@@ -1,9 +1,5 @@
 # Ayunis Core
 
-[![License](https://img.shields.io/badge/license-AGPL)](LICENSE.md)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
-
 > An open-source AI gateway for public administrations
 
 Ayunis Core is a comprehensive AI platform that enables intelligent conversations with customizable agents, advanced prompt management, and extensible tool integration. Built with ❤️ for public administrations.
