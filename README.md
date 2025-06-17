@@ -37,39 +37,44 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 
 ### Installation
 
-**Clone the repository:**
+**Clone the repository and navigate to the project root**
 
 ```bash
-git clone https://github.com/ayunis-core/ayunis-core.git
-cd ayunis-core
+cd /path/to/ayunis-core
 ```
 
-**Configure environment**: 
- - compare `ayunis-core-backend/.env.example` and create a `.env` with your variables
- - compare `ayunis-core-frontend/.env.example` and create a `.env` with your variables
-
-**Start the services:**
+**Create your production environment file (only backend required in production)**
 
 ```bash
-# Start all services with Docker
-docker compose up -d
-
-# Install backend dependencies
-cd core-backend
-npm install
-
-# Run database migrations
-npm run migration:run:dev
-
-# Install frontend dependencies
-cd ../core-frontend
-npm install
+cp ./ayunis-core-backend/env.example ./ayunis-core-backend/.env
 ```
 
-**Access the application:**
+**Edit the environment file with your production values**
 
-- Frontend: http://localhost:3001
-- Backend API: http://localhost:3000
+```bash
+nano ./ayunis-core-backend/.env
+```
+
+**Build and start the production stack**
+
+```bash
+docker compose up -d --build
+```
+
+**Access the application**
+
+- Application: http://localhost:3000
+- Backend Base URL: http://localhost:3000/api
+- SwaggerUI: http://localhost:3000/api/docs
+- OpenAPI JSON: http://localhost:3000/api/docs-json
+
+## First steps
+
+- Create an account
+- Go to Admin Settings -> Models and enable some models
+- Invite users
+- Go to the Prompt Library and add some prompts for easy access
+- Chat with your enabled models, add prompts via the book icon button below the chat input
 
 ## 📚 Resources
 
@@ -85,7 +90,6 @@ We welcome contributions from the community! Please read our [Contributing Guide
 ## 🙏 Acknowledgments
 
 - Built with ❤️ by the Ayunis team and contributors
-- Inspired by modern AI conversation platforms
 - Thanks to all our open source contributors
 
 ---
