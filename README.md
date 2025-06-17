@@ -40,9 +40,13 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 **Clone the repository:**
 
 ```bash
-git clone https://github.com/your-username/ayunis-core.git
+git clone https://github.com/ayunis-core/ayunis-core.git
 cd ayunis-core
 ```
+
+**Configure environment**: 
+ - compare `ayunis-core-backend/.env.example` and create a `.env` with your variables
+ - compare `ayunis-core-frontend/.env.example` and create a `.env` with your variables
 
 **Start the services:**
 
