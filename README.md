@@ -11,6 +11,7 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 - **Multiple LLM providers** - Seamlessly connect to Ollama, Mistral, Anthropic or OpenAI without configuration overhead
 - **Prompt Library** - Organize prompts for easy reuse
 - **Agent Builder (coming soon)** - Create your personalized AI assistants to help with your tasks. Share the best with your entire team.
+- **RAG Pipeline (coming soon)** - Enhance model context with your own data & documents. Use our pipeline in your own services.
 
 ### 🛠️ Advanced Capabilities
 
@@ -68,7 +69,7 @@ docker compose up -d --build
 - SwaggerUI: http://localhost:3000/api/docs
 - OpenAPI JSON: http://localhost:3000/api/docs-json
 
-## First steps
+## 🎯 First steps
 
 - Create an account
 - Go to Admin Settings -> Models and enable some models
