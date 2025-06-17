@@ -5,11 +5,11 @@ FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Copy frontend package files
-COPY core-frontend/package*.json ./
+COPY ayunis-core-frontend/package*.json ./
 RUN npm ci
 
 # Copy frontend source
-COPY core-frontend/ ./
+COPY ayunis-core-frontend/ ./
 
 # Build frontend
 RUN npm run build
@@ -23,11 +23,11 @@ RUN apk add --no-cache python3 make g++ gcc
 WORKDIR /app
 
 # Copy backend package files
-COPY core-backend/package*.json ./
+COPY ayunis-core-backend/package*.json ./
 RUN npm ci
 
 # Copy backend source
-COPY core-backend/ ./
+COPY ayunis-core-backend/ ./
 
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder /app/frontend/dist ./frontend
@@ -44,7 +44,7 @@ RUN apk add --no-cache python3 make g++ gcc
 WORKDIR /app
 
 # Copy package files and install production dependencies
-COPY core-backend/package*.json ./
+COPY ayunis-core-backend/package*.json ./
 RUN npm ci --only=production && npm rebuild bcrypt --build-from-source
 
 # Copy built backend from builder stage

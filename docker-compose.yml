@@ -6,10 +6,10 @@ services:
     container_name: ayunis-postgres-prod
     restart: unless-stopped
     env_file:
-      - ./core-backend/.env
+      - ./ayunis-core-backend/.env
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./core-backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./ayunis-core-backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - ayunis-network
     healthcheck:
@@ -23,7 +23,7 @@ services:
     container_name: ayunis-minio-prod
     restart: unless-stopped
     env_file:
-      - ./core-backend/.env
+      - ./ayunis-core-backend/.env
     volumes:
       - minio-data:/data
     networks:
@@ -53,8 +53,8 @@ services:
       minio:
         condition: service_healthy
     env_file:
-      - ./core-backend/.env
-      - ./core-frontend/.env
+      - ./ayunis-core-backend/.env
+      - ./ayunis-core-frontend/.env
     volumes:
       - app-uploads:/app/uploads
     networks:
