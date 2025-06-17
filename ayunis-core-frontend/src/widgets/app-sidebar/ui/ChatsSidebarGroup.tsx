@@ -31,7 +31,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/shared/ui/shadcn/collapsible";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import { useConfirmation } from "@/widgets/confirmation-modal";
 
 export function ChatsSidebarGroup() {

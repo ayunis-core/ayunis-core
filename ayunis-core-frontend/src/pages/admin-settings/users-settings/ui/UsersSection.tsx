@@ -27,7 +27,7 @@ import { useState } from "react";
 import type { User } from "../model/openapi";
 import type { UserResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useConfirmation } from "@/widgets/confirmation-modal";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface UsersSectionProps {
   users: User[];

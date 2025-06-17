@@ -9,7 +9,7 @@ import { Label } from "@/shared/ui/shadcn/label";
 import { Input } from "@/shared/ui/shadcn/input";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Separator } from "@/shared/ui/shadcn/separator";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 export default function AccountSettingsPage() {
   const { t } = useTranslation("settings");

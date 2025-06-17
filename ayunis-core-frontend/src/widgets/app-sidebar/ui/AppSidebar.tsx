@@ -29,7 +29,7 @@ import { ChatsSidebarGroup } from "./ChatsSidebarGroup";
 import { useMe } from "../api/useMe";
 import { useLogout } from "../api/useLogout";
 import { Link } from "@tanstack/react-router";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import { useNavigate } from "@tanstack/react-router";
 

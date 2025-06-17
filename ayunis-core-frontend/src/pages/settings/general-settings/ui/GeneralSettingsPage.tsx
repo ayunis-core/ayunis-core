@@ -1,5 +1,5 @@
 import { SettingsLayout } from "../../settings-layout";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import { ThemeSettingsCard } from "./ThemeSettingsCard";
 import { LanguageSettingsCard } from "./LanguageSettingsCard";
 import { ChatSettingsCard } from "./ChatSettingsCard";

@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import ModelProviderCard from "./ModelProviderCard";
 import SettingsLayout from "../../admin-settings-layout";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface ModelSettingsPageProps {
   models: ModelWithConfigResponseDto[];

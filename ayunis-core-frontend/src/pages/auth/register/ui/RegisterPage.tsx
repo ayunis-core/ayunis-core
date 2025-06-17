@@ -10,7 +10,7 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import OnboardingLayout from "@/layouts/onboarding-layout";
 import { useRegister } from "../api";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 
 export function RegisterPage() {

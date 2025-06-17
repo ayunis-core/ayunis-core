@@ -5,7 +5,7 @@ import { useAuthenticationControllerLogin } from "@/shared/api/generated/ayunisC
 import { loginFormSchema, type LoginFormValues } from "./loginSchema";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 export function useLogin() {
   const { t } = useTranslation("auth");

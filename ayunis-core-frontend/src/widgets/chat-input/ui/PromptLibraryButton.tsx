@@ -8,7 +8,7 @@ import {
 } from "@/shared/ui/shadcn/dropdown-menu";
 import { BookOpen, Loader2 } from "lucide-react";
 import { usePrompts } from "../api/usePrompts";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import {
   Tooltip,
   TooltipContent,

@@ -11,7 +11,7 @@ import { Badge } from "@/shared/ui/shadcn/badge";
 import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useCreatePermittedModel } from "../api/useCreatePermittedModel";
 import { useDeletePermittedModel } from "../api/useDeletePermittedModel";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface ModelProviderCardProps {
   provider: string;

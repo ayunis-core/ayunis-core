@@ -9,7 +9,7 @@ import ModelSelector from "./ModelSelector";
 import PromptLibraryButton from "./PromptLibraryButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import type { PermittedModel } from "../model/openapi";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface ChatInputProps {
   model: PermittedModel;

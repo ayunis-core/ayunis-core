@@ -22,7 +22,7 @@ import {
 import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useDeleteThread } from "@/features/useDeleteThread";
 import { useNavigate } from "@tanstack/react-router";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface ChatPageProps {
   thread: Thread;

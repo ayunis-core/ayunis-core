@@ -21,7 +21,7 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useAddPrompt } from "../api/useAddPrompt";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface CreatePromptDialogProps {
   buttonText?: string;

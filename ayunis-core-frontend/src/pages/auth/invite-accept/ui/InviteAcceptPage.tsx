@@ -11,7 +11,7 @@ import { Input } from "@/shared/ui/shadcn/input";
 import OnboardingLayout from "@/layouts/onboarding-layout";
 import type { Invite } from "../model/openapi";
 import { useInviteAccept } from "../api";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface InviteAcceptPageProps {
   invite: Invite;
