@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/shadcn/select";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import { usePermittedModels } from "@/features/usePermittedModels";
 import { useUserDefaultModel } from "../api/useUserDefaultModel";
 

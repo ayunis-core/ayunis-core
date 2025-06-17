@@ -2,7 +2,7 @@ import NewChatPageLayout from "./NewChatPageLayout";
 import ChatInput from "@/widgets/chat-input";
 import { useInitiateChat } from "../api/useInitiateChat";
 import { useState } from "react";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import type { PermittedModel } from "../model/openapi";
 
 interface NewChatPageProps {

@@ -21,7 +21,7 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { useState, useEffect } from "react";
 import type { Prompt } from "../model/openapi";
 import { useEditPrompt } from "../api/useEditPrompt";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface EditPromptDialogProps {
   trigger: React.ReactNode;

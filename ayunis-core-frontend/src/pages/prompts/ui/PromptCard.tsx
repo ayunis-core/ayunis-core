@@ -10,7 +10,7 @@ import { Edit, MessageCircle, Trash2 } from "lucide-react";
 import EditPromptDialog from "./EditPromptDialog";
 import { useDeletePrompt } from "../api/useDeletePrompt";
 import { useConfirmation } from "@/widgets/confirmation-modal";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import type { Prompt } from "../model/openapi";
 import { Link } from "@tanstack/react-router";
 

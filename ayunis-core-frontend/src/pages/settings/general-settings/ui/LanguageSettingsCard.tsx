@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/shared/ui/shadcn/select";
 import { useLanguage } from "@/features/language";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 export function LanguageSettingsCard() {
   const { t } = useTranslation("settings");

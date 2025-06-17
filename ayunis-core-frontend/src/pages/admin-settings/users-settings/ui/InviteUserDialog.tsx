@@ -29,7 +29,7 @@ import { useForm } from "react-hook-form";
 import type { InviteRole } from "../model/openapi";
 import { useInviteCreate } from "../api/useInviteCreate";
 import { Copy, Check } from "lucide-react";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface InviteFormData {
   email: string;

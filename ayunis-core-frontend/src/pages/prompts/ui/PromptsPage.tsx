@@ -6,7 +6,7 @@ import PromptCard from "./PromptCard";
 import type { Prompt } from "../model/openapi";
 import PromptsEmptyState from "./PromptsEmptyState";
 import FullScreenMessageLayout from "@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 
 interface PromptsPageProps {
   prompts: Prompt[];

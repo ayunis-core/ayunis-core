@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import { Avatar, AvatarFallback } from "@/shared/ui/shadcn/avatar";
 import { Bot, User, Loader2, Settings, Wrench } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useTranslation } from "node_modules/react-i18next";
+import { useTranslation } from "react-i18next";
 import type {
   Message,
   AssistantMessageContent,
