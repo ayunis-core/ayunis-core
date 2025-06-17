@@ -1,0 +1,22 @@
+{
+  "chat": {
+    "untitled": "Untitled",
+    "deleteThread": "Delete thread",
+    "deleteThreadTitle": "Delete Thread",
+    "deleteThreadDescription": "Are you sure you want to delete this thread? This action cannot be undone.",
+    "deleteText": "Delete",
+    "cancelText": "Cancel",
+    "errorDeleteThread": "Failed to delete thread. Please try again.",
+    "aiThinking": "AI is thinking...",
+    "usingTool": "Using tool: {{toolName}}",
+    "resultFrom": "Result from {{toolName}}:",
+    "unknownMessageType": "Unknown message type"
+  },
+  "newChat": {
+    "title": "How can I help you today?",
+    "description": "Ask me anything about documents, websites, or code.",
+    "noModelTitle": "No Model Available",
+    "noModelDescription": "No AI model could be found. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
+    "configureModel": "Configure Model"
+  }
+}

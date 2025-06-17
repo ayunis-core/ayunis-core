@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Meine Prompts"
+  },
+  "emptyState": {
+    "title": "Noch keine Prompts",
+    "description": "Beginnen Sie mit der Erstellung Ihres ersten Prompts. Prompts helfen Ihnen dabei, konsistente Anweisungen für Ihre KI-Gespräche zu erstellen."
+  },
+  "card": {
+    "confirmDelete": {
+      "title": "Prompt löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Prompt hinzufügen",
+    "buttonTextFirst": "Erstellen Sie Ihren ersten Prompt",
+    "title": "Neuen Prompt hinzufügen",
+    "description": "Erstellen Sie eine neue Prompt-Vorlage. Füllen Sie unten Titel und Inhalt aus.",
+    "form": {
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Prompt-Titel eingeben...",
+      "contentLabel": "Inhalt",
+      "contentPlaceholder": "Prompt-Inhalt eingeben..."
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "create": "Prompt erstellen",
+      "creating": "Wird erstellt..."
+    }
+  },
+  "editDialog": {
+    "title": "Prompt bearbeiten",
+    "description": "Nehmen Sie hier Änderungen an Ihrem Prompt vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",
+    "form": {
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Prompt-Titel eingeben...",
+      "contentLabel": "Inhalt",
+      "contentPlaceholder": "Prompt-Inhalt eingeben..."
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert..."
+    }
+  }
+}

@@ -1,0 +1,4045 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/models/available": {
+      "get": {
+        "operationId": "ModelsController_getAvailableModelsWithConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all available models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelWithConfigResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all available models",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/permitted": {
+      "post": {
+        "operationId": "ModelsController_createPermittedModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePermittedModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created a permitted model"
+          },
+          "400": {
+            "description": "Invalid model input"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a permitted model",
+        "tags": [
+          "models"
+        ]
+      },
+      "get": {
+        "operationId": "ModelsController_getPermittedModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all permitted models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedModelResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all permitted models",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/permitted/{id}": {
+      "delete": {
+        "operationId": "ModelsController_deletePermittedModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted a permitted model"
+          }
+        },
+        "summary": "Delete a permitted model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/default": {
+      "get": {
+        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
+        "operationId": "ModelsController_getEffectiveDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the effective default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No default model found"
+          }
+        },
+        "summary": "Get the effective default model for the user",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/org/default": {
+      "get": {
+        "description": "Returns only the organization's specific default model. Returns null if no org default is set.",
+        "operationId": "ModelsController_getOrgSpecificDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the organization default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No organization default model found"
+          }
+        },
+        "summary": "Get the organization default model",
+        "tags": [
+          "models"
+        ]
+      },
+      "put": {
+        "description": "Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model.",
+        "operationId": "ModelsController_manageOrgDefaultModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the organization default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Set or update the organization default model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/user/default": {
+      "get": {
+        "description": "Returns the user's personal default model only. Returns null if no user-specific default is set.",
+        "operationId": "ModelsController_getUserSpecificDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user-specific default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No user-specific default model found"
+          }
+        },
+        "summary": "Get the user-specific default model",
+        "tags": [
+          "models"
+        ]
+      },
+      "put": {
+        "description": "Sets the specified permitted model as the user default. If a default already exists, it will be updated to the new model.",
+        "operationId": "ModelsController_manageUserDefaultModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the user default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Set or update the user default model",
+        "tags": [
+          "models"
+        ]
+      },
+      "delete": {
+        "operationId": "ModelsController_deleteUserDefaultModel",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user default model"
+          },
+          "404": {
+            "description": "User default model not found"
+          }
+        },
+        "summary": "Delete the user default model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/inference": {
+      "post": {
+        "operationId": "ModelsController_inference",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InferenceRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully triggered inference and returned model response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InferenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid inference request payload"
+          },
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error or model provider error"
+          }
+        },
+        "summary": "Trigger inference",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/tools/http": {
+      "post": {
+        "operationId": "ToolsController_createHttpTool",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHttpToolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The HTTP tool has been successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpTool"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new HTTP tool for current user",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/tools/{id}": {
+      "delete": {
+        "operationId": "ToolsController_deleteTool",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The tool has been successfully deleted."
+          }
+        },
+        "summary": "Delete a tool by ID",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/sources/{id}": {
+      "get": {
+        "operationId": "SourcesController_getSourceById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Source ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Source found"
+          },
+          "404": {
+            "description": "Source not found"
+          }
+        },
+        "summary": "Get source by ID",
+        "tags": [
+          "sources"
+        ]
+      },
+      "delete": {
+        "operationId": "SourcesController_deleteSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Source ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Source deleted successfully"
+          },
+          "404": {
+            "description": "Source not found"
+          }
+        },
+        "summary": "Delete source by ID",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources": {
+      "get": {
+        "operationId": "SourcesController_getSourcesByThreadId",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "query",
+            "description": "Thread ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sources found"
+          }
+        },
+        "summary": "Get sources by thread ID",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/user/sources": {
+      "get": {
+        "operationId": "SourcesController_getSourcesByUserId",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User sources found"
+          }
+        },
+        "summary": "Get sources by user",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/file": {
+      "post": {
+        "operationId": "SourcesController_createFileSource",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "threadId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "fileType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File source created successfully"
+          },
+          "400": {
+            "description": "Invalid file or request data"
+          }
+        },
+        "summary": "Create a file source",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/url": {
+      "post": {
+        "operationId": "SourcesController_createUrlSource",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUrlSourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "URL source created successfully"
+          },
+          "400": {
+            "description": "Invalid URL or request data"
+          }
+        },
+        "summary": "Create a URL source",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/search": {
+      "post": {
+        "operationId": "SourcesController_matchSourceContentChunks",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchSourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Source content chunks matching the query"
+          },
+          "400": {
+            "description": "Invalid search parameters"
+          }
+        },
+        "summary": "Search/match source content chunks",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/retrievers/file": {
+      "post": {
+        "operationId": "FileRetrieversController_retrieveFile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The file has been successfully processed"
+          }
+        },
+        "summary": "Process content from a file",
+        "tags": [
+          "retrievers"
+        ]
+      }
+    },
+    "/retrievers/url": {
+      "post": {
+        "operationId": "UrlRetrieverController_retrieveUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The content has been successfully retrieved"
+          }
+        },
+        "summary": "Retrieve content from a URL",
+        "tags": [
+          "retrievers"
+        ]
+      }
+    },
+    "/splitter/providers": {
+      "get": {
+        "operationId": "SplitterController_getAvailableProviders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of available splitter providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "recursive",
+                          "line"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get available text splitter providers",
+        "tags": [
+          "splitter"
+        ]
+      }
+    },
+    "/splitter/split": {
+      "post": {
+        "operationId": "SplitterController_splitText",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitTextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The text has been successfully split into chunks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error"
+          },
+          "404": {
+            "description": "Splitter provider not found"
+          }
+        },
+        "summary": "Split text using the specified provider",
+        "tags": [
+          "splitter"
+        ]
+      }
+    },
+    "/embeddings/embed": {
+      "post": {
+        "operationId": "EmbeddingsController_embedText",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbedTextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The text has been successfully embedded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResultsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error"
+          },
+          "404": {
+            "description": "Embeddings provider not found"
+          }
+        },
+        "summary": "Embed text into a vector using the specified provider",
+        "tags": [
+          "embeddings"
+        ]
+      }
+    },
+    "/threads": {
+      "post": {
+        "operationId": "ThreadsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateThreadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The thread has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetThreadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid model data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new thread",
+        "tags": [
+          "threads"
+        ]
+      },
+      "get": {
+        "operationId": "ThreadsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns all threads for the current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetThreadsResponseDtoItem"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all threads for the current user",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}": {
+      "get": {
+        "operationId": "ThreadsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread to retrieve",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the thread with the specified ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetThreadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a thread by ID",
+        "tags": [
+          "threads"
+        ]
+      },
+      "delete": {
+        "operationId": "ThreadsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The thread has been successfully deleted"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a thread",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}/instruction": {
+      "patch": {
+        "operationId": "ThreadsController_updateInstruction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread to update",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateThreadInstructionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The thread instruction has been successfully updated"
+          },
+          "400": {
+            "description": "Invalid instruction data"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update thread instruction",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}/model": {
+      "patch": {
+        "operationId": "ThreadsController_updateModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread to update",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateThreadModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The thread model has been successfully updated"
+          },
+          "400": {
+            "description": "Invalid model data"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update thread model",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}/internet-search": {
+      "patch": {
+        "operationId": "ThreadsController_updateInternetSearch",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread to update",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateThreadInternetSearchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The thread internet search setting has been successfully updated"
+          },
+          "400": {
+            "description": "Invalid internet search data"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update thread internet search setting",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}/sources": {
+      "get": {
+        "operationId": "ThreadsController_getThreadSources",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all sources for the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all sources for a thread",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}/sources/file": {
+      "post": {
+        "operationId": "ThreadsController_addFileSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload"
+                  },
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the user who owns this source"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The display name for the file source"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A description of the file source"
+                  }
+                },
+                "required": [
+                  "file",
+                  "userId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The file source has been successfully added to the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileSourceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add a file source to a thread",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/threads/{id}/sources/{sourceId}": {
+      "delete": {
+        "operationId": "ThreadsController_removeSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the source to remove",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The source has been successfully removed from the thread"
+          },
+          "404": {
+            "description": "Thread or source not found"
+          }
+        },
+        "summary": "Remove a source from a thread",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
+    "/runs/stream/{threadId}": {
+      "get": {
+        "description": "Establishes a server-sent events connection and returns a session ID for sending messages",
+        "operationId": "RunsController_connectToStream",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events stream with discriminated response types",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/RunSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunMessageResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunErrorResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunThreadResponseDto"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "session": "#/components/schemas/RunSessionResponseDto",
+                      "message": "#/components/schemas/RunMessageResponseDto",
+                      "error": "#/components/schemas/RunErrorResponseDto",
+                      "thread": "#/components/schemas/RunThreadResponseDto"
+                    }
+                  }
+                },
+                "examples": {
+                  "session-event": {
+                    "summary": "Session establishment event",
+                    "value": {
+                      "type": "session",
+                      "success": true,
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z"
+                    }
+                  },
+                  "message-event": {
+                    "summary": "Message event",
+                    "value": {
+                      "type": "message",
+                      "message": {
+                        "id": "123e4567-e89b-12d3-a456-426614174000",
+                        "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                        "role": "assistant",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Hello!"
+                          }
+                        ],
+                        "createdAt": "2024-01-01T12:00:00.000Z"
+                      },
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z"
+                    }
+                  },
+                  "error-event": {
+                    "summary": "Error event",
+                    "value": {
+                      "type": "error",
+                      "message": "An error occurred while processing your request",
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z",
+                      "code": "EXECUTION_ERROR"
+                    }
+                  },
+                  "thread-event": {
+                    "summary": "Thread update event",
+                    "value": {
+                      "type": "thread",
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "updateType": "title_updated",
+                      "title": "Discussion about AI and machine learning",
+                      "timestamp": "2024-01-01T12:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "Content type for server-sent events",
+                "schema": {
+                  "type": "string",
+                  "example": "text/event-stream"
+                }
+              },
+              "Cache-Control": {
+                "description": "Cache control header",
+                "schema": {
+                  "type": "string",
+                  "example": "no-cache"
+                }
+              },
+              "Connection": {
+                "description": "Connection type",
+                "schema": {
+                  "type": "string",
+                  "example": "keep-alive"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Connect to the run stream and receive a session ID",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/runs/send-message": {
+      "post": {
+        "description": "Sends a user message to the specified session and triggers AI processing",
+        "operationId": "RunsController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully. Response will be streamed to the SSE connection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Message sent to session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload or session not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Send a message to an active session",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/storage/upload": {
+      "post": {
+        "operationId": "StorageController_uploadFile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/storage/{objectName}": {
+      "get": {
+        "operationId": "StorageController_getFile",
+        "parameters": [
+          {
+            "name": "objectName",
+            "required": true,
+            "in": "path",
+            "description": "Name of the object to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "storage"
+        ]
+      },
+      "delete": {
+        "operationId": "StorageController_deleteFile",
+        "parameters": [
+          {
+            "name": "objectName",
+            "required": true,
+            "in": "path",
+            "description": "Name of the object to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/storage/url/{objectName}": {
+      "get": {
+        "operationId": "StorageController_getPresignedUrl",
+        "parameters": [
+          {
+            "name": "objectName",
+            "required": true,
+            "in": "path",
+            "description": "Name of the object to get URL for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/prompts": {
+      "post": {
+        "operationId": "PromptsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The prompt has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid prompt data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new prompt",
+        "tags": [
+          "prompts"
+        ]
+      },
+      "get": {
+        "operationId": "PromptsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns all prompts for the current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromptResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all prompts for the current user",
+        "tags": [
+          "prompts"
+        ]
+      }
+    },
+    "/prompts/{id}": {
+      "get": {
+        "operationId": "PromptsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the prompt to retrieve",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the prompt with the specified ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Prompt not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a prompt by ID",
+        "tags": [
+          "prompts"
+        ]
+      },
+      "put": {
+        "operationId": "PromptsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the prompt to update",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The prompt has been successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid prompt data"
+          },
+          "404": {
+            "description": "Prompt not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a prompt",
+        "tags": [
+          "prompts"
+        ]
+      },
+      "delete": {
+        "operationId": "PromptsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the prompt to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The prompt has been successfully deleted"
+          },
+          "404": {
+            "description": "Prompt not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a prompt",
+        "tags": [
+          "prompts"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
+        "operationId": "AuthenticationController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "User credentials for authentication",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Authentication cookies are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "User login",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "description": "Register a new user account with email, password, and organization name. Automatically logs in the user and sets authentication cookies.",
+        "operationId": "AuthenticationController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "User registration information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration successful. User is automatically logged in and authentication cookies are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User with this email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "User registration",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "description": "Refresh expired access tokens using the refresh token stored in cookies. Returns new authentication cookies.",
+        "operationId": "AuthenticationController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Token refresh successful. New authentication cookies are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Authentication configuration error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "refreshToken": []
+          }
+        ],
+        "summary": "Refresh authentication tokens",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "description": "Get the current authenticated user's email and role. If access token is expired but refresh token is valid, automatically refreshes tokens and sets new cookies.",
+        "operationId": "AuthenticationController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User information retrieved successfully. If tokens were refreshed, new cookies are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated - no valid tokens found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Authentication configuration error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get current user information",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "Log out the current user by clearing authentication cookies.",
+        "operationId": "AuthenticationController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logout successful. Authentication cookies are cleared.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "User logout",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/invites": {
+      "post": {
+        "description": "Send an invitation to a user to join an organization with a specific role",
+        "operationId": "InvitesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The invite has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInviteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid invite data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new invite",
+        "tags": [
+          "invites"
+        ]
+      },
+      "get": {
+        "description": "Retrieve all invites for the organization with calculated status and sent date",
+        "operationId": "InvitesController_getInvites",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns all invites for the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InviteResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all invites for current user's organization",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/invites/{token}": {
+      "get": {
+        "description": "Retrieve invite details including organization name by token",
+        "operationId": "InvitesController_getInviteByToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "description": "Token of the invited user",
+            "schema": {
+              "example": "1234567890",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the invite with organization details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteDetailResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a single invite by token",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/invites/accept": {
+      "post": {
+        "description": "Accept an invitation using the JWT token",
+        "operationId": "InvitesController_acceptInvite",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The invite has been successfully accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInviteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid invite token or invite already accepted/expired"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Accept an invite",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/invites/{id}": {
+      "delete": {
+        "description": "Delete an invitation (only allowed by the user who created it)",
+        "operationId": "InvitesController_deleteInvite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the invite to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The invite has been successfully deleted"
+          },
+          "403": {
+            "description": "Unauthorized to delete this invite"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete an invite",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "description": "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+        "operationId": "UserController_getUsersInOrganization",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved users in the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error occurred while retrieving users"
+          }
+        },
+        "summary": "Get users in current organization",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/role": {
+      "patch": {
+        "description": "Update the role of a user. You cannot update your own role.",
+        "operationId": "UserController_updateUserRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to update role for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "New role information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User role successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid role value"
+          },
+          "401": {
+            "description": "User not authenticated or trying to update own role"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user role"
+          }
+        },
+        "summary": "Update user role",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "description": "Delete a user by their ID. Only users within the same organization can be deleted.",
+        "operationId": "UserController_deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully deleted"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while deleting user"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Ayunis Core API",
+    "description": "The Ayunis Core API description",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "ayunis",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "ModelWithConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the model. Null if the model is not permitted.",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "microsoft",
+              "ollama"
+            ],
+            "description": "The provider of the model"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model"
+          },
+          "canStream": {
+            "type": "boolean",
+            "description": "Whether the model can stream"
+          },
+          "isReasoning": {
+            "type": "boolean",
+            "description": "Whether the model can reason"
+          },
+          "isPermitted": {
+            "type": "boolean",
+            "description": "Whether the model is permitted to be used"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether the model is the default model"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "canStream",
+          "isReasoning",
+          "isPermitted",
+          "isDefault"
+        ]
+      },
+      "CreatePermittedModelDto": {
+        "type": "object",
+        "properties": {
+          "modelName": {
+            "type": "string",
+            "description": "The name of the model",
+            "example": "gpt-4"
+          },
+          "modelProvider": {
+            "type": "string",
+            "description": "The provider of the model",
+            "example": "openai"
+          }
+        },
+        "required": [
+          "modelName",
+          "modelProvider"
+        ]
+      },
+      "PermittedModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the permitted model"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "microsoft",
+              "ollama"
+            ],
+            "description": "The provider of the model"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model"
+          },
+          "canStream": {
+            "type": "boolean",
+            "description": "Whether the model can stream"
+          },
+          "isReasoning": {
+            "type": "boolean",
+            "description": "Whether the model can reason"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "canStream",
+          "isReasoning"
+        ]
+      },
+      "SetUserDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "description": "The ID of the permitted model to set as default",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": [
+          "permittedModelId"
+        ]
+      },
+      "SetOrgDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "permittedModelId": {
+            "type": "string",
+            "description": "The ID of the permitted model to set as organization default",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": [
+          "permittedModelId"
+        ]
+      },
+      "InferenceResponse": {
+        "type": "object",
+        "properties": {}
+      },
+      "Message": {
+        "type": "object",
+        "properties": {}
+      },
+      "InferenceRequestDto": {
+        "type": "object",
+        "properties": {
+          "modelName": {
+            "type": "string",
+            "description": "The name of the model to use for the inference",
+            "example": "mistral-large-latest"
+          },
+          "modelProvider": {
+            "type": "string",
+            "description": "The provider of the model to use for the inference",
+            "example": "mistral",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "microsoft",
+              "ollama"
+            ]
+          },
+          "messages": {
+            "description": "The messages to use for the inference",
+            "example": [
+              {
+                "role": "system",
+                "content": "You are a helpful AI assistant."
+              },
+              {
+                "role": "user",
+                "content": "Hello, what can you help me with today?"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          },
+          "tools": {
+            "description": "The tools to use for the inference",
+            "example": [
+              {
+                "name": "weather_tool",
+                "displayName": "Weather Tool",
+                "description": "Get current weather information for a location",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "description": "The city or location to get weather for"
+                    }
+                  },
+                  "required": [
+                    "location"
+                  ]
+                }
+              }
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "toolChoice": {
+            "type": "string",
+            "description": "The tool choice to use for the inference",
+            "example": "auto",
+            "enum": [
+              "auto",
+              "required"
+            ]
+          }
+        },
+        "required": [
+          "modelName",
+          "modelProvider",
+          "messages"
+        ]
+      },
+      "CreateHttpToolDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the tool"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of what the tool does"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "JSON Schema defining the parameters the tool accepts",
+            "example": {
+              "type": "object",
+              "required": [
+                "query"
+              ],
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query"
+                }
+              }
+            }
+          },
+          "endpointUrl": {
+            "type": "string",
+            "description": "Endpoint URL for the HTTP tool",
+            "example": "https://api.example.com/search"
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method for the HTTP tool",
+            "example": "GET"
+          }
+        },
+        "required": [
+          "displayName",
+          "description",
+          "parameters",
+          "endpointUrl",
+          "method"
+        ]
+      },
+      "HttpTool": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateUrlSourceDto": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID (optional)",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL to create source from",
+            "example": "https://example.com/document"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "MatchSourceDto": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "description": "Source ID to search within",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "query": {
+            "type": "string",
+            "description": "Query text to search for",
+            "example": "machine learning algorithms"
+          },
+          "similarityThreshold": {
+            "type": "number",
+            "description": "Similarity threshold (0.0 = identical, 2.0 = opposite)",
+            "example": 0.8,
+            "minimum": 0,
+            "maximum": 2
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of results to return",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "sourceId",
+          "query"
+        ]
+      },
+      "RetrieveUrlDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to retrieve content from",
+            "example": "https://example.com/article"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "SplitterMetadataDto": {
+        "type": "object",
+        "properties": {
+          "chunkSize": {
+            "type": "number",
+            "description": "Number of text chunks or lines per segment",
+            "example": 1000
+          },
+          "chunkOverlap": {
+            "type": "number",
+            "description": "Number of characters to overlap between chunks",
+            "example": 200
+          },
+          "preserveHeader": {
+            "type": "boolean",
+            "description": "For CSV files: whether to preserve header in each chunk",
+            "default": true
+          },
+          "skipBlankLines": {
+            "type": "boolean",
+            "description": "For CSV files: whether to skip blank lines",
+            "default": true
+          },
+          "detectQuotes": {
+            "type": "boolean",
+            "description": "For CSV files: whether to handle quoted fields that span multiple lines",
+            "default": true
+          },
+          "headerRow": {
+            "type": "string",
+            "description": "For CSV files: custom header row to use instead of first line"
+          }
+        }
+      },
+      "SplitTextDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text content to split",
+            "example": "This is a sample text that needs to be split into chunks..."
+          },
+          "provider": {
+            "type": "string",
+            "description": "The splitter provider to use",
+            "enum": [
+              "recursive",
+              "line"
+            ],
+            "example": "recursive"
+          },
+          "metadata": {
+            "description": "Metadata for customizing the splitting behavior",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SplitterMetadataDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "text",
+          "provider"
+        ]
+      },
+      "TextChunkDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text content of the chunk"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the chunk",
+            "example": {
+              "index": 0,
+              "lineCount": 5,
+              "hasHeader": true,
+              "startLine": 1,
+              "endLine": 5
+            }
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "SplitResultDto": {
+        "type": "object",
+        "properties": {
+          "chunks": {
+            "description": "The chunks of text produced by the splitting operation",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TextChunkDto"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the split operation",
+            "example": {
+              "provider": "recursive",
+              "chunkSize": 1000,
+              "chunkOverlap": 200,
+              "totalChunks": 5
+            }
+          }
+        },
+        "required": [
+          "chunks",
+          "metadata"
+        ]
+      },
+      "EmbedTextDto": {
+        "type": "object",
+        "properties": {
+          "texts": {
+            "type": "string",
+            "description": "The text to embed",
+            "example": "This is a sample text that needs to be embedded into a vector."
+          }
+        },
+        "required": [
+          "texts"
+        ]
+      },
+      "EmbeddingResultDto": {
+        "type": "object",
+        "properties": {
+          "vector": {
+            "description": "The vector representation of the embedded text",
+            "example": [
+              0.01,
+              -0.02,
+              0.03,
+              -0.04,
+              0.05
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "text": {
+            "type": "string",
+            "description": "The original text that was embedded"
+          },
+          "dimension": {
+            "type": "number",
+            "description": "The dimension (length) of the embedding vector",
+            "example": 384
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the embedding process",
+            "example": {
+              "provider": "openai",
+              "model": "text-embedding-3-small",
+              "dimension": 1536
+            }
+          }
+        },
+        "required": [
+          "vector",
+          "text",
+          "dimension",
+          "metadata"
+        ]
+      },
+      "EmbeddingResultsDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "description": "The list of embeddings",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmbeddingResultDto"
+            }
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
+      "CreateThreadDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "description": "The id of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ]
+      },
+      "UserMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the message",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this message belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the message sender",
+            "example": "user",
+            "enum": [
+              "user"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "description": "Array of text content items for user messages",
+            "items": {
+              "$ref": "#/components/schemas/TextMessageContentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
+      },
+      "SystemMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the message",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this message belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the message sender",
+            "example": "system",
+            "enum": [
+              "system"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "description": "Array of text content items for system messages",
+            "items": {
+              "$ref": "#/components/schemas/TextMessageContentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
+      },
+      "AssistantMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the message",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this message belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the message sender",
+            "example": "assistant",
+            "enum": [
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "description": "Array of content items for assistant messages (text or tool use)",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TextMessageContentResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolUseMessageContentResponseDto"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
+      },
+      "ToolResultMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the message",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this message belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the message sender",
+            "example": "tool",
+            "enum": [
+              "tool"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "description": "Array of tool result content items for tool messages",
+            "items": {
+              "$ref": "#/components/schemas/ToolResultMessageContentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
+      },
+      "TextMessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "The text content of the message",
+            "example": "Hello, how can I help you today?"
+          }
+        },
+        "required": [
+          "type",
+          "text"
+        ]
+      },
+      "ToolUseMessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the tool call",
+            "example": "call_abc123"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the tool being used",
+            "example": "get_weather"
+          },
+          "params": {
+            "type": "object",
+            "description": "Parameters passed to the tool",
+            "example": {
+              "location": "New York",
+              "unit": "celsius"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "name",
+          "params"
+        ]
+      },
+      "ToolResultMessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result"
+            ]
+          },
+          "toolId": {
+            "type": "string",
+            "description": "Identifier of the tool call this result belongs to",
+            "example": "call_abc123"
+          },
+          "toolName": {
+            "type": "string",
+            "description": "Name of the tool that generated this result",
+            "example": "get_weather"
+          },
+          "result": {
+            "type": "string",
+            "description": "The result returned by the tool",
+            "example": "The current temperature in New York is 22°C with partly cloudy skies."
+          }
+        },
+        "required": [
+          "type",
+          "toolId",
+          "toolName",
+          "result"
+        ]
+      },
+      "ModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model",
+            "example": "gpt-4o"
+          },
+          "provider": {
+            "type": "string",
+            "description": "The provider of the model",
+            "example": "mistral",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "microsoft",
+              "ollama"
+            ]
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model",
+            "example": "Mistral"
+          },
+          "canStream": {
+            "type": "boolean",
+            "description": "Whether the model can stream",
+            "example": true
+          },
+          "isReasoning": {
+            "type": "boolean",
+            "description": "Whether the model can reason",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "canStream",
+          "isReasoning"
+        ]
+      },
+      "GetThreadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the thread",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID who owns this thread",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "model": {
+            "description": "Model",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelResponseDto"
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the thread",
+            "example": "Discussion about AI models"
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Instruction for the thread",
+            "example": "Please analyze the attached documents and provide insights on market trends."
+          },
+          "isInternetSearchEnabled": {
+            "type": "boolean",
+            "description": "Whether internet search is enabled for the thread",
+            "example": false
+          },
+          "messages": {
+            "type": "array",
+            "description": "Array of messages in the thread (role-specific types)",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/UserMessageResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/SystemMessageResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/AssistantMessageResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolResultMessageResponseDto"
+                }
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2024-01-01T12:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "model",
+          "isInternetSearchEnabled",
+          "messages",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "GetThreadsResponseDtoItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the thread",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the thread",
+            "example": "Discussion about AI models"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2024-01-01T12:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateThreadInstructionDto": {
+        "type": "object",
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "description": "The instruction for the thread",
+            "example": "Please analyze the attached documents and provide insights on market trends."
+          }
+        },
+        "required": [
+          "instruction"
+        ]
+      },
+      "UpdateThreadModelDto": {
+        "type": "object",
+        "properties": {
+          "modelName": {
+            "type": "string",
+            "description": "The name of the model",
+            "example": "gpt-4"
+          },
+          "modelProvider": {
+            "type": "string",
+            "description": "The provider of the model",
+            "example": "openai",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "microsoft",
+              "ollama"
+            ]
+          }
+        },
+        "required": [
+          "modelName",
+          "modelProvider"
+        ]
+      },
+      "UpdateThreadInternetSearchDto": {
+        "type": "object",
+        "properties": {
+          "isInternetSearchEnabled": {
+            "type": "boolean",
+            "description": "Whether internet search is enabled for the thread",
+            "example": true
+          }
+        },
+        "required": [
+          "isInternetSearchEnabled"
+        ]
+      },
+      "SourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID who owns this source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "file",
+              "url"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "userId",
+          "type",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "FileSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID who owns this source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "file",
+              "url"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "fileType": {
+            "type": "string",
+            "description": "MIME type of the file"
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "Size of the file in bytes"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Path to the stored file"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "userId",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "fileType",
+          "fileSize",
+          "filePath"
+        ]
+      },
+      "RunSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "session",
+            "enum": [
+              "session"
+            ]
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Indicates successful session establishment",
+            "example": true
+          },
+          "streaming": {
+            "type": "boolean",
+            "description": "Indicates if the session is streaming",
+            "example": true
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID for the session",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Session establishment timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "type",
+          "threadId",
+          "timestamp"
+        ]
+      },
+      "RunMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "message",
+            "enum": [
+              "message"
+            ]
+          },
+          "message": {
+            "description": "The message data",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UserMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/ToolResultMessageResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/SystemMessageResponseDto"
+              }
+            ]
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID for the message",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Message timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "type",
+          "message",
+          "threadId",
+          "timestamp"
+        ]
+      },
+      "RunErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "error",
+            "enum": [
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "An error occurred while processing your request"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID where the error occurred",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Error timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "code": {
+            "type": "string",
+            "description": "Optional error code for categorization",
+            "example": "EXECUTION_ERROR"
+          },
+          "details": {
+            "type": "object",
+            "description": "Optional additional error details",
+            "example": {
+              "originalError": "Network timeout"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "message",
+          "threadId",
+          "timestamp"
+        ]
+      },
+      "RunThreadResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "thread",
+            "enum": [
+              "thread"
+            ]
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID that was updated",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "updateType": {
+            "type": "string",
+            "description": "Type of thread update",
+            "example": "title_updated",
+            "enum": [
+              "title_updated"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Updated thread title",
+            "example": "Discussion about AI and machine learning"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Thread update timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "type",
+          "threadId",
+          "updateType",
+          "title",
+          "timestamp"
+        ]
+      },
+      "TextInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of input",
+            "enum": [
+              "text"
+            ],
+            "example": "text"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text content for the inference",
+            "example": "What is the weather forecast for New York tomorrow?"
+          }
+        },
+        "required": [
+          "type",
+          "text"
+        ]
+      },
+      "ToolResultInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of input",
+            "enum": [
+              "tool_result"
+            ],
+            "example": "tool_result"
+          },
+          "toolId": {
+            "type": "string",
+            "description": "The ID of the tool that produced this result",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "toolName": {
+            "type": "string",
+            "description": "The name of the tool that produced this result",
+            "example": "weather_tool"
+          },
+          "result": {
+            "type": "string",
+            "description": "The result data from the tool execution",
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
+          }
+        },
+        "required": [
+          "type",
+          "toolId",
+          "toolName",
+          "result"
+        ]
+      },
+      "SendMessageDto": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "type": "string",
+            "description": "The thread to use for the inference.",
+            "example": "550e8400-e29b-12d3-a456-426614174000"
+          },
+          "input": {
+            "description": "The input to use for the inference",
+            "discriminator": {
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TextInput"
+              },
+              {
+                "$ref": "#/components/schemas/ToolResultInput"
+              }
+            ]
+          },
+          "streaming": {
+            "type": "boolean",
+            "description": "Enable streaming mode for real-time response updates",
+            "example": true,
+            "default": false
+          }
+        },
+        "required": [
+          "threadId",
+          "input"
+        ]
+      },
+      "CreatePromptDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the prompt",
+            "example": "Project Planning Assistant",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the prompt",
+            "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
+      },
+      "PromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the prompt",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the prompt",
+            "example": "Project Planning Assistant"
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the prompt",
+            "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
+          },
+          "userId": {
+            "type": "string",
+            "description": "The unique identifier of the user who owns this prompt",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the prompt was created",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "The date and time when the prompt was last updated",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "content",
+          "userId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdatePromptDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the prompt",
+            "example": "Updated Project Planning Assistant",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the prompt",
+            "example": "You are an expert project planning assistant. Provide comprehensive guidance for project management, including risk assessment and timeline optimization."
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address for authentication",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for authentication",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "SuccessResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status",
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Authentication failed"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address for the user account",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for the user account",
+            "example": "password123"
+          },
+          "orgName": {
+            "type": "string",
+            "description": "Organization name",
+            "example": "My Organization"
+          },
+          "userName": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "orgName",
+          "userName"
+        ]
+      },
+      "MeResponseDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          }
+        },
+        "required": [
+          "email",
+          "role",
+          "name"
+        ]
+      },
+      "CreateInviteDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address of the person to invite",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role to assign to the invited user",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ]
+      },
+      "CreateInviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "inviteToken": {
+            "type": "string",
+            "description": "JWT token for the invite",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "inviteToken"
+        ]
+      },
+      "InviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the invited user",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the invite",
+            "enum": [
+              "pending",
+              "accepted",
+              "expired"
+            ],
+            "example": "pending"
+          },
+          "sentDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was sent",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite expires",
+            "example": "2023-12-08T10:00:00Z"
+          },
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was accepted (if applicable)",
+            "example": "2023-12-02T15:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "status",
+          "sentDate",
+          "expiresAt"
+        ]
+      },
+      "InviteDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the invited user",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the invited user",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the invite",
+            "enum": [
+              "pending",
+              "accepted",
+              "expired"
+            ],
+            "example": "pending"
+          },
+          "sentDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was sent",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite expires",
+            "example": "2023-12-08T10:00:00Z"
+          },
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the invite was accepted (if applicable)",
+            "example": "2023-12-02T15:30:00Z"
+          },
+          "organizationName": {
+            "type": "string",
+            "description": "Name of the organization",
+            "example": "Acme Corporation"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "status",
+          "sentDate",
+          "expiresAt",
+          "organizationName"
+        ]
+      },
+      "AcceptInviteDto": {
+        "type": "object",
+        "properties": {
+          "inviteToken": {
+            "type": "string",
+            "description": "JWT token from the invite",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "userName": {
+            "type": "string",
+            "description": "Name of the user accepting the invite",
+            "example": "John Doe"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user accepting the invite",
+            "example": "password"
+          },
+          "passwordConfirm": {
+            "type": "string",
+            "description": "Confirmation of the password of the user accepting the invite",
+            "example": "password"
+          }
+        },
+        "required": [
+          "inviteToken",
+          "userName",
+          "password",
+          "passwordConfirm"
+        ]
+      },
+      "AcceptInviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "inviteId": {
+            "type": "string",
+            "description": "ID of the accepted invite",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email of the user who accepted the invite",
+            "example": "user@example.com"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user was invited to",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "inviteId",
+          "email",
+          "orgId"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "john.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174001",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the user was created",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "createdAt"
+        ]
+      },
+      "UsersListResponseDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "description": "List of users in the organization",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDto"
+            }
+          }
+        },
+        "required": [
+          "users"
+        ]
+      },
+      "UpdateUserRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "New role for the user",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "admin"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      }
+    }
+  }
+}

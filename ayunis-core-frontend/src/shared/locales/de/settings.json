@@ -1,0 +1,46 @@
+{
+  "layout": {
+    "goBack": "Zurück",
+    "returnToMainApp": "Zur Anwendung zurückkehren",
+    "settings": "Einstellungen",
+    "general": "Allgemein",
+    "account": "Konto"
+  },
+  "account": {
+    "title": "Kontoeinstellungen",
+    "profileInformation": "Profilinformationen",
+    "fullName": "Vollständiger Name",
+    "fullNamePlaceholder": "Geben Sie Ihren vollständigen Namen ein",
+    "fullNameDescription": "Dies ist der Name, der in Ihrem Profil angezeigt wird.",
+    "emailAddress": "E-Mail-Adresse",
+    "emailPlaceholder": "Geben Sie Ihre E-Mail-Adresse ein",
+    "emailDescription": "Wir senden kontobezogene E-Mails an diese Adresse.",
+    "saveChanges": "Änderungen speichern",
+    "password": "Passwort",
+    "currentPassword": "Aktuelles Passwort",
+    "currentPasswordPlaceholder": "Geben Sie Ihr aktuelles Passwort ein",
+    "newPassword": "Neues Passwort",
+    "newPasswordPlaceholder": "Geben Sie Ihr neues Passwort ein",
+    "newPasswordDescription": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "confirmPasswordPlaceholder": "Bestätigen Sie Ihr neues Passwort",
+    "changePassword": "Passwort ändern",
+    "accountActions": "Kontoaktionen",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft."
+  },
+  "general": {
+    "title": "Allgemeine Einstellungen",
+    "appearance": "Erscheinungsbild",
+    "darkMode": "Dunkler Modus",
+    "darkModeDescription": "Zwischen hellen und dunklen Themen wechseln",
+    "languageRegion": "Sprache & Region",
+    "displayLanguage": "Anzeigesprache",
+    "displayLanguageDescription": "Wählen Sie die Sprache für Menüs und Nachrichten",
+    "selectLanguage": "Sprache auswählen",
+    "chat": "Chat",
+    "defaultModelSelection": "Standardmodell",
+    "defaultModelDescription": "Wählen Sie das Standard-KI-Modell für neue Gespräche",
+    "selectDefaultModel": "Standardmodell auswählen"
+  }
+}

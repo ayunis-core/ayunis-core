@@ -1,0 +1,51 @@
+{
+  "page": {
+    "title": "My Prompts"
+  },
+  "emptyState": {
+    "title": "No prompts yet",
+    "description": "Get started by creating your first prompt. Prompts help you set up consistent instructions for your AI conversations."
+  },
+  "card": {
+    "editButton": "Edit",
+    "deleteButton": "Delete",
+    "confirmDelete": {
+      "title": "Delete Prompt",
+      "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Add Prompt",
+    "buttonTextFirst": "Create your first prompt",
+    "title": "Add New Prompt",
+    "description": "Create a new prompt template. Fill in the title and content below.",
+    "form": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Enter prompt title...",
+      "contentLabel": "Content",
+      "contentPlaceholder": "Enter the prompt content..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Prompt",
+      "creating": "Creating..."
+    }
+  },
+  "editDialog": {
+    "title": "Edit Prompt",
+    "description": "Make changes to your prompt here. Click save when you're done.",
+    "form": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Enter prompt title...",
+      "contentLabel": "Content",
+      "contentPlaceholder": "Enter the prompt content..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving..."
+    }
+  }
+}

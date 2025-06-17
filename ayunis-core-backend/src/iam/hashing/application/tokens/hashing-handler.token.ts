@@ -1,0 +1,1 @@
+export const HASHING_HANDLER = 'HASHING_HANDLER';

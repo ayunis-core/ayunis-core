@@ -1,0 +1,70 @@
+{
+  "layout": {
+    "title": "Einstellungen",
+    "goBack": "Zurück",
+    "returnToMainApp": "Zur Anwendung zurückkehren",
+    "settings": "Einstellungen",
+    "users": "Benutzer",
+    "models": "Modelle"
+  },
+  "models": {
+    "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
+    "streaming": "Streaming",
+    "reasoning": "Reasoning"
+  },
+  "users": {
+    "invites": "Einladungen",
+    "users": "Benutzer",
+    "email": "E-Mail",
+    "role": "Rolle",
+    "status": "Status",
+    "sentDate": "Sendedatum",
+    "name": "Name",
+    "joinDate": "Beitrittsdatum",
+    "active": "Aktiv",
+    "pending": "ausstehend",
+    "accepted": "akzeptiert",
+    "rejected": "abgelehnt",
+    "more": "Mehr",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "changeRole": "Zu {{role}} wechseln",
+    "user": "Benutzer",
+    "admin": "Administrator"
+  },
+  "inviteDialog": {
+    "inviteUser": "Benutzer einladen",
+    "dialogTitle": "Benutzer einladen",
+    "dialogDescription": "Senden Sie eine Einladung an einen neuen Benutzer, um Ihrer Organisation beizutreten.",
+    "emailAddress": "E-Mail-Adresse",
+    "emailPlaceholder": "benutzer@beispiel.de",
+    "emailRequired": "E-Mail-Adresse ist erforderlich",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "roleLabel": "Rolle",
+    "roleRequired": "Rolle ist erforderlich",
+    "roleSelectPlaceholder": "Wählen Sie eine Rolle",
+    "roleUser": "Benutzer",
+    "roleAdmin": "Administrator",
+    "cancel": "Abbrechen",
+    "sendInvitation": "Einladung senden",
+    "sending": "Wird gesendet...",
+    "invitationCreatedTitle": "Einladung erfolgreich erstellt",
+    "invitationCreatedDescription": "Die Einladung wurde erstellt. Bitte senden Sie diesen Einladungslink an den Benutzer, damit er Ihrer Organisation beitreten kann.",
+    "inviteToken": "Einladungslink",
+    "copiedToClipboard": "Einladungslink in die Zwischenablage kopiert!",
+    "clickToCopy": "Klicken Sie auf die Schaltfläche, um den Einladungslink zu kopieren",
+    "close": "Schließen"
+  },
+  "confirmations": {
+    "deleteInviteTitle": "Einladung löschen",
+    "deleteInviteDescription": "Sind Sie sicher, dass Sie die Einladung für {{email}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteUserTitle": "Benutzer löschen",
+    "deleteUserDescription": "Sind Sie sicher, dass Sie {{name}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "changeUserRoleTitle": "Benutzerrolle ändern",
+    "changeUserRoleDescription": "Sind Sie sicher, dass Sie die Rolle von {{name}} zu {{role}} ändern möchten?",
+    "confirmText": "Bestätigen",
+    "deleteText": "Löschen",
+    "changeRoleText": "Rolle ändern",
+    "cancelText": "Abbrechen"
+  }
+}

@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ayunis-postgres-prod
+    restart: unless-stopped
+    env_file:
+      - ./core-backend/.env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./core-backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ayunis-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: ayunis-minio-prod
+    restart: unless-stopped
+    env_file:
+      - ./core-backend/.env
+    volumes:
+      - minio-data:/data
+    networks:
+      - ayunis-network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Only expose console port externally if needed
+    ports:
+      - "9001:9001"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: ayunis-app-prod
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    env_file:
+      - ./core-backend/.env
+      - ./core-frontend/.env
+    volumes:
+      - app-uploads:/app/uploads
+    networks:
+      - ayunis-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres-data:
+    driver: local
+  minio-data:
+    driver: local
+  app-uploads:
+    driver: local
+
+networks:
+  ayunis-network:
+    driver: bridge

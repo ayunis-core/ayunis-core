@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+# Install build dependencies for bcrypt and other native modules
+RUN apk add --no-cache python3 make g++ gcc curl
+
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# The entrypoint and command are defined in docker-compose.dev.yml 

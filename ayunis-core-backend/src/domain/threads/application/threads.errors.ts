@@ -1,0 +1,133 @@
+import {
+  ApplicationError,
+  ErrorMetadata,
+} from '../../../common/errors/base.error';
+
+export enum ThreadErrorCode {
+  THREAD_NOT_FOUND = 'THREAD_NOT_FOUND',
+  THREAD_CREATION_FAILED = 'THREAD_CREATION_FAILED',
+  MESSAGE_ADDITION_FAILED = 'MESSAGE_ADDITION_FAILED',
+  SOURCE_ADDITION_FAILED = 'SOURCE_ADDITION_FAILED',
+  SOURCE_REMOVAL_FAILED = 'SOURCE_REMOVAL_FAILED',
+  SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
+  THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
+}
+
+/**
+ * Base thread error that all thread-specific errors should extend
+ */
+export abstract class ThreadError extends ApplicationError {
+  constructor(
+    message: string,
+    code: ThreadErrorCode,
+    statusCode: number = 400,
+    metadata?: ErrorMetadata,
+  ) {
+    super(message, code, statusCode, metadata);
+  }
+}
+
+export class ThreadNotFoundError extends ThreadError {
+  constructor(threadId: string, userId?: string, metadata?: ErrorMetadata) {
+    super(
+      `Thread with ID '${threadId}' not found${userId ? ` for user '${userId}'` : ''}`,
+      ThreadErrorCode.THREAD_NOT_FOUND,
+      404,
+      {
+        threadId,
+        ...(userId && { userId }),
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class ThreadCreationError extends ThreadError {
+  constructor(error: Error, userId?: string, metadata?: ErrorMetadata) {
+    super(
+      `Failed to create thread: ${error.message}`,
+      ThreadErrorCode.THREAD_CREATION_FAILED,
+      500,
+      {
+        originalError: error.message,
+        ...(userId && { userId }),
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class MessageAdditionError extends ThreadError {
+  constructor(threadId: string, error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Failed to add message to thread '${threadId}': ${error.message}`,
+      ThreadErrorCode.MESSAGE_ADDITION_FAILED,
+      500,
+      {
+        threadId,
+        originalError: error.message,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class SourceAdditionError extends ThreadError {
+  constructor(threadId: string, error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Failed to add source to thread '${threadId}': ${error.message}`,
+      ThreadErrorCode.SOURCE_ADDITION_FAILED,
+      500,
+      {
+        threadId,
+        originalError: error.message,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class SourceRemovalError extends ThreadError {
+  constructor(threadId: string, error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Failed to remove source from thread '${threadId}': ${error.message}`,
+      ThreadErrorCode.SOURCE_REMOVAL_FAILED,
+      500,
+      {
+        threadId,
+        originalError: error.message,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class SourceNotFoundError extends ThreadError {
+  constructor(sourceId: string, threadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Source with ID '${sourceId}' not found in thread '${threadId}'`,
+      ThreadErrorCode.SOURCE_NOT_FOUND,
+      404,
+      {
+        sourceId,
+        threadId,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class ThreadUpdateError extends ThreadError {
+  constructor(threadId: string, error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Failed to update thread '${threadId}': ${error.message}`,
+      ThreadErrorCode.THREAD_UPDATE_FAILED,
+      500,
+      {
+        threadId,
+        originalError: error.message,
+        ...metadata,
+      },
+    );
+  }
+}

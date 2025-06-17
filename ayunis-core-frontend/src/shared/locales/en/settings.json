@@ -1,0 +1,46 @@
+{
+  "layout": {
+    "goBack": "Go Back",
+    "returnToMainApp": "Return to main app",
+    "settings": "Settings",
+    "general": "General",
+    "account": "Account"
+  },
+  "account": {
+    "title": "Account Settings",
+    "profileInformation": "Profile Information",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Enter your full name",
+    "fullNameDescription": "This is the name that will be displayed on your profile.",
+    "emailAddress": "Email address",
+    "emailPlaceholder": "Enter your email",
+    "emailDescription": "We'll send account-related emails to this address.",
+    "saveChanges": "Save Changes",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "Enter your new password",
+    "newPasswordDescription": "Password must be at least 8 characters long.",
+    "confirmPassword": "Confirm new password",
+    "confirmPasswordPlaceholder": "Confirm your new password",
+    "changePassword": "Change Password",
+    "accountActions": "Account Actions",
+    "deleteAccount": "Delete Account",
+    "deleteAccountDescription": "Permanently delete your account and all associated data."
+  },
+  "general": {
+    "title": "General Settings",
+    "appearance": "Appearance",
+    "darkMode": "Dark mode",
+    "darkModeDescription": "Switch between light and dark themes",
+    "languageRegion": "Language & Region",
+    "displayLanguage": "Display language",
+    "displayLanguageDescription": "Choose the language for menus and messages",
+    "selectLanguage": "Select language",
+    "chat": "Chat",
+    "defaultModelSelection": "Default model",
+    "defaultModelDescription": "Choose the default AI model for new conversations",
+    "selectDefaultModel": "Select default model"
+  }
+}

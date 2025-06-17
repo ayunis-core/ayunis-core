@@ -1,0 +1,22 @@
+{
+  "chat": {
+    "untitled": "Ohne Titel",
+    "deleteThread": "Thread löschen",
+    "deleteThreadTitle": "Thread löschen",
+    "deleteThreadDescription": "Sind Sie sicher, dass Sie diesen Thread löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteText": "Löschen",
+    "cancelText": "Abbrechen",
+    "errorDeleteThread": "Thread konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "aiThinking": "KI denkt nach...",
+    "usingTool": "Tool wird verwendet: {{toolName}}",
+    "resultFrom": "Ergebnis von {{toolName}}:",
+    "unknownMessageType": "Unbekannter Nachrichtentyp"
+  },
+  "newChat": {
+    "title": "Wie kann ich Ihnen heute helfen?",
+    "description": "Fragen Sie mich alles über Dokumente, Websites oder Code.",
+    "noModelTitle": "Kein Modell verfügbar",
+    "noModelDescription": "Es konnte kein KI-Modell gefunden werden. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
+    "configureModel": "Modell konfigurieren"
+  }
+}

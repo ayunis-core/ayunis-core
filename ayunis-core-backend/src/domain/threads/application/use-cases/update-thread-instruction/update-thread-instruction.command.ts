@@ -1,0 +1,9 @@
+import { UUID } from 'crypto';
+
+export class UpdateThreadInstructionCommand {
+  constructor(
+    public readonly threadId: UUID,
+    public readonly userId: UUID,
+    public readonly instruction: string,
+  ) {}
+}

@@ -1,0 +1,32 @@
+{
+  "sidebar": {
+    "appName": "Ayunis Core",
+    "appTagline": "whoop whoop",
+    "newChat": "Neuer Chat",
+    "prompts": "Prompts",
+    "accountSettings": "Konto-Einstellungen",
+    "adminSettings": "Admin-Einstellungen",
+    "signOut": "Abmelden",
+    "chats": "Chats",
+    "loadingChats": "Chats werden geladen...",
+    "failedToLoadChats": "Chats konnten nicht geladen werden",
+    "emptyChatsTitle": "Ihre Chats werden hier angezeigt.",
+    "emptyChatsDescription": "Interagieren Sie mit AyunisCore und stellen Sie Fragen.",
+    "untitled": "Ohne Titel",
+    "more": "Mehr",
+    "deleteChat": "Chat löschen",
+    "deleteChatTitle": "Chat löschen",
+    "deleteChatDescription": "Sind Sie sicher, dass Sie diesen Chat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteChatConfirm": "Löschen",
+    "deleteChatCancel": "Abbrechen"
+  },
+  "chatInput": {
+    "placeholder": "Stellen Sie eine Frage in Ayunis Core...",
+    "selectPrompt": "Fügen Sie einen Prompt aus Ihrer Bibliothek hinzu",
+    "promptsLoadError": "Fehler beim Laden der Prompts",
+    "noPromptsAvailable": "Keine Prompts verfügbar"
+  },
+  "common": {
+    "loading": "Laden..."
+  }
+}

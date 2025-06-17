@@ -1,0 +1,70 @@
+{
+  "layout": {
+    "title": "Settings",
+    "goBack": "Go Back",
+    "returnToMainApp": "Return to main app",
+    "settings": "Settings",
+    "users": "Users",
+    "models": "Models"
+  },
+  "models": {
+    "noModelsAvailable": "No models available. Please check your configuration.",
+    "streaming": "Streaming",
+    "reasoning": "Reasoning"
+  },
+  "users": {
+    "invites": "Invites",
+    "users": "Users",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "sentDate": "Sent Date",
+    "name": "Name",
+    "joinDate": "Join Date",
+    "active": "Active",
+    "pending": "pending",
+    "accepted": "accepted",
+    "rejected": "rejected",
+    "more": "More",
+    "edit": "Edit",
+    "delete": "Delete",
+    "changeRole": "Change to {{role}}",
+    "user": "User",
+    "admin": "Admin"
+  },
+  "inviteDialog": {
+    "inviteUser": "Invite User",
+    "dialogTitle": "Invite User",
+    "dialogDescription": "Send an invitation to a new user to join your organization.",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "user@example.com",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "roleLabel": "Role",
+    "roleRequired": "Role is required",
+    "roleSelectPlaceholder": "Select a role",
+    "roleUser": "User",
+    "roleAdmin": "Admin",
+    "cancel": "Cancel",
+    "sendInvitation": "Send Invitation",
+    "sending": "Sending...",
+    "invitationCreatedTitle": "Invitation Created Successfully",
+    "invitationCreatedDescription": "The invitation has been created. Please send this invitation link to the user so they can join your organization.",
+    "inviteToken": "Invitation Link",
+    "copiedToClipboard": "Invitation link copied to clipboard!",
+    "clickToCopy": "Click the copy button to copy the invitation link",
+    "close": "Close"
+  },
+  "confirmations": {
+    "deleteInviteTitle": "Delete Invite",
+    "deleteInviteDescription": "Are you sure you want to delete the invite for {{email}}? This action cannot be undone.",
+    "deleteUserTitle": "Delete User",
+    "deleteUserDescription": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+    "changeUserRoleTitle": "Change User Role",
+    "changeUserRoleDescription": "Are you sure you want to change {{name}}'s role to {{role}}?",
+    "confirmText": "Confirm",
+    "deleteText": "Delete",
+    "changeRoleText": "Change Role",
+    "cancelText": "Cancel"
+  }
+}
