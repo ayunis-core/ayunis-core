@@ -10,6 +10,9 @@ import type {
   ToolUseMessageContent,
   ToolResultMessageContent,
 } from "../model/openapi";
+import brandIconLight from "@/shared/assets/brand/brand-icon-round-light.svg";
+import brandIconDark from "@/shared/assets/brand/brand-icon-round-dark.svg";
+import { useTheme } from "@/features/theme";
 
 interface ChatMessageProps {
   message?: Message;
@@ -90,10 +93,16 @@ const renderMessageContent = (message: Message, t: any) => {
 };
 
 // Helper function to get avatar icon based on role
-const getAvatarIcon = (role: string) => {
+const getAvatarIcon = (role: string, theme: string) => {
   switch (role) {
     case "assistant":
-      return <Bot className="h-4 w-4" />;
+      return (
+        <img
+          src={theme === "dark" ? brandIconDark : brandIconLight}
+          alt="Ayunis Logo"
+          className="h-8 w-8 object-contain"
+        />
+      );
     case "user":
       return <User className="h-4 w-4" />;
     case "system":
@@ -140,7 +149,7 @@ export default function ChatMessage({
   isLoading = false,
 }: ChatMessageProps) {
   const { t } = useTranslation("chats");
-
+  const { theme } = useTheme();
   // Show loading indicator when isLoading is true and no message
   if (isLoading && !message) {
     return (
@@ -189,7 +198,7 @@ export default function ChatMessage({
       <div className="flex flex-col items-start gap-2">
         <Avatar className="h-8 w-8">
           <AvatarFallback className={getAvatarStyle(message.role)}>
-            {getAvatarIcon(message.role)}
+            {getAvatarIcon(message.role, theme)}
           </AvatarFallback>
         </Avatar>
         <div className="max-w-[70%] space-y-1">
@@ -204,7 +213,7 @@ export default function ChatMessage({
     <div className="flex gap-3 justify-start">
       <Avatar className="h-8 w-8">
         <AvatarFallback className={getAvatarStyle(message.role)}>
-          {getAvatarIcon(message.role)}
+          {getAvatarIcon(message.role, theme)}
         </AvatarFallback>
       </Avatar>
       <div className="max-w-[70%] space-y-1">

@@ -32,8 +32,12 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import { useNavigate } from "@tanstack/react-router";
+import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
+import brandFullDark from "@/shared/assets/brand/brand-full-dark.svg";
+import { useTheme } from "@/features/theme";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { theme } = useTheme();
   const { user } = useMe();
   const { logout } = useLogout();
   const { t } = useTranslation("common");
@@ -64,17 +68,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <BookOpen className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    {t("sidebar.appName")}
-                  </span>
-                  <span className="truncate text-xs">
-                    {t("sidebar.appTagline")}
-                  </span>
-                </div>
+                <img
+                  src={theme === "dark" ? brandFullDark : brandFullLight}
+                  alt="Ayunis Logo"
+                  className="w-full max-w-32"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
