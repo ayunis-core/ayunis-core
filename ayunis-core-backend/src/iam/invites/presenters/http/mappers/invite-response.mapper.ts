@@ -40,7 +40,7 @@ export class InviteResponseMapper {
       id: inviteWithOrg.id,
       email: inviteWithOrg.email,
       role: inviteWithOrg.role,
-      status: inviteWithOrg.status as InviteStatus,
+      status: inviteWithOrg.status,
       sentDate: inviteWithOrg.sentDate,
       expiresAt: inviteWithOrg.expiresAt,
       acceptedAt: inviteWithOrg.acceptedAt,

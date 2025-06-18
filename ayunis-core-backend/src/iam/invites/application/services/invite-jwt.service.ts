@@ -71,7 +71,7 @@ export class InviteJwtService {
 
   decodeInviteToken(token: string): InviteJwtPayload | null {
     try {
-      const decoded = this.jwtService.decode(token) as InviteJwtPayload;
+      const decoded = this.jwtService.decode(token);
       return decoded;
     } catch (error) {
       this.logger.error('Failed to decode invite token', { error });

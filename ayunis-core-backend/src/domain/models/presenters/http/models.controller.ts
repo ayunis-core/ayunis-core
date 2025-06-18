@@ -55,6 +55,20 @@ import { GetOrgDefaultModelQuery } from '../../application/use-cases/get-org-def
 import { ManageOrgDefaultModelUseCase } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
 import { ManageOrgDefaultModelCommand } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.command';
 import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
+import { CreateCustomToolUseCase } from 'src/domain/tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
+import { CreateCustomToolCommand } from 'src/domain/tools/application/use-cases/create-custom-tool/create-custom-tool.command';
+import {
+  ToolSpecificationDto,
+  UserMessageRequestDto,
+  SystemMessageRequestDto,
+  AssistantMessageRequestDto,
+  ToolResultMessageRequestDto,
+  TextMessageContentRequestDto,
+  ToolUseMessageContentRequestDto,
+  ToolResultMessageContentRequestDto,
+} from './dto/inference-request.dto';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { MessageRequestDtoMapper } from './mappers/message-request-dto.mapper';
 
 @ApiTags('models')
 @Controller('models')
@@ -75,6 +89,8 @@ export class ModelsController {
     private readonly getUserDefaultModelUseCase: GetUserDefaultModelUseCase,
     private readonly getOrgDefaultModelUseCase: GetOrgDefaultModelUseCase,
     private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
+    private readonly createCustomToolUseCase: CreateCustomToolUseCase,
+    private readonly messageRequestDtoMapper: MessageRequestDtoMapper,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
   ) {}
@@ -401,7 +417,17 @@ export class ModelsController {
     status: 500,
     description: 'Internal server error or model provider error',
   })
-  @ApiExtraModels(InferenceResponse)
+  @ApiExtraModels(
+    InferenceResponse,
+    ToolSpecificationDto,
+    UserMessageRequestDto,
+    SystemMessageRequestDto,
+    AssistantMessageRequestDto,
+    ToolResultMessageRequestDto,
+    TextMessageContentRequestDto,
+    ToolUseMessageContentRequestDto,
+    ToolResultMessageContentRequestDto,
+  )
   async inference(
     @Body() inferenceRequestDto: InferenceRequestDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
@@ -414,10 +440,30 @@ export class ModelsController {
     });
     const model = await this.getPermittedModelUseCase.execute(getModelQuery);
 
+    // Create CustomTool entities from tool specifications
+    const tools: Tool[] = [];
+    if (inferenceRequestDto.tools && inferenceRequestDto.tools.length > 0) {
+      for (const toolSpec of inferenceRequestDto.tools) {
+        const createToolCommand = new CreateCustomToolCommand(
+          toolSpec.name,
+          toolSpec.description,
+          toolSpec.parameters,
+        );
+        const customTool =
+          await this.createCustomToolUseCase.execute(createToolCommand);
+        tools.push(customTool);
+      }
+    }
+
+    // Convert MessageRequestDto[] to Message[]
+    const messages = this.messageRequestDtoMapper.fromDtoArray(
+      inferenceRequestDto.messages,
+    );
+
     const inferenceCommand = new GetInferenceCommand({
       model: model.model,
-      messages: inferenceRequestDto.messages,
-      tools: inferenceRequestDto.tools || [],
+      messages: messages,
+      tools: tools,
       toolChoice: inferenceRequestDto.toolChoice || ModelToolChoice.AUTO,
     });
 

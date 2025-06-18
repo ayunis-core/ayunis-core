@@ -33,6 +33,8 @@ import { DeleteUserDefaultModelUseCase } from './application/use-cases/delete-us
 import { GetUserDefaultModelUseCase } from './application/use-cases/get-user-default-model/get-user-default-model.use-case';
 import { GetOrgDefaultModelUseCase } from './application/use-cases/get-org-default-model/get-org-default-model.use-case';
 import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
+import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
+import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
 
 @Module({
   imports: [
@@ -44,6 +46,7 @@ import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org
     ModelRegistry,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
+    MessageRequestDtoMapper,
     AnthropicStreamInferenceHandler,
     OpenAIStreamInferenceHandler,
     {
@@ -84,6 +87,7 @@ import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org
       ],
     },
     // Use Cases
+    CreateCustomToolUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     GetAvailableModelUseCase,
