@@ -5,6 +5,8 @@ import { ActiveUser } from '../../../domain/active-user.entity';
 import { InvalidTokenError } from '../../authentication.errors';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 
 interface JwtPayload {
   sub: UUID;
@@ -18,7 +20,10 @@ interface JwtPayload {
 export class GetCurrentUserUseCase {
   private readonly logger = new Logger(GetCurrentUserUseCase.name);
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly findUserByIdUseCase: FindUserByIdUseCase,
+  ) {}
 
   async execute(command: GetCurrentUserCommand): Promise<ActiveUser> {
     this.logger.log('getCurrentUser');
@@ -44,12 +49,16 @@ export class GetCurrentUserUseCase {
         name: payload.name,
       });
 
+      const user = await this.findUserByIdUseCase.execute(
+        new FindUserByIdQuery(payload.sub),
+      );
+
       return new ActiveUser(
-        payload.sub,
-        payload.email,
-        payload.role,
-        payload.orgId,
-        payload.name,
+        user.id,
+        user.email,
+        user.role,
+        user.orgId,
+        user.name,
       );
     } catch (error: unknown) {
       this.logger.error('Token verification failed', { error });

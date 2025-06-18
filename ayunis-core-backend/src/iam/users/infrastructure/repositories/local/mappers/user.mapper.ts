@@ -10,6 +10,8 @@ export class UserMapper {
       orgId: entity.orgId,
       passwordHash: entity.passwordHash,
       name: entity.name,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     });
   }
 
@@ -21,6 +23,8 @@ export class UserMapper {
     entity.orgId = domain.orgId;
     entity.passwordHash = domain.passwordHash;
     entity.name = domain.name;
+    entity.updatedAt = domain.updatedAt;
+    entity.createdAt = domain.createdAt;
     return entity;
   }
 }

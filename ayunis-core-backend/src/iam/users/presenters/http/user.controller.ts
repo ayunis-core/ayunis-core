@@ -30,14 +30,16 @@ import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delet
 import { DeleteUserCommand } from '../../application/use-cases/delete-user/delete-user.command';
 import { UpdateUserRoleUseCase } from '../../application/use-cases/update-user-role/update-user-role.use-case';
 import { UpdateUserRoleCommand } from '../../application/use-cases/update-user-role/update-user-role.command';
+import { UpdateUserNameUseCase } from '../../application/use-cases/update-user-name/update-user-name.use-case';
+import { UpdateUserNameCommand } from '../../application/use-cases/update-user-name/update-user-name.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
 import {
   UsersListResponseDto,
   UserResponseDto,
 } from './dtos/user-response.dto';
 import { UpdateUserRoleDto } from './dtos/update-user-role.dto';
+import { UpdateUserNameDto } from './dtos/update-user-name.dto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { Role } from '@mistralai/mistralai/models/components/systemmessage';
 import { UserRole } from '../../domain/value-objects/role.object';
 
 @ApiTags('Users')
@@ -50,6 +52,7 @@ export class UserController {
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly updateUserRoleUseCase: UpdateUserRoleUseCase,
+    private readonly updateUserNameUseCase: UpdateUserNameUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
   ) {}
 
@@ -132,6 +135,50 @@ export class UserController {
 
     const updatedUser = await this.updateUserRoleUseCase.execute(
       new UpdateUserRoleCommand(userId, updateUserRoleDto.role),
+    );
+
+    return this.userResponseDtoMapper.toDto(updatedUser);
+  }
+
+  @Patch('name')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update user name',
+    description:
+      "Update the name of a user. Users can only update their own name, or admins can update any user's name in their organization.",
+  })
+  @ApiBody({
+    type: UpdateUserNameDto,
+    description: 'New name information',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User name successfully updated',
+    type: UserResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid name value',
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      "User not authenticated or not authorized to update this user's name",
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred while updating user name',
+  })
+  async updateUserName(
+    @Body() updateUserNameDto: UpdateUserNameDto,
+    @CurrentUser(UserProperty.ID) currentUserId: UUID,
+  ): Promise<UserResponseDto> {
+    this.logger.log('updateUserName', {
+      newName: updateUserNameDto.name,
+    });
+
+    const updatedUser = await this.updateUserNameUseCase.execute(
+      new UpdateUserNameCommand(currentUserId, updateUserNameDto.name),
     );
 
     return this.userResponseDtoMapper.toDto(updatedUser);

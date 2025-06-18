@@ -8,7 +8,7 @@
   },
   "account": {
     "title": "Kontoeinstellungen",
-    "profileInformation": "Profilinformationen",
+    "profileInformation": "Profil",
     "fullName": "Vollständiger Name",
     "fullNamePlaceholder": "Geben Sie Ihren vollständigen Namen ein",
     "fullNameDescription": "Dies ist der Name, der in Ihrem Profil angezeigt wird.",
@@ -16,6 +16,7 @@
     "emailPlaceholder": "Geben Sie Ihre E-Mail-Adresse ein",
     "emailDescription": "Wir senden kontobezogene E-Mails an diese Adresse.",
     "saveChanges": "Änderungen speichern",
+    "nameUpdatedSuccessfully": "Name erfolgreich aktualisiert",
     "password": "Passwort",
     "currentPassword": "Aktuelles Passwort",
     "currentPasswordPlaceholder": "Geben Sie Ihr aktuelles Passwort ein",

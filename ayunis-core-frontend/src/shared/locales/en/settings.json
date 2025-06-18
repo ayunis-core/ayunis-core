@@ -16,6 +16,7 @@
     "emailPlaceholder": "Enter your email",
     "emailDescription": "We'll send account-related emails to this address.",
     "saveChanges": "Save Changes",
+    "nameUpdatedSuccessfully": "Name updated successfully",
     "password": "Password",
     "currentPassword": "Current password",
     "currentPasswordPlaceholder": "Enter your current password",

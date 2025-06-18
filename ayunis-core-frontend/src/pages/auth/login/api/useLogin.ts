@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuthenticationControllerLogin } from "@/shared/api/generated/ayunisCoreAPI";
-import { loginFormSchema, type LoginFormValues } from "./loginSchema";
+import { loginFormSchema, type LoginFormValues } from "../model/loginSchema";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { showError } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";

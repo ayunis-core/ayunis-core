@@ -18,6 +18,7 @@ import { CreateAdminUserUseCase } from './application/use-cases/create-admin-use
 import { CreateRegularUserUseCase } from './application/use-cases/create-regular-user/create-regular-user.use-case';
 import { ValidateUserUseCase } from './application/use-cases/validate-user/validate-user.use-case';
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
+import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
@@ -48,6 +49,7 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     CreateRegularUserUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
+    UpdateUserNameUseCase,
     // Mappers
     UserResponseDtoMapper,
   ],

@@ -135,7 +135,7 @@ export class LocalUsersRepository extends UsersRepository {
       const userEntity = UserMapper.toEntity(user);
       const savedUserEntity = await this.userRepository.save(userEntity);
       this.logger.debug('User updated successfully', {
-        userId: savedUserEntity.id,
+        user: savedUserEntity,
       });
       return UserMapper.toDomain(savedUserEntity);
     } catch (error) {

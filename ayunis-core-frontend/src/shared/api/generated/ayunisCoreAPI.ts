@@ -71,6 +71,7 @@ import type {
   UpdateThreadInstructionDto,
   UpdateThreadInternetSearchDto,
   UpdateThreadModelDto,
+  UpdateUserNameDto,
   UpdateUserRoleDto,
   UserResponseDto,
   UsersListResponseDto
@@ -4401,6 +4402,71 @@ export const useUserControllerUpdateUserRole = <TError = void,
       > => {
 
       const mutationOptions = getUserControllerUpdateUserRoleMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update the name of a user. Users can only update their own name, or admins can update any user's name in their organization.
+ * @summary Update user name
+ */
+export const userControllerUpdateUserName = (
+    updateUserNameDto: UpdateUserNameDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserResponseDto>(
+      {url: `/users/name`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserNameDto
+    },
+      );
+    }
+  
+
+
+export const getUserControllerUpdateUserNameMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext> => {
+
+const mutationKey = ['userControllerUpdateUserName'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdateUserName>>, {data: UpdateUserNameDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerUpdateUserName(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerUpdateUserNameMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdateUserName>>>
+    export type UserControllerUpdateUserNameMutationBody = UpdateUserNameDto
+    export type UserControllerUpdateUserNameMutationError = void
+
+    /**
+ * @summary Update user name
+ */
+export const useUserControllerUpdateUserName = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerUpdateUserName>>,
+        TError,
+        {data: UpdateUserNameDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerUpdateUserNameMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

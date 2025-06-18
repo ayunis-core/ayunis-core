@@ -9,7 +9,7 @@ import {
 } from "@/shared/ui/shadcn/form";
 import { Input } from "@/shared/ui/shadcn/input";
 import OnboardingLayout from "@/layouts/onboarding-layout";
-import { useLogin } from "../api";
+import { useLogin } from "../api/useLogin";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 

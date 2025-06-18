@@ -5,7 +5,7 @@ import path from "path";
 
 // Check if we're running from the correct directory
 const currentDirName = path.basename(process.cwd());
-if (currentDirName !== "core-frontend") {
+if (currentDirName !== "ayunis-core-frontend") {
   console.error(
     "❌ Error: This script must be executed from the core-frontend directory",
   );

@@ -1,4 +1,5 @@
 import { SettingsLayout } from "../../settings-layout";
+import { ProfileInformationCard } from "./ProfileInformationCard";
 import {
   Card,
   CardContent,
@@ -11,49 +12,18 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { useTranslation } from "react-i18next";
 
-export default function AccountSettingsPage() {
+export default function AccountSettingsPage({
+  user,
+}: {
+  user: { name: string; email: string };
+}) {
   const { t } = useTranslation("settings");
 
   return (
     <SettingsLayout title={t("account.title")}>
       <div className="space-y-4">
         {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("account.profileInformation")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="full-name">{t("account.fullName")}</Label>
-              <Input
-                id="full-name"
-                type="text"
-                placeholder={t("account.fullNamePlaceholder")}
-                defaultValue="John Doe"
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("account.fullNameDescription")}
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="email">{t("account.emailAddress")}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t("account.emailPlaceholder")}
-                defaultValue="john.doe@example.com"
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("account.emailDescription")}
-              </p>
-            </div>
-
-            <div className="flex justify-end">
-              <Button>{t("account.saveChanges")}</Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ProfileInformationCard user={user} />
 
         {/* Password Settings */}
         <Card>
