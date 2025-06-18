@@ -10,9 +10,9 @@ import { ToolResultMessage } from '../../../messages/domain/messages/tool-result
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { Mistral } from '@mistralai/mistralai';
 import {
-  ToolCall,
-  Tool,
-  Messages,
+  ToolCall as MistralToolCall,
+  Tool as MistralTool,
+  Messages as MistralMessages,
   ToolChoiceEnum as MistralToolChoiceEnum,
   ToolChoice as MistralToolChoice,
 } from '@mistralai/mistralai/models/components';
@@ -67,7 +67,7 @@ export class MistralInferenceHandler extends InferenceHandler {
     return modelResponse;
   }
 
-  private convertTool(tool: ToolEntity): Tool {
+  private convertTool(tool: ToolEntity): MistralTool {
     return {
       type: 'function' as const,
       function: {
@@ -78,16 +78,16 @@ export class MistralInferenceHandler extends InferenceHandler {
     };
   }
 
-  private convertMessages(messages: Message[]): Messages[] {
-    const convertedMessages: Messages[] = [];
+  private convertMessages(messages: Message[]): MistralMessages[] {
+    const convertedMessages: MistralMessages[] = [];
     for (const message of messages) {
       convertedMessages.push(...this.convertMessage(message));
     }
     return convertedMessages;
   }
 
-  private convertMessage(message: Message): Messages[] {
-    const convertedMessages: Messages[] = [];
+  private convertMessage(message: Message): MistralMessages[] {
+    const convertedMessages: MistralMessages[] = [];
     // User Message
     if (message instanceof UserMessage) {
       for (const content of message.content) {
@@ -108,7 +108,8 @@ export class MistralInferenceHandler extends InferenceHandler {
 
     if (message instanceof AssistantMessage) {
       let assistantTextMessageContent: string | undefined = undefined;
-      let assistantToolUseMessageContent: ToolCall[] | undefined = undefined;
+      let assistantToolUseMessageContent: MistralToolCall[] | undefined =
+        undefined;
 
       for (const content of message.content) {
         // Text Message Content
@@ -240,7 +241,7 @@ export class MistralInferenceHandler extends InferenceHandler {
     return modelResponse;
   }
 
-  private parseToolCall(toolCall: ToolCall): {
+  private parseToolCall(toolCall: MistralToolCall): {
     id: string | undefined;
     name: string;
     params: { [k: string]: any } | string;

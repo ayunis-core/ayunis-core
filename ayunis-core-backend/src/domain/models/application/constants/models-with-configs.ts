@@ -54,15 +54,15 @@ export const ALL_MODELS: Array<ModelWithConfig> = [
   },
 
   // MISTRAL MODELS
-  // {
-  //   model: new Model('mistral-large-latest', ModelProvider.MISTRAL),
-  //   config: new ModelConfig({
-  //     displayName: 'Mistral Large',
-  //     canStream: true,
-  //     isReasoning: true,
-  //     isArchived: false,
-  //   }),
-  // },
+  {
+    model: new Model('mistral-large-latest', ModelProvider.MISTRAL),
+    config: new ModelConfig({
+      displayName: 'Mistral Large',
+      canStream: true,
+      isReasoning: false,
+      isArchived: false,
+    }),
+  },
   // {
   //   model: new Model('codestral-latest', ModelProvider.MISTRAL),
   //   config: new ModelConfig({

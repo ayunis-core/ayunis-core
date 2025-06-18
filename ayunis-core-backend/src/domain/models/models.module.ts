@@ -35,6 +35,7 @@ import { GetOrgDefaultModelUseCase } from './application/use-cases/get-org-defau
 import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
 import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
 import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
+import { MistralStreamInferenceHandler } from './infrastructure/stream-inference/mistral.stream-inference';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-c
     MessageRequestDtoMapper,
     AnthropicStreamInferenceHandler,
     OpenAIStreamInferenceHandler,
+    MistralStreamInferenceHandler,
     {
       provide: MISTRAL_INFERENCE_HANDLER,
       useClass: MistralInferenceHandler,
@@ -63,13 +65,18 @@ import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-c
     },
     {
       provide: StreamInferenceHandlerRegistry,
-      useFactory: (anthropicHandler, openaiHandler) => {
+      useFactory: (anthropicHandler, openaiHandler, mistralHandler) => {
         const registry = new StreamInferenceHandlerRegistry();
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
+        registry.register(ModelProvider.MISTRAL, mistralHandler);
         return registry;
       },
-      inject: [AnthropicStreamInferenceHandler, OpenAIStreamInferenceHandler],
+      inject: [
+        AnthropicStreamInferenceHandler,
+        OpenAIStreamInferenceHandler,
+        MistralStreamInferenceHandler,
+      ],
     },
     {
       provide: InferenceHandlerRegistry,
