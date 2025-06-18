@@ -10,7 +10,7 @@ export const ALL_MODELS: Array<ModelWithConfig> = [
     config: new ModelConfig({
       displayName: 'GPT-4.1',
       canStream: true,
-      isReasoning: true,
+      isReasoning: false,
       isArchived: false,
     }),
   },
@@ -39,7 +39,7 @@ export const ALL_MODELS: Array<ModelWithConfig> = [
     config: new ModelConfig({
       displayName: 'Claude Sonnet 4',
       canStream: true,
-      isReasoning: true,
+      isReasoning: false,
       isArchived: false,
     }),
   },
@@ -48,28 +48,28 @@ export const ALL_MODELS: Array<ModelWithConfig> = [
     config: new ModelConfig({
       displayName: 'Claude 3.7 Sonnet',
       canStream: true,
-      isReasoning: true,
+      isReasoning: false,
       isArchived: false,
     }),
   },
 
   // MISTRAL MODELS
-  {
-    model: new Model('mistral-large-latest', ModelProvider.MISTRAL),
-    config: new ModelConfig({
-      displayName: 'Mistral Large',
-      canStream: true,
-      isReasoning: true,
-      isArchived: false,
-    }),
-  },
-  {
-    model: new Model('codestral-latest', ModelProvider.MISTRAL),
-    config: new ModelConfig({
-      displayName: 'Codestral',
-      canStream: true,
-      isReasoning: true,
-      isArchived: false,
-    }),
-  },
+  // {
+  //   model: new Model('mistral-large-latest', ModelProvider.MISTRAL),
+  //   config: new ModelConfig({
+  //     displayName: 'Mistral Large',
+  //     canStream: true,
+  //     isReasoning: true,
+  //     isArchived: false,
+  //   }),
+  // },
+  // {
+  //   model: new Model('codestral-latest', ModelProvider.MISTRAL),
+  //   config: new ModelConfig({
+  //     displayName: 'Codestral',
+  //     canStream: true,
+  //     isReasoning: true,
+  //     isArchived: false,
+  //   }),
+  // },
 ];
