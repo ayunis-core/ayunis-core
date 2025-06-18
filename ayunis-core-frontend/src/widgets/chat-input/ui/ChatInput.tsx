@@ -3,8 +3,6 @@ import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/shared/ui/shadcn/button";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
-import AddSourceButton from "./AddSourceButton";
-import ToolsButton from "./ToolsButton";
 import ModelSelector from "./ModelSelector";
 import PromptLibraryButton from "./PromptLibraryButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
@@ -28,10 +26,6 @@ export default function ChatInput({
   isStreaming,
   onModelChange,
   onSend,
-  internetSearch,
-  onInternetSearchChange,
-  codeExecution,
-  onCodeExecutionChange,
   prefilledPrompt,
 }: ChatInputProps) {
   const [isFocused, setIsFocused] = useState<boolean>(false);
@@ -80,14 +74,14 @@ export default function ChatInput({
               <div className="flex-shrink-0 flex space-x-2">
                 <ModelSelector selectedModel={model} onChange={onModelChange} />
                 <PromptLibraryButton onPromptSelect={handlePromptSelect} />
-                <ToolsButton
+                {/* <ToolsButton
                   internetSearch={internetSearch}
                   codeExecution={codeExecution}
                   onInternetSearchChange={onInternetSearchChange}
                   onCodeExecutionChange={onCodeExecutionChange}
                 />
 
-                <AddSourceButton threadId={"1"} />
+                <AddSourceButton threadId={"1"} /> */}
               </div>
 
               {/* Right side */}
