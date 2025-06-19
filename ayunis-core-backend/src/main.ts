@@ -10,7 +10,6 @@ import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-option
 
 import { AppModule } from './app/app.module';
 import { ApplicationErrorFilter } from './common/filters/application-error.filter';
-import dataSource from './db/datasource';
 
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;
@@ -20,47 +19,10 @@ class Bootstrap {
       logger: WinstonModule.createLogger({ instance: logger }),
     });
 
-    await this.runMigrationsInProduction();
-
     this.configureApp(app);
     await app.listen(this.PORT);
 
     Logger.log(`🚀 Application is running on http://localhost:${this.PORT}`);
-  }
-
-  private static async runMigrationsInProduction() {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    if (!isProduction) {
-      Logger.log('⏭️  Skipping migrations (not in production mode)');
-      return;
-    }
-
-    try {
-      Logger.log('🔄 Running database migrations...');
-
-      // Initialize the datasource if not already initialized
-      if (!dataSource.isInitialized) {
-        await dataSource.initialize();
-      }
-
-      // Run pending migrations
-      const migrations = await dataSource.runMigrations({
-        transaction: 'each', // Run each migration in its own transaction
-      });
-
-      if (migrations.length > 0) {
-        Logger.log(`✅ Successfully ran ${migrations.length} migration(s):`);
-        migrations.forEach((migration) => {
-          Logger.log(`   - ${migration.name}`);
-        });
-      } else {
-        Logger.log('✅ Database is up to date - no migrations to run');
-      }
-    } catch (error) {
-      Logger.error('❌ Failed to run database migrations:', error);
-      throw new Error(`Migration failed: ${error.message}`);
-    }
   }
 
   private static configureApp(

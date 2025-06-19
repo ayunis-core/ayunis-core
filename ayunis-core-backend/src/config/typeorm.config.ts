@@ -30,6 +30,7 @@ const productionConfig: DataSourceOptions = {
   // Minimal logging in production
   logging: ['error'],
   synchronize: false,
+  migrationsRun: true,
 };
 
 // Determine which configuration to use based on NODE_ENV
