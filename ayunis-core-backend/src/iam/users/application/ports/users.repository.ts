@@ -8,6 +8,7 @@ export abstract class UsersRepository {
   abstract findManyByOrgId(orgId: UUID): Promise<User[]>;
   abstract create(user: User): Promise<User>;
   abstract update(user: User): Promise<User>;
+  // abstract changePassword(userId: UUID, password: string): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
   abstract validateUser(email: string, password: string): Promise<User>;
   abstract isValidPassword(password: string): Promise<boolean>;

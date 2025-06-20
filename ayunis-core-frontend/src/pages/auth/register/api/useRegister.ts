@@ -21,7 +21,7 @@ export function useRegister() {
     },
   });
 
-  const onSubmit = (values: RegisterFormValues) => {
+  function onSubmit(values: RegisterFormValues) {
     registerMutation.mutate(
       {
         data: {
@@ -33,7 +33,6 @@ export function useRegister() {
       },
       {
         onSuccess: () => {
-          // Redirect to login or dashboard after successful registration
           navigate({ to: "/login" });
         },
         onError: (error) => {
@@ -44,7 +43,7 @@ export function useRegister() {
         },
       },
     );
-  };
+  }
 
   return {
     form,
