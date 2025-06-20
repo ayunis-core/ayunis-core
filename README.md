@@ -79,7 +79,7 @@ docker compose up -d --build
 
 ## 📚 Resources
 
-- **[Documentation](https://todo.de)**
+- **Documentation (Coming Soon)**
 - **[Contributing Guide](CONTRIBUTING.md)**
 - **[Deployment Guide](DEPLOYMENT.md)**
 - **[License](LICENSE.md)**
