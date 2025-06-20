@@ -54,6 +54,15 @@ export const ALL_MODELS: Array<ModelWithConfig> = [
   },
 
   // MISTRAL MODELS
+  // {
+  //   model: new Model('magistral-medium-2506', ModelProvider.MISTRAL),
+  //   config: new ModelConfig({
+  //     displayName: 'Magistral Medium',
+  //     canStream: true,
+  //     isReasoning: true,
+  //     isArchived: false,
+  //   }),
+  // },
   {
     model: new Model('mistral-large-latest', ModelProvider.MISTRAL),
     config: new ModelConfig({

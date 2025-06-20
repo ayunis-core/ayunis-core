@@ -41,11 +41,6 @@ export class ModelRegistry {
     return hasKey;
   }
 
-  // getModelsForProvider(provider: ModelProvider): ModelWithConfig[] {
-  //   this.logger.log('getModelsForProvider', provider);
-  //   return this.modelsWithConfigs.filter((m) => m.model.provider === provider);
-  // }
-
   getAllAvailableModels(): ModelWithConfig[] {
     this.logger.log('getAllAvailableModels', {
       count: this.modelsWithConfigs.length,

@@ -118,7 +118,7 @@ export class ModelsController {
     this.logger.log('getAvailableModels');
     const query = new GetAvailableModelsQuery(orgId);
     const allAvailableModelsWithConfig =
-      await this.getAvailableModelsUseCase.execute(query);
+      this.getAvailableModelsUseCase.execute(query);
     this.logger.debug('All available models with config', {
       allAvailableModelsWithConfig,
     });
