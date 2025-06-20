@@ -12,20 +12,17 @@ export function useInviteCreate(options?: UseInviteCreateOptions) {
   const createInviteMutation = useInvitesControllerCreate({
     mutation: {
       onSuccess: (response: InviteCreateResponse) => {
-        console.log("Create invite succeeded, invalidating queries");
         showSuccess("Invitation sent successfully!");
         queryClient.invalidateQueries({
           queryKey: ["invites"],
         });
-        console.log("invite created");
 
         // Call the success callback with the invite token
         if (options?.onSuccessCallback) {
           options.onSuccessCallback(response.inviteToken);
         }
       },
-      onError: (err) => {
-        console.error("Error creating invite", err);
+      onError: () => {
         showError("Failed to send invitation. Please try again.");
       },
     },

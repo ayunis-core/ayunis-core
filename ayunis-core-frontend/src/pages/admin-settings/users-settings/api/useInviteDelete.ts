@@ -8,7 +8,6 @@ export function useInviteDelete() {
   const deleteInviteMutation = useInvitesControllerDeleteInvite({
     mutation: {
       onMutate: async ({ id }) => {
-        console.log("Deleting invite");
         await queryClient.cancelQueries({
           queryKey: ["invites"],
         });
@@ -20,15 +19,12 @@ export function useInviteDelete() {
         return { previousData };
       },
       onSuccess: () => {
-        console.log("Delete invite succeeded, invalidating queries");
         showSuccess("Invite deleted successfully!");
         queryClient.invalidateQueries({
           queryKey: ["invites"],
         });
-        console.log("invite deleted");
       },
-      onError: (err, _, context) => {
-        console.error("Error deleting invite", err);
+      onError: (_, __, context) => {
         showError("Failed to delete invite. Please try again.");
         queryClient.setQueryData(["invites"], context?.previousData);
       },
