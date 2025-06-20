@@ -23,6 +23,7 @@ import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useDeleteThread } from "@/features/useDeleteThread";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useThread } from "../api/useThread";
 
 interface ChatPageProps {
   thread: Thread;
@@ -30,14 +31,13 @@ interface ChatPageProps {
 
 export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   const { t } = useTranslation("chats");
-  const [threadTitle, setThreadTitle] = useState<string | undefined>(
-    threadFromLoader.title,
-  );
-  const [model, setModel] = useState<Model>(threadFromLoader.model);
   const { pendingMessage, setPendingMessage } = useChatContext();
-  const [messages, setMessages] = useState<Message[]>(
-    threadFromLoader.messages,
+  const thread = useThread(threadFromLoader.id, threadFromLoader);
+  const [threadTitle, setThreadTitle] = useState<string | undefined>(
+    thread!.title,
   );
+  const [model, setModel] = useState<Model>(thread!.model);
+  const [messages, setMessages] = useState<Message[]>(thread!.messages);
   const [internetSearch, setInternetSearch] = useState(
     threadFromLoader.isInternetSearchEnabled,
   );

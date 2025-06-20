@@ -108,9 +108,18 @@ export function useMessageEventStream({
                   parsedData.type === "session"
                 ) {
                   onSessionEvent(parsedData as RunSessionResponseDto);
+                  queryClient.invalidateQueries({
+                    queryKey: ["threads", threadId],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: ["threads"],
+                  });
                 }
                 // Check if it's a thread event
                 else if ("type" in parsedData && parsedData.type === "thread") {
+                  queryClient.invalidateQueries({
+                    queryKey: ["threads", threadId],
+                  });
                   queryClient.invalidateQueries({
                     queryKey: ["threads"],
                   });
