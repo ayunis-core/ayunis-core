@@ -8,7 +8,7 @@ import { useMessageEventStream } from "../api/useMessageEventStream";
 import { useMessageSend } from "../api/useMessageSend";
 import { useUpdateThreadModel } from "../api/useUpdateThreadModel";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { MessageSquare, MoreVertical, Trash2 } from "lucide-react";
+import { Dot, MessageSquare, MoreVertical, Trash2 } from "lucide-react";
 import type { Thread, Model, Message } from "../model/openapi";
 import { showError } from "@/shared/lib/toast";
 import config from "@/shared/config";
@@ -127,7 +127,7 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     config.env === "development" && console.log("Disconnected");
   }, []);
 
-  useMessageEventStream({
+  const { isConnected } = useMessageEventStream({
     threadId: threadFromLoader.id,
     onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: (data) => handleError(data.message),
@@ -136,6 +136,7 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     onConnected: handleConnected,
     onDisconnect: handleDisconnect,
   });
+  console.log("isConnected", isConnected);
 
   // Auto-scroll to bottom when new messages are added - use the local messages state
   useEffect(() => {
@@ -217,7 +218,18 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   // Chat Header
   const chatHeader = (
     <ContentAreaHeader
-      title={threadTitle || t("chat.untitled")}
+      title={
+        <span className="inline-flex items-center gap-1">
+          {threadTitle || t("chat.untitled")}
+          <span className="">
+            {isConnected ? (
+              <Dot className="text-green-400 p-0" />
+            ) : (
+              <Dot className="text-red-400 p-0" />
+            )}
+          </span>
+        </span>
+      }
       icon={<MessageSquare className="h-5 w-5 text-primary" />}
       action={
         <DropdownMenu>

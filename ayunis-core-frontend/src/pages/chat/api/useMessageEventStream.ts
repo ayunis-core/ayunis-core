@@ -191,6 +191,21 @@ export function useMessageEventStream({
     };
   }, [threadId]); // Only depend on threadId
 
+  // Re-connect when the page is visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        connect();
+      } else {
+        disconnect();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [connect]);
+
   return {
     connect,
     disconnect,

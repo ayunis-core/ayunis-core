@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 
 interface ContentAreaHeaderProps {
-  title: string;
+  title: string | ReactNode;
   icon?: ReactNode;
   action?: ReactNode;
 }
