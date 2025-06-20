@@ -24,6 +24,7 @@ import { typeormConfig } from '../config/typeorm.config';
 import { embeddingsConfig } from '../config/embeddings.config';
 import storageConfig from '../config/storage.config';
 import { webConfig } from '../config/web.config';
+import { appConfig } from '../config/app.config';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
@@ -41,6 +42,7 @@ import { join } from 'path';
         embeddingsConfig,
         storageConfig,
         webConfig,
+        appConfig,
       ],
     }),
     ServeStaticModule.forRoot({

@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuthenticationControllerRegister } from "@/shared/api/generated/ayunisCoreAPI";
 import { registerFormSchema, type RegisterFormValues } from "./registerSchema";
+import { showError } from "@/shared/lib/toast";
+import extractErrorData from "@/shared/api/extract-error-data";
 
 export function useRegister() {
   const navigate = useNavigate();
@@ -36,7 +38,9 @@ export function useRegister() {
         },
         onError: (error) => {
           console.error("Registration failed:", error);
-          // Handle error (show toast, form errors, etc.)
+          const { message } = extractErrorData(error);
+          if (message) showError(message);
+          else showError("Registration failed");
         },
       },
     );
