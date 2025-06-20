@@ -42,6 +42,7 @@ export function useMessageEventStream({
         abortControllerRef.current.abort();
       }
 
+      isConnectedRef.current = false;
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
 
@@ -166,6 +167,7 @@ export function useMessageEventStream({
     onConnected,
     onError,
     onDisconnect,
+    queryClient,
   ]);
 
   const disconnect = useCallback(() => {
@@ -191,20 +193,25 @@ export function useMessageEventStream({
     };
   }, [threadId]); // Only depend on threadId
 
-  // Re-connect when the page is visible
+  // Handle visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        connect();
-      } else {
-        disconnect();
+        // Reconnect when tab becomes visible if not connected
+        if (!isConnectedRef.current) {
+          connect();
+        }
       }
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      return () => {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+        );
+      };
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [connect]);
+  }, []);
 
   return {
     connect,
