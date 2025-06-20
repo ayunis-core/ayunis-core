@@ -26,9 +26,17 @@
     "confirmPassword": "Confirm new password",
     "confirmPasswordPlaceholder": "Confirm your new password",
     "changePassword": "Change Password",
+    "changingPassword": "Changing Password...",
+    "passwordUpdatedSuccessfully": "Password updated successfully",
     "accountActions": "Account Actions",
     "deleteAccount": "Delete Account",
-    "deleteAccountDescription": "Permanently delete your account and all associated data."
+    "deleteAccountDescription": "Permanently delete your account and all associated data.",
+    "error": {
+      "invalidName": "Invalid name provided",
+      "updateFailed": "Failed to update. Please try again.",
+      "invalidPassword": "Invalid password provided",
+      "incorrectCurrentPassword": "Current password is incorrect"
+    }
   },
   "general": {
     "title": "General Settings",

@@ -26,9 +26,17 @@
     "confirmPassword": "Neues Passwort bestätigen",
     "confirmPasswordPlaceholder": "Bestätigen Sie Ihr neues Passwort",
     "changePassword": "Passwort ändern",
+    "changingPassword": "Passwort wird geändert...",
+    "passwordUpdatedSuccessfully": "Passwort erfolgreich aktualisiert",
     "accountActions": "Kontoaktionen",
     "deleteAccount": "Konto löschen",
-    "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft."
+    "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft.",
+    "error": {
+      "invalidName": "Ungültiger Name angegeben",
+      "updateFailed": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "invalidPassword": "Ungültiges Passwort angegeben",
+      "incorrectCurrentPassword": "Aktuelles Passwort ist falsch"
+    }
   },
   "general": {
     "title": "Allgemeine Einstellungen",

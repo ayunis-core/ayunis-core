@@ -32,6 +32,8 @@ import { UpdateUserRoleUseCase } from '../../application/use-cases/update-user-r
 import { UpdateUserRoleCommand } from '../../application/use-cases/update-user-role/update-user-role.command';
 import { UpdateUserNameUseCase } from '../../application/use-cases/update-user-name/update-user-name.use-case';
 import { UpdateUserNameCommand } from '../../application/use-cases/update-user-name/update-user-name.command';
+import { UpdatePasswordUseCase } from '../../application/use-cases/update-password/update-password.use-case';
+import { UpdatePasswordCommand } from '../../application/use-cases/update-password/update-password.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
 import {
   UsersListResponseDto,
@@ -39,12 +41,12 @@ import {
 } from './dtos/user-response.dto';
 import { UpdateUserRoleDto } from './dtos/update-user-role.dto';
 import { UpdateUserNameDto } from './dtos/update-user-name.dto';
+import { UpdatePasswordDto } from './dtos/update-password.dto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from '../../domain/value-objects/role.object';
 
 @ApiTags('Users')
 @Controller('users')
-@Roles(UserRole.ADMIN)
 export class UserController {
   private readonly logger = new Logger(UserController.name);
 
@@ -53,6 +55,7 @@ export class UserController {
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly updateUserRoleUseCase: UpdateUserRoleUseCase,
     private readonly updateUserNameUseCase: UpdateUserNameUseCase,
+    private readonly updatePasswordUseCase: UpdatePasswordUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
   ) {}
 
@@ -86,6 +89,7 @@ export class UserController {
     return this.userResponseDtoMapper.toListDto(users);
   }
 
+  @Roles(UserRole.ADMIN)
   @Patch(':id/role')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -145,7 +149,7 @@ export class UserController {
   @ApiOperation({
     summary: 'Update user name',
     description:
-      "Update the name of a user. Users can only update their own name, or admins can update any user's name in their organization.",
+      'Update the name of a user. Users can only update their own name.',
   })
   @ApiBody({
     type: UpdateUserNameDto,
@@ -163,8 +167,7 @@ export class UserController {
     description: 'User not found',
   })
   @ApiUnauthorizedResponse({
-    description:
-      "User not authenticated or not authorized to update this user's name",
+    description: 'User not authenticated or not authorized to update this user',
   })
   @ApiInternalServerErrorResponse({
     description: 'Internal server error occurred while updating user name',
@@ -184,6 +187,49 @@ export class UserController {
     return this.userResponseDtoMapper.toDto(updatedUser);
   }
 
+  @Patch('password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Update user password',
+    description:
+      'Update the password of the current authenticated user. Requires current password for verification.',
+  })
+  @ApiBody({
+    type: UpdatePasswordDto,
+    description: 'Password update information',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Password successfully updated',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid password values or passwords do not match',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or current password is incorrect',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred while updating password',
+  })
+  async updatePassword(
+    @Body() updatePasswordDto: UpdatePasswordDto,
+    @CurrentUser(UserProperty.ID) currentUserId: UUID,
+  ): Promise<void> {
+    this.logger.log('updatePassword', {
+      userId: currentUserId,
+    });
+
+    await this.updatePasswordUseCase.execute(
+      new UpdatePasswordCommand(
+        currentUserId,
+        updatePasswordDto.currentPassword,
+        updatePasswordDto.newPassword,
+        updatePasswordDto.newPasswordConfirmation,
+      ),
+    );
+  }
+
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({

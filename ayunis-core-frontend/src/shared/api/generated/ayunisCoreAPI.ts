@@ -67,6 +67,7 @@ import type {
   StorageControllerUploadFileBody,
   SuccessResponseDto,
   ThreadsControllerAddFileSourceBody,
+  UpdatePasswordDto,
   UpdatePromptDto,
   UpdateThreadInstructionDto,
   UpdateThreadInternetSearchDto,
@@ -4407,7 +4408,7 @@ export const useUserControllerUpdateUserRole = <TError = void,
     }
     
 /**
- * Update the name of a user. Users can only update their own name, or admins can update any user's name in their organization.
+ * Update the name of a user. Users can only update their own name.
  * @summary Update user name
  */
 export const userControllerUpdateUserName = (
@@ -4467,6 +4468,71 @@ export const useUserControllerUpdateUserName = <TError = void,
       > => {
 
       const mutationOptions = getUserControllerUpdateUserNameMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update the password of the current authenticated user. Requires current password for verification.
+ * @summary Update user password
+ */
+export const userControllerUpdatePassword = (
+    updatePasswordDto: UpdatePasswordDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/password`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePasswordDto
+    },
+      );
+    }
+  
+
+
+export const getUserControllerUpdatePasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext> => {
+
+const mutationKey = ['userControllerUpdatePassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdatePassword>>, {data: UpdatePasswordDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerUpdatePassword(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerUpdatePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdatePassword>>>
+    export type UserControllerUpdatePasswordMutationBody = UpdatePasswordDto
+    export type UserControllerUpdatePasswordMutationError = void
+
+    /**
+ * @summary Update user password
+ */
+export const useUserControllerUpdatePassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerUpdatePassword>>,
+        TError,
+        {data: UpdatePasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerUpdatePasswordMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -2104,7 +2104,7 @@
     },
     "/users/name": {
       "patch": {
-        "description": "Update the name of a user. Users can only update their own name, or admins can update any user's name in their organization.",
+        "description": "Update the name of a user. Users can only update their own name.",
         "operationId": "UserController_updateUserName",
         "parameters": [],
         "requestBody": {
@@ -2133,7 +2133,7 @@
             "description": "Invalid name value"
           },
           "401": {
-            "description": "User not authenticated or not authorized to update this user's name"
+            "description": "User not authenticated or not authorized to update this user"
           },
           "404": {
             "description": "User not found"
@@ -2143,6 +2143,42 @@
           }
         },
         "summary": "Update user name",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/password": {
+      "patch": {
+        "description": "Update the password of the current authenticated user. Requires current password for verification.",
+        "operationId": "UserController_updatePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Password update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password successfully updated"
+          },
+          "400": {
+            "description": "Invalid password values or passwords do not match"
+          },
+          "401": {
+            "description": "User not authenticated or current password is incorrect"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating password"
+          }
+        },
+        "summary": "Update user password",
         "tags": [
           "Users"
         ]
@@ -4332,6 +4368,34 @@
         },
         "required": [
           "name"
+        ]
+      },
+      "UpdatePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "description": "Current password for verification",
+            "example": "currentPassword123",
+            "minLength": 8
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password",
+            "example": "newPassword123!",
+            "minLength": 8
+          },
+          "newPasswordConfirmation": {
+            "type": "string",
+            "description": "Confirmation of the new password",
+            "example": "newPassword123!",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword",
+          "newPasswordConfirmation"
         ]
       }
     }

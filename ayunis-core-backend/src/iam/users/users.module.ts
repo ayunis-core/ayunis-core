@@ -14,11 +14,13 @@ import { FindUserByIdUseCase } from './application/use-cases/find-user-by-id/fin
 import { FindUsersByOrgIdUseCase } from './application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { DeleteUserUseCase } from './application/use-cases/delete-user/delete-user.use-case';
 import { UpdateUserRoleUseCase } from './application/use-cases/update-user-role/update-user-role.use-case';
+import { CreateUserUseCase } from './application/use-cases/create-user/create-user.use-case';
 import { CreateAdminUserUseCase } from './application/use-cases/create-admin-user/create-admin-user.use-case';
 import { CreateRegularUserUseCase } from './application/use-cases/create-regular-user/create-regular-user.use-case';
 import { ValidateUserUseCase } from './application/use-cases/validate-user/validate-user.use-case';
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
+import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
@@ -45,11 +47,13 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     FindUsersByOrgIdUseCase,
     DeleteUserUseCase,
     UpdateUserRoleUseCase,
+    CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
+    UpdatePasswordUseCase,
     // Mappers
     UserResponseDtoMapper,
   ],
@@ -58,6 +62,7 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     FindUsersByOrgIdUseCase,
     DeleteUserUseCase,
     UpdateUserRoleUseCase,
+    CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
     ValidateUserUseCase,

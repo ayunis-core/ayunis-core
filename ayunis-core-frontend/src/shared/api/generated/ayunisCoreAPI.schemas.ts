@@ -1207,6 +1207,24 @@ export interface UpdateUserNameDto {
   name: string;
 }
 
+export interface UpdatePasswordDto {
+  /**
+   * Current password for verification
+   * @minLength 8
+   */
+  currentPassword: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  newPassword: string;
+  /**
+   * Confirmation of the new password
+   * @minLength 8
+   */
+  newPasswordConfirmation: string;
+}
+
 export type SourcesControllerGetSourcesByThreadIdParams = {
 /**
  * Thread ID

@@ -43,6 +43,10 @@ export class CreateThreadUseCase {
           modelConfig: config,
         });
       } catch (error) {
+        this.logger.error('Failed to create thread', {
+          userId: command.userId,
+          error,
+        });
         throw new ThreadCreationError(error, command.userId);
       }
     } catch (error) {

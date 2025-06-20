@@ -6,11 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui/shadcn/card";
-import { Label } from "@/shared/ui/shadcn/label";
-import { Input } from "@/shared/ui/shadcn/input";
 import { Button } from "@/shared/ui/shadcn/button";
-import { Separator } from "@/shared/ui/shadcn/separator";
 import { useTranslation } from "react-i18next";
+import PasswordSettingsPage from "./PasswordSettingsPage";
 
 export default function AccountSettingsPage({
   user,
@@ -22,57 +20,8 @@ export default function AccountSettingsPage({
   return (
     <SettingsLayout title={t("account.title")}>
       <div className="space-y-4">
-        {/* Profile Information */}
         <ProfileInformationCard user={user} />
-
-        {/* Password Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("account.password")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="current-password">
-                {t("account.currentPassword")}
-              </Label>
-              <Input
-                id="current-password"
-                type="password"
-                placeholder={t("account.currentPasswordPlaceholder")}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-2">
-              <Label htmlFor="new-password">{t("account.newPassword")}</Label>
-              <Input
-                id="new-password"
-                type="password"
-                placeholder={t("account.newPasswordPlaceholder")}
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("account.newPasswordDescription")}
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">
-                {t("account.confirmPassword")}
-              </Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                placeholder={t("account.confirmPasswordPlaceholder")}
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <Button>{t("account.changePassword")}</Button>
-            </div>
-          </CardContent>
-        </Card>
-
+        <PasswordSettingsPage />
         {/* Account Actions */}
         <Card>
           <CardHeader>
