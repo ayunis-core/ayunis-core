@@ -5,7 +5,6 @@ import {
   CardTitle,
 } from "@/shared/ui/shadcn/card";
 import { Input } from "@/shared/ui/shadcn/input";
-import { Label } from "@/shared/ui/shadcn/label";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { useTranslation } from "react-i18next";
