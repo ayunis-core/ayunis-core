@@ -259,12 +259,19 @@ export class UserController {
   async deleteUser(
     @Param('id') userId: UUID,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
     this.logger.log('deleteUser', { userId });
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot delete yourself');
     }
 
-    await this.deleteUserUseCase.execute(new DeleteUserCommand(userId));
+    await this.deleteUserUseCase.execute(
+      new DeleteUserCommand({
+        userId,
+        orgId,
+        requestUserId: currentUserId,
+      }),
+    );
   }
 }
