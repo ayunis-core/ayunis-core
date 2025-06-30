@@ -18,7 +18,14 @@ export default function PromptsPage({ prompts }: PromptsPageProps) {
   if (prompts.length === 0) {
     return (
       <AppLayout>
-        <FullScreenMessageLayout>
+        <FullScreenMessageLayout
+          header={
+            <ContentAreaHeader
+              title={t("page.title")}
+              action={prompts.length > 0 ? <CreatePromptDialog /> : undefined}
+            />
+          }
+        >
           <PromptsEmptyState />
         </FullScreenMessageLayout>
       </AppLayout>

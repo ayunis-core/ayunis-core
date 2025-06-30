@@ -4,6 +4,7 @@ import { useInitiateChat } from "../api/useInitiateChat";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PermittedModel } from "../model/openapi";
+import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 
 interface NewChatPageProps {
   defaultModel: PermittedModel;
@@ -25,7 +26,7 @@ export default function NewChatPage({
   };
 
   return (
-    <NewChatPageLayout>
+    <NewChatPageLayout header={<ContentAreaHeader title="New Chat" />}>
       <div className="text-center">
         <h1 className="text-2xl font-bold">{t("newChat.title")}</h1>
         <p className="text-sm text-muted-foreground">

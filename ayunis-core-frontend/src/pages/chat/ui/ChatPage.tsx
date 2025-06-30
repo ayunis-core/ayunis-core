@@ -8,7 +8,7 @@ import { useMessageEventStream } from "../api/useMessageEventStream";
 import { useMessageSend } from "../api/useMessageSend";
 import { useUpdateThreadModel } from "../api/useUpdateThreadModel";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { Dot, MessageSquare, MoreVertical, Trash2 } from "lucide-react";
+import { Dot, MoreVertical, Trash2 } from "lucide-react";
 import type { Thread, Model, Message } from "../model/openapi";
 import { showError } from "@/shared/lib/toast";
 import config from "@/shared/config";
@@ -230,7 +230,6 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
           </span>
         </span>
       }
-      icon={<MessageSquare className="h-5 w-5 text-primary" />}
       action={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
