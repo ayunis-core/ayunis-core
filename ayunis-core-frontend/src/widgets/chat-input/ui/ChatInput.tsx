@@ -32,11 +32,14 @@ export default function ChatInput({
   const [message, setMessage] = useState(prefilledPrompt ?? "");
   const { t } = useTranslation("common");
 
-  useKeyboardShortcut(["Enter"], () => isFocused && handleSend());
   useKeyboardShortcut(
     ["Shift", "Enter"],
     () => isFocused && setMessage((m) => m + "\n"),
   );
+
+  useKeyboardShortcut(["Enter"], () => isFocused && handleSend(), {
+    exclusive: true,
+  });
 
   function handleSend() {
     if (!message.trim() || !model) return;

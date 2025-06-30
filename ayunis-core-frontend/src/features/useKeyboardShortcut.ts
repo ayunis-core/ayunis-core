@@ -5,6 +5,7 @@ type Key = string;
 export default function useKeyboardShortcut(
   targetKeys: Key[],
   callback: () => void,
+  options?: { exclusive?: boolean },
 ): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -22,7 +23,12 @@ export default function useKeyboardShortcut(
       // Convert targetKeys to a set and compare
       const targetKeySet = new Set(targetKeys);
 
-      if ([...targetKeySet].every((key) => pressedKeys.has(key))) {
+      const isMatch = options?.exclusive
+        ? [...targetKeySet].every((key) => pressedKeys.has(key)) &&
+          pressedKeys.size === targetKeySet.size
+        : [...targetKeySet].every((key) => pressedKeys.has(key));
+
+      if (isMatch) {
         event.preventDefault(); // Prevent default behavior if needed
         callback();
       }
@@ -33,5 +39,5 @@ export default function useKeyboardShortcut(
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [targetKeys, callback]);
+  }, [targetKeys, callback, options]);
 }
