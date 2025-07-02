@@ -22,7 +22,7 @@ export default function PromptsPage({ prompts }: PromptsPageProps) {
           header={
             <ContentAreaHeader
               title={t("page.title")}
-              action={prompts.length > 0 ? <CreatePromptDialog /> : undefined}
+              action={<CreatePromptDialog />}
             />
           }
         >
@@ -37,7 +37,7 @@ export default function PromptsPage({ prompts }: PromptsPageProps) {
         contentHeader={
           <ContentAreaHeader
             title={t("page.title")}
-            action={prompts.length > 0 ? <CreatePromptDialog /> : undefined}
+            action={<CreatePromptDialog />}
           />
         }
         contentArea={

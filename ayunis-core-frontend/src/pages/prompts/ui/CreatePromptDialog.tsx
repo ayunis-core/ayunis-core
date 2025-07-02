@@ -52,6 +52,7 @@ export default function CreatePromptDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
+          size="sm"
           className={`${showIcon ? "inline-flex items-center gap-2" : ""} ${buttonClassName}`}
         >
           {showIcon && <Plus className="h-4 w-4" />}

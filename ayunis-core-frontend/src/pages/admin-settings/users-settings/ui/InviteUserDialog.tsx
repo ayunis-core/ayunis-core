@@ -93,7 +93,7 @@ export default function InviteUserDialog() {
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button>{t("inviteDialog.inviteUser")}</Button>
+          <Button size="sm">{t("inviteDialog.inviteUser")}</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
