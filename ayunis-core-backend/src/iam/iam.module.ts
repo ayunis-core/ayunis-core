@@ -10,6 +10,7 @@ import { HashingModule } from './hashing/hashing.module';
 import { UsersModule } from './users/users.module';
 import { OrgsModule } from './orgs/orgs.module';
 import { AuthorizationModule } from './authorization/authorization.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({})
 export class IamModule {
@@ -27,6 +28,7 @@ export class IamModule {
         InvitesModule,
         UsersModule,
         OrgsModule,
+        SubscriptionsModule,
       ],
       exports: [
         AuthenticationModule,
@@ -35,6 +37,7 @@ export class IamModule {
         InvitesModule,
         UsersModule,
         OrgsModule,
+        SubscriptionsModule,
       ],
     };
   }
