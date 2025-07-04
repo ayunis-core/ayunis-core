@@ -3,6 +3,7 @@ import { NewChatPage, NewChatPageNoModelError } from "@/pages/new-chat";
 import {
   modelsControllerGetEffectiveDefaultModel,
   promptsControllerFindOne,
+  subscriptionsControllerHasActiveSubscription,
   type PermittedModelResponseDto,
 } from "@/shared/api";
 import extractErrorData from "@/shared/api/extract-error-data";
@@ -18,6 +19,11 @@ const queryPromptOptions = (prompt: string) => ({
   queryFn: () => promptsControllerFindOne(prompt),
 });
 
+const queryHasActiveSubscriptionOptions = () => ({
+  queryKey: ["subscription"],
+  queryFn: () => subscriptionsControllerHasActiveSubscription(),
+});
+
 const searchSchema = z.object({
   prompt: z.string().optional(),
 });
@@ -28,13 +34,17 @@ export const Route = createFileRoute("/_authenticated/chat/")({
   loader: async ({ deps: { prompt: promptId }, context: { queryClient } }) => {
     const defaultModel: PermittedModelResponseDto =
       await queryClient.ensureQueryData(queryDefaultModelOptions());
-    if (promptId) {
-      const prompt = await queryClient.ensureQueryData(
-        queryPromptOptions(promptId),
-      );
-      return { defaultModel, prefilledPrompt: prompt?.content };
-    }
-    return { defaultModel };
+    const { hasActiveSubscription } = await queryClient.ensureQueryData(
+      queryHasActiveSubscriptionOptions(),
+    );
+    const prompt = promptId
+      ? await queryClient.ensureQueryData(queryPromptOptions(promptId))
+      : undefined;
+    return {
+      defaultModel,
+      prefilledPrompt: prompt?.content,
+      hasActiveSubscription,
+    };
   },
   errorComponent: ({ error }) => {
     const { code } = extractErrorData(error);
@@ -47,11 +57,13 @@ export const Route = createFileRoute("/_authenticated/chat/")({
 });
 
 function RouteComponent() {
-  const { defaultModel, prefilledPrompt } = Route.useLoaderData();
+  const { defaultModel, prefilledPrompt, hasActiveSubscription } =
+    Route.useLoaderData();
   return (
     <NewChatPage
       defaultModel={defaultModel}
       prefilledPrompt={prefilledPrompt}
+      hasSubscription={hasActiveSubscription}
     />
   );
 }

@@ -5,15 +5,18 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PermittedModel } from "../model/openapi";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
+import { showError } from "@/shared/lib/toast";
 
 interface NewChatPageProps {
   defaultModel: PermittedModel;
   prefilledPrompt?: string;
+  hasSubscription: boolean;
 }
 
 export default function NewChatPage({
   defaultModel,
   prefilledPrompt,
+  hasSubscription,
 }: NewChatPageProps) {
   const { t } = useTranslation("chats");
   const { initiateChat } = useInitiateChat();
@@ -22,6 +25,10 @@ export default function NewChatPage({
   const [codeExecution, setCodeExecution] = useState(false);
 
   const handleSend = (message: string) => {
+    if (!hasSubscription) {
+      showError(t("newChat.upgradeToProError"));
+      return;
+    }
     initiateChat(message, model.id);
   };
 

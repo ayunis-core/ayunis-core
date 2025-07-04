@@ -1225,6 +1225,75 @@ export interface UpdatePasswordDto {
   newPasswordConfirmation: string;
 }
 
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Renewal cycle of the subscription
+ */
+export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubscriptionResponseDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+export interface SubscriptionResponseDto {
+  /** Unique identifier of the subscription */
+  id: string;
+  /** Date when the subscription was created */
+  createdAt: string;
+  /** Date when the subscription was last updated */
+  updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Number of seats in the subscription */
+  noOfSeats: number;
+  /** Price per seat in the subscription */
+  pricePerSeat: number;
+  /** Renewal cycle of the subscription */
+  renewalCycle: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles */
+  renewalCycleAnchor: string;
+  /** Number of available seats (total seats minus invites) */
+  availableSeats: number;
+  /** Date of the next renewal */
+  nextRenewalDate: string;
+}
+
+/**
+ * Renewal cycle of the subscription
+ */
+export type CreateSubscriptionRequestDtoRenewalCycle = typeof CreateSubscriptionRequestDtoRenewalCycle[keyof typeof CreateSubscriptionRequestDtoRenewalCycle];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSubscriptionRequestDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+export interface CreateSubscriptionRequestDto {
+  /**
+   * Number of seats for the subscription
+   * @minimum 1
+   */
+  noOfSeats?: number;
+  /** Renewal cycle of the subscription */
+  renewalCycle: CreateSubscriptionRequestDtoRenewalCycle;
+}
+
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
+}
+
 export type SourcesControllerGetSourcesByThreadIdParams = {
 /**
  * Thread ID

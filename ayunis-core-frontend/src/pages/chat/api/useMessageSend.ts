@@ -7,6 +7,9 @@ import {
   TextInputType,
   ToolResultInputType,
 } from "@/shared/api";
+import { AxiosError } from "axios";
+import { showError } from "@/shared/lib/toast";
+import { useTranslation } from "react-i18next";
 
 interface SendMesageInput {
   text: string;
@@ -20,15 +23,17 @@ interface SendToolResultInput {
 
 interface UseMessageSendParams {
   threadId: string;
-  onSuccess: (data: any) => void;
-  onError: (error: any) => void;
 }
 
 export function useMessageSend(params: UseMessageSendParams) {
+  const { t } = useTranslation("chats");
   const mutation = useRunsControllerSendMessage({
     mutation: {
-      onSuccess: params.onSuccess,
-      onError: params.onError,
+      onError: (error: AxiosError) => {
+        if (error.response?.status === 403) {
+          showError(t("chat.upgradeToProError"));
+        }
+      },
     },
   });
 

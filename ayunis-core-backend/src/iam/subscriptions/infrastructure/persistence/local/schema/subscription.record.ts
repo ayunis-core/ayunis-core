@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
-import { BaseRecord } from 'src/common/db/base-record';
-import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { BaseRecord } from '../../../../../../common/db/base-record';
+import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
+import { RenewalCycle } from '../../../../domain/value-objects/renewal-cycle.enum';
 import { Entity, OneToOne, JoinColumn, Column, Index } from 'typeorm';
 
 @Entity({ name: 'subscriptions' })

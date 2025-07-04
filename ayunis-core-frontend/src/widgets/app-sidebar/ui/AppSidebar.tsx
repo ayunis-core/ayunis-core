@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/shadcn/dropdown-menu";
 import { ChatsSidebarGroup } from "./ChatsSidebarGroup";
+import { SubscriptionHintButton } from "./SubscriptionHintButton";
 import { useMe } from "../api/useMe";
 import { useLogout } from "../api/useLogout";
 import { Link } from "@tanstack/react-router";
@@ -99,6 +100,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ))}
           </SidebarMenu>
         </SidebarGroup>
+
+        <SubscriptionHintButton />
 
         <ChatsSidebarGroup />
       </SidebarContent>

@@ -10,13 +10,15 @@
     "aiThinking": "AI is thinking...",
     "usingTool": "Using tool: {{toolName}}",
     "resultFrom": "Result from {{toolName}}:",
-    "unknownMessageType": "Unknown message type"
+    "unknownMessageType": "Unknown message type",
+    "upgradeToProError": "You need to upgrade to a paid plan to use this feature."
   },
   "newChat": {
     "title": "How can I help you today?",
     "description": "Ask me anything about documents, websites, or code.",
     "noModelTitle": "No Model Available",
     "noModelDescription": "No AI model could be found. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
-    "configureModel": "Configure Model"
+    "configureModel": "Configure Model",
+    "upgradeToProError": "You need to upgrade to a paid plan to use this feature."
   }
 }

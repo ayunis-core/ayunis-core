@@ -10,13 +10,15 @@
     "aiThinking": "KI denkt nach...",
     "usingTool": "Tool wird verwendet: {{toolName}}",
     "resultFrom": "Ergebnis von {{toolName}}:",
-    "unknownMessageType": "Unbekannter Nachrichtentyp"
+    "unknownMessageType": "Unbekannter Nachrichtentyp",
+    "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden."
   },
   "newChat": {
     "title": "Wie kann ich Ihnen heute helfen?",
     "description": "Fragen Sie mich alles über Dokumente, Websites oder Code.",
     "noModelTitle": "Kein Modell verfügbar",
     "noModelDescription": "Es konnte kein KI-Modell gefunden werden. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
-    "configureModel": "Modell konfigurieren"
+    "configureModel": "Modell konfigurieren",
+    "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden."
   }
 }

@@ -3,6 +3,7 @@ import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
 import { SubscriptionError } from '../../subscription.errors';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class HasActiveSubscriptionUseCase {
@@ -10,9 +11,15 @@ export class HasActiveSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(query: HasActiveSubscriptionQuery): Promise<boolean> {
+    const isSelfHosted = this.configService.get('app.isSelfHosted');
+    if (isSelfHosted) {
+      return true;
+    }
+
     this.logger.log('Checking active subscription', {
       orgId: query.orgId,
     });

@@ -68,19 +68,8 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     setCodeExecution(false);
   }, [threadFromLoader]);
 
-  // Memoize the callbacks for useMessageSend to prevent recreating the hook
-  const handleSendSuccess = useCallback((data: any) => {
-    console.log("success", data);
-  }, []);
-
-  const handleSendError = useCallback((error: any) => {
-    showError(error.message);
-  }, []);
-
   const { sendTextMessage } = useMessageSend({
     threadId: threadFromLoader.id,
-    onSuccess: handleSendSuccess,
-    onError: handleSendError,
   });
 
   function handleSend(message: string) {
