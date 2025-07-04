@@ -15,6 +15,7 @@ import { SourcesModule } from '../domain/sources/sources.module';
 import { StorageModule } from '../domain/storage/storage.module';
 import { PromptsModule } from '../domain/prompts/prompts.module';
 import { IamModule } from '../iam/iam.module';
+import { AdminModule } from '../admin/admin.module';
 import { modelsConfig } from '../config/models.config';
 import {
   AuthProvider,
@@ -25,6 +26,7 @@ import { embeddingsConfig } from '../config/embeddings.config';
 import storageConfig from '../config/storage.config';
 import { webConfig } from '../config/web.config';
 import { appConfig } from '../config/app.config';
+import { adminConfig } from '../config/admin.config';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
@@ -43,6 +45,7 @@ import { join } from 'path';
         storageConfig,
         webConfig,
         appConfig,
+        adminConfig,
       ],
     }),
     ServeStaticModule.forRoot({
@@ -75,6 +78,7 @@ import { join } from 'path';
       authProvider:
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

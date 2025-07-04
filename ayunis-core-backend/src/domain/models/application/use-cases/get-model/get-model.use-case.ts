@@ -19,14 +19,7 @@ export class GetModelUseCase {
     const model = await this.modelsRepository.findOne(query);
 
     if (!model) {
-      if ('id' in query) {
-        throw new ModelNotFoundByIdError(query.id);
-      } else {
-        throw new ModelNotFoundByNameAndProviderError(
-          query.name,
-          query.provider,
-        );
-      }
+      throw new ModelNotFoundByNameAndProviderError(query.name, query.provider);
     }
 
     return model;
