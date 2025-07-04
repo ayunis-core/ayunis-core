@@ -10,7 +10,9 @@
   "models": {
     "noModelsAvailable": "No models available. Please check your configuration.",
     "streaming": "Streaming",
-    "reasoning": "Reasoning"
+    "reasoning": "Reasoning",
+    "enableProvider": "Enable Provider",
+    "disableProvider": "Disable Provider"
   },
   "users": {
     "invites": "Invites",

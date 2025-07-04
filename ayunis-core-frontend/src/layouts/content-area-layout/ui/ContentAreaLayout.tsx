@@ -13,7 +13,7 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`flex flex-col absolute inset-0 ${className} pb-4`}>
+    <div className={`flex flex-col absolute inset-0 ${className} px-4`}>
       {/* Content Header - sticky at top, not scrollable */}
       {contentHeader && (
         <div className="flex-shrink-0 sticky top-0 z-10 bg-background mb-4">

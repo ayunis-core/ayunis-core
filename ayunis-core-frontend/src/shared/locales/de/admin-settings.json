@@ -10,7 +10,9 @@
   "models": {
     "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
     "streaming": "Streaming",
-    "reasoning": "Reasoning"
+    "reasoning": "Reasoning",
+    "enableProvider": "Provider freischalten",
+    "disableProvider": "Provider deaktivieren"
   },
   "users": {
     "invites": "Einladungen",
