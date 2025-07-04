@@ -238,15 +238,13 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('updateModel', {
       threadId,
-      modelName: updateModelDto.modelName,
-      modelProvider: updateModelDto.modelProvider,
+      modelId: updateModelDto.modelId,
     });
 
     const command = new UpdateThreadModelCommand(
       threadId,
       userId,
-      updateModelDto.modelName,
-      updateModelDto.modelProvider,
+      updateModelDto.modelId,
     );
 
     await this.updateThreadModelUseCase.execute(command);

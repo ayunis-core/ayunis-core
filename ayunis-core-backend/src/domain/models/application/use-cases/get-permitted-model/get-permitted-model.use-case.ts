@@ -2,14 +2,10 @@ import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity'
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
   ModelInvalidInputError,
-  PermittedModelNotFoundByIdError,
-  PermittedModelNotFoundByNameAndProviderError,
+  PermittedModelNotFoundError,
+  UnexpectedModelError,
 } from '../../models.errors';
-import {
-  GetPermittedModelByIdQuery,
-  GetPermittedModelByNameAndProviderQuery,
-  GetPermittedModelQuery,
-} from './get-permitted-model.query';
+import { GetPermittedModelQuery } from './get-permitted-model.query';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
@@ -20,50 +16,34 @@ export class GetPermittedModelUseCase {
   ) {}
 
   async execute(query: GetPermittedModelQuery): Promise<PermittedModel> {
-    this.logger.log('execute', {
-      query,
-    });
-    if (query instanceof GetPermittedModelByIdQuery) {
+    try {
+      this.logger.log('execute', {
+        query,
+      });
       this.logger.debug('GetPermittedModelByIdQuery', {
         query,
       });
       const model = await this.permittedModelsRepository.findOne({
-        id: query.modelId,
+        id: query.permittedModelId,
         orgId: query.orgId,
       });
       if (!model) {
         this.logger.error('Permitted model not found', {
           query,
         });
-        throw new PermittedModelNotFoundByIdError(query.modelId);
+        throw new PermittedModelNotFoundError(query.permittedModelId);
       }
       return model;
-    }
-    if (query instanceof GetPermittedModelByNameAndProviderQuery) {
-      this.logger.debug('GetPermittedModelByNameAndProviderQuery', {
+    } catch (error) {
+      if (error instanceof PermittedModelNotFoundError) {
+        throw error;
+      }
+      this.logger.error('Error getting permitted model', {
+        error,
+      });
+      throw new UnexpectedModelError(error, {
         query,
       });
-      const model = await this.permittedModelsRepository.findOne({
-        name: query.name,
-        provider: query.provider,
-        orgId: query.orgId,
-      });
-      if (!model) {
-        this.logger.error('Permitted model not found', {
-          query,
-        });
-        throw new PermittedModelNotFoundByNameAndProviderError(
-          query.name,
-          query.provider,
-        );
-      }
-      return model;
     }
-    this.logger.error('Invalid query', {
-      query,
-    });
-    throw new ModelInvalidInputError('Invalid query', {
-      query,
-    });
   }
 }

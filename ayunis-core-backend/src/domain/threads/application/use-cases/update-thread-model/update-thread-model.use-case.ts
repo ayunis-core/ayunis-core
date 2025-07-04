@@ -3,7 +3,7 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { UpdateThreadModelCommand } from './update-thread-model.command';
 import { ThreadUpdateError } from '../../threads.errors';
 import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
-import { GetPermittedModelByNameAndProviderQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
+import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
 import { FindOrgByUserIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-user-id/find-org-by-user-id.use-case';
 import { FindOrgByUserIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-user-id/find-org-by-user-id.query';
 
@@ -20,8 +20,7 @@ export class UpdateThreadModelUseCase {
   async execute(command: UpdateThreadModelCommand): Promise<void> {
     this.logger.log('updateModel', {
       threadId: command.threadId,
-      modelName: command.modelName,
-      modelProvider: command.modelProvider,
+      modelId: command.modelId,
     });
 
     try {
@@ -29,9 +28,8 @@ export class UpdateThreadModelUseCase {
         new FindOrgByUserIdQuery(command.userId),
       );
       const model = await this.getPermittedModelUseCase.execute(
-        new GetPermittedModelByNameAndProviderQuery({
-          name: command.modelName,
-          provider: command.modelProvider,
+        new GetPermittedModelQuery({
+          permittedModelId: command.modelId,
           orgId: org.id,
         }),
       );
@@ -43,8 +41,7 @@ export class UpdateThreadModelUseCase {
     } catch (error) {
       this.logger.error('Failed to update thread model', {
         threadId: command.threadId,
-        modelName: command.modelName,
-        modelProvider: command.modelProvider,
+        modelId: command.modelId,
         error,
       });
       throw error instanceof Error

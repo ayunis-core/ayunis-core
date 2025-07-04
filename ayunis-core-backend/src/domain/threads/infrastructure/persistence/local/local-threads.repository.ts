@@ -25,7 +25,17 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('create', { thread });
     const threadEntity = this.threadMapper.toEntity(thread);
     const savedThreadEntity = await this.threadRepository.save(threadEntity);
-    return this.threadMapper.toDomain(savedThreadEntity);
+    const reloadedThreadEntity = await this.threadRepository.findOne({
+      where: { id: savedThreadEntity.id },
+      relations: ['messages', 'sources', 'model'],
+    });
+    if (!reloadedThreadEntity) {
+      throw new ThreadNotFoundError(
+        savedThreadEntity.id,
+        savedThreadEntity.userId,
+      );
+    }
+    return this.threadMapper.toDomain(reloadedThreadEntity);
   }
 
   async findOne(id: UUID, userId: UUID): Promise<Thread | null> {

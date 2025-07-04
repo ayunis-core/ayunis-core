@@ -7,8 +7,7 @@ export function useUpdateThreadModel() {
 
   async function updateModel(threadId: string, model: Model): Promise<void> {
     const data: UpdateThreadModelDto = {
-      modelName: model.name,
-      modelProvider: model.provider as UpdateThreadModelDto["modelProvider"],
+      modelId: model.id,
     };
     await mutation.mutateAsync({ id: threadId, data });
   }

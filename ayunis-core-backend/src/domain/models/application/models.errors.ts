@@ -26,6 +26,7 @@ export enum ModelErrorCode {
   MODEL_ALREADY_EXISTS = 'MODEL_ALREADY_EXISTS',
   MODEL_UPDATE_FAILED = 'MODEL_UPDATE_FAILED',
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
+  UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
 }
 
 /**
@@ -65,6 +66,15 @@ export abstract class ModelError extends ApplicationError {
           ...(this.metadata && { metadata: this.metadata }),
         });
     }
+  }
+}
+
+export class UnexpectedModelError extends ModelError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, ModelErrorCode.UNEXPECTED_MODEL_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }
 
@@ -111,21 +121,10 @@ export class DefaultModelNotFoundError extends ModelError {
 /**
  * Errors thrown when a permitted model is not found
  */
-export class PermittedModelNotFoundByIdError extends ModelError {
+export class PermittedModelNotFoundError extends ModelError {
   constructor(id: UUID, metadata?: ErrorMetadata) {
     super(
       `Permitted model '${id}' not found`,
-      ModelErrorCode.MODEL_NOT_FOUND,
-      404,
-      metadata,
-    );
-  }
-}
-
-export class PermittedModelNotFoundByNameAndProviderError extends ModelError {
-  constructor(name: string, provider: ModelProvider, metadata?: ErrorMetadata) {
-    super(
-      `Permitted model '${name}' with provider '${provider}' not found`,
       ModelErrorCode.MODEL_NOT_FOUND,
       404,
       metadata,

@@ -2,10 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ManageOrgDefaultModelCommand } from './manage-org-default-model.command';
 import { PermittedModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import {
-  ModelError,
-  PermittedModelNotFoundByIdError,
-} from '../../models.errors';
+import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
 
 @Injectable()
 export class ManageOrgDefaultModelUseCase {
@@ -35,7 +32,7 @@ export class ManageOrgDefaultModelUseCase {
           permittedModelId: command.permittedModelId,
           orgId: command.orgId,
         });
-        throw new PermittedModelNotFoundByIdError(command.permittedModelId);
+        throw new PermittedModelNotFoundError(command.permittedModelId);
       }
 
       // Check if there's already a default model

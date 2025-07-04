@@ -5,10 +5,7 @@ import { Agent } from '../../../domain/agent.entity';
 import { FindOneToolUseCase } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.use-case';
 import { AgentToolAssignment } from '../../../domain/value-objects/agent-tool-assignment.object';
 import { FindOneConfigurableToolQuery } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
-import {
-  GetPermittedModelByIdQuery,
-  GetPermittedModelQuery,
-} from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
+import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
 import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
 
 @Injectable()
@@ -24,8 +21,8 @@ export class CreateAgentUseCase {
   async execute(command: CreateAgentCommand): Promise<Agent> {
     this.logger.log('Creating agent', { name: command.name });
     const model = await this.getPermittedModelUseCase.execute(
-      new GetPermittedModelByIdQuery({
-        modelId: command.modelId,
+      new GetPermittedModelQuery({
+        permittedModelId: command.modelId,
         orgId: command.orgId,
       }),
     );

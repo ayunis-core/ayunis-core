@@ -3,10 +3,7 @@ import { ManageUserDefaultModelCommand } from './manage-user-default-model.comma
 import { PermittedModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import {
-  ModelError,
-  PermittedModelNotFoundByIdError,
-} from '../../models.errors';
+import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
 
 @Injectable()
 export class ManageUserDefaultModelUseCase {
@@ -38,7 +35,7 @@ export class ManageUserDefaultModelUseCase {
           permittedModelId: command.permittedModelId,
           orgId: command.orgId,
         });
-        throw new PermittedModelNotFoundByIdError(command.permittedModelId);
+        throw new PermittedModelNotFoundError(command.permittedModelId);
       }
 
       // Check if there's already a user default model

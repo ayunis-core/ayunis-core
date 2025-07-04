@@ -45,8 +45,6 @@ import type {
   GetThreadResponseDto,
   GetThreadsResponseDtoItem,
   HttpTool,
-  InferenceRequestDto,
-  InferenceResponse,
   InviteDetailResponseDto,
   InviteResponseDto,
   LoginDto,
@@ -929,71 +927,6 @@ export const useModelsControllerDeleteUserDefaultModel = <TError = void,
       > => {
 
       const mutationOptions = getModelsControllerDeleteUserDefaultModelMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Trigger inference
- */
-export const modelsControllerInference = (
-    inferenceRequestDto: InferenceRequestDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<InferenceResponse>(
-      {url: `/models/inference`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: inferenceRequestDto, signal
-    },
-      );
-    }
-  
-
-
-export const getModelsControllerInferenceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerInference>>, TError,{data: InferenceRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerInference>>, TError,{data: InferenceRequestDto}, TContext> => {
-
-const mutationKey = ['modelsControllerInference'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerInference>>, {data: InferenceRequestDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  modelsControllerInference(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ModelsControllerInferenceMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerInference>>>
-    export type ModelsControllerInferenceMutationBody = InferenceRequestDto
-    export type ModelsControllerInferenceMutationError = void
-
-    /**
- * @summary Trigger inference
- */
-export const useModelsControllerInference = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerInference>>, TError,{data: InferenceRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof modelsControllerInference>>,
-        TError,
-        {data: InferenceRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getModelsControllerInferenceMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

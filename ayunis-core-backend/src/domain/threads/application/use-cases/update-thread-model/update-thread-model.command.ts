@@ -5,7 +5,6 @@ export class UpdateThreadModelCommand {
   constructor(
     public readonly threadId: UUID,
     public readonly userId: UUID,
-    public readonly modelName: string,
-    public readonly modelProvider: ModelProvider,
+    public readonly modelId: UUID,
   ) {}
 }

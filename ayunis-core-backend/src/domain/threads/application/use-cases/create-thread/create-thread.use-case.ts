@@ -4,10 +4,10 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
 import { ThreadCreationError, ThreadError } from '../../threads.errors';
 import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
-import { GetPermittedModelByIdQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
 import { ModelError } from 'src/domain/models/application/models.errors';
 import { GetAvailableModelUseCase } from 'src/domain/models/application/use-cases/get-available-model/get-available-model.use-case';
 import { GetAvailableModelQuery } from 'src/domain/models/application/use-cases/get-available-model/get-available-model.query';
+import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -23,8 +23,8 @@ export class CreateThreadUseCase {
     this.logger.log('execute', { userId: command.userId });
     try {
       const model = await this.getPermittedModelUseCase.execute(
-        new GetPermittedModelByIdQuery({
-          modelId: command.modelId,
+        new GetPermittedModelQuery({
+          permittedModelId: command.modelId,
           orgId: command.orgId,
         }),
       );

@@ -33,7 +33,6 @@ import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
 import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
-import { GetPermittedModelByNameAndProviderQuery } from '../../application/use-cases/get-permitted-model/get-permitted-model.query';
 import { GetPermittedModelUseCase } from '../../application/use-cases/get-permitted-model/get-permitted-model.use-case';
 import { InferenceResponse } from '../../application/ports/inference.handler';
 import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
@@ -394,78 +393,81 @@ export class ModelsController {
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
   }
 
-  @Post('inference')
-  @ApiOperation({ summary: 'Trigger inference' })
-  @ApiBody({ type: InferenceRequestDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully triggered inference and returned model response',
-    schema: {
-      $ref: getSchemaPath(InferenceResponse),
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid inference request payload',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Model not found',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error or model provider error',
-  })
-  @ApiExtraModels(
-    InferenceResponse,
-    ToolSpecificationDto,
-    UserMessageRequestDto,
-    SystemMessageRequestDto,
-    AssistantMessageRequestDto,
-    ToolResultMessageRequestDto,
-    TextMessageContentRequestDto,
-    ToolUseMessageContentRequestDto,
-    ToolResultMessageContentRequestDto,
-  )
-  async inference(
-    @Body() inferenceRequestDto: InferenceRequestDto,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<InferenceResponse> {
-    this.logger.log('inference', inferenceRequestDto);
-    const getModelQuery = new GetPermittedModelByNameAndProviderQuery({
-      name: inferenceRequestDto.modelName,
-      provider: inferenceRequestDto.modelProvider,
-      orgId,
-    });
-    const model = await this.getPermittedModelUseCase.execute(getModelQuery);
+  /**
+   * TODO: Implement with model and provider as input
+   */
+  // @Post('inference')
+  // @ApiOperation({ summary: 'Trigger inference' })
+  // @ApiBody({ type: InferenceRequestDto })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Successfully triggered inference and returned model response',
+  //   schema: {
+  //     $ref: getSchemaPath(InferenceResponse),
+  //   },
+  // })
+  // @ApiResponse({
+  //   status: 400,
+  //   description: 'Invalid inference request payload',
+  // })
+  // @ApiResponse({
+  //   status: 404,
+  //   description: 'Model not found',
+  // })
+  // @ApiResponse({
+  //   status: 500,
+  //   description: 'Internal server error or model provider error',
+  // })
+  // @ApiExtraModels(
+  //   InferenceResponse,
+  //   ToolSpecificationDto,
+  //   UserMessageRequestDto,
+  //   SystemMessageRequestDto,
+  //   AssistantMessageRequestDto,
+  //   ToolResultMessageRequestDto,
+  //   TextMessageContentRequestDto,
+  //   ToolUseMessageContentRequestDto,
+  //   ToolResultMessageContentRequestDto,
+  // )
+  // async inference(
+  //   @Body() inferenceRequestDto: InferenceRequestDto,
+  //   @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  // ): Promise<InferenceResponse> {
+  //   this.logger.log('inference', inferenceRequestDto);
+  //   const getModelQuery = new GetPermittedModelByNameAndProviderQuery({
+  //     name: inferenceRequestDto.modelName,
+  //     provider: inferenceRequestDto.modelProvider,
+  //     orgId,
+  //   });
+  //   const model = await this.getPermittedModelUseCase.execute(getModelQuery);
 
-    // Create CustomTool entities from tool specifications
-    const tools: Tool[] = [];
-    if (inferenceRequestDto.tools && inferenceRequestDto.tools.length > 0) {
-      for (const toolSpec of inferenceRequestDto.tools) {
-        const createToolCommand = new CreateCustomToolCommand(
-          toolSpec.name,
-          toolSpec.description,
-          toolSpec.parameters,
-        );
-        const customTool =
-          await this.createCustomToolUseCase.execute(createToolCommand);
-        tools.push(customTool);
-      }
-    }
+  //   // Create CustomTool entities from tool specifications
+  //   const tools: Tool[] = [];
+  //   if (inferenceRequestDto.tools && inferenceRequestDto.tools.length > 0) {
+  //     for (const toolSpec of inferenceRequestDto.tools) {
+  //       const createToolCommand = new CreateCustomToolCommand(
+  //         toolSpec.name,
+  //         toolSpec.description,
+  //         toolSpec.parameters,
+  //       );
+  //       const customTool =
+  //         await this.createCustomToolUseCase.execute(createToolCommand);
+  //       tools.push(customTool);
+  //     }
+  //   }
 
-    // Convert MessageRequestDto[] to Message[]
-    const messages = this.messageRequestDtoMapper.fromDtoArray(
-      inferenceRequestDto.messages,
-    );
+  //   // Convert MessageRequestDto[] to Message[]
+  //   const messages = this.messageRequestDtoMapper.fromDtoArray(
+  //     inferenceRequestDto.messages,
+  //   );
 
-    const inferenceCommand = new GetInferenceCommand({
-      model: model.model,
-      messages: messages,
-      tools: tools,
-      toolChoice: inferenceRequestDto.toolChoice || ModelToolChoice.AUTO,
-    });
+  //   const inferenceCommand = new GetInferenceCommand({
+  //     model: model.model,
+  //     messages: messages,
+  //     tools: tools,
+  //     toolChoice: inferenceRequestDto.toolChoice || ModelToolChoice.AUTO,
+  //   });
 
-    return await this.triggerInferenceUseCase.execute(inferenceCommand);
-  }
+  //   return await this.triggerInferenceUseCase.execute(inferenceCommand);
+  // }
 }

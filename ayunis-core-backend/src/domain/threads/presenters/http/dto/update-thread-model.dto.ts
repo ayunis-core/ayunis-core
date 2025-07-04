@@ -1,22 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { IsNotEmpty, IsUUID } from 'class-validator';
+import { UUID } from 'crypto';
 
 export class UpdateThreadModelDto {
   @ApiProperty({
-    description: 'The name of the model',
-    example: 'gpt-4',
-    type: String,
+    description: 'The id of the model',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
-  modelName: string;
-
-  @ApiProperty({
-    description: 'The provider of the model',
-    example: ModelProvider.OPENAI,
-    enum: ModelProvider,
-  })
-  @IsEnum(ModelProvider)
-  modelProvider: ModelProvider;
+  modelId: UUID;
 }
