@@ -86,13 +86,9 @@ export class ModelProviderNotSupportedError extends ModelError {
  * Error thrown when a model is not found
  */
 export class ModelNotFoundError extends ModelError {
-  constructor(
-    modelName: string,
-    modelProvider: ModelProvider,
-    metadata?: ErrorMetadata,
-  ) {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
     super(
-      `Model '${modelName}' not found for provider '${modelProvider}'`,
+      `Model '${modelId}' not found`,
       ModelErrorCode.MODEL_NOT_FOUND,
       404,
       metadata,

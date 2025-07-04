@@ -9,7 +9,7 @@ export class ModelResponseDtoMapper {
     model: ModelWithConfig,
     permittedModel: PermittedModel,
   ): PermittedModelResponseDto {
-    if (!model.model.equals(permittedModel.model)) {
+    if (model.model.id !== permittedModel.model.id) {
       throw new Error('Model and permitted model do not match');
     }
     return {

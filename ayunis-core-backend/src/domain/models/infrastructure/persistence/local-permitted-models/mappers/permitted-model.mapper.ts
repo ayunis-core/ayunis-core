@@ -1,28 +1,39 @@
 import { PermittedModel } from '../../../../domain/permitted-model.entity';
 import { PermittedModelRecord } from '../schema/permitted-model.record';
 import { Model } from '../../../../domain/model.entity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class PermittedModelMapper {
-  toDomain(entity: PermittedModelRecord): PermittedModel {
+  private readonly logger = new Logger(PermittedModelMapper.name);
+
+  toDomain(record: PermittedModelRecord): PermittedModel {
+    this.logger.log('toDomain', { record });
     return new PermittedModel({
-      id: entity.id,
-      model: new Model(entity.name, entity.provider),
-      orgId: entity.orgId,
-      isDefault: entity.isDefault,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      id: record.id,
+      model: new Model({
+        id: record.model.id,
+        name: record.model.name,
+        provider: record.model.provider,
+        createdAt: record.model.createdAt,
+        updatedAt: record.model.updatedAt,
+      }),
+      orgId: record.orgId,
+      isDefault: record.isDefault,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
     });
   }
 
-  toEntity(domain: PermittedModel): PermittedModelRecord {
-    const entity = new PermittedModelRecord();
-    entity.id = domain.id;
-    entity.name = domain.model.name;
-    entity.provider = domain.model.provider;
-    entity.orgId = domain.orgId;
-    entity.isDefault = domain.isDefault;
-    return entity;
+  toRecord(domain: PermittedModel): PermittedModelRecord {
+    this.logger.log('toRecord', { domain });
+    const record = new PermittedModelRecord();
+    record.id = domain.id;
+    record.modelId = domain.model.id;
+    record.orgId = domain.orgId;
+    record.isDefault = domain.isDefault;
+    record.createdAt = domain.createdAt;
+    record.updatedAt = domain.updatedAt;
+    return record;
   }
 }

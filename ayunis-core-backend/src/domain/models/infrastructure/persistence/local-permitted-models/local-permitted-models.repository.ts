@@ -24,6 +24,9 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findAll(orgId: UUID): Promise<PermittedModel[]> {
     const permittedModels = await this.permittedModelRepository.find({
       where: { orgId },
+      relations: {
+        model: true,
+      },
     });
     return permittedModels.map((permittedModel) =>
       this.permittedModelMapper.toDomain(permittedModel),
@@ -61,10 +64,17 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
 
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
     const permittedModelEntity =
-      this.permittedModelMapper.toEntity(permittedModel);
+      this.permittedModelMapper.toRecord(permittedModel);
     const savedPermittedModel =
       await this.permittedModelRepository.save(permittedModelEntity);
-    return this.permittedModelMapper.toDomain(savedPermittedModel);
+    const reloadedPermittedModel =
+      await this.permittedModelRepository.findOneOrFail({
+        where: { id: savedPermittedModel.id },
+        relations: {
+          model: true,
+        },
+      });
+    return this.permittedModelMapper.toDomain(reloadedPermittedModel);
   }
 
   async delete(params: { id: UUID; orgId: UUID }): Promise<void> {
@@ -122,8 +132,8 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
         this.logger.debug('Model set as default', {
           id: params.id,
           orgId: params.orgId,
-          modelName: updatedModel.name,
-          modelProvider: updatedModel.provider,
+          modelName: updatedModel.model.name,
+          modelProvider: updatedModel.model.provider,
         });
 
         return this.permittedModelMapper.toDomain(updatedModel);

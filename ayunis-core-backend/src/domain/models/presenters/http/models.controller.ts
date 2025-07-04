@@ -153,8 +153,7 @@ export class ModelsController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
     const command = new CreatePermittedModelCommand(
-      createPermittedModelDto.modelName,
-      createPermittedModelDto.modelProvider,
+      createPermittedModelDto.modelId,
       orgId,
     );
     await this.createPermittedModelUseCase.execute(command);
@@ -184,7 +183,7 @@ export class ModelsController {
     const models = await this.getPermittedModelsUseCase.execute(query);
     const permittedModelResponse = models.map((model) => {
       const modelWithConfig = this.getAvailableModelUseCase.execute(
-        new GetAvailableModelQuery(model.model.name, model.model.provider),
+        new GetAvailableModelQuery(model.model.id),
       );
       return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
     });
@@ -229,7 +228,7 @@ export class ModelsController {
     const query = new GetDefaultModelQuery(orgId, userId);
     const model = await this.getDefaultModelUseCase.execute(query);
     const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.name, model.model.provider),
+      new GetAvailableModelQuery(model.model.id),
     );
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
   }
@@ -262,7 +261,7 @@ export class ModelsController {
     }
 
     const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.name, model.model.provider),
+      new GetAvailableModelQuery(model.model.id),
     );
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
   }
@@ -295,7 +294,7 @@ export class ModelsController {
     }
 
     const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.name, model.model.provider),
+      new GetAvailableModelQuery(model.model.id),
     );
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
   }
@@ -335,7 +334,7 @@ export class ModelsController {
     );
     const model = await this.manageUserDefaultModelUseCase.execute(command);
     const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.name, model.model.provider),
+      new GetAvailableModelQuery(model.model.id),
     );
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
   }
@@ -390,7 +389,7 @@ export class ModelsController {
     );
     const model = await this.manageOrgDefaultModelUseCase.execute(command);
     const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.name, model.model.provider),
+      new GetAvailableModelQuery(model.model.id),
     );
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
   }

@@ -2370,6 +2370,127 @@
           "subscriptions"
         ]
       }
+    },
+    "/admin/models": {
+      "get": {
+        "operationId": "AdminController_getAllModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/model": {
+      "get": {
+        "operationId": "AdminController_getModel",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/models/{id}": {
+      "put": {
+        "operationId": "AdminController_updateModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminController_deleteModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
     }
   },
   "info": {
@@ -2390,7 +2511,11 @@
       "ModelWithConfigResponseDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "modelId": {
+            "type": "string",
+            "description": "The id of the model"
+          },
+          "permittedModelId": {
             "type": "string",
             "description": "The id of the model. Null if the model is not permitted.",
             "nullable": true
@@ -2432,7 +2557,8 @@
           }
         },
         "required": [
-          "id",
+          "modelId",
+          "permittedModelId",
           "name",
           "provider",
           "displayName",
@@ -2445,20 +2571,14 @@
       "CreatePermittedModelDto": {
         "type": "object",
         "properties": {
-          "modelName": {
+          "modelId": {
             "type": "string",
-            "description": "The name of the model",
-            "example": "gpt-4"
-          },
-          "modelProvider": {
-            "type": "string",
-            "description": "The provider of the model",
-            "example": "openai"
+            "description": "The id of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         },
         "required": [
-          "modelName",
-          "modelProvider"
+          "modelId"
         ]
       },
       "PermittedModelResponseDto": {
@@ -4666,6 +4786,14 @@
         "required": [
           "hasActiveSubscription"
         ]
+      },
+      "CreateModelDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateModelDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }

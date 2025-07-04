@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LocalModelRecord } from './schema/local-model.record';
+import { ModelRecord } from './schema/model.record';
 import { LocalModelsRepository } from './local-models.repository';
 import { ModelsRepository } from '../../../application/ports/models.repository';
-import { LocalModelMapper } from './mappers/local-model.mapper';
+import { ModelMapper } from './mappers/model.mapper';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([LocalModelRecord])],
+  imports: [TypeOrmModule.forFeature([ModelRecord])],
   providers: [
     LocalModelsRepository,
-    LocalModelMapper,
+    ModelMapper,
     {
       provide: ModelsRepository,
       useClass: LocalModelsRepository,
     },
   ],
-  exports: [LocalModelsRepository, LocalModelMapper, ModelsRepository],
+  exports: [LocalModelsRepository, ModelMapper, ModelsRepository],
 })
 export class LocalModelsRepositoryModule {}

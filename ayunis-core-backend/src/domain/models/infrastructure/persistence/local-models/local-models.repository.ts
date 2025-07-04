@@ -7,17 +7,17 @@ import {
   ModelsRepository,
 } from '../../../application/ports/models.repository';
 import { ModelWithConfig } from '../../../domain/model-with-config.entity';
-import { LocalModelRecord } from './schema/local-model.record';
-import { LocalModelMapper } from './mappers/local-model.mapper';
+import { ModelRecord } from './schema/model.record';
+import { ModelMapper } from './mappers/model.mapper';
 
 @Injectable()
 export class LocalModelsRepository extends ModelsRepository {
   private readonly logger = new Logger(LocalModelsRepository.name);
 
   constructor(
-    @InjectRepository(LocalModelRecord)
-    private readonly localModelRepository: Repository<LocalModelRecord>,
-    private readonly localModelMapper: LocalModelMapper,
+    @InjectRepository(ModelRecord)
+    private readonly localModelRepository: Repository<ModelRecord>,
+    private readonly localModelMapper: ModelMapper,
   ) {
     super();
   }
@@ -25,11 +25,11 @@ export class LocalModelsRepository extends ModelsRepository {
   async findAll(): Promise<ModelWithConfig[]> {
     this.logger.log('findAll');
 
-    const models = await this.localModelRepository.find({
-      order: { createdAt: 'ASC' },
-    });
+    const modelRecords = await this.localModelRepository.find();
 
-    return models.map((model) => this.localModelMapper.toDomain(model));
+    return modelRecords.map((modelRecord) =>
+      this.localModelMapper.toDomain(modelRecord),
+    );
   }
 
   async findOne(
@@ -54,7 +54,7 @@ export class LocalModelsRepository extends ModelsRepository {
       displayName: model.config.displayName,
     });
 
-    const modelEntity = this.localModelMapper.toEntity(model);
+    const modelEntity = this.localModelMapper.toRecord(model);
     const savedModel = await this.localModelRepository.save(modelEntity);
 
     return this.localModelMapper.toDomain(savedModel);
@@ -68,7 +68,7 @@ export class LocalModelsRepository extends ModelsRepository {
       displayName: model.config.displayName,
     });
 
-    const modelEntity = this.localModelMapper.toEntity(model);
+    const modelEntity = this.localModelMapper.toRecord(model);
     modelEntity.id = id;
 
     const savedModel = await this.localModelRepository.save(modelEntity);

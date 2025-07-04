@@ -1,10 +1,10 @@
-import { BaseRecord } from 'src/common/db/base-record';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { BaseRecord } from '../../../../../../common/db/base-record';
+import { ModelProvider } from '../../../../domain/value-objects/model-provider.object';
 import { Column, Entity, Index } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'models' })
 @Index(['name', 'provider'], { unique: true })
-export class LocalModelRecord extends BaseRecord {
+export class ModelRecord extends BaseRecord {
   @Column()
   name: string;
 

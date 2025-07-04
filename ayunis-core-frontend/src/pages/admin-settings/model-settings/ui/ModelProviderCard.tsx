@@ -51,13 +51,12 @@ export default function ModelProviderCard({
   ) {
     if (isPermitted) {
       createPermittedModel({
-        modelName: model.name,
-        modelProvider: provider,
+        modelId: model.modelId,
       });
       return;
     }
-    if (!isPermitted && model.id) {
-      deletePermittedModel(model.id);
+    if (!isPermitted && model.permittedModelId) {
+      deletePermittedModel(model.permittedModelId);
       return;
     }
   }

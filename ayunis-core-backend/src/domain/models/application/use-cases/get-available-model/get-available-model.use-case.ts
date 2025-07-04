@@ -8,10 +8,7 @@ export class GetAvailableModelUseCase {
   constructor(private readonly modelRegistry: ModelRegistry) {}
 
   execute(query: GetAvailableModelQuery): ModelWithConfig {
-    const model = this.modelRegistry.getAvailableModel(
-      query.modelName,
-      query.modelProvider,
-    );
+    const model = this.modelRegistry.getAvailableModel(query.modelId);
     return model;
   }
 }

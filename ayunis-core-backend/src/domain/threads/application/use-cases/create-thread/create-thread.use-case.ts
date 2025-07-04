@@ -36,7 +36,7 @@ export class CreateThreadUseCase {
         });
         const createdThread = await this.threadsRepository.create(thread);
         const { config } = this.getAvailableModelUseCase.execute(
-          new GetAvailableModelQuery(model.model.name, model.model.provider),
+          new GetAvailableModelQuery(model.model.id),
         );
         return new Thread({
           ...createdThread,

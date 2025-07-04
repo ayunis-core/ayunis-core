@@ -26,10 +26,7 @@ export class FindThreadUseCase {
         throw new ThreadNotFoundError(query.id, query.userId);
       }
       const modelWithConfig = this.getAvailableModelUseCase.execute(
-        new GetAvailableModelQuery(
-          thread.model.model.name,
-          thread.model.model.provider,
-        ),
+        new GetAvailableModelQuery(thread.model.model.id),
       );
       return new Thread({
         ...thread,

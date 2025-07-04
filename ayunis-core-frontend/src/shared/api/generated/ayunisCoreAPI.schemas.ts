@@ -21,11 +21,13 @@ export const ModelWithConfigResponseDtoProvider = {
 } as const;
 
 export interface ModelWithConfigResponseDto {
+  /** The id of the model */
+  modelId: string;
   /**
    * The id of the model. Null if the model is not permitted.
    * @nullable
    */
-  id: string | null;
+  permittedModelId: string | null;
   /** The name of the model */
   name: string;
   /** The provider of the model */
@@ -43,10 +45,8 @@ export interface ModelWithConfigResponseDto {
 }
 
 export interface CreatePermittedModelDto {
-  /** The name of the model */
-  modelName: string;
-  /** The provider of the model */
-  modelProvider: string;
+  /** The id of the model */
+  modelId: string;
 }
 
 /**
@@ -1294,6 +1294,10 @@ export interface ActiveSubscriptionResponseDto {
   hasActiveSubscription: boolean;
 }
 
+export interface CreateModelDto { [key: string]: unknown }
+
+export interface UpdateModelDto { [key: string]: unknown }
+
 export type SourcesControllerGetSourcesByThreadIdParams = {
 /**
  * Thread ID
@@ -1341,5 +1345,10 @@ export type RunsControllerSendMessage200 = {
 
 export type StorageControllerUploadFileBody = {
   file?: Blob;
+};
+
+export type AdminControllerGetModelParams = {
+name: string;
+provider: string;
 };
 

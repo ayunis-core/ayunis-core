@@ -49,7 +49,10 @@ export class UpdateModelUseCase {
       }
 
       // Create updated model with config
-      const model = new Model(command.name, command.provider);
+      const model = new Model({
+        name: command.name,
+        provider: command.provider,
+      });
       const config = new ModelConfig({
         displayName: command.displayName,
         canStream: command.canStream,

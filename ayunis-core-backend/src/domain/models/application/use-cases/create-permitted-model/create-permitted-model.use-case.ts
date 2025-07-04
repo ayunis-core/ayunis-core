@@ -15,15 +15,11 @@ export class CreatePermittedModelUseCase {
 
   async execute(command: CreatePermittedModelCommand): Promise<void> {
     this.logger.log('execute', {
-      modelName: command.modelName,
-      modelProvider: command.modelProvider,
+      modelId: command.modelId,
       orgId: command.orgId,
     });
     try {
-      const model = this.modelRegistry.getAvailableModel(
-        command.modelName,
-        command.modelProvider,
-      );
+      const model = this.modelRegistry.getAvailableModel(command.modelId);
       const permittedModel = new PermittedModel({
         model: model.model,
         orgId: command.orgId,

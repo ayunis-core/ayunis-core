@@ -9,6 +9,7 @@ interface ModelSettingsPageProps {
 }
 
 export default function ModelSettingsPage({ models }: ModelSettingsPageProps) {
+  console.log("Models", models);
   const { t } = useTranslation("admin-settings");
 
   // Group models by provider

@@ -10,14 +10,16 @@ export class ModelWithConfigResponseDtoMapper {
     permittedModels: PermittedModel[],
   ): ModelWithConfigResponseDto[] {
     return allModelsWithConfig.map((modelWithConfig) => {
-      const permittedModel = permittedModels.find((permittedModel) =>
-        modelWithConfig.model.equals(permittedModel.model),
+      const permittedModel = permittedModels.find(
+        (permittedModel) =>
+          modelWithConfig.model.id === permittedModel.model.id,
       );
       const id = permittedModel?.id;
       const isPermitted = permittedModel !== undefined;
       const isDefault = permittedModel?.isDefault ?? false;
       return {
-        id,
+        modelId: modelWithConfig.model.id,
+        permittedModelId: id,
         name: modelWithConfig.model.name,
         provider: modelWithConfig.model.provider,
         displayName: modelWithConfig.config.displayName,

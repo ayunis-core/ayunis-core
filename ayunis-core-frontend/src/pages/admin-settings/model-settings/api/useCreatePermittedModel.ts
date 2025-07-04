@@ -36,6 +36,7 @@ export function useCreatePermittedModel() {
   });
 
   function createPermittedModel(model: Model) {
+    console.log("Creating permitted model", model);
     createPermittedModelMutation.mutate(
       {
         data: model,

@@ -55,7 +55,7 @@ export class AdminController {
     );
   }
 
-  @Post('model')
+  @Post('models')
   async createModel(@Body() createModelDto: CreateModelDto) {
     return this.createModelUseCase.execute(
       new CreateModelCommand(
@@ -69,7 +69,7 @@ export class AdminController {
     );
   }
 
-  @Put('model/:id')
+  @Put('models/:id')
   async updateModel(
     @Param('id') id: UUID,
     @Body() updateModelDto: UpdateModelDto,
@@ -87,7 +87,7 @@ export class AdminController {
     );
   }
 
-  @Delete('model/:id')
+  @Delete('models/:id')
   async deleteModel(@Param('id') id: UUID) {
     await this.deleteModelUseCase.execute(new DeleteModelCommand(id));
     return { message: 'Model deleted successfully' };

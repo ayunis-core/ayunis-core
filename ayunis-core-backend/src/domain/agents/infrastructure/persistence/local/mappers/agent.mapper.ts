@@ -26,7 +26,7 @@ export class AgentMapper {
     entity.id = domain.id;
     entity.name = domain.name;
     entity.instructions = domain.instructions;
-    entity.model = this.permittedModelMapper.toEntity(domain.model);
+    entity.model = this.permittedModelMapper.toRecord(domain.model);
     entity.userId = domain.userId;
     entity.agentTools = domain.toolAssignments.map((assignment) =>
       AgentToolMapper.toEntity(domain.id, assignment),

@@ -1,8 +1,5 @@
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { UUID } from 'crypto';
 
 export class GetAvailableModelQuery {
-  constructor(
-    public readonly modelName: string,
-    public readonly modelProvider: ModelProvider,
-  ) {}
+  constructor(public readonly modelId: UUID) {}
 }

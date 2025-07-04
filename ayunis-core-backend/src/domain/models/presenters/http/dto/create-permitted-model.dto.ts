@@ -1,19 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString } from 'class-validator';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { UUID } from 'crypto';
+import { IsUUID } from 'class-validator';
 
 export class CreatePermittedModelDto {
   @ApiProperty({
-    description: 'The name of the model',
-    example: 'gpt-4',
+    description: 'The id of the model',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @IsString()
-  modelName: string;
-
-  @ApiProperty({
-    description: 'The provider of the model',
-    example: 'openai',
-  })
-  @IsEnum(ModelProvider)
-  modelProvider: ModelProvider;
+  @IsUUID()
+  modelId: UUID;
 }

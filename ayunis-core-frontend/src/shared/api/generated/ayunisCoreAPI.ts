@@ -28,9 +28,11 @@ import type {
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
+  AdminControllerGetModelParams,
   CreateHttpToolDto,
   CreateInviteDto,
   CreateInviteResponseDto,
+  CreateModelDto,
   CreatePermittedModelDto,
   CreatePromptDto,
   CreateSubscriptionRequestDto,
@@ -70,6 +72,7 @@ import type {
   SubscriptionResponseDto,
   SuccessResponseDto,
   ThreadsControllerAddFileSourceBody,
+  UpdateModelDto,
   UpdatePasswordDto,
   UpdatePromptDto,
   UpdateThreadInstructionDto,
@@ -4965,6 +4968,345 @@ export const useSubscriptionsControllerUncancelSubscription = <TError = void,
       > => {
 
       const mutationOptions = getSubscriptionsControllerUncancelSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminControllerGetAllModels = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/admin/models`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAdminControllerGetAllModelsQueryKey = () => {
+    return [`/admin/models`] as const;
+    }
+
+    
+export const getAdminControllerGetAllModelsQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetAllModelsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetAllModels>>> = ({ signal }) => adminControllerGetAllModels(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerGetAllModelsQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetAllModels>>>
+export type AdminControllerGetAllModelsQueryError = unknown
+
+
+export function useAdminControllerGetAllModels<TData = Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetAllModels>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetAllModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetAllModels<TData = Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetAllModels>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetAllModels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetAllModels<TData = Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminControllerGetAllModels<TData = Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetAllModels>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerGetAllModelsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export const adminControllerCreateModel = (
+    createModelDto: CreateModelDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/admin/models`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createModelDto, signal
+    },
+      );
+    }
+  
+
+
+export const getAdminControllerCreateModelMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerCreateModel>>, TError,{data: CreateModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerCreateModel>>, TError,{data: CreateModelDto}, TContext> => {
+
+const mutationKey = ['adminControllerCreateModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerCreateModel>>, {data: CreateModelDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminControllerCreateModel(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerCreateModelMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerCreateModel>>>
+    export type AdminControllerCreateModelMutationBody = CreateModelDto
+    export type AdminControllerCreateModelMutationError = unknown
+
+    export const useAdminControllerCreateModel = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerCreateModel>>, TError,{data: CreateModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerCreateModel>>,
+        TError,
+        {data: CreateModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerCreateModelMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminControllerGetModel = (
+    params: AdminControllerGetModelParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/admin/model`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getAdminControllerGetModelQueryKey = (params: AdminControllerGetModelParams,) => {
+    return [`/admin/model`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAdminControllerGetModelQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetModel>>, TError = unknown>(params: AdminControllerGetModelParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetModel>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetModelQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetModel>>> = ({ signal }) => adminControllerGetModel(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetModel>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerGetModelQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetModel>>>
+export type AdminControllerGetModelQueryError = unknown
+
+
+export function useAdminControllerGetModel<TData = Awaited<ReturnType<typeof adminControllerGetModel>>, TError = unknown>(
+ params: AdminControllerGetModelParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetModel>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetModel>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetModel<TData = Awaited<ReturnType<typeof adminControllerGetModel>>, TError = unknown>(
+ params: AdminControllerGetModelParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetModel>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetModel>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetModel>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetModel<TData = Awaited<ReturnType<typeof adminControllerGetModel>>, TError = unknown>(
+ params: AdminControllerGetModelParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetModel>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminControllerGetModel<TData = Awaited<ReturnType<typeof adminControllerGetModel>>, TError = unknown>(
+ params: AdminControllerGetModelParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetModel>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerGetModelQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export const adminControllerUpdateModel = (
+    id: string,
+    updateModelDto: UpdateModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/admin/models/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateModelDto
+    },
+      );
+    }
+  
+
+
+export const getAdminControllerUpdateModelMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerUpdateModel>>, TError,{id: string;data: UpdateModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerUpdateModel>>, TError,{id: string;data: UpdateModelDto}, TContext> => {
+
+const mutationKey = ['adminControllerUpdateModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerUpdateModel>>, {id: string;data: UpdateModelDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminControllerUpdateModel(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerUpdateModelMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerUpdateModel>>>
+    export type AdminControllerUpdateModelMutationBody = UpdateModelDto
+    export type AdminControllerUpdateModelMutationError = unknown
+
+    export const useAdminControllerUpdateModel = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerUpdateModel>>, TError,{id: string;data: UpdateModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerUpdateModel>>,
+        TError,
+        {id: string;data: UpdateModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerUpdateModelMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+export const adminControllerDeleteModel = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/admin/models/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getAdminControllerDeleteModelMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerDeleteModel>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerDeleteModel>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['adminControllerDeleteModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerDeleteModel>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminControllerDeleteModel(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerDeleteModelMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerDeleteModel>>>
+    
+    export type AdminControllerDeleteModelMutationError = unknown
+
+    export const useAdminControllerDeleteModel = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerDeleteModel>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerDeleteModel>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerDeleteModelMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

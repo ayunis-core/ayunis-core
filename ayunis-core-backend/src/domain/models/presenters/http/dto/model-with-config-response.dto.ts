@@ -5,10 +5,16 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 export class ModelWithConfigResponseDto {
   @ApiProperty({
     type: 'string',
+    description: 'The id of the model',
+  })
+  modelId: UUID;
+
+  @ApiProperty({
+    type: 'string',
     description: 'The id of the model. Null if the model is not permitted.',
     nullable: true,
   })
-  id?: UUID;
+  permittedModelId?: UUID;
 
   @ApiProperty({
     type: 'string',
