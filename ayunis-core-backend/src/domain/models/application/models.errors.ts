@@ -23,6 +23,9 @@ export enum ModelErrorCode {
   INFERENCE_TIMEOUT = 'INFERENCE_TIMEOUT',
   MODEL_RATE_LIMIT_EXCEEDED = 'MODEL_RATE_LIMIT_EXCEEDED',
   MODEL_DELETION_FAILED = 'MODEL_DELETION_FAILED',
+  MODEL_ALREADY_EXISTS = 'MODEL_ALREADY_EXISTS',
+  MODEL_UPDATE_FAILED = 'MODEL_UPDATE_FAILED',
+  MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
 }
 
 /**
@@ -211,6 +214,90 @@ export class ModelRateLimitExceededError extends ModelError {
       `Rate limit exceeded for provider '${provider}'`,
       ModelErrorCode.MODEL_RATE_LIMIT_EXCEEDED,
       429,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when trying to create a model that already exists
+ */
+export class ModelAlreadyExistsError extends ModelError {
+  constructor(name: string, provider: ModelProvider, metadata?: ErrorMetadata) {
+    super(
+      `Model '${name}' with provider '${provider}' already exists`,
+      ModelErrorCode.MODEL_ALREADY_EXISTS,
+      409,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when model update fails
+ */
+export class ModelUpdateFailedError extends ModelError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Model update failed: ${reason}`,
+      ModelErrorCode.MODEL_UPDATE_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when model creation fails
+ */
+export class ModelCreationFailedError extends ModelError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Model creation failed: ${reason}`,
+      ModelErrorCode.MODEL_CREATION_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a model is not found by ID
+ */
+export class ModelNotFoundByIdError extends ModelError {
+  constructor(id: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model with ID '${id}' not found`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a model is not found by name and provider
+ */
+export class ModelNotFoundByNameAndProviderError extends ModelError {
+  constructor(name: string, provider: ModelProvider, metadata?: ErrorMetadata) {
+    super(
+      `Model '${name}' with provider '${provider}' not found`,
+      ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when model deletion fails
+ */
+export class ModelDeletionFailedError extends ModelError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Model deletion failed: ${reason}`,
+      ModelErrorCode.MODEL_DELETION_FAILED,
+      500,
       metadata,
     );
   }

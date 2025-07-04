@@ -21,6 +21,7 @@ import { ModelResponseDtoMapper } from './presenters/http/mappers/model-response
 import { ModelWithConfigResponseDtoMapper } from './presenters/http/mappers/model-with-config-response-dto.mapper';
 import { LocalPermittedModelsRepositoryModule } from './infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
 import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persistence/local-user-default-models/local-user-default-models-repository.module';
+import { LocalModelsRepositoryModule } from './infrastructure/persistence/local-models/local-models-repository.module';
 import { CreatePermittedModelUseCase } from './application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelUseCase } from './application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
 import { GetAvailableModelUseCase } from './application/use-cases/get-available-model/get-available-model.use-case';
@@ -36,11 +37,17 @@ import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org
 import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
 import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
 import { MistralStreamInferenceHandler } from './infrastructure/stream-inference/mistral.stream-inference';
+import { CreateModelUseCase } from './application/use-cases/create-model/create-model.use-case';
+import { UpdateModelUseCase } from './application/use-cases/update-model/update-model.use-case';
+import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
+import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
+import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-model.use-case';
 
 @Module({
   imports: [
     LocalPermittedModelsRepositoryModule,
     LocalUserDefaultModelsRepositoryModule,
+    LocalModelsRepositoryModule,
   ],
   controllers: [ModelsController],
   providers: [
@@ -112,6 +119,12 @@ import { MistralStreamInferenceHandler } from './infrastructure/stream-inference
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
     ManageOrgDefaultModelUseCase,
+    // Model Management Use Cases
+    CreateModelUseCase,
+    UpdateModelUseCase,
+    GetModelUseCase,
+    GetAllModelsUseCase,
+    DeleteModelUseCase,
   ],
   exports: [
     InferenceHandlerRegistry,
@@ -134,6 +147,12 @@ import { MistralStreamInferenceHandler } from './infrastructure/stream-inference
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
     ManageOrgDefaultModelUseCase,
+    // Model Management Use Cases
+    CreateModelUseCase,
+    UpdateModelUseCase,
+    GetModelUseCase,
+    GetAllModelsUseCase,
+    DeleteModelUseCase,
   ],
 })
 export class ModelsModule {}
