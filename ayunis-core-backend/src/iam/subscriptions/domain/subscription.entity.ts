@@ -1,16 +1,17 @@
 import { randomUUID, UUID } from 'crypto';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { BillingCycle } from './value-objects/billing-cycle.enum';
+import { RenewalCycle } from './value-objects/renewal-cycle.enum';
 
 export interface SubscriptionParams {
   id?: UUID;
   createdAt?: Date;
   updatedAt?: Date;
   cancelledAt?: Date | null;
-  org: Org;
+  orgId: UUID;
+  noOfSeats: number;
   pricePerSeat: number;
-  billingCycle: BillingCycle;
-  billingCycleAnchor: Date;
+  renewalCycle: RenewalCycle;
+  renewalCycleAnchor: Date;
 }
 
 export class Subscription {
@@ -18,19 +19,21 @@ export class Subscription {
   createdAt: Date;
   updatedAt: Date;
   cancelledAt: Date | null;
-  org: Org;
+  orgId: UUID;
+  noOfSeats: number;
   pricePerSeat: number;
-  billingCycle: BillingCycle;
-  billingCycleAnchor: Date;
+  renewalCycle: RenewalCycle;
+  renewalCycleAnchor: Date;
 
   constructor(params: SubscriptionParams) {
     this.id = params.id ?? randomUUID();
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     this.cancelledAt = params.cancelledAt ?? null;
-    this.org = params.org;
+    this.orgId = params.orgId;
+    this.noOfSeats = params.noOfSeats;
     this.pricePerSeat = params.pricePerSeat;
-    this.billingCycle = params.billingCycle;
-    this.billingCycleAnchor = params.billingCycleAnchor;
+    this.renewalCycle = params.renewalCycle;
+    this.renewalCycleAnchor = params.renewalCycleAnchor;
   }
 }

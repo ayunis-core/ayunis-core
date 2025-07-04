@@ -18,6 +18,7 @@ export enum UserErrorCode {
   USER_AUTHENTICATION_FAILED = 'USER_AUTHENTICATION_FAILED',
   USER_UNAUTHORIZED = 'USER_UNAUTHORIZED',
   USER_INVALID_INPUT = 'USER_INVALID_INPUT',
+  USER_UNEXPECTED_ERROR = 'USER_UNEXPECTED_ERROR',
 }
 
 /**
@@ -63,6 +64,20 @@ export abstract class UserError extends ApplicationError {
           ...(this.metadata && { metadata: this.metadata }),
         });
     }
+  }
+}
+
+export class UserUnexpectedError extends UserError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'An unexpected error occurred while updating user role',
+      UserErrorCode.USER_UNEXPECTED_ERROR,
+      500,
+      {
+        ...metadata,
+        error: error,
+      },
+    );
   }
 }
 

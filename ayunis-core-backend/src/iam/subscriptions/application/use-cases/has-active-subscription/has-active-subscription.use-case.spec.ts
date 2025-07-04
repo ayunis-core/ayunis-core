@@ -3,7 +3,7 @@ import { HasActiveSubscriptionUseCase } from './has-active-subscription.use-case
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from '../../../domain/subscription.entity';
-import { BillingCycle } from '../../../domain/value-objects/billing-cycle.enum';
+import { RenewalCycle } from '../../../domain/value-objects/renewal-cycle.enum';
 import { Org } from '../../../../orgs/domain/org.entity';
 
 describe('HasActiveSubscriptionUseCase', () => {
@@ -61,10 +61,11 @@ describe('HasActiveSubscriptionUseCase', () => {
     it('should return true for active subscription (not cancelled)', async () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt: null,
       });
 
@@ -91,10 +92,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-01-20T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -116,10 +118,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-01-20T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -141,10 +144,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-01-20T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -166,10 +170,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-31T00:00:00.000Z');
       const cancelledAt = new Date('2024-02-05T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -191,10 +196,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2023-01-31T00:00:00.000Z');
       const cancelledAt = new Date('2023-02-05T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -216,10 +222,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-03-10T00:00:00.000Z'); // Cancelled in March
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -241,10 +248,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-03-10T00:00:00.000Z'); // Cancelled in March
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -268,10 +276,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-06-10T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 100,
-        billingCycle: BillingCycle.YEARLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.YEARLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -293,10 +302,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-06-10T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 100,
-        billingCycle: BillingCycle.YEARLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.YEARLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -318,10 +328,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-02-29T00:00:00.000Z'); // Leap year
       const cancelledAt = new Date('2024-12-15T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 100,
-        billingCycle: BillingCycle.YEARLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.YEARLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -345,10 +356,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-02-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-01-20T00:00:00.000Z'); // Cancelled before anchor
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -370,10 +382,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-01-20T00:00:00.000Z');
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -408,10 +421,11 @@ describe('HasActiveSubscriptionUseCase', () => {
       const billingCycleAnchor = new Date('2024-01-15T00:00:00.000Z');
       const cancelledAt = new Date('2024-02-15T12:00:00.000Z'); // Cancelled on billing date
       const subscription = new Subscription({
-        org: mockOrg,
+        orgId: mockOrg.id,
         pricePerSeat: 10,
-        billingCycle: BillingCycle.MONTHLY,
-        billingCycleAnchor,
+        noOfSeats: 1,
+        renewalCycle: RenewalCycle.MONTHLY,
+        renewalCycleAnchor: billingCycleAnchor,
         cancelledAt,
       });
 
@@ -440,7 +454,7 @@ describe('HasActiveSubscriptionUseCase', () => {
 
       const result = getLastBillingDate(
         cancelledAt,
-        BillingCycle.MONTHLY,
+        RenewalCycle.MONTHLY,
         billingCycleAnchor,
       );
 
@@ -458,7 +472,7 @@ describe('HasActiveSubscriptionUseCase', () => {
 
       const result = getLastBillingDate(
         cancelledAt,
-        BillingCycle.YEARLY,
+        RenewalCycle.YEARLY,
         billingCycleAnchor,
       );
 
@@ -476,7 +490,7 @@ describe('HasActiveSubscriptionUseCase', () => {
 
       const result = getLastBillingDate(
         cancelledAt,
-        BillingCycle.MONTHLY,
+        RenewalCycle.MONTHLY,
         billingCycleAnchor,
       );
 

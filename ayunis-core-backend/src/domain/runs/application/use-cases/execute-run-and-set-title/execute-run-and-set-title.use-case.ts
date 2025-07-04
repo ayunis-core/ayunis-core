@@ -34,7 +34,6 @@ export class ExecuteRunAndSetTitleUseCase {
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunResponse> {
     try {
-      // Generate title if needed for empty threads
       const titleResponse = await this.generateTitleIfNeeded(command);
       if (titleResponse) {
         yield titleResponse;

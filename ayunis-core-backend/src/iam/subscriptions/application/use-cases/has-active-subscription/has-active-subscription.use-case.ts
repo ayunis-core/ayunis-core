@@ -1,85 +1,80 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { BillingCycle } from 'src/iam/subscriptions/domain/value-objects/billing-cycle.enum';
+import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
+import { SubscriptionError } from '../../subscription.errors';
 
 @Injectable()
 export class HasActiveSubscriptionUseCase {
+  private readonly logger = new Logger(HasActiveSubscriptionUseCase.name);
+
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   async execute(query: HasActiveSubscriptionQuery): Promise<boolean> {
-    const subscription = await this.subscriptionRepository.findByOrgId(
-      query.orgId,
-    );
-    if (!subscription) {
-      return false;
-    }
+    this.logger.log('Checking active subscription', {
+      orgId: query.orgId,
+    });
 
-    if (subscription.cancelledAt) {
-      const lastBillingDate = this.getLastBillingDate(
-        subscription.cancelledAt,
-        subscription.billingCycle,
-        subscription.billingCycleAnchor,
+    try {
+      this.logger.debug('Finding subscription');
+      const subscription = await this.subscriptionRepository.findByOrgId(
+        query.orgId,
       );
-
-      // If we're past the last billing date, subscription is no longer active
-      if (new Date() >= lastBillingDate) {
+      if (!subscription) {
+        this.logger.debug('No subscription found for organization', {
+          orgId: query.orgId,
+        });
         return false;
       }
-    }
 
-    return true;
-  }
+      if (subscription.cancelledAt) {
+        this.logger.debug(
+          'Subscription is cancelled, checking if still active',
+          {
+            subscriptionId: subscription.id,
+            cancelledAt: subscription.cancelledAt,
+          },
+        );
 
-  private getLastBillingDate(
-    cancelledAt: Date,
-    billingCycle: BillingCycle,
-    billingCycleAnchor: Date,
-  ): Date {
-    let nextBillingDate = new Date(billingCycleAnchor);
+        const lastBillingDate = getNextDate({
+          anchorDate: subscription.renewalCycleAnchor,
+          targetDate: subscription.cancelledAt,
+          cycle: subscription.renewalCycle,
+        });
 
-    // If the anchor is already after cancellation, return it
-    if (nextBillingDate > cancelledAt) {
-      return nextBillingDate;
-    }
+        // If we're past the last billing date, subscription is no longer active
+        if (new Date() > lastBillingDate) {
+          this.logger.debug('Subscription is expired', {
+            subscriptionId: subscription.id,
+            lastBillingDate,
+            currentDate: new Date(),
+          });
+          return false;
+        }
 
-    // Calculate the next billing date after cancellation
-    while (nextBillingDate <= cancelledAt) {
-      if (billingCycle === BillingCycle.MONTHLY) {
-        nextBillingDate = this.addMonths(nextBillingDate, 1);
-      } else if (billingCycle === BillingCycle.YEARLY) {
-        nextBillingDate = this.addYears(nextBillingDate, 1);
+        this.logger.debug('Subscription is cancelled but still active', {
+          subscriptionId: subscription.id,
+          lastBillingDate,
+        });
+      } else {
+        this.logger.debug('Subscription is active', {
+          subscriptionId: subscription.id,
+        });
       }
+
+      return true;
+    } catch (error) {
+      if (error instanceof SubscriptionError) {
+        // Already logged and properly typed error, just rethrow
+        throw error;
+      }
+      this.logger.error('Checking active subscription failed', {
+        error,
+        orgId: query.orgId,
+      });
+      throw error;
     }
-
-    return nextBillingDate;
-  }
-
-  private addMonths(date: Date, months: number): Date {
-    const result = new Date(date);
-    const targetMonth = result.getMonth() + months;
-    result.setMonth(targetMonth);
-
-    // Handle month overflow (e.g., Jan 31 + 1 month should be Feb 28/29, not Mar 3)
-    if (result.getMonth() !== targetMonth % 12) {
-      // If we overflowed, set to the last day of the target month
-      result.setDate(0);
-    }
-
-    return result;
-  }
-
-  private addYears(date: Date, years: number): Date {
-    const result = new Date(date);
-    result.setFullYear(result.getFullYear() + years);
-
-    // Handle leap year edge case (Feb 29 -> Feb 28 in non-leap years)
-    if (result.getMonth() !== date.getMonth()) {
-      result.setDate(0);
-    }
-
-    return result;
   }
 }

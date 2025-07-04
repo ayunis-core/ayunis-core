@@ -42,6 +42,7 @@ import {
 } from './dto/run-response.dto';
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
+import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 
 @ApiTags('runs')
 @ApiExtraModels(
@@ -269,6 +270,7 @@ export class RunsController {
   }
 
   @Post('send-message')
+  @RequireSubscription()
   @ApiOperation({
     summary: 'Send a message to an active session',
     description:
@@ -298,6 +300,7 @@ export class RunsController {
   async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<{ success: boolean; message: string }> {
     this.logger.log('sendMessage', { sendMessageDto, userId });
 
@@ -313,12 +316,12 @@ export class RunsController {
     try {
       const input = RunInputMapper.toCommand(sendMessageDto.input);
 
-      // Execute the run in background using the new use case
       this.executeRunInBackground({
         threadId: sendMessageDto.threadId,
         input,
         userId,
         streaming: sendMessageDto.streaming,
+        orgId,
       });
 
       return {
@@ -339,14 +342,16 @@ export class RunsController {
     input: any;
     userId: UUID;
     streaming?: boolean;
+    orgId: UUID;
   }) {
     try {
-      const command = new ExecuteRunAndSetTitleCommand(
-        params.threadId,
-        params.input,
-        params.userId,
-        params.streaming,
-      );
+      const command = new ExecuteRunAndSetTitleCommand({
+        threadId: params.threadId,
+        input: params.input,
+        userId: params.userId,
+        streaming: params.streaming,
+        orgId: params.orgId,
+      });
 
       const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);
 

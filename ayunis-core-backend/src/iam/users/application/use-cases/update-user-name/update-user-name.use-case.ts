@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserNameCommand } from './update-user-name.command';
 import { User } from '../../../domain/user.entity';
-import { UserInvalidInputError, UserNotFoundError } from '../../users.errors';
+import {
+  UserError,
+  UserInvalidInputError,
+  UserNotFoundError,
+  UserUnexpectedError,
+} from '../../users.errors';
 
 @Injectable()
 export class UpdateUserNameUseCase {
@@ -18,6 +23,9 @@ export class UpdateUserNameUseCase {
 
     try {
       const user = await this.usersRepository.findOneById(command.userId);
+      if (!user) {
+        throw new UserNotFoundError(command.userId);
+      }
       this.logger.debug('user found', {
         userId: user.id,
         currentName: user.name,
@@ -31,7 +39,7 @@ export class UpdateUserNameUseCase {
 
       return updatedUser;
     } catch (error) {
-      if (error instanceof UserNotFoundError) {
+      if (error instanceof UserError) {
         throw error;
       }
       this.logger.error('Failed to update user name', {
@@ -39,9 +47,7 @@ export class UpdateUserNameUseCase {
         userId: command.userId,
         newName: command.newName,
       });
-      throw new UserInvalidInputError(
-        `Failed to update user with ID ${command.userId}`,
-      );
+      throw new UserUnexpectedError(error);
     }
   }
 }

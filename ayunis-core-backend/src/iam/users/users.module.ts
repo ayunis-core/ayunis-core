@@ -21,6 +21,7 @@ import { ValidateUserUseCase } from './application/use-cases/validate-user/valid
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
 import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
+import { IsFromOrgUseCase } from './application/use-cases/is-from-org/is-from-org.use-case';
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
@@ -54,6 +55,7 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
     UpdatePasswordUseCase,
+    IsFromOrgUseCase,
     // Mappers
     UserResponseDtoMapper,
   ],
@@ -67,6 +69,7 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     CreateRegularUserUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
+    IsFromOrgUseCase,
   ],
 })
 export class UsersModule {}

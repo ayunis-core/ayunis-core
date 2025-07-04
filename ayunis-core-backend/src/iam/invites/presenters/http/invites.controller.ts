@@ -123,7 +123,7 @@ export class InvitesController {
     this.logger.log('getInvites', { userId, orgId });
 
     const invites = await this.getInvitesByOrgUseCase.execute(
-      new GetInvitesByOrgQuery(orgId, userId),
+      new GetInvitesByOrgQuery({ orgId, requestingUserId: userId }),
     );
 
     return this.inviteResponseMapper.toDtoArray(invites);

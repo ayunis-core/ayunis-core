@@ -37,11 +37,22 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     }
   }
 
-  async create(subscription: Subscription): Promise<void> {
+  async findAll(): Promise<Subscription[]> {
+    try {
+      const records = await this.subscriptionRepository.find();
+      return records.map((record) => this.subscriptionMapper.toDomain(record));
+    } catch (error) {
+      this.logger.error(`Failed to find all subscriptions`, error);
+      throw error;
+    }
+  }
+
+  async create(subscription: Subscription): Promise<Subscription> {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
       await this.subscriptionRepository.save(record);
       this.logger.log(`Created subscription with id ${subscription.id}`);
+      return this.subscriptionMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
         `Failed to create subscription with id ${subscription.id}`,
@@ -51,11 +62,12 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     }
   }
 
-  async update(subscription: Subscription): Promise<void> {
+  async update(subscription: Subscription): Promise<Subscription> {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
       await this.subscriptionRepository.save(record);
       this.logger.log(`Updated subscription with id ${subscription.id}`);
+      return this.subscriptionMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
         `Failed to update subscription with id ${subscription.id}`,

@@ -1,25 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SubscriptionRecord } from '../schema/subscription.record';
-import { Org } from 'src/iam/orgs/domain/org.entity';
 
 @Injectable()
 export class SubscriptionMapper {
   toDomain(record: SubscriptionRecord): Subscription {
-    const org = new Org({
-      id: record.org.id,
-      name: record.org.name,
-    });
-
     return new Subscription({
       id: record.id,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       cancelledAt: record.cancelledAt,
-      org: org,
+      orgId: record.orgId,
+      noOfSeats: record.noOfSeats,
       pricePerSeat: record.pricePerSeat,
-      billingCycle: record.billingCycle,
-      billingCycleAnchor: record.billingCycleAnchor,
+      renewalCycle: record.renewalCycle,
+      renewalCycleAnchor: record.renewalCycleAnchor,
     });
   }
 
@@ -28,11 +23,12 @@ export class SubscriptionMapper {
     record.id = domain.id;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
-    record.cancelledAt = domain.cancelledAt;
-    record.orgId = domain.org.id;
+    record.cancelledAt = domain.cancelledAt ?? undefined;
+    record.orgId = domain.orgId;
     record.pricePerSeat = domain.pricePerSeat;
-    record.billingCycle = domain.billingCycle;
-    record.billingCycleAnchor = domain.billingCycleAnchor;
+    record.noOfSeats = domain.noOfSeats;
+    record.renewalCycle = domain.renewalCycle;
+    record.renewalCycleAnchor = domain.renewalCycleAnchor;
 
     // Note: The org relationship will need to be populated separately
     // when saving, as we only store the orgId in the record

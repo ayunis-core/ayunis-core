@@ -19,6 +19,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node -r tsconfig-paths/register -r dotenv/config ./node_modules/typeorm/cli.js",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:dev:build": "docker-compose -f docker-compose.dev.yml up --build",
     "db:dev": "docker-compose -f docker-compose.dev.yml exec api npx typeorm-ts-node-commonjs",
     "db:prod": "docker-compose exec api npx typeorm-ts-node-commonjs",
     "migration:generate:dev": "npm run db:dev -- migration:generate -d src/db/datasource.ts",

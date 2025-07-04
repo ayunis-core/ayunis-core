@@ -2,7 +2,7 @@ import { User } from '../../domain/user.entity';
 import { UUID } from 'crypto';
 
 export abstract class UsersRepository {
-  abstract findOneById(id: UUID): Promise<User>;
+  abstract findOneById(id: UUID): Promise<User | null>;
   abstract findOneByEmail(email: string): Promise<User | null>;
   abstract findOneByOrgId(orgId: UUID): Promise<User[]>;
   abstract findManyByOrgId(orgId: UUID): Promise<User[]>;

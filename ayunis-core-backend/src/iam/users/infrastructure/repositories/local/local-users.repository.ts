@@ -25,21 +25,17 @@ export class LocalUsersRepository extends UsersRepository {
     this.logger.log('constructor');
   }
 
-  async findOneById(id: UUID): Promise<User> {
+  async findOneById(id: UUID): Promise<User | null> {
     this.logger.log('findOneById', { id });
     try {
       const userEntity = await this.userRepository.findOne({ where: { id } });
       if (!userEntity) {
         this.logger.warn('User not found by ID', { id });
-        throw new UserNotFoundError(`User with ID ${id} not found`);
+        return null;
       }
       return UserMapper.toDomain(userEntity);
     } catch (error) {
-      if (error instanceof UserNotFoundError) {
-        throw error;
-      }
-      this.logger.error('Failed to find user by ID', { error, id });
-      throw new UserNotFoundError(`Error finding user with ID ${id}`);
+      throw new UserInvalidInputError(`Error finding user with ID ${id}`);
     }
   }
 
