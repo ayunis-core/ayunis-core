@@ -12,7 +12,7 @@ export default function AppLayout({ children, sidebar }: AppLayoutProps) {
     <SidebarProvider>
       {sidebar ?? <AppSidebar />}
       <SidebarInset>
-        <div className="flex flex-1 flex-col h-screen overflow-hidden p-4 pt-0">
+        <div className="flex flex-1 flex-col h-screen overflow-hidden p-4 pt-0 relative">
           {children}
         </div>
       </SidebarInset>
