@@ -20,7 +20,7 @@ import {
   ToolChoiceAuto,
   ToolChoiceTool,
 } from '@anthropic-ai/sdk/resources/messages';
-import { ModelToolChoice } from '../../application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 

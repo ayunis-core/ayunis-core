@@ -13,22 +13,15 @@ import { Badge } from "@/shared/ui/shadcn/badge";
 import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useCreatePermittedModel } from "../api/useCreatePermittedModel";
 import { useDeletePermittedModel } from "../api/useDeletePermittedModel";
+import { useCreatePermittedProvider } from "../api/useCreatePermittedProvider";
+import { useDeletePermittedProvider } from "../api/useDeletePermittedProvider";
 import { useTranslation } from "react-i18next";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
 import { Button } from "@/shared/ui/shadcn/button";
-import { Checkbox } from "@/shared/ui/shadcn/checkbox";
-import { useState } from "react";
+import type { Provider } from "../model/openapi";
+import ProviderConfirmationDialog from "./ProviderConfirmationDialog";
 
 interface ModelProviderCardProps {
-  provider: string;
+  provider: Provider;
   models: ModelWithConfigResponseDto[];
 }
 
@@ -37,12 +30,23 @@ export default function ModelProviderCard({
   models,
 }: ModelProviderCardProps) {
   const { t } = useTranslation("admin-settings");
-  const [isProviderPermitted, setIsProviderPermitted] = useState(false);
   const { createPermittedModel } = useCreatePermittedModel();
   const { deletePermittedModel } = useDeletePermittedModel();
+  const { createPermittedProvider } = useCreatePermittedProvider();
+  const { deletePermittedProvider } = useDeletePermittedProvider();
 
   function handleProviderToggle() {
-    setIsProviderPermitted((prev) => !prev);
+    if (provider.isPermitted) {
+      // Delete permitted provider
+      deletePermittedProvider({
+        provider: provider.provider,
+      });
+    } else {
+      // Create permitted provider
+      createPermittedProvider({
+        provider: provider.provider,
+      });
+    }
   }
 
   function handleModelToggle(
@@ -64,70 +68,25 @@ export default function ModelProviderCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <span className="capitalize">{provider}</span>
+          <span>{provider.displayName}</span>
         </CardTitle>
-        <CardDescription>Hosted in EU</CardDescription>
+        <CardDescription>Hosted in {provider.hostedIn}</CardDescription>
         <CardAction>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <span>
-                  {isProviderPermitted
-                    ? t("models.disableProvider")
-                    : t("models.enableProvider")}
-                </span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  <span className="capitalize">{provider}</span> freischalten
-                </DialogTitle>
-              </DialogHeader>
-              <p>
-                Wenn Sie diesen Provider freischalten, können alle Benutzer
-                diesen Provider verwenden und auf dessen Modelle zugreifen.
-              </p>
-              <p>
-                <span className="flex items-center gap-2">
-                  <Checkbox id="confirm" />
-                  <Label htmlFor="confirm">
-                    <span>
-                      Ich akzeptiere die zusätzlichen{" "}
-                      <a
-                        href="https://ayunis.com/core/terms"
-                        target="_blank"
-                        className="underline"
-                      >
-                        Nutzungsbedingungen
-                      </a>{" "}
-                      und die{" "}
-                      <a
-                        href="https://ayunis.com/core/privacy"
-                        target="_blank"
-                        className="underline"
-                      >
-                        Datenschutzerklärung
-                      </a>
-                      .
-                    </span>
-                  </Label>
-                </span>
-              </p>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="submit" onClick={handleProviderToggle}>
-                    {isProviderPermitted
-                      ? t("models.disableProvider")
-                      : t("models.enableProvider")}
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <ProviderConfirmationDialog
+            provider={provider}
+            onConfirm={handleProviderToggle}
+          >
+            <Button variant="outline" size="sm">
+              <span>
+                {provider.isPermitted
+                  ? t("models.disableProvider")
+                  : t("models.enableProvider")}
+              </span>
+            </Button>
+          </ProviderConfirmationDialog>
         </CardAction>
       </CardHeader>
-      {isProviderPermitted && (
+      {provider.isPermitted && (
         <CardContent>
           <div className="space-y-3">
             {models.map((model, index) => {

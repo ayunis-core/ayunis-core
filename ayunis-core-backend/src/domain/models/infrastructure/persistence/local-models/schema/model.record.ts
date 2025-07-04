@@ -1,5 +1,5 @@
 import { BaseRecord } from '../../../../../../common/db/base-record';
-import { ModelProvider } from '../../../../domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
 import { Column, Entity, Index } from 'typeorm';
 
 @Entity({ name: 'models' })

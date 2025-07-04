@@ -23,7 +23,7 @@ import {
   InferenceResponse,
   InferenceInput as HandlerInferenceInput,
 } from '../../application/ports/inference.handler';
-import { ModelToolChoice } from '../../application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import { ConfigService } from '@nestjs/config';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 

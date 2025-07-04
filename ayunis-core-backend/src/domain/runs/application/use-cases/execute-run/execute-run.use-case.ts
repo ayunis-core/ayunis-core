@@ -45,7 +45,7 @@ import { FindContextualToolsQuery } from '../../../../tools/application/use-case
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
-import { ModelToolChoice } from 'src/domain/models/application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { StreamInferenceUseCase } from '../../../../models/application/use-cases/stream-inference/stream-inference.use-case';
 import {
   StreamInferenceInput,

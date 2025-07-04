@@ -16,10 +16,7 @@ import {
   getSchemaPath,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { InferenceRequestDto } from './dto/inference-request.dto';
-import { GetInferenceCommand } from '../../application/use-cases/get-inference/get-inference.command';
 import { GetAvailableModelsQuery } from '../../application/use-cases/get-available-models/get-available-models.query';
-import { ModelToolChoice } from '../../application/enums/model-tool-choice.enum';
 import { GetInferenceUseCase } from '../../application/use-cases/get-inference/get-inference.use-case';
 import { GetAvailableModelsUseCase } from '../../application/use-cases/get-available-models/get-available-models.use-case';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
@@ -34,7 +31,6 @@ import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-re
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
 import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelUseCase } from '../../application/use-cases/get-permitted-model/get-permitted-model.use-case';
-import { InferenceResponse } from '../../application/ports/inference.handler';
 import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
@@ -55,19 +51,32 @@ import { ManageOrgDefaultModelUseCase } from '../../application/use-cases/manage
 import { ManageOrgDefaultModelCommand } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.command';
 import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
 import { CreateCustomToolUseCase } from 'src/domain/tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
-import { CreateCustomToolCommand } from 'src/domain/tools/application/use-cases/create-custom-tool/create-custom-tool.command';
-import {
-  ToolSpecificationDto,
-  UserMessageRequestDto,
-  SystemMessageRequestDto,
-  AssistantMessageRequestDto,
-  ToolResultMessageRequestDto,
-  TextMessageContentRequestDto,
-  ToolUseMessageContentRequestDto,
-  ToolResultMessageContentRequestDto,
-} from './dto/inference-request.dto';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { MessageRequestDtoMapper } from './mappers/message-request-dto.mapper';
+import { GetModelProviderInfoUseCase } from '../../application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
+import { GetModelProviderInfoQuery } from '../../application/use-cases/get-model-provider-info/get-model-provider-info.query';
+import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+import { ModelProviderInfoResponseDto } from './dto/model-provider-info-response.dto';
+import { ModelProviderInfoResponseDtoMapper } from './mappers/model-provider-info-response-dto.mapper';
+import { CreatePermittedProviderDto } from './dto/create-permitted-provider.dto';
+import { DeletePermittedProviderDto } from './dto/delete-permitted-provider.dto';
+import { PermittedProviderResponseDto } from './dto/permitted-provider-response.dto';
+import { PermittedProviderResponseDtoMapper } from './mappers/permitted-provider-response-dto.mapper';
+import { CreatePermittedProviderUseCase } from '../../application/use-cases/create-permitted-provider/create-permitted-provider.use-case';
+import { DeletePermittedProviderUseCase } from '../../application/use-cases/delete-permitted-provider/delete-permitted-provider.use-case';
+import { GetAllPermittedProvidersUseCase } from '../../application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
+import { CreatePermittedProviderCommand } from '../../application/use-cases/create-permitted-provider/create-permitted-provider.command';
+import { DeletePermittedProviderCommand } from '../../application/use-cases/delete-permitted-provider/delete-permitted-provider.command';
+import { GetAllPermittedProvidersQuery } from '../../application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
+import { PermittedProvider } from '../../domain/permitted-model-provider.entity';
+import { Admin } from 'src/admin/application/decorators/admin.decorator';
+import { AdminGuard } from 'src/admin/application/guards/admin.guard';
+import { Public } from 'src/common/guards/public.guard';
+import { ModelProviderWithPermittedStatusResponseDto } from './dto/model-provider-with-permitted-status-response.dto';
+import { ModelProviderWithPermittedStatusResponseDtoMapper } from './mappers/model-provider-with-permitted-status-response-dto.mapper';
+import { GetAllModelProviderInfosWithPermittedStatusUseCase } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
+import { GetAllModelProviderInfosWithPermittedStatusQuery } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.query';
+import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @ApiTags('models')
 @Controller('models')
@@ -89,12 +98,21 @@ export class ModelsController {
     private readonly getOrgDefaultModelUseCase: GetOrgDefaultModelUseCase,
     private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
     private readonly createCustomToolUseCase: CreateCustomToolUseCase,
+    private readonly getModelProviderInfoUseCase: GetModelProviderInfoUseCase,
+    private readonly createPermittedProviderUseCase: CreatePermittedProviderUseCase,
+    private readonly deletePermittedProviderUseCase: DeletePermittedProviderUseCase,
+    private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
+    private readonly getAllModelProviderInfosWithPermittedStatusUseCase: GetAllModelProviderInfosWithPermittedStatusUseCase,
     private readonly messageRequestDtoMapper: MessageRequestDtoMapper,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
+    private readonly modelProviderInfoResponseDtoMapper: ModelProviderInfoResponseDtoMapper,
+    private readonly permittedProviderResponseDtoMapper: PermittedProviderResponseDtoMapper,
+    private readonly modelProviderWithPermittedStatusResponseDtoMapper: ModelProviderWithPermittedStatusResponseDtoMapper,
   ) {}
 
   @Get('available')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get all available models' })
   @ApiResponse({
     status: 200,
@@ -391,6 +409,181 @@ export class ModelsController {
       new GetAvailableModelQuery(model.model.id),
     );
     return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
+  }
+
+  @Get('provider/:provider')
+  @ApiOperation({
+    summary: 'Get model provider information',
+    description:
+      'Retrieves detailed information about a specific model provider',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved model provider information',
+    schema: {
+      $ref: getSchemaPath(ModelProviderInfoResponseDto),
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Model provider not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(ModelProviderInfoResponseDto)
+  async getModelProviderInfo(
+    @Param('provider') provider: string,
+  ): Promise<ModelProviderInfoResponseDto> {
+    this.logger.log('getModelProviderInfo', { provider });
+    const query = new GetModelProviderInfoQuery(provider as ModelProvider);
+    const entity = await this.getModelProviderInfoUseCase.execute(query);
+    return this.modelProviderInfoResponseDtoMapper.toDto(entity);
+  }
+
+  @Post('providers/permitted')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Create a permitted provider (Admin only)' })
+  @ApiBody({ type: CreatePermittedProviderDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Successfully created a permitted provider',
+    schema: {
+      $ref: getSchemaPath(PermittedProviderResponseDto),
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid provider input or provider already permitted',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(CreatePermittedProviderDto, PermittedProviderResponseDto)
+  async createPermittedProvider(
+    @Body() createPermittedProviderDto: CreatePermittedProviderDto,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<void> {
+    const permittedProvider = new PermittedProvider({
+      provider: createPermittedProviderDto.provider,
+      orgId,
+    });
+    const command = new CreatePermittedProviderCommand(
+      orgId,
+      permittedProvider,
+    );
+    await this.createPermittedProviderUseCase.execute(command);
+  }
+
+  @Get('providers/permitted')
+  @ApiOperation({ summary: 'Get all permitted providers' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved all permitted providers',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(PermittedProviderResponseDto),
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(PermittedProviderResponseDto)
+  async getAllPermittedProviders(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<PermittedProviderResponseDto[]> {
+    const query = new GetAllPermittedProvidersQuery(orgId);
+    const providers = await this.getAllPermittedProvidersUseCase.execute(query);
+    return this.permittedProviderResponseDtoMapper.toDtoArray(providers);
+  }
+
+  @Delete('providers/permitted')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Delete a permitted provider (Admin only)' })
+  @ApiBody({ type: DeletePermittedProviderDto })
+  @ApiResponse({
+    status: 204,
+    description: 'Successfully deleted a permitted provider',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid provider input',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Permitted provider not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(DeletePermittedProviderDto)
+  async deletePermittedProvider(
+    @Body() deletePermittedProviderDto: DeletePermittedProviderDto,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<void> {
+    const permittedProvider = new PermittedProvider({
+      provider: deletePermittedProviderDto.provider,
+      orgId,
+    });
+    const command = new DeletePermittedProviderCommand(
+      orgId,
+      permittedProvider,
+    );
+    await this.deletePermittedProviderUseCase.execute(command);
+  }
+
+  @Get('providers/all-with-permitted-status')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get all model provider infos with permitted status (Admin only)',
+    description:
+      'Returns all available model providers with information about whether each is permitted for the organization',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Successfully retrieved all model provider infos with permitted status',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(ModelProviderWithPermittedStatusResponseDto),
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid admin token',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(ModelProviderWithPermittedStatusResponseDto)
+  async getAllModelProviderInfosWithPermittedStatus(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<ModelProviderWithPermittedStatusResponseDto[]> {
+    const query = new GetAllModelProviderInfosWithPermittedStatusQuery(orgId);
+    const providerInfos =
+      await this.getAllModelProviderInfosWithPermittedStatusUseCase.execute(
+        query,
+      );
+    return this.modelProviderWithPermittedStatusResponseDtoMapper.toDtoArray(
+      providerInfos,
+    );
   }
 
   /**

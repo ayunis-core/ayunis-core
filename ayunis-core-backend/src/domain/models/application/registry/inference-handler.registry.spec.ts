@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InferenceHandlerRegistry } from './inference-handler.registry';
-import { ModelProvider } from '../../domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { InferenceHandler } from '../ports/inference.handler';
 import { MISTRAL_INFERENCE_HANDLER } from '../tokens/inference-handler.tokens';
 

@@ -90,6 +90,162 @@ export interface SetOrgDefaultModelDto {
 }
 
 /**
+ * The model provider identifier
+ */
+export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoResponseDtoProvider[keyof typeof ModelProviderInfoResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderInfoResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  microsoft: 'microsoft',
+  ollama: 'ollama',
+} as const;
+
+/**
+ * The location where the provider hosts their services
+ */
+export type ModelProviderInfoResponseDtoHostedIn = typeof ModelProviderInfoResponseDtoHostedIn[keyof typeof ModelProviderInfoResponseDtoHostedIn];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderInfoResponseDtoHostedIn = {
+  DE: 'DE',
+  EU: 'EU',
+  US: 'US',
+  SELF_HOSTED: 'SELF_HOSTED',
+} as const;
+
+export interface ModelProviderInfoResponseDto {
+  /** The model provider identifier */
+  provider: ModelProviderInfoResponseDtoProvider;
+  /** The display name of the model provider */
+  displayName: string;
+  /** The location where the provider hosts their services */
+  hostedIn: ModelProviderInfoResponseDtoHostedIn;
+}
+
+/**
+ * The model provider to permit
+ */
+export type CreatePermittedProviderDtoProvider = typeof CreatePermittedProviderDtoProvider[keyof typeof CreatePermittedProviderDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreatePermittedProviderDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  microsoft: 'microsoft',
+  ollama: 'ollama',
+} as const;
+
+export interface CreatePermittedProviderDto {
+  /** The model provider to permit */
+  provider: CreatePermittedProviderDtoProvider;
+}
+
+/**
+ * The permitted model provider
+ */
+export type PermittedProviderResponseDtoProvider = typeof PermittedProviderResponseDtoProvider[keyof typeof PermittedProviderResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedProviderResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  microsoft: 'microsoft',
+  ollama: 'ollama',
+} as const;
+
+/**
+ * The location where the provider hosts their services
+ */
+export type PermittedProviderResponseDtoHostedIn = typeof PermittedProviderResponseDtoHostedIn[keyof typeof PermittedProviderResponseDtoHostedIn];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedProviderResponseDtoHostedIn = {
+  DE: 'DE',
+  EU: 'EU',
+  US: 'US',
+  SELF_HOSTED: 'SELF_HOSTED',
+} as const;
+
+export interface PermittedProviderResponseDto {
+  /** The permitted model provider */
+  provider: PermittedProviderResponseDtoProvider;
+  /** The display name of the model provider */
+  displayName: string;
+  /** The location where the provider hosts their services */
+  hostedIn: PermittedProviderResponseDtoHostedIn;
+}
+
+/**
+ * The model provider to remove
+ */
+export type DeletePermittedProviderDtoProvider = typeof DeletePermittedProviderDtoProvider[keyof typeof DeletePermittedProviderDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DeletePermittedProviderDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  microsoft: 'microsoft',
+  ollama: 'ollama',
+} as const;
+
+export interface DeletePermittedProviderDto {
+  /** The model provider to remove */
+  provider: DeletePermittedProviderDtoProvider;
+}
+
+/**
+ * The model provider identifier
+ */
+export type ModelProviderWithPermittedStatusResponseDtoProvider = typeof ModelProviderWithPermittedStatusResponseDtoProvider[keyof typeof ModelProviderWithPermittedStatusResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderWithPermittedStatusResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  microsoft: 'microsoft',
+  ollama: 'ollama',
+} as const;
+
+/**
+ * The location where the provider hosts their services
+ */
+export type ModelProviderWithPermittedStatusResponseDtoHostedIn = typeof ModelProviderWithPermittedStatusResponseDtoHostedIn[keyof typeof ModelProviderWithPermittedStatusResponseDtoHostedIn];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderWithPermittedStatusResponseDtoHostedIn = {
+  DE: 'DE',
+  EU: 'EU',
+  US: 'US',
+  SELF_HOSTED: 'SELF_HOSTED',
+} as const;
+
+export interface ModelProviderWithPermittedStatusResponseDto {
+  /** The model provider identifier */
+  provider: ModelProviderWithPermittedStatusResponseDtoProvider;
+  /** The display name of the model provider */
+  displayName: string;
+  /** The location where the provider hosts their services */
+  hostedIn: ModelProviderWithPermittedStatusResponseDtoHostedIn;
+  /** Whether this provider is permitted for the organization */
+  isPermitted: boolean;
+}
+
+/**
  * JSON Schema defining the parameters the tool accepts
  */
 export type CreateHttpToolDtoParameters = { [key: string]: unknown };

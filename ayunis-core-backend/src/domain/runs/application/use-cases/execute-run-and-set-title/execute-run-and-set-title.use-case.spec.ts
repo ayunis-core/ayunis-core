@@ -14,7 +14,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
 import { PotentialModel } from 'src/domain/models/domain/potential-model';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   RunTextInput,
   RunInput,

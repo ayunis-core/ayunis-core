@@ -1,5 +1,5 @@
 import { IsBoolean, IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export class CreateModelDto {
   @IsString()

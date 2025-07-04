@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
-import { ModelProvider } from '../../domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { ModelWithConfig } from '../../domain/model-with-config.entity';
 
 export type FindOneModelParams =

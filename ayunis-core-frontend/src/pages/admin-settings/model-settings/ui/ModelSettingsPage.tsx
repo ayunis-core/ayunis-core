@@ -3,12 +3,17 @@ import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCo
 import ModelProviderCard from "./ModelProviderCard";
 import SettingsLayout from "../../admin-settings-layout";
 import { useTranslation } from "react-i18next";
+import type { Provider } from "../model/openapi";
 
 interface ModelSettingsPageProps {
   models: ModelWithConfigResponseDto[];
+  providers: Provider[];
 }
 
-export default function ModelSettingsPage({ models }: ModelSettingsPageProps) {
+export default function ModelSettingsPage({
+  models,
+  providers,
+}: ModelSettingsPageProps) {
   console.log("Models", models);
   const { t } = useTranslation("admin-settings");
 
@@ -29,7 +34,7 @@ export default function ModelSettingsPage({ models }: ModelSettingsPageProps) {
           Object.entries(groupedModels).map(([provider, providerModels]) => (
             <ModelProviderCard
               key={provider}
-              provider={provider}
+              provider={providers.find((p) => p.provider === provider)!}
               models={providerModels}
             />
           ))}

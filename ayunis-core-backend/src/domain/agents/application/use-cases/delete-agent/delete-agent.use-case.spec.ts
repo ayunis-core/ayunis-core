@@ -4,7 +4,7 @@ import { AgentRepository } from '../../ports/agent.repository';
 import { DeleteAgentCommand } from './delete-agent.command';
 import { Agent } from '../../../domain/agent.entity';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { AgentNotFoundError } from '../../agents.errors';
 import { randomUUID } from 'crypto';
 import { Model } from 'src/domain/models/domain/model.entity';

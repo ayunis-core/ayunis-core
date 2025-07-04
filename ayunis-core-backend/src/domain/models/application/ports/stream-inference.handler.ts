@@ -1,6 +1,6 @@
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { ModelToolChoice } from 'src/domain/models/application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Model } from '../../domain/model.entity';
 import { Observable } from 'rxjs';
 

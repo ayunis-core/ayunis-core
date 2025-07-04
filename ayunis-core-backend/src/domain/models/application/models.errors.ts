@@ -7,7 +7,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { ModelProvider } from '../domain/value-objects/model-provider.object';
+import { ModelProvider } from '../domain/value-objects/model-provider.enum';
 import { UUID } from 'crypto';
 
 /**
@@ -26,6 +26,7 @@ export enum ModelErrorCode {
   MODEL_ALREADY_EXISTS = 'MODEL_ALREADY_EXISTS',
   MODEL_UPDATE_FAILED = 'MODEL_UPDATE_FAILED',
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
+  MODEL_PROVIDER_INFO_NOT_FOUND = 'MODEL_PROVIDER_INFO_NOT_FOUND',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
 }
 
@@ -278,6 +279,20 @@ export class ModelNotFoundByNameAndProviderError extends ModelError {
     super(
       `Model '${name}' with provider '${provider}' not found`,
       ModelErrorCode.MODEL_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a model provider info is not found
+ */
+export class ModelProviderInfoNotFoundError extends ModelError {
+  constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
+    super(
+      `Model provider info for '${provider}' not found`,
+      ModelErrorCode.MODEL_PROVIDER_INFO_NOT_FOUND,
       404,
       metadata,
     );

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export class ModelResponseDto {
   @ApiProperty({

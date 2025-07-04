@@ -19,7 +19,7 @@ import { UpdateModelUseCase } from 'src/domain/models/application/use-cases/upda
 import { UpdateModelCommand } from 'src/domain/models/application/use-cases/update-model/update-model.command';
 import { DeleteModelUseCase } from 'src/domain/models/application/use-cases/delete-model/delete-model.use-case';
 import { DeleteModelCommand } from 'src/domain/models/application/use-cases/delete-model/delete-model.command';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { Public } from 'src/common/guards/public.guard';
 import { Admin } from '../../application/decorators/admin.decorator';
 import { AdminGuard } from '../../application/guards/admin.guard';

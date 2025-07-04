@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { Logger, Injectable } from '@nestjs/common';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
-import { ModelToolChoice } from '../../application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';

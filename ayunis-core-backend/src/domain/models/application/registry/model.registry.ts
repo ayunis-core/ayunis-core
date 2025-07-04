@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ModelProvider } from '../../domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { ModelNotFoundError } from '../models.errors';
 import { ConfigService } from '@nestjs/config';
 import { ModelWithConfig } from '../../domain/model-with-config.entity';

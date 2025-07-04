@@ -6,7 +6,7 @@ import { AgentsService } from '../src/domain/agents/application/agents.service';
 import { AgentRepository } from '../src/domain/agents/application/ports/agent.repository';
 import { ModelsService } from '../src/domain/models/application/models.service';
 import { ToolsService } from '../src/domain/tools/application/tools.service';
-import { ModelProvider } from '../src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from '../src/domain/models/domain/value-objects/model-provider.enum';
 import { AgentsController } from '../src/domain/agents/presenters/http/agents.controller';
 import { Agent } from '../src/domain/agents/domain/agent.entity';
 import { PotentialModel } from '../src/domain/models/domain/potential-model';

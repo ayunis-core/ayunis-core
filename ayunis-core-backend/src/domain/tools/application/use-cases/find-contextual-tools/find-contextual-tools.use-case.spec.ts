@@ -6,7 +6,7 @@ import { Thread } from '../../../../threads/domain/thread.entity';
 import { ContextualTool } from '../../../domain/contextual-tool.entity';
 import { contextualToolTypes } from '../../../domain/value-objects/tool-type.enum';
 import { Model } from '../../../../models/domain/model.entity';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import { UUID } from 'crypto';
 
 describe('FindContextualToolsUseCase', () => {

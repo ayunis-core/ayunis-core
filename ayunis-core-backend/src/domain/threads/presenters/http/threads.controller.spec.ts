@@ -16,7 +16,7 @@ import { UpdateThreadModelUseCase } from '../../application/use-cases/update-thr
 import { UpdateThreadInternetSearchUseCase } from '../../application/use-cases/update-thread-internet-search/update-thread-internet-search.use-case';
 import { UpdateThreadModelCommand } from '../../application/use-cases/update-thread-model/update-thread-model.command';
 import { PotentialModel } from '../../../models/domain/potential-model';
-import { ModelProvider } from '../../../models/domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
 import { randomUUID } from 'crypto';
 
 describe('ThreadsController', () => {

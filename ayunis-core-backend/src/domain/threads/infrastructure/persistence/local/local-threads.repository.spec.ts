@@ -5,7 +5,7 @@ import { LocalThreadsRepository } from './local-threads.repository';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { PotentialModel } from 'src/domain/models/domain/potential-model';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { randomUUID } from 'crypto';
 

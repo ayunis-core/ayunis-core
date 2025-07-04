@@ -1,5 +1,5 @@
 import { randomUUID, UUID } from 'crypto';
-import { ModelProvider } from './value-objects/model-provider.object';
+import { ModelProvider } from './value-objects/model-provider.enum';
 
 export class Model {
   public readonly id: UUID;

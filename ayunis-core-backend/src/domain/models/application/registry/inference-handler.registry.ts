@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ModelProvider } from '../../domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { InferenceHandler } from '../ports/inference.handler';
 import { ModelProviderNotSupportedError } from '../models.errors';
 

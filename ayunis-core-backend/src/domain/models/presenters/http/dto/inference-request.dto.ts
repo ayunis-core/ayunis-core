@@ -1,5 +1,5 @@
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
-import { ModelToolChoice } from 'src/domain/models/application/enums/model-tool-choice.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import {

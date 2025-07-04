@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CreateModelUseCase } from './create-model.use-case';
 import { ModelsRepository } from '../../ports/models.repository';
 import { CreateModelCommand } from './create-model.command';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   ModelAlreadyExistsError,
   ModelCreationFailedError,

@@ -1,6 +1,6 @@
 import { Message } from 'src/domain/messages/domain/message.entity';
 
-import { ModelToolChoice } from '../../enums/model-tool-choice.enum';
+import { ModelToolChoice } from '../../../domain/value-objects/model-tool-choice.enum';
 import { Model } from 'src/domain/models/domain/model.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 

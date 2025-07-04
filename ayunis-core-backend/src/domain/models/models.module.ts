@@ -8,7 +8,7 @@ import {
   ANTHROPIC_INFERENCE_HANDLER,
   OPENAI_INFERENCE_HANDLER,
 } from './application/tokens/inference-handler.tokens';
-import { ModelProvider } from './domain/value-objects/model-provider.object';
+import { ModelProvider } from './domain/value-objects/model-provider.enum';
 import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
 import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.inference';
 import { GetInferenceUseCase } from './application/use-cases/get-inference/get-inference.use-case';
@@ -42,18 +42,33 @@ import { UpdateModelUseCase } from './application/use-cases/update-model/update-
 import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
 import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
 import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-model.use-case';
+import { ModelProviderInfoRegistry } from './application/registry/model-provider-info.registry';
+import { GetModelProviderInfoUseCase } from './application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
+import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/model-provider-info-response-dto.mapper';
+import { CreatePermittedProviderUseCase } from './application/use-cases/create-permitted-provider/create-permitted-provider.use-case';
+import { DeletePermittedProviderUseCase } from './application/use-cases/delete-permitted-provider/delete-permitted-provider.use-case';
+import { GetAllPermittedProvidersUseCase } from './application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
+import { PermittedProviderResponseDtoMapper } from './presenters/http/mappers/permitted-provider-response-dto.mapper';
+import { LocalPermittedProvidersRepositoryModule } from './infrastructure/persistence/local-permitted-providers/local-permitted-providers-repository.module';
+import { GetAllModelProviderInfosWithPermittedStatusUseCase } from './application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
+import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/http/mappers/model-provider-with-permitted-status-response-dto.mapper';
 
 @Module({
   imports: [
     LocalPermittedModelsRepositoryModule,
     LocalUserDefaultModelsRepositoryModule,
     LocalModelsRepositoryModule,
+    LocalPermittedProvidersRepositoryModule,
   ],
   controllers: [ModelsController],
   providers: [
     ModelRegistry,
+    ModelProviderInfoRegistry,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
+    ModelProviderInfoResponseDtoMapper,
+    PermittedProviderResponseDtoMapper,
+    ModelProviderWithPermittedStatusResponseDtoMapper,
     MessageRequestDtoMapper,
     AnthropicStreamInferenceHandler,
     OpenAIStreamInferenceHandler,
@@ -112,6 +127,7 @@ import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-
     GetInferenceUseCase,
     StreamInferenceUseCase,
     GetAvailableModelsUseCase,
+    GetModelProviderInfoUseCase,
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
     DeleteUserDefaultModelUseCase,
@@ -125,6 +141,11 @@ import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-
     GetModelUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
+    // Permitted Provider Use Cases
+    CreatePermittedProviderUseCase,
+    DeletePermittedProviderUseCase,
+    GetAllPermittedProvidersUseCase,
+    GetAllModelProviderInfosWithPermittedStatusUseCase,
   ],
   exports: [
     InferenceHandlerRegistry,

@@ -8,7 +8,7 @@ import {
   TextInput,
   ToolConfigDto,
 } from './dto/send-message.dto';
-import { ModelProvider } from '../../../models/domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
 import { RunTextInput } from '../../domain/run-input.entity';
 import { randomUUID } from 'crypto';
 import { HttpException, HttpStatus } from '@nestjs/common';

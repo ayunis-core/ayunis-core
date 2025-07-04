@@ -11,7 +11,7 @@ import {
   InvalidTitleResponseTypeError,
   TitleGenerationError,
 } from '../../thread-title.errors';
-import { ModelToolChoice } from 'src/domain/models/application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 
 @Injectable()
 export class GenerateAndSetThreadTitleUseCase {

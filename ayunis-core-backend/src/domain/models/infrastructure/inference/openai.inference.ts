@@ -13,7 +13,7 @@ import { TextMessageContent } from 'src/domain/messages/domain/message-contents/
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
-import { ModelToolChoice } from '../../application/enums/model-tool-choice.enum';
+import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 

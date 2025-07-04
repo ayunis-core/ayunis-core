@@ -8,7 +8,7 @@ import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get
 import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
 import { Thread } from '../../../domain/thread.entity';
 import { PotentialModel } from 'src/domain/models/domain/potential-model';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';

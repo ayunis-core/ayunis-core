@@ -4,7 +4,7 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
 import { Thread } from '../../../domain/thread.entity';
 import { Model } from '../../../../models/domain/model.entity';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.object';
+import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import { ThreadCreationError } from '../../threads.errors';
 import { GetModelUseCase } from 'src/domain/models/application/use-cases/get-model/get-model.use-case';
 import { randomUUID } from 'crypto';
