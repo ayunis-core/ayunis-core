@@ -13,6 +13,9 @@ export class DeletePermittedProviderUseCase {
 
   async execute(command: DeletePermittedProviderCommand): Promise<void> {
     try {
+      this.logger.debug(
+        `Deleting permitted provider ${command.permittedProvider} for organization ${command.orgId}`,
+      );
       await this.permittedProvidersRepository.delete(
         command.orgId,
         command.permittedProvider,

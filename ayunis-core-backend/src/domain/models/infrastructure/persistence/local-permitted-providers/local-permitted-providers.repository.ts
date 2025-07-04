@@ -37,10 +37,20 @@ export class LocalPermittedProvidersRepository extends PermittedProvidersReposit
     orgId: UUID,
     permittedProvider: PermittedProvider,
   ): Promise<void> {
-    await this.localPermittedProvidersRepository.delete({
-      orgId,
-      provider: permittedProvider.provider,
-    });
+    // First find the entity to trigger hooks
+    const entityToDelete = await this.localPermittedProvidersRepository.findOne(
+      {
+        where: {
+          orgId,
+          provider: permittedProvider.provider,
+        },
+      },
+    );
+
+    if (entityToDelete) {
+      // Use remove() instead of delete() to trigger entity hooks
+      await this.localPermittedProvidersRepository.remove(entityToDelete);
+    }
   }
 
   async findAll(orgId: UUID): Promise<PermittedProvider[]> {
