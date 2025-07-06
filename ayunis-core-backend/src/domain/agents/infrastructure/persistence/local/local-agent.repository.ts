@@ -8,6 +8,7 @@ import { Agent } from '../../../domain/agent.entity';
 import { AgentRecord } from './schema/agent.record';
 import { AgentMapper } from './mappers/agent.mapper';
 import { AgentNotFoundError } from '../../../application/agents.errors';
+import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class LocalAgentRepository implements AgentRepository {
@@ -20,24 +21,38 @@ export class LocalAgentRepository implements AgentRepository {
   ) {}
 
   async create(agent: Agent): Promise<Agent> {
-    this.logger.log('create', { id: agent.id, name: agent.name });
+    this.logger.log('create', {
+      name: agent.name,
+      userId: agent.userId,
+      modelId: agent.model.id,
+    });
 
     try {
       const agentEntity = this.agentMapper.toEntity(agent);
-      const savedAgentEntity = await this.agentRepository.save(agentEntity);
+      const savedAgent = await this.agentRepository.save(agentEntity);
 
       this.logger.debug('Agent created successfully', {
-        savedAgentEntity,
+        id: savedAgent.id,
+        name: savedAgent.name,
       });
 
-      return this.agentMapper.toDomain(savedAgentEntity);
+      // Load the agent with relations to return complete data
+      const agentWithRelations = await this.agentRepository.findOne({
+        where: { id: savedAgent.id },
+        relations: ['agentTools'],
+      });
+
+      if (!agentWithRelations) {
+        throw new Error('Failed to load created agent');
+      }
+
+      return this.agentMapper.toDomain(agentWithRelations);
     } catch (error) {
       this.logger.error('Error creating agent', {
         error,
-        id: agent.id,
-        name: agent.name,
+        agentName: agent.name,
+        userId: agent.userId,
       });
-
       throw error;
     }
   }
@@ -46,27 +61,18 @@ export class LocalAgentRepository implements AgentRepository {
     this.logger.log('delete', { agentId, userId });
 
     try {
-      // Verify agent exists
-      const existingAgent = await this.agentRepository.findOne({
-        where: { id: agentId, userId },
+      const result = await this.agentRepository.delete({
+        id: agentId,
+        userId,
       });
 
-      if (!existingAgent) {
-        this.logger.warn('Attempted to delete non-existent agent', {
-          id: agentId,
-        });
+      if (result.affected === 0) {
         throw new AgentNotFoundError(agentId);
       }
 
-      await this.agentRepository.delete({ id: agentId, userId });
       this.logger.debug('Agent deleted successfully', { agentId });
     } catch (error) {
-      if (error instanceof AgentNotFoundError) {
-        // Already logged and correctly typed, just rethrow
-        throw error;
-      }
-
-      this.logger.error('Error deleting agent', { error, agentId });
+      this.logger.error('Error deleting agent', { error, agentId, userId });
       throw error;
     }
   }
@@ -77,7 +83,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntity = await this.agentRepository.findOne({
         where: { id, userId },
-        relations: ['tools'],
+        relations: ['agentTools'],
       });
 
       if (!agentEntity) {
@@ -103,7 +109,7 @@ export class LocalAgentRepository implements AgentRepository {
           id: ids.length > 0 ? (ids as any) : undefined, // TypeORM syntax for IN query
           userId,
         },
-        relations: ['tools'], // Include tools relation
+        relations: ['agentTools'], // Include agentTools relation
       });
 
       this.logger.debug('Agents found', { count: agentEntities.length });
@@ -130,6 +136,62 @@ export class LocalAgentRepository implements AgentRepository {
       return agentEntities.map((entity) => this.agentMapper.toDomain(entity));
     } catch (error) {
       this.logger.error('Error finding agents for user', { error, userId });
+      throw error;
+    }
+  }
+
+  async findAllByModel(modelId: UUID): Promise<Agent[]> {
+    this.logger.log('findAllByModel', { modelId });
+
+    try {
+      const agentEntities = await this.agentRepository.find({
+        where: { modelId },
+        relations: ['agentTools'],
+      });
+
+      this.logger.debug('Agents found for model', {
+        count: agentEntities.length,
+        modelId,
+      });
+      return agentEntities.map((entity) => this.agentMapper.toDomain(entity));
+    } catch (error) {
+      this.logger.error('Error finding agents for model', { error, modelId });
+      throw error;
+    }
+  }
+
+  async updateModel(
+    agentId: UUID,
+    userId: UUID,
+    model: PermittedModel,
+  ): Promise<void> {
+    this.logger.log('updateModel', {
+      agentId,
+      userId,
+      modelId: model.id,
+    });
+
+    try {
+      const result = await this.agentRepository.update(
+        { id: agentId, userId },
+        { modelId: model.id },
+      );
+
+      if (!result.affected || result.affected === 0) {
+        throw new AgentNotFoundError(agentId);
+      }
+
+      this.logger.debug('Agent model updated successfully', {
+        agentId,
+        modelId: model.id,
+      });
+    } catch (error) {
+      this.logger.error('Error updating agent model', {
+        error,
+        agentId,
+        userId,
+        modelId: model.id,
+      });
       throw error;
     }
   }

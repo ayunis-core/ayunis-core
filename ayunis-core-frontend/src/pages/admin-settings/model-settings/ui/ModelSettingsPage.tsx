@@ -3,19 +3,12 @@ import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCo
 import ModelProviderCard from "./ModelProviderCard";
 import SettingsLayout from "../../admin-settings-layout";
 import { useTranslation } from "react-i18next";
-import type { Provider } from "../model/openapi";
+import { useModelsWithConfig, useProvidersWithPermittedStatus } from "../api";
 
-interface ModelSettingsPageProps {
-  models: ModelWithConfigResponseDto[];
-  providers: Provider[];
-}
-
-export default function ModelSettingsPage({
-  models,
-  providers,
-}: ModelSettingsPageProps) {
-  console.log("Models", models);
+export default function ModelSettingsPage() {
   const { t } = useTranslation("admin-settings");
+  const { models } = useModelsWithConfig();
+  const { providers } = useProvidersWithPermittedStatus();
 
   // Group models by provider
   const groupedModels = models.reduce(

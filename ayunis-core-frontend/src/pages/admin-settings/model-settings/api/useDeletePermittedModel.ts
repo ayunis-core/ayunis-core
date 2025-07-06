@@ -1,6 +1,7 @@
 import {
   useModelsControllerDeletePermittedModel,
   type ModelWithConfigResponseDto,
+  getModelsControllerGetAvailableModelsWithConfigQueryKey,
 } from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,40 +10,58 @@ export function useDeletePermittedModel() {
   const deletePermittedModelMutation = useModelsControllerDeletePermittedModel({
     mutation: {
       onMutate: async ({ id }) => {
-        console.log("Deleting permitted model");
-        await queryClient.cancelQueries({
-          queryKey: ["permitted-models"],
-        });
-        const previousData = queryClient.getQueryData(["permitted-models"]);
+        const queryKey =
+          getModelsControllerGetAvailableModelsWithConfigQueryKey();
 
-        queryClient.setQueryData(
-          ["permitted-models"],
-          (old: ModelWithConfigResponseDto[]) => {
+        await queryClient.cancelQueries({
+          queryKey,
+        });
+
+        const previousData =
+          queryClient.getQueryData<ModelWithConfigResponseDto[]>(queryKey);
+
+        // Optimistically update to the new value
+        queryClient.setQueryData<ModelWithConfigResponseDto[]>(
+          queryKey,
+          (old) => {
+            if (!old) {
+              console.warn("No previous data found for optimistic update");
+              return old;
+            }
+
             return old.map((item: ModelWithConfigResponseDto) => {
-              if (item.id === id) {
+              // Match by permittedModelId since that's what the delete endpoint expects
+              if (item.permittedModelId === id) {
+                console.log(
+                  "Found matching model, updating isPermitted to false",
+                );
                 return { ...item, isPermitted: false };
               }
               return item;
             });
           },
         );
-        return { previousData };
+
+        return { previousData, queryKey };
       },
-      onSuccess: () => {
-        console.log("Delete permitted model succeeded, invalidating queries");
+      onError: (error, _, context) => {
+        console.error("Error deleting permitted model", error);
+        if (context?.previousData && context?.queryKey) {
+          queryClient.setQueryData(context.queryKey, context.previousData);
+        }
+      },
+      onSettled: () => {
+        const queryKey =
+          getModelsControllerGetAvailableModelsWithConfigQueryKey();
         queryClient.invalidateQueries({
-          queryKey: ["permitted-models"],
+          queryKey,
         });
-        console.log("model deleted");
-      },
-      onError: (err, _, context) => {
-        console.error("Error deleting permitted model", err);
-        queryClient.setQueryData(["permitted-models"], context?.previousData);
       },
     },
   });
 
   function deletePermittedModel(id: string) {
+    console.log("Deleting permitted model with permittedModelId:", id);
     deletePermittedModelMutation.mutate({
       id,
     });

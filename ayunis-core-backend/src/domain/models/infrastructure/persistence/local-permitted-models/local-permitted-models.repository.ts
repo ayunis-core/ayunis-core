@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import { UUID } from 'crypto';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -21,9 +22,14 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     super();
   }
 
-  async findAll(orgId: UUID): Promise<PermittedModel[]> {
+  async findAll(
+    orgId: UUID,
+    filter?: {
+      provider?: ModelProvider;
+    },
+  ): Promise<PermittedModel[]> {
     const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId },
+      where: { orgId, model: { provider: filter?.provider } },
       relations: {
         model: true,
       },
@@ -121,6 +127,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
         // Fetch and return the updated model
         const updatedModel = await manager.findOne(PermittedModelRecord, {
           where: { id: params.id, orgId: params.orgId },
+          relations: ['model'],
         });
 
         if (!updatedModel) {

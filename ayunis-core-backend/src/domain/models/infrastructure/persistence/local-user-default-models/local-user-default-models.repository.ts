@@ -107,12 +107,24 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       userDefaultModelEntity,
     );
 
-    this.logger.debug('User default model set as default', {
-      userId,
-      modelId: savedEntity.model.id,
+    // Reload the saved entity with its relations
+    const reloadedEntity = await this.userDefaultModelRepository.findOne({
+      where: { id: savedEntity.id },
+      relations: ['model'],
     });
 
-    return this.userDefaultModelMapper.toDomain(savedEntity);
+    if (!reloadedEntity) {
+      throw new Error(
+        `Failed to reload user default model with id ${savedEntity.id}`,
+      );
+    }
+
+    this.logger.debug('User default model set as default', {
+      userId,
+      modelId: reloadedEntity.model.id,
+    });
+
+    return this.userDefaultModelMapper.toDomain(reloadedEntity);
   }
 
   async delete(permittedModel: PermittedModel, userId: UUID): Promise<void> {
@@ -136,6 +148,17 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     this.logger.debug('User default model deleted', {
       userId,
       modelId: permittedModel.id,
+    });
+  }
+
+  async deleteByModelId(modelId: UUID): Promise<void> {
+    this.logger.log('deleteByModelId', { modelId });
+    const result = await this.userDefaultModelRepository.delete({
+      model: { id: modelId },
+    });
+    this.logger.debug('Deleted user default models by model id', {
+      modelId,
+      affected: result.affected,
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
@@ -52,6 +52,9 @@ import { PermittedProviderResponseDtoMapper } from './presenters/http/mappers/pe
 import { LocalPermittedProvidersRepositoryModule } from './infrastructure/persistence/local-permitted-providers/local-permitted-providers-repository.module';
 import { GetAllModelProviderInfosWithPermittedStatusUseCase } from './application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
 import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/http/mappers/model-provider-with-permitted-status-response-dto.mapper';
+import { ThreadsModule } from '../threads/threads.module';
+import { AgentsModule } from '../agents/agents.module';
+import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 
 @Module({
   imports: [
@@ -59,6 +62,8 @@ import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/
     LocalUserDefaultModelsRepositoryModule,
     LocalModelsRepositoryModule,
     LocalPermittedProvidersRepositoryModule,
+    forwardRef(() => ThreadsModule),
+    forwardRef(() => AgentsModule),
   ],
   controllers: [ModelsController],
   providers: [
@@ -131,6 +136,7 @@ import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
     DeleteUserDefaultModelUseCase,
+    DeleteUserDefaultModelsByModelIdUseCase,
     GetUserDefaultModelUseCase,
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
@@ -164,6 +170,7 @@ import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
     DeleteUserDefaultModelUseCase,
+    DeleteUserDefaultModelsByModelIdUseCase,
     GetUserDefaultModelUseCase,
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases

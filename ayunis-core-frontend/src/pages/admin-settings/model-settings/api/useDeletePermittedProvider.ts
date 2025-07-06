@@ -2,6 +2,8 @@ import {
   useModelsControllerDeletePermittedProvider,
   type PermittedProviderResponseDto,
   type DeletePermittedProviderDto,
+  getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey,
+  getModelsControllerGetAvailableModelsWithConfigQueryKey,
 } from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -12,35 +14,43 @@ export function useDeletePermittedProvider() {
       mutation: {
         onMutate: async ({ data }) => {
           console.log("Deleting permitted provider");
+
+          // Get the correct query key from the generated API
+          const providersQueryKey =
+            getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey();
+
           await queryClient.cancelQueries({
-            queryKey: ["permitted-providers"],
+            queryKey: providersQueryKey,
           });
-          const previousData = queryClient.getQueryData([
-            "permitted-providers",
-          ]);
+          const previousData = queryClient.getQueryData(providersQueryKey);
           queryClient.setQueryData(
-            ["permitted-providers"],
+            providersQueryKey,
             (old: PermittedProviderResponseDto[]) => {
-              if (!old) return [];
-              return old.filter((p) => p.provider !== data.provider);
+              return old.map((p) =>
+                p.provider === data.provider ? { ...p, isPermitted: false } : p,
+              );
             },
           );
-          return { previousData };
+          return { previousData, queryKey: providersQueryKey };
         },
-        onSuccess: () => {
+        onSettled: () => {
+          const providersQueryKey =
+            getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey();
+          const modelsQueryKey =
+            getModelsControllerGetAvailableModelsWithConfigQueryKey();
+
           queryClient.invalidateQueries({
-            queryKey: ["permitted-providers"],
+            queryKey: providersQueryKey,
           });
           queryClient.invalidateQueries({
-            queryKey: ["permitted-models"],
+            queryKey: modelsQueryKey,
           });
         },
         onError: (err, _, context) => {
           console.error("Error deleting permitted provider", err);
-          queryClient.setQueryData(
-            ["permitted-providers"],
-            context?.previousData,
-          );
+          if (context?.previousData && context?.queryKey) {
+            queryClient.setQueryData(context.queryKey, context.previousData);
+          }
         },
       },
     });

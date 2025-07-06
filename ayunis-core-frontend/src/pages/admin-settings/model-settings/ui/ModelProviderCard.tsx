@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ui/shadcn/button";
 import type { Provider } from "../model/openapi";
 import ProviderConfirmationDialog from "./ProviderConfirmationDialog";
+import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
 
 interface ModelProviderCardProps {
   provider: Provider;
@@ -86,37 +87,39 @@ export default function ModelProviderCard({
           </ProviderConfirmationDialog>
         </CardAction>
       </CardHeader>
-      {provider.isPermitted && (
-        <CardContent>
-          <div className="space-y-3">
-            {models.map((model, index) => {
-              const modelKey = `model-${provider}:${model.name}`;
-
-              return (
-                <div key={modelKey} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor={modelKey} className="font-medium">
-                          {model.displayName || model.name}
-                        </Label>
-                        <div className="flex gap-1">
-                          {model.canStream && (
-                            <Badge variant="outline" className="text-xs">
-                              {t("models.streaming")}
-                            </Badge>
-                          )}
-                          {model.isReasoning && (
-                            <Badge variant="outline" className="text-xs">
-                              {t("models.reasoning")}
-                            </Badge>
-                          )}
-                        </div>
+      <CardContent>
+        <div className="space-y-3">
+          {models.map((model, index) => {
+            const modelKey = `model-${provider}:${model.name}`;
+            return (
+              <div key={modelKey} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={modelKey} className="font-medium">
+                        {model.displayName || model.name}
+                      </Label>
+                      <div className="flex gap-1">
+                        {model.canStream && (
+                          <Badge variant="outline" className="text-xs">
+                            {t("models.streaming")}
+                          </Badge>
+                        )}
+                        {model.isReasoning && (
+                          <Badge variant="outline" className="text-xs">
+                            {t("models.reasoning")}
+                          </Badge>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {model.name}
-                      </p>
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      {model.name}
+                    </p>
+                  </div>
+                  <TooltipIf
+                    condition={!provider.isPermitted}
+                    tooltip={t("models.providerDisabled")}
+                  >
                     <Switch
                       id={modelKey}
                       checked={model.isPermitted}
@@ -124,14 +127,14 @@ export default function ModelProviderCard({
                         handleModelToggle(model, isPermitted)
                       }
                     />
-                  </div>
-                  {index < models.length - 1 && <Separator />}
+                  </TooltipIf>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      )}
+                {index < models.length - 1 && <Separator />}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
     </Card>
   );
 }

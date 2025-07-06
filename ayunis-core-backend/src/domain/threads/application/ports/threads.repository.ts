@@ -6,6 +6,7 @@ export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
   abstract findAll(userId: UUID): Promise<Thread[]>;
+  abstract findAllByModel(modelId: UUID): Promise<Thread[]>;
   abstract update(thread: Thread): Promise<Thread>;
   abstract updateTitle(id: UUID, userId: UUID, title: string): Promise<void>;
   abstract updateInstruction(

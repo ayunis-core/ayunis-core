@@ -1332,29 +1332,29 @@ export function useModelsControllerGetAllModelProviderInfosWithPermittedStatus<T
 
 
 /**
- * @summary Create a new HTTP tool for current user
+ * @summary Create a new thread
  */
-export const toolsControllerCreateHttpTool = (
-    createHttpToolDto: CreateHttpToolDto,
+export const threadsControllerCreate = (
+    createThreadDto: CreateThreadDto,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<HttpTool>(
-      {url: `/tools/http`, method: 'POST',
+      return customAxiosInstance<GetThreadResponseDto>(
+      {url: `/threads`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: createHttpToolDto, signal
+      data: createThreadDto, signal
     },
       );
     }
   
 
 
-export const getToolsControllerCreateHttpToolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext> => {
+export const getThreadsControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerCreate>>, TError,{data: CreateThreadDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerCreate>>, TError,{data: CreateThreadDto}, TContext> => {
 
-const mutationKey = ['toolsControllerCreateHttpTool'];
+const mutationKey = ['threadsControllerCreate'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1364,10 +1364,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, {data: CreateHttpToolDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerCreate>>, {data: CreateThreadDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  toolsControllerCreateHttpTool(data,)
+          return  threadsControllerCreate(data,)
         }
 
         
@@ -1375,48 +1375,224 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ToolsControllerCreateHttpToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>>
-    export type ToolsControllerCreateHttpToolMutationBody = CreateHttpToolDto
-    export type ToolsControllerCreateHttpToolMutationError = unknown
+    export type ThreadsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerCreate>>>
+    export type ThreadsControllerCreateMutationBody = CreateThreadDto
+    export type ThreadsControllerCreateMutationError = void
 
     /**
- * @summary Create a new HTTP tool for current user
+ * @summary Create a new thread
  */
-export const useToolsControllerCreateHttpTool = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
+export const useThreadsControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerCreate>>, TError,{data: CreateThreadDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>,
+        Awaited<ReturnType<typeof threadsControllerCreate>>,
         TError,
-        {data: CreateHttpToolDto},
+        {data: CreateThreadDto},
         TContext
       > => {
 
-      const mutationOptions = getToolsControllerCreateHttpToolMutationOptions(options);
+      const mutationOptions = getThreadsControllerCreateMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * @summary Delete a tool by ID
+ * @summary Get all threads for the current user
  */
-export const toolsControllerDeleteTool = (
+export const threadsControllerFindAll = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GetThreadsResponseDtoItem[]>(
+      {url: `/threads`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getThreadsControllerFindAllQueryKey = () => {
+    return [`/threads`] as const;
+    }
+
+    
+export const getThreadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerFindAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerFindAll>>> = ({ signal }) => threadsControllerFindAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerFindAll>>>
+export type ThreadsControllerFindAllQueryError = void
+
+
+export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all threads for the current user
+ */
+
+export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadsControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get a thread by ID
+ */
+export const threadsControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GetThreadResponseDto>(
+      {url: `/threads/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getThreadsControllerFindOneQueryKey = (id: string,) => {
+    return [`/threads/${id}`] as const;
+    }
+
+    
+export const getThreadsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerFindOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerFindOne>>> = ({ signal }) => threadsControllerFindOne(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerFindOne>>>
+export type ThreadsControllerFindOneQueryError = void
+
+
+export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a thread by ID
+ */
+
+export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Delete a thread
+ */
+export const threadsControllerDelete = (
     id: string,
  ) => {
       
       
       return customAxiosInstance<void>(
-      {url: `/tools/${id}`, method: 'DELETE'
+      {url: `/threads/${id}`, method: 'DELETE'
     },
       );
     }
   
 
 
-export const getToolsControllerDeleteToolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext> => {
+export const getThreadsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerDelete>>, TError,{id: string}, TContext> => {
 
-const mutationKey = ['toolsControllerDeleteTool'];
+const mutationKey = ['threadsControllerDelete'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1426,10 +1602,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, {id: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerDelete>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  toolsControllerDeleteTool(id,)
+          return  threadsControllerDelete(id,)
         }
 
         
@@ -1437,23 +1613,444 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ToolsControllerDeleteToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerDeleteTool>>>
+    export type ThreadsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerDelete>>>
     
-    export type ToolsControllerDeleteToolMutationError = unknown
+    export type ThreadsControllerDeleteMutationError = void
 
     /**
- * @summary Delete a tool by ID
+ * @summary Delete a thread
  */
-export const useToolsControllerDeleteTool = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
+export const useThreadsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerDelete>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof toolsControllerDeleteTool>>,
+        Awaited<ReturnType<typeof threadsControllerDelete>>,
         TError,
         {id: string},
         TContext
       > => {
 
-      const mutationOptions = getToolsControllerDeleteToolMutationOptions(options);
+      const mutationOptions = getThreadsControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update thread instruction
+ */
+export const threadsControllerUpdateInstruction = (
+    id: string,
+    updateThreadInstructionDto: UpdateThreadInstructionDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/instruction`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateThreadInstructionDto
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUpdateInstructionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext> => {
+
+const mutationKey = ['threadsControllerUpdateInstruction'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, {id: string;data: UpdateThreadInstructionDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadsControllerUpdateInstruction(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUpdateInstructionMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>>
+    export type ThreadsControllerUpdateInstructionMutationBody = UpdateThreadInstructionDto
+    export type ThreadsControllerUpdateInstructionMutationError = void
+
+    /**
+ * @summary Update thread instruction
+ */
+export const useThreadsControllerUpdateInstruction = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>,
+        TError,
+        {id: string;data: UpdateThreadInstructionDto},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUpdateInstructionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update thread model
+ */
+export const threadsControllerUpdateModel = (
+    id: string,
+    updateThreadModelDto: UpdateThreadModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/model`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateThreadModelDto
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUpdateModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext> => {
+
+const mutationKey = ['threadsControllerUpdateModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, {id: string;data: UpdateThreadModelDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadsControllerUpdateModel(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUpdateModelMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateModel>>>
+    export type ThreadsControllerUpdateModelMutationBody = UpdateThreadModelDto
+    export type ThreadsControllerUpdateModelMutationError = void
+
+    /**
+ * @summary Update thread model
+ */
+export const useThreadsControllerUpdateModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUpdateModel>>,
+        TError,
+        {id: string;data: UpdateThreadModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUpdateModelMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update thread internet search setting
+ */
+export const threadsControllerUpdateInternetSearch = (
+    id: string,
+    updateThreadInternetSearchDto: UpdateThreadInternetSearchDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/internet-search`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateThreadInternetSearchDto
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUpdateInternetSearchMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext> => {
+
+const mutationKey = ['threadsControllerUpdateInternetSearch'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, {id: string;data: UpdateThreadInternetSearchDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadsControllerUpdateInternetSearch(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUpdateInternetSearchMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>>
+    export type ThreadsControllerUpdateInternetSearchMutationBody = UpdateThreadInternetSearchDto
+    export type ThreadsControllerUpdateInternetSearchMutationError = void
+
+    /**
+ * @summary Update thread internet search setting
+ */
+export const useThreadsControllerUpdateInternetSearch = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>,
+        TError,
+        {id: string;data: UpdateThreadInternetSearchDto},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUpdateInternetSearchMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Get all sources for a thread
+ */
+export const threadsControllerGetThreadSources = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SourceResponseDto[]>(
+      {url: `/threads/${id}/sources`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getThreadsControllerGetThreadSourcesQueryKey = (id: string,) => {
+    return [`/threads/${id}/sources`] as const;
+    }
+
+    
+export const getThreadsControllerGetThreadSourcesQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerGetThreadSourcesQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>> = ({ signal }) => threadsControllerGetThreadSources(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadsControllerGetThreadSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>>
+export type ThreadsControllerGetThreadSourcesQueryError = void
+
+
+export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all sources for a thread
+ */
+
+export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadsControllerGetThreadSourcesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Add a file source to a thread
+ */
+export const threadsControllerAddFileSource = (
+    id: string,
+    threadsControllerAddFileSourceBody: ThreadsControllerAddFileSourceBody,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, threadsControllerAddFileSourceBody.file)
+formData.append(`userId`, threadsControllerAddFileSourceBody.userId)
+if(threadsControllerAddFileSourceBody.name !== undefined) {
+ formData.append(`name`, threadsControllerAddFileSourceBody.name)
+ }
+if(threadsControllerAddFileSourceBody.description !== undefined) {
+ formData.append(`description`, threadsControllerAddFileSourceBody.description)
+ }
+
+      return customAxiosInstance<FileSourceResponseDto>(
+      {url: `/threads/${id}/sources/file`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerAddFileSourceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext> => {
+
+const mutationKey = ['threadsControllerAddFileSource'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, {id: string;data: ThreadsControllerAddFileSourceBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadsControllerAddFileSource(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerAddFileSource>>>
+    export type ThreadsControllerAddFileSourceMutationBody = ThreadsControllerAddFileSourceBody
+    export type ThreadsControllerAddFileSourceMutationError = unknown
+
+    /**
+ * @summary Add a file source to a thread
+ */
+export const useThreadsControllerAddFileSource = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerAddFileSource>>,
+        TError,
+        {id: string;data: ThreadsControllerAddFileSourceBody},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerAddFileSourceMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Remove a source from a thread
+ */
+export const threadsControllerRemoveSource = (
+    id: string,
+    sourceId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/sources/${sourceId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerRemoveSourceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
+
+const mutationKey = ['threadsControllerRemoveSource'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
+          const {id,sourceId} = props ?? {};
+
+          return  threadsControllerRemoveSource(id,sourceId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerRemoveSource>>>
+    
+    export type ThreadsControllerRemoveSourceMutationError = void
+
+    /**
+ * @summary Remove a source from a thread
+ */
+export const useThreadsControllerRemoveSource = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerRemoveSource>>,
+        TError,
+        {id: string;sourceId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerRemoveSourceMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -2340,29 +2937,29 @@ export const useEmbeddingsControllerEmbedText = <TError = void,
     }
     
 /**
- * @summary Create a new thread
+ * @summary Create a new HTTP tool for current user
  */
-export const threadsControllerCreate = (
-    createThreadDto: CreateThreadDto,
+export const toolsControllerCreateHttpTool = (
+    createHttpToolDto: CreateHttpToolDto,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<GetThreadResponseDto>(
-      {url: `/threads`, method: 'POST',
+      return customAxiosInstance<HttpTool>(
+      {url: `/tools/http`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: createThreadDto, signal
+      data: createHttpToolDto, signal
     },
       );
     }
   
 
 
-export const getThreadsControllerCreateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerCreate>>, TError,{data: CreateThreadDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerCreate>>, TError,{data: CreateThreadDto}, TContext> => {
+export const getToolsControllerCreateHttpToolMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext> => {
 
-const mutationKey = ['threadsControllerCreate'];
+const mutationKey = ['toolsControllerCreateHttpTool'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2372,10 +2969,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerCreate>>, {data: CreateThreadDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, {data: CreateHttpToolDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  threadsControllerCreate(data,)
+          return  toolsControllerCreateHttpTool(data,)
         }
 
         
@@ -2383,224 +2980,48 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerCreate>>>
-    export type ThreadsControllerCreateMutationBody = CreateThreadDto
-    export type ThreadsControllerCreateMutationError = void
+    export type ToolsControllerCreateHttpToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>>
+    export type ToolsControllerCreateHttpToolMutationBody = CreateHttpToolDto
+    export type ToolsControllerCreateHttpToolMutationError = unknown
 
     /**
- * @summary Create a new thread
+ * @summary Create a new HTTP tool for current user
  */
-export const useThreadsControllerCreate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerCreate>>, TError,{data: CreateThreadDto}, TContext>, }
+export const useToolsControllerCreateHttpTool = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerCreate>>,
+        Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>,
         TError,
-        {data: CreateThreadDto},
+        {data: CreateHttpToolDto},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerCreateMutationOptions(options);
+      const mutationOptions = getToolsControllerCreateHttpToolMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * @summary Get all threads for the current user
+ * @summary Delete a tool by ID
  */
-export const threadsControllerFindAll = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<GetThreadsResponseDtoItem[]>(
-      {url: `/threads`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getThreadsControllerFindAllQueryKey = () => {
-    return [`/threads`] as const;
-    }
-
-    
-export const getThreadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerFindAllQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerFindAll>>> = ({ signal }) => threadsControllerFindAll(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerFindAll>>>
-export type ThreadsControllerFindAllQueryError = void
-
-
-export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof threadsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof threadsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all threads for the current user
- */
-
-export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadsControllerFindAllQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get a thread by ID
- */
-export const threadsControllerFindOne = (
-    id: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<GetThreadResponseDto>(
-      {url: `/threads/${id}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getThreadsControllerFindOneQueryKey = (id: string,) => {
-    return [`/threads/${id}`] as const;
-    }
-
-    
-export const getThreadsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerFindOneQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerFindOne>>> = ({ signal }) => threadsControllerFindOne(id, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerFindOne>>>
-export type ThreadsControllerFindOneQueryError = void
-
-
-export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof threadsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof threadsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a thread by ID
- */
-
-export function useThreadsControllerFindOne<TData = Awaited<ReturnType<typeof threadsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadsControllerFindOneQueryOptions(id,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Delete a thread
- */
-export const threadsControllerDelete = (
+export const toolsControllerDeleteTool = (
     id: string,
  ) => {
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}`, method: 'DELETE'
+      {url: `/tools/${id}`, method: 'DELETE'
     },
       );
     }
   
 
 
-export const getThreadsControllerDeleteMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerDelete>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerDelete>>, TError,{id: string}, TContext> => {
+export const getToolsControllerDeleteToolMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext> => {
 
-const mutationKey = ['threadsControllerDelete'];
+const mutationKey = ['toolsControllerDeleteTool'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2610,10 +3031,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerDelete>>, {id: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  threadsControllerDelete(id,)
+          return  toolsControllerDeleteTool(id,)
         }
 
         
@@ -2621,444 +3042,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerDelete>>>
+    export type ToolsControllerDeleteToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerDeleteTool>>>
     
-    export type ThreadsControllerDeleteMutationError = void
+    export type ToolsControllerDeleteToolMutationError = unknown
 
     /**
- * @summary Delete a thread
+ * @summary Delete a tool by ID
  */
-export const useThreadsControllerDelete = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerDelete>>, TError,{id: string}, TContext>, }
+export const useToolsControllerDeleteTool = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerDelete>>,
+        Awaited<ReturnType<typeof toolsControllerDeleteTool>>,
         TError,
         {id: string},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Update thread instruction
- */
-export const threadsControllerUpdateInstruction = (
-    id: string,
-    updateThreadInstructionDto: UpdateThreadInstructionDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/instruction`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateThreadInstructionDto
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerUpdateInstructionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext> => {
-
-const mutationKey = ['threadsControllerUpdateInstruction'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, {id: string;data: UpdateThreadInstructionDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerUpdateInstruction(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerUpdateInstructionMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>>
-    export type ThreadsControllerUpdateInstructionMutationBody = UpdateThreadInstructionDto
-    export type ThreadsControllerUpdateInstructionMutationError = void
-
-    /**
- * @summary Update thread instruction
- */
-export const useThreadsControllerUpdateInstruction = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>,
-        TError,
-        {id: string;data: UpdateThreadInstructionDto},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerUpdateInstructionMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Update thread model
- */
-export const threadsControllerUpdateModel = (
-    id: string,
-    updateThreadModelDto: UpdateThreadModelDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/model`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateThreadModelDto
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerUpdateModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext> => {
-
-const mutationKey = ['threadsControllerUpdateModel'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, {id: string;data: UpdateThreadModelDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerUpdateModel(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerUpdateModelMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateModel>>>
-    export type ThreadsControllerUpdateModelMutationBody = UpdateThreadModelDto
-    export type ThreadsControllerUpdateModelMutationError = void
-
-    /**
- * @summary Update thread model
- */
-export const useThreadsControllerUpdateModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateModel>>,
-        TError,
-        {id: string;data: UpdateThreadModelDto},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerUpdateModelMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Update thread internet search setting
- */
-export const threadsControllerUpdateInternetSearch = (
-    id: string,
-    updateThreadInternetSearchDto: UpdateThreadInternetSearchDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/internet-search`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateThreadInternetSearchDto
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerUpdateInternetSearchMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext> => {
-
-const mutationKey = ['threadsControllerUpdateInternetSearch'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, {id: string;data: UpdateThreadInternetSearchDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerUpdateInternetSearch(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerUpdateInternetSearchMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>>
-    export type ThreadsControllerUpdateInternetSearchMutationBody = UpdateThreadInternetSearchDto
-    export type ThreadsControllerUpdateInternetSearchMutationError = void
-
-    /**
- * @summary Update thread internet search setting
- */
-export const useThreadsControllerUpdateInternetSearch = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>,
-        TError,
-        {id: string;data: UpdateThreadInternetSearchDto},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerUpdateInternetSearchMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Get all sources for a thread
- */
-export const threadsControllerGetThreadSources = (
-    id: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SourceResponseDto[]>(
-      {url: `/threads/${id}/sources`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getThreadsControllerGetThreadSourcesQueryKey = (id: string,) => {
-    return [`/threads/${id}/sources`] as const;
-    }
-
-    
-export const getThreadsControllerGetThreadSourcesQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerGetThreadSourcesQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>> = ({ signal }) => threadsControllerGetThreadSources(id, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ThreadsControllerGetThreadSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>>
-export type ThreadsControllerGetThreadSourcesQueryError = void
-
-
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>,
-          TError,
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>,
-          TError,
-          Awaited<ReturnType<typeof threadsControllerGetThreadSources>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all sources for a thread
- */
-
-export function useThreadsControllerGetThreadSources<TData = Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerGetThreadSources>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getThreadsControllerGetThreadSourcesQueryOptions(id,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Add a file source to a thread
- */
-export const threadsControllerAddFileSource = (
-    id: string,
-    threadsControllerAddFileSourceBody: ThreadsControllerAddFileSourceBody,
- signal?: AbortSignal
-) => {
-      
-      const formData = new FormData();
-formData.append(`file`, threadsControllerAddFileSourceBody.file)
-formData.append(`userId`, threadsControllerAddFileSourceBody.userId)
-if(threadsControllerAddFileSourceBody.name !== undefined) {
- formData.append(`name`, threadsControllerAddFileSourceBody.name)
- }
-if(threadsControllerAddFileSourceBody.description !== undefined) {
- formData.append(`description`, threadsControllerAddFileSourceBody.description)
- }
-
-      return customAxiosInstance<FileSourceResponseDto>(
-      {url: `/threads/${id}/sources/file`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerAddFileSourceMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext> => {
-
-const mutationKey = ['threadsControllerAddFileSource'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, {id: string;data: ThreadsControllerAddFileSourceBody}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerAddFileSource(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerAddFileSource>>>
-    export type ThreadsControllerAddFileSourceMutationBody = ThreadsControllerAddFileSourceBody
-    export type ThreadsControllerAddFileSourceMutationError = unknown
-
-    /**
- * @summary Add a file source to a thread
- */
-export const useThreadsControllerAddFileSource = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerAddFileSource>>, TError,{id: string;data: ThreadsControllerAddFileSourceBody}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerAddFileSource>>,
-        TError,
-        {id: string;data: ThreadsControllerAddFileSourceBody},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerAddFileSourceMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Remove a source from a thread
- */
-export const threadsControllerRemoveSource = (
-    id: string,
-    sourceId: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/sources/${sourceId}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerRemoveSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
-
-const mutationKey = ['threadsControllerRemoveSource'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
-          const {id,sourceId} = props ?? {};
-
-          return  threadsControllerRemoveSource(id,sourceId,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerRemoveSource>>>
-    
-    export type ThreadsControllerRemoveSourceMutationError = void
-
-    /**
- * @summary Remove a source from a thread
- */
-export const useThreadsControllerRemoveSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerRemoveSource>>,
-        TError,
-        {id: string;sourceId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerRemoveSourceMutationOptions(options);
+      const mutationOptions = getToolsControllerDeleteToolMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

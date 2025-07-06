@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { ToolsModule } from 'src/domain/tools/tools.module';
 import { LocalRepositoryModule } from './infrastructure/persistence/local/local-agent-repository.module';
@@ -13,12 +13,13 @@ import { FindAgentUseCase } from './application/use-cases/find-agent/find-agent.
 import { FindManyAgentsUseCase } from './application/use-cases/find-many-agents/find-many-agents.use-case';
 import { FindAllAgentsByOwnerUseCase } from './application/use-cases/find-all-agents-by-owner/find-all-agents-by-owner.use-case';
 import { DeleteAgentUseCase } from './application/use-cases/delete-agent/delete-agent.use-case';
+import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AgentRecord]),
     LocalRepositoryModule,
-    ModelsModule,
+    forwardRef(() => ModelsModule),
     ToolsModule,
   ],
   providers: [
@@ -32,6 +33,7 @@ import { DeleteAgentUseCase } from './application/use-cases/delete-agent/delete-
     FindManyAgentsUseCase,
     FindAllAgentsByOwnerUseCase,
     DeleteAgentUseCase,
+    ReplaceModelWithUserDefaultUseCase,
   ],
   exports: [
     CreateAgentUseCase,
@@ -39,6 +41,7 @@ import { DeleteAgentUseCase } from './application/use-cases/delete-agent/delete-
     FindManyAgentsUseCase,
     FindAllAgentsByOwnerUseCase,
     DeleteAgentUseCase,
+    ReplaceModelWithUserDefaultUseCase,
   ],
 })
 export class AgentsModule {}

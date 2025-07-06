@@ -59,6 +59,15 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 
+  async findAllByModel(modelId: UUID): Promise<Thread[]> {
+    this.logger.log('findAllByModel', { modelId });
+    const threadEntities = await this.threadRepository.find({
+      where: { modelId },
+      relations: ['messages', 'model'],
+    });
+    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+  }
+
   async update(thread: Thread): Promise<Thread> {
     this.logger.log('update', { threadId: thread.id });
     const threadEntity = this.threadMapper.toEntity(thread);

@@ -3,11 +3,7 @@ import { GetDefaultModelQuery } from './get-default-model.query';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import {
-  DefaultModelNotFoundError,
-  ModelError,
-  ModelNotFoundError,
-} from '../../models.errors';
+import { DefaultModelNotFoundError, ModelError } from '../../models.errors';
 
 @Injectable()
 export class GetDefaultModelUseCase {
@@ -78,13 +74,14 @@ export class GetDefaultModelUseCase {
         query.orgId,
       );
 
-      if (availableModels.length > 0) {
-        const firstModel = availableModels[0];
-        this.logger.debug('Using first available model as fallback', {
-          orgId: query.orgId,
-          modelId: firstModel.id,
-        });
-        return firstModel;
+      let index = 0;
+      while (index < availableModels.length) {
+        const model = availableModels[index];
+        if (query.blacklistedModelIds?.includes(model.id)) {
+          index++;
+          continue;
+        }
+        return model;
       }
 
       // Step 4: No models available at all

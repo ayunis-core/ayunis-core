@@ -17,6 +17,7 @@ export class ThreadMapper {
     const threadEntity = new ThreadRecord();
     threadEntity.id = thread.id;
     threadEntity.userId = thread.userId;
+    threadEntity.modelId = thread.model.id;
     threadEntity.model = this.permittedModelMapper.toRecord(thread.model);
     threadEntity.title = thread.title;
     threadEntity.instruction = thread.instruction;

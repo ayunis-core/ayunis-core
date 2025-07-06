@@ -13,7 +13,7 @@ export class CreatePermittedModelUseCase {
     private readonly modelRegistry: ModelRegistry,
   ) {}
 
-  async execute(command: CreatePermittedModelCommand): Promise<void> {
+  async execute(command: CreatePermittedModelCommand): Promise<PermittedModel> {
     this.logger.log('execute', {
       modelId: command.modelId,
       orgId: command.orgId,
@@ -24,7 +24,9 @@ export class CreatePermittedModelUseCase {
         model: model.model,
         orgId: command.orgId,
       });
-      await this.permittedModelsRepository.create(permittedModel);
+      const created =
+        await this.permittedModelsRepository.create(permittedModel);
+      return created;
     } catch (error) {
       if (error instanceof ModelNotFoundError) {
         throw error;

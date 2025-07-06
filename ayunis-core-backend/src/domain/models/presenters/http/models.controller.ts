@@ -168,12 +168,17 @@ export class ModelsController {
   async createPermittedModel(
     @Body() createPermittedModelDto: CreatePermittedModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<void> {
+  ): Promise<PermittedModelResponseDto> {
     const command = new CreatePermittedModelCommand(
       createPermittedModelDto.modelId,
       orgId,
     );
-    await this.createPermittedModelUseCase.execute(command);
+    const permittedModel =
+      await this.createPermittedModelUseCase.execute(command);
+    const modelWithConfig = this.getAvailableModelUseCase.execute(
+      new GetAvailableModelQuery(permittedModel.model.id),
+    );
+    return this.modelResponseDtoMapper.toDto(modelWithConfig, permittedModel);
   }
 
   @Get('permitted')
@@ -217,7 +222,10 @@ export class ModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
-    const command = new DeletePermittedModelCommand(orgId, id);
+    const command = new DeletePermittedModelCommand({
+      orgId,
+      permittedModelId: id,
+    });
     await this.deletePermittedModelUseCase.execute(command);
   }
 
@@ -242,7 +250,7 @@ export class ModelsController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<PermittedModelResponseDto> {
-    const query = new GetDefaultModelQuery(orgId, userId);
+    const query = new GetDefaultModelQuery({ orgId, userId });
     const model = await this.getDefaultModelUseCase.execute(query);
     const modelWithConfig = this.getAvailableModelUseCase.execute(
       new GetAvailableModelQuery(model.model.id),

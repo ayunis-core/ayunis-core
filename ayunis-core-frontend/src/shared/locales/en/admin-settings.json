@@ -12,7 +12,8 @@
     "streaming": "Streaming",
     "reasoning": "Reasoning",
     "enableProvider": "Enable Provider",
-    "disableProvider": "Disable Provider"
+    "disableProvider": "Disable Provider",
+    "providerDisabled": "Cannot be enabled because the provider is not enabled."
   },
   "users": {
     "invites": "Invites",

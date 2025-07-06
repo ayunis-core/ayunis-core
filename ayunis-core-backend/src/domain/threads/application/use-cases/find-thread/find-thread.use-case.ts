@@ -5,6 +5,9 @@ import { FindThreadQuery } from './find-thread.query';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { GetAvailableModelUseCase } from 'src/domain/models/application/use-cases/get-available-model/get-available-model.use-case';
 import { GetAvailableModelQuery } from 'src/domain/models/application/use-cases/get-available-model/get-available-model.query';
+import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
+import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 
 @Injectable()
 export class FindThreadUseCase {
@@ -13,6 +16,7 @@ export class FindThreadUseCase {
   constructor(
     private readonly threadsRepository: ThreadsRepository,
     private readonly getAvailableModelUseCase: GetAvailableModelUseCase,
+    private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
   ) {}
 
   async execute(query: FindThreadQuery): Promise<Thread> {

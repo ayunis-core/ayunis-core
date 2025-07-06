@@ -14,7 +14,12 @@ export type FindOneParams =
     };
 
 export abstract class PermittedModelsRepository {
-  abstract findAll(orgId: string): Promise<PermittedModel[]>;
+  abstract findAll(
+    orgId: string,
+    filter?: {
+      provider?: ModelProvider;
+    },
+  ): Promise<PermittedModel[]>;
   abstract findDefault(orgId: string): Promise<PermittedModel | undefined>;
   abstract findOne(params: FindOneParams): Promise<PermittedModel | undefined>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;

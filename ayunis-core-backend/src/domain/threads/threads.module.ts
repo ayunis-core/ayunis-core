@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ThreadsController } from './presenters/http/threads.controller';
 import { ThreadsRepository } from './application/ports/threads.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
@@ -26,12 +26,13 @@ import { GenerateAndSetThreadTitleUseCase } from './application/use-cases/genera
 import { LocalThreadsRepository } from './infrastructure/persistence/local/local-threads.repository';
 import { GetThreadsDtoMapper } from './presenters/http/mappers/get-threads.mapper';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
     SourcesModule,
-    ModelsModule,
+    forwardRef(() => ModelsModule),
     MessagesModule,
     OrgsModule,
   ],
@@ -55,6 +56,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     UpdateThreadModelUseCase,
     UpdateThreadInternetSearchUseCase,
     GenerateAndSetThreadTitleUseCase,
+    ReplaceModelWithUserDefaultUseCase,
 
     // Mappers
     SourceDtoMapper,
@@ -77,6 +79,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     UpdateThreadModelUseCase,
     UpdateThreadInternetSearchUseCase,
     GenerateAndSetThreadTitleUseCase,
+    ReplaceModelWithUserDefaultUseCase,
 
     // Export mappers
     GetThreadDtoMapper,

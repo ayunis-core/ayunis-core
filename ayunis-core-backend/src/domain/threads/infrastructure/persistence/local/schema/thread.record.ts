@@ -14,7 +14,7 @@ export class ThreadRecord extends BaseRecord {
   @Column()
   modelId: UUID;
 
-  @ManyToOne(() => PermittedModelRecord, { nullable: false })
+  @ManyToOne(() => PermittedModelRecord)
   model: PermittedModelRecord;
 
   @Column({ nullable: true })

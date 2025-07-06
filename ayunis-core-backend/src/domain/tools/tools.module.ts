@@ -24,12 +24,7 @@ import { DeleteToolUseCase } from './application/use-cases/delete-tool/delete-to
 import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 
 @Module({
-  imports: [
-    ModelsModule,
-    SourcesModule,
-    LocalToolConfigModule,
-    RetrieverModule,
-  ],
+  imports: [SourcesModule, LocalToolConfigModule, RetrieverModule],
   controllers: [ToolsController],
   providers: [
     // Use cases

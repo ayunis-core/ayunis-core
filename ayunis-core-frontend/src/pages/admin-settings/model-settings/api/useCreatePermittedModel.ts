@@ -1,6 +1,7 @@
 import {
   useModelsControllerCreatePermittedModel,
   type ModelWithConfigResponseDto,
+  getModelsControllerGetAvailableModelsWithConfigQueryKey,
 } from "@/shared/api";
 import { type Model } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,39 +11,59 @@ export function useCreatePermittedModel() {
   const createPermittedModelMutation = useModelsControllerCreatePermittedModel({
     mutation: {
       onMutate: async ({ data }) => {
-        console.log("Creating permitted model");
+        const queryKey =
+          getModelsControllerGetAvailableModelsWithConfigQueryKey();
         await queryClient.cancelQueries({
-          queryKey: ["permitted-models"],
+          queryKey,
         });
-        const previousData = queryClient.getQueryData(["permitted-models"]);
-        queryClient.setQueryData(
-          ["permitted-models"],
-          (old: ModelWithConfigResponseDto[]) => {
-            return [...old, data];
+        const previousData =
+          queryClient.getQueryData<ModelWithConfigResponseDto[]>(queryKey);
+
+        // Optimistically update to the new value
+        queryClient.setQueryData<ModelWithConfigResponseDto[]>(
+          queryKey,
+          (old) => {
+            if (!old) {
+              console.warn("No previous data found for optimistic update");
+              return old;
+            }
+            return old.map((model) => {
+              if (model.modelId === data.modelId) {
+                console.log(
+                  "Found matching model, updating isPermitted to true",
+                );
+                return {
+                  ...model,
+                  isPermitted: true,
+                };
+              }
+              return model;
+            });
           },
         );
-        return { previousData };
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["permitted-models"],
-        });
+
+        return { previousData, queryKey };
       },
       onError: (err, _, context) => {
         console.error("Error creating permitted model", err);
-        queryClient.setQueryData(["permitted-models"], context?.previousData);
+        if (context?.previousData && context?.queryKey) {
+          queryClient.setQueryData(context.queryKey, context.previousData);
+        }
+      },
+      onSettled: () => {
+        const queryKey =
+          getModelsControllerGetAvailableModelsWithConfigQueryKey();
+        queryClient.invalidateQueries({
+          queryKey,
+        });
       },
     },
   });
 
   function createPermittedModel(model: Model) {
-    console.log("Creating permitted model", model);
-    createPermittedModelMutation.mutate(
-      {
-        data: model,
-      },
-      {},
-    );
+    createPermittedModelMutation.mutate({
+      data: model,
+    });
   }
 
   return {

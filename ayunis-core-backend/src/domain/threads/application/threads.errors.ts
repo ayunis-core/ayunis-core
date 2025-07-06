@@ -1,3 +1,4 @@
+import { UUID } from 'crypto';
 import {
   ApplicationError,
   ErrorMetadata,
@@ -11,6 +12,7 @@ export enum ThreadErrorCode {
   SOURCE_REMOVAL_FAILED = 'SOURCE_REMOVAL_FAILED',
   SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
   THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
+  MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
 }
 
 /**
@@ -126,6 +128,21 @@ export class ThreadUpdateError extends ThreadError {
       {
         threadId,
         originalError: error.message,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class ModelReplacementError extends ThreadError {
+  constructor(threadId: UUID, modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Failed to replace model in thread '${threadId}' with model '${modelId}'`,
+      ThreadErrorCode.MODEL_REPLACEMENT_FAILED,
+      500,
+      {
+        threadId,
+        modelId,
         ...metadata,
       },
     );

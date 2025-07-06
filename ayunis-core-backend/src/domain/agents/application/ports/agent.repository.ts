@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 import { Agent } from '../../domain/agent.entity';
+import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 
 export abstract class AgentRepository {
   abstract create(agent: Agent): Promise<Agent>;
@@ -7,4 +8,10 @@ export abstract class AgentRepository {
   abstract findOne(id: UUID, userId: UUID): Promise<Agent | null>;
   abstract findMany(ids: UUID[], userId: UUID): Promise<Agent[]>;
   abstract findAllByOwner(userId: UUID): Promise<Agent[]>;
+  abstract findAllByModel(modelId: UUID): Promise<Agent[]>;
+  abstract updateModel(
+    agentId: UUID,
+    userId: UUID,
+    model: PermittedModel,
+  ): Promise<void>;
 }
