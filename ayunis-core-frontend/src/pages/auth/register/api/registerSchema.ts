@@ -15,6 +15,7 @@ export const registerFormSchema = z
     userName: z.string().min(1, {
       message: "User name is required.",
     }),
+    legalAcceptance: z.boolean(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

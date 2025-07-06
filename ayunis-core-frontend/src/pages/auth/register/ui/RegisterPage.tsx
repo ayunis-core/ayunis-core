@@ -10,8 +10,10 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import OnboardingLayout from "@/layouts/onboarding-layout";
 import { useRegister } from "../api";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import { Link } from "@tanstack/react-router";
+import { Checkbox } from "@/shared/ui/shadcn/checkbox";
+import { Label } from "@/shared/ui/shadcn/label";
 
 export function RegisterPage() {
   const { form, onSubmit, isLoading } = useRegister();
@@ -42,6 +44,7 @@ export function RegisterPage() {
                 <FormLabel>{t("register.email")}</FormLabel>
                 <FormControl>
                   <Input
+                    required
                     placeholder={t("register.emailPlaceholder")}
                     type="email"
                     {...field}
@@ -59,6 +62,7 @@ export function RegisterPage() {
                 <FormLabel>{t("register.userName")}</FormLabel>
                 <FormControl>
                   <Input
+                    required
                     placeholder={t("register.userNamePlaceholder")}
                     {...field}
                   />
@@ -75,6 +79,7 @@ export function RegisterPage() {
                 <FormLabel>{t("register.orgName")}</FormLabel>
                 <FormControl>
                   <Input
+                    required
                     placeholder={t("register.orgNamePlaceholder")}
                     {...field}
                   />
@@ -91,6 +96,7 @@ export function RegisterPage() {
                 <FormLabel>{t("register.password")}</FormLabel>
                 <FormControl>
                   <Input
+                    required
                     placeholder={t("register.passwordPlaceholder")}
                     type="password"
                     {...field}
@@ -108,10 +114,54 @@ export function RegisterPage() {
                 <FormLabel>{t("register.confirmPassword")}</FormLabel>
                 <FormControl>
                   <Input
+                    required
                     placeholder={t("register.confirmPasswordPlaceholder")}
                     type="password"
                     {...field}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="legalAcceptance"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="legalAcceptance"
+                      required
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <Label htmlFor="legalAcceptance" className="block">
+                      <Trans
+                        i18nKey="register.legalAcceptanceDescription"
+                        ns="auth"
+                        components={{
+                          privacyLink: (
+                            <a
+                              href="/privacy-policy"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            />
+                          ),
+                          tosLink: (
+                            <a
+                              href="/terms-of-service"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            />
+                          ),
+                        }}
+                      />
+                    </Label>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

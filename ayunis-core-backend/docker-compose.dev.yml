@@ -20,6 +20,18 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - '8888:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ayunis.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
   minio:
     image: quay.io/minio/minio:latest
     container_name: ayunis-minio-dev
@@ -76,5 +88,6 @@ services:
 
 volumes:
   postgres-data-dev:
+  pgadmin-data:
   node_modules_dev:
   minio-data-dev:

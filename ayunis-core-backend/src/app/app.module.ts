@@ -27,6 +27,7 @@ import storageConfig from '../config/storage.config';
 import { webConfig } from '../config/web.config';
 import { appConfig } from '../config/app.config';
 import { adminConfig } from '../config/admin.config';
+import { legalConfig } from '../config/legal.config';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
@@ -46,6 +47,7 @@ import { join } from 'path';
         webConfig,
         appConfig,
         adminConfig,
+        legalConfig,
       ],
     }),
     ServeStaticModule.forRoot({

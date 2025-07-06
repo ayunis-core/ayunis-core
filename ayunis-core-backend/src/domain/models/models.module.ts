@@ -55,6 +55,7 @@ import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/
 import { ThreadsModule } from '../threads/threads.module';
 import { AgentsModule } from '../agents/agents.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
+import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 
 @Module({
   imports: [
@@ -62,8 +63,9 @@ import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases
     LocalUserDefaultModelsRepositoryModule,
     LocalModelsRepositoryModule,
     LocalPermittedProvidersRepositoryModule,
-    forwardRef(() => ThreadsModule),
-    forwardRef(() => AgentsModule),
+    LegalAcceptancesModule,
+    forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
+    forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
   controllers: [ModelsController],
   providers: [

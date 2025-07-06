@@ -18,6 +18,7 @@ export function useRegister() {
       confirmPassword: "",
       orgName: "",
       userName: "",
+      legalAcceptance: false,
     },
   });
 

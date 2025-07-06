@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { OrgsModule } from './orgs/orgs.module';
 import { AuthorizationModule } from './authorization/authorization.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.module';
 
 @Module({})
 export class IamModule {
@@ -29,6 +30,7 @@ export class IamModule {
         UsersModule,
         OrgsModule,
         SubscriptionsModule,
+        LegalAcceptancesModule,
       ],
       exports: [
         AuthenticationModule,
@@ -38,6 +40,7 @@ export class IamModule {
         UsersModule,
         OrgsModule,
         SubscriptionsModule,
+        LegalAcceptancesModule,
       ],
     };
   }

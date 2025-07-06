@@ -12,6 +12,12 @@ import {
   AuthenticationFailedError,
 } from '../../authentication.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
+import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
+import {
+  CreateLegalAcceptanceCommand,
+  CreateTosAcceptanceCommand,
+} from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
+import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -21,6 +27,7 @@ export class RegisterUserUseCase {
     private readonly createAdminUserUseCase: CreateAdminUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
+    private readonly createLegalAcceptanceUseCase: CreateLegalAcceptanceUseCase,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
@@ -55,6 +62,17 @@ export class RegisterUserUseCase {
           password: command.password,
           orgId: org.id,
           name: command.userName,
+        }),
+      );
+
+      this.logger.debug('Creating legal acceptance', {
+        userId: user.id,
+        orgId: org.id,
+      });
+      await this.createLegalAcceptanceUseCase.execute(
+        new CreateTosAcceptanceCommand({
+          userId: user.id,
+          orgId: org.id,
         }),
       );
 

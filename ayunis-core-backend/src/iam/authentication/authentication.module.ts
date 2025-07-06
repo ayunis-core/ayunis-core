@@ -21,6 +21,7 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token/refre
 import { RegisterUserUseCase } from './application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from './application/use-cases/get-current-user/get-current-user.use-case';
 import { MeResponseDtoMapper } from './presenters/http/mappers/me-response-dto.mapper';
+import { LegalAcceptancesModule } from '../legal-acceptances/legal-acceptances.module';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -35,6 +36,7 @@ export class AuthenticationModule {
         PassportModule,
         UsersModule,
         OrgsModule,
+        LegalAcceptancesModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],

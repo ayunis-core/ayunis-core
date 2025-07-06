@@ -46,7 +46,6 @@ export class LocalUsersRepository extends UsersRepository {
         where: { email },
       });
       if (!userEntity) {
-        // Not throwing an error here as this is often used to check if a user exists
         this.logger.debug('User not found by email', { email });
         return null;
       }
