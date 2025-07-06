@@ -6,6 +6,7 @@ export class GetPermittedModelsQuery {
     public readonly orgId: UUID,
     public readonly filter?: {
       provider?: ModelProvider;
+      modelId?: UUID;
     },
   ) {}
 }

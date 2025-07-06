@@ -63,6 +63,13 @@ export class LocalOrgsRepository extends OrgsRepository {
     return OrgMapper.toDomain(orgEntity);
   }
 
+  async findAllIds(): Promise<UUID[]> {
+    const orgs = await this.orgRepository.find({
+      select: { id: true },
+    });
+    return orgs.map((org) => org.id);
+  }
+
   async create(org: Org): Promise<Org> {
     this.logger.log('create', { id: org.id, name: org.name });
 

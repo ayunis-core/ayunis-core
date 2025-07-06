@@ -13,7 +13,7 @@ export default function Markdown({ children, className = "" }: MarkdownProps) {
     >
       <ReactMarkdown
         components={{
-          code: ({ inline, className, children, ...props }: any) => {
+          code: ({ inline, className, children }: any) => {
             // Multiple detection methods
             const hasLanguageClass =
               className && className.startsWith("language-");

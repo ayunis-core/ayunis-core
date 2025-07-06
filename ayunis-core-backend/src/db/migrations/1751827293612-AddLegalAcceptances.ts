@@ -1,12 +1,11 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AddLegalAcceptances1751796802699 implements MigrationInterface {
-    name = 'AddLegalAcceptances1751796802699'
+export class AddLegalAcceptances1751827293612 implements MigrationInterface {
+    name = 'AddLegalAcceptances1751827293612'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."legal_acceptances_modelprovider_enum" AS ENUM('openai', 'anthropic', 'mistral')`);
         await queryRunner.query(`CREATE TABLE "legal_acceptances" ("id" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "version" character varying NOT NULL, "userId" character varying NOT NULL, "orgId" character varying NOT NULL, "type" character varying NOT NULL, "modelProvider" "public"."legal_acceptances_modelprovider_enum", CONSTRAINT "PK_80ba27e822e932eceb3b0640983" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_12108d1223f8a169fd959b949c" ON "legal_acceptances" ("orgId", "type", "version") `);
         await queryRunner.query(`CREATE INDEX "IDX_f62debcd26469d1afe5e4dff49" ON "legal_acceptances" ("type") `);
         await queryRunner.query(`DROP INDEX "public"."IDX_7c11834d93fa8eaf208a48d66a"`);
         await queryRunner.query(`ALTER TYPE "public"."models_provider_enum" RENAME TO "models_provider_enum_old"`);
@@ -36,7 +35,6 @@ export class AddLegalAcceptances1751796802699 implements MigrationInterface {
         await queryRunner.query(`ALTER TYPE "public"."models_provider_enum_old" RENAME TO "models_provider_enum"`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_7c11834d93fa8eaf208a48d66a" ON "models" ("name", "provider") `);
         await queryRunner.query(`DROP INDEX "public"."IDX_f62debcd26469d1afe5e4dff49"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_12108d1223f8a169fd959b949c"`);
         await queryRunner.query(`DROP TABLE "legal_acceptances"`);
         await queryRunner.query(`DROP TYPE "public"."legal_acceptances_modelprovider_enum"`);
     }

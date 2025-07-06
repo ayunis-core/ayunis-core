@@ -66,13 +66,63 @@ docker compose up -d --build
 
 - Application: http://localhost:3000
 - Backend Base URL: http://localhost:3000/api
+- Admin Base URL: http://localhost:3000/api/admin
 - SwaggerUI: http://localhost:3000/api/docs
 - OpenAPI JSON: http://localhost:3000/api/docs-json
+
+## ⚙️ Configuration
+
+- Copy `.env.example` and fill in environment variables
+- Provide at least one API key for a model provider (Mistral, Anthropic, OpenAPI, ...)
+- Provide a secure admin token for the admin endpoint
+
+### Model Configuration
+
+Add available models via HTTP requests to the admin endpoint:
+
+```bash
+curl -X POST http://localhost:3000/api/admin/models \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
+  -d '{
+    "name": "mistral-large-latest",
+    "provider": "mistral",
+    "displayName": "Mistral Large",
+    "canStream": true,
+    "isReasoning": false,
+    "isArchived": false
+  }'
+```
+
+Other methods
+
+```bash
+# Get models
+curl -X GET http://localhost:3000/api/admin/models/ \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE"
+
+# Update model
+curl -X PUT http://localhost:3000/api/admin/models/:id \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
+  -d '{
+    "name": "mistral-large-latest",
+    "provider": "mistral",
+    "displayName": "Mistral Large",
+    "canStream": true,
+    "isReasoning": false,
+    "isArchived": false
+  }'
+
+# Delete model
+curl -X DELETE http://localhost:3000/api/admin/models/:id
+```
 
 ## 🎯 First steps
 
 - Create an account
-- Go to Admin Settings -> Models and enable some models
+- Go to Admin Settings -> Models and enable some models (only those created through the admin interface will be visible here)
 - Invite users
 - Go to the Prompt Library and add some prompts for easy access
 - Chat with your enabled models, add prompts via the book icon button below the chat input

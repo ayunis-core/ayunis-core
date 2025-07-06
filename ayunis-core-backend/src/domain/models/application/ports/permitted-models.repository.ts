@@ -18,6 +18,7 @@ export abstract class PermittedModelsRepository {
     orgId: string,
     filter?: {
       provider?: ModelProvider;
+      modelId?: UUID;
     },
   ): Promise<PermittedModel[]>;
   abstract findDefault(orgId: string): Promise<PermittedModel | undefined>;

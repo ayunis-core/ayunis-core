@@ -19,7 +19,6 @@ import {
     name: 'type',
   },
 })
-@Index(['orgId', 'type', 'version'], { unique: true })
 export abstract class LegalAcceptanceRecord extends BaseRecord {
   @Column()
   version: string;

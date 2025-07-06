@@ -28,6 +28,10 @@ export class CloudOrgsRepository extends OrgsRepository {
     throw new Error('Not implemented');
   }
 
+  async findAllIds(): Promise<UUID[]> {
+    throw new Error('Not implemented');
+  }
+
   async create(org: Org): Promise<Org> {
     this.logger.log('create', { id: org.id, name: org.name });
     this.logger.error('Not implemented: create');

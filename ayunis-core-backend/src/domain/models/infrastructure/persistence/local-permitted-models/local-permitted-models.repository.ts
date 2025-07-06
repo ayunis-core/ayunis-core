@@ -26,10 +26,14 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     orgId: UUID,
     filter?: {
       provider?: ModelProvider;
+      modelId?: UUID;
     },
   ): Promise<PermittedModel[]> {
     const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId, model: { provider: filter?.provider } },
+      where: {
+        orgId,
+        model: { provider: filter?.provider, id: filter?.modelId },
+      },
       relations: {
         model: true,
       },

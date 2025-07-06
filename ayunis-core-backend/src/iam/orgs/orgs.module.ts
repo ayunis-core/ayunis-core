@@ -15,6 +15,7 @@ import { CreateOrgUseCase } from './application/use-cases/create-org/create-org.
 import { UpdateOrgUseCase } from './application/use-cases/update-org/update-org.use-case';
 import { DeleteOrgUseCase } from './application/use-cases/delete-org/delete-org.use-case';
 import { FindOrgByUserIdUseCase } from './application/use-cases/find-org-by-user-id/find-org-by-user-id.use-case';
+import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OrgRecord])],
@@ -37,6 +38,7 @@ import { FindOrgByUserIdUseCase } from './application/use-cases/find-org-by-user
     CreateOrgUseCase,
     UpdateOrgUseCase,
     DeleteOrgUseCase,
+    FindAllOrgIdsUseCase,
   ],
   exports: [
     FindOrgByIdUseCase,
@@ -44,6 +46,7 @@ import { FindOrgByUserIdUseCase } from './application/use-cases/find-org-by-user
     CreateOrgUseCase,
     UpdateOrgUseCase,
     DeleteOrgUseCase,
+    FindAllOrgIdsUseCase,
   ],
 })
 export class OrgsModule {}
