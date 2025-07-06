@@ -125,7 +125,6 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     onConnected: handleConnected,
     onDisconnect: handleDisconnect,
   });
-  console.log("isConnected", isConnected);
 
   // Auto-scroll to bottom when new messages are added - use the local messages state
   useEffect(() => {

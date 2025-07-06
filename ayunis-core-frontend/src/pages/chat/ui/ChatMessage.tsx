@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import { Avatar, AvatarFallback } from "@/shared/ui/shadcn/avatar";
 import { Bot, User, Loader2, Settings, Wrench } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import type {
   Message,
@@ -13,6 +12,7 @@ import type {
 import brandIconLight from "@/shared/assets/brand/brand-icon-round-light.svg";
 import brandIconDark from "@/shared/assets/brand/brand-icon-round-dark.svg";
 import { useTheme } from "@/features/theme";
+import { Markdown } from "@/widgets/markdown";
 
 interface ChatMessageProps {
   message?: Message;
@@ -21,14 +21,7 @@ interface ChatMessageProps {
 
 // Helper function to render text content
 const renderTextContent = (content: TextMessageContent) => {
-  return (
-    <div
-      key={content.text}
-      className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert"
-    >
-      <ReactMarkdown>{content.text}</ReactMarkdown>
-    </div>
-  );
+  return <Markdown key={content.text}>{content.text}</Markdown>;
 };
 
 // Helper function to render tool use content

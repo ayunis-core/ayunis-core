@@ -53,6 +53,7 @@ export function useMessageEventStream({
         headers: {
           Accept: "text/event-stream",
           "Cache-Control": "no-cache",
+          Connection: "keep-alive",
         },
         credentials: "include",
         signal,
