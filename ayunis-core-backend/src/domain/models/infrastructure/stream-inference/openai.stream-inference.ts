@@ -51,11 +51,11 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       const completionOptions: OpenAI.ChatCompletionCreateParamsStreaming = {
         model: input.model.name,
         messages: openAiMessages,
+        max_tokens: 10000,
         tools: openAiTools,
         tool_choice: toolChoice
           ? this.convertToolChoice(toolChoice)
           : undefined,
-        max_tokens: 1000,
         stream: true,
       };
       this.logger.debug('completionOptions', completionOptions);

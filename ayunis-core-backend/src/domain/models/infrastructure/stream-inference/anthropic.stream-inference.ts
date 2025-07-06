@@ -64,7 +64,7 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
         messages: anthropicMessages,
         tools: anthropicTools,
         tool_choice: anthropicToolChoice,
-        max_tokens: 1000,
+        max_tokens: 10000,
         stream: true,
       };
 
