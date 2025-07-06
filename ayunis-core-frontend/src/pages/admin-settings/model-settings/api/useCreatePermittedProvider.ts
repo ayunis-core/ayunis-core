@@ -4,6 +4,8 @@ import {
   type CreatePermittedProviderDto,
   getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey,
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
+  getModelsControllerGetUserSpecificDefaultModelQueryKey,
+  getModelsControllerGetPermittedModelsQueryKey,
 } from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -13,44 +15,40 @@ export function useCreatePermittedProvider() {
     useModelsControllerCreatePermittedProvider({
       mutation: {
         onMutate: async ({ data }) => {
-          console.log("Creating permitted provider");
-
-          // Get the correct query key from the generated API
-          const providersQueryKey =
+          const queryKey =
             getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey();
-
           await queryClient.cancelQueries({
-            queryKey: providersQueryKey,
+            queryKey,
           });
-          const previousData = queryClient.getQueryData(providersQueryKey);
+          const previousData = queryClient.getQueryData(queryKey);
           queryClient.setQueryData(
-            providersQueryKey,
+            queryKey,
             (old: PermittedProviderResponseDto[]) => {
               if (!old) return [data];
               return [...old, data];
             },
           );
-          return { previousData, queryKey: providersQueryKey };
-        },
-        onSuccess: () => {
-          // Get the correct query keys from the generated API
-          const providersQueryKey =
-            getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey();
-          const modelsQueryKey =
-            getModelsControllerGetAvailableModelsWithConfigQueryKey();
-
-          queryClient.invalidateQueries({
-            queryKey: providersQueryKey,
-          });
-          queryClient.invalidateQueries({
-            queryKey: modelsQueryKey,
-          });
+          return { previousData, queryKey };
         },
         onError: (err, _, context) => {
           console.error("Error creating permitted provider", err);
           if (context?.previousData && context?.queryKey) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }
+        },
+        onSettled: () => {
+          const queryKeys = [
+            getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey(),
+            getModelsControllerGetAvailableModelsWithConfigQueryKey(),
+            getModelsControllerGetPermittedModelsQueryKey(),
+            getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+          ];
+
+          queryKeys.forEach((queryKey) => {
+            queryClient.invalidateQueries({
+              queryKey,
+            });
+          });
         },
       },
     });

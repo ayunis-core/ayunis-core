@@ -2,6 +2,8 @@ import {
   useModelsControllerCreatePermittedModel,
   type ModelWithConfigResponseDto,
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
+  getModelsControllerGetUserSpecificDefaultModelQueryKey,
+  getModelsControllerGetPermittedModelsQueryKey,
 } from "@/shared/api";
 import { type Model } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,10 +53,15 @@ export function useCreatePermittedModel() {
         }
       },
       onSettled: () => {
-        const queryKey =
-          getModelsControllerGetAvailableModelsWithConfigQueryKey();
-        queryClient.invalidateQueries({
-          queryKey,
+        const queryKeys = [
+          getModelsControllerGetAvailableModelsWithConfigQueryKey(),
+          getModelsControllerGetPermittedModelsQueryKey(),
+          getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+        ];
+        queryKeys.forEach((queryKey) => {
+          queryClient.invalidateQueries({
+            queryKey,
+          });
         });
       },
     },

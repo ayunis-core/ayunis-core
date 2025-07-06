@@ -2,6 +2,8 @@ import {
   useModelsControllerDeletePermittedModel,
   type ModelWithConfigResponseDto,
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
+  getModelsControllerGetUserSpecificDefaultModelQueryKey,
+  getModelsControllerGetPermittedModelsQueryKey,
 } from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -51,10 +53,15 @@ export function useDeletePermittedModel() {
         }
       },
       onSettled: () => {
-        const queryKey =
-          getModelsControllerGetAvailableModelsWithConfigQueryKey();
-        queryClient.invalidateQueries({
-          queryKey,
+        const queryKeys = [
+          getModelsControllerGetAvailableModelsWithConfigQueryKey(),
+          getModelsControllerGetPermittedModelsQueryKey(),
+          getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+        ];
+        queryKeys.forEach((queryKey) => {
+          queryClient.invalidateQueries({
+            queryKey,
+          });
         });
       },
     },

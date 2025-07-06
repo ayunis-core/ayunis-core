@@ -2,6 +2,7 @@ import {
   useModelsControllerGetUserSpecificDefaultModel,
   useModelsControllerManageUserDefaultModel,
   useModelsControllerDeleteUserDefaultModel,
+  getModelsControllerGetUserSpecificDefaultModelQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
 import type { SetUserDefaultModelDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,17 +14,14 @@ interface UseUserDefaultModelOptions {
 
 export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   const queryClient = useQueryClient();
+  const queryKey = getModelsControllerGetUserSpecificDefaultModelQueryKey();
 
   // Get user default model
   const {
     data: userDefaultModel,
     error,
     refetch,
-  } = useModelsControllerGetUserSpecificDefaultModel({
-    query: {
-      queryKey: ["models"],
-    },
-  });
+  } = useModelsControllerGetUserSpecificDefaultModel();
 
   // Manage user default model (handles both creating and updating)
   const manageUserDefaultModelMutation =
@@ -32,9 +30,9 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
         onMutate: async ({ data }: { data: SetUserDefaultModelDto }) => {
           console.log("Managing user default model");
           await queryClient.cancelQueries({
-            queryKey: ["models"],
+            queryKey,
           });
-          const previousData = queryClient.getQueryData(["models"]);
+          const previousData = queryClient.getQueryData(queryKey);
 
           // Find the actual model from the provided models
           const selectedModel = allModels.find(
@@ -42,19 +40,19 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           );
 
           if (selectedModel) {
-            queryClient.setQueryData(["models"], selectedModel);
+            queryClient.setQueryData(queryKey, selectedModel);
           }
 
           return { previousData };
         },
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: ["models"],
+            queryKey,
           });
         },
         onError: (err: any, _: any, context: any) => {
           console.error("Error managing user default model", err);
-          queryClient.setQueryData(["models"], context?.previousData);
+          queryClient.setQueryData(queryKey, context?.previousData);
         },
       },
     });
@@ -66,22 +64,22 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
         onMutate: async () => {
           console.log("Deleting user default model");
           await queryClient.cancelQueries({
-            queryKey: ["models"],
+            queryKey,
           });
-          const previousData = queryClient.getQueryData(["models"]);
+          const previousData = queryClient.getQueryData(queryKey);
 
           // Optimistically set to null (no default model)
-          queryClient.setQueryData(["models"], null);
+          queryClient.setQueryData(queryKey, null);
           return { previousData };
         },
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: ["models"],
+            queryKey,
           });
         },
         onError: (err: any, _: any, context: any) => {
           console.error("Error deleting user default model", err);
-          queryClient.setQueryData(["models"], context?.previousData);
+          queryClient.setQueryData(queryKey, context?.previousData);
         },
       },
     });
