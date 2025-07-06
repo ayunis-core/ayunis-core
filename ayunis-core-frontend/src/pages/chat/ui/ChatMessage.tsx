@@ -174,9 +174,9 @@ export default function ChatMessage({
   if (isUserMessage) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[70%] space-y-1">
+        <div className="max-w-2xl min-w-0 space-y-1">
           <Card className={`p-2 ${getCardStyle(message.role)}`}>
-            <CardContent className="p-2 space-y-2">
+            <CardContent className="p-2 space-y-2 min-w-0 overflow-hidden">
               {renderMessageContent(message, t)}
             </CardContent>
           </Card>
@@ -194,8 +194,10 @@ export default function ChatMessage({
             {getAvatarIcon(message.role, theme)}
           </AvatarFallback>
         </Avatar>
-        <div className="max-w-[70%] space-y-1">
-          <div className="space-y-2">{renderMessageContent(message, t)}</div>
+        <div className="max-w-2xl min-w-0 space-y-1">
+          <div className="space-y-2 overflow-hidden">
+            {renderMessageContent(message, t)}
+          </div>
         </div>
       </div>
     );
@@ -209,9 +211,9 @@ export default function ChatMessage({
           {getAvatarIcon(message.role, theme)}
         </AvatarFallback>
       </Avatar>
-      <div className="max-w-[70%] space-y-1">
+      <div className="max-w-2xl min-w-0 space-y-1">
         <Card className={`p-2 ${getCardStyle(message.role)}`}>
-          <CardContent className="p-2 space-y-2">
+          <CardContent className="p-2 space-y-2 min-w-0 overflow-hidden">
             {renderMessageContent(message, t)}
           </CardContent>
         </Card>

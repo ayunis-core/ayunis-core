@@ -31,7 +31,7 @@ export default function CodeBlock({
   }
 
   return (
-    <div className="overflow-x-auto my-4">
+    <div className="overflow-x-auto my-4 max-w-full">
       <SyntaxHighlighter
         style={theme === "dark" ? oneDark : oneLight}
         language={language || "text"}
@@ -40,6 +40,7 @@ export default function CodeBlock({
           margin: "0",
           borderRadius: "0.375rem",
           fontSize: "0.875rem",
+          overflow: "auto",
         }}
       >
         {children.replace(/\n$/, "")}
