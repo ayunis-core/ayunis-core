@@ -28,6 +28,7 @@ export default function ModelSelector({
   onChange,
 }: ModelSelectorProps) {
   const { models, placeholder, isDisabled } = usePermittedModels();
+  const splitChar = "$%$%$";
 
   // group models by provider
   const groupedModels = models.reduce(
@@ -40,11 +41,11 @@ export default function ModelSelector({
   );
 
   function modelToString(model: PermittedModel) {
-    return `${model.name}:${model.provider}`;
+    return `${model.name}${splitChar}${model.provider}`;
   }
 
   function stringToModel(value: string): PermittedModel {
-    const [modelName, modelProvider] = value.split(":");
+    const [modelName, modelProvider] = value.split(splitChar);
     const model = models.find(
       (model) => model.name === modelName && model.provider === modelProvider,
     );
@@ -81,7 +82,7 @@ export default function ModelSelector({
                     {models.map((model) => (
                       <SelectItem
                         key={model.name}
-                        value={`${model.name}:${provider}`}
+                        value={`${model.name}${splitChar}${provider}`}
                       >
                         {model.displayName}
                       </SelectItem>

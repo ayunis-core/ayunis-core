@@ -59,6 +59,7 @@
     "langfuse": "^3.37.4",
     "minio": "^8.0.5",
     "nest-winston": "^1.10.2",
+    "ollama": "^0.5.16",
     "openai": "^4.104.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

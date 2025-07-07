@@ -12,7 +12,6 @@ import {
 import { GetModelUseCase } from 'src/domain/models/application/use-cases/get-model/get-model.use-case';
 import { GetModelQuery } from 'src/domain/models/application/use-cases/get-model/get-model.query';
 import { GetAllModelsUseCase } from 'src/domain/models/application/use-cases/get-all-models/get-all-models.use-case';
-import { GetAllModelsQuery } from 'src/domain/models/application/use-cases/get-all-models/get-all-models.query';
 import { CreateModelUseCase } from 'src/domain/models/application/use-cases/create-model/create-model.use-case';
 import { CreateModelCommand } from 'src/domain/models/application/use-cases/create-model/create-model.command';
 import { UpdateModelUseCase } from 'src/domain/models/application/use-cases/update-model/update-model.use-case';
@@ -42,7 +41,7 @@ export class AdminController {
 
   @Get('models')
   async getAllModels() {
-    return this.getAllModelsUseCase.execute(new GetAllModelsQuery());
+    return this.getAllModelsUseCase.execute();
   }
 
   @Get('model')

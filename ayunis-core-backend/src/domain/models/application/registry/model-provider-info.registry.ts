@@ -20,11 +20,11 @@ const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
     displayName: 'Mistral',
     hostedIn: ModelProviderLocation.EU,
   },
-  //{
-  //  provider: ModelProvider.OLLAMA,
-  //  displayName: 'Ollama',
-  //  hostedIn: ModelProviderLocation.SELF_HOSTED,
-  //},
+  {
+    provider: ModelProvider.OLLAMA,
+    displayName: 'Ollama',
+    hostedIn: ModelProviderLocation.SELF_HOSTED,
+  },
 ];
 
 @Injectable()

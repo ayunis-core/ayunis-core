@@ -10,4 +10,7 @@ export const modelsConfig = registerAs('models', () => ({
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY,
   },
+  ollama: {
+    baseURL: process.env.OLLAMA_BASE_URL,
+  },
 }));

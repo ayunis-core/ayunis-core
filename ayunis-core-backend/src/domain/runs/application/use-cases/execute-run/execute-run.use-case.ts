@@ -54,6 +54,7 @@ import {
 import { UUID } from 'crypto';
 import langfuse from 'src/common/evals/langfuse';
 import { LangfuseTraceClient } from 'langfuse';
+import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -110,7 +111,7 @@ export class ExecuteRunUseCase {
         throw error;
       }
       throw new RunExecutionFailedError('Unknown error in execute run', {
-        error,
+        error: error as Error,
       });
     }
   }
@@ -242,7 +243,7 @@ export class ExecuteRunUseCase {
             name: 'new_message',
             output: toolResultMessage,
           });
-          this.addMessageToThreadUseCase.execute(
+          await this.addMessageToThreadUseCase.execute(
             new AddMessageCommand(params.thread, toolResultMessage),
           );
           yield toolResultMessage;
@@ -259,7 +260,7 @@ export class ExecuteRunUseCase {
             name: 'new_message',
             input: newTextMessage,
           });
-          this.addMessageToThreadUseCase.execute(
+          await this.addMessageToThreadUseCase.execute(
             new AddMessageCommand(params.thread, newTextMessage),
           );
           yield newTextMessage;
@@ -312,7 +313,7 @@ export class ExecuteRunUseCase {
 
             // Note: Final message is already saved to DB by executeStreamingInference
             // So we just need to add it to the thread without saving again
-            this.addMessageToThreadUseCase.execute(
+            await this.addMessageToThreadUseCase.execute(
               new AddMessageCommand(params.thread, assistantMessage),
             );
           } else {
@@ -348,7 +349,7 @@ export class ExecuteRunUseCase {
               output: assistantMessage,
             });
             // Add message to thread and yield it
-            this.addMessageToThreadUseCase.execute(
+            await this.addMessageToThreadUseCase.execute(
               new AddMessageCommand(params.thread, assistantMessage),
             );
             yield assistantMessage;
@@ -357,7 +358,7 @@ export class ExecuteRunUseCase {
           this.logger.error('Inference failed', error);
           throw new RunExecutionFailedError(
             error instanceof Error ? error.message : 'Inference error',
-            { originalError: error },
+            { originalError: error as Error },
           );
         }
 
@@ -374,10 +375,10 @@ export class ExecuteRunUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Run execution failed', { error });
+      this.logger.error('Run execution failed', { error: error as Error });
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Unknown error',
-        { originalError: error },
+        { originalError: error as Error },
       );
     }
     return;
@@ -453,11 +454,13 @@ export class ExecuteRunUseCase {
               span.update({
                 metadata: {
                   isError: true,
-                  error: error.message,
+                  error:
+                    error instanceof Error ? error.message : 'Unknown error',
                 },
               });
               span.end({
-                output: error.message,
+                output:
+                  error instanceof Error ? error.message : 'Unknown error',
               });
               if (
                 error instanceof ToolExecutionFailedError &&
@@ -484,7 +487,7 @@ export class ExecuteRunUseCase {
         this.logger.error(`Error processing tool ${content.name}`, error);
         throw new RunExecutionFailedError(
           `Failed to process tool ${content.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          { toolName: content.name, originalError: error },
+          { toolName: content.name, originalError: error as Error },
         );
       }
     }
@@ -506,7 +509,7 @@ export class ExecuteRunUseCase {
     // Hand over to the user if the agent only sends text (no tool calls)
     // Or the agent wants to call a tool in the frontend
     const responseContainsOnlyText = agentResponseMessage.content.every(
-      (content) => content.type === 'text',
+      (content) => content.type === MessageContentType.TEXT,
     );
     if (responseContainsOnlyText) return true;
 
@@ -569,8 +572,8 @@ export class ExecuteRunUseCase {
 
     // We'll create messages with consistent ID but not save to DB until the end
     let messageId: UUID | undefined;
-    let messageThreadId: UUID;
-    let messageCreatedAt: Date;
+    //let messageThreadId: UUID;
+    //let messageCreatedAt: Date;
 
     // Convert observable to async iterable
     const asyncIterable = {
@@ -582,7 +585,7 @@ export class ExecuteRunUseCase {
         const subscription = stream$.subscribe({
           next: (chunk) => chunks.push(chunk),
           error: (err) => {
-            error = err;
+            error = err as Error;
             completed = true;
           },
           complete: () => {
@@ -656,7 +659,7 @@ export class ExecuteRunUseCase {
         accumulatedToolCalls.forEach((toolCall) => {
           if (toolCall.id && toolCall.name && toolCall.arguments) {
             try {
-              const parsedArgs = JSON.parse(toolCall.arguments);
+              const parsedArgs = JSON.parse(toolCall.arguments) as object;
               messageContent.push(
                 new ToolUseMessageContent(
                   toolCall.id,
@@ -665,6 +668,13 @@ export class ExecuteRunUseCase {
                 ),
               );
             } catch (error) {
+              this.logger.warn(
+                `Failed to parse tool arguments for ${toolCall.name}`,
+                {
+                  arguments: toolCall.arguments,
+                  error: error as Error,
+                },
+              );
               // Don't add incomplete tool calls yet
             }
           }
@@ -679,8 +689,8 @@ export class ExecuteRunUseCase {
         // Store the message details for consistency
         if (!messageId) {
           messageId = partialMessage.id;
-          messageThreadId = partialMessage.threadId;
-          messageCreatedAt = partialMessage.createdAt;
+          //messageThreadId = partialMessage.threadId;
+          //messageCreatedAt = partialMessage.createdAt;
         } else {
           // Use consistent ID for all partial updates
           partialMessage.id = messageId;
@@ -704,7 +714,7 @@ export class ExecuteRunUseCase {
     accumulatedToolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
         try {
-          const parsedArgs = JSON.parse(toolCall.arguments);
+          const parsedArgs = JSON.parse(toolCall.arguments) as object;
           finalMessageContent.push(
             new ToolUseMessageContent(toolCall.id, toolCall.name, parsedArgs),
           );
@@ -713,7 +723,7 @@ export class ExecuteRunUseCase {
             `Failed to parse tool arguments for ${toolCall.name}`,
             {
               arguments: toolCall.arguments,
-              error,
+              error: error as Error,
             },
           );
         }

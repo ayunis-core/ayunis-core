@@ -36,9 +36,7 @@ export class GetAllModelProviderInfosWithPermittedStatusUseCase {
       for (const provider of allProviders) {
         try {
           const providerInfo =
-            this.modelProviderInfoRegistry.getModelProviderInfo(
-              provider as ModelProvider,
-            );
+            this.modelProviderInfoRegistry.getModelProviderInfo(provider);
           allProviderInfos.push(providerInfo);
         } catch (error) {
           this.logger.warn(`Provider info not found for ${provider}`, error);
@@ -70,7 +68,7 @@ export class GetAllModelProviderInfosWithPermittedStatusUseCase {
         throw error;
       }
       this.logger.error(error);
-      throw new UnexpectedModelError(error);
+      throw new UnexpectedModelError(error as Error);
     }
   }
 }

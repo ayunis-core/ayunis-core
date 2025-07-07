@@ -68,9 +68,6 @@ import { CreatePermittedProviderCommand } from '../../application/use-cases/crea
 import { DeletePermittedProviderCommand } from '../../application/use-cases/delete-permitted-provider/delete-permitted-provider.command';
 import { GetAllPermittedProvidersQuery } from '../../application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
 import { PermittedProvider } from '../../domain/permitted-model-provider.entity';
-import { Admin } from 'src/admin/application/decorators/admin.decorator';
-import { AdminGuard } from 'src/admin/application/guards/admin.guard';
-import { Public } from 'src/common/guards/public.guard';
 import { ModelProviderWithPermittedStatusResponseDto } from './dto/model-provider-with-permitted-status-response.dto';
 import { ModelProviderWithPermittedStatusResponseDtoMapper } from './mappers/model-provider-with-permitted-status-response-dto.mapper';
 import { GetAllModelProviderInfosWithPermittedStatusUseCase } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
@@ -441,12 +438,12 @@ export class ModelsController {
     description: 'Internal server error',
   })
   @ApiExtraModels(ModelProviderInfoResponseDto)
-  async getModelProviderInfo(
-    @Param('provider') provider: string,
-  ): Promise<ModelProviderInfoResponseDto> {
+  getModelProviderInfo(
+    @Param('provider') provider: ModelProvider,
+  ): ModelProviderInfoResponseDto {
     this.logger.log('getModelProviderInfo', { provider });
-    const query = new GetModelProviderInfoQuery(provider as ModelProvider);
-    const entity = await this.getModelProviderInfoUseCase.execute(query);
+    const query = new GetModelProviderInfoQuery(provider);
+    const entity = this.getModelProviderInfoUseCase.execute(query);
     return this.modelProviderInfoResponseDtoMapper.toDto(entity);
   }
 

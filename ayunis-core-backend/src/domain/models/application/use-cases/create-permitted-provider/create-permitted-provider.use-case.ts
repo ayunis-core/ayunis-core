@@ -5,6 +5,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ModelError, UnexpectedModelError } from '../../models.errors';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { CreateModelProviderAcceptanceCommand } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 @Injectable()
 export class CreatePermittedProviderUseCase {
@@ -19,13 +20,16 @@ export class CreatePermittedProviderUseCase {
     command: CreatePermittedProviderCommand,
   ): Promise<PermittedProvider> {
     try {
-      await this.createLegalAcceptanceUseCase.execute(
-        new CreateModelProviderAcceptanceCommand({
-          userId: command.userId,
-          orgId: command.orgId,
-          provider: command.permittedProvider.provider,
-        }),
-      );
+      const noAcceptNeeded: Array<ModelProvider> = [ModelProvider.OLLAMA];
+      if (!noAcceptNeeded.includes(command.permittedProvider.provider)) {
+        await this.createLegalAcceptanceUseCase.execute(
+          new CreateModelProviderAcceptanceCommand({
+            userId: command.userId,
+            orgId: command.orgId,
+            provider: command.permittedProvider.provider,
+          }),
+        );
+      }
       const permittedProvider = await this.permittedProvidersRepository.create(
         command.orgId,
         command.permittedProvider,
@@ -36,7 +40,7 @@ export class CreatePermittedProviderUseCase {
         throw error;
       }
       this.logger.error(error);
-      throw new UnexpectedModelError(error);
+      throw new UnexpectedModelError(error as Error);
     }
   }
 }

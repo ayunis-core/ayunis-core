@@ -2,6 +2,7 @@ export enum ModelProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
   MISTRAL = 'mistral',
+  OLLAMA = 'ollama',
+
   //MICROSOFT = 'microsoft',
-  //OLLAMA = 'ollama',
 }

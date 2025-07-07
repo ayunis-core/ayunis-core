@@ -4,7 +4,6 @@ import { ModelNotFoundError } from '../models.errors';
 import { ConfigService } from '@nestjs/config';
 import { ModelWithConfig } from '../../domain/model-with-config.entity';
 import { GetAllModelsUseCase } from '../use-cases/get-all-models/get-all-models.use-case';
-import { GetAllModelsQuery } from '../use-cases/get-all-models/get-all-models.query';
 import { UUID } from 'crypto';
 
 @Injectable()
@@ -20,9 +19,7 @@ export class ModelRegistry {
   }
 
   async onModuleInit(): Promise<void> {
-    const models = await this.getAllModelsUseCase.execute(
-      new GetAllModelsQuery(),
-    );
+    const models = await this.getAllModelsUseCase.execute();
     this.modelsWithConfigs = models;
   }
 
@@ -31,6 +28,7 @@ export class ModelRegistry {
       [ModelProvider.MISTRAL]: 'models.mistral.apiKey',
       [ModelProvider.OPENAI]: 'models.openai.apiKey',
       [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
+      [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
     };
 
     const configKey = providerConfigMap[provider];

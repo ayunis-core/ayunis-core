@@ -53,7 +53,7 @@ export class CreateModelUseCase {
         throw error;
       }
       this.logger.error('Error creating model', error);
-      throw new ModelCreationFailedError(error.message);
+      throw new ModelCreationFailedError((error as Error).message);
     }
   }
 }

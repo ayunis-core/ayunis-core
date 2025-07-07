@@ -7,6 +7,7 @@ import {
   MISTRAL_INFERENCE_HANDLER,
   ANTHROPIC_INFERENCE_HANDLER,
   OPENAI_INFERENCE_HANDLER,
+  OLLAMA_INFERENCE_HANDLER,
 } from './application/tokens/inference-handler.tokens';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
 import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
@@ -57,6 +58,7 @@ import { AgentsModule } from '../agents/agents.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { OllamaStreamInferenceHandler } from './infrastructure/stream-inference/ollama.stream-inference';
 
 @Module({
   imports: [
@@ -82,6 +84,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     AnthropicStreamInferenceHandler,
     OpenAIStreamInferenceHandler,
     MistralStreamInferenceHandler,
+    OllamaStreamInferenceHandler,
     {
       provide: MISTRAL_INFERENCE_HANDLER,
       useClass: MistralInferenceHandler,
@@ -95,22 +98,29 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
       useClass: AnthropicInferenceHandler,
     },
     {
+      provide: OLLAMA_INFERENCE_HANDLER,
+      useClass: OllamaStreamInferenceHandler,
+    },
+    {
       provide: StreamInferenceHandlerRegistry,
       useFactory: (
         anthropicHandler: AnthropicStreamInferenceHandler,
         openaiHandler: OpenAIStreamInferenceHandler,
         mistralHandler: MistralStreamInferenceHandler,
+        ollamaHandler: OllamaStreamInferenceHandler,
       ) => {
         const registry = new StreamInferenceHandlerRegistry();
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
+        registry.register(ModelProvider.OLLAMA, ollamaHandler);
         return registry;
       },
       inject: [
         AnthropicStreamInferenceHandler,
         OpenAIStreamInferenceHandler,
         MistralStreamInferenceHandler,
+        OllamaStreamInferenceHandler,
       ],
     },
     {

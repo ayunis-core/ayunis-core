@@ -13,9 +13,7 @@ export class GetModelProviderInfoUseCase {
     private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
   ) {}
 
-  async execute(
-    query: GetModelProviderInfoQuery,
-  ): Promise<ModelProviderInfoEntity> {
+  execute(query: GetModelProviderInfoQuery): ModelProviderInfoEntity {
     try {
       return this.modelProviderInfoRegistry.getModelProviderInfo(
         query.provider,
@@ -24,7 +22,7 @@ export class GetModelProviderInfoUseCase {
       if (error instanceof ModelProviderInfoNotFoundError) {
         throw error;
       }
-      throw new UnexpectedModelError(error);
+      throw new UnexpectedModelError(error as Error);
     }
   }
 }
