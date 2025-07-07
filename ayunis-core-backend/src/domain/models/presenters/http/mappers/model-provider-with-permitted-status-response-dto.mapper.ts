@@ -10,7 +10,7 @@ export class ModelProviderWithPermittedStatusResponseDtoMapper {
     return {
       provider: providerInfo.provider,
       displayName: providerInfo.displayName,
-      hostedIn: providerInfo.hostedIn as any, // Convert string to enum
+      hostedIn: providerInfo.hostedIn,
       isPermitted: providerInfo.isPermitted,
     };
   }

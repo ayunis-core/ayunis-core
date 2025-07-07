@@ -16,6 +16,7 @@ import { SystemMessage } from 'src/domain/messages/domain/messages/system-messag
 import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 
 @Injectable()
 export class OpenAIInferenceHandler extends InferenceHandler {
@@ -66,12 +67,13 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       }
       throw new InferenceFailedError('OpenAI inference failed', {
         source: 'openai',
-        originalError: error,
+        originalError:
+          error instanceof Error ? error : new Error('Unknown error'),
       });
     }
   }
 
-  private convertTool(tool: Tool): OpenAI.ChatCompletionTool {
+  private convertTool = (tool: Tool): OpenAI.ChatCompletionTool => {
     return {
       type: 'function' as const,
       function: {
@@ -80,24 +82,24 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         parameters: tool.parameters as FunctionParameters | undefined,
       },
     };
-  }
+  };
 
-  private convertMessages(
+  private convertMessages = (
     messages: Message[],
-  ): OpenAI.ChatCompletionMessageParam[] {
+  ): OpenAI.ChatCompletionMessageParam[] => {
     const convertedMessages: OpenAI.ChatCompletionMessageParam[] = [];
     for (const message of messages) {
       convertedMessages.push(...this.convertMessage(message));
     }
     return convertedMessages;
-  }
+  };
 
-  private convertMessage(
+  private convertMessage = (
     message: Message,
-  ): OpenAI.ChatCompletionMessageParam[] {
+  ): OpenAI.ChatCompletionMessageParam[] => {
     const convertedMessages: OpenAI.ChatCompletionMessageParam[] = [];
     // User Message
-    if (message.role === 'user') {
+    if (message.role === MessageRole.USER) {
       for (const content of message.content) {
         // Text Message Content
         if (content instanceof TextMessageContent) {
@@ -114,7 +116,7 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       }
     }
 
-    if (message.role === 'assistant') {
+    if (message.role === MessageRole.ASSISTANT) {
       let assistantTextMessageContent: string | undefined = undefined;
       let assistantToolUseMessageContent:
         | OpenAI.ChatCompletionMessageToolCall[]
@@ -177,23 +179,23 @@ export class OpenAIInferenceHandler extends InferenceHandler {
     }
 
     return convertedMessages;
-  }
+  };
 
-  private convertToolChoice(
+  private convertToolChoice = (
     toolChoice: ModelToolChoice,
-  ): OpenAI.ChatCompletionToolChoiceOption {
-    if (toolChoice === 'auto') {
+  ): OpenAI.ChatCompletionToolChoiceOption => {
+    if (toolChoice === ModelToolChoice.AUTO) {
       return 'auto';
-    } else if (toolChoice === 'required') {
+    } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return 'required';
     } else {
       return { type: 'function', function: { name: toolChoice } };
     }
-  }
+  };
 
-  private parseCompletion(
+  private parseCompletion = (
     response: OpenAI.Chat.Completions.ChatCompletion,
-  ): InferenceResponse {
+  ): InferenceResponse => {
     const completion = response.choices[0]?.message;
 
     if (!completion) {
@@ -223,14 +225,17 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       },
     };
     return modelResponse;
-  }
+  };
 
   private parseToolCall(
     toolCall: OpenAI.ChatCompletionMessageToolCall,
   ): ToolUseMessageContent {
     const id = toolCall.id;
     const name = toolCall.function.name;
-    const parameters = JSON.parse(toolCall.function.arguments);
+    const parameters = JSON.parse(toolCall.function.arguments) as Record<
+      string,
+      unknown
+    >;
     return new ToolUseMessageContent(id, name, parameters);
   }
 }

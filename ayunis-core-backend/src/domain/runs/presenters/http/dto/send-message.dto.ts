@@ -1,5 +1,4 @@
 import {
-  IsArray,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -27,7 +26,7 @@ export class TextInput extends Input {
     enum: ['text'],
     example: 'text',
   })
-  type: 'text' = 'text';
+  type: 'text' = 'text' as const;
 
   @ApiProperty({
     description: 'The text content for the inference',
@@ -43,7 +42,7 @@ export class ToolResultInput extends Input {
     enum: ['tool_result'],
     example: 'tool_result',
   })
-  type: 'tool_result' = 'tool_result';
+  type: 'tool_result' = 'tool_result' as const;
 
   @ApiProperty({
     description: 'The ID of the tool that produced this result',

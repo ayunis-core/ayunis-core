@@ -43,7 +43,7 @@ export class GetUserDefaultModelUseCase {
       }
       this.logger.error('Failed to get user default model', {
         userId: query.userId,
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

@@ -20,7 +20,7 @@ export class DeletePermittedProviderUseCase {
   async execute(command: DeletePermittedProviderCommand): Promise<void> {
     try {
       this.logger.debug(
-        `Deleting permitted provider ${command.permittedProvider} for organization ${command.orgId}`,
+        `Deleting permitted provider ${command.permittedProvider.provider} for organization ${command.orgId}`,
       );
 
       // TODO: Make this a single transaction
@@ -54,7 +54,9 @@ export class DeletePermittedProviderUseCase {
         throw error;
       }
       this.logger.error(error);
-      throw new UnexpectedModelError(error);
+      throw new UnexpectedModelError(
+        error instanceof Error ? error : new Error('Unknown error'),
+      );
     }
   }
 }

@@ -97,7 +97,7 @@ export class GetDefaultModelUseCase {
       this.logger.error('Failed to get default model', {
         orgId: query.orgId,
         userId: query.userId,
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

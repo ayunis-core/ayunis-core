@@ -74,7 +74,7 @@ export class ManageUserDefaultModelUseCase {
         userId: command.userId,
         permittedModelId: command.permittedModelId,
         orgId: command.orgId,
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

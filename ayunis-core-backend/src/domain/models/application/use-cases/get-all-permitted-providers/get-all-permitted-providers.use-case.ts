@@ -60,7 +60,9 @@ export class GetAllPermittedProvidersUseCase {
         throw error;
       }
       this.logger.error(error);
-      throw new UnexpectedModelError(error);
+      throw new UnexpectedModelError(
+        error instanceof Error ? error : new Error('Unknown error'),
+      );
     }
   }
 }

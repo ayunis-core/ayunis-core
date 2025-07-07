@@ -28,12 +28,15 @@ export class RetrieveUrlUseCase {
       }
 
       // Otherwise log and convert to appropriate domain error
-      this.logger.error(`URL retrieval failed: ${error.message}`, error.stack);
+      this.logger.error(
+        `URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : 'Unknown error',
+      );
 
       throw new UrlRetrieverProviderNotAvailableError(
         this.handler.constructor.name,
         {
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           url: command.url,
         },
       );

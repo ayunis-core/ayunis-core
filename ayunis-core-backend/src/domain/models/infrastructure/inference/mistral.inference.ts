@@ -67,7 +67,7 @@ export class MistralInferenceHandler extends InferenceHandler {
     return modelResponse;
   }
 
-  private convertTool(tool: ToolEntity): MistralTool {
+  private convertTool = (tool: ToolEntity): MistralTool => {
     return {
       type: 'function' as const,
       function: {
@@ -76,17 +76,17 @@ export class MistralInferenceHandler extends InferenceHandler {
         parameters: tool.parameters as Record<string, any>,
       },
     };
-  }
+  };
 
-  private convertMessages(messages: Message[]): MistralMessages[] {
+  private convertMessages = (messages: Message[]): MistralMessages[] => {
     const convertedMessages: MistralMessages[] = [];
     for (const message of messages) {
       convertedMessages.push(...this.convertMessage(message));
     }
     return convertedMessages;
-  }
+  };
 
-  private convertMessage(message: Message): MistralMessages[] {
+  private convertMessage = (message: Message): MistralMessages[] => {
     const convertedMessages: MistralMessages[] = [];
     // User Message
     if (message instanceof UserMessage) {
@@ -178,21 +178,23 @@ export class MistralInferenceHandler extends InferenceHandler {
     }
 
     return convertedMessages;
-  }
+  };
 
-  private convertToolChoice(
+  private convertToolChoice = (
     toolChoice: ModelToolChoice,
-  ): MistralToolChoice | MistralToolChoiceEnum {
-    if (toolChoice === 'auto') {
+  ): MistralToolChoice | MistralToolChoiceEnum => {
+    if (toolChoice === ModelToolChoice.AUTO) {
       return 'auto';
-    } else if (toolChoice === 'required') {
+    } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return 'required';
     } else {
       return { type: 'function', function: { name: toolChoice } };
     }
-  }
+  };
 
-  private parseCompletion(response: ChatCompletionResponse): InferenceResponse {
+  private parseCompletion = (
+    response: ChatCompletionResponse,
+  ): InferenceResponse => {
     const completion = response.choices && response.choices[0].message;
     const modelResponseContent: Array<
       TextMessageContent | ToolUseMessageContent
@@ -219,14 +221,7 @@ export class MistralInferenceHandler extends InferenceHandler {
     }
 
     for (const tool of completion.toolCalls || []) {
-      const { id, name, params } = this.parseToolCall(tool);
-      modelResponseContent.push(
-        new ToolUseMessageContent(
-          id || 'none',
-          name,
-          params as Record<string, any>,
-        ),
-      );
+      modelResponseContent.push(this.parseToolCall(tool));
     }
 
     const modelResponse: InferenceResponse = {
@@ -239,19 +234,21 @@ export class MistralInferenceHandler extends InferenceHandler {
     };
 
     return modelResponse;
-  }
+  };
 
-  private parseToolCall(toolCall: MistralToolCall): {
-    id: string | undefined;
-    name: string;
-    params: { [k: string]: any } | string;
-  } {
-    const id = toolCall.id;
+  private parseToolCall = (
+    toolCall: MistralToolCall,
+  ): ToolUseMessageContent => {
+    const id = toolCall.id || 'none';
     const name = toolCall.function.name;
     const parameters = toolCall.function.arguments;
     if (typeof parameters === 'string') {
-      return { id, name, params: JSON.parse(parameters) };
+      return new ToolUseMessageContent(
+        id,
+        name,
+        JSON.parse(parameters) as Record<string, unknown>,
+      );
     }
-    return { id, name, params: parameters };
-  }
+    return new ToolUseMessageContent(id, name, parameters);
+  };
 }

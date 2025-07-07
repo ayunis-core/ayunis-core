@@ -15,30 +15,25 @@ export class ApplicationErrorFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // Check if the error has a toHttpException method (like in MessageError)
-    if (typeof exception['toHttpException'] === 'function') {
-      const httpException = exception['toHttpException']();
-      const status = httpException.getStatus();
-      const responseBody = httpException.getResponse();
+    const httpException = exception.toHttpException();
+    const status = httpException.getStatus();
+    const responseBody = httpException.getResponse();
 
+    if (responseBody instanceof Object) {
       response.status(status).json({
         ...responseBody,
         timestamp: new Date().toISOString(),
         path: request.url,
       });
-      return;
+    } else {
+      response.status(status).json({
+        code: exception.code,
+        message: exception.message,
+        ...(exception.metadata && { metadata: exception.metadata }),
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
     }
-
-    // Default handling for other ApplicationErrors
-    this.logger.error(`Domain error: ${exception.message}`, exception.stack);
-
-    const status = exception.statusCode || 500;
-    response.status(status).json({
-      code: exception.code,
-      message: exception.message,
-      ...(exception.metadata && { metadata: exception.metadata }),
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+    return;
   }
 }

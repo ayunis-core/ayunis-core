@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PermittedProviderRecord } from './schema/permitted-provider.record';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { UUID } from 'crypto';
 import { PermittedProvidersRepository } from 'src/domain/models/application/ports/permitted-providers.repository';
 import { PermittedProvider } from 'src/domain/models/domain/permitted-model-provider.entity';

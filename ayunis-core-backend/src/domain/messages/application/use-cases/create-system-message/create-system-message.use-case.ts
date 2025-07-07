@@ -32,7 +32,7 @@ export class CreateSystemMessageUseCase {
     } catch (error) {
       this.logger.error('Failed to create system message', {
         threadId: command.threadId,
-        error,
+        error: error as Error,
       });
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.SYSTEM.toLowerCase(), error)

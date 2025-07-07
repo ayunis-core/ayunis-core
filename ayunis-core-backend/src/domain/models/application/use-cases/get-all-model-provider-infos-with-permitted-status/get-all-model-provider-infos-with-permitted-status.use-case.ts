@@ -6,11 +6,12 @@ import { GetAllModelProviderInfosWithPermittedStatusQuery } from './get-all-mode
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelProviderInfoEntity } from 'src/domain/models/domain/model-provider-info.entity';
 import { ModelError, UnexpectedModelError } from '../../models.errors';
+import { ModelProviderLocation } from 'src/domain/models/domain/value-objects/model-provider-locations.enum';
 
 export interface ModelProviderInfoWithPermittedStatus {
   provider: ModelProvider;
   displayName: string;
-  hostedIn: string;
+  hostedIn: ModelProviderLocation;
   isPermitted: boolean;
 }
 

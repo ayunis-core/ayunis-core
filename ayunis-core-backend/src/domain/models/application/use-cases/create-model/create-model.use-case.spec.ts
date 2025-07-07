@@ -13,12 +13,16 @@ import { ModelWithConfig } from 'src/domain/models/domain/model-with-config.enti
 
 describe('CreateModelUseCase', () => {
   let useCase: CreateModelUseCase;
-  let modelsRepository: jest.Mocked<ModelsRepository>;
+  let mockFindOne: jest.Mock;
+  let mockCreate: jest.Mock;
 
   beforeEach(async () => {
+    mockFindOne = jest.fn();
+    mockCreate = jest.fn();
+
     const mockModelsRepository = {
-      findOne: jest.fn(),
-      create: jest.fn(),
+      findOne: mockFindOne,
+      create: mockCreate,
       findAll: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -35,7 +39,6 @@ describe('CreateModelUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateModelUseCase>(CreateModelUseCase);
-    modelsRepository = module.get(ModelsRepository);
   });
 
   describe('execute', () => {
@@ -49,7 +52,10 @@ describe('CreateModelUseCase', () => {
     );
 
     it('should create a model successfully', async () => {
-      const expectedModel = new Model('test-model', ModelProvider.OPENAI);
+      const expectedModel = new Model({
+        name: 'test-model',
+        provider: ModelProvider.OPENAI,
+      });
       const expectedConfig = new ModelConfig({
         displayName: 'Test Model',
         canStream: true,
@@ -61,35 +67,36 @@ describe('CreateModelUseCase', () => {
         expectedConfig,
       );
 
-      modelsRepository.findOne.mockResolvedValue(undefined);
-      modelsRepository.create.mockResolvedValue(expectedModelWithConfig);
+      mockFindOne.mockResolvedValue(undefined);
+      mockCreate.mockResolvedValue(expectedModelWithConfig);
 
       const result = await useCase.execute(command);
 
-      expect(modelsRepository.findOne).toHaveBeenCalledWith({
+      expect(mockFindOne).toHaveBeenCalledWith({
         name: 'test-model',
         provider: ModelProvider.OPENAI,
       });
-      expect(modelsRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: expect.objectContaining({
-            name: 'test-model',
-            provider: ModelProvider.OPENAI,
-          }),
-          config: expect.objectContaining({
-            displayName: 'Test Model',
-            canStream: true,
-            isReasoning: false,
-            isArchived: false,
-          }),
-        }),
-      );
+      expect(mockCreate).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          name: 'test-model',
+          provider: ModelProvider.OPENAI,
+        }) as Model,
+        config: expect.objectContaining({
+          displayName: 'Test Model',
+          canStream: true,
+          isReasoning: false,
+          isArchived: false,
+        }) as ModelConfig,
+      });
       expect(result).toEqual(expectedModelWithConfig);
     });
 
     it('should throw ModelAlreadyExistsError when model already exists', async () => {
       const existingModel = new ModelWithConfig(
-        new Model('test-model', ModelProvider.OPENAI),
+        new Model({
+          name: 'test-model',
+          provider: ModelProvider.OPENAI,
+        }),
         new ModelConfig({
           displayName: 'Existing Model',
           canStream: true,
@@ -98,17 +105,17 @@ describe('CreateModelUseCase', () => {
         }),
       );
 
-      modelsRepository.findOne.mockResolvedValue(existingModel);
+      mockFindOne.mockResolvedValue(existingModel);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         ModelAlreadyExistsError,
       );
-      expect(modelsRepository.create).not.toHaveBeenCalled();
+      expect(mockCreate).not.toHaveBeenCalled();
     });
 
     it('should throw ModelCreationFailedError when repository throws unexpected error', async () => {
-      modelsRepository.findOne.mockResolvedValue(undefined);
-      modelsRepository.create.mockRejectedValue(new Error('Database error'));
+      mockFindOne.mockResolvedValue(undefined);
+      mockCreate.mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute(command)).rejects.toThrow(
         ModelCreationFailedError,

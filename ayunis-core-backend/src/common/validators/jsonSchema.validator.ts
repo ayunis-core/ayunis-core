@@ -15,7 +15,7 @@ export function IsJsonSchema(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, _: ValidationArguments) {
+        validate(value: unknown) {
           if (typeof value !== 'object' || value === null) {
             return false;
           }

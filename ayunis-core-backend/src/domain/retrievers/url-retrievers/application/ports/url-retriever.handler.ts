@@ -2,7 +2,7 @@ import { UrlRetrieverResult } from '../../domain/url-retriever-result.entity';
 
 export interface UrlRetrieverInput {
   url: string;
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
 }
 
 export abstract class UrlRetrieverHandler {

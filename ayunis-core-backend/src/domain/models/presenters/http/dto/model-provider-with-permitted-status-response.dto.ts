@@ -22,7 +22,7 @@ export class ModelProviderWithPermittedStatusResponseDto {
     type: 'string',
     enum: Object.values(ModelProviderLocation),
     description: 'The location where the provider hosts their services',
-    example: ModelProviderLocation.US,
+    example: ModelProviderLocation.DE,
   })
   hostedIn: ModelProviderLocation;
 

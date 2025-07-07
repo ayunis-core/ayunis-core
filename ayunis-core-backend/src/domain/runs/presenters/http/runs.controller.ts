@@ -43,6 +43,7 @@ import {
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
+import { RunInput } from '../../domain/run-input.entity';
 
 @ApiTags('runs')
 @ApiExtraModels(
@@ -216,11 +217,16 @@ export class RunsController {
             const errorResponse: RunErrorResponseDto = {
               type: 'error',
               message:
-                error.message || 'An error occurred in the message stream',
+                error instanceof Error
+                  ? error.message
+                  : 'An error occurred in the message stream',
               threadId: threadId,
               timestamp: new Date().toISOString(),
               code: 'STREAM_ERROR',
-              details: { error: error.toString() },
+              details: {
+                error:
+                  error instanceof Error ? error.toString() : 'Unknown error',
+              },
             };
 
             const errorEvent: MessageEvent = {
@@ -245,7 +251,7 @@ export class RunsController {
         this.logger.error('Error in connectToStream', {
           userId,
           threadId,
-          error,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
 
         // Send error response for connection errors
@@ -255,7 +261,9 @@ export class RunsController {
           threadId: threadId,
           timestamp: new Date().toISOString(),
           code: 'CONNECTION_ERROR',
-          details: { error: error.toString() },
+          details: {
+            error: error instanceof Error ? error.toString() : 'Unknown error',
+          },
         };
 
         const errorEvent: MessageEvent = {
@@ -297,11 +305,11 @@ export class RunsController {
     status: 500,
     description: 'Internal server error',
   })
-  async sendMessage(
+  sendMessage(
     @Body() sendMessageDto: SendMessageDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<{ success: boolean; message: string }> {
+  ): { success: boolean; message: string } {
     this.logger.log('sendMessage', { sendMessageDto, userId });
 
     // Get the session
@@ -316,7 +324,7 @@ export class RunsController {
     try {
       const input = RunInputMapper.toCommand(sendMessageDto.input);
 
-      this.executeRunInBackground({
+      void this.executeRunInBackground({
         threadId: sendMessageDto.threadId,
         input,
         userId,
@@ -339,7 +347,7 @@ export class RunsController {
 
   private async executeRunInBackground(params: {
     threadId: UUID;
-    input: any;
+    input: RunInput;
     userId: UUID;
     streaming?: boolean;
     orgId: UUID;
@@ -373,13 +381,16 @@ export class RunsController {
       // Send structured error response
       const errorResponse: RunErrorResponseDto = {
         type: 'error',
-        message: error.message || 'An error occurred while executing the run',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred while executing the run',
         threadId: params.threadId,
         timestamp: new Date().toISOString(),
         code: 'EXECUTION_ERROR',
         details: {
-          error: error.toString(),
-          stack: error.stack,
+          error: error instanceof Error ? error.toString() : 'Unknown error',
+          stack: error instanceof Error ? error.stack : 'Unknown error',
         },
       };
 

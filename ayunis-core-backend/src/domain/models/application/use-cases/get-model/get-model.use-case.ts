@@ -2,10 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ModelWithConfig } from 'src/domain/models/domain/model-with-config.entity';
 import { ModelsRepository } from '../../ports/models.repository';
 import { GetModelQuery } from './get-model.query';
-import {
-  ModelNotFoundByIdError,
-  ModelNotFoundByNameAndProviderError,
-} from '../../models.errors';
+import { ModelNotFoundByNameAndProviderError } from '../../models.errors';
 
 @Injectable()
 export class GetModelUseCase {

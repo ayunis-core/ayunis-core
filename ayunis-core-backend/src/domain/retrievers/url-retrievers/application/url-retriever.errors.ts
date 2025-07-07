@@ -3,7 +3,6 @@ import {
   ErrorMetadata,
 } from '../../../../common/errors/base.error';
 import {
-  BadRequestException,
   NotFoundException,
   InternalServerErrorException,
   RequestTimeoutException,

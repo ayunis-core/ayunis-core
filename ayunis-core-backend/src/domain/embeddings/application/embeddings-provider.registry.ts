@@ -37,7 +37,7 @@ export class EmbeddingsProviderRegistry {
 
   getAvailableProviders(): EmbeddingsProvider[] {
     return Array.from(this.handlers.entries())
-      .filter(([_, handler]) => handler.isAvailable())
+      .filter(([, handler]) => handler.isAvailable())
       .map(([provider]) => provider);
   }
 }

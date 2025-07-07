@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
@@ -93,7 +93,9 @@ export class DeletePermittedModelUseCase {
         throw error;
       }
       this.logger.error('Error deleting permitted model', error);
-      throw new UnexpectedModelError(error);
+      throw new UnexpectedModelError(
+        error instanceof Error ? error : new Error('Unknown error'),
+      );
     }
   }
 }

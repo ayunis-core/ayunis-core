@@ -19,7 +19,9 @@ class MockEmbeddingsHandler extends EmbeddingsHandler {
   }
 
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
-    return input.map((text) => new Embedding([0.1, 0.2, 0.3], text, model));
+    return Promise.resolve(
+      input.map((text) => new Embedding([0.1, 0.2, 0.3], text, model)),
+    );
   }
 
   isAvailable(): boolean {

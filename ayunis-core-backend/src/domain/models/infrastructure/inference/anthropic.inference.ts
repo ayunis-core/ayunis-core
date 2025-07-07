@@ -23,6 +23,7 @@ import {
 import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
@@ -77,20 +78,21 @@ export class AnthropicInferenceHandler extends InferenceHandler {
       }
       throw new InferenceFailedError('Anthropic inference failed', {
         source: 'anthropic',
-        originalError: error,
+        originalError:
+          error instanceof Error ? error : new Error('Unknown error'),
       });
     }
   }
 
-  private convertTool(tool: Tool): Anthropic.Tool {
+  private convertTool = (tool: Tool): Anthropic.Tool => {
     return {
       name: tool.name,
       description: tool.description,
       input_schema: tool.parameters as Anthropic.Messages.Tool.InputSchema,
     };
-  }
+  };
 
-  private convertMessages(messages: Message[]): Anthropic.MessageParam[] {
+  private convertMessages = (messages: Message[]): Anthropic.MessageParam[] => {
     const chatMessages = messages.reduce((convertedMessages, message) => {
       // always push the first message and next loop
       if (convertedMessages.length === 0) {
@@ -104,7 +106,10 @@ export class AnthropicInferenceHandler extends InferenceHandler {
       // assistant messages are always separate so
       // an assistant message is always pushed
       // and the following message is always pushed
-      if (message.role === 'assistant' || lastMessage.role === 'assistant') {
+      if (
+        message.role === MessageRole.ASSISTANT ||
+        lastMessage.role === MessageRole.ASSISTANT
+      ) {
         convertedMessages.push(lastMessage);
         convertedMessages.push(this.convertMessage(message));
         return convertedMessages;
@@ -130,10 +135,10 @@ export class AnthropicInferenceHandler extends InferenceHandler {
       return convertedMessages;
     }, [] as Anthropic.MessageParam[]);
     return chatMessages;
-  }
+  };
 
   // Map messages to Anthropic.MessageParam
-  private convertMessage(message: Message): Anthropic.MessageParam {
+  private convertMessage = (message: Message): Anthropic.MessageParam => {
     if (message instanceof UserMessage) {
       return {
         role: 'user',
@@ -163,7 +168,7 @@ export class AnthropicInferenceHandler extends InferenceHandler {
               input: content.params,
             };
           }
-          throw new Error(`Unknown message content type: ${content}`);
+          throw new Error(`Unknown message content type`);
         }),
       };
     }
@@ -190,22 +195,24 @@ export class AnthropicInferenceHandler extends InferenceHandler {
         }),
       };
     }
-    throw new Error(`Unknown message type: ${message}`);
-  }
+    throw new Error(`Unknown message type`);
+  };
 
-  private convertToolChoice(toolChoice: ModelToolChoice): AnthropicToolChoice {
-    if (toolChoice === 'auto') {
+  private convertToolChoice = (
+    toolChoice: ModelToolChoice,
+  ): AnthropicToolChoice => {
+    if (toolChoice === ModelToolChoice.AUTO) {
       return { type: 'auto' };
-    } else if (toolChoice === 'required') {
+    } else if (toolChoice === ModelToolChoice.REQUIRED) {
       throw new Error("Tool choice 'required' is not supported in Anthropic");
     } else {
       return { type: 'tool', name: toolChoice };
     }
-  }
+  };
 
-  private parseCompletion(
+  private parseCompletion = (
     response: Anthropic.Messages.Message,
-  ): InferenceResponse {
+  ): InferenceResponse => {
     this.logger.debug('parseCompletion', response);
 
     if (!response) {
@@ -225,8 +232,7 @@ export class AnthropicInferenceHandler extends InferenceHandler {
 
     const modelResponseContent = response.content.map((c) => {
       if (c.type === 'tool_use') {
-        const { id, name, params } = this.parseToolCall(c);
-        return new ToolUseMessageContent(id, name, params);
+        return this.parseToolCall(c);
       } else if (c.type === 'text') {
         return new TextMessageContent(c.text);
       } else {
@@ -248,12 +254,14 @@ export class AnthropicInferenceHandler extends InferenceHandler {
     };
 
     return modelResponse;
-  }
+  };
 
-  private parseToolCall(toolCall: Anthropic.Messages.ToolUseBlock) {
+  private parseToolCall = (
+    toolCall: Anthropic.Messages.ToolUseBlock,
+  ): ToolUseMessageContent => {
     const id = toolCall.id;
     const name = toolCall.name;
     const parameters = toolCall.input as object;
-    return { id, name, params: JSON.parse(JSON.stringify(parameters)) };
-  }
+    return new ToolUseMessageContent(id, name, parameters);
+  };
 }

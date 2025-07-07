@@ -70,8 +70,12 @@ export class UpdateModelUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Error updating model', error);
-      throw new ModelUpdateFailedError(error.message);
+      this.logger.error('Error updating model', {
+        error: error instanceof Error ? error : new Error('Unknown error'),
+      });
+      throw new ModelUpdateFailedError(
+        error instanceof Error ? error.message : 'Unknown error',
+      );
     }
   }
 }

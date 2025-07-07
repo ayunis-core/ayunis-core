@@ -74,7 +74,7 @@ export class ManageOrgDefaultModelUseCase {
       this.logger.error('Failed to manage organization default model', {
         permittedModelId: command.permittedModelId,
         orgId: command.orgId,
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

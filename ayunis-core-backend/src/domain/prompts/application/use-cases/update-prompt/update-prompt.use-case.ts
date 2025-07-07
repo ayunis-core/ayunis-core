@@ -49,7 +49,7 @@ export class UpdatePromptUseCase {
       this.logger.error('Failed to update prompt', {
         id: command.id,
         userId: command.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new PromptUpdateError(error, command.id, command.userId)

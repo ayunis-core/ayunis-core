@@ -11,6 +11,7 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverHttpError,
   UrlRetrieverParsingError,
+  UrlRetrieverError,
 } from '../application/url-retriever.errors';
 
 @Injectable()
@@ -28,7 +29,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
       this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
 
       // Create AbortController for timeout handling
-      const timeout = input.options?.timeout || this.defaultTimeout;
+      const timeout = (input.options?.timeout as number) || this.defaultTimeout;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -68,17 +69,22 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
           return new UrlRetrieverResult(cleanedText, input.url);
         } catch (error) {
-          throw new UrlRetrieverParsingError(input.url, error.message, {
-            error: error.stack,
-          });
+          throw new UrlRetrieverParsingError(
+            input.url,
+            error instanceof Error ? error.message : 'Unknown error',
+            {
+              error: error instanceof Error ? error.stack : 'Unknown error',
+            },
+          );
         }
       } catch (error) {
         // Clear the timeout if not already cleared
         clearTimeout(timeoutId);
 
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           throw new UrlRetrieverTimeoutError(input.url, timeout, {
-            originalError: error.message,
+            originalError:
+              error instanceof Error ? error.message : 'Unknown error',
           });
         }
         throw error; // Re-throw for the outer catch block
@@ -86,20 +92,20 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     } catch (error) {
       // Log the error with appropriate details
       this.logger.error(
-        `HTTP URL retrieval failed: ${error.message}`,
-        error.stack,
+        `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : 'Unknown error',
       );
 
       // If error is already one of our domain errors, rethrow it
-      if (error.name && error.name.startsWith('UrlRetriever')) {
+      if (error instanceof UrlRetrieverError) {
         throw error;
       }
 
       // Otherwise wrap in a generic retrieval error
       throw new UrlRetrieverRetrievalError(`Failed to retrieve URL with HTTP`, {
         url: input.url,
-        error: error.message,
-        stack: error.stack,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'Unknown error',
       });
     }
   }

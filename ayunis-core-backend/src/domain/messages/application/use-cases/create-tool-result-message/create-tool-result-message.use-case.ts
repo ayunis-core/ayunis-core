@@ -36,7 +36,7 @@ export class CreateToolResultMessageUseCase {
     } catch (error) {
       this.logger.error('Failed to create tool result message', {
         threadId: command.threadId,
-        error,
+        error: error as Error,
       });
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.TOOL.toLowerCase(), error)

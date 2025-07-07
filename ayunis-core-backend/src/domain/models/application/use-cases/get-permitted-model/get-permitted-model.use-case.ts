@@ -1,7 +1,6 @@
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
-  ModelInvalidInputError,
   PermittedModelNotFoundError,
   UnexpectedModelError,
 } from '../../models.errors';
@@ -39,11 +38,14 @@ export class GetPermittedModelUseCase {
         throw error;
       }
       this.logger.error('Error getting permitted model', {
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
-      throw new UnexpectedModelError(error, {
-        query,
-      });
+      throw new UnexpectedModelError(
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          query,
+        },
+      );
     }
   }
 }

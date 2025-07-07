@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { OpenAIEmbeddingsHandler } from './infrastructure/handler/openai-embeddings.handler';
 import { EmbeddingsController } from './presenters/https/embeddings.controller';
 import { EmbeddingResultMapper } from './presenters/https/mappers/embedding-result.mapper';

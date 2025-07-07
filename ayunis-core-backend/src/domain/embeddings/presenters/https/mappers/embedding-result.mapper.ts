@@ -4,7 +4,6 @@ import {
   EmbeddingResultDto,
   EmbeddingResultsDto,
 } from '../dto/embedding-result.dto';
-import { EmbeddingsProvider } from '../../../domain/embeddings-provider.enum';
 
 @Injectable()
 export class EmbeddingResultMapper {

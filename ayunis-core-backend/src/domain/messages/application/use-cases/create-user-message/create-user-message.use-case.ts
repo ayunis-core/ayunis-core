@@ -30,7 +30,7 @@ export class CreateUserMessageUseCase {
     } catch (error) {
       this.logger.error('Failed to create user message', {
         threadId: command.threadId,
-        error,
+        error: error as Error,
       });
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.USER.toLowerCase(), error)

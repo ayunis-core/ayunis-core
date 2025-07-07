@@ -52,9 +52,9 @@ export class MatchSourceContentChunksUseCase {
     } catch (error) {
       this.logger.error(
         `Error during vector search for query "${command.query}":`,
-        error,
+        error instanceof Error ? error.message : 'Unknown error',
       );
-      throw new Error(`Vector search failed: ${error.message}`);
+      throw new Error(`Vector search failed`);
     }
   }
 }

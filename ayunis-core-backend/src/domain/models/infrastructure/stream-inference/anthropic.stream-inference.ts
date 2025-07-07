@@ -24,6 +24,7 @@ import {
   ToolChoiceAuto,
   ToolChoiceTool,
 } from '@anthropic-ai/sdk/resources/messages';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
@@ -42,7 +43,7 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     return new Observable<StreamInferenceResponseChunk>((subscriber) => {
-      this.streamResponse(input, subscriber);
+      void this.streamResponse(input, subscriber);
     });
   }
 
@@ -91,15 +92,15 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     }
   }
 
-  private convertTool(tool: Tool): Anthropic.Tool {
+  private convertTool = (tool: Tool): Anthropic.Tool => {
     return {
       name: tool.name,
       description: tool.description,
       input_schema: tool.parameters as Anthropic.Messages.Tool.InputSchema,
     };
-  }
+  };
 
-  private convertMessages(messages: Message[]): Anthropic.MessageParam[] {
+  private convertMessages = (messages: Message[]): Anthropic.MessageParam[] => {
     const chatMessages = messages.reduce((convertedMessages, message) => {
       // always push the first message and next loop
       if (convertedMessages.length === 0) {
@@ -113,7 +114,10 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
       // assistant messages are always separate so
       // an assistant message is always pushed
       // and the following message is always pushed
-      if (message.role === 'assistant' || lastMessage.role === 'assistant') {
+      if (
+        message.role === MessageRole.ASSISTANT ||
+        lastMessage.role === MessageRole.ASSISTANT
+      ) {
         convertedMessages.push(lastMessage);
         convertedMessages.push(this.convertMessage(message));
         return convertedMessages;
@@ -139,9 +143,9 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
       return convertedMessages;
     }, [] as Anthropic.MessageParam[]);
     return chatMessages;
-  }
+  };
 
-  private convertMessage(message: Message): Anthropic.MessageParam {
+  private convertMessage = (message: Message): Anthropic.MessageParam => {
     if (message instanceof UserMessage) {
       return {
         role: 'user',
@@ -171,7 +175,7 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
               input: content.params,
             };
           }
-          throw new Error(`Unknown message content type: ${content}`);
+          throw new Error(`Unknown message content type`);
         }),
       };
     }
@@ -198,22 +202,24 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
         }),
       };
     }
-    throw new Error(`Unknown message type: ${message}`);
-  }
+    throw new Error(`Unknown message type`);
+  };
 
-  private convertToolChoice(toolChoice: ModelToolChoice): AnthropicToolChoice {
-    if (toolChoice === 'auto') {
+  private convertToolChoice = (
+    toolChoice: ModelToolChoice,
+  ): AnthropicToolChoice => {
+    if (toolChoice === ModelToolChoice.AUTO) {
       return { type: 'auto' };
-    } else if (toolChoice === 'required') {
+    } else if (toolChoice === ModelToolChoice.REQUIRED) {
       throw new Error("Tool choice 'required' is not supported in Anthropic");
     } else {
       return { type: 'tool', name: toolChoice };
     }
-  }
+  };
 
-  private convertChunk(
+  private convertChunk = (
     chunk: Anthropic.Messages.MessageStreamEvent,
-  ): StreamInferenceResponseChunk | null {
+  ): StreamInferenceResponseChunk | null => {
     // Handle different types of streaming events
     if (chunk.type === 'content_block_delta') {
       if (chunk.delta.type === 'text_delta') {
@@ -257,5 +263,5 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
 
     // Return null for other event types we don't need to handle
     return null;
-  }
+  };
 }

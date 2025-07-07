@@ -27,29 +27,17 @@ export class MessageRequestDtoMapper {
     messageDto: MessageRequestDto,
     threadId: UUID = randomUUID(),
   ): Message {
-    switch ((messageDto as any).role) {
+    switch (messageDto.role) {
       case MessageRole.USER:
-        return this.fromUserMessageDto(
-          messageDto as UserMessageRequestDto,
-          threadId,
-        );
+        return this.fromUserMessageDto(messageDto, threadId);
       case MessageRole.SYSTEM:
-        return this.fromSystemMessageDto(
-          messageDto as SystemMessageRequestDto,
-          threadId,
-        );
+        return this.fromSystemMessageDto(messageDto, threadId);
       case MessageRole.ASSISTANT:
-        return this.fromAssistantMessageDto(
-          messageDto as AssistantMessageRequestDto,
-          threadId,
-        );
+        return this.fromAssistantMessageDto(messageDto, threadId);
       case MessageRole.TOOL:
-        return this.fromToolResultMessageDto(
-          messageDto as ToolResultMessageRequestDto,
-          threadId,
-        );
+        return this.fromToolResultMessageDto(messageDto, threadId);
       default:
-        throw new Error(`Unknown message role: ${messageDto.role}`);
+        throw new Error(`Unknown message role`);
     }
   }
 
@@ -87,18 +75,12 @@ export class MessageRequestDtoMapper {
     return new AssistantMessage({
       threadId,
       content: dto.content.map((content) => {
-        if ((content as any).type === MessageContentType.TEXT) {
-          return this.fromTextContentDto(
-            content as TextMessageContentRequestDto,
-          );
-        } else if ((content as any).type === MessageContentType.TOOL_USE) {
-          return this.fromToolUseContentDto(
-            content as ToolUseMessageContentRequestDto,
-          );
+        if (content.type === MessageContentType.TEXT) {
+          return this.fromTextContentDto(content);
+        } else if (content.type === MessageContentType.TOOL_USE) {
+          return this.fromToolUseContentDto(content);
         } else {
-          throw new Error(
-            `Invalid content type for assistant message: ${(content as any).type}`,
-          );
+          throw new Error(`Invalid content type for assistant message `);
         }
       }),
     });

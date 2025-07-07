@@ -82,13 +82,16 @@ export class ExecuteRunAndSetTitleUseCase {
       // Yield error response
       const errorResponse: RunErrorResponseDto = {
         type: 'error',
-        message: error.message || 'An error occurred while executing the run',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred while executing the run',
         threadId: command.threadId,
         timestamp: new Date().toISOString(),
         code: 'EXECUTION_ERROR',
         details: {
-          error: error.toString(),
-          stack: error.stack,
+          error: error instanceof Error ? error.toString() : 'Unknown error',
+          stack: error instanceof Error ? error.stack : 'Unknown error',
         },
       };
 
@@ -155,7 +158,7 @@ export class ExecuteRunAndSetTitleUseCase {
     } catch (error) {
       this.logger.warn('Error in generateTitleIfNeeded', {
         threadId: command.threadId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return null;
     }

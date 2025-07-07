@@ -52,7 +52,7 @@ export class DeleteUserDefaultModelUseCase {
       }
       this.logger.error('Failed to delete user default model', {
         userId: command.userId,
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

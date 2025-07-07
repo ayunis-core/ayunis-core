@@ -45,7 +45,7 @@ export class GetOrgDefaultModelUseCase {
       }
       this.logger.error('Failed to get organization default model', {
         orgId: query.orgId,
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

@@ -20,7 +20,7 @@ export class GetPermittedModelsUseCase {
       return this.permittedModelsRepository.findAll(query.orgId, query.filter);
     } catch (error) {
       this.logger.error('Error getting permitted models', {
-        error,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw error;
     }

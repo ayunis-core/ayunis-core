@@ -25,11 +25,12 @@ export function setCookies(
   const secure = configService.get<boolean>('auth.cookie.secure', false);
   const sameSite = configService.get<string>('auth.cookie.sameSite', 'lax');
 
-  const baseOptions: any = {
+  const baseOptions = {
     httpOnly,
     secure,
     sameSite: sameSite as 'none' | 'lax' | 'strict',
     path: '/', // Ensure cookies are available for all paths
+    domain: undefined as string | undefined,
   };
 
   // Only include domain if it's explicitly set
@@ -77,11 +78,12 @@ export function clearCookies(
   const secure = configService.get<boolean>('auth.cookie.secure', false);
   const sameSite = configService.get<string>('auth.cookie.sameSite', 'lax');
 
-  const baseOptions: any = {
+  const baseOptions = {
     httpOnly,
     secure,
     sameSite: sameSite as 'none' | 'lax' | 'strict',
     path: '/', // Ensure cookies are cleared from all paths
+    domain: undefined as string | undefined,
   };
 
   // Only include domain if it's explicitly set

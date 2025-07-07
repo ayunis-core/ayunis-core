@@ -43,7 +43,7 @@ export class GetInferenceUseCase {
             messages: command.messages,
             tools: command.tools,
             toolChoice: command.toolChoice,
-            error,
+            error: error instanceof Error ? error : new Error('Unknown error'),
           });
           throw new InferenceFailedError(
             error instanceof Error
@@ -60,8 +60,7 @@ export class GetInferenceUseCase {
         messages: command.messages,
         tools: command.tools,
         toolChoice: command.toolChoice,
-        errorMessage: error.message,
-        errorStack: error.stack,
+        error: error instanceof Error ? error : new Error('Unknown error'),
       });
       throw new InferenceFailedError(
         error instanceof Error

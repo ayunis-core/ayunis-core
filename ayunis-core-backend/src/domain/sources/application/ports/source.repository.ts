@@ -3,7 +3,6 @@ import { Source } from '../../domain/source.entity';
 import { FileSource } from '../../domain/sources/file-source.entity';
 import { UrlSource } from '../../domain/sources/url-source.entity';
 import { SourceContentChunk } from '../../domain/source-content-chunk.entity';
-import { SourceContent } from '../../domain/source-content.entity';
 
 export const SOURCE_REPOSITORY = Symbol('SOURCE_REPOSITORY');
 

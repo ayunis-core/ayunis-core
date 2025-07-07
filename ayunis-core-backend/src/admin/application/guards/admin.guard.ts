@@ -28,8 +28,8 @@ export class AdminGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const adminToken = request.headers['x-admin-token'];
+    const request: Request = context.switchToHttp().getRequest();
+    const adminToken = request.headers.get('x-admin-token');
     const expectedToken = this.configService.get<string>('admin.adminToken');
 
     if (!adminToken || adminToken !== expectedToken) {

@@ -3,6 +3,7 @@ import { InferenceHandlerRegistry } from './inference-handler.registry';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { InferenceHandler } from '../ports/inference.handler';
 import { MISTRAL_INFERENCE_HANDLER } from '../tokens/inference-handler.tokens';
+import { MistralInferenceHandler } from '../../infrastructure/inference/mistral.inference';
 
 describe('InferenceHandlerRegistry', () => {
   let registry: InferenceHandlerRegistry;
@@ -19,7 +20,7 @@ describe('InferenceHandlerRegistry', () => {
         },
         {
           provide: InferenceHandlerRegistry,
-          useFactory: (mistralHandler) => {
+          useFactory: (mistralHandler: MistralInferenceHandler) => {
             const registry = new InferenceHandlerRegistry();
             registry.register(ModelProvider.MISTRAL, mistralHandler);
             return registry;

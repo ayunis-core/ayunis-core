@@ -34,7 +34,7 @@ export class ReplaceModelWithUserDefaultUseCase {
     }
 
     // TODO: Make this a single transaction
-    for await (const agent of agents) {
+    for (const agent of agents) {
       this.logger.debug('Processing agent for model replacement', {
         agentId: agent.id,
         agentName: agent.name,
@@ -78,8 +78,8 @@ export class ReplaceModelWithUserDefaultUseCase {
           agentName: agent.name,
           userId: agent.userId,
           oldModelId: command.oldPermittedModelId,
-          error: error.message,
-          stack: error.stack,
+          error: (error as Error).message,
+          stack: (error as Error).stack,
         });
         throw error;
       }

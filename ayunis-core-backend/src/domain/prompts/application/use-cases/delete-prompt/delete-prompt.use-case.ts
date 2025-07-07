@@ -37,7 +37,7 @@ export class DeletePromptUseCase {
       this.logger.error('Failed to delete prompt', {
         id: command.id,
         userId: command.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new PromptDeletionError(error, command.id, command.userId)

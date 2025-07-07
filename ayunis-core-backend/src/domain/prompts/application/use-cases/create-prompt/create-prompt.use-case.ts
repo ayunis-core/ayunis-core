@@ -32,7 +32,7 @@ export class CreatePromptUseCase {
       this.logger.error('Failed to create prompt', {
         userId: command.userId,
         title: command.title,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new PromptCreationError(error, command.userId)

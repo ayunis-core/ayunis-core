@@ -57,7 +57,7 @@ import { join } from 'path';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) =>
         configService.get('typeorm')!,
-      dataSourceFactory: async (options) => {
+      dataSourceFactory: async () => {
         // Vector type hack is now applied in the datasource itself
         // Initialize datasource
         await dataSource.initialize();

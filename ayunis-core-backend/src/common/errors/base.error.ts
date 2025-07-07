@@ -1,3 +1,9 @@
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
+
 export type ErrorCode = string;
 
 export interface ErrorMetadata {
@@ -38,6 +44,32 @@ export abstract class ApplicationError extends Error {
     // Maintain proper stack trace for where the error was thrown (V8 engines)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
+    }
+  }
+
+  /**
+   * Convert to a NestJS HTTP exception
+   */
+  toHttpException() {
+    switch (this.statusCode) {
+      case 404:
+        return new NotFoundException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 409:
+        return new ConflictException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      default:
+        return new BadRequestException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
     }
   }
 }

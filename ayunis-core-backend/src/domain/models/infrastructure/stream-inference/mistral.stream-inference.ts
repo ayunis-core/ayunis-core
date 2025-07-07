@@ -43,7 +43,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     return new Observable<StreamInferenceResponseChunk>((subscriber) => {
-      this.streamResponse(input, subscriber);
+      void this.streamResponse(input, subscriber);
     });
   }
 
@@ -91,7 +91,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     }
   }
 
-  private convertTool(tool: Tool): MistralTool {
+  private convertTool = (tool: Tool): MistralTool => {
     return {
       type: 'function' as const,
       function: {
@@ -100,12 +100,12 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
         parameters: tool.parameters as Record<string, any>,
       },
     };
-  }
+  };
 
-  private convertMessages(
+  private convertMessages = (
     messages: Message[],
     systemPrompt?: string,
-  ): MistralMessages[] {
+  ): MistralMessages[] => {
     const convertedMessages: MistralMessages[] = [];
 
     // Add system message if provided
@@ -121,9 +121,9 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     return convertedMessages;
-  }
+  };
 
-  private convertMessage(message: Message): MistralMessages[] {
+  private convertMessage = (message: Message): MistralMessages[] => {
     const convertedMessages: MistralMessages[] = [];
 
     // User Message
@@ -216,23 +216,23 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     return convertedMessages;
-  }
+  };
 
-  private convertToolChoice(
+  private convertToolChoice = (
     toolChoice: ModelToolChoice,
-  ): MistralToolChoice | MistralToolChoiceEnum {
-    if (toolChoice === 'auto') {
+  ): MistralToolChoice | MistralToolChoiceEnum => {
+    if (toolChoice === ModelToolChoice.AUTO) {
       return 'auto';
-    } else if (toolChoice === 'required') {
+    } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return 'required';
     } else {
       return { type: 'function', function: { name: toolChoice } };
     }
-  }
+  };
 
-  private convertChunk(
+  private convertChunk = (
     chunk: CompletionEvent,
-  ): StreamInferenceResponseChunk | null {
+  ): StreamInferenceResponseChunk | null => {
     // Mistral streaming chunks have different structures
     // Handle text content delta
     let textContentDelta: string | null = null;
@@ -272,5 +272,5 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
       textContentDelta,
       toolCallsDelta,
     });
-  }
+  };
 }

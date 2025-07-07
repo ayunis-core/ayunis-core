@@ -34,7 +34,6 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
               fileName: file.filename,
               content: file.fileData,
             },
-            // @ts-ignore
             purpose: 'ocr',
           }),
         maxRetries: 3,
@@ -48,12 +47,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           }),
         maxRetries: 3,
         delay: 1000,
-      }).catch((error) => {
+      }).catch(async (error) => {
         this.logger.error(
-          `Mistral OCR signed URL retrieval failed: ${error.message}`,
-          error.stack,
+          `Mistral OCR signed URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error instanceof Error ? error.stack : 'Unknown error',
         );
-        this.client.files.delete({
+        await this.client.files.delete({
           fileId: uploaded_pdf.id,
         });
         throw error;
@@ -71,12 +70,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           }),
         maxRetries: 3,
         delay: 1000,
-      }).catch((error) => {
+      }).catch(async (error) => {
         this.logger.error(
-          `Mistral OCR processing failed: ${error.message}`,
-          error.stack,
+          `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error instanceof Error ? error.stack : 'Unknown error',
         );
-        this.client.files.delete({
+        await this.client.files.delete({
           fileId: uploaded_pdf.id,
         });
         throw error;
@@ -95,14 +94,14 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       return this.parseResponse(ocrResponse);
     } catch (error) {
       this.logger.error(
-        `Mistral OCR processing failed: ${error.message}`,
-        error.stack,
+        `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : 'Unknown error',
       );
       throw new FileRetrieverProcessingError(
         `Failed to process file with Mistral OCR`,
         {
           model: this.MODEL_NAME,
-          error,
+          error: error instanceof Error ? error.message : 'Unknown error',
         },
       );
     }

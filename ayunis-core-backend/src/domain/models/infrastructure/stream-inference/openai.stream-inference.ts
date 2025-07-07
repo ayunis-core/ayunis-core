@@ -17,6 +17,7 @@ import { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 
 @Injectable()
 export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
@@ -33,7 +34,7 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     return new Observable<StreamInferenceResponseChunk>((subscriber) => {
-      this.streamResponse(input, subscriber);
+      void this.streamResponse(input, subscriber);
     });
   }
 
@@ -79,7 +80,7 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     }
   }
 
-  private convertTool(tool: Tool): OpenAI.ChatCompletionTool {
+  private convertTool = (tool: Tool): OpenAI.ChatCompletionTool => {
     return {
       type: 'function' as const,
       function: {
@@ -88,24 +89,24 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
         parameters: tool.parameters as FunctionParameters | undefined,
       },
     };
-  }
+  };
 
-  private convertMessages(
+  private convertMessages = (
     messages: Message[],
-  ): OpenAI.ChatCompletionMessageParam[] {
+  ): OpenAI.ChatCompletionMessageParam[] => {
     const convertedMessages: OpenAI.ChatCompletionMessageParam[] = [];
     for (const message of messages) {
       convertedMessages.push(...this.convertMessage(message));
     }
     return convertedMessages;
-  }
+  };
 
-  private convertMessage(
+  private convertMessage = (
     message: Message,
-  ): OpenAI.ChatCompletionMessageParam[] {
+  ): OpenAI.ChatCompletionMessageParam[] => {
     const convertedMessages: OpenAI.ChatCompletionMessageParam[] = [];
     // User Message
-    if (message.role === 'user') {
+    if (message.role === MessageRole.USER) {
       for (const content of message.content) {
         // Text Message Content
         if (content instanceof TextMessageContent) {
@@ -122,7 +123,7 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       }
     }
 
-    if (message.role === 'assistant') {
+    if (message.role === MessageRole.ASSISTANT) {
       let assistantTextMessageContent: string | undefined = undefined;
       let assistantToolUseMessageContent:
         | OpenAI.ChatCompletionMessageToolCall[]
@@ -185,23 +186,23 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     return convertedMessages;
-  }
+  };
 
-  private convertToolChoice(
+  private convertToolChoice = (
     toolChoice: ModelToolChoice,
-  ): OpenAI.ChatCompletionToolChoiceOption {
-    if (toolChoice === 'auto') {
+  ): OpenAI.ChatCompletionToolChoiceOption => {
+    if (toolChoice === ModelToolChoice.AUTO) {
       return 'auto';
-    } else if (toolChoice === 'required') {
+    } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return 'required';
     } else {
       return { type: 'function', function: { name: toolChoice } };
     }
-  }
+  };
 
-  private convertChunk(
+  private convertChunk = (
     chunk: OpenAI.ChatCompletionChunk,
-  ): StreamInferenceResponseChunk {
+  ): StreamInferenceResponseChunk => {
     const delta = chunk.choices[0].delta;
     return new StreamInferenceResponseChunk({
       textContentDelta: delta.content ?? null,
@@ -216,5 +217,5 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
             }),
         ) ?? [],
     });
-  }
+  };
 }

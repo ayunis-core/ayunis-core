@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 
 import { AgentRepository } from '../../../application/ports/agent.repository';
@@ -49,7 +49,7 @@ export class LocalAgentRepository implements AgentRepository {
       return this.agentMapper.toDomain(agentWithRelations);
     } catch (error) {
       this.logger.error('Error creating agent', {
-        error,
+        error: error as Error,
         agentName: agent.name,
         userId: agent.userId,
       });
@@ -72,7 +72,11 @@ export class LocalAgentRepository implements AgentRepository {
 
       this.logger.debug('Agent deleted successfully', { agentId });
     } catch (error) {
-      this.logger.error('Error deleting agent', { error, agentId, userId });
+      this.logger.error('Error deleting agent', {
+        error: error as Error,
+        agentId,
+        userId,
+      });
       throw error;
     }
   }
@@ -94,7 +98,11 @@ export class LocalAgentRepository implements AgentRepository {
       this.logger.debug('Agent found', { id, name: agentEntity.name });
       return this.agentMapper.toDomain(agentEntity);
     } catch (error) {
-      this.logger.error('Error finding agent', { error, id, userId });
+      this.logger.error('Error finding agent', {
+        error: error as Error,
+        id,
+        userId,
+      });
       throw error;
     }
   }
@@ -106,7 +114,7 @@ export class LocalAgentRepository implements AgentRepository {
       // Use find instead of findBy to include relations
       const agentEntities = await this.agentRepository.find({
         where: {
-          id: ids.length > 0 ? (ids as any) : undefined, // TypeORM syntax for IN query
+          id: In(ids),
           userId,
         },
         relations: ['agentTools'], // Include agentTools relation
@@ -115,7 +123,11 @@ export class LocalAgentRepository implements AgentRepository {
       this.logger.debug('Agents found', { count: agentEntities.length });
       return agentEntities.map((entity) => this.agentMapper.toDomain(entity));
     } catch (error) {
-      this.logger.error('Error finding agents', { error, ids, userId });
+      this.logger.error('Error finding agents', {
+        error: error as Error,
+        ids,
+        userId,
+      });
       throw error;
     }
   }
@@ -135,7 +147,10 @@ export class LocalAgentRepository implements AgentRepository {
       });
       return agentEntities.map((entity) => this.agentMapper.toDomain(entity));
     } catch (error) {
-      this.logger.error('Error finding agents for user', { error, userId });
+      this.logger.error('Error finding agents for user', {
+        error: error as Error,
+        userId,
+      });
       throw error;
     }
   }
@@ -155,7 +170,10 @@ export class LocalAgentRepository implements AgentRepository {
       });
       return agentEntities.map((entity) => this.agentMapper.toDomain(entity));
     } catch (error) {
-      this.logger.error('Error finding agents for model', { error, modelId });
+      this.logger.error('Error finding agents for model', {
+        error: error as Error,
+        modelId,
+      });
       throw error;
     }
   }
@@ -187,7 +205,7 @@ export class LocalAgentRepository implements AgentRepository {
       });
     } catch (error) {
       this.logger.error('Error updating agent model', {
-        error,
+        error: error as Error,
         agentId,
         userId,
         modelId: model.id,

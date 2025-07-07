@@ -36,7 +36,7 @@ export class CreateAssistantMessageUseCase {
     } catch (error) {
       this.logger.error('Failed to create assistant message', {
         threadId: command.threadId,
-        error,
+        error: error as Error,
       });
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.ASSISTANT.toLowerCase(), error)

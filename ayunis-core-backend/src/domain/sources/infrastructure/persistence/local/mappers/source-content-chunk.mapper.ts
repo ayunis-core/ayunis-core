@@ -3,7 +3,6 @@ import { EmbeddingModel } from 'src/domain/embeddings/domain/embedding-model.ent
 import { EmbeddingsProvider } from 'src/domain/embeddings/domain/embeddings-provider.enum';
 import { SourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
-import { SourceContent } from 'src/domain/sources/domain/source-content.entity';
 import { SourceContentMapper } from './source-content.mapper';
 
 @Injectable()

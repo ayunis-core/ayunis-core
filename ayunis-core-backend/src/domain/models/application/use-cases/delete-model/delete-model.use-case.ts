@@ -40,14 +40,14 @@ export class DeleteModelUseCase {
       const orgIds = await this.findAllOrgIdsUseCase.execute();
 
       // Delete all permitted models that reference this model
-      for await (const orgId of orgIds) {
+      for (const orgId of orgIds) {
         const permittedModels = await this.getPermittedModelsUseCase.execute(
           new GetPermittedModelsQuery(orgId, {
             modelId: command.id,
           }),
         );
 
-        for await (const permittedModel of permittedModels) {
+        for (const permittedModel of permittedModels) {
           await this.deletePermittedModelUseCase.execute(
             new DeletePermittedModelCommand({
               orgId: permittedModel.orgId,
@@ -63,7 +63,9 @@ export class DeleteModelUseCase {
         throw error;
       }
       this.logger.error('Error deleting model', error);
-      throw new ModelDeletionFailedError(error.message);
+      throw new ModelDeletionFailedError(
+        error instanceof Error ? error.message : 'Unknown error',
+      );
     }
   }
 }

@@ -31,12 +31,12 @@ export default function retryWithBackoff<T>({
           }
         })
         .catch((error) => {
-          if (retryIfError && !retryIfError(error)) {
-            reject(error);
+          if (retryIfError && !retryIfError(error as Error)) {
+            reject(error as Error);
             return;
           }
           if (retries >= maxRetries) {
-            reject(error);
+            reject(error as Error);
             return;
           }
           retries += 1;
