@@ -9,12 +9,13 @@ import NewChatPageLayout from "./NewChatPageLayout";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 
 export default function NewChatPageNoModelError() {
   const { t } = useTranslation("chats");
 
   return (
-    <NewChatPageLayout>
+    <NewChatPageLayout header={<ContentAreaHeader title="New Chat" />}>
       <Card className="text-center">
         <CardHeader>
           <CardTitle>{t("newChat.noModelTitle")}</CardTitle>
