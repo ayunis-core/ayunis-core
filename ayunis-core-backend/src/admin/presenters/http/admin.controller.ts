@@ -48,10 +48,10 @@ export class AdminController {
   @Get('model')
   async getModel(
     @Query('name') name: string,
-    @Query('provider') provider: string,
+    @Query('provider') provider: keyof typeof ModelProvider,
   ) {
     return this.getModelUseCase.execute(
-      new GetModelQuery(name, ModelProvider[provider.toUpperCase()]),
+      new GetModelQuery(name, ModelProvider[provider]),
     );
   }
 
@@ -60,7 +60,7 @@ export class AdminController {
     return this.createModelUseCase.execute(
       new CreateModelCommand(
         createModelDto.name,
-        ModelProvider[createModelDto.provider.toUpperCase()],
+        createModelDto.provider,
         createModelDto.displayName,
         createModelDto.canStream,
         createModelDto.isReasoning,
@@ -78,7 +78,7 @@ export class AdminController {
       new UpdateModelCommand(
         id,
         updateModelDto.name,
-        ModelProvider[updateModelDto.provider.toUpperCase()],
+        updateModelDto.provider,
         updateModelDto.displayName,
         updateModelDto.canStream,
         updateModelDto.isReasoning,

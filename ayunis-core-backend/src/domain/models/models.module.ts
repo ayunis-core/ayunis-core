@@ -96,7 +96,11 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     },
     {
       provide: StreamInferenceHandlerRegistry,
-      useFactory: (anthropicHandler, openaiHandler, mistralHandler) => {
+      useFactory: (
+        anthropicHandler: AnthropicStreamInferenceHandler,
+        openaiHandler: OpenAIStreamInferenceHandler,
+        mistralHandler: MistralStreamInferenceHandler,
+      ) => {
         const registry = new StreamInferenceHandlerRegistry();
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
@@ -111,7 +115,11 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
     },
     {
       provide: InferenceHandlerRegistry,
-      useFactory: (mistralHandler, openaiHandler, anthropicHandler) => {
+      useFactory: (
+        mistralHandler: MistralInferenceHandler,
+        openaiHandler: OpenAIInferenceHandler,
+        anthropicHandler: AnthropicInferenceHandler,
+      ) => {
         const registry = new InferenceHandlerRegistry();
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);

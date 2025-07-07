@@ -73,8 +73,8 @@ export class CreateSubscriptionUseCase {
 
       const pricePerSeat =
         command.renewalCycle === RenewalCycle.MONTHLY
-          ? this.configService.get('subscriptions.pricePerSeatMonthly')
-          : this.configService.get('subscriptions.pricePerSeatYearly');
+          ? this.configService.get<number>('subscriptions.pricePerSeatMonthly')
+          : this.configService.get<number>('subscriptions.pricePerSeatYearly');
 
       if (!pricePerSeat) {
         this.logger.error('Price per seat not configured', {
@@ -107,7 +107,7 @@ export class CreateSubscriptionUseCase {
         throw error;
       }
       this.logger.error('Subscription creation failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,
       });
