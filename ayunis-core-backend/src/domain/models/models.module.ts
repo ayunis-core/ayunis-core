@@ -59,6 +59,7 @@ import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases
 import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { OllamaStreamInferenceHandler } from './infrastructure/stream-inference/ollama.stream-inference';
+import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-permitted/is-provider-permitted.use-case';
 
 @Module({
   imports: [
@@ -174,6 +175,7 @@ import { OllamaStreamInferenceHandler } from './infrastructure/stream-inference/
     DeletePermittedProviderUseCase,
     GetAllPermittedProvidersUseCase,
     GetAllModelProviderInfosWithPermittedStatusUseCase,
+    IsProviderPermittedUseCase,
   ],
   exports: [
     InferenceHandlerRegistry,
