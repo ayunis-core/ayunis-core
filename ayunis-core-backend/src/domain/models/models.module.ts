@@ -3,12 +3,6 @@ import { ModelsController } from './presenters/http/models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelRegistry } from './application/registry/model.registry';
-import {
-  MISTRAL_INFERENCE_HANDLER,
-  ANTHROPIC_INFERENCE_HANDLER,
-  OPENAI_INFERENCE_HANDLER,
-  OLLAMA_INFERENCE_HANDLER,
-} from './application/tokens/inference-handler.tokens';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
 import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
 import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.inference';
@@ -58,9 +52,11 @@ import { AgentsModule } from '../agents/agents.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
-import { OllamaStreamInferenceHandler } from './infrastructure/stream-inference/ollama.stream-inference';
-import { OllamaInferenceHandler } from './infrastructure/inference/ollama.inference';
 import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-permitted/is-provider-permitted.use-case';
+import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ollama.inference';
+import { LocalOllamaStreamInferenceHandler } from './infrastructure/stream-inference/local-ollama.stream-inference';
+import { SynaforceInferenceHandler } from './infrastructure/inference/synaforce.inference';
+import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inference/synaforce.stream-inference';
 
 @Module({
   imports: [
@@ -83,46 +79,40 @@ import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-
     PermittedProviderResponseDtoMapper,
     ModelProviderWithPermittedStatusResponseDtoMapper,
     MessageRequestDtoMapper,
+    MistralInferenceHandler,
+    OpenAIInferenceHandler,
+    AnthropicInferenceHandler,
+    LocalOllamaInferenceHandler,
+    SynaforceInferenceHandler,
     AnthropicStreamInferenceHandler,
     OpenAIStreamInferenceHandler,
     MistralStreamInferenceHandler,
-    OllamaStreamInferenceHandler,
-    {
-      provide: MISTRAL_INFERENCE_HANDLER,
-      useClass: MistralInferenceHandler,
-    },
-    {
-      provide: OPENAI_INFERENCE_HANDLER,
-      useClass: OpenAIInferenceHandler,
-    },
-    {
-      provide: ANTHROPIC_INFERENCE_HANDLER,
-      useClass: AnthropicInferenceHandler,
-    },
-    {
-      provide: OLLAMA_INFERENCE_HANDLER,
-      useClass: OllamaInferenceHandler,
-    },
+    LocalOllamaStreamInferenceHandler,
+    SynaforceStreamInferenceHandler,
+    LocalOllamaInferenceHandler,
     {
       provide: StreamInferenceHandlerRegistry,
       useFactory: (
         anthropicHandler: AnthropicStreamInferenceHandler,
         openaiHandler: OpenAIStreamInferenceHandler,
         mistralHandler: MistralStreamInferenceHandler,
-        ollamaHandler: OllamaStreamInferenceHandler,
+        ollamaHandler: LocalOllamaStreamInferenceHandler,
+        synaforceHandler: SynaforceStreamInferenceHandler,
       ) => {
         const registry = new StreamInferenceHandlerRegistry();
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
+        registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         return registry;
       },
       inject: [
         AnthropicStreamInferenceHandler,
         OpenAIStreamInferenceHandler,
         MistralStreamInferenceHandler,
-        OllamaStreamInferenceHandler,
+        LocalOllamaStreamInferenceHandler,
+        SynaforceStreamInferenceHandler,
       ],
     },
     {
@@ -131,20 +121,23 @@ import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-
         mistralHandler: MistralInferenceHandler,
         openaiHandler: OpenAIInferenceHandler,
         anthropicHandler: AnthropicInferenceHandler,
-        ollamaHandler: OllamaInferenceHandler,
+        ollamaHandler: LocalOllamaInferenceHandler,
+        synaforceHandler: SynaforceInferenceHandler,
       ) => {
         const registry = new InferenceHandlerRegistry();
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
+        registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         return registry;
       },
       inject: [
-        MISTRAL_INFERENCE_HANDLER,
-        OPENAI_INFERENCE_HANDLER,
-        ANTHROPIC_INFERENCE_HANDLER,
-        OLLAMA_INFERENCE_HANDLER,
+        MistralInferenceHandler,
+        OpenAIInferenceHandler,
+        AnthropicInferenceHandler,
+        LocalOllamaInferenceHandler,
+        SynaforceInferenceHandler,
       ],
     },
     // Use Cases

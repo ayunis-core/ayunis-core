@@ -25,6 +25,11 @@ const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
     displayName: 'Ollama',
     hostedIn: ModelProviderLocation.SELF_HOSTED,
   },
+  {
+    provider: ModelProvider.SYNAFORCE,
+    displayName: 'Synaforce',
+    hostedIn: ModelProviderLocation.AYUNIS,
+  },
 ];
 
 @Injectable()

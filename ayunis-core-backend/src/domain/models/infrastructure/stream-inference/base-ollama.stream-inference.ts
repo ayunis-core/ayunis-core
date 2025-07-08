@@ -14,7 +14,6 @@ import {
   ToolCall as OllamaToolCall,
   ChatResponse,
 } from 'ollama';
-import { ConfigService } from '@nestjs/config';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
@@ -24,15 +23,17 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 
 @Injectable()
-export class OllamaStreamInferenceHandler implements StreamInferenceHandler {
-  private readonly logger = new Logger(OllamaStreamInferenceHandler.name);
-  private readonly client: Ollama;
+export class BaseOllamaStreamInferenceHandler
+  implements StreamInferenceHandler
+{
+  private readonly logger = new Logger(BaseOllamaStreamInferenceHandler.name);
+  protected client: Ollama;
 
-  constructor(private readonly configService: ConfigService) {
-    this.client = new Ollama({
-      host: this.configService.get('models.ollama.baseURL'),
-    });
-  }
+  // constructor(private readonly configService: ConfigService) {
+  //   this.client = new Ollama({
+  //     host: this.configService.get('models.ollama.baseURL'),
+  //   });
+  // }
 
   answer(
     input: StreamInferenceInput,

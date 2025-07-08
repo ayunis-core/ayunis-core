@@ -3,4 +3,5 @@ export enum ModelProviderLocation {
   EU = 'EU',
   US = 'US',
   SELF_HOSTED = 'SELF_HOSTED',
+  AYUNIS = 'AYUNIS',
 }

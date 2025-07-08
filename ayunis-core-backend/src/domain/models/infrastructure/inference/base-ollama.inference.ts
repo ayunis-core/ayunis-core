@@ -12,7 +12,6 @@ import {
   ToolCall as OllamaToolCall,
   ChatResponse,
 } from 'ollama';
-import { ConfigService } from '@nestjs/config';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
@@ -23,16 +22,16 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import { InferenceFailedError } from '../../application/models.errors';
 
 @Injectable()
-export class OllamaInferenceHandler extends InferenceHandler {
-  private readonly logger = new Logger(OllamaInferenceHandler.name);
-  private readonly client: Ollama;
+export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
+  private readonly logger = new Logger(BaseOllamaInferenceHandler.name);
+  protected client: Ollama;
 
-  constructor(private readonly configService: ConfigService) {
-    super();
-    this.client = new Ollama({
-      host: this.configService.get('models.ollama.baseURL'),
-    });
-  }
+  //   constructor(private readonly configService: ConfigService) {
+  //     super();
+  //     this.client = new Ollama({
+  //       host: this.configService.get('models.ollama.baseURL'),
+  //     });
+  //   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
     this.logger.log('answer', input);

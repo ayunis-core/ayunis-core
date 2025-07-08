@@ -29,6 +29,7 @@ export class ModelRegistry {
       [ModelProvider.OPENAI]: 'models.openai.apiKey',
       [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
       [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
+      [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
     };
 
     const configKey = providerConfigMap[provider];

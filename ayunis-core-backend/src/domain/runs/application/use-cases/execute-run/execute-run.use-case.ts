@@ -167,7 +167,7 @@ export class ExecuteRunUseCase {
       instructions = thread.instruction;
     }
 
-    const contextualTools = await this.findContextualToolsUseCase.execute(
+    const contextualTools = this.findContextualToolsUseCase.execute(
       new FindContextualToolsQuery({ thread }),
     );
     // TODO: add tools from thread
@@ -243,7 +243,7 @@ export class ExecuteRunUseCase {
             name: 'new_message',
             output: toolResultMessage,
           });
-          await this.addMessageToThreadUseCase.execute(
+          this.addMessageToThreadUseCase.execute(
             new AddMessageCommand(params.thread, toolResultMessage),
           );
           yield toolResultMessage;
@@ -260,7 +260,7 @@ export class ExecuteRunUseCase {
             name: 'new_message',
             input: newTextMessage,
           });
-          await this.addMessageToThreadUseCase.execute(
+          this.addMessageToThreadUseCase.execute(
             new AddMessageCommand(params.thread, newTextMessage),
           );
           yield newTextMessage;
@@ -313,7 +313,7 @@ export class ExecuteRunUseCase {
 
             // Note: Final message is already saved to DB by executeStreamingInference
             // So we just need to add it to the thread without saving again
-            await this.addMessageToThreadUseCase.execute(
+            this.addMessageToThreadUseCase.execute(
               new AddMessageCommand(params.thread, assistantMessage),
             );
           } else {
@@ -349,7 +349,7 @@ export class ExecuteRunUseCase {
               output: assistantMessage,
             });
             // Add message to thread and yield it
-            await this.addMessageToThreadUseCase.execute(
+            this.addMessageToThreadUseCase.execute(
               new AddMessageCommand(params.thread, assistantMessage),
             );
             yield assistantMessage;

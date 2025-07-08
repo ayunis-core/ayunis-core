@@ -3,6 +3,5 @@ export enum ModelProvider {
   ANTHROPIC = 'anthropic',
   MISTRAL = 'mistral',
   OLLAMA = 'ollama',
-
-  //MICROSOFT = 'microsoft',
+  SYNAFORCE = 'synaforce',
 }

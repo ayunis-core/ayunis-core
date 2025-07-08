@@ -17,5 +17,8 @@ export const legalConfig = registerAs('legal', () => ({
     mistral: {
       version: process.env.PROVIDER_MISTRAL_LEGAL_VERSION,
     },
+    synaforce: {
+      version: process.env.PROVIDER_SYNAFORCE_LEGAL_VERSION,
+    },
   },
 }));

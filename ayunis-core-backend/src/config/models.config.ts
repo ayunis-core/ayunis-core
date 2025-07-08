@@ -13,4 +13,10 @@ export const modelsConfig = registerAs('models', () => ({
   ollama: {
     baseURL: process.env.OLLAMA_BASE_URL,
   },
+  synaforce: {
+    baseURL:
+      process.env.NODE_ENV === 'production'
+        ? process.env.SYNAFORCE_BASE_URL
+        : process.env.OLLAMA_BASE_URL,
+  },
 }));

@@ -10,7 +10,7 @@ import { SourceContentRecord } from './source-content.record';
 import { SourceRecord } from './source.record';
 import { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
-import { EmbeddingsProvider } from 'src/domain/embeddings/domain/embeddings-provider.enum';
+import { EmbeddingsProvider } from '../../../../../embeddings/domain/embeddings-provider.enum';
 
 @Entity({ name: 'source_content_chunks' })
 export class SourceContentChunkRecord extends BaseRecord {
