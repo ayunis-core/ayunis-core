@@ -49,8 +49,6 @@ export const CurrentUser = createParamDecorator(
       return user;
     }
 
-    const propertyKey = UserProperty[property] as keyof typeof user;
-
-    return user[propertyKey];
+    return user[property as keyof typeof user];
   },
 );

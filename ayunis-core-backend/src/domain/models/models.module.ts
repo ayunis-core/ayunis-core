@@ -59,6 +59,7 @@ import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases
 import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { OllamaStreamInferenceHandler } from './infrastructure/stream-inference/ollama.stream-inference';
+import { OllamaInferenceHandler } from './infrastructure/inference/ollama.inference';
 import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-permitted/is-provider-permitted.use-case';
 
 @Module({
@@ -100,7 +101,7 @@ import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-
     },
     {
       provide: OLLAMA_INFERENCE_HANDLER,
-      useClass: OllamaStreamInferenceHandler,
+      useClass: OllamaInferenceHandler,
     },
     {
       provide: StreamInferenceHandlerRegistry,
@@ -130,17 +131,20 @@ import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-
         mistralHandler: MistralInferenceHandler,
         openaiHandler: OpenAIInferenceHandler,
         anthropicHandler: AnthropicInferenceHandler,
+        ollamaHandler: OllamaInferenceHandler,
       ) => {
         const registry = new InferenceHandlerRegistry();
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
+        registry.register(ModelProvider.OLLAMA, ollamaHandler);
         return registry;
       },
       inject: [
         MISTRAL_INFERENCE_HANDLER,
         OPENAI_INFERENCE_HANDLER,
         ANTHROPIC_INFERENCE_HANDLER,
+        OLLAMA_INFERENCE_HANDLER,
       ],
     },
     // Use Cases

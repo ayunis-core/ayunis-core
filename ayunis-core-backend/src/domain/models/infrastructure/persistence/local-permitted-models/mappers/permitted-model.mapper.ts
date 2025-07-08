@@ -1,14 +1,11 @@
 import { PermittedModel } from '../../../../domain/permitted-model.entity';
 import { PermittedModelRecord } from '../schema/permitted-model.record';
 import { Model } from '../../../../domain/model.entity';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PermittedModelMapper {
-  private readonly logger = new Logger(PermittedModelMapper.name);
-
   toDomain(record: PermittedModelRecord): PermittedModel {
-    this.logger.log('toDomain', { record });
     return new PermittedModel({
       id: record.id,
       model: new Model({
@@ -26,7 +23,6 @@ export class PermittedModelMapper {
   }
 
   toRecord(domain: PermittedModel): PermittedModelRecord {
-    this.logger.log('toRecord', { domain });
     const record = new PermittedModelRecord();
     record.id = domain.id;
     record.modelId = domain.model.id;
