@@ -26,7 +26,7 @@ export class ReplaceModelWithUserDefaultUseCase {
         threads,
       });
       // TODO: Make this a single transaction
-      for await (const thread of threads) {
+      for (const thread of threads) {
         const defaultModel = await this.getDefaultModelUseCase.execute(
           new GetDefaultModelQuery({
             orgId: thread.model.orgId,
@@ -53,7 +53,7 @@ export class ReplaceModelWithUserDefaultUseCase {
       }
     } catch (error) {
       this.logger.error('Error replacing model with user default', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }

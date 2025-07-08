@@ -73,17 +73,17 @@ export class GenerateAndSetThreadTitleUseCase {
       return title;
     } catch (error) {
       // Log the error with appropriate context
-      let logError = error;
+      let logError = error as Error;
       if (
         !(error instanceof EmptyTitleResponseError) &&
         !(error instanceof InvalidTitleResponseTypeError)
       ) {
-        logError = new TitleGenerationError(command.thread.id, error);
+        logError = new TitleGenerationError(command.thread.id, error as Error);
       }
 
       this.logger.error('Failed to generate title', {
         threadId: command.thread.id,
-        error: logError,
+        error: logError instanceof Error ? logError.message : 'Unknown error',
       });
 
       // Don't throw error - just log it

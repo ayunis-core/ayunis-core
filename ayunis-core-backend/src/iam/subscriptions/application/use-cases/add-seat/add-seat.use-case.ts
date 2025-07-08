@@ -87,7 +87,7 @@ export class AddSeatUseCase {
         throw error;
       }
       this.logger.error('Adding seats failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,
         noOfSeats: command.noOfSeats,

@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateToolUseCase } from './create-tool.use-case';
-import { CreateHttpToolCommand } from './create-tool.command';
+import {
+  CreateHttpToolCommand,
+  CreateToolCommand,
+} from './create-tool.command';
 import { ToolConfigRepository } from '../../ports/tool-config.repository';
 import { ToolFactory } from '../../tool.factory';
 import {
@@ -9,6 +12,7 @@ import {
 } from '../../../domain/tools/http-tool.entity';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
 import { UUID } from 'crypto';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 describe('CreateToolUseCase', () => {
   let useCase: CreateToolUseCase;
@@ -67,7 +71,7 @@ describe('CreateToolUseCase', () => {
         .mockResolvedValue(savedConfig);
       jest
         .spyOn(mockToolFactory, 'createTool')
-        .mockReturnValue(mockTool as any);
+        .mockReturnValue(mockTool as unknown as Tool);
 
       // Act
       const result = await useCase.execute(command);
@@ -86,7 +90,7 @@ describe('CreateToolUseCase', () => {
 
     it('should throw error for unsupported tool type', async () => {
       // Arrange
-      const command = { type: 'UNSUPPORTED' } as any;
+      const command = { type: 'UNSUPPORTED' } as unknown as CreateToolCommand;
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(

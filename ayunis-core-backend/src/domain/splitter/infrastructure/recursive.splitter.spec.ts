@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { RecursiveSplitterHandler } from './recursive.splitter';
-import { SplitResult, TextChunk } from '../domain/split-result.entity';
+import { SplitResult } from '../domain/split-result.entity';
 import { SplitterProcessingError } from '../application/splitter.errors';
 
 describe('RecursiveSplitterHandler', () => {
@@ -37,7 +37,7 @@ describe('RecursiveSplitterHandler', () => {
   });
 
   describe('processText', () => {
-    it('should split text into chunks with default settings', async () => {
+    it('should split text into chunks with default settings', () => {
       // Arrange
       const text =
         'This is paragraph 1.\n\nThis is paragraph 2.\n\nThis is paragraph 3.';
@@ -55,7 +55,7 @@ describe('RecursiveSplitterHandler', () => {
       expect(result.metadata.chunkOverlap).toBe(200);
     });
 
-    it('should use custom chunk size and overlap from metadata', async () => {
+    it('should use custom chunk size and overlap from metadata', () => {
       // Arrange
       const text =
         'This is paragraph 1.\n\nThis is paragraph 2.\n\nThis is paragraph 3.';
@@ -76,7 +76,7 @@ describe('RecursiveSplitterHandler', () => {
       expect(result.metadata.chunkOverlap).toBe(customChunkOverlap);
     });
 
-    it('should handle long text that needs to be split', async () => {
+    it('should handle long text that needs to be split', () => {
       // Arrange
       const paragraph =
         'This is a sample paragraph with enough text to test the splitting functionality. '.repeat(
@@ -105,7 +105,7 @@ describe('RecursiveSplitterHandler', () => {
       ); // Allow up to half to be oversized
     });
 
-    it('should split text without paragraph breaks', async () => {
+    it('should split text without paragraph breaks', () => {
       // Arrange
       const text =
         'This is a very long sentence without any paragraph breaks that should still be split into multiple chunks based on sentence boundaries and other separators when it exceeds the specified chunk size limit for proper text processing.';
@@ -128,7 +128,7 @@ describe('RecursiveSplitterHandler', () => {
       });
     });
 
-    it('should include overlap from previous chunks', async () => {
+    it('should include overlap from previous chunks', () => {
       // Arrange
       const chunkSize = 30;
       const chunkOverlap = 10;
@@ -158,7 +158,7 @@ describe('RecursiveSplitterHandler', () => {
       }
     });
 
-    it('should handle empty text', async () => {
+    it('should handle empty text', () => {
       // Act
       const result = handler.processText({ text: '' });
 
@@ -186,7 +186,6 @@ describe('RecursiveSplitterHandler', () => {
       const text = 'Paragraph 1.\n\nParagraph 2.\n\nParagraph 3.';
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const chunks = handler['splitTextRecursively'](text, 1000, 200);
 
       // Assert
@@ -201,7 +200,6 @@ describe('RecursiveSplitterHandler', () => {
       const text = `${paragraph1}\n\n${paragraph2}`;
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const chunks = handler['splitTextRecursively'](text, 100, 20);
 
       // Assert
@@ -214,7 +212,6 @@ describe('RecursiveSplitterHandler', () => {
         'This is sentence one. This is sentence two. This is sentence three. This is sentence four.';
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const chunks = handler['splitTextRecursively'](text, 40, 10);
 
       // Assert
@@ -229,7 +226,6 @@ describe('RecursiveSplitterHandler', () => {
       const text = 'A'.repeat(100); // No separators
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const chunks = handler['splitTextRecursively'](text, 30, 5);
 
       // Assert
@@ -246,7 +242,6 @@ describe('RecursiveSplitterHandler', () => {
       const text = `${paragraph1}\n\n${paragraph2}`;
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const chunks = handler['splitTextRecursively'](text, 100, 20);
 
       // Assert

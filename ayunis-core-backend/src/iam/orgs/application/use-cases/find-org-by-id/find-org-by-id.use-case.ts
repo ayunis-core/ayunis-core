@@ -22,7 +22,7 @@ export class FindOrgByIdUseCase {
         throw error;
       }
       this.logger.error('Failed to find organization by ID', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         id: query.id,
       });
       throw new OrgNotFoundError(query.id);

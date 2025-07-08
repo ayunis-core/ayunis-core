@@ -7,11 +7,6 @@ import { UrlSourceRecord } from '../schema/url-source.record';
 import { SourceType } from '../../../../domain/source-type.enum';
 import { Injectable } from '@nestjs/common';
 import { SourceContent } from 'src/domain/sources/domain/source-content.entity';
-import { SourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
-import { EmbeddingModel } from 'src/domain/embeddings/domain/embedding-model.entity';
-import { EmbeddingsProvider } from 'src/domain/embeddings/domain/embeddings-provider.enum';
-import { SourceContentRecord } from '../schema/source-content.record';
-import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
 import { SourceContentMapper } from './source-content.mapper';
 
 @Injectable()
@@ -25,7 +20,7 @@ export class SourceMapper {
       return this.urlSourceToDomain(entity as UrlSourceRecord);
     }
 
-    throw new Error('Invalid source type: ' + entity.type);
+    throw new Error(`Invalid source type`);
   }
 
   private fileSourceToDomain(entity: FileSourceRecord): FileSource {

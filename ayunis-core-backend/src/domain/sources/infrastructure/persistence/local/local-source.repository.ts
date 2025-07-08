@@ -11,9 +11,6 @@ import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import { SourceMapper } from './mappers/source.mapper';
 import { SourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
-import { SourceContent } from 'src/domain/sources/domain/source-content.entity';
-import { SourceContentMapper } from './mappers/source-content.mapper';
-import { SourceContentRecord } from './schema/source-content.record';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -22,12 +19,9 @@ export class LocalSourceRepository extends SourceRepository {
   constructor(
     @InjectRepository(SourceRecord)
     private readonly sourceRepository: Repository<SourceRecord>,
-    @InjectRepository(SourceContentRecord)
-    private readonly sourceContentRepository: Repository<SourceContentRecord>,
     @InjectRepository(SourceContentChunkRecord)
     private readonly sourceContentChunkRepository: Repository<SourceContentChunkRecord>,
     private readonly sourceMapper: SourceMapper,
-    private readonly sourceContentMapper: SourceContentMapper,
     private readonly sourceContentChunkMapper: SourceContentChunkMapper,
   ) {
     super();
@@ -167,7 +161,15 @@ export class LocalSourceRepository extends SourceRepository {
 
       this.logger.debug(
         `Found ${entities.length} similar chunks for vector search in source ${filter.sourceId} ` +
-          `(threshold: ${similarityThreshold}, vector dim: ${queryVector.length}, limit: ${limit}, cosine similarity: ${raw.map((r) => r.cosine_similarity)})`,
+          `(threshold: ${similarityThreshold}, vector dim: ${queryVector.length}, limit: ${limit}, cosine similarity: ${raw
+            .filter(
+              (r: { cosine_similarity: number }) =>
+                r.cosine_similarity !== null,
+            )
+            .map((r: { cosine_similarity: number }) =>
+              r.cosine_similarity.toFixed(2),
+            )
+            .join(', ')})`,
       );
 
       // Return the properly mapped entities
@@ -179,7 +181,9 @@ export class LocalSourceRepository extends SourceRepository {
         `Error performing vector search in source ${filter.sourceId}:`,
         error,
       );
-      throw new Error(`Vector search failed: ${error.message}`);
+      throw new Error(
+        `Vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 }

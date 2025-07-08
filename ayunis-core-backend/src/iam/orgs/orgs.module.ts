@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OrgsRepository } from './application/ports/orgs.repository';
-import { CloudOrgsRepository } from './infrastructure/repositories/cloud/cloud-orgs.repository';
 import { LocalOrgsRepository } from './infrastructure/repositories/local/local-orgs.repository';
-import { ConfigService } from '@nestjs/config';
-import { AuthProvider } from 'src/config/authentication.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgRecord } from './infrastructure/repositories/local/schema/org.record';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -22,15 +19,10 @@ import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/f
   providers: [
     {
       provide: OrgsRepository,
-      useFactory: (
-        configService: ConfigService,
-        orgRepository: Repository<OrgRecord>,
-      ) => {
-        return configService.get('auth.provider') === AuthProvider.CLOUD
-          ? new CloudOrgsRepository()
-          : new LocalOrgsRepository(orgRepository);
+      useFactory: (orgRepository: Repository<OrgRecord>) => {
+        return new LocalOrgsRepository(orgRepository);
       },
-      inject: [ConfigService, getRepositoryToken(OrgRecord)],
+      inject: [getRepositoryToken(OrgRecord)],
     },
     // Use cases
     FindOrgByIdUseCase,

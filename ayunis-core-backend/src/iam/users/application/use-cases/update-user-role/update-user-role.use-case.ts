@@ -36,8 +36,10 @@ export class UpdateUserRoleUseCase {
       if (error instanceof UserError) {
         throw error;
       }
-      this.logger.error('Error updating user role', { error });
-      throw new UserUnexpectedError(error);
+      this.logger.error('Error updating user role', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new UserUnexpectedError(error as Error);
     }
   }
 }

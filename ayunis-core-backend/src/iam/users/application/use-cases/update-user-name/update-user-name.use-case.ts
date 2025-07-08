@@ -4,7 +4,6 @@ import { UpdateUserNameCommand } from './update-user-name.command';
 import { User } from '../../../domain/user.entity';
 import {
   UserError,
-  UserInvalidInputError,
   UserNotFoundError,
   UserUnexpectedError,
 } from '../../users.errors';
@@ -43,11 +42,11 @@ export class UpdateUserNameUseCase {
         throw error;
       }
       this.logger.error('Failed to update user name', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         userId: command.userId,
         newName: command.newName,
       });
-      throw new UserUnexpectedError(error);
+      throw new UserUnexpectedError(error as Error);
     }
   }
 }

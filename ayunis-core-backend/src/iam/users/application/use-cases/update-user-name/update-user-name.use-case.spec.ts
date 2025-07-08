@@ -4,6 +4,7 @@ import { UpdateUserNameCommand } from './update-user-name.command';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
+import { UUID } from 'crypto';
 
 describe('UpdateUserNameUseCase', () => {
   let useCase: UpdateUserNameUseCase;
@@ -30,13 +31,13 @@ describe('UpdateUserNameUseCase', () => {
   });
 
   it('should update user name successfully', async () => {
-    const command = new UpdateUserNameCommand('user-id' as any, 'New Name');
+    const command = new UpdateUserNameCommand('user-id' as UUID, 'New Name');
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
       name: 'Old Name',
     });
     const updatedUser = { ...mockUser, name: 'New Name' };
@@ -55,7 +56,7 @@ describe('UpdateUserNameUseCase', () => {
   });
 
   it('should handle repository errors when finding user', async () => {
-    const command = new UpdateUserNameCommand('user-id' as any, 'New Name');
+    const command = new UpdateUserNameCommand('user-id' as UUID, 'New Name');
     const error = new Error('User not found');
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockRejectedValue(error);
@@ -66,13 +67,13 @@ describe('UpdateUserNameUseCase', () => {
   });
 
   it('should handle repository errors when updating user', async () => {
-    const command = new UpdateUserNameCommand('user-id' as any, 'New Name');
+    const command = new UpdateUserNameCommand('user-id' as UUID, 'New Name');
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
       name: 'Old Name',
     });
     const updateError = new Error('Update failed');

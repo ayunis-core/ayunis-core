@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
@@ -45,9 +45,9 @@ export class CreateThreadUseCase {
       } catch (error) {
         this.logger.error('Failed to create thread', {
           userId: command.userId,
-          error,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
-        throw new ThreadCreationError(error, command.userId);
+        throw new ThreadCreationError(error as Error, command.userId);
       }
     } catch (error) {
       if (error instanceof ModelError || error instanceof ThreadError) {
@@ -55,7 +55,7 @@ export class CreateThreadUseCase {
       }
       this.logger.error('Failed to create thread', {
         userId: command.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new ThreadCreationError(error, command.userId)

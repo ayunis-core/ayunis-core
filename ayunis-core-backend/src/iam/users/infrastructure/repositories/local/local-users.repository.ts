@@ -35,6 +35,10 @@ export class LocalUsersRepository extends UsersRepository {
       }
       return UserMapper.toDomain(userEntity);
     } catch (error) {
+      this.logger.error('Failed to find user by ID', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        id,
+      });
       throw new UserInvalidInputError(`Error finding user with ID ${id}`);
     }
   }
@@ -51,7 +55,10 @@ export class LocalUsersRepository extends UsersRepository {
       }
       return UserMapper.toDomain(userEntity);
     } catch (error) {
-      this.logger.error('Failed to find user by email', { error, email });
+      this.logger.error('Failed to find user by email', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        email,
+      });
       throw new UserInvalidInputError(`Error finding user with email ${email}`);
     }
   }
@@ -60,10 +67,10 @@ export class LocalUsersRepository extends UsersRepository {
     this.logger.log('findOneByOrgId', { orgId });
     try {
       const userEntities = await this.userRepository.find({ where: { orgId } });
-      return userEntities.map(UserMapper.toDomain);
+      return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
     } catch (error) {
       this.logger.error('Failed to find users by organization ID', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId,
       });
       throw new UserInvalidInputError(
@@ -77,7 +84,7 @@ export class LocalUsersRepository extends UsersRepository {
     const userEntities = await this.userRepository.find({
       where: { orgId },
     });
-    return userEntities.map(UserMapper.toDomain);
+    return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
   }
 
   async create(user: User): Promise<User> {
@@ -107,7 +114,10 @@ export class LocalUsersRepository extends UsersRepository {
       if (error instanceof UserAlreadyExistsError) {
         throw error;
       }
-      this.logger.error('Failed to create user', { error, email: user.email });
+      this.logger.error('Failed to create user', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        email: user.email,
+      });
       throw new UserInvalidInputError('Failed to create user');
     }
   }
@@ -137,7 +147,10 @@ export class LocalUsersRepository extends UsersRepository {
       if (error instanceof UserNotFoundError) {
         throw error;
       }
-      this.logger.error('Failed to update user', { error, userId: user.id });
+      this.logger.error('Failed to update user', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: user.id,
+      });
       throw new UserInvalidInputError(
         `Failed to update user with ID ${user.id}`,
       );
@@ -163,7 +176,10 @@ export class LocalUsersRepository extends UsersRepository {
       if (error instanceof UserNotFoundError) {
         throw error;
       }
-      this.logger.error('Failed to delete user', { error, userId: id });
+      this.logger.error('Failed to delete user', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: id,
+      });
       throw new UserInvalidInputError(`Failed to delete user with ID ${id}`);
     }
   }
@@ -189,20 +205,20 @@ export class LocalUsersRepository extends UsersRepository {
 
   async isValidPassword(password: string): Promise<boolean> {
     if (password.length < 8) {
-      return false;
+      return Promise.resolve(false);
     }
     if (!/[A-Z]/.test(password)) {
-      return false;
+      return Promise.resolve(false);
     }
     if (!/[0-9]/.test(password)) {
-      return false;
+      return Promise.resolve(false);
     }
     if (!/[!@#$%^&*]/.test(password)) {
-      return false;
+      return Promise.resolve(false);
     }
     if (!/[a-z]/.test(password)) {
-      return false;
+      return Promise.resolve(false);
     }
-    return true;
+    return Promise.resolve(true);
   }
 }

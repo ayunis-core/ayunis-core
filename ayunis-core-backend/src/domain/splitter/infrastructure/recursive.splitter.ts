@@ -52,14 +52,14 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       });
     } catch (error) {
       this.logger.error(
-        `Recursive Text Splitter processing failed: ${error.message}`,
-        error.stack,
+        `Recursive Text Splitter processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new SplitterProcessingError(
         `Failed to process text with Recursive Text Splitter`,
         {
           provider: this.PROVIDER_NAME,
-          originalError: error,
+          originalError: error as Error,
         },
       );
     }

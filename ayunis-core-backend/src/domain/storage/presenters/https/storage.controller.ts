@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import {
   Controller,
   Post,
@@ -65,7 +64,7 @@ export class StorageController {
       },
     },
   })
-  async uploadFile(@UploadedFile() file: any) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
     try {
       if (!file) {
         throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);

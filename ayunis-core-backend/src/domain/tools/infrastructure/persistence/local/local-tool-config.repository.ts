@@ -41,7 +41,7 @@ export class LocalToolConfigRepository extends ToolConfigRepository {
     userId: UUID,
     filters?: { type?: ToolType },
   ): Promise<ToolConfig[]> {
-    const where: any = { userId };
+    const where: Record<string, unknown> = { userId };
     if (filters?.type) {
       where.type = filters.type;
     }

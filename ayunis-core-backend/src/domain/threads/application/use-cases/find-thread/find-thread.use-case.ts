@@ -6,8 +6,6 @@ import { ThreadNotFoundError } from '../../threads.errors';
 import { GetAvailableModelUseCase } from 'src/domain/models/application/use-cases/get-available-model/get-available-model.use-case';
 import { GetAvailableModelQuery } from 'src/domain/models/application/use-cases/get-available-model/get-available-model.query';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
-import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 
 @Injectable()
 export class FindThreadUseCase {
@@ -43,7 +41,7 @@ export class FindThreadUseCase {
       this.logger.error('Failed to find thread', {
         threadId: query.id,
         userId: query.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }

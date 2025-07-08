@@ -4,6 +4,7 @@ import { FindOrgByIdQuery } from './find-org-by-id.query';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from '../../../domain/org.entity';
 import { OrgNotFoundError } from '../../orgs.errors';
+import { UUID } from 'crypto';
 
 describe('FindOrgByIdUseCase', () => {
   let useCase: FindOrgByIdUseCase;
@@ -29,9 +30,9 @@ describe('FindOrgByIdUseCase', () => {
   });
 
   it('should find organization by ID successfully', async () => {
-    const query = new FindOrgByIdQuery('org-id' as any);
+    const query = new FindOrgByIdQuery('org-id' as UUID);
     const mockOrg = new Org({
-      id: 'org-id' as any,
+      id: 'org-id' as UUID,
       name: 'Test Organization',
     });
 
@@ -44,17 +45,17 @@ describe('FindOrgByIdUseCase', () => {
   });
 
   it('should throw OrgNotFoundError when organization not found', async () => {
-    const query = new FindOrgByIdQuery('org-id' as any);
+    const query = new FindOrgByIdQuery('org-id' as UUID);
 
     jest
       .spyOn(mockOrgsRepository, 'findById')
-      .mockRejectedValue(new OrgNotFoundError('org-id' as any));
+      .mockRejectedValue(new OrgNotFoundError('org-id' as UUID));
 
     await expect(useCase.execute(query)).rejects.toThrow(OrgNotFoundError);
   });
 
   it('should throw OrgNotFoundError for unexpected errors', async () => {
-    const query = new FindOrgByIdQuery('org-id' as any);
+    const query = new FindOrgByIdQuery('org-id' as UUID);
 
     jest
       .spyOn(mockOrgsRepository, 'findById')

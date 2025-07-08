@@ -38,11 +38,12 @@ export class SplitResultMapper {
   private mapMetadata(result: SplitResult): SplitResultDto['metadata'] {
     return {
       provider: result.metadata.provider as SplitterProvider,
-      chunkSize: result.metadata.chunkSize,
-      chunkOverlap: result.metadata.chunkOverlap,
-      preserveHeader: result.metadata.preserveHeader,
-      skipBlankLines: result.metadata.skipBlankLines,
-      totalChunks: result.metadata.totalChunks || result.chunks.length,
+      chunkSize: result.metadata.chunkSize as number,
+      chunkOverlap: result.metadata.chunkOverlap as number,
+      preserveHeader: result.metadata.preserveHeader as boolean,
+      skipBlankLines: result.metadata.skipBlankLines as boolean,
+      totalChunks:
+        (result.metadata.totalChunks as number) ?? result.chunks.length,
       ...result.metadata,
     };
   }

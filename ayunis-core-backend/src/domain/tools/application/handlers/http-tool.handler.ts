@@ -14,7 +14,9 @@ export class HttpToolHandler extends BaseExecutionHandler {
     this.logger.log('execute', tool, input);
     try {
       const validatedInput = tool.validateParams(input);
-      const requestInput = JSON.parse(validatedInput.bodyOrQueryParams);
+      const requestInput = JSON.parse(
+        validatedInput.bodyOrQueryParams,
+      ) as Record<string, unknown>;
       const options: RequestInit = {
         method: tool.config.method,
         headers: {
@@ -36,7 +38,7 @@ export class HttpToolHandler extends BaseExecutionHandler {
         const queryParams = new URLSearchParams();
         for (const [key, value] of Object.entries(requestInput)) {
           if (value !== undefined && value !== null) {
-            queryParams.append(key, String(value));
+            queryParams.append(key, value as string);
           }
         }
         url = `${url}?${queryParams.toString()}`;
@@ -51,7 +53,7 @@ export class HttpToolHandler extends BaseExecutionHandler {
         });
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as Record<string, unknown>;
       return JSON.stringify(data);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {

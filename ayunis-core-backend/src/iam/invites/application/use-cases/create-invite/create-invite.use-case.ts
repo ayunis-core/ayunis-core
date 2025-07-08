@@ -24,7 +24,7 @@ export class CreateInviteUseCase {
       userId: command.userId,
     });
 
-    const validDuration = this.configService.get(
+    const validDuration = this.configService.get<string>(
       'auth.jwt.inviteExpiresIn',
       '7d',
     );

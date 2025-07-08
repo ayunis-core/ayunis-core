@@ -3,7 +3,6 @@ import { ToolsController } from './presenters/http/tools.controller';
 import { ToolHandlerRegistry } from './application/tool-handler.registry';
 import { HttpToolHandler } from './application/handlers/http-tool.handler';
 import { SourceQueryToolHandler } from './application/handlers/source-query-tool.handler';
-import { ModelsModule } from '../models/models.module';
 import { ToolConfigRepository } from './application/ports/tool-config.repository';
 import { LocalToolConfigRepository } from './infrastructure/persistence/local/local-tool-config.repository';
 import { ToolFactory } from './application/tool.factory';

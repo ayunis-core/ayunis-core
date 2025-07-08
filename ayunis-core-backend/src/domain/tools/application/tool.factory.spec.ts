@@ -50,15 +50,15 @@ describe('ToolFactory', () => {
     });
 
     it('should throw error for unsupported tool type', () => {
-      expect(() => factory.createTool('UNSUPPORTED' as any)).toThrow(
-        'Unsupported tool type: UNSUPPORTED',
-      );
+      expect(() =>
+        factory.createTool('UNSUPPORTED' as unknown as ToolType),
+      ).toThrow('Unsupported tool type: UNSUPPORTED');
     });
 
     it('should throw error for invalid config type', () => {
       const invalidConfig = {
         displayName: 'Test Tool',
-      } as any;
+      } as unknown as HttpToolConfig;
 
       expect(() => factory.createTool(ToolType.HTTP, invalidConfig)).toThrow(
         'Invalid config type for HTTP tool',

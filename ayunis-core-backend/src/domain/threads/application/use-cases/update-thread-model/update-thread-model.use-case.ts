@@ -42,7 +42,7 @@ export class UpdateThreadModelUseCase {
       this.logger.error('Failed to update thread model', {
         threadId: command.threadId,
         modelId: command.modelId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new ThreadUpdateError(command.threadId, error)

@@ -7,7 +7,7 @@ import { MessageAdditionError } from '../../threads.errors';
 export class AddMessageToThreadUseCase {
   private readonly logger = new Logger(AddMessageToThreadUseCase.name);
 
-  async execute(command: AddMessageCommand): Promise<Thread> {
+  execute(command: AddMessageCommand): Thread {
     this.logger.log('addMessage', {
       threadId: command.thread.id,
       messageRole: command.message.role,
@@ -18,7 +18,7 @@ export class AddMessageToThreadUseCase {
     } catch (error) {
       this.logger.error('Failed to add message to thread', {
         threadId: command.thread.id,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new MessageAdditionError(command.thread.id, error)

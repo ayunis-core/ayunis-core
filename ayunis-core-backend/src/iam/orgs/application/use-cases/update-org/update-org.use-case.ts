@@ -27,7 +27,7 @@ export class UpdateOrgUseCase {
         throw error;
       }
       this.logger.error('Failed to update organization', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         id: command.org.id,
       });
       throw new OrgUpdateFailedError(

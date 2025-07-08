@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
@@ -35,7 +35,7 @@ export class AddSourceToThreadUseCase {
       this.logger.error('Failed to add source to thread', {
         threadId: command.thread.id,
         sourceId: command.source.id,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new SourceAdditionError(command.thread.id, error)

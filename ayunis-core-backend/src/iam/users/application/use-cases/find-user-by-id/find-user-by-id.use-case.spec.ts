@@ -4,6 +4,7 @@ import { FindUserByIdQuery } from './find-user-by-id.query';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
+import { UUID } from 'crypto';
 
 describe('FindUserByIdUseCase', () => {
   let useCase: FindUserByIdUseCase;
@@ -29,14 +30,14 @@ describe('FindUserByIdUseCase', () => {
   });
 
   it('should find user by ID successfully', async () => {
-    const query = new FindUserByIdQuery('user-id' as any);
+    const query = new FindUserByIdQuery('user-id' as UUID);
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       name: 'Test User',
       email: 'test@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
     });
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);

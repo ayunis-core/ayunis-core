@@ -37,10 +37,10 @@ export class ExecuteToolUseCase {
       }
       throw new ToolExecutionFailedError({
         toolName: command.tool.name,
-        message: e.message,
+        message: e instanceof Error ? e.message : 'Unknown error',
         exposeToLLM: false,
         metadata: {
-          error: e.message,
+          error: e instanceof Error ? e.message : 'Unknown error',
         },
       });
     }

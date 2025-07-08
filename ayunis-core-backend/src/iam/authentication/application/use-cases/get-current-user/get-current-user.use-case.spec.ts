@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { InvalidTokenError } from '../../authentication.errors';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { UUID } from 'crypto';
 
 describe('GetCurrentUserUseCase', () => {
   let useCase: GetCurrentUserUseCase;
@@ -32,10 +33,10 @@ describe('GetCurrentUserUseCase', () => {
   it('should return user information from valid token', async () => {
     const command = new GetCurrentUserCommand('valid-access-token');
     const mockPayload = {
-      sub: 'user-id-123' as any,
+      sub: 'user-id-123' as UUID,
       email: 'test@example.com',
       role: UserRole.USER,
-      orgId: 'org-id-123' as any,
+      orgId: 'org-id-123' as UUID,
     };
 
     jest.spyOn(mockJwtService, 'verify').mockReturnValue(mockPayload);
@@ -63,7 +64,7 @@ describe('GetCurrentUserUseCase', () => {
   it('should throw InvalidTokenError for token with missing payload fields', async () => {
     const command = new GetCurrentUserCommand('incomplete-token');
     const mockPayload = {
-      sub: 'user-id-123' as any,
+      sub: 'user-id-123' as UUID,
       email: 'test@example.com',
       // Missing role and orgId
     };

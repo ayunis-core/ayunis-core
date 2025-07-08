@@ -58,7 +58,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       'refresh_token',
     );
 
-    const refreshToken = request.cookies?.[refreshTokenName];
+    const refreshToken = request.cookies?.[refreshTokenName] as string;
 
     if (!refreshToken) {
       this.logger.debug('JwtAuthGuard canActivate: no refresh token found');

@@ -24,7 +24,7 @@ export class DeleteOrgUseCase {
         throw error;
       }
       this.logger.error('Failed to delete organization', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         id: command.id,
       });
       throw new OrgDeletionFailedError(

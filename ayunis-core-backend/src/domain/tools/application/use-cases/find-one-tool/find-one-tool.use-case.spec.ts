@@ -8,6 +8,8 @@ import { ToolConfigRepository } from '../../ports/tool-config.repository';
 import { ToolFactory } from '../../tool.factory';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
 import { UUID } from 'crypto';
+import { Tool } from '../../../domain/tool.entity';
+import { ToolConfig } from '../../../domain/tool-config.entity';
 
 describe('FindOneToolUseCase', () => {
   let useCase: FindOneToolUseCase;
@@ -49,7 +51,7 @@ describe('FindOneToolUseCase', () => {
 
       jest
         .spyOn(mockToolFactory, 'createTool')
-        .mockReturnValue(mockTool as any);
+        .mockReturnValue(mockTool as unknown as Tool);
 
       // Act
       const result = await useCase.execute(query);
@@ -82,10 +84,10 @@ describe('FindOneToolUseCase', () => {
 
       jest
         .spyOn(mockToolConfigRepository, 'findOne')
-        .mockResolvedValue(mockConfig as any);
+        .mockResolvedValue(mockConfig as unknown as ToolConfig);
       jest
         .spyOn(mockToolFactory, 'createTool')
-        .mockReturnValue(mockTool as any);
+        .mockReturnValue(mockTool as unknown as Tool);
 
       // Act
       const result = await useCase.execute(query);

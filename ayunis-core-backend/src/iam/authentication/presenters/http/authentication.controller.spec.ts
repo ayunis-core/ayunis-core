@@ -11,6 +11,7 @@ import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { ActiveUser } from '../../domain/active-user.entity';
 import { AuthTokens } from '../../domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
+import { UUID } from 'crypto';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -78,10 +79,11 @@ describe('AuthenticationController', () => {
 
     it('should return user info when access token is valid', async () => {
       const mockUser = new ActiveUser(
-        'user-id' as any,
+        'user-id' as UUID,
         'test@example.com',
         UserRole.USER,
-        'org-id' as any,
+        'org-id' as UUID,
+        'name',
       );
 
       // Mock config
@@ -115,10 +117,11 @@ describe('AuthenticationController', () => {
 
     it('should refresh tokens and return user info when access token is invalid but refresh token is valid', async () => {
       const mockUser = new ActiveUser(
-        'user-id' as any,
+        'user-id' as UUID,
         'test@example.com',
         UserRole.ADMIN,
-        'org-id' as any,
+        'org-id' as UUID,
+        'name',
       );
       const mockTokens = new AuthTokens(
         'new-access-token',

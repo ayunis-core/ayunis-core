@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Message } from 'src/domain/messages/domain/message.entity';
-import { MessageContent } from 'src/domain/messages/domain/message-content.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
@@ -71,7 +70,7 @@ export class MessageDtoMapper {
         };
 
       default:
-        throw new Error(`Unknown message role: ${message.role}`);
+        throw new Error('Unknown message role');
     }
   }
 

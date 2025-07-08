@@ -36,7 +36,7 @@ export class UploadObjectUseCase {
 
       // Check if bucket exists before uploading
       if (bucketName !== this.getDefaultBucket()) {
-        const bucketExists = await this.bucketExists(bucketName);
+        const bucketExists = this.bucketExists(bucketName);
         if (!bucketExists) {
           throw new BucketNotFoundError({ bucket: bucketName });
         }
@@ -80,8 +80,8 @@ export class UploadObjectUseCase {
       );
       throw new UploadFailedError({
         objectName: command.objectName,
-        message: error.message,
-        metadata: { originalError: error },
+        message: error instanceof Error ? error.message : 'Unknown error',
+        metadata: { originalError: error as Error },
       });
     }
   }
@@ -96,11 +96,11 @@ export class UploadObjectUseCase {
       !!objectName &&
       objectName.length > 0 &&
       objectName.length <= 1024 &&
-      !/[\x00-\x1F]/.test(objectName)
+      !/[\x00-\x1F]/.test(objectName) // eslint-disable-line no-control-regex
     );
   }
 
-  private async bucketExists(bucketName: string): Promise<boolean> {
+  private bucketExists(bucketName: string): boolean {
     try {
       // This is a dummy method - implementation depends on the provider
       // For example, MinIO would call client.bucketExists

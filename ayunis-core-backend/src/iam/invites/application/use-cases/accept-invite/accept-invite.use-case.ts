@@ -39,7 +39,9 @@ export class AcceptInviteUseCase {
     try {
       payload = this.inviteJwtService.verifyInviteToken(command.inviteToken);
     } catch (error) {
-      this.logger.error('Invalid invite token', { error });
+      this.logger.error('Invalid invite token', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       throw new InvalidInviteTokenError('Token verification failed');
     }
 

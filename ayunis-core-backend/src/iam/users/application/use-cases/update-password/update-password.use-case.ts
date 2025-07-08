@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
 import {
-  UserAuthenticationFailedError,
   UserError,
   UserInvalidInputError,
   UserNotFoundError,
@@ -54,7 +53,9 @@ export class UpdatePasswordUseCase {
           if (error instanceof HashingError) {
             throw error;
           }
-          this.logger.error('Password hashing failed', { error });
+          this.logger.error('Password hashing failed', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
           throw new UserInvalidInputError('Password hashing failed');
         });
 
@@ -65,7 +66,9 @@ export class UpdatePasswordUseCase {
       if (error instanceof UserError || error instanceof HashingError) {
         throw error;
       }
-      this.logger.error('Password update failed', { error });
+      this.logger.error('Password update failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       throw new UserInvalidInputError('Password update failed');
     }
   }

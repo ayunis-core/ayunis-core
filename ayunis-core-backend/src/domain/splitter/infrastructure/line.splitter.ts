@@ -67,14 +67,14 @@ export class LineSplitterHandler extends SplitterHandler {
       });
     } catch (error) {
       this.logger.error(
-        `Line Splitter processing failed: ${error.message}`,
-        error.stack,
+        `Line Splitter processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new SplitterProcessingError(
         `Failed to process text with Line Splitter`,
         {
           provider: this.PROVIDER_NAME,
-          originalError: error,
+          originalError: error as Error,
         },
       );
     }

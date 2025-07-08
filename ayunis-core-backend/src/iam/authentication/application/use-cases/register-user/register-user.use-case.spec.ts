@@ -12,6 +12,7 @@ import {
   InvalidPasswordError,
   AuthenticationFailedError,
 } from '../../authentication.errors';
+import { UUID } from 'crypto';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
@@ -53,18 +54,20 @@ describe('RegisterUserUseCase', () => {
   });
 
   it('should register user successfully', async () => {
-    const command = new RegisterUserCommand(
-      'test@example.com',
-      'validPassword123',
-      'Test Org',
-    );
-    const mockOrg = new Org({ id: 'org-id' as any, name: 'Test Org' });
+    const command = new RegisterUserCommand({
+      userName: 'test',
+      email: 'test@example.com',
+      password: 'validPassword123',
+      orgName: 'Test Org',
+    });
+    const mockOrg = new Org({ id: 'org-id' as UUID, name: 'Test Org' });
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hashedPassword',
       role: UserRole.ADMIN,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
+      name: 'test',
     });
 
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
@@ -96,11 +99,12 @@ describe('RegisterUserUseCase', () => {
   });
 
   it('should throw InvalidPasswordError for invalid password', async () => {
-    const command = new RegisterUserCommand(
-      'test@example.com',
-      'weak',
-      'Test Org',
-    );
+    const command = new RegisterUserCommand({
+      userName: 'test',
+      email: 'test@example.com',
+      password: 'weak',
+      orgName: 'Test Org',
+    });
 
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(false);
 
@@ -110,11 +114,12 @@ describe('RegisterUserUseCase', () => {
   });
 
   it('should throw AuthenticationFailedError for unexpected errors', async () => {
-    const command = new RegisterUserCommand(
-      'test@example.com',
-      'validPassword123',
-      'Test Org',
-    );
+    const command = new RegisterUserCommand({
+      userName: 'test',
+      email: 'test@example.com',
+      password: 'validPassword123',
+      orgName: 'Test Org',
+    });
 
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
     jest

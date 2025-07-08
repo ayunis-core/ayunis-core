@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeleteUserUseCase } from './delete-user.use-case';
 import { DeleteUserCommand } from './delete-user.command';
 import { UsersRepository } from '../../ports/users.repository';
+import { UUID } from 'crypto';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
@@ -41,7 +42,11 @@ describe('DeleteUserUseCase', () => {
   });
 
   it('should handle repository errors', async () => {
-    const command = new DeleteUserCommand('user-id' as any);
+    const command = new DeleteUserCommand({
+      userId: 'user-id' as UUID,
+      orgId: 'org-id' as UUID,
+      requestUserId: 'request-user-id' as UUID,
+    });
     const error = new Error('Repository error');
 
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);

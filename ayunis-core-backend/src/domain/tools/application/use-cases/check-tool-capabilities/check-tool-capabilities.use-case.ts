@@ -20,13 +20,15 @@ export class CheckToolCapabilitiesUseCase {
     };
   }
 
-  isDisplayable(_: Tool): boolean {
+  isDisplayable(tool: Tool): boolean {
     // TODO: Implement
+    console.log('isDisplayable', tool);
     return false;
   }
 
-  isExecutable(_: Tool): boolean {
+  isExecutable(tool: Tool): boolean {
     // TODO: Implement
+    console.log('isExecutable', tool);
     return true;
   }
 }

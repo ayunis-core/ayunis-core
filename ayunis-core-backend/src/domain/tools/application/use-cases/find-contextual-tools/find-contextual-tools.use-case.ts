@@ -11,7 +11,7 @@ export class FindContextualToolsUseCase {
 
   constructor(private readonly toolFactory: ToolFactory) {}
 
-  async execute(query: FindContextualToolsQuery): Promise<Tool[]> {
+  execute(query: FindContextualToolsQuery): Tool[] {
     this.logger.log('execute', query);
 
     return contextualToolTypes

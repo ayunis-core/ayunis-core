@@ -80,7 +80,7 @@ export class GetDueSubscriptionsInTimeframeUseCase {
         throw error;
       }
       this.logger.error('Getting due subscriptions failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         from: query.from,
         to: query.to,
       });

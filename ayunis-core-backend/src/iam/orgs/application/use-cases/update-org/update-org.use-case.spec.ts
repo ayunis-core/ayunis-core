@@ -4,6 +4,7 @@ import { UpdateOrgCommand } from './update-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from '../../../domain/org.entity';
 import { OrgUpdateFailedError } from '../../orgs.errors';
+import { UUID } from 'crypto';
 
 describe('UpdateOrgUseCase', () => {
   let useCase: UpdateOrgUseCase;
@@ -30,7 +31,7 @@ describe('UpdateOrgUseCase', () => {
 
   it('should update organization successfully', async () => {
     const org = new Org({
-      id: 'org-id' as any,
+      id: 'org-id' as UUID,
       name: 'Updated Organization',
     });
     const command = new UpdateOrgCommand(org);
@@ -45,7 +46,7 @@ describe('UpdateOrgUseCase', () => {
 
   it('should throw OrgUpdateFailedError for unexpected errors', async () => {
     const org = new Org({
-      id: 'org-id' as any,
+      id: 'org-id' as UUID,
       name: 'Updated Organization',
     });
     const command = new UpdateOrgCommand(org);

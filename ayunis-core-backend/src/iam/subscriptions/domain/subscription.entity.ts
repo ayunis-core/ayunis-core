@@ -1,5 +1,4 @@
 import { randomUUID, UUID } from 'crypto';
-import { Org } from 'src/iam/orgs/domain/org.entity';
 import { RenewalCycle } from './value-objects/renewal-cycle.enum';
 
 export interface SubscriptionParams {

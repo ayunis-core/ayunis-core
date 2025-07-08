@@ -9,6 +9,7 @@ import { User } from '../../../../users/domain/user.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { AuthTokens } from '../../../domain/auth-tokens.entity';
 import { InvalidTokenError } from '../../authentication.errors';
+import { UUID } from 'crypto';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
@@ -49,11 +50,12 @@ describe('RefreshTokenUseCase', () => {
   it('should refresh token successfully', async () => {
     const command = new RefreshTokenCommand('valid-refresh-token');
     const mockUser = new User({
-      id: 'user-id-123' as any,
+      id: 'user-id-123' as UUID,
       email: 'test@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
+      name: 'name',
     });
     const mockTokens = new AuthTokens('new-access-token', 'new-refresh-token');
 

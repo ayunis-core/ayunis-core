@@ -53,7 +53,7 @@ export class ValidateUserUseCase {
           throw error;
         }
         this.logger.error('Password validation failed', {
-          error,
+          error: error instanceof Error ? error.message : 'Unknown error',
           email: query.email,
         });
         throw new UserAuthenticationFailedError('Password validation failed');
@@ -63,7 +63,7 @@ export class ValidateUserUseCase {
         throw error;
       }
       this.logger.error('User validation failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         email: query.email,
       });
       throw new UserAuthenticationFailedError('User validation failed');

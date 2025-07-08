@@ -22,7 +22,9 @@ export class HashTextUseCase {
       return hashedData;
     } catch (error) {
       if (!(error instanceof HashingError)) {
-        this.logger.error('Failed to hash data', { error });
+        this.logger.error('Failed to hash data', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         throw new HashingFailedError(
           error instanceof Error ? error.message : 'Unknown error',
         );

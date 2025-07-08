@@ -26,7 +26,7 @@ export class FindUserByIdUseCase {
       if (error instanceof UserError) {
         throw error;
       }
-      throw new UserUnexpectedError(error);
+      throw new UserUnexpectedError(error as Error);
     }
   }
 }

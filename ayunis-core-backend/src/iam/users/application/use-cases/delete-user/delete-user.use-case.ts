@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { DeleteUserCommand } from './delete-user.command';
 import { UserNotFoundError, UserUnauthorizedError } from '../../users.errors';

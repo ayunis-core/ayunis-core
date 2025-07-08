@@ -5,6 +5,8 @@ import { ToolConfigRepository } from '../../ports/tool-config.repository';
 import { ToolFactory } from '../../tool.factory';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
 import { UUID } from 'crypto';
+import { ToolConfig } from '../../../domain/tool-config.entity';
+import { Tool } from '../../../domain/tool.entity';
 
 describe('FindAllUserToolsUseCase', () => {
   let useCase: FindAllUserToolsUseCase;
@@ -63,11 +65,11 @@ describe('FindAllUserToolsUseCase', () => {
 
       jest
         .spyOn(mockToolConfigRepository, 'findAll')
-        .mockResolvedValue(mockConfigs as any);
+        .mockResolvedValue(mockConfigs as unknown as ToolConfig[]);
       jest
         .spyOn(mockToolFactory, 'createTool')
-        .mockReturnValueOnce(mockTools[0] as any)
-        .mockReturnValueOnce(mockTools[1] as any);
+        .mockReturnValueOnce(mockTools[0] as unknown as Tool)
+        .mockReturnValueOnce(mockTools[1] as unknown as Tool);
 
       // Act
       const result = await useCase.execute(query);
@@ -135,7 +137,7 @@ describe('FindAllUserToolsUseCase', () => {
 
       jest
         .spyOn(mockToolConfigRepository, 'findAll')
-        .mockResolvedValue(mockConfigs as any);
+        .mockResolvedValue(mockConfigs as unknown as ToolConfig[]);
       jest.spyOn(mockToolFactory, 'createTool').mockImplementation(() => {
         throw new Error('Tool creation failed');
       });

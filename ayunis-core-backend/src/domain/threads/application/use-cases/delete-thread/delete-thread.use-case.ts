@@ -37,7 +37,7 @@ export class DeleteThreadUseCase {
       this.logger.error('Failed to delete thread', {
         threadId: command.id,
         userId: command.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }

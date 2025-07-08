@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, JoinColumn } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
 

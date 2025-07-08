@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsUUID } from 'class-validator';
-import { UUID } from 'crypto';
+import { IsEmail, IsEnum } from 'class-validator';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 
 export class CreateInviteDto {

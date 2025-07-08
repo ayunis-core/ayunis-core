@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { UpdateThreadTitleCommand } from './update-thread-title.command';
 import { ThreadUpdateError } from '../../threads.errors';
@@ -25,7 +25,7 @@ export class UpdateThreadTitleUseCase {
       this.logger.error('Failed to update thread title', {
         threadId: command.threadId,
         title: command.title,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new ThreadUpdateError(command.threadId, error)

@@ -5,10 +5,8 @@ import { UsersRepository } from '../../ports/users.repository';
 import { HashTextUseCase } from '../../../../hashing/application/use-cases/hash-text/hash-text.use-case';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
-import {
-  UserAlreadyExistsError,
-  UserInvalidInputError,
-} from '../../users.errors';
+import { UserAlreadyExistsError } from '../../users.errors';
+import { UUID } from 'crypto';
 
 describe('CreateAdminUserUseCase', () => {
   let useCase: CreateAdminUserUseCase;
@@ -40,17 +38,19 @@ describe('CreateAdminUserUseCase', () => {
   });
 
   it('should create admin user successfully', async () => {
-    const command = new CreateAdminUserCommand(
-      'admin@example.com',
-      'password123',
-      'org-id' as any,
-    );
+    const command = new CreateAdminUserCommand({
+      email: 'admin@example.com',
+      password: 'password123',
+      orgId: 'org-id' as UUID,
+      name: 'Admin User',
+    });
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'admin@example.com',
       passwordHash: 'hashedPassword',
       role: UserRole.ADMIN,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
+      name: 'Admin User',
     });
 
     jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(null);
@@ -70,17 +70,19 @@ describe('CreateAdminUserUseCase', () => {
   });
 
   it('should throw UserAlreadyExistsError when user exists', async () => {
-    const command = new CreateAdminUserCommand(
-      'admin@example.com',
-      'password123',
-      'org-id' as any,
-    );
+    const command = new CreateAdminUserCommand({
+      email: 'admin@example.com',
+      password: 'password123',
+      orgId: 'org-id' as UUID,
+      name: 'Admin User',
+    });
     const existingUser = new User({
-      id: 'existing-id' as any,
+      id: 'existing-id' as UUID,
       email: 'admin@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
+      name: 'Admin User',
     });
 
     jest

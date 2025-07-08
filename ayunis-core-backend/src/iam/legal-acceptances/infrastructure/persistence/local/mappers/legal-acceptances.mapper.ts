@@ -2,7 +2,6 @@ import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptan
 import { TosAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/tos-acceptance.entity';
 import { PrivacyPolicyAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/privacy-policy-acceptance.entity';
 import { ModelProviderAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/model-provider-acceptance.entity';
-import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
 import {
   LegalAcceptanceRecord,
   TermsOfServiceLegalAcceptanceRecord,
@@ -23,62 +22,57 @@ export class LegalAcceptancesMapper {
       updatedAt: record.updatedAt,
     };
 
-    switch (record.type) {
-      case LegalAcceptanceType.TERMS_OF_SERVICE:
-        return new TosAcceptance(baseParams);
-
-      case LegalAcceptanceType.PRIVACY_POLICY:
-        return new PrivacyPolicyAcceptance(baseParams);
-
-      case LegalAcceptanceType.MODEL_PROVIDER:
-        const modelProviderRecord =
-          record as ModelProviderLegalAcceptanceRecord;
-        return new ModelProviderAcceptance({
-          ...baseParams,
-          provider: modelProviderRecord.modelProvider,
-        });
-
-      default:
-        throw new Error(`Unknown legal acceptance type: ${record.type}`);
+    if (record instanceof TermsOfServiceLegalAcceptanceRecord) {
+      return new TosAcceptance(baseParams);
     }
+
+    if (record instanceof PrivacyPolicyLegalAcceptanceRecord) {
+      return new PrivacyPolicyAcceptance(baseParams);
+    }
+
+    if (record instanceof ModelProviderLegalAcceptanceRecord) {
+      return new ModelProviderAcceptance({
+        ...baseParams,
+        provider: record.modelProvider,
+      });
+    }
+
+    throw new Error(`Unknown legal acceptance type: ${record.type}`);
   }
 
   toRecord(legalAcceptance: LegalAcceptance): LegalAcceptanceRecord {
-    switch (legalAcceptance.type) {
-      case LegalAcceptanceType.TERMS_OF_SERVICE:
-        const tosRecord = new TermsOfServiceLegalAcceptanceRecord();
-        tosRecord.id = legalAcceptance.id;
-        tosRecord.userId = legalAcceptance.userId;
-        tosRecord.orgId = legalAcceptance.orgId;
-        tosRecord.version = legalAcceptance.version;
-        tosRecord.type = legalAcceptance.type;
-        return tosRecord;
-
-      case LegalAcceptanceType.PRIVACY_POLICY:
-        const privacyRecord = new PrivacyPolicyLegalAcceptanceRecord();
-        privacyRecord.id = legalAcceptance.id;
-        privacyRecord.userId = legalAcceptance.userId;
-        privacyRecord.orgId = legalAcceptance.orgId;
-        privacyRecord.version = legalAcceptance.version;
-        privacyRecord.type = legalAcceptance.type;
-        return privacyRecord;
-
-      case LegalAcceptanceType.MODEL_PROVIDER:
-        const modelProviderRecord = new ModelProviderLegalAcceptanceRecord();
-        const modelProviderAcceptance =
-          legalAcceptance as ModelProviderAcceptance;
-        modelProviderRecord.id = legalAcceptance.id;
-        modelProviderRecord.userId = legalAcceptance.userId;
-        modelProviderRecord.orgId = legalAcceptance.orgId;
-        modelProviderRecord.version = legalAcceptance.version;
-        modelProviderRecord.type = legalAcceptance.type;
-        modelProviderRecord.modelProvider = modelProviderAcceptance.provider;
-        return modelProviderRecord;
-
-      default:
-        throw new Error(
-          `Unknown legal acceptance type: ${legalAcceptance.type}`,
-        );
+    if (legalAcceptance instanceof TosAcceptance) {
+      const tosRecord = new TermsOfServiceLegalAcceptanceRecord();
+      tosRecord.id = legalAcceptance.id;
+      tosRecord.userId = legalAcceptance.userId;
+      tosRecord.orgId = legalAcceptance.orgId;
+      tosRecord.version = legalAcceptance.version;
+      tosRecord.type = legalAcceptance.type;
+      return tosRecord;
     }
+
+    if (legalAcceptance instanceof PrivacyPolicyAcceptance) {
+      const privacyRecord = new PrivacyPolicyLegalAcceptanceRecord();
+      privacyRecord.id = legalAcceptance.id;
+      privacyRecord.userId = legalAcceptance.userId;
+      privacyRecord.orgId = legalAcceptance.orgId;
+      privacyRecord.version = legalAcceptance.version;
+      privacyRecord.type = legalAcceptance.type;
+      return privacyRecord;
+    }
+
+    if (legalAcceptance instanceof ModelProviderAcceptance) {
+      const modelProviderRecord = new ModelProviderLegalAcceptanceRecord();
+      const modelProviderAcceptance = legalAcceptance;
+      modelProviderRecord.id = legalAcceptance.id;
+      modelProviderRecord.userId = legalAcceptance.userId;
+      modelProviderRecord.orgId = legalAcceptance.orgId;
+      modelProviderRecord.version = legalAcceptance.version;
+      modelProviderRecord.type = legalAcceptance.type;
+      modelProviderRecord.modelProvider = modelProviderAcceptance.provider;
+      return modelProviderRecord;
+    }
+
+    throw new Error(`Unknown legal acceptance type: ${legalAcceptance.type}`);
   }
 }

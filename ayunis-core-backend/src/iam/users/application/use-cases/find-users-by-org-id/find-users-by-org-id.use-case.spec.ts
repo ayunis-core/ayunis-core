@@ -4,6 +4,7 @@ import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
+import { UUID } from 'crypto';
 
 describe('FindUsersByOrgIdUseCase', () => {
   let useCase: FindUsersByOrgIdUseCase;
@@ -29,22 +30,22 @@ describe('FindUsersByOrgIdUseCase', () => {
   });
 
   it('should find users by org ID successfully', async () => {
-    const query = new FindUsersByOrgIdQuery('org-id' as any);
+    const query = new FindUsersByOrgIdQuery('org-id' as UUID);
     const mockUsers = [
       new User({
-        id: 'user-1' as any,
+        id: 'user-1' as UUID,
         email: 'user1@example.com',
         passwordHash: 'hash1',
         role: UserRole.USER,
-        orgId: 'org-id' as any,
+        orgId: 'org-id' as UUID,
         name: 'User One',
       }),
       new User({
-        id: 'user-2' as any,
+        id: 'user-2' as UUID,
         email: 'user2@example.com',
         passwordHash: 'hash2',
         role: UserRole.USER,
-        orgId: 'org-id' as any,
+        orgId: 'org-id' as UUID,
         name: 'User Two',
       }),
     ];
@@ -61,7 +62,7 @@ describe('FindUsersByOrgIdUseCase', () => {
   });
 
   it('should return empty array when no users found for org ID', async () => {
-    const query = new FindUsersByOrgIdQuery('org-id' as any);
+    const query = new FindUsersByOrgIdQuery('org-id' as UUID);
 
     jest.spyOn(mockUsersRepository, 'findManyByOrgId').mockResolvedValue([]);
 

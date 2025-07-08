@@ -80,7 +80,7 @@ export class CancelSubscriptionUseCase {
         throw error;
       }
       this.logger.error('Subscription cancellation failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,
       });

@@ -15,7 +15,7 @@ export class HasActiveSubscriptionUseCase {
   ) {}
 
   async execute(query: HasActiveSubscriptionQuery): Promise<boolean> {
-    const isSelfHosted = this.configService.get('app.isSelfHosted');
+    const isSelfHosted = this.configService.get<boolean>('app.isSelfHosted');
     if (isSelfHosted) {
       return true;
     }
@@ -78,7 +78,7 @@ export class HasActiveSubscriptionUseCase {
         throw error;
       }
       this.logger.error('Checking active subscription failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId: query.orgId,
       });
       throw error;

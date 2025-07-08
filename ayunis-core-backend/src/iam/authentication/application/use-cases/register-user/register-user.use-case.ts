@@ -13,11 +13,7 @@ import {
 } from '../../authentication.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
-import {
-  CreateLegalAcceptanceCommand,
-  CreateTosAcceptanceCommand,
-} from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
-import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
+import { CreateTosAcceptanceCommand } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
 
 @Injectable()
 export class RegisterUserUseCase {

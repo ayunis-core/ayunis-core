@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { UpdateThreadInstructionCommand } from './update-thread-instruction.command';
 import { ThreadUpdateError } from '../../threads.errors';
@@ -25,7 +25,7 @@ export class UpdateThreadInstructionUseCase {
       this.logger.error('Failed to update thread instruction', {
         threadId: command.threadId,
         instruction: command.instruction,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
         ? new ThreadUpdateError(command.threadId, error)

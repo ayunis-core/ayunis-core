@@ -7,7 +7,6 @@ import {
   ChildEntity,
   Column,
   Entity,
-  Index,
   ManyToOne,
   TableInheritance,
 } from 'typeorm';

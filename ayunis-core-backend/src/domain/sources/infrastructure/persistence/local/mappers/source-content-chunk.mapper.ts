@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { EmbeddingModel } from 'src/domain/embeddings/domain/embedding-model.entity';
-import { EmbeddingsProvider } from 'src/domain/embeddings/domain/embeddings-provider.enum';
 import { SourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
 import { SourceContentMapper } from './source-content.mapper';
@@ -17,10 +16,10 @@ export class SourceContentChunkMapper {
       content: entity.chunkContent,
       embedding: Array.isArray(entity.vector)
         ? entity.vector
-        : JSON.parse(entity.vector), // Handle both array and string format
+        : (JSON.parse(entity.vector) as number[]), // Handle both array and string format
       embeddingModel: new EmbeddingModel(
         entity.embeddingModel,
-        EmbeddingsProvider[entity.embeddingProvider],
+        entity.embeddingProvider,
         entity.embeddingDimension,
       ),
       createdAt: entity.createdAt,

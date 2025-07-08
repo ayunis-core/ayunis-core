@@ -15,14 +15,13 @@ import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.mo
 
 @Module({})
 export class IamModule {
-  static register(options?: { authProvider?: AuthProvider; authConfig?: any }) {
+  static register(options?: { authProvider?: AuthProvider }) {
     return {
       module: IamModule,
       imports: [
         ConfigModule.forFeature(authenticationConfig),
         AuthenticationModule.register({
           provider: options?.authProvider,
-          ...options?.authConfig,
         }),
         AuthorizationModule,
         HashingModule,

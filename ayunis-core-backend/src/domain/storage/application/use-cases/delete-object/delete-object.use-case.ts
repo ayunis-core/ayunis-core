@@ -48,8 +48,8 @@ export class DeleteObjectUseCase {
       );
       throw new DeleteFailedError({
         objectName: command.objectName,
-        message: error.message,
-        metadata: { originalError: error },
+        message: error instanceof Error ? error.message : 'Unknown error',
+        metadata: { originalError: error as Error },
       });
     }
   }

@@ -89,7 +89,7 @@ export class GetSubscriptionUseCase {
         throw error;
       }
       this.logger.error('Getting subscription failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId: query.orgId,
         requestingUserId: query.requestingUserId,
       });

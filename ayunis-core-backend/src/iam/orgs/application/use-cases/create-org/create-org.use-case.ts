@@ -33,7 +33,7 @@ export class CreateOrgUseCase {
         throw error;
       }
       this.logger.error('Failed to create organization', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         name: command.name,
       });
       throw new OrgCreationFailedError('Failed to create organization');

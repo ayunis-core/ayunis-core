@@ -1,8 +1,7 @@
-import { Body, Controller, Get, Post, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { SplitterProvider } from '../../domain/splitter-provider.enum';
 import { ProcessTextCommand } from '../../application/use-cases/process-text/process-text.command';
-import { GetAvailableProvidersQuery } from '../../application/use-cases/get-available-providers/get-available-providers.query';
 import { SplitTextDto } from './dto/split-text.dto';
 import { SplitResultDto } from './dto/split-result.dto';
 import { SplitResultMapper } from './mappers/split-result.mapper';
@@ -39,9 +38,7 @@ export class SplitterController {
     },
   })
   getAvailableProviders(): { providers: SplitterProvider[] } {
-    const providers = this.getAvailableProvidersUseCase.execute(
-      new GetAvailableProvidersQuery(),
-    );
+    const providers = this.getAvailableProvidersUseCase.execute();
     this.logger.debug(`Available splitter providers: ${providers.join(', ')}`);
     return { providers };
   }
@@ -62,7 +59,7 @@ export class SplitterController {
     status: 400,
     description: 'Bad request - validation error',
   })
-  async splitText(@Body() body: SplitTextDto): Promise<SplitResultDto> {
+  splitText(@Body() body: SplitTextDto): SplitResultDto {
     this.logger.debug(
       `Received split text request using provider: ${body.provider}`,
     );

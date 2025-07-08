@@ -3,6 +3,7 @@ import { DeleteOrgUseCase } from './delete-org.use-case';
 import { DeleteOrgCommand } from './delete-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { OrgDeletionFailedError } from '../../orgs.errors';
+import { UUID } from 'crypto';
 
 describe('DeleteOrgUseCase', () => {
   let useCase: DeleteOrgUseCase;
@@ -28,7 +29,7 @@ describe('DeleteOrgUseCase', () => {
   });
 
   it('should delete organization successfully', async () => {
-    const command = new DeleteOrgCommand('org-id' as any);
+    const command = new DeleteOrgCommand('org-id' as UUID);
 
     jest.spyOn(mockOrgsRepository, 'delete').mockResolvedValue(undefined);
 
@@ -38,7 +39,7 @@ describe('DeleteOrgUseCase', () => {
   });
 
   it('should throw OrgDeletionFailedError for unexpected errors', async () => {
-    const command = new DeleteOrgCommand('org-id' as any);
+    const command = new DeleteOrgCommand('org-id' as UUID);
 
     jest
       .spyOn(mockOrgsRepository, 'delete')

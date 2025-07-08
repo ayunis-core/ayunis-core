@@ -49,7 +49,6 @@ import { GetInviteByTokenQuery } from '../../application/use-cases/get-invite-by
 
 // Import Mappers
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
-import { InvitesRepository } from '../../application/ports/invites.repository';
 import { Public } from 'src/common/guards/public.guard';
 
 @ApiTags('invites')

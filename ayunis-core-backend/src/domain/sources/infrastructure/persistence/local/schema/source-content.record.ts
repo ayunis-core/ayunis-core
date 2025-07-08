@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { SourceRecord } from './source.record';
 import { SourceContentChunkRecord } from './source-content-chunk.record';
 import { BaseRecord } from '../../../../../../common/db/base-record';

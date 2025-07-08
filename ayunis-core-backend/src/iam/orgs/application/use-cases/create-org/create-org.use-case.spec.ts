@@ -4,6 +4,7 @@ import { CreateOrgCommand } from './create-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from '../../../domain/org.entity';
 import { OrgCreationFailedError } from '../../orgs.errors';
+import { UUID } from 'crypto';
 
 describe('CreateOrgUseCase', () => {
   let useCase: CreateOrgUseCase;
@@ -31,7 +32,7 @@ describe('CreateOrgUseCase', () => {
   it('should create organization successfully', async () => {
     const command = new CreateOrgCommand('Test Organization');
     const mockOrg = new Org({
-      id: 'org-id' as any,
+      id: 'org-id' as UUID,
       name: 'Test Organization',
     });
 

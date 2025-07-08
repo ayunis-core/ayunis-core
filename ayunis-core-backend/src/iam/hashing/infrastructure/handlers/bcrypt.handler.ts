@@ -30,7 +30,9 @@ export class BcryptHandler implements HashingHandler {
       });
       return await bcrypt.hash(plainText, this.saltRounds);
     } catch (error) {
-      this.logger.error('Bcrypt hashing failed', { error });
+      this.logger.error('Bcrypt hashing failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       throw new HashingFailedError(
         error instanceof Error ? error.message : 'Unknown error',
       );
@@ -49,7 +51,9 @@ export class BcryptHandler implements HashingHandler {
       this.logger.debug('Comparing using bcrypt');
       return await bcrypt.compare(plainText, hash);
     } catch (error) {
-      this.logger.error('Bcrypt comparison failed', { error });
+      this.logger.error('Bcrypt comparison failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       throw new ComparisonFailedError(
         error instanceof Error ? error.message : 'Unknown error',
       );

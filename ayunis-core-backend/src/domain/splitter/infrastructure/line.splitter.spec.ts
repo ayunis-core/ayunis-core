@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { LineSplitterHandler } from './line.splitter';
-import { SplitResult, TextChunk } from '../domain/split-result.entity';
+import { SplitResult } from '../domain/split-result.entity';
 import { SplitterProcessingError } from '../application/splitter.errors';
 
 describe('LineSplitterHandler', () => {
@@ -36,12 +36,12 @@ describe('LineSplitterHandler', () => {
   });
 
   describe('processText', () => {
-    it('should split text into chunks by lines with default settings', async () => {
+    it('should split text into chunks by lines with default settings', () => {
       // Arrange
       const text = 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5';
 
       // Act
-      const result = await handler.processText({ text });
+      const result = handler.processText({ text });
 
       // Assert
       expect(result).toBeInstanceOf(SplitResult);
@@ -52,7 +52,7 @@ describe('LineSplitterHandler', () => {
       expect(result.metadata.chunkSize).toBe(100);
     });
 
-    it('should use custom chunk size', async () => {
+    it('should use custom chunk size', () => {
       // Arrange
       const text = Array(20)
         .fill('Line')
@@ -61,7 +61,7 @@ describe('LineSplitterHandler', () => {
       const chunkSize = 5;
 
       // Act
-      const result = await handler.processText({
+      const result = handler.processText({
         text,
         metadata: {
           chunkSize,
@@ -73,7 +73,7 @@ describe('LineSplitterHandler', () => {
       expect(result.metadata.chunkSize).toBe(chunkSize);
     });
 
-    it('should preserve header in each chunk', async () => {
+    it('should preserve header in each chunk', () => {
       // Arrange
       const header = 'Column1,Column2,Column3';
       const dataLines = Array(10)
@@ -83,7 +83,7 @@ describe('LineSplitterHandler', () => {
       const chunkSize = 3;
 
       // Act
-      const result = await handler.processText({
+      const result = handler.processText({
         text,
         metadata: {
           chunkSize,
@@ -101,12 +101,12 @@ describe('LineSplitterHandler', () => {
       });
     });
 
-    it('should skip blank lines if specified', async () => {
+    it('should skip blank lines if specified', () => {
       // Arrange
       const text = 'Line 1\n\nLine 3\n\n\nLine 6';
 
       // Act
-      const result = await handler.processText({
+      const result = handler.processText({
         text,
         metadata: {
           skipBlankLines: true,
@@ -121,7 +121,7 @@ describe('LineSplitterHandler', () => {
       expect(linesInChunk[2]).toBe('Line 6');
     });
 
-    it('should handle CSV with quoted fields that span multiple lines', async () => {
+    it('should handle CSV with quoted fields that span multiple lines', () => {
       // Arrange
       const csvText =
         'Header1,Header2,Header3\n' +
@@ -129,7 +129,7 @@ describe('LineSplitterHandler', () => {
         'Value4,Value5,Value6';
 
       // Act
-      const result = await handler.processText({
+      const result = handler.processText({
         text: csvText,
         metadata: {
           detectQuotes: true,
@@ -144,14 +144,14 @@ describe('LineSplitterHandler', () => {
       expect(processedText).toContain('Value1,"Value2\nwith a newline",Value3');
     });
 
-    it('should use provided header row', async () => {
+    it('should use provided header row', () => {
       // Arrange
       const customHeader = 'CustomCol1,CustomCol2,CustomCol3';
       const dataLines = ['data1,data2,data3', 'value1,value2,value3'];
       const text = dataLines.join('\n');
 
       // Act
-      const result = await handler.processText({
+      const result = handler.processText({
         text,
         metadata: {
           headerRow: customHeader,
@@ -188,7 +188,6 @@ describe('LineSplitterHandler', () => {
       ];
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const result = handler['handleQuotedCSV'](lines);
 
       // Assert
@@ -206,7 +205,6 @@ describe('LineSplitterHandler', () => {
       ];
 
       // Act
-      // @ts-ignore - accessing private method for testing
       const result = handler['handleQuotedCSV'](lines);
 
       // Assert

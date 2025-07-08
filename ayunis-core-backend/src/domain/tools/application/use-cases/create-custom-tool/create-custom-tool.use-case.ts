@@ -4,7 +4,7 @@ import { CustomTool } from 'src/domain/tools/domain/tools/custom-tool.entity';
 
 @Injectable()
 export class CreateCustomToolUseCase {
-  async execute(command: CreateCustomToolCommand): Promise<CustomTool> {
+  execute(command: CreateCustomToolCommand): CustomTool {
     return new CustomTool({
       name: command.name,
       description: command.description,

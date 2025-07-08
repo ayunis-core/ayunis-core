@@ -9,6 +9,7 @@ import {
   UserNotFoundError,
   UserAuthenticationFailedError,
 } from '../../users.errors';
+import { UUID } from 'crypto';
 
 describe('ValidateUserUseCase', () => {
   let useCase: ValidateUserUseCase;
@@ -41,11 +42,12 @@ describe('ValidateUserUseCase', () => {
   it('should validate user successfully', async () => {
     const query = new ValidateUserQuery('test@example.com', 'password123');
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hashedPassword',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
+      name: 'Test User',
     });
 
     jest
@@ -73,11 +75,12 @@ describe('ValidateUserUseCase', () => {
   it('should throw UserAuthenticationFailedError if password is invalid', async () => {
     const query = new ValidateUserQuery('test@example.com', 'wrongpassword');
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hashedPassword',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
+      name: 'Test User',
     });
 
     jest

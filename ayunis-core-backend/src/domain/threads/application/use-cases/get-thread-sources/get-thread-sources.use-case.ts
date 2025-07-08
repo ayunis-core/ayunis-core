@@ -30,7 +30,7 @@ export class GetThreadSourcesUseCase {
       this.logger.error('Failed to get thread sources', {
         threadId: query.threadId,
         userId: query.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
 
       throw error;

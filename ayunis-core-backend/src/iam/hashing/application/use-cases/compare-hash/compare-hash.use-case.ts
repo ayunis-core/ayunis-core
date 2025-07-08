@@ -25,7 +25,9 @@ export class CompareHashUseCase {
       return isMatch;
     } catch (error) {
       if (!(error instanceof HashingError)) {
-        this.logger.error('Failed to compare hash', { error });
+        this.logger.error('Failed to compare hash', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         throw new ComparisonFailedError(
           error instanceof Error ? error.message : 'Unknown error',
         );

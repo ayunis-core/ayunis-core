@@ -15,7 +15,7 @@ export enum UserProperty {
 /**
  * Type for the parameter of the CurrentUser decorator
  */
-export type CurrentUserParam = UserProperty | keyof typeof UserProperty;
+export type CurrentUserParam = UserProperty;
 
 /**
  * Custom decorator to extract the current user from the request.
@@ -49,12 +49,7 @@ export const CurrentUser = createParamDecorator(
       return user;
     }
 
-    // Handle both enum values and string keys
-    const propertyKey =
-      typeof property === 'string' &&
-      Object.prototype.hasOwnProperty.call(UserProperty, property)
-        ? UserProperty[property as keyof typeof UserProperty]
-        : property;
+    const propertyKey = UserProperty[property] as keyof typeof user;
 
     return user[propertyKey];
   },

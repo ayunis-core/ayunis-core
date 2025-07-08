@@ -4,6 +4,7 @@ import { UpdateUserRoleCommand } from './update-user-role.command';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
+import { UUID } from 'crypto';
 
 describe('UpdateUserRoleUseCase', () => {
   let useCase: UpdateUserRoleUseCase;
@@ -30,13 +31,16 @@ describe('UpdateUserRoleUseCase', () => {
   });
 
   it('should update user role successfully', async () => {
-    const command = new UpdateUserRoleCommand('user-id' as any, UserRole.ADMIN);
+    const command = new UpdateUserRoleCommand(
+      'user-id' as UUID,
+      UserRole.ADMIN,
+    );
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
       name: 'Test User',
     });
     const updatedUser = { ...mockUser, role: UserRole.ADMIN };
@@ -55,7 +59,10 @@ describe('UpdateUserRoleUseCase', () => {
   });
 
   it('should handle repository errors when finding user', async () => {
-    const command = new UpdateUserRoleCommand('user-id' as any, UserRole.ADMIN);
+    const command = new UpdateUserRoleCommand(
+      'user-id' as UUID,
+      UserRole.ADMIN,
+    );
     const error = new Error('User not found');
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockRejectedValue(error);
@@ -66,13 +73,16 @@ describe('UpdateUserRoleUseCase', () => {
   });
 
   it('should handle repository errors when updating user', async () => {
-    const command = new UpdateUserRoleCommand('user-id' as any, UserRole.ADMIN);
+    const command = new UpdateUserRoleCommand(
+      'user-id' as UUID,
+      UserRole.ADMIN,
+    );
     const mockUser = new User({
-      id: 'user-id' as any,
+      id: 'user-id' as UUID,
       email: 'test@example.com',
       passwordHash: 'hash',
       role: UserRole.USER,
-      orgId: 'org-id' as any,
+      orgId: 'org-id' as UUID,
       name: 'Test User',
     });
     const updateError = new Error('Update failed');

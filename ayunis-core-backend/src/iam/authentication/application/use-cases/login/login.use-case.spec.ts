@@ -6,6 +6,7 @@ import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repositor
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { AuthTokens } from '../../../domain/auth-tokens.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { UUID } from 'crypto';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
@@ -35,10 +36,11 @@ describe('LoginUseCase', () => {
 
   it('should login user successfully', async () => {
     const activeUser = new ActiveUser(
-      'user-id' as any,
+      'user-id' as UUID,
       'test@example.com',
       UserRole.USER,
-      'org-id' as any,
+      'org-id' as UUID,
+      'name',
     );
     const command = new LoginCommand(activeUser);
     const expectedTokens = new AuthTokens('access-token', 'refresh-token');

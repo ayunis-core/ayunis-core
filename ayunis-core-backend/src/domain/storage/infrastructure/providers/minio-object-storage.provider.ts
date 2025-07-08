@@ -61,7 +61,7 @@ export class MinioObjectStorageProvider
       } catch (error) {
         console.warn(
           `MinIO connection attempt ${attempt} failed:`,
-          error.message,
+          error instanceof Error ? error.message : 'Unknown error',
         );
         if (attempt === maxRetries) {
           throw error;
@@ -137,7 +137,7 @@ export class MinioObjectStorageProvider
         stat.lastModified,
       );
     } catch (error) {
-      if (error.code === 'NotFound') {
+      if (error instanceof Error && error.message.includes('not found')) {
         throw new Error(
           `Object '${storageUrl.objectName}' not found in bucket '${bucketName}'`,
         );
@@ -158,7 +158,7 @@ export class MinioObjectStorageProvider
       await this.client.statObject(bucketName, storageUrl.objectName);
       return true;
     } catch (error) {
-      if (error.code === 'NotFound') {
+      if (error instanceof Error && error.message.includes('not found')) {
         return false;
       }
       throw error;

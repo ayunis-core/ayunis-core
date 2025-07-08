@@ -47,7 +47,7 @@ export class GetObjectInfoUseCase {
         info.lastModified,
       );
     } catch (error) {
-      if (error.message && error.message.includes('not found')) {
+      if (error instanceof Error && error.message.includes('not found')) {
         throw new ObjectNotFoundError({
           objectName: command.objectName,
           bucket: command.bucket,
@@ -60,8 +60,8 @@ export class GetObjectInfoUseCase {
       );
       throw new DownloadFailedError({
         objectName: command.objectName,
-        message: error.message,
-        metadata: { originalError: error },
+        message: error instanceof Error ? error.message : 'Unknown error',
+        metadata: { originalError: error as Error },
       });
     }
   }

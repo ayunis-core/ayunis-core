@@ -71,10 +71,13 @@ export class InviteJwtService {
 
   decodeInviteToken(token: string): InviteJwtPayload | null {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const decoded = this.jwtService.decode(token);
-      return decoded;
+      return decoded as InviteJwtPayload;
     } catch (error) {
-      this.logger.error('Failed to decode invite token', { error });
+      this.logger.error('Failed to decode invite token', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       return null;
     }
   }

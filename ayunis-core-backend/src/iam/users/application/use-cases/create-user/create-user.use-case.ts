@@ -51,7 +51,7 @@ export class CreateUserUseCase {
           throw error;
         }
         this.logger.error('Password hashing failed', {
-          error,
+          error: error instanceof Error ? error.message : 'Unknown error',
           email: command.email,
         });
         throw new UserInvalidInputError('Password hashing failed');
@@ -61,7 +61,7 @@ export class CreateUserUseCase {
       const user = new User({
         email: command.email,
         passwordHash,
-        orgId: command.orgId as any,
+        orgId: command.orgId,
         role: command.role,
         name: command.name,
       });
@@ -79,7 +79,7 @@ export class CreateUserUseCase {
         throw error;
       }
       this.logger.error('User creation failed', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         email: command.email,
         role: command.role,
       });

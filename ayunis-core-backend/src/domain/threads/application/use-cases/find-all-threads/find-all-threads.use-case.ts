@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { FindAllThreadsQuery } from './find-all-threads.query';
@@ -16,7 +16,7 @@ export class FindAllThreadsUseCase {
     } catch (error) {
       this.logger.error('Failed to find all threads', {
         userId: query.userId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
