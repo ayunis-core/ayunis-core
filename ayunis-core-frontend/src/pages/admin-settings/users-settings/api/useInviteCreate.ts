@@ -1,4 +1,7 @@
-import { useInvitesControllerCreate } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  getInvitesControllerGetInvitesQueryKey,
+  useInvitesControllerCreate,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import type { InviteCreateData, InviteCreateResponse } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
@@ -14,7 +17,7 @@ export function useInviteCreate(options?: UseInviteCreateOptions) {
       onSuccess: (response: InviteCreateResponse) => {
         showSuccess("Invitation sent successfully!");
         queryClient.invalidateQueries({
-          queryKey: ["invites"],
+          queryKey: [getInvitesControllerGetInvitesQueryKey()],
         });
 
         // Call the success callback with the invite token

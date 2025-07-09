@@ -1,4 +1,7 @@
-import { useInvitesControllerDeleteInvite } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  getInvitesControllerGetInvitesQueryKey,
+  useInvitesControllerDeleteInvite,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import type { Invite } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
@@ -9,9 +12,11 @@ export function useInviteDelete() {
     mutation: {
       onMutate: async ({ id }) => {
         await queryClient.cancelQueries({
-          queryKey: ["invites"],
+          queryKey: [getInvitesControllerGetInvitesQueryKey()],
         });
-        const previousData = queryClient.getQueryData(["invites"]);
+        const previousData = queryClient.getQueryData([
+          getInvitesControllerGetInvitesQueryKey(),
+        ]);
 
         queryClient.setQueryData(["invites"], (old: Invite[]) => {
           return old.filter((invite: Invite) => invite.id !== id);
@@ -21,12 +26,15 @@ export function useInviteDelete() {
       onSuccess: () => {
         showSuccess("Invite deleted successfully!");
         queryClient.invalidateQueries({
-          queryKey: ["invites"],
+          queryKey: [getInvitesControllerGetInvitesQueryKey()],
         });
       },
       onError: (_, __, context) => {
         showError("Failed to delete invite. Please try again.");
-        queryClient.setQueryData(["invites"], context?.previousData);
+        queryClient.setQueryData(
+          [getInvitesControllerGetInvitesQueryKey()],
+          context?.previousData,
+        );
       },
     },
   });

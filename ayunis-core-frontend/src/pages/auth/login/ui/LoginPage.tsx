@@ -20,7 +20,8 @@ export function LoginPage() {
   return (
     <OnboardingLayout
       title={t("login.title")}
-      description={
+      description={t("login.description")}
+      footer={
         <>
           {t("login.noAccount")}{" "}
           <Link

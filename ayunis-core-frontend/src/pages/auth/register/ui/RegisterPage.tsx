@@ -22,7 +22,8 @@ export function RegisterPage() {
   return (
     <OnboardingLayout
       title={t("register.title")}
-      description={
+      description={t("register.description")}
+      footer={
         <>
           {t("register.or")}{" "}
           <Link
