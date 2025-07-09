@@ -119,6 +119,35 @@ curl -X PUT http://localhost:3000/api/admin/models/:id \
 curl -X DELETE http://localhost:3000/api/admin/models/:id
 ```
 
+Examples
+
+```json
+{
+  "name": "mistral-large-latest",
+  "provider": "mistral",
+  "displayName": "Mistral Large",
+  "canStream": true,
+  "isReasoning": false,
+  "isArchived": false
+},
+{
+  "name": "claude-sonnet-4-20250514",
+  "provider": "anthropic",
+  "displayName": "Claude 4 Sonnet",
+  "canStream": true,
+  "isReasoning": false,
+  "isArchived": false
+},
+{
+  "name": "gpt-4.1",
+  "provider": "openai",
+  "displayName": "GPT 4.1",
+  "canStream": true,
+  "isReasoning": false,
+  "isArchived": false
+}
+```
+
 ## 🎯 First steps
 
 - Create an account
