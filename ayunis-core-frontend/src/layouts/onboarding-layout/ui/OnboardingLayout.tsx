@@ -52,7 +52,7 @@ export default function OnboardingLayout({
       </div>
 
       {/* Right side - Gradient background with chat mockup */}
-      <div className="flex-1 relative overflow-hidden p-4">
+      <div className="hidden lg:flex flex-1 relative overflow-hidden p-4">
         <div
           className="h-full w-full rounded-xl"
           style={{
