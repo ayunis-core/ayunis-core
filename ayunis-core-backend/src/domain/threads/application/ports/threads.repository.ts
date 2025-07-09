@@ -1,28 +1,27 @@
 import { Thread } from '../../domain/thread.entity';
 import { UUID } from 'crypto';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
   abstract findAll(userId: UUID): Promise<Thread[]>;
   abstract findAllByModel(modelId: UUID): Promise<Thread[]>;
+  abstract findAllByAgent(agentId: UUID): Promise<Thread[]>;
   abstract update(thread: Thread): Promise<Thread>;
-  abstract updateTitle(id: UUID, userId: UUID, title: string): Promise<void>;
-  abstract updateInstruction(
-    id: UUID,
-    userId: UUID,
-    instruction: string,
-  ): Promise<void>;
-  abstract updateModel(
-    id: UUID,
-    userId: UUID,
-    model: PermittedModel,
-  ): Promise<void>;
-  abstract updateInternetSearch(
-    id: UUID,
-    userId: UUID,
-    isInternetSearchEnabled: boolean,
-  ): Promise<void>;
+  abstract updateModel(params: {
+    threadId: UUID;
+    userId: UUID;
+    permittedModelId: UUID;
+  }): Promise<void>;
+  abstract updateAgent(params: {
+    threadId: UUID;
+    userId: UUID;
+    agentId: UUID;
+  }): Promise<void>;
+  abstract updateTitle(params: {
+    threadId: UUID;
+    userId: UUID;
+    title: string;
+  }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
 }

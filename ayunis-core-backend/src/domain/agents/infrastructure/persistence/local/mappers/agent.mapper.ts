@@ -1,35 +1,40 @@
 import { Agent } from '../../../../domain/agent.entity';
 import { AgentRecord } from '../schema/agent.record';
 import { Injectable } from '@nestjs/common';
-import { AgentToolMapper } from './agent-tool.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
+import { AgentToolMapper } from './agent-tool.mapper';
 
 @Injectable()
 export class AgentMapper {
-  constructor(private readonly permittedModelMapper: PermittedModelMapper) {}
+  constructor(
+    private readonly permittedModelMapper: PermittedModelMapper,
+    private readonly agentToolMapper: AgentToolMapper,
+  ) {}
 
-  toDomain(entity: AgentRecord): Agent {
+  toDomain(record: AgentRecord): Agent {
     return new Agent({
-      id: entity.id,
-      name: entity.name,
-      instructions: entity.instructions,
-      model: this.permittedModelMapper.toDomain(entity.model),
-      toolAssignments: AgentToolMapper.toDomainArray(entity.agentTools),
-      userId: entity.userId,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      id: record.id,
+      name: record.name,
+      instructions: record.instructions,
+      model: this.permittedModelMapper.toDomain(record.model),
+      tools: record.agentTools?.map((toolRecord) =>
+        this.agentToolMapper.toDomain(toolRecord),
+      ),
+      userId: record.userId,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
     });
   }
 
-  toEntity(domain: Agent): AgentRecord {
+  toRecord(domain: Agent): AgentRecord {
     const entity = new AgentRecord();
     entity.id = domain.id;
     entity.name = domain.name;
     entity.instructions = domain.instructions;
     entity.model = this.permittedModelMapper.toRecord(domain.model);
     entity.userId = domain.userId;
-    entity.agentTools = domain.toolAssignments.map((assignment) =>
-      AgentToolMapper.toEntity(domain.id, assignment),
+    entity.agentTools = domain.tools.map((tool) =>
+      this.agentToolMapper.toRecord(tool, domain.id),
     );
     return entity;
   }

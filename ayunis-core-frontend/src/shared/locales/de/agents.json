@@ -1,0 +1,67 @@
+{
+  "page": {
+    "title": "Meine Agenten"
+  },
+  "emptyState": {
+    "title": "Noch keine Agenten",
+    "description": "Beginnen Sie mit der Erstellung Ihres ersten KI-Agenten. Agenten helfen Ihnen dabei, spezialisierte KI-Assistenten für bestimmte Aufgaben und Arbeitsabläufe zu erstellen."
+  },
+  "card": {
+    "editButton": "Bearbeiten",
+    "deleteButton": "Löschen",
+    "confirmDelete": {
+      "title": "Agent löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Agent hinzufügen",
+    "buttonTextFirst": "Erstellen Sie Ihren ersten Agent",
+    "title": "Neuen Agent hinzufügen",
+    "description": "Erstellen Sie einen neuen KI-Agenten mit spezifischen Fähigkeiten. Füllen Sie die Details unten aus.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Agent-Name eingeben...",
+      "instructionsLabel": "Anweisungen",
+      "instructionsPlaceholder": "Geben Sie die Anweisungen und das Verhalten des Agenten ein...",
+      "modelLabel": "Modell",
+      "modelPlaceholder": "Wählen Sie ein KI-Modell..."
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "create": "Agent erstellen",
+      "creating": "Wird erstellt..."
+    }
+  },
+  "editDialog": {
+    "title": "Agent bearbeiten",
+    "description": "Nehmen Sie hier Änderungen an Ihrem Agent vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Agent-Name eingeben...",
+      "instructionsLabel": "Anweisungen",
+      "instructionsPlaceholder": "Geben Sie die Anweisungen und das Verhalten des Agenten ein...",
+      "modelLabel": "Modell",
+      "modelPlaceholder": "Wählen Sie ein KI-Modell..."
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert..."
+    }
+  },
+  "create": {
+    "success": "Agent erfolgreich erstellt!",
+    "error": "Agent konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+  },
+  "update": {
+    "success": "Agent erfolgreich aktualisiert!",
+    "error": "Agent konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+  },
+  "delete": {
+    "success": "Agent erfolgreich gelöscht!",
+    "error": "Agent konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+  }
+}

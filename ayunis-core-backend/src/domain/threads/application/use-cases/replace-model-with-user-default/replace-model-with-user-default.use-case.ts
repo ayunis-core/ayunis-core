@@ -4,6 +4,7 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import { ModelReplacementError } from '../../threads.errors';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 
 @Injectable()
 export class ReplaceModelWithUserDefaultUseCase {
@@ -19,19 +20,31 @@ export class ReplaceModelWithUserDefaultUseCase {
       command,
     });
     try {
-      const threads = await this.threadsRepository.findAllByModel(
-        command.oldPermittedModelId,
-      );
+      let threads: Thread[] = [];
+      if (command.oldPermittedModelId) {
+        threads = await this.threadsRepository.findAllByModel(
+          command.oldPermittedModelId,
+        );
+      } else if (command.oldAgentId) {
+        threads = await this.threadsRepository.findAllByAgent(
+          command.oldAgentId,
+        );
+      }
       this.logger.debug('Found threads', {
         threads,
       });
       // TODO: Make this a single transaction
       for (const thread of threads) {
+        if (!thread.model) {
+          continue;
+        }
         const defaultModel = await this.getDefaultModelUseCase.execute(
           new GetDefaultModelQuery({
             orgId: thread.model.orgId,
             userId: thread.userId,
-            blacklistedModelIds: [command.oldPermittedModelId],
+            blacklistedModelIds: command.oldPermittedModelId
+              ? [command.oldPermittedModelId]
+              : [],
           }),
         );
         this.logger.debug('Found default model', {
@@ -45,10 +58,11 @@ export class ReplaceModelWithUserDefaultUseCase {
           );
         }
 
-        await this.threadsRepository.updateModel(
-          thread.id,
-          thread.userId,
-          defaultModel,
+        await this.threadsRepository.update(
+          new Thread({
+            ...thread,
+            model: defaultModel,
+          }),
         );
       }
     } catch (error) {

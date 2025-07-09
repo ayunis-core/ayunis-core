@@ -28,7 +28,7 @@ export class LocalAgentRepository implements AgentRepository {
     });
 
     try {
-      const agentEntity = this.agentMapper.toEntity(agent);
+      const agentEntity = this.agentMapper.toRecord(agent);
       const savedAgent = await this.agentRepository.save(agentEntity);
 
       this.logger.debug('Agent created successfully', {
@@ -87,7 +87,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntity = await this.agentRepository.findOne({
         where: { id, userId },
-        relations: ['agentTools'],
+        relations: ['agentTools', 'model'],
       });
 
       if (!agentEntity) {
@@ -117,7 +117,7 @@ export class LocalAgentRepository implements AgentRepository {
           id: In(ids),
           userId,
         },
-        relations: ['agentTools'], // Include agentTools relation
+        relations: ['agentTools', 'model'],
       });
 
       this.logger.debug('Agents found', { count: agentEntities.length });

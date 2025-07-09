@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ModelsModule } from '../domain/models/models.module';
+import { AgentsModule } from '../domain/agents/agents.module';
 import { MessagesModule } from '../domain/messages/messages.module';
 import { ToolsModule } from '../domain/tools/tools.module';
 import { ThreadsModule } from '../domain/threads/threads.module';
@@ -66,6 +67,7 @@ import { join } from 'path';
       },
     }),
     ModelsModule,
+    AgentsModule,
     MessagesModule,
     ToolsModule,
     ThreadsModule,

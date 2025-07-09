@@ -6,6 +6,7 @@ import {
   Settings2,
   LogOut,
   Plus,
+  Bot,
 } from "lucide-react";
 
 import {
@@ -59,6 +60,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("sidebar.prompts"),
       url: "/prompts",
       icon: BookOpen,
+    },
+    {
+      title: t("sidebar.agents"),
+      url: "/agents",
+      icon: Bot,
     },
   ];
 

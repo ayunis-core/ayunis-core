@@ -597,51 +597,6 @@
         ]
       }
     },
-    "/threads/{id}/instruction": {
-      "patch": {
-        "operationId": "ThreadsController_updateInstruction",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread to update",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateThreadInstructionDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The thread instruction has been successfully updated"
-          },
-          "400": {
-            "description": "Invalid instruction data"
-          },
-          "404": {
-            "description": "Thread not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update thread instruction",
-        "tags": [
-          "threads"
-        ]
-      }
-    },
     "/threads/{id}/model": {
       "patch": {
         "operationId": "ThreadsController_updateModel",
@@ -687,9 +642,9 @@
         ]
       }
     },
-    "/threads/{id}/internet-search": {
+    "/threads/{id}/agent": {
       "patch": {
-        "operationId": "ThreadsController_updateInternetSearch",
+        "operationId": "ThreadsController_updateAgent",
         "parameters": [
           {
             "name": "id",
@@ -707,17 +662,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateThreadInternetSearchDto"
+                "$ref": "#/components/schemas/UpdateThreadAgentDto"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The thread internet search setting has been successfully updated"
+            "description": "The thread agent has been successfully updated"
           },
           "400": {
-            "description": "Invalid internet search data"
+            "description": "Invalid agent data"
           },
           "404": {
             "description": "Thread not found"
@@ -726,7 +681,7 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Update thread internet search setting",
+        "summary": "Update thread agent",
         "tags": [
           "threads"
         ]
@@ -877,6 +832,62 @@
         "summary": "Remove a source from a thread",
         "tags": [
           "threads"
+        ]
+      }
+    },
+    "/tools/http": {
+      "post": {
+        "operationId": "ToolsController_createHttpTool",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHttpToolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The HTTP tool has been successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpTool"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new HTTP tool for current user",
+        "tags": [
+          "tools"
+        ]
+      }
+    },
+    "/tools/{id}": {
+      "delete": {
+        "operationId": "ToolsController_deleteTool",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The tool has been successfully deleted."
+          }
+        },
+        "summary": "Delete a tool by ID",
+        "tags": [
+          "tools"
         ]
       }
     },
@@ -1224,59 +1235,186 @@
         ]
       }
     },
-    "/tools/http": {
+    "/agents": {
       "post": {
-        "operationId": "ToolsController_createHttpTool",
+        "operationId": "AgentsController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateHttpToolDto"
+                "$ref": "#/components/schemas/CreateAgentDto"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "The HTTP tool has been successfully created.",
+            "description": "The agent has been successfully created",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpTool"
+                  "$ref": "#/components/schemas/AgentResponseDto"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid agent data"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "summary": "Create a new HTTP tool for current user",
+        "summary": "Create a new agent",
         "tags": [
-          "tools"
+          "agents"
+        ]
+      },
+      "get": {
+        "operationId": "AgentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns all agents for the current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all agents for the current user",
+        "tags": [
+          "agents"
         ]
       }
     },
-    "/tools/{id}": {
-      "delete": {
-        "operationId": "ToolsController_deleteTool",
+    "/agents/{id}": {
+      "get": {
+        "operationId": "AgentsController_findOne",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "The UUID of the agent to retrieve",
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "The tool has been successfully deleted."
+            "description": "Returns the agent with the specified ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         },
-        "summary": "Delete a tool by ID",
+        "summary": "Get an agent by ID",
         "tags": [
-          "tools"
+          "agents"
+        ]
+      },
+      "put": {
+        "operationId": "AgentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent to update",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAgentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The agent has been successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid agent data"
+          },
+          "404": {
+            "description": "Agent not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update an agent",
+        "tags": [
+          "agents"
+        ]
+      },
+      "delete": {
+        "operationId": "AgentsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The agent has been successfully deleted"
+          },
+          "404": {
+            "description": "Agent not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete an agent",
+        "tags": [
+          "agents"
         ]
       }
     },
@@ -2549,14 +2687,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "provider",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2660,7 +2790,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "description": "The provider of the model"
           },
@@ -2726,7 +2858,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "description": "The provider of the model"
           },
@@ -2786,7 +2920,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -2802,7 +2938,8 @@
               "DE",
               "EU",
               "US",
-              "SELF_HOSTED"
+              "SELF_HOSTED",
+              "AYUNIS"
             ],
             "description": "The location where the provider hosts their services",
             "example": "US"
@@ -2823,7 +2960,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "example": "openai"
           }
@@ -2840,7 +2979,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "description": "The permitted model provider",
             "example": "openai"
@@ -2856,7 +2997,8 @@
               "DE",
               "EU",
               "US",
-              "SELF_HOSTED"
+              "SELF_HOSTED",
+              "AYUNIS"
             ],
             "description": "The location where the provider hosts their services",
             "example": "US"
@@ -2877,7 +3019,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "example": "openai"
           }
@@ -2894,7 +3038,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -2910,10 +3056,11 @@
               "DE",
               "EU",
               "US",
-              "SELF_HOSTED"
+              "SELF_HOSTED",
+              "AYUNIS"
             ],
             "description": "The location where the provider hosts their services",
-            "example": "US"
+            "example": "DE"
           },
           "isPermitted": {
             "type": "boolean",
@@ -2936,11 +3083,14 @@
             "description": "The id of the model",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "description": "The id of the agent",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
           }
-        },
-        "required": [
-          "modelId"
-        ]
+        }
       },
       "UserMessageResponseDto": {
         "type": "object",
@@ -3236,7 +3386,9 @@
             "enum": [
               "openai",
               "anthropic",
-              "mistral"
+              "mistral",
+              "ollama",
+              "synaforce"
             ]
           },
           "displayName": {
@@ -3277,28 +3429,20 @@
             "description": "User ID who owns this thread",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
-          "model": {
-            "description": "Model",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ModelResponseDto"
-              }
-            ]
+          "permittedModelId": {
+            "type": "string",
+            "description": "Permitted model ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "agentId": {
+            "type": "string",
+            "description": "Agent ID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           },
           "title": {
             "type": "string",
             "description": "Title of the thread",
             "example": "Discussion about AI models"
-          },
-          "instruction": {
-            "type": "string",
-            "description": "Instruction for the thread",
-            "example": "Please analyze the attached documents and provide insights on market trends."
-          },
-          "isInternetSearchEnabled": {
-            "type": "boolean",
-            "description": "Whether internet search is enabled for the thread",
-            "example": false
           },
           "messages": {
             "type": "array",
@@ -3334,8 +3478,8 @@
         "required": [
           "id",
           "userId",
-          "model",
-          "isInternetSearchEnabled",
+          "permittedModelId",
+          "agentId",
           "messages",
           "createdAt",
           "updatedAt"
@@ -3371,19 +3515,6 @@
           "updatedAt"
         ]
       },
-      "UpdateThreadInstructionDto": {
-        "type": "object",
-        "properties": {
-          "instruction": {
-            "type": "string",
-            "description": "The instruction for the thread",
-            "example": "Please analyze the attached documents and provide insights on market trends."
-          }
-        },
-        "required": [
-          "instruction"
-        ]
-      },
       "UpdateThreadModelDto": {
         "type": "object",
         "properties": {
@@ -3397,17 +3528,17 @@
           "modelId"
         ]
       },
-      "UpdateThreadInternetSearchDto": {
+      "UpdateThreadAgentDto": {
         "type": "object",
         "properties": {
-          "isInternetSearchEnabled": {
-            "type": "boolean",
-            "description": "Whether internet search is enabled for the thread",
-            "example": true
+          "agentId": {
+            "type": "string",
+            "description": "The UUID of the agent to update",
+            "format": "uuid"
           }
         },
         "required": [
-          "isInternetSearchEnabled"
+          "agentId"
         ]
       },
       "SourceResponseDto": {
@@ -3506,6 +3637,56 @@
           "fileSize",
           "filePath"
         ]
+      },
+      "CreateHttpToolDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the tool"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of what the tool does"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "JSON Schema defining the parameters the tool accepts",
+            "example": {
+              "type": "object",
+              "required": [
+                "query"
+              ],
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query"
+                }
+              }
+            }
+          },
+          "endpointUrl": {
+            "type": "string",
+            "description": "Endpoint URL for the HTTP tool",
+            "example": "https://api.example.com/search"
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method for the HTTP tool",
+            "example": "GET"
+          }
+        },
+        "required": [
+          "displayName",
+          "description",
+          "parameters",
+          "endpointUrl",
+          "method"
+        ]
+      },
+      "HttpTool": {
+        "type": "object",
+        "properties": {}
       },
       "CreateUrlSourceDto": {
         "type": "object",
@@ -3756,55 +3937,131 @@
           "results"
         ]
       },
-      "CreateHttpToolDto": {
+      "CreateAgentDto": {
         "type": "object",
         "properties": {
-          "displayName": {
+          "name": {
             "type": "string",
-            "description": "Display name of the tool"
+            "description": "The name of the agent",
+            "example": "Customer Support Assistant",
+            "minLength": 1,
+            "maxLength": 255
           },
-          "description": {
+          "instructions": {
             "type": "string",
-            "description": "Description of what the tool does"
+            "description": "The instructions for the agent",
+            "example": "You are a helpful customer support assistant. Always be polite and professional."
           },
-          "parameters": {
-            "type": "object",
-            "description": "JSON Schema defining the parameters the tool accepts",
-            "example": {
-              "type": "object",
-              "required": [
-                "query"
-              ],
-              "properties": {
-                "query": {
-                  "type": "string",
-                  "description": "Search query"
-                }
-              }
-            }
-          },
-          "endpointUrl": {
+          "modelId": {
             "type": "string",
-            "description": "Endpoint URL for the HTTP tool",
-            "example": "https://api.example.com/search"
-          },
-          "method": {
-            "type": "string",
-            "description": "HTTP method for the HTTP tool",
-            "example": "GET"
+            "description": "The ID of the permitted model to use for this agent",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
           }
         },
         "required": [
-          "displayName",
-          "description",
-          "parameters",
-          "endpointUrl",
-          "method"
+          "name",
+          "instructions",
+          "modelId"
         ]
       },
-      "HttpTool": {
+      "AgentResponseDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the agent",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the agent",
+            "example": "Customer Support Assistant"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions for the agent",
+            "example": "You are a helpful customer support assistant. Always be polite and professional."
+          },
+          "userId": {
+            "type": "string",
+            "description": "The unique identifier of the user who owns this agent",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the agent was created",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "The date and time when the agent was last updated",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "model": {
+            "description": "The model configuration for this agent",
+            "example": {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "name": "gpt-4",
+              "provider": "openai"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelResponseDto"
+              }
+            ]
+          },
+          "tools": {
+            "type": "array",
+            "description": "The tools assigned to this agent",
+            "example": [],
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instructions",
+          "userId",
+          "createdAt",
+          "updatedAt",
+          "model",
+          "tools"
+        ]
+      },
+      "UpdateAgentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the agent",
+            "example": "Customer Support Assistant",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions for the agent",
+            "example": "You are a helpful customer support assistant. Always be polite and professional."
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The ID of the permitted model to use for this agent",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "name",
+          "instructions",
+          "modelId"
+        ]
       },
       "RunSessionResponseDto": {
         "type": "object",

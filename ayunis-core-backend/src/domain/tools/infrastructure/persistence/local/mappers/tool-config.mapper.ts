@@ -2,17 +2,19 @@ import { ToolConfig } from 'src/domain/tools/domain/tool-config.entity';
 import { ToolConfigRecord } from '../schema/tool-config.record';
 import { HttpToolConfigRecord } from '../schema/http-tool-config.record';
 import { HttpToolConfig } from 'src/domain/tools/domain/tools/http-tool.entity';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class ToolConfigMapper {
-  toDomain(entity: ToolConfigRecord): ToolConfig {
-    if (entity instanceof HttpToolConfigRecord) {
-      return this.httpToolConfigToDomain(entity);
+  toDomain(record: ToolConfigRecord): ToolConfig {
+    if (record instanceof HttpToolConfigRecord) {
+      return this.httpToolConfigToDomain(record);
     }
 
-    throw new Error('Invalid tool config type: ' + entity.constructor.name);
+    throw new Error('Invalid tool config type: ' + record.constructor.name);
   }
 
-  toEntity(domain: ToolConfig): ToolConfigRecord {
+  toRecord(domain: ToolConfig): ToolConfigRecord {
     if (domain instanceof HttpToolConfig) {
       return this.httpToolConfigToEntity(domain);
     }

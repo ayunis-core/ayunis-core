@@ -24,13 +24,14 @@ export const useInitiateChat = () => {
     },
   });
 
-  function initiateChat(message: string, modelId: string) {
+  function initiateChat(message: string, modelId?: string, agentId?: string) {
     // Store the message as pending
     setPendingMessage(message);
 
     // Create thread data
     const createThreadData: CreateThreadData = {
       modelId,
+      agentId,
     };
 
     // Create the new thread

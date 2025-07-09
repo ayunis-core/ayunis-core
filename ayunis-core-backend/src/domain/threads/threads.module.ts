@@ -19,20 +19,22 @@ import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-
 import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from './application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { UpdateThreadTitleUseCase } from './application/use-cases/update-thread-title/update-thread-title.use-case';
-import { UpdateThreadInstructionUseCase } from './application/use-cases/update-thread-instruction/update-thread-instruction.use-case';
 import { UpdateThreadModelUseCase } from './application/use-cases/update-thread-model/update-thread-model.use-case';
-import { UpdateThreadInternetSearchUseCase } from './application/use-cases/update-thread-internet-search/update-thread-internet-search.use-case';
 import { GenerateAndSetThreadTitleUseCase } from './application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import { LocalThreadsRepository } from './infrastructure/persistence/local/local-threads.repository';
 import { GetThreadsDtoMapper } from './presenters/http/mappers/get-threads.mapper';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
+import { ReplaceAgentWithUserDefaultUseCase } from './application/use-cases/replace-agent-with-user-default/replace-agent-with-user-default.use-case';
+import { AgentsModule } from '../agents/agents.module';
+import { UpdateThreadAgentUseCase } from './application/use-cases/update-thread-agent/update-thread-agent.use-case';
 
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
     SourcesModule,
     forwardRef(() => ModelsModule),
+    forwardRef(() => AgentsModule),
     MessagesModule,
     OrgsModule,
   ],
@@ -52,11 +54,11 @@ import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/repl
     RemoveSourceFromThreadUseCase,
     GetThreadSourcesUseCase,
     UpdateThreadTitleUseCase,
-    UpdateThreadInstructionUseCase,
     UpdateThreadModelUseCase,
-    UpdateThreadInternetSearchUseCase,
+    UpdateThreadAgentUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
+    ReplaceAgentWithUserDefaultUseCase,
 
     // Mappers
     SourceDtoMapper,
@@ -75,12 +77,10 @@ import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/repl
     RemoveSourceFromThreadUseCase,
     GetThreadSourcesUseCase,
     UpdateThreadTitleUseCase,
-    UpdateThreadInstructionUseCase,
     UpdateThreadModelUseCase,
-    UpdateThreadInternetSearchUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
-
+    ReplaceAgentWithUserDefaultUseCase,
     // Export mappers
     GetThreadDtoMapper,
     GetThreadsDtoMapper,

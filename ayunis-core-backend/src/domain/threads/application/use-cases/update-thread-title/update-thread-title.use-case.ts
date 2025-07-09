@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { UpdateThreadTitleCommand } from './update-thread-title.command';
-import { ThreadUpdateError } from '../../threads.errors';
+import { ThreadNotFoundError, ThreadUpdateError } from '../../threads.errors';
 
 @Injectable()
 export class UpdateThreadTitleUseCase {
@@ -16,11 +16,18 @@ export class UpdateThreadTitleUseCase {
     });
 
     try {
-      await this.threadsRepository.updateTitle(
+      const thread = await this.threadsRepository.findOne(
         command.threadId,
         command.userId,
-        command.title,
       );
+      if (!thread) {
+        throw new ThreadNotFoundError(command.threadId, command.userId);
+      }
+      await this.threadsRepository.updateTitle({
+        threadId: command.threadId,
+        userId: command.userId,
+        title: command.title,
+      });
     } catch (error) {
       this.logger.error('Failed to update thread title', {
         threadId: command.threadId,

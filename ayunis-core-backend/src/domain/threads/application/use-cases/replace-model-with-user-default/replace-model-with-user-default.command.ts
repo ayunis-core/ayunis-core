@@ -1,5 +1,10 @@
 import { UUID } from 'crypto';
 
 export class ReplaceModelWithUserDefaultCommand {
-  constructor(public readonly oldPermittedModelId: UUID) {}
+  oldPermittedModelId?: UUID;
+  oldAgentId?: UUID;
+  constructor(params: { oldPermittedModelId?: UUID; oldAgentId?: UUID }) {
+    this.oldPermittedModelId = params.oldPermittedModelId;
+    this.oldAgentId = params.oldAgentId;
+  }
 }

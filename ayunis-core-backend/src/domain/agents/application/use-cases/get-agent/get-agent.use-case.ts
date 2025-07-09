@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AgentRepository } from '../../ports/agent.repository';
-import { FindAgentQuery } from './find-agent.query';
+import { GetAgentQuery } from './get-agent.query';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentNotFoundError } from '../../agents.errors';
 
 @Injectable()
-export class FindAgentUseCase {
-  private readonly logger = new Logger(FindAgentUseCase.name);
+export class GetAgentUseCase {
+  private readonly logger = new Logger(GetAgentUseCase.name);
 
   constructor(private readonly agentRepository: AgentRepository) {}
 
-  async execute(query: FindAgentQuery): Promise<Agent> {
+  async execute(query: GetAgentQuery): Promise<Agent> {
     this.logger.log('execute', query);
     const agent = await this.agentRepository.findOne(query.id, query.userId);
     if (!agent) {

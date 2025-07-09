@@ -9,7 +9,7 @@ import { useMessageSend } from "../api/useMessageSend";
 import { useUpdateThreadModel } from "../api/useUpdateThreadModel";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { Dot, MoreVertical, Trash2 } from "lucide-react";
-import type { Thread, Model, Message } from "../model/openapi";
+import type { Thread, Message } from "../model/openapi";
 import { showError } from "@/shared/lib/toast";
 import config from "@/shared/config";
 import { Button } from "@/shared/ui/shadcn/button";
@@ -24,6 +24,7 @@ import { useDeleteThread } from "@/features/useDeleteThread";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useThread } from "../api/useThread";
+import { useUpdateThreadAgent } from "../api/useUpdateThreadAgent";
 
 interface ChatPageProps {
   thread: Thread;
@@ -33,15 +34,14 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   const { t } = useTranslation("chats");
   const { pendingMessage, setPendingMessage } = useChatContext();
   const thread = useThread(threadFromLoader.id, threadFromLoader);
+  console.log("thread", thread);
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread!.title,
   );
-  const [model, setModel] = useState<Model>(thread!.model);
-  const [messages, setMessages] = useState<Message[]>(thread!.messages);
-  const [internetSearch, setInternetSearch] = useState(
-    threadFromLoader.isInternetSearchEnabled,
+  const [modelOrAgentId, setModelOrAgentId] = useState(
+    thread?.agentId ?? thread?.permittedModelId,
   );
-  const [codeExecution, setCodeExecution] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(thread!.messages);
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const processedPendingMessageRef = useRef<String | null>(null);
@@ -59,13 +59,14 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   });
 
   const { updateModel } = useUpdateThreadModel();
+  const { updateAgent } = useUpdateThreadAgent();
 
   useEffect(() => {
     setMessages(threadFromLoader.messages);
     setThreadTitle(threadFromLoader.title);
-    setModel(threadFromLoader.model);
-    setInternetSearch(threadFromLoader.isInternetSearchEnabled);
-    setCodeExecution(false);
+    setModelOrAgentId(
+      threadFromLoader.agentId ?? threadFromLoader.permittedModelId,
+    );
   }, [threadFromLoader]);
 
   const { sendTextMessage } = useMessageSend({
@@ -184,11 +185,19 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     }
   }, [pendingMessage, sendTextMessage, setPendingMessage]);
 
-  function handleModelChange(newModel: Model) {
-    setModel(newModel);
-    updateModel(threadFromLoader.id, newModel).catch((error) => {
+  function handleModelChange(newModelId: string) {
+    setModelOrAgentId(newModelId);
+    updateModel(threadFromLoader.id, newModelId).catch((error) => {
       console.error("Failed to update thread model", error);
       showError("Failed to update thread model");
+    });
+  }
+
+  function handleAgentChange(newAgentId: string) {
+    setModelOrAgentId(newAgentId);
+    updateAgent(threadFromLoader.id, newAgentId).catch((error) => {
+      console.error("Failed to update thread agent", error);
+      showError("Failed to update thread agent");
     });
   }
 
@@ -258,13 +267,10 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   // Chat Input
   const chatInput = (
     <ChatInput
-      model={model}
+      modelOrAgentId={modelOrAgentId}
       isStreaming={isStreaming}
       onModelChange={handleModelChange}
-      internetSearch={internetSearch}
-      onInternetSearchChange={setInternetSearch}
-      codeExecution={codeExecution}
-      onCodeExecutionChange={setCodeExecution}
+      onAgentChange={handleAgentChange}
       onSend={handleSend}
     />
   );

@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'src/domain/models/domain/model.entity';
-import { ModelConfig } from 'src/domain/models/domain/model-config.entity';
-import { ModelWithConfig } from 'src/domain/models/domain/model-with-config.entity';
 import { ModelsRepository } from '../../ports/models.repository';
 import { CreateModelCommand } from './create-model.command';
 import {
@@ -15,7 +13,7 @@ export class CreateModelUseCase {
 
   constructor(private readonly modelsRepository: ModelsRepository) {}
 
-  async execute(command: CreateModelCommand): Promise<ModelWithConfig> {
+  async execute(command: CreateModelCommand): Promise<Model> {
     this.logger.log('execute', {
       modelName: command.name,
       modelProvider: command.provider,
@@ -37,17 +35,13 @@ export class CreateModelUseCase {
       const model = new Model({
         name: command.name,
         provider: command.provider,
-      });
-      const config = new ModelConfig({
         displayName: command.displayName,
         canStream: command.canStream,
         isReasoning: command.isReasoning,
         isArchived: command.isArchived,
       });
 
-      const modelWithConfig = new ModelWithConfig(model, config);
-
-      return await this.modelsRepository.create(modelWithConfig);
+      return await this.modelsRepository.create(model);
     } catch (error) {
       if (error instanceof ModelAlreadyExistsError) {
         throw error;

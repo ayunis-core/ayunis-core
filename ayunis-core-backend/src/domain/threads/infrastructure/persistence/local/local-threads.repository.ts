@@ -7,7 +7,6 @@ import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -23,7 +22,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
   async create(thread: Thread): Promise<Thread> {
     this.logger.log('create', { thread });
-    const threadEntity = this.threadMapper.toEntity(thread);
+    const threadEntity = this.threadMapper.toRecord(thread);
     const savedThreadEntity = await this.threadRepository.save(threadEntity);
     const reloadedThreadEntity = await this.threadRepository.findOne({
       where: { id: savedThreadEntity.id },
@@ -42,7 +41,15 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findOne', { id, userId });
     const threadEntity = await this.threadRepository.findOne({
       where: { id, userId },
-      relations: ['messages', 'sources', 'model'],
+      relations: {
+        messages: true,
+        model: true,
+        agent: {
+          model: {
+            model: true,
+          },
+        },
+      },
     });
     if (!threadEntity) {
       return null;
@@ -54,7 +61,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findAll', { userId });
     const threadEntities = await this.threadRepository.find({
       where: { userId },
-      relations: ['messages', 'model'],
+      relations: {
+        messages: true,
+      },
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
@@ -63,79 +72,73 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findAllByModel', { modelId });
     const threadEntities = await this.threadRepository.find({
       where: { modelId },
-      relations: ['messages', 'model'],
+      relations: ['messages', 'model', 'agent'],
+    });
+    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+  }
+
+  async findAllByAgent(agentId: UUID): Promise<Thread[]> {
+    this.logger.log('findAllByAgent', { agentId });
+    const threadEntities = await this.threadRepository.find({
+      where: { agentId },
+      relations: ['messages', 'agent'],
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 
   async update(thread: Thread): Promise<Thread> {
     this.logger.log('update', { threadId: thread.id });
-    const threadEntity = this.threadMapper.toEntity(thread);
-    const savedThreadEntity = await this.threadRepository.save(threadEntity);
-    return this.threadMapper.toDomain(savedThreadEntity);
+    const threadRecord = this.threadMapper.toRecord(thread);
+    const savedThreadRecord = await this.threadRepository.save(threadRecord);
+    return this.threadMapper.toDomain(savedThreadRecord);
   }
 
-  async updateTitle(id: UUID, userId: UUID, title: string): Promise<void> {
-    this.logger.log('updateTitle', { id, userId, title });
+  async updateTitle(params: {
+    threadId: UUID;
+    userId: UUID;
+    title: string;
+  }): Promise<void> {
+    this.logger.log('updateTitle', { params });
     const result = await this.threadRepository.update(
-      { id, userId },
-      { title },
+      { id: params.threadId, userId: params.userId },
+      { title: params.title },
     );
     if (result.affected === 0) {
-      throw new ThreadNotFoundError(id, userId);
+      throw new ThreadNotFoundError(params.threadId, params.userId);
     }
   }
 
-  async updateInstruction(
-    id: UUID,
-    userId: UUID,
-    instruction: string,
-  ): Promise<void> {
-    this.logger.log('updateInstruction', { id, userId, instruction });
-    const result = await this.threadRepository.update(
-      { id, userId },
-      { instruction },
-    );
-    if (result.affected === 0) {
-      throw new ThreadNotFoundError(id, userId);
-    }
-  }
-
-  async updateModel(
-    id: UUID,
-    userId: UUID,
-    model: PermittedModel,
-  ): Promise<void> {
+  async updateModel(params: {
+    threadId: UUID;
+    userId: UUID;
+    permittedModelId: UUID;
+  }): Promise<void> {
     this.logger.log('updateModel', {
-      id,
-      userId,
-      modelId: model.id,
+      threadId: params.threadId,
+      userId: params.userId,
+      permittedModelId: params.permittedModelId,
     });
     const result = await this.threadRepository.update(
-      { id, userId },
-      { modelId: model.id },
+      { id: params.threadId, userId: params.userId },
+      { modelId: params.permittedModelId },
     );
     if (!result.affected || result.affected === 0) {
-      throw new ThreadNotFoundError(id, userId);
+      throw new ThreadNotFoundError(params.threadId, params.userId);
     }
   }
 
-  async updateInternetSearch(
-    id: UUID,
-    userId: UUID,
-    isInternetSearchEnabled: boolean,
-  ): Promise<void> {
-    this.logger.log('updateInternetSearch', {
-      id,
-      userId,
-      isInternetSearchEnabled,
-    });
+  async updateAgent(params: {
+    threadId: UUID;
+    userId: UUID;
+    agentId: UUID;
+  }): Promise<void> {
+    this.logger.log('updateAgent', { params });
     const result = await this.threadRepository.update(
-      { id, userId },
-      { isInternetSearchEnabled },
+      { id: params.threadId, userId: params.userId },
+      { agentId: params.agentId },
     );
     if (!result.affected || result.affected === 0) {
-      throw new ThreadNotFoundError(id, userId);
+      throw new ThreadNotFoundError(params.threadId, params.userId);
     }
   }
 

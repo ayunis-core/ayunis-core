@@ -9,4 +9,4 @@ import { LocalToolConfigRepository } from './local-tool-config.repository';
   providers: [ToolConfigMapper, LocalToolConfigRepository],
   exports: [ToolConfigMapper, LocalToolConfigRepository],
 })
-export class LocalToolConfigModule {}
+export class LocalToolConfigRepositoryModule {}

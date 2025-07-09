@@ -2,14 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { ModelNotFoundError } from '../models.errors';
 import { ConfigService } from '@nestjs/config';
-import { ModelWithConfig } from '../../domain/model-with-config.entity';
 import { GetAllModelsUseCase } from '../use-cases/get-all-models/get-all-models.use-case';
 import { UUID } from 'crypto';
+import { Model } from '../../domain/model.entity';
 
 @Injectable()
 export class ModelRegistry {
   private readonly logger = new Logger(ModelRegistry.name);
-  private modelsWithConfigs: ModelWithConfig[] = [];
+  private models: Model[] = [];
 
   constructor(
     private readonly configService: ConfigService,
@@ -20,7 +20,7 @@ export class ModelRegistry {
 
   async onModuleInit(): Promise<void> {
     const models = await this.getAllModelsUseCase.execute();
-    this.modelsWithConfigs = models;
+    this.models = models;
   }
 
   private hasApiKeyForProvider(provider: ModelProvider): boolean {
@@ -50,45 +50,39 @@ export class ModelRegistry {
     return hasKey;
   }
 
-  getAllAvailableModels(): ModelWithConfig[] {
+  getAllAvailableModels(): Model[] {
     this.logger.log('getAllAvailableModels', {
-      count: this.modelsWithConfigs.length,
+      count: this.models.length,
     });
-    return this.modelsWithConfigs.filter(
-      (m) =>
-        m.config.isArchived === false &&
-        this.hasApiKeyForProvider(m.model.provider),
+    return this.models.filter(
+      (m) => m.isArchived === false && this.hasApiKeyForProvider(m.provider),
     );
   }
 
   getProviders(): readonly ModelProvider[] {
-    const providers = Array.from(
-      new Set(this.modelsWithConfigs.map((m) => m.model.provider)),
-    );
+    const providers = Array.from(new Set(this.models.map((m) => m.provider)));
     return providers.filter((p) => this.hasApiKeyForProvider(p));
   }
 
-  getAvailableModel(modelId: UUID): ModelWithConfig {
+  getAvailableModel(modelId: UUID): Model {
     this.logger.log('getModel', { modelId });
-    const modelWithConfig = this.modelsWithConfigs.find(
-      (m) =>
-        m.model.id === modelId && this.hasApiKeyForProvider(m.model.provider),
+    const model = this.models.find(
+      (m) => m.id === modelId && this.hasApiKeyForProvider(m.provider),
     );
-    if (!modelWithConfig) {
+    if (!model) {
       throw new ModelNotFoundError(modelId);
     }
-    return modelWithConfig;
+    return model;
   }
 
-  getModelWithConfig(modelId: UUID): ModelWithConfig {
-    this.logger.log('getModelWithConfig', { modelId });
-    const modelWithConfig = this.modelsWithConfigs.find(
-      (m) =>
-        m.model.id === modelId && this.hasApiKeyForProvider(m.model.provider),
+  getModel(modelId: UUID): Model {
+    this.logger.log('getModel', { modelId });
+    const model = this.models.find(
+      (m) => m.id === modelId && this.hasApiKeyForProvider(m.provider),
     );
-    if (!modelWithConfig) {
+    if (!model) {
       throw new ModelNotFoundError(modelId);
     }
-    return modelWithConfig;
+    return model;
   }
 }

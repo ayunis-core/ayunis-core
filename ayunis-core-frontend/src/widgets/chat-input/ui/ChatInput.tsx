@@ -6,25 +6,22 @@ import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import ModelSelector from "./ModelSelector";
 import PromptLibraryButton from "./PromptLibraryButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
-import type { PermittedModel } from "../model/openapi";
 import { useTranslation } from "react-i18next";
 
 interface ChatInputProps {
-  model: PermittedModel;
+  modelOrAgentId: string | undefined;
   isStreaming?: boolean;
-  onModelChange: (model: PermittedModel) => void;
-  internetSearch: boolean;
-  onInternetSearchChange: (internetSearch: boolean) => void;
-  codeExecution: boolean;
-  onCodeExecutionChange: (codeExecution: boolean) => void;
+  onModelChange: (modelId: string) => void;
+  onAgentChange: (agentId: string) => void;
   onSend: (message: string) => void;
   prefilledPrompt?: string;
 }
 
 export default function ChatInput({
-  model,
+  modelOrAgentId,
   isStreaming,
   onModelChange,
+  onAgentChange,
   onSend,
   prefilledPrompt,
 }: ChatInputProps) {
@@ -42,7 +39,7 @@ export default function ChatInput({
   });
 
   function handleSend() {
-    if (!message.trim() || !model) return;
+    if (!message.trim() || !modelOrAgentId) return;
 
     onSend(message);
     setMessage(""); // Clear message after sending
@@ -75,16 +72,12 @@ export default function ChatInput({
             <div className="flex items-center justify-between">
               {/* Left side */}
               <div className="flex-shrink-0 flex space-x-2">
-                <ModelSelector selectedModel={model} onChange={onModelChange} />
-                <PromptLibraryButton onPromptSelect={handlePromptSelect} />
-                {/* <ToolsButton
-                  internetSearch={internetSearch}
-                  codeExecution={codeExecution}
-                  onInternetSearchChange={onInternetSearchChange}
-                  onCodeExecutionChange={onCodeExecutionChange}
+                <ModelSelector
+                  selectedModelOrAgentId={modelOrAgentId}
+                  onModelChange={onModelChange}
+                  onAgentChange={onAgentChange}
                 />
-
-                <AddSourceButton threadId={"1"} /> */}
+                <PromptLibraryButton onPromptSelect={handlePromptSelect} />
               </div>
 
               {/* Right side */}
@@ -95,7 +88,7 @@ export default function ChatInput({
                   </Button>
                 ) : (
                   <Button
-                    disabled={!message.trim() || !model}
+                    disabled={!message.trim() || !modelOrAgentId}
                     size="icon"
                     onClick={handleSend}
                   >

@@ -18,6 +18,7 @@ import {
   RunInput,
   RunTextInput,
 } from 'src/domain/runs/domain/run-input.entity';
+import { RunNoModelFoundError } from '../../runs.errors';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -135,10 +136,18 @@ export class ExecuteRunAndSetTitleUseCase {
         messagePreview: firstUserMessage.substring(0, 50),
       });
 
+      const model = thread.model ?? thread.agent?.model;
+      if (!model) {
+        throw new RunNoModelFoundError({
+          threadId: command.threadId,
+          userId: command.userId,
+        });
+      }
+
       const title = await this.generateAndSetThreadTitleUseCase.execute(
         new GenerateAndSetThreadTitleCommand({
           thread,
-          model: thread.model.model,
+          model: model.model,
           message: firstUserMessage,
           userId: command.userId,
         }),

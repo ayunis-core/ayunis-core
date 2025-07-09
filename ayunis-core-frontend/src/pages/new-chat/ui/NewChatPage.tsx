@@ -3,34 +3,47 @@ import ChatInput from "@/widgets/chat-input";
 import { useInitiateChat } from "../api/useInitiateChat";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { PermittedModel } from "../model/openapi";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { showError } from "@/shared/lib/toast";
 
 interface NewChatPageProps {
-  defaultModel: PermittedModel;
   prefilledPrompt?: string;
+  selectedModelId?: string;
+  selectedAgentId?: string;
   hasSubscription: boolean;
 }
 
 export default function NewChatPage({
-  defaultModel,
+  selectedModelId,
+  selectedAgentId,
   prefilledPrompt,
   hasSubscription,
 }: NewChatPageProps) {
   const { t } = useTranslation("chats");
   const { initiateChat } = useInitiateChat();
-  const [model, setModel] = useState<PermittedModel>(defaultModel);
-  const [internetSearch, setInternetSearch] = useState(false);
-  const [codeExecution, setCodeExecution] = useState(false);
+  const [modelId, setModelId] = useState(selectedModelId);
+  const [agentId, setAgentId] = useState(selectedAgentId);
 
-  const handleSend = (message: string) => {
+  function handleModelChange(modelId: string) {
+    setModelId(modelId);
+    setAgentId(undefined);
+  }
+  function handleAgentChange(agentId: string) {
+    setAgentId(agentId);
+    setModelId(undefined);
+  }
+
+  function handleSend(message: string) {
+    if (!modelId && !agentId) {
+      showError(t("newChat.noModelOrAgentError"));
+      return;
+    }
     if (!hasSubscription) {
       showError(t("newChat.upgradeToProError"));
       return;
     }
-    initiateChat(message, model.id);
-  };
+    initiateChat(message, modelId, agentId);
+  }
 
   return (
     <NewChatPageLayout header={<ContentAreaHeader title="New Chat" />}>
@@ -42,12 +55,9 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4">
         <ChatInput
-          model={model}
-          onModelChange={(model) => setModel(model)}
-          internetSearch={internetSearch}
-          onInternetSearchChange={setInternetSearch}
-          codeExecution={codeExecution}
-          onCodeExecutionChange={setCodeExecution}
+          modelOrAgentId={modelId ?? agentId}
+          onModelChange={handleModelChange}
+          onAgentChange={handleAgentChange}
           onSend={handleSend}
           prefilledPrompt={prefilledPrompt}
         />

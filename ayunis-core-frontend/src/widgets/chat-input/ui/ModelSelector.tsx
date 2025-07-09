@@ -1,11 +1,9 @@
-import { Fragment } from "react";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
   SelectLabel,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/shadcn/select";
@@ -16,54 +14,35 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/shadcn/tooltip";
 import { usePermittedModels } from "@/features/usePermittedModels";
-import type { PermittedModel } from "../model/openapi";
+import { useAgents } from "../api/useAgents";
 
 interface ModelSelectorProps {
-  selectedModel: PermittedModel;
-  onChange: (value: PermittedModel) => void;
+  selectedModelOrAgentId: string | undefined;
+  onModelChange: (value: string) => void;
+  onAgentChange: (value: string) => void;
 }
 
 export default function ModelSelector({
-  selectedModel,
-  onChange,
+  selectedModelOrAgentId,
+  onModelChange,
+  onAgentChange,
 }: ModelSelectorProps) {
   const { models, placeholder, isDisabled } = usePermittedModels();
-  const splitChar = "$%$%$";
-
-  // group models by provider
-  const groupedModels = models.reduce(
-    (acc, model) => {
-      acc[model.provider] = acc[model.provider] || [];
-      acc[model.provider].push(model);
-      return acc;
-    },
-    {} as Record<string, typeof models>,
-  );
-
-  function modelToString(model: PermittedModel) {
-    return `${model.name}${splitChar}${model.provider}`;
-  }
-
-  function stringToModel(value: string): PermittedModel {
-    const [modelName, modelProvider] = value.split(splitChar);
-    const model = models.find(
-      (model) => model.name === modelName && model.provider === modelProvider,
-    );
-    if (!model) {
-      throw new Error(`Model ${value} not found`);
-    }
-    return model;
-  }
+  const { agents } = useAgents();
 
   function handleChange(value: string) {
-    onChange(stringToModel(value));
+    if (models.find((model) => model.id === value)) {
+      onModelChange(value);
+    } else if (agents.find((agent) => agent.id === value)) {
+      onAgentChange(value);
+    }
   }
 
   return (
     <TooltipProvider>
       <Tooltip>
         <Select
-          value={selectedModel ? modelToString(selectedModel) : ""}
+          value={selectedModelOrAgentId}
           disabled={isDisabled}
           onValueChange={handleChange}
         >
@@ -73,26 +52,26 @@ export default function ModelSelector({
             </SelectTrigger>
           </TooltipTrigger>
           <SelectContent>
-            {models &&
-              Object.entries(groupedModels).map(([provider, models], i) => (
-                // One group per provider
-                <Fragment key={i}>
-                  <SelectGroup>
-                    <SelectLabel>{provider}</SelectLabel>
-                    {models.map((model) => (
-                      <SelectItem
-                        key={model.name}
-                        value={`${model.name}${splitChar}${provider}`}
-                      >
-                        {model.displayName}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  {i < Object.keys(groupedModels).length - 1 && (
-                    <SelectSeparator />
-                  )}
-                </Fragment>
-              ))}
+            {agents.length > 0 && (
+              <SelectGroup>
+                <SelectLabel>Agents</SelectLabel>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+            {models.length > 0 && (
+              <SelectGroup>
+                <SelectLabel>Models</SelectLabel>
+                {models.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.displayName}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
           </SelectContent>
         </Select>
         <TooltipContent>

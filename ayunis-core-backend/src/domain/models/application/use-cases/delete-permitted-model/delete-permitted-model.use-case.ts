@@ -81,7 +81,9 @@ export class DeletePermittedModelUseCase {
       // Because the user default model is deleted, this will fall back
       // to the org default model or the first available model
       await this.replaceModelWithUserDefaultUseCase.execute(
-        new ReplaceModelWithUserDefaultCommand(command.permittedModelId),
+        new ReplaceModelWithUserDefaultCommand({
+          oldPermittedModelId: command.permittedModelId,
+        }),
       );
 
       await this.permittedModelsRepository.delete({

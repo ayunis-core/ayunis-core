@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetAvailableModelsQuery } from './get-available-models.query';
 import { ModelRegistry } from '../../registry/model.registry';
-import { ModelWithConfig } from 'src/domain/models/domain/model-with-config.entity';
+import { Model } from 'src/domain/models/domain/model.entity';
 
 @Injectable()
 export class GetAvailableModelsUseCase {
@@ -9,12 +9,12 @@ export class GetAvailableModelsUseCase {
 
   constructor(private readonly modelRegistry: ModelRegistry) {}
 
-  execute(query: GetAvailableModelsQuery): ModelWithConfig[] {
+  execute(query: GetAvailableModelsQuery): Model[] {
     this.logger.log('getAvailableModels', query);
-    const allModelsWithConfig = this.modelRegistry.getAllAvailableModels();
-    this.logger.debug('All available models with config', {
-      allModelsWithConfig,
+    const allModels = this.modelRegistry.getAllAvailableModels();
+    this.logger.debug('All available models', {
+      allModels,
     });
-    return allModelsWithConfig;
+    return allModels;
   }
 }

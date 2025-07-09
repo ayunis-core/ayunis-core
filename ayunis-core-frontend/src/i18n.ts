@@ -15,6 +15,8 @@ import enChats from "./shared/locales/en/chats.json";
 import deChats from "./shared/locales/de/chats.json";
 import enPrompts from "./shared/locales/en/prompts.json";
 import dePrompts from "./shared/locales/de/prompts.json";
+import enAgents from "./shared/locales/en/agents.json";
+import deAgents from "./shared/locales/de/agents.json";
 
 const resources = {
   en: {
@@ -24,6 +26,7 @@ const resources = {
     settings: enSettings,
     chats: enChats,
     prompts: enPrompts,
+    agents: enAgents,
   },
   de: {
     auth: deAuth,
@@ -32,6 +35,7 @@ const resources = {
     settings: deSettings,
     chats: deChats,
     prompts: dePrompts,
+    agents: deAgents,
   },
 };
 

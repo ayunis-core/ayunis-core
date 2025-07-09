@@ -7,7 +7,7 @@ import { ToolConfigRepository } from './application/ports/tool-config.repository
 import { LocalToolConfigRepository } from './infrastructure/persistence/local/local-tool-config.repository';
 import { ToolFactory } from './application/tool.factory';
 import { SourcesModule } from '../sources/sources.module';
-import { LocalToolConfigModule } from './infrastructure/persistence/local/local-tool-config.module';
+import { LocalToolConfigRepositoryModule } from './infrastructure/persistence/local/local-tool-config-repository.module';
 import { InternetSearchToolHandler } from './application/handlers/internet-search-tool.handler';
 import { WebsiteContentToolHandler } from './application/handlers/website-content-tool.handler';
 import { RetrieverModule } from '../retrievers/retriever.module';
@@ -21,9 +21,10 @@ import { FindContextualToolsUseCase } from './application/use-cases/find-context
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
 import { DeleteToolUseCase } from './application/use-cases/delete-tool/delete-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
+import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/tool-config.mapper';
 
 @Module({
-  imports: [SourcesModule, LocalToolConfigModule, RetrieverModule],
+  imports: [SourcesModule, LocalToolConfigRepositoryModule, RetrieverModule],
   controllers: [ToolsController],
   providers: [
     // Use cases
@@ -52,6 +53,9 @@ import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool
       provide: ToolFactory,
       useClass: ToolFactory,
     },
+
+    // Mappers
+    ToolConfigMapper,
   ],
   exports: [
     // Export use cases
@@ -67,6 +71,9 @@ import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool
     // Export core services
     ToolHandlerRegistry,
     ToolFactory,
+
+    // Export mappers
+    ToolConfigMapper,
   ],
 })
 export class ToolsModule {}

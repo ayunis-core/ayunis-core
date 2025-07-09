@@ -39,14 +39,10 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-start gap-4">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg mb-1">{prompt.title}</CardTitle>
-            <CardDescription className="line-clamp-2">
-              {prompt.content}
-            </CardDescription>
-          </div>
-        </div>
+        <CardTitle className="text-lg mb-1">{prompt.title}</CardTitle>
+        <CardDescription className="line-clamp-2">
+          {prompt.content}
+        </CardDescription>
         <CardAction>
           <div className="flex items-center gap-2">
             <Link to="/chat" search={{ prompt: prompt.id }}>

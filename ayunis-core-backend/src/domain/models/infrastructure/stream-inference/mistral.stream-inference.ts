@@ -54,14 +54,14 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     try {
       const { messages, tools, toolChoice, systemPrompt } = input;
       const mistralTools = tools?.map(this.convertTool);
-      const mistralMessages = this.convertMessages(messages, systemPrompt);
+      const mistralMessages = this.convertMessages(messages);
       const mistralToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
 
       const completionOptions: ChatCompletionStreamRequest = {
         model: input.model.name,
-        messages: mistralMessages,
+        messages: [this.convertSystemPrompt(systemPrompt), ...mistralMessages],
         tools: mistralTools,
         toolChoice: mistralToolChoice,
         maxTokens: 10000,
@@ -99,6 +99,13 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
         description: tool.description,
         parameters: tool.parameters as Record<string, any>,
       },
+    };
+  };
+
+  private convertSystemPrompt = (systemPrompt: string): MistralMessages => {
+    return {
+      role: 'system' as const,
+      content: systemPrompt,
     };
   };
 

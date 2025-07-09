@@ -1,0 +1,67 @@
+{
+  "page": {
+    "title": "My Agents"
+  },
+  "emptyState": {
+    "title": "No agents yet",
+    "description": "Get started by creating your first AI agent. Agents help you set up specialized AI assistants for specific tasks and workflows."
+  },
+  "card": {
+    "editButton": "Edit",
+    "deleteButton": "Delete",
+    "confirmDelete": {
+      "title": "Delete Agent",
+      "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Add Agent",
+    "buttonTextFirst": "Create your first agent",
+    "title": "Add New Agent",
+    "description": "Create a new AI agent with specific capabilities. Fill in the details below.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter agent name...",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
+      "modelLabel": "Model",
+      "modelPlaceholder": "Select an AI model..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Agent",
+      "creating": "Creating..."
+    }
+  },
+  "editDialog": {
+    "title": "Edit Agent",
+    "description": "Make changes to your agent here. Click save when you're done.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter agent name...",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
+      "modelLabel": "Model",
+      "modelPlaceholder": "Select an AI model..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving..."
+    }
+  },
+  "create": {
+    "success": "Agent created successfully!",
+    "error": "Failed to create agent. Please try again."
+  },
+  "update": {
+    "success": "Agent updated successfully!",
+    "error": "Failed to update agent. Please try again."
+  },
+  "delete": {
+    "success": "Agent deleted successfully!",
+    "error": "Failed to delete agent. Please try again."
+  }
+}

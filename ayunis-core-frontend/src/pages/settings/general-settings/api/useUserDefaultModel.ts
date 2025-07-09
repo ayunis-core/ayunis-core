@@ -3,6 +3,7 @@ import {
   useModelsControllerManageUserDefaultModel,
   useModelsControllerDeleteUserDefaultModel,
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
+  getModelsControllerGetEffectiveDefaultModelQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
 import type { SetUserDefaultModelDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,10 @@ interface UseUserDefaultModelOptions {
 
 export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   const queryClient = useQueryClient();
-  const queryKey = getModelsControllerGetUserSpecificDefaultModelQueryKey();
+  const queryKey = [
+    ...getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+    ...getModelsControllerGetEffectiveDefaultModelQueryKey(),
+  ];
 
   // Get user default model
   const {
@@ -45,7 +49,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
 
           return { previousData };
         },
-        onSuccess: () => {
+        onSettled: () => {
           queryClient.invalidateQueries({
             queryKey,
           });

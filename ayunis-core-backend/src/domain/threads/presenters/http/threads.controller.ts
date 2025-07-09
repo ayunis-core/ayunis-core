@@ -41,9 +41,7 @@ import { DeleteThreadUseCase } from '../../application/use-cases/delete-thread/d
 import { AddSourceToThreadUseCase } from '../../application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
-import { UpdateThreadInstructionUseCase } from '../../application/use-cases/update-thread-instruction/update-thread-instruction.use-case';
 import { UpdateThreadModelUseCase } from '../../application/use-cases/update-thread-model/update-thread-model.use-case';
-import { UpdateThreadInternetSearchUseCase } from '../../application/use-cases/update-thread-internet-search/update-thread-internet-search.use-case';
 
 // Import commands and queries
 import { CreateThreadCommand } from '../../application/use-cases/create-thread/create-thread.command';
@@ -53,9 +51,7 @@ import { DeleteThreadCommand } from '../../application/use-cases/delete-thread/d
 import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
 import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
 import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
-import { UpdateThreadInstructionCommand } from '../../application/use-cases/update-thread-instruction/update-thread-instruction.command';
 import { UpdateThreadModelCommand } from '../../application/use-cases/update-thread-model/update-thread-model.command';
-import { UpdateThreadInternetSearchCommand } from '../../application/use-cases/update-thread-internet-search/update-thread-internet-search.command';
 
 // Import other dependencies
 import { CreateFileSourceCommand } from '../../../sources/application/use-cases/create-file-source/create-file-source.command';
@@ -65,9 +61,7 @@ import {
   FileSourceResponseDto,
 } from './dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
-import { UpdateThreadInstructionDto } from './dto/update-thread-instruction.dto';
 import { UpdateThreadModelDto } from './dto/update-thread-model.dto';
-import { UpdateThreadInternetSearchDto } from './dto/update-thread-internet-search.dto';
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
@@ -76,6 +70,9 @@ import { CreateFileSourceUseCase } from '../../../sources/application/use-cases/
 import { DeleteSourceUseCase } from '../../../sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from '../../../sources/application/use-cases/delete-source/delete-source.command';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
+import { UpdateThreadAgentCommand } from '../../application/use-cases/update-thread-agent/update-thread-agent.command';
+import { UpdateThreadAgentUseCase } from '../../application/use-cases/update-thread-agent/update-thread-agent.use-case';
+import { UpdateThreadAgentDto } from './dto/update-thread-agent.dto';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -90,14 +87,13 @@ export class ThreadsController {
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly updateThreadInstructionUseCase: UpdateThreadInstructionUseCase,
     private readonly updateThreadModelUseCase: UpdateThreadModelUseCase,
-    private readonly updateThreadInternetSearchUseCase: UpdateThreadInternetSearchUseCase,
     private readonly createFileSourceUseCase: CreateFileSourceUseCase,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
+    private readonly updateThreadAgentUseCase: UpdateThreadAgentUseCase,
   ) {}
 
   @Post()
@@ -124,6 +120,7 @@ export class ThreadsController {
         userId,
         orgId,
         modelId: createThreadDto.modelId,
+        agentId: createThreadDto.agentId,
       }),
     );
     return this.getThreadDtoMapper.toDto(thread);
@@ -180,41 +177,6 @@ export class ThreadsController {
     return this.getThreadDtoMapper.toDto(thread);
   }
 
-  @Patch(':id/instruction')
-  @ApiOperation({ summary: 'Update thread instruction' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread to update',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiBody({ type: UpdateThreadInstructionDto })
-  @ApiResponse({
-    status: 200,
-    description: 'The thread instruction has been successfully updated',
-  })
-  @ApiResponse({ status: 404, description: 'Thread not found' })
-  @ApiResponse({ status: 400, description: 'Invalid instruction data' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  async updateInstruction(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Body() updateInstructionDto: UpdateThreadInstructionDto,
-  ): Promise<void> {
-    this.logger.log('updateInstruction', {
-      threadId,
-      instruction: updateInstructionDto.instruction,
-    });
-
-    const command = new UpdateThreadInstructionCommand(
-      threadId,
-      userId,
-      updateInstructionDto.instruction,
-    );
-
-    await this.updateThreadInstructionUseCase.execute(command);
-  }
-
   @Patch(':id/model')
   @ApiOperation({ summary: 'Update thread model' })
   @ApiParam({
@@ -250,40 +212,39 @@ export class ThreadsController {
     await this.updateThreadModelUseCase.execute(command);
   }
 
-  @Patch(':id/internet-search')
-  @ApiOperation({ summary: 'Update thread internet search setting' })
+  @Patch(':id/agent')
+  @ApiOperation({ summary: 'Update thread agent' })
   @ApiParam({
     name: 'id',
     description: 'The UUID of the thread to update',
     type: 'string',
     format: 'uuid',
   })
-  @ApiBody({ type: UpdateThreadInternetSearchDto })
+  @ApiBody({ type: UpdateThreadAgentDto })
   @ApiResponse({
     status: 200,
-    description:
-      'The thread internet search setting has been successfully updated',
+    description: 'The thread agent has been successfully updated',
   })
   @ApiResponse({ status: 404, description: 'Thread not found' })
-  @ApiResponse({ status: 400, description: 'Invalid internet search data' })
+  @ApiResponse({ status: 400, description: 'Invalid agent data' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  async updateInternetSearch(
+  async updateAgent(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Body() updateInternetSearchDto: UpdateThreadInternetSearchDto,
+    @Body() updateAgentDto: UpdateThreadAgentDto,
   ): Promise<void> {
-    this.logger.log('updateInternetSearch', {
+    this.logger.log('updateAgent', {
       threadId,
-      isInternetSearchEnabled: updateInternetSearchDto.isInternetSearchEnabled,
+      agentId: updateAgentDto.agentId,
     });
 
-    const command = new UpdateThreadInternetSearchCommand(
+    const command = new UpdateThreadAgentCommand({
       threadId,
+      agentId: updateAgentDto.agentId,
       userId,
-      updateInternetSearchDto.isInternetSearchEnabled,
-    );
+    });
 
-    await this.updateThreadInternetSearchUseCase.execute(command);
+    await this.updateThreadAgentUseCase.execute(command);
   }
 
   @Delete(':id')

@@ -6,7 +6,7 @@ import {
   FindOneModelParams,
   ModelsRepository,
 } from '../../../application/ports/models.repository';
-import { ModelWithConfig } from '../../../domain/model-with-config.entity';
+import { Model } from '../../../domain/model.entity';
 import { ModelRecord } from './schema/model.record';
 import { ModelMapper } from './mappers/model.mapper';
 
@@ -22,7 +22,7 @@ export class LocalModelsRepository extends ModelsRepository {
     super();
   }
 
-  async findAll(): Promise<ModelWithConfig[]> {
+  async findAll(): Promise<Model[]> {
     this.logger.log('findAll');
 
     const modelRecords = await this.localModelRepository.find();
@@ -32,9 +32,7 @@ export class LocalModelsRepository extends ModelsRepository {
     );
   }
 
-  async findOne(
-    params: FindOneModelParams,
-  ): Promise<ModelWithConfig | undefined> {
+  async findOne(params: FindOneModelParams): Promise<Model | undefined> {
     this.logger.log('findOne', params);
 
     const where =
@@ -47,11 +45,11 @@ export class LocalModelsRepository extends ModelsRepository {
     return model ? this.localModelMapper.toDomain(model) : undefined;
   }
 
-  async create(model: ModelWithConfig): Promise<ModelWithConfig> {
+  async create(model: Model): Promise<Model> {
     this.logger.log('create', {
-      modelName: model.model.name,
-      modelProvider: model.model.provider,
-      displayName: model.config.displayName,
+      modelName: model.name,
+      modelProvider: model.provider,
+      displayName: model.displayName,
     });
 
     const modelEntity = this.localModelMapper.toRecord(model);
@@ -60,12 +58,12 @@ export class LocalModelsRepository extends ModelsRepository {
     return this.localModelMapper.toDomain(savedModel);
   }
 
-  async update(id: UUID, model: ModelWithConfig): Promise<ModelWithConfig> {
+  async update(id: UUID, model: Model): Promise<Model> {
     this.logger.log('update', {
       id,
-      modelName: model.model.name,
-      modelProvider: model.model.provider,
-      displayName: model.config.displayName,
+      modelName: model.name,
+      modelProvider: model.provider,
+      displayName: model.displayName,
     });
 
     const modelEntity = this.localModelMapper.toRecord(model);

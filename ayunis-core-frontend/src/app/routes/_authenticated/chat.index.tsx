@@ -4,7 +4,6 @@ import {
   modelsControllerGetEffectiveDefaultModel,
   promptsControllerFindOne,
   subscriptionsControllerHasActiveSubscription,
-  type PermittedModelResponseDto,
 } from "@/shared/api";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { z } from "zod";
@@ -26,14 +25,29 @@ const queryHasActiveSubscriptionOptions = () => ({
 
 const searchSchema = z.object({
   prompt: z.string().optional(),
+  modelId: z.string().optional(),
+  agentId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/chat/")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { prompt: promptId }, context: { queryClient } }) => {
-    const defaultModel: PermittedModelResponseDto =
-      await queryClient.ensureQueryData(queryDefaultModelOptions());
+  loader: async ({
+    deps: { prompt: promptId, modelId, agentId },
+    context: { queryClient },
+  }) => {
+    let selectedModelId: string | undefined;
+    let selectedAgentId: string | undefined;
+    if (modelId) {
+      selectedModelId = modelId;
+    } else if (agentId) {
+      selectedAgentId = agentId;
+    } else {
+      const defaultModel = await queryClient.ensureQueryData(
+        queryDefaultModelOptions(),
+      );
+      selectedModelId = defaultModel.id;
+    }
     const { hasActiveSubscription } = await queryClient.ensureQueryData(
       queryHasActiveSubscriptionOptions(),
     );
@@ -41,7 +55,8 @@ export const Route = createFileRoute("/_authenticated/chat/")({
       ? await queryClient.ensureQueryData(queryPromptOptions(promptId))
       : undefined;
     return {
-      defaultModel,
+      selectedModelId,
+      selectedAgentId,
       prefilledPrompt: prompt?.content,
       hasActiveSubscription,
     };
@@ -57,11 +72,16 @@ export const Route = createFileRoute("/_authenticated/chat/")({
 });
 
 function RouteComponent() {
-  const { defaultModel, prefilledPrompt, hasActiveSubscription } =
-    Route.useLoaderData();
+  const {
+    selectedModelId,
+    selectedAgentId,
+    prefilledPrompt,
+    hasActiveSubscription,
+  } = Route.useLoaderData();
   return (
     <NewChatPage
-      defaultModel={defaultModel}
+      selectedModelId={selectedModelId}
+      selectedAgentId={selectedAgentId}
       prefilledPrompt={prefilledPrompt}
       hasSubscription={hasActiveSubscription}
     />

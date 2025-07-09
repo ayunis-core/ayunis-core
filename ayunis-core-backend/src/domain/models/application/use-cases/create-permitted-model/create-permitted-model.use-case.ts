@@ -27,13 +27,13 @@ export class CreatePermittedModelUseCase {
     try {
       const model = this.modelRegistry.getAvailableModel(command.modelId);
       const isProviderPermitted = await this.isProviderPermittedUseCase.execute(
-        new IsProviderPermittedQuery(command.orgId, model.model.provider),
+        new IsProviderPermittedQuery(command.orgId, model.provider),
       );
       if (!isProviderPermitted) {
-        throw new ModelProviderNotPermittedError(model.model.provider);
+        throw new ModelProviderNotPermittedError(model.provider);
       }
       const permittedModel = new PermittedModel({
-        model: model.model,
+        model: model,
         orgId: command.orgId,
       });
       const created =

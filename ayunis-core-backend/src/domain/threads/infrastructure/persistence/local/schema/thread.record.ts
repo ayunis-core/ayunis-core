@@ -4,6 +4,7 @@ import { SourceRecord } from '../../../../../sources/infrastructure/persistence/
 import { Column, Entity, OneToMany, Index, ManyToOne } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -11,20 +12,22 @@ export class ThreadRecord extends BaseRecord {
   @Index()
   userId: UUID;
 
-  @Column()
-  modelId: UUID;
+  @Column({ nullable: true })
+  @Index()
+  modelId?: UUID;
 
   @ManyToOne(() => PermittedModelRecord)
-  model: PermittedModelRecord;
+  model?: PermittedModelRecord;
+
+  @Column({ nullable: true })
+  @Index()
+  agentId?: UUID;
+
+  @ManyToOne(() => AgentRecord)
+  agent?: AgentRecord;
 
   @Column({ nullable: true })
   title?: string;
-
-  @Column({ nullable: true })
-  instruction?: string;
-
-  @Column({ default: false })
-  isInternetSearchEnabled: boolean;
 
   @OneToMany(() => MessageRecord, (message) => message.thread)
   messages: MessageRecord[];

@@ -13,13 +13,13 @@ import { SystemMessage } from 'src/domain/messages/domain/messages/system-messag
 
 @Injectable()
 export class MessageMapper {
-  toEntity(message: Message): MessageRecord {
-    const messageEntity = new MessageRecord();
-    messageEntity.id = message.id;
-    messageEntity.threadId = message.threadId;
-    messageEntity.role = message.role;
-    messageEntity.createdAt = message.createdAt;
-    messageEntity.content = message.content.map((content) => {
+  toRecord(message: Message): MessageRecord {
+    const record = new MessageRecord();
+    record.id = message.id;
+    record.threadId = message.threadId;
+    record.role = message.role;
+    record.createdAt = message.createdAt;
+    record.content = message.content.map((content) => {
       if (content instanceof TextMessageContent) {
         return {
           type: MessageContentType.TEXT,
@@ -44,7 +44,7 @@ export class MessageMapper {
       }
       throw new Error('Invalid message content');
     });
-    return messageEntity;
+    return record;
   }
 
   toDomain(messageEntity: MessageRecord): Message {

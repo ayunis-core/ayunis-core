@@ -29,5 +29,5 @@ export class AgentRecord extends BaseRecord {
   @OneToMany(() => AgentToolAssignmentRecord, (agentTool) => agentTool.agent, {
     cascade: true,
   })
-  agentTools: AgentToolAssignmentRecord[];
+  agentTools?: AgentToolAssignmentRecord[];
 }

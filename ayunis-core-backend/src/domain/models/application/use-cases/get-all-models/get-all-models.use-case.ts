@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ModelWithConfig } from 'src/domain/models/domain/model-with-config.entity';
 import { ModelsRepository } from '../../ports/models.repository';
+import { Model } from 'src/domain/models/domain/model.entity';
 
 @Injectable()
 export class GetAllModelsUseCase {
@@ -8,7 +8,7 @@ export class GetAllModelsUseCase {
 
   constructor(private readonly modelsRepository: ModelsRepository) {}
 
-  async execute(): Promise<ModelWithConfig[]> {
+  async execute(): Promise<Model[]> {
     this.logger.log('execute');
 
     return await this.modelsRepository.findAll();

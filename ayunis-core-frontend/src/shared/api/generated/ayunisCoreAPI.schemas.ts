@@ -16,6 +16,8 @@ export const ModelWithConfigResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -58,6 +60,8 @@ export const PermittedModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 export interface PermittedModelResponseDto {
@@ -96,6 +100,8 @@ export const ModelProviderInfoResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 /**
@@ -110,6 +116,7 @@ export const ModelProviderInfoResponseDtoHostedIn = {
   EU: 'EU',
   US: 'US',
   SELF_HOSTED: 'SELF_HOSTED',
+  AYUNIS: 'AYUNIS',
 } as const;
 
 export interface ModelProviderInfoResponseDto {
@@ -132,6 +139,8 @@ export const CreatePermittedProviderDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -150,6 +159,8 @@ export const PermittedProviderResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 /**
@@ -164,6 +175,7 @@ export const PermittedProviderResponseDtoHostedIn = {
   EU: 'EU',
   US: 'US',
   SELF_HOSTED: 'SELF_HOSTED',
+  AYUNIS: 'AYUNIS',
 } as const;
 
 export interface PermittedProviderResponseDto {
@@ -186,6 +198,8 @@ export const DeletePermittedProviderDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -204,6 +218,8 @@ export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 /**
@@ -218,6 +234,7 @@ export const ModelProviderWithPermittedStatusResponseDtoHostedIn = {
   EU: 'EU',
   US: 'US',
   SELF_HOSTED: 'SELF_HOSTED',
+  AYUNIS: 'AYUNIS',
 } as const;
 
 export interface ModelProviderWithPermittedStatusResponseDto {
@@ -233,7 +250,9 @@ export interface ModelProviderWithPermittedStatusResponseDto {
 
 export interface CreateThreadDto {
   /** The id of the model */
-  modelId: string;
+  modelId?: string;
+  /** The id of the agent */
+  agentId?: string;
 }
 
 /**
@@ -418,6 +437,8 @@ export const ModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
 } as const;
 
 export interface ModelResponseDto {
@@ -442,14 +463,12 @@ export interface GetThreadResponseDto {
   id: string;
   /** User ID who owns this thread */
   userId: string;
-  /** Model */
-  model: ModelResponseDto;
+  /** Permitted model ID */
+  permittedModelId: string;
+  /** Agent ID */
+  agentId: string;
   /** Title of the thread */
   title?: string;
-  /** Instruction for the thread */
-  instruction?: string;
-  /** Whether internet search is enabled for the thread */
-  isInternetSearchEnabled: boolean;
   /** Array of messages in the thread (role-specific types) */
   messages: GetThreadResponseDtoMessagesItem[];
   /** Creation timestamp */
@@ -469,19 +488,14 @@ export interface GetThreadsResponseDtoItem {
   updatedAt: string;
 }
 
-export interface UpdateThreadInstructionDto {
-  /** The instruction for the thread */
-  instruction: string;
-}
-
 export interface UpdateThreadModelDto {
   /** The id of the model */
   modelId: string;
 }
 
-export interface UpdateThreadInternetSearchDto {
-  /** Whether internet search is enabled for the thread */
-  isInternetSearchEnabled: boolean;
+export interface UpdateThreadAgentDto {
+  /** The UUID of the agent to update */
+  agentId: string;
 }
 
 /**
@@ -543,6 +557,26 @@ export interface FileSourceResponseDto {
   /** Path to the stored file */
   filePath: string;
 }
+
+/**
+ * JSON Schema defining the parameters the tool accepts
+ */
+export type CreateHttpToolDtoParameters = { [key: string]: unknown };
+
+export interface CreateHttpToolDto {
+  /** Display name of the tool */
+  displayName: string;
+  /** Description of what the tool does */
+  description: string;
+  /** JSON Schema defining the parameters the tool accepts */
+  parameters: CreateHttpToolDtoParameters;
+  /** Endpoint URL for the HTTP tool */
+  endpointUrl: string;
+  /** HTTP method for the HTTP tool */
+  method: string;
+}
+
+export interface HttpTool { [key: string]: unknown }
 
 export interface CreateUrlSourceDto {
   /** Thread ID (optional) */
@@ -661,25 +695,52 @@ export interface EmbeddingResultsDto {
   results: EmbeddingResultDto[];
 }
 
-/**
- * JSON Schema defining the parameters the tool accepts
- */
-export type CreateHttpToolDtoParameters = { [key: string]: unknown };
-
-export interface CreateHttpToolDto {
-  /** Display name of the tool */
-  displayName: string;
-  /** Description of what the tool does */
-  description: string;
-  /** JSON Schema defining the parameters the tool accepts */
-  parameters: CreateHttpToolDtoParameters;
-  /** Endpoint URL for the HTTP tool */
-  endpointUrl: string;
-  /** HTTP method for the HTTP tool */
-  method: string;
+export interface CreateAgentDto {
+  /**
+   * The name of the agent
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** The instructions for the agent */
+  instructions: string;
+  /** The ID of the permitted model to use for this agent */
+  modelId: string;
 }
 
-export interface HttpTool { [key: string]: unknown }
+export type AgentResponseDtoToolsItem = { [key: string]: unknown };
+
+export interface AgentResponseDto {
+  /** The unique identifier of the agent */
+  id: string;
+  /** The name of the agent */
+  name: string;
+  /** The instructions for the agent */
+  instructions: string;
+  /** The unique identifier of the user who owns this agent */
+  userId: string;
+  /** The date and time when the agent was created */
+  createdAt: string;
+  /** The date and time when the agent was last updated */
+  updatedAt: string;
+  /** The model configuration for this agent */
+  model: ModelResponseDto;
+  /** The tools assigned to this agent */
+  tools: AgentResponseDtoToolsItem[];
+}
+
+export interface UpdateAgentDto {
+  /**
+   * The name of the agent
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** The instructions for the agent */
+  instructions: string;
+  /** The ID of the permitted model to use for this agent */
+  modelId: string;
+}
 
 /**
  * Response type identifier
@@ -1268,6 +1329,5 @@ export type StorageControllerUploadFileBody = {
 
 export type AdminControllerGetModelParams = {
 name: string;
-provider: string;
 };
 

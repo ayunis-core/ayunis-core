@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions } from "@tanstack/react-query";
-import { threadsControllerFindOne } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  threadsControllerFindOne,
+  getThreadsControllerFindOneQueryKey,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import ChatPage from "@/pages/chat/";
 
 const threadQueryOptions = (threadId: string) =>
   queryOptions({
-    queryKey: ["threads", threadId],
+    queryKey: [getThreadsControllerFindOneQueryKey(threadId)],
     queryFn: () => threadsControllerFindOne(threadId),
   });
 

@@ -4,6 +4,7 @@ import { ThreadRecord } from '../schema/thread.record';
 import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/local/mappers/message.mapper';
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
+import { AgentMapper } from 'src/domain/agents/infrastructure/persistence/local/mappers/agent.mapper';
 
 @Injectable()
 export class ThreadMapper {
@@ -11,35 +12,45 @@ export class ThreadMapper {
     private readonly messageMapper: MessageMapper,
     private readonly sourceMapper: SourceMapper,
     private readonly permittedModelMapper: PermittedModelMapper,
+    private readonly agentMapper: AgentMapper,
   ) {}
 
-  toEntity(thread: Thread): ThreadRecord {
-    const threadEntity = new ThreadRecord();
-    threadEntity.id = thread.id;
-    threadEntity.userId = thread.userId;
-    threadEntity.modelId = thread.model.id;
-    threadEntity.model = this.permittedModelMapper.toRecord(thread.model);
-    threadEntity.title = thread.title;
-    threadEntity.instruction = thread.instruction;
-    threadEntity.isInternetSearchEnabled = thread.isInternetSearchEnabled;
-    threadEntity.messages = thread.messages.map((message) =>
-      this.messageMapper.toEntity(message),
+  toRecord(thread: Thread): ThreadRecord {
+    const record = new ThreadRecord();
+    record.id = thread.id;
+    record.userId = thread.userId;
+    record.modelId = thread.model?.id;
+    record.model = thread.model
+      ? this.permittedModelMapper.toRecord(thread.model)
+      : undefined;
+    record.agentId = thread.agent?.id;
+    record.agent = thread.agent
+      ? this.agentMapper.toRecord(thread.agent)
+      : undefined;
+    record.title = thread.title;
+    record.messages = thread.messages.map((message) =>
+      this.messageMapper.toRecord(message),
     );
-    threadEntity.sources =
+    record.sources =
       thread.sources?.map((source) => this.sourceMapper.toEntity(source)) || [];
-    threadEntity.createdAt = thread.createdAt;
-    threadEntity.updatedAt = thread.updatedAt;
-    return threadEntity;
+    record.createdAt = thread.createdAt;
+    record.updatedAt = thread.updatedAt;
+    return record;
   }
 
   toDomain(threadEntity: ThreadRecord): Thread {
     return new Thread({
       id: threadEntity.id,
       userId: threadEntity.userId,
-      model: this.permittedModelMapper.toDomain(threadEntity.model),
+      model:
+        threadEntity.modelId && threadEntity.model
+          ? this.permittedModelMapper.toDomain(threadEntity.model)
+          : undefined,
+      agent:
+        threadEntity.agentId && threadEntity.agent
+          ? this.agentMapper.toDomain(threadEntity.agent)
+          : undefined,
       title: threadEntity.title,
-      instruction: threadEntity.instruction,
-      isInternetSearchEnabled: threadEntity.isInternetSearchEnabled,
       messages:
         threadEntity.messages?.map((message) =>
           this.messageMapper.toDomain(message),

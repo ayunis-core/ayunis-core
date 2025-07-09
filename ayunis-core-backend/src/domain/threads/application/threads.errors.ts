@@ -13,6 +13,7 @@ export enum ThreadErrorCode {
   SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
   THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
+  NO_MODEL_OR_AGENT_PROVIDED = 'NO_MODEL_OR_AGENT_PROVIDED',
 }
 
 /**
@@ -143,6 +144,20 @@ export class ModelReplacementError extends ThreadError {
       {
         threadId,
         modelId,
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class NoModelOrAgentProvidedError extends ThreadError {
+  constructor(userId?: string, metadata?: ErrorMetadata) {
+    super(
+      'No model or agent provided',
+      ThreadErrorCode.NO_MODEL_OR_AGENT_PROVIDED,
+      400,
+      {
+        ...(userId && { userId }),
         ...metadata,
       },
     );

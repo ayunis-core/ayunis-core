@@ -29,6 +29,8 @@ import type {
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
   AdminControllerGetModelParams,
+  AgentResponseDto,
+  CreateAgentDto,
   CreateHttpToolDto,
   CreateInviteDto,
   CreateInviteResponseDto,
@@ -75,11 +77,11 @@ import type {
   SubscriptionResponseDto,
   SuccessResponseDto,
   ThreadsControllerAddFileSourceBody,
+  UpdateAgentDto,
   UpdateModelDto,
   UpdatePasswordDto,
   UpdatePromptDto,
-  UpdateThreadInstructionDto,
-  UpdateThreadInternetSearchDto,
+  UpdateThreadAgentDto,
   UpdateThreadModelDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
@@ -1635,71 +1637,6 @@ export const useThreadsControllerDelete = <TError = void,
     }
     
 /**
- * @summary Update thread instruction
- */
-export const threadsControllerUpdateInstruction = (
-    id: string,
-    updateThreadInstructionDto: UpdateThreadInstructionDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/instruction`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateThreadInstructionDto
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerUpdateInstructionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext> => {
-
-const mutationKey = ['threadsControllerUpdateInstruction'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, {id: string;data: UpdateThreadInstructionDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerUpdateInstruction(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerUpdateInstructionMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>>
-    export type ThreadsControllerUpdateInstructionMutationBody = UpdateThreadInstructionDto
-    export type ThreadsControllerUpdateInstructionMutationError = void
-
-    /**
- * @summary Update thread instruction
- */
-export const useThreadsControllerUpdateInstruction = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>, TError,{id: string;data: UpdateThreadInstructionDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateInstruction>>,
-        TError,
-        {id: string;data: UpdateThreadInstructionDto},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerUpdateInstructionMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
  * @summary Update thread model
  */
 export const threadsControllerUpdateModel = (
@@ -1765,29 +1702,29 @@ export const useThreadsControllerUpdateModel = <TError = void,
     }
     
 /**
- * @summary Update thread internet search setting
+ * @summary Update thread agent
  */
-export const threadsControllerUpdateInternetSearch = (
+export const threadsControllerUpdateAgent = (
     id: string,
-    updateThreadInternetSearchDto: UpdateThreadInternetSearchDto,
+    updateThreadAgentDto: UpdateThreadAgentDto,
  ) => {
       
       
       return customAxiosInstance<void>(
-      {url: `/threads/${id}/internet-search`, method: 'PATCH',
+      {url: `/threads/${id}/agent`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
-      data: updateThreadInternetSearchDto
+      data: updateThreadAgentDto
     },
       );
     }
   
 
 
-export const getThreadsControllerUpdateInternetSearchMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext> => {
+export const getThreadsControllerUpdateAgentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, TError,{id: string;data: UpdateThreadAgentDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, TError,{id: string;data: UpdateThreadAgentDto}, TContext> => {
 
-const mutationKey = ['threadsControllerUpdateInternetSearch'];
+const mutationKey = ['threadsControllerUpdateAgent'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1797,10 +1734,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, {id: string;data: UpdateThreadInternetSearchDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, {id: string;data: UpdateThreadAgentDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  threadsControllerUpdateInternetSearch(id,data,)
+          return  threadsControllerUpdateAgent(id,data,)
         }
 
         
@@ -1808,23 +1745,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ThreadsControllerUpdateInternetSearchMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>>
-    export type ThreadsControllerUpdateInternetSearchMutationBody = UpdateThreadInternetSearchDto
-    export type ThreadsControllerUpdateInternetSearchMutationError = void
+    export type ThreadsControllerUpdateAgentMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>>
+    export type ThreadsControllerUpdateAgentMutationBody = UpdateThreadAgentDto
+    export type ThreadsControllerUpdateAgentMutationError = void
 
     /**
- * @summary Update thread internet search setting
+ * @summary Update thread agent
  */
-export const useThreadsControllerUpdateInternetSearch = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>, TError,{id: string;data: UpdateThreadInternetSearchDto}, TContext>, }
+export const useThreadsControllerUpdateAgent = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, TError,{id: string;data: UpdateThreadAgentDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateInternetSearch>>,
+        Awaited<ReturnType<typeof threadsControllerUpdateAgent>>,
         TError,
-        {id: string;data: UpdateThreadInternetSearchDto},
+        {id: string;data: UpdateThreadAgentDto},
         TContext
       > => {
 
-      const mutationOptions = getThreadsControllerUpdateInternetSearchMutationOptions(options);
+      const mutationOptions = getThreadsControllerUpdateAgentMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -2051,6 +1988,133 @@ export const useThreadsControllerRemoveSource = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerRemoveSourceMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Create a new HTTP tool for current user
+ */
+export const toolsControllerCreateHttpTool = (
+    createHttpToolDto: CreateHttpToolDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<HttpTool>(
+      {url: `/tools/http`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createHttpToolDto, signal
+    },
+      );
+    }
+  
+
+
+export const getToolsControllerCreateHttpToolMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext> => {
+
+const mutationKey = ['toolsControllerCreateHttpTool'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, {data: CreateHttpToolDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  toolsControllerCreateHttpTool(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToolsControllerCreateHttpToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>>
+    export type ToolsControllerCreateHttpToolMutationBody = CreateHttpToolDto
+    export type ToolsControllerCreateHttpToolMutationError = unknown
+
+    /**
+ * @summary Create a new HTTP tool for current user
+ */
+export const useToolsControllerCreateHttpTool = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>,
+        TError,
+        {data: CreateHttpToolDto},
+        TContext
+      > => {
+
+      const mutationOptions = getToolsControllerCreateHttpToolMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Delete a tool by ID
+ */
+export const toolsControllerDeleteTool = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/tools/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getToolsControllerDeleteToolMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['toolsControllerDeleteTool'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  toolsControllerDeleteTool(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToolsControllerDeleteToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerDeleteTool>>>
+    
+    export type ToolsControllerDeleteToolMutationError = unknown
+
+    /**
+ * @summary Delete a tool by ID
+ */
+export const useToolsControllerDeleteTool = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof toolsControllerDeleteTool>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getToolsControllerDeleteToolMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -2937,29 +3001,29 @@ export const useEmbeddingsControllerEmbedText = <TError = void,
     }
     
 /**
- * @summary Create a new HTTP tool for current user
+ * @summary Create a new agent
  */
-export const toolsControllerCreateHttpTool = (
-    createHttpToolDto: CreateHttpToolDto,
+export const agentsControllerCreate = (
+    createAgentDto: CreateAgentDto,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<HttpTool>(
-      {url: `/tools/http`, method: 'POST',
+      return customAxiosInstance<AgentResponseDto>(
+      {url: `/agents`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: createHttpToolDto, signal
+      data: createAgentDto, signal
     },
       );
     }
   
 
 
-export const getToolsControllerCreateHttpToolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext> => {
+export const getAgentsControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerCreate>>, TError,{data: CreateAgentDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerCreate>>, TError,{data: CreateAgentDto}, TContext> => {
 
-const mutationKey = ['toolsControllerCreateHttpTool'];
+const mutationKey = ['agentsControllerCreate'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2969,10 +3033,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, {data: CreateHttpToolDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerCreate>>, {data: CreateAgentDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  toolsControllerCreateHttpTool(data,)
+          return  agentsControllerCreate(data,)
         }
 
         
@@ -2980,48 +3044,227 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ToolsControllerCreateHttpToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>>
-    export type ToolsControllerCreateHttpToolMutationBody = CreateHttpToolDto
-    export type ToolsControllerCreateHttpToolMutationError = unknown
+    export type AgentsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerCreate>>>
+    export type AgentsControllerCreateMutationBody = CreateAgentDto
+    export type AgentsControllerCreateMutationError = void
 
     /**
- * @summary Create a new HTTP tool for current user
+ * @summary Create a new agent
  */
-export const useToolsControllerCreateHttpTool = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
+export const useAgentsControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerCreate>>, TError,{data: CreateAgentDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>,
+        Awaited<ReturnType<typeof agentsControllerCreate>>,
         TError,
-        {data: CreateHttpToolDto},
+        {data: CreateAgentDto},
         TContext
       > => {
 
-      const mutationOptions = getToolsControllerCreateHttpToolMutationOptions(options);
+      const mutationOptions = getAgentsControllerCreateMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * @summary Delete a tool by ID
+ * @summary Get all agents for the current user
  */
-export const toolsControllerDeleteTool = (
+export const agentsControllerFindAll = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AgentResponseDto[]>(
+      {url: `/agents`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAgentsControllerFindAllQueryKey = () => {
+    return [`/agents`] as const;
+    }
+
+    
+export const getAgentsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerFindAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerFindAll>>> = ({ signal }) => agentsControllerFindAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AgentsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerFindAll>>>
+export type AgentsControllerFindAllQueryError = void
+
+
+export function useAgentsControllerFindAll<TData = Awaited<ReturnType<typeof agentsControllerFindAll>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerFindAll<TData = Awaited<ReturnType<typeof agentsControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerFindAll<TData = Awaited<ReturnType<typeof agentsControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all agents for the current user
+ */
+
+export function useAgentsControllerFindAll<TData = Awaited<ReturnType<typeof agentsControllerFindAll>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAgentsControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get an agent by ID
+ */
+export const agentsControllerFindOne = (
     id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AgentResponseDto>(
+      {url: `/agents/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAgentsControllerFindOneQueryKey = (id: string,) => {
+    return [`/agents/${id}`] as const;
+    }
+
+    
+export const getAgentsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerFindOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerFindOne>>> = ({ signal }) => agentsControllerFindOne(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AgentsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerFindOne>>>
+export type AgentsControllerFindOneQueryError = void
+
+
+export function useAgentsControllerFindOne<TData = Awaited<ReturnType<typeof agentsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerFindOne<TData = Awaited<ReturnType<typeof agentsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerFindOne<TData = Awaited<ReturnType<typeof agentsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get an agent by ID
+ */
+
+export function useAgentsControllerFindOne<TData = Awaited<ReturnType<typeof agentsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAgentsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update an agent
+ */
+export const agentsControllerUpdate = (
+    id: string,
+    updateAgentDto: UpdateAgentDto,
  ) => {
       
       
-      return customAxiosInstance<void>(
-      {url: `/tools/${id}`, method: 'DELETE'
+      return customAxiosInstance<AgentResponseDto>(
+      {url: `/agents/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateAgentDto
     },
       );
     }
   
 
 
-export const getToolsControllerDeleteToolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext> => {
+export const getAgentsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUpdate>>, TError,{id: string;data: UpdateAgentDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUpdate>>, TError,{id: string;data: UpdateAgentDto}, TContext> => {
 
-const mutationKey = ['toolsControllerDeleteTool'];
+const mutationKey = ['agentsControllerUpdate'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3031,10 +3274,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerUpdate>>, {id: string;data: UpdateAgentDto}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  toolsControllerDeleteTool(id,)
+          return  agentsControllerUpdate(id,data,)
         }
 
         
@@ -3042,23 +3285,85 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ToolsControllerDeleteToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerDeleteTool>>>
-    
-    export type ToolsControllerDeleteToolMutationError = unknown
+    export type AgentsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerUpdate>>>
+    export type AgentsControllerUpdateMutationBody = UpdateAgentDto
+    export type AgentsControllerUpdateMutationError = void
 
     /**
- * @summary Delete a tool by ID
+ * @summary Update an agent
  */
-export const useToolsControllerDeleteTool = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
+export const useAgentsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUpdate>>, TError,{id: string;data: UpdateAgentDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof toolsControllerDeleteTool>>,
+        Awaited<ReturnType<typeof agentsControllerUpdate>>,
+        TError,
+        {id: string;data: UpdateAgentDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAgentsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Delete an agent
+ */
+export const agentsControllerDelete = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/agents/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getAgentsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['agentsControllerDelete'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  agentsControllerDelete(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AgentsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerDelete>>>
+    
+    export type AgentsControllerDeleteMutationError = void
+
+    /**
+ * @summary Delete an agent
+ */
+export const useAgentsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerDelete>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof agentsControllerDelete>>,
         TError,
         {id: string},
         TContext
       > => {
 
-      const mutationOptions = getToolsControllerDeleteToolMutationOptions(options);
+      const mutationOptions = getAgentsControllerDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

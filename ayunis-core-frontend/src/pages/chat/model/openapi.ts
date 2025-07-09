@@ -7,7 +7,6 @@ import type {
 } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 export type Thread = GetThreadResponseDto;
-export type Model = GetThreadResponseDto["model"];
 export type Message = GetThreadResponseDto["messages"][number];
 export type AssistantMessage = AssistantMessageResponseDto;
 export type AssistantMessageContent =

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FindAgentUseCase } from './find-agent.use-case';
+import { GetAgentUseCase } from './get-agent.use-case';
 import { AgentRepository } from '../../ports/agent.repository';
-import { FindAgentQuery } from './find-agent.query';
+import { GetAgentQuery } from './get-agent.query';
 import { Agent } from '../../../domain/agent.entity';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 import { Model } from 'src/domain/models/domain/model.entity';
 
 describe('FindAgentUseCase', () => {
-  let useCase: FindAgentUseCase;
+  let useCase: GetAgentUseCase;
   let mockAgentRepository: Partial<AgentRepository>;
 
   beforeEach(async () => {
@@ -23,12 +23,12 @@ describe('FindAgentUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FindAgentUseCase,
+        GetAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
       ],
     }).compile();
 
-    useCase = module.get<FindAgentUseCase>(FindAgentUseCase);
+    useCase = module.get<GetAgentUseCase>(GetAgentUseCase);
   });
 
   it('should be defined', () => {
@@ -40,7 +40,7 @@ describe('FindAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const query = new FindAgentQuery(agentId, userId);
+      const query = new GetAgentQuery(agentId, userId);
 
       const mockModel = new PermittedModel({
         id: randomUUID(),
@@ -71,7 +71,7 @@ describe('FindAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const query = new FindAgentQuery(agentId, userId);
+      const query = new GetAgentQuery(agentId, userId);
 
       jest.spyOn(mockAgentRepository, 'findOne').mockResolvedValue(null);
 
@@ -87,7 +87,7 @@ describe('FindAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const query = new FindAgentQuery(agentId, userId);
+      const query = new GetAgentQuery(agentId, userId);
 
       // Mock repository to return null (agent not found for this user)
       jest.spyOn(mockAgentRepository, 'findOne').mockResolvedValue(null);

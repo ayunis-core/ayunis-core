@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { ModelWithConfig } from '../../domain/model-with-config.entity';
+import { Model } from '../../domain/model.entity';
 
 export type FindOneModelParams =
   | {
@@ -12,11 +12,9 @@ export type FindOneModelParams =
     };
 
 export abstract class ModelsRepository {
-  abstract findAll(): Promise<ModelWithConfig[]>;
-  abstract findOne(
-    params: FindOneModelParams,
-  ): Promise<ModelWithConfig | undefined>;
-  abstract create(model: ModelWithConfig): Promise<ModelWithConfig>;
-  abstract update(id: UUID, model: ModelWithConfig): Promise<ModelWithConfig>;
+  abstract findAll(): Promise<Model[]>;
+  abstract findOne(params: FindOneModelParams): Promise<Model | undefined>;
+  abstract create(model: Model): Promise<Model>;
+  abstract update(id: UUID, model: Model): Promise<Model>;
   abstract delete(id: UUID): Promise<void>;
 }

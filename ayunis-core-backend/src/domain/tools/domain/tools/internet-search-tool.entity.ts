@@ -29,7 +29,7 @@ export class InternetSearchTool extends ContextualTool {
 
   isAvailable(ctx: unknown): boolean {
     if (ctx instanceof Thread) {
-      return ctx.isInternetSearchEnabled ?? false;
+      return false;
     }
     return false;
   }

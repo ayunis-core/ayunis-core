@@ -39,9 +39,10 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         function: { ...tool.function, strict: true },
       }));
       const openAiMessages = this.convertMessages(messages);
+      const systemPrompt = this.convertSystemPrompt(input.systemPrompt);
       const completionOptions = {
         model: input.model.name,
-        messages: openAiMessages,
+        messages: [systemPrompt, ...openAiMessages],
         tools: openAiTools,
         tool_choice: toolChoice
           ? this.convertToolChoice(toolChoice)
@@ -81,6 +82,15 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         description: tool.description,
         parameters: tool.parameters as FunctionParameters | undefined,
       },
+    };
+  };
+
+  private convertSystemPrompt = (
+    systemPrompt: string,
+  ): OpenAI.ChatCompletionMessageParam => {
+    return {
+      role: 'system' as const,
+      content: systemPrompt,
     };
   };
 

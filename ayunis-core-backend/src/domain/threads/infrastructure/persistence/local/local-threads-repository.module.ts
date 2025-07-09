@@ -6,12 +6,15 @@ import { LocalMessagesRepositoryModule } from 'src/domain/messages/infrastructur
 import { ThreadMapper } from './mappers/thread.mapper';
 import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
 import { LocalPermittedModelsRepositoryModule } from 'src/domain/models/infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
+import { LocalAgentsRepositoryModule } from 'src/domain/agents/infrastructure/persistence/local/local-agent-repository.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([ThreadRecord]),
     LocalMessagesRepositoryModule,
     LocalSourceRepositoryModule,
     LocalPermittedModelsRepositoryModule,
+    LocalAgentsRepositoryModule,
   ],
   providers: [LocalThreadsRepository, ThreadMapper],
   exports: [LocalThreadsRepository, ThreadMapper],

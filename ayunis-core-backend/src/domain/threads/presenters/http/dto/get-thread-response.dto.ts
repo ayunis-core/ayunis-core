@@ -15,6 +15,7 @@ import {
   ToolResultMessageContentResponseDto,
 } from './message-response.dto';
 import { ModelResponseDto } from './model-response-dto';
+import { UUID } from 'crypto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -40,30 +41,22 @@ export class GetThreadResponseDto {
   userId: string;
 
   @ApiProperty({
-    description: 'Model',
-    type: ModelResponseDto,
+    description: 'Permitted model ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  model: ModelResponseDto;
+  permittedModelId?: UUID;
+
+  @ApiProperty({
+    description: 'Agent ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  agentId?: UUID;
 
   @ApiPropertyOptional({
     description: 'Title of the thread',
     example: 'Discussion about AI models',
   })
   title?: string;
-
-  @ApiPropertyOptional({
-    description: 'Instruction for the thread',
-    example:
-      'Please analyze the attached documents and provide insights on market trends.',
-  })
-  instruction?: string;
-
-  @ApiProperty({
-    description: 'Whether internet search is enabled for the thread',
-    example: false,
-    type: Boolean,
-  })
-  isInternetSearchEnabled: boolean;
 
   @ApiProperty({
     description: 'Array of messages in the thread (role-specific types)',

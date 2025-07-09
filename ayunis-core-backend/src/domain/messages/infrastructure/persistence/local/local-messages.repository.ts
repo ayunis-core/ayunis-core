@@ -18,7 +18,7 @@ export class LocalMessagesRepository extends MessagesRepository {
   }
 
   async create(message: Message): Promise<Message> {
-    const messageEntity = this.messageMapper.toEntity(message);
+    const messageEntity = this.messageMapper.toRecord(message);
     const savedMessageEntity = await this.repository.save(messageEntity);
     return this.messageMapper.toDomain(savedMessageEntity);
   }

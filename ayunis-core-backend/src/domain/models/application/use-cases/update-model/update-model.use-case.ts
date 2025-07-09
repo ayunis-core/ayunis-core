@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'src/domain/models/domain/model.entity';
-import { ModelConfig } from 'src/domain/models/domain/model-config.entity';
-import { ModelWithConfig } from 'src/domain/models/domain/model-with-config.entity';
 import { ModelsRepository } from '../../ports/models.repository';
 import { UpdateModelCommand } from './update-model.command';
 import {
@@ -16,7 +14,7 @@ export class UpdateModelUseCase {
 
   constructor(private readonly modelsRepository: ModelsRepository) {}
 
-  async execute(command: UpdateModelCommand): Promise<ModelWithConfig> {
+  async execute(command: UpdateModelCommand): Promise<Model> {
     this.logger.log('execute', {
       id: command.id,
       modelName: command.name,
@@ -42,27 +40,24 @@ export class UpdateModelUseCase {
 
       if (
         modelWithSameName &&
-        (modelWithSameName.model.name !== existingModel.model.name ||
-          modelWithSameName.model.provider !== existingModel.model.provider)
+        (modelWithSameName.name !== existingModel.name ||
+          modelWithSameName.provider !== existingModel.provider)
       ) {
         throw new ModelAlreadyExistsError(command.name, command.provider);
       }
 
       // Create updated model with config
       const model = new Model({
+        id: command.id,
         name: command.name,
         provider: command.provider,
-      });
-      const config = new ModelConfig({
         displayName: command.displayName,
         canStream: command.canStream,
         isReasoning: command.isReasoning,
         isArchived: command.isArchived,
       });
 
-      const modelWithConfig = new ModelWithConfig(model, config);
-
-      return await this.modelsRepository.update(command.id, modelWithConfig);
+      return await this.modelsRepository.update(command.id, model);
     } catch (error) {
       if (
         error instanceof ModelNotFoundByIdError ||

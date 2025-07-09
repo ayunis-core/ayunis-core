@@ -1,13 +1,7 @@
-import { usePromptsControllerFindAll } from "@/shared/api/generated/ayunisCoreAPI";
-
-export interface ChatPrompt {
-  id: string;
-  title: string;
-  content: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  getPromptsControllerFindAllQueryKey,
+  usePromptsControllerFindAll,
+} from "@/shared/api/generated/ayunisCoreAPI";
 
 export function usePrompts() {
   const {
@@ -17,12 +11,12 @@ export function usePrompts() {
     refetch,
   } = usePromptsControllerFindAll({
     query: {
-      queryKey: ["prompts"],
+      queryKey: [getPromptsControllerFindAllQueryKey()],
     },
   });
 
   return {
-    prompts: prompts as ChatPrompt[],
+    prompts,
     isLoading,
     error,
     refetch,

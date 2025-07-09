@@ -1,14 +1,17 @@
 import { randomUUID, UUID } from 'crypto';
-import { AgentToolAssignment } from './value-objects/agent-tool-assignment.object';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { ContextualTool } from 'src/domain/tools/domain/contextual-tool.entity';
+import { ConfigurableTool } from 'src/domain/tools/domain/configurable-tool.entity';
+import { ToolConfig } from 'src/domain/tools/domain/tool-config.entity';
 
 export class Agent {
   public readonly id: UUID;
   public readonly name: string;
   public readonly instructions: string;
   public readonly model: PermittedModel;
-  public readonly toolAssignments: AgentToolAssignment[];
+  public readonly tools: Array<Tool>;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
   public readonly userId: UUID;
@@ -18,7 +21,7 @@ export class Agent {
     name: string;
     instructions: string;
     model: PermittedModel;
-    toolAssignments?: AgentToolAssignment[];
+    tools?: Array<Tool>;
     userId: UUID;
     createdAt?: Date;
     updatedAt?: Date;
@@ -27,27 +30,26 @@ export class Agent {
     this.name = params.name;
     this.instructions = params.instructions;
     this.model = params.model;
-    this.toolAssignments = params.toolAssignments ?? [];
+    this.tools = params.tools ?? [];
     this.userId = params.userId;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
 
   /**
-   * Get all contextual tool assignments
+   * Get all contextual tools
    */
-  getContextualTools(): AgentToolAssignment[] {
-    return this.toolAssignments.filter((assignment) =>
-      assignment.isContextual(),
-    );
+  getContextualTools(): Array<ContextualTool> {
+    return this.tools.filter((tool) => tool instanceof ContextualTool);
   }
 
   /**
-   * Get all configurable tool assignments
+   * Get all configurable tools
    */
-  getConfigurableTools(): AgentToolAssignment[] {
-    return this.toolAssignments.filter((assignment) =>
-      assignment.isConfigurable(),
+  getConfigurableTools(): Array<ConfigurableTool<ToolConfig>> {
+    return this.tools.filter(
+      (tool): tool is ConfigurableTool<ToolConfig> =>
+        tool instanceof ConfigurableTool,
     );
   }
 
@@ -55,8 +57,6 @@ export class Agent {
    * Check if agent has a specific tool assigned
    */
   hasToolAssigned(toolType: ToolType): boolean {
-    return this.toolAssignments.some(
-      (assignment) => assignment.toolType === toolType,
-    );
+    return this.tools.some((tool) => tool.type === toolType);
   }
 }

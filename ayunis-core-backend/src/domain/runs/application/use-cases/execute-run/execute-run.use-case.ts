@@ -10,7 +10,6 @@ import { CreateUserMessageCommand } from '../../../../messages/application/use-c
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import { ToolUseMessageContent } from '../../../../messages/domain/message-contents/tool-use.message-content.entity';
-import { FindOneToolUseCase } from '../../../../tools/application/use-cases/find-one-tool/find-one-tool.use-case';
 import { FindContextualToolsUseCase } from '../../../../tools/application/use-cases/find-contextual-tools/find-contextual-tools.use-case';
 import { ExecuteToolUseCase } from '../../../../tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from '../../../../tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
@@ -25,6 +24,7 @@ import {
   RunExecutionFailedError,
   RunInvalidInputError,
   RunMaxIterationsReachedError,
+  RunNoModelFoundError,
   RunToolNotFoundError,
 } from '../../runs.errors';
 import {
@@ -34,13 +34,7 @@ import {
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ToolExecutionFailedError } from '../../../../tools/application/tools.errors';
 import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
-import { FindAgentUseCase } from '../../../../agents/application/use-cases/find-agent/find-agent.use-case';
-import { FindAgentQuery } from '../../../../agents/application/use-cases/find-agent/find-agent.query';
 import { Model } from 'src/domain/models/domain/model.entity';
-import {
-  FindOneConfigurableToolQuery,
-  FindOneToolQuery,
-} from '../../../../tools/application/use-cases/find-one-tool/find-one-tool.query';
 import { FindContextualToolsQuery } from '../../../../tools/application/use-cases/find-contextual-tools/find-contextual-tools.query';
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -66,13 +60,11 @@ export class ExecuteRunUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
-    private readonly findOneToolUseCase: FindOneToolUseCase,
     private readonly findContextualToolsUseCase: FindContextualToolsUseCase,
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly triggerInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
-    private readonly findAgentUseCase: FindAgentUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
   ) {}
@@ -82,15 +74,25 @@ export class ExecuteRunUseCase {
   ): Promise<AsyncGenerator<Message, void, void>> {
     this.logger.log('executeRun', command);
     try {
-      const { thread, tools, model, instructions } =
-        await this.assembleEntities(command);
+      const thread = await this.findThreadUseCase.execute(
+        new FindThreadQuery(command.threadId, command.userId),
+      );
+      const tools = this.assembleTools(thread);
+      const model = thread.agent ? thread.agent.model : thread.model;
+      if (!model) {
+        throw new RunNoModelFoundError({
+          threadId: thread.id,
+          userId: command.userId,
+        });
+      }
+      const instructions = thread.agent?.instructions;
 
       const trace = langfuse.trace({
         name: 'execute_run',
         userId: command.userId,
         metadata: {
           threadId: thread.id,
-          model: model.name,
+          model: model.model.name,
           streaming: command.streaming,
         },
         input: command.input,
@@ -100,7 +102,7 @@ export class ExecuteRunUseCase {
       return this.executeRunInternal({
         thread,
         tools,
-        model,
+        model: model.model,
         input: command.input as RunTextInput | RunToolResultInput,
         instructions,
         streaming: command.streaming,
@@ -116,55 +118,10 @@ export class ExecuteRunUseCase {
     }
   }
 
-  private async assembleEntities(command: ExecuteRunCommand): Promise<{
-    thread: Thread;
-    tools: Tool[];
-    model: Model;
-    instructions?: string;
-  }> {
-    const thread = await this.findThreadUseCase.execute(
-      new FindThreadQuery(command.threadId, command.userId),
-    );
-
-    // Variables for model, tools, and instructions
-    let model: Model;
+  private assembleTools(thread: Thread): Tool[] {
     let tools: Tool[] = [];
-    let instructions: string | undefined;
-
-    // If agent ID is provided, fetch the agent
-    if (command.agentId) {
-      const agent = await this.findAgentUseCase.execute(
-        new FindAgentQuery(command.agentId, command.userId),
-      );
-
-      model = agent.model.model;
-
-      // Start with agent's tools
-      tools = await Promise.all(
-        agent.toolAssignments.map((toolAssignment) => {
-          if (toolAssignment.toolConfigId) {
-            return this.findOneToolUseCase.execute(
-              new FindOneConfigurableToolQuery({
-                type: toolAssignment.toolType,
-                configId: toolAssignment.toolConfigId,
-                userId: command.userId,
-              }),
-            );
-          }
-          return this.findOneToolUseCase.execute(
-            new FindOneToolQuery({ type: toolAssignment.toolType }),
-          );
-        }),
-      );
-
-      // Use agent's instructions
-      instructions =
-        agent.instructions +
-        '\n\n' +
-        (thread.instruction ? `Thread instruction: ${thread.instruction}` : '');
-    } else {
-      model = thread.model.model;
-      instructions = thread.instruction;
+    if (thread.agent) {
+      tools = thread.agent.tools;
     }
 
     const contextualTools = this.findContextualToolsUseCase.execute(
@@ -183,7 +140,7 @@ export class ExecuteRunUseCase {
       }
     }
 
-    return { thread, tools, model, instructions };
+    return tools;
   }
 
   private async *executeRunInternal(params: {

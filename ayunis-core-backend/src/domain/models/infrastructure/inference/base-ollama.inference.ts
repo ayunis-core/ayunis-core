@@ -42,9 +42,10 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
         function: { ...tool.function, strict: true },
       }));
       const ollamaMessages = this.convertMessages(messages);
+      const systemPrompt = this.convertSystemPrompt(input.systemPrompt);
       const completionOptions: ChatRequest & { stream: false } = {
         model: input.model.name,
-        messages: ollamaMessages,
+        messages: [systemPrompt, ...ollamaMessages],
         tools: ollamaTools,
         stream: false,
       };
@@ -80,6 +81,13 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
         description: tool.description,
         parameters: tool.parameters as Record<string, unknown>,
       },
+    };
+  };
+
+  private convertSystemPrompt = (systemPrompt: string): OllamaMessage => {
+    return {
+      role: 'system' as const,
+      content: systemPrompt,
     };
   };
 

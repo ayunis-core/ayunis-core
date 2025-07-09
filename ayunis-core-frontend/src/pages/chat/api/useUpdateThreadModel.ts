@@ -1,13 +1,12 @@
 import { useThreadsControllerUpdateModel } from "@/shared/api/generated/ayunisCoreAPI";
 import type { UpdateThreadModelDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import type { Model } from "../model/openapi";
 
 export function useUpdateThreadModel() {
   const mutation = useThreadsControllerUpdateModel();
 
-  async function updateModel(threadId: string, model: Model): Promise<void> {
+  async function updateModel(threadId: string, modelId: string): Promise<void> {
     const data: UpdateThreadModelDto = {
-      modelId: model.id,
+      modelId,
     };
     await mutation.mutateAsync({ id: threadId, data });
   }
