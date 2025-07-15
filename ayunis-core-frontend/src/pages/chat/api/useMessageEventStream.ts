@@ -183,6 +183,11 @@ export function useMessageEventStream({
     }
   }, [onDisconnect]);
 
+  const reconnect = useCallback(async () => {
+    disconnect();
+    await connect();
+  }, [disconnect, connect]);
+
   // Auto-connect when threadId changes
   useEffect(() => {
     if (threadId) {
@@ -217,6 +222,7 @@ export function useMessageEventStream({
   return {
     connect,
     disconnect,
+    reconnect,
     isConnected: isConnectedRef.current,
   };
 }

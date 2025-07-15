@@ -72,7 +72,10 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     threadId: threadFromLoader.id,
   });
 
-  function handleSend(message: string) {
+  async function handleSend(message: string) {
+    if (!isConnected) {
+      await reconnect();
+    }
     sendTextMessage({
       text: message,
     });
@@ -104,7 +107,6 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
 
   const handleThread = useCallback((thread: any) => {
     config.env === "development" && console.log("Thread", thread);
-    // reset the "thread" queryKeys from the queryClient
     setThreadTitle(thread.title);
   }, []);
 
@@ -116,7 +118,7 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     config.env === "development" && console.log("Disconnected");
   }, []);
 
-  const { isConnected } = useMessageEventStream({
+  const { isConnected, reconnect } = useMessageEventStream({
     threadId: threadFromLoader.id,
     onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: (data) => handleError(data.message),
