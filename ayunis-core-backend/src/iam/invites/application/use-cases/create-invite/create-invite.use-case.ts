@@ -4,6 +4,11 @@ import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { CreateInviteCommand } from './create-invite.command';
 import { ConfigService } from '@nestjs/config';
 import { InviteJwtService } from '../../services/invite-jwt.service';
+import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.use-case';
+import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
+import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
+import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
+import { InvalidSeatsError } from '../../invites.errors';
 
 @Injectable()
 export class CreateInviteUseCase {
@@ -13,6 +18,8 @@ export class CreateInviteUseCase {
     private readonly invitesRepository: InvitesRepository,
     private readonly configService: ConfigService,
     private readonly inviteJwtService: InviteJwtService,
+    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
+    private readonly updateSeatsUseCase: UpdateSeatsUseCase,
   ) {}
 
   async execute(
@@ -23,6 +30,31 @@ export class CreateInviteUseCase {
       orgId: command.orgId,
       userId: command.userId,
     });
+
+    const isCloud = this.configService.get<boolean>('app.isCloudHosted', false);
+    if (isCloud) {
+      const subscription = await this.getActiveSubscriptionUseCase.execute(
+        new GetActiveSubscriptionQuery({
+          orgId: command.orgId,
+          requestingUserId: command.userId,
+        }),
+      );
+      if (subscription && subscription.availableSeats < 0) {
+        throw new InvalidSeatsError({
+          orgId: command.orgId,
+          availableSeats: subscription.availableSeats,
+        });
+      }
+      if (subscription && subscription.availableSeats === 0) {
+        await this.updateSeatsUseCase.execute(
+          new UpdateSeatsCommand({
+            orgId: command.orgId,
+            requestingUserId: command.userId,
+            noOfSeats: subscription.subscription.noOfSeats + 1,
+          }),
+        );
+      }
+    }
 
     const validDuration = this.configService.get<string>(
       'auth.jwt.inviteExpiresIn',

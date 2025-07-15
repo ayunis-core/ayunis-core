@@ -2613,6 +2613,77 @@
         ]
       }
     },
+    "/subscriptions/seats": {
+      "put": {
+        "operationId": "SubscriptionsController_updateSeats",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeatsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated seats"
+          },
+          "400": {
+            "description": "Invalid seat update data provided"
+          },
+          "403": {
+            "description": "User is not authorized to update seats for this organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the number of seats for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/subscriptions/billing-info": {
+      "put": {
+        "operationId": "SubscriptionsController_updateBillingInfo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillingInfoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated billing information"
+          },
+          "400": {
+            "description": "Invalid billing information provided"
+          },
+          "403": {
+            "description": "User is not authorized to update billing information for this organization"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the billing information for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
     "/subscriptions/uncancel": {
       "post": {
         "operationId": "SubscriptionsController_uncancelSubscription",
@@ -4867,6 +4938,54 @@
           "newPasswordConfirmation"
         ]
       },
+      "SubscriptionBillingInfoResponseDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Company name",
+            "example": "Acme GmbH"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street",
+            "example": "Musterstraße"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "Number",
+            "example": "123a"
+          },
+          "city": {
+            "type": "string",
+            "description": "City",
+            "example": "Musterstadt"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code",
+            "example": "12345"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country",
+            "example": "Deutschland"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "USt-ID",
+            "example": "DE1234567890"
+          }
+        },
+        "required": [
+          "companyName",
+          "street",
+          "houseNumber",
+          "city",
+          "postalCode",
+          "country"
+        ]
+      },
       "SubscriptionResponseDto": {
         "type": "object",
         "properties": {
@@ -4934,6 +5053,14 @@
             "type": "string",
             "description": "Date of the next renewal",
             "example": "2024-01-01T10:00:00Z"
+          },
+          "billingInfo": {
+            "description": "Billing information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionBillingInfoResponseDto"
+              }
+            ]
           }
         },
         "required": [
@@ -4946,7 +5073,8 @@
           "renewalCycle",
           "renewalCycleAnchor",
           "availableSeats",
-          "nextRenewalDate"
+          "nextRenewalDate",
+          "billingInfo"
         ]
       },
       "CreateSubscriptionRequestDto": {
@@ -4959,18 +5087,54 @@
             "minimum": 1,
             "default": 1
           },
-          "renewalCycle": {
+          "companyName": {
             "type": "string",
-            "description": "Renewal cycle of the subscription",
-            "enum": [
-              "monthly",
-              "yearly"
-            ],
-            "example": "monthly"
+            "description": "Company name for the subscription",
+            "example": "Acme Inc."
+          },
+          "subText": {
+            "type": "string",
+            "description": "Sub text for the subscription",
+            "example": "Sub text"
+          },
+          "street": {
+            "type": "string",
+            "description": "Street for the subscription",
+            "example": "123 Main St"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "House number for the subscription",
+            "example": "123"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code for the subscription",
+            "example": "12345"
+          },
+          "city": {
+            "type": "string",
+            "description": "City for the subscription",
+            "example": "New York"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country for the subscription",
+            "example": "United States"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number for the subscription",
+            "example": "1234567890"
           }
         },
         "required": [
-          "renewalCycle"
+          "companyName",
+          "street",
+          "houseNumber",
+          "postalCode",
+          "city",
+          "country"
         ]
       },
       "ActiveSubscriptionResponseDto": {
@@ -4985,6 +5149,58 @@
         "required": [
           "hasActiveSubscription"
         ]
+      },
+      "UpdateBillingInfoDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "Company name for the subscription",
+            "example": "Acme Inc."
+          },
+          "street": {
+            "type": "string",
+            "description": "Street for the subscription",
+            "example": "123 Main St"
+          },
+          "houseNumber": {
+            "type": "string",
+            "description": "House number for the subscription",
+            "example": "123"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code for the subscription",
+            "example": "12345"
+          },
+          "city": {
+            "type": "string",
+            "description": "City for the subscription",
+            "example": "New York"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country for the subscription",
+            "example": "United States"
+          },
+          "vatNumber": {
+            "type": "string",
+            "description": "VAT number for the subscription",
+            "example": "1234567890"
+          }
+        },
+        "required": [
+          "companyName",
+          "street",
+          "houseNumber",
+          "postalCode",
+          "city",
+          "country"
+        ]
+      },
+      "UpdateSeatsDto": {
+        "type": "object",
+        "properties": {}
       },
       "CreateModelDto": {
         "type": "object",

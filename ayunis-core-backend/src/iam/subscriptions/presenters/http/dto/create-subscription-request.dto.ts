@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
-import { RenewalCycle } from '../../../domain/value-objects/renewal-cycle.enum';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateSubscriptionRequestDto {
   @ApiProperty({
@@ -16,10 +15,66 @@ export class CreateSubscriptionRequestDto {
   noOfSeats?: number;
 
   @ApiProperty({
-    description: 'Renewal cycle of the subscription',
-    enum: RenewalCycle,
-    example: RenewalCycle.MONTHLY,
+    description: 'Company name for the subscription',
+    example: 'Acme Inc.',
+    required: true,
   })
-  @IsEnum(RenewalCycle)
-  renewalCycle: RenewalCycle;
+  @IsString()
+  companyName: string;
+
+  @ApiProperty({
+    description: 'Sub text for the subscription',
+    example: 'Sub text',
+    required: false,
+  })
+  @IsString()
+  subText?: string;
+
+  @ApiProperty({
+    description: 'Street for the subscription',
+    example: '123 Main St',
+    required: true,
+  })
+  @IsString()
+  street: string;
+
+  @ApiProperty({
+    description: 'House number for the subscription',
+    example: '123',
+    required: true,
+  })
+  @IsString()
+  houseNumber: string;
+
+  @ApiProperty({
+    description: 'Postal code for the subscription',
+    example: '12345',
+    required: true,
+  })
+  @IsString()
+  postalCode: string;
+
+  @ApiProperty({
+    description: 'City for the subscription',
+    example: 'New York',
+    required: true,
+  })
+  @IsString()
+  city: string;
+
+  @ApiProperty({
+    description: 'Country for the subscription',
+    example: 'United States',
+    required: true,
+  })
+  @IsString()
+  country: string;
+
+  @ApiProperty({
+    description: 'VAT number for the subscription',
+    example: '1234567890',
+    required: false,
+  })
+  @IsString()
+  vatNumber?: string;
 }

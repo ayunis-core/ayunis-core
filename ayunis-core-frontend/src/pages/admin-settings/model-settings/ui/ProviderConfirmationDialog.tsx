@@ -25,7 +25,7 @@ export default function ProviderConfirmationDialog({
   onConfirm,
   children,
 }: ProviderConfirmationDialogProps) {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-models");
   const [isConfirmationChecked, setIsConfirmationChecked] = useState(false);
 
   function handleConfirm() {

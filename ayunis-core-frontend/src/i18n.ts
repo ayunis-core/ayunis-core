@@ -7,8 +7,14 @@ import enAuth from "./shared/locales/en/auth.json";
 import deAuth from "./shared/locales/de/auth.json";
 import enCommon from "./shared/locales/en/common.json";
 import deCommon from "./shared/locales/de/common.json";
-import enAdminSettings from "./shared/locales/en/admin-settings.json";
-import deAdminSettings from "./shared/locales/de/admin-settings.json";
+import enAdminSettingsLayout from "./shared/locales/en/admin-settings-layout.json";
+import deAdminSettingsLayout from "./shared/locales/de/admin-settings-layout.json";
+import enAdminSettingsBilling from "./shared/locales/en/admin-settings-billing.json";
+import deAdminSettingsBilling from "./shared/locales/de/admin-settings-billing.json";
+import enAdminSettingsModels from "./shared/locales/en/admin-settings-models.json";
+import deAdminSettingsModels from "./shared/locales/de/admin-settings-models.json";
+import enAdminSettingsUsers from "./shared/locales/en/admin-settings-users.json";
+import deAdminSettingsUsers from "./shared/locales/de/admin-settings-users.json";
 import enSettings from "./shared/locales/en/settings.json";
 import deSettings from "./shared/locales/de/settings.json";
 import enChats from "./shared/locales/en/chats.json";
@@ -22,7 +28,10 @@ const resources = {
   en: {
     auth: enAuth,
     common: enCommon,
-    "admin-settings": enAdminSettings,
+    "admin-settings-layout": enAdminSettingsLayout,
+    "admin-settings-billing": enAdminSettingsBilling,
+    "admin-settings-models": enAdminSettingsModels,
+    "admin-settings-users": enAdminSettingsUsers,
     settings: enSettings,
     chats: enChats,
     prompts: enPrompts,
@@ -31,7 +40,10 @@ const resources = {
   de: {
     auth: deAuth,
     common: deCommon,
-    "admin-settings": deAdminSettings,
+    "admin-settings-layout": deAdminSettingsLayout,
+    "admin-settings-billing": deAdminSettingsBilling,
+    "admin-settings-models": deAdminSettingsModels,
+    "admin-settings-users": deAdminSettingsUsers,
     settings: deSettings,
     chats: deChats,
     prompts: dePrompts,

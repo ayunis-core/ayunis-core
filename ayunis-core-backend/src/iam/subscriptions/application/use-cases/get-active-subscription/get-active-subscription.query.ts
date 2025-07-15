@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 
-export class GetSubscriptionQuery {
+export class GetActiveSubscriptionQuery {
   public readonly orgId: UUID;
   public readonly requestingUserId: UUID;
 

@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 
-export class AddSeatCommand {
+export class UpdateSeatsCommand {
   public readonly orgId: UUID;
   public readonly requestingUserId: UUID;
   public readonly noOfSeats: number;

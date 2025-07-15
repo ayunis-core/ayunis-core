@@ -1,4 +1,5 @@
 import { Crown } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -24,10 +25,10 @@ export function SubscriptionHintButton() {
             className="bg-gradient-to-r from-[#62589F] to-[#A7A0CA] text-white hover:text-white active:text-white"
             asChild
           >
-            <a href="https://ayunis.com/core/upgrade" target="_blank">
+            <Link to="/admin-settings/billing">
               <Crown className="size-4" />
               <span className="font-medium">{t("sidebar.upgrade")}</span>
-            </a>
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

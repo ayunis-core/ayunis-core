@@ -1205,6 +1205,23 @@ export interface UpdatePasswordDto {
   newPasswordConfirmation: string;
 }
 
+export interface SubscriptionBillingInfoResponseDto {
+  /** Company name */
+  companyName: string;
+  /** Street */
+  street: string;
+  /** Number */
+  houseNumber: string;
+  /** City */
+  city: string;
+  /** Postal code */
+  postalCode: string;
+  /** Country */
+  country: string;
+  /** USt-ID */
+  vatNumber?: string;
+}
+
 /**
  * Date when the subscription was cancelled (if applicable)
  */
@@ -1245,19 +1262,9 @@ export interface SubscriptionResponseDto {
   availableSeats: number;
   /** Date of the next renewal */
   nextRenewalDate: string;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
 }
-
-/**
- * Renewal cycle of the subscription
- */
-export type CreateSubscriptionRequestDtoRenewalCycle = typeof CreateSubscriptionRequestDtoRenewalCycle[keyof typeof CreateSubscriptionRequestDtoRenewalCycle];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateSubscriptionRequestDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-} as const;
 
 export interface CreateSubscriptionRequestDto {
   /**
@@ -1265,14 +1272,47 @@ export interface CreateSubscriptionRequestDto {
    * @minimum 1
    */
   noOfSeats?: number;
-  /** Renewal cycle of the subscription */
-  renewalCycle: CreateSubscriptionRequestDtoRenewalCycle;
+  /** Company name for the subscription */
+  companyName: string;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
 }
 
 export interface ActiveSubscriptionResponseDto {
   /** Whether the organization has an active subscription */
   hasActiveSubscription: boolean;
 }
+
+export interface UpdateBillingInfoDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+}
+
+export interface UpdateSeatsDto { [key: string]: unknown }
 
 export interface CreateModelDto { [key: string]: unknown }
 

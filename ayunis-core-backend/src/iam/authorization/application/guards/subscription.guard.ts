@@ -29,6 +29,7 @@ export class SubscriptionGuard implements CanActivate {
       return true;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const user: ActiveUser = context.switchToHttp().getRequest().user;
     if (!user) {
       this.logger.warn('User not found in request context');
@@ -56,7 +57,7 @@ export class SubscriptionGuard implements CanActivate {
       return hasActiveSubscription;
     } catch (error) {
       this.logger.error('Error checking subscription', {
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         orgId: user.orgId,
         userId: user.id,
       });

@@ -1,0 +1,11 @@
+{
+  "layout": {
+    "title": "Settings",
+    "goBack": "Go Back",
+    "returnToMainApp": "Return to main app",
+    "settings": "Settings",
+    "users": "Users",
+    "models": "Models",
+    "billing": "Billing"
+  }
+}

@@ -1,5 +1,6 @@
 import { randomUUID, UUID } from 'crypto';
 import { RenewalCycle } from './value-objects/renewal-cycle.enum';
+import { SubscriptionBillingInfo } from './subscription-billing-info.entity';
 
 export interface SubscriptionParams {
   id?: UUID;
@@ -11,6 +12,7 @@ export interface SubscriptionParams {
   pricePerSeat: number;
   renewalCycle: RenewalCycle;
   renewalCycleAnchor: Date;
+  billingInfo: SubscriptionBillingInfo;
 }
 
 export class Subscription {
@@ -23,6 +25,7 @@ export class Subscription {
   pricePerSeat: number;
   renewalCycle: RenewalCycle;
   renewalCycleAnchor: Date;
+  billingInfo: SubscriptionBillingInfo;
 
   constructor(params: SubscriptionParams) {
     this.id = params.id ?? randomUUID();
@@ -34,5 +37,6 @@ export class Subscription {
     this.pricePerSeat = params.pricePerSeat;
     this.renewalCycle = params.renewalCycle;
     this.renewalCycleAnchor = params.renewalCycleAnchor;
+    this.billingInfo = params.billingInfo;
   }
 }

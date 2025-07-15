@@ -15,9 +15,7 @@ const threadQueryOptions = (threadId: string) =>
 export const Route = createFileRoute("/_authenticated/chats/$threadId")({
   component: RouteComponent,
   loader: async ({ params: { threadId }, context: { queryClient } }) => {
-    const thread = await queryClient.ensureQueryData(
-      threadQueryOptions(threadId),
-    );
+    const thread = await queryClient.fetchQuery(threadQueryOptions(threadId));
     return thread;
   },
 });

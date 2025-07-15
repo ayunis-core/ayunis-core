@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GetSubscriptionQuery } from './get-subscription.query';
+import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { IsFromOrgUseCase } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.use-case';
@@ -11,20 +11,26 @@ import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
 import {
   UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
-  SubscriptionError,
+  MultipleActiveSubscriptionsError,
 } from '../../subscription.errors';
+import { isActive } from '../../util/is-active';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
+import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
-export class GetSubscriptionUseCase {
-  private readonly logger = new Logger(GetSubscriptionUseCase.name);
+export class GetActiveSubscriptionUseCase {
+  private readonly logger = new Logger(GetActiveSubscriptionUseCase.name);
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
+    private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
   ) {}
 
-  async execute(query: GetSubscriptionQuery): Promise<{
+  async execute(query: GetActiveSubscriptionQuery): Promise<{
     subscription: Subscription;
     availableSeats: number;
     nextRenewalDate: Date;
@@ -53,38 +59,46 @@ export class GetSubscriptionUseCase {
         );
       }
 
-      this.logger.debug('Finding subscription');
-      const subscription = await this.subscriptionRepository.findByOrgId(
-        query.orgId,
-      );
-      if (!subscription) {
+      const subscriptions = (
+        await this.subscriptionRepository.findByOrgId(query.orgId)
+      ).filter(isActive);
+      if (subscriptions.length === 0) {
         this.logger.warn('Subscription not found', {
           orgId: query.orgId,
         });
         throw new SubscriptionNotFoundError(query.orgId);
       }
-
-      this.logger.debug('Getting invites for organization');
-      const invites = await this.getInvitesByOrgUseCase.execute(
-        new GetInvitesByOrgQuery({
+      if (subscriptions.length > 1) {
+        this.logger.warn('Multiple active subscriptions found', {
           orgId: query.orgId,
-          requestingUserId: query.requestingUserId,
-        }),
+        });
+        throw new MultipleActiveSubscriptionsError(query.orgId);
+      }
+
+      const subscription = subscriptions[0];
+
+      const [invites, users] = await Promise.all([
+        this.getInvitesByOrgUseCase.execute(
+          new GetInvitesByOrgQuery({
+            orgId: query.orgId,
+            requestingUserId: query.requestingUserId,
+            onlyOpen: true,
+          }),
+        ),
+        this.findUsersByOrgIdUseCase.execute(
+          new FindUsersByOrgIdQuery(query.orgId),
+        ),
+      ]);
+
+      const availableSeats = this.getAvailableSeats(
+        subscription,
+        invites,
+        users,
       );
-
-      const availableSeats = this.getAvailableSeats(subscription, invites);
       const nextRenewalDate = this.getNextRenewalDate(subscription);
-
-      this.logger.debug('Subscription retrieved successfully', {
-        subscriptionId: subscription.id,
-        orgId: query.orgId,
-        availableSeats,
-        nextRenewalDate,
-      });
-
       return { subscription, availableSeats, nextRenewalDate };
     } catch (error) {
-      if (error instanceof SubscriptionError) {
+      if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
@@ -100,8 +114,9 @@ export class GetSubscriptionUseCase {
   private getAvailableSeats(
     subscription: Subscription,
     invites: Invite[],
+    users: User[],
   ): number {
-    return subscription.noOfSeats - invites.length;
+    return subscription.noOfSeats - invites.length - users.length;
   }
 
   private getNextRenewalDate(subscription: Subscription): Date {

@@ -13,7 +13,7 @@ export default function SettingsLayout({
   children,
   action,
 }: SettingsLayoutProps) {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-layout");
   const contentHeader = (
     <ContentAreaHeader title={t("layout.title")} action={action} />
   );

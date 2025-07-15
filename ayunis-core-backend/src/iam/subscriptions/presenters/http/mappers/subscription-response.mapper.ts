@@ -23,6 +23,15 @@ export class SubscriptionResponseMapper {
       renewalCycleAnchor: subscription.renewalCycleAnchor,
       availableSeats,
       nextRenewalDate,
+      billingInfo: {
+        companyName: subscription.billingInfo.companyName,
+        street: subscription.billingInfo.street,
+        houseNumber: subscription.billingInfo.houseNumber,
+        city: subscription.billingInfo.city,
+        postalCode: subscription.billingInfo.postalCode,
+        country: subscription.billingInfo.country,
+        vatNumber: subscription.billingInfo.vatNumber,
+      },
     };
   }
 }

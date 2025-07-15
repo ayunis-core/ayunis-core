@@ -1,4 +1,7 @@
-import { useUserControllerDeleteUser } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  getUserControllerGetUsersInOrganizationQueryKey,
+  useUserControllerDeleteUser,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
 
@@ -14,7 +17,7 @@ export function useUserDelete(options?: UseUserDeleteOptions) {
         console.log("Delete user succeeded, invalidating queries");
         showSuccess("User deleted successfully!");
         queryClient.invalidateQueries({
-          queryKey: ["users"],
+          queryKey: [...getUserControllerGetUsersInOrganizationQueryKey()],
         });
 
         // Call the success callback

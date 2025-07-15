@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
 import { SubscriptionError } from '../../subscription.errors';
 import { ConfigService } from '@nestjs/config';
+import { isActive } from '../../util/is-active';
 
 @Injectable()
 export class HasActiveSubscriptionUseCase {
@@ -15,6 +15,9 @@ export class HasActiveSubscriptionUseCase {
   ) {}
 
   async execute(query: HasActiveSubscriptionQuery): Promise<boolean> {
+    // Self-hosted instances are not required to have an active subscription
+    // This is used in the subscription guard to allow access to the subscription endpoint
+    // And as a separate endpoint for the frontend to display "get a subscription" hints
     const isSelfHosted = this.configService.get<boolean>('app.isSelfHosted');
     if (isSelfHosted) {
       return true;
@@ -26,52 +29,23 @@ export class HasActiveSubscriptionUseCase {
 
     try {
       this.logger.debug('Finding subscription');
-      const subscription = await this.subscriptionRepository.findByOrgId(
+      const subscriptions = await this.subscriptionRepository.findByOrgId(
         query.orgId,
       );
-      if (!subscription) {
+      if (subscriptions.length === 0) {
         this.logger.debug('No subscription found for organization', {
           orgId: query.orgId,
         });
         return false;
       }
 
-      if (subscription.cancelledAt) {
-        this.logger.debug(
-          'Subscription is cancelled, checking if still active',
-          {
-            subscriptionId: subscription.id,
-            cancelledAt: subscription.cancelledAt,
-          },
-        );
-
-        const lastBillingDate = getNextDate({
-          anchorDate: subscription.renewalCycleAnchor,
-          targetDate: subscription.cancelledAt,
-          cycle: subscription.renewalCycle,
-        });
-
-        // If we're past the last billing date, subscription is no longer active
-        if (new Date() > lastBillingDate) {
-          this.logger.debug('Subscription is expired', {
-            subscriptionId: subscription.id,
-            lastBillingDate,
-            currentDate: new Date(),
-          });
-          return false;
+      for (const subscription of subscriptions) {
+        if (isActive(subscription)) {
+          return true;
         }
-
-        this.logger.debug('Subscription is cancelled but still active', {
-          subscriptionId: subscription.id,
-          lastBillingDate,
-        });
-      } else {
-        this.logger.debug('Subscription is active', {
-          subscriptionId: subscription.id,
-        });
       }
 
-      return true;
+      return false;
     } catch (error) {
       if (error instanceof SubscriptionError) {
         // Already logged and properly typed error, just rethrow

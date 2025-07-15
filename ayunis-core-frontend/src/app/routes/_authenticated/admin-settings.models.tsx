@@ -13,8 +13,8 @@ export const Route = createFileRoute("/_authenticated/admin-settings/models")({
     const providersQueryOptions =
       getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions();
     await Promise.all([
-      queryClient.ensureQueryData(modelsQueryOptions),
-      queryClient.ensureQueryData(providersQueryOptions),
+      queryClient.fetchQuery(modelsQueryOptions),
+      queryClient.fetchQuery(providersQueryOptions),
     ]);
   },
 });

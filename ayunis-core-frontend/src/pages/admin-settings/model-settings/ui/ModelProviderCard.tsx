@@ -30,7 +30,7 @@ export default function ModelProviderCard({
   provider,
   models,
 }: ModelProviderCardProps) {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-models");
   const { createPermittedModel } = useCreatePermittedModel();
   const { deletePermittedModel } = useDeletePermittedModel();
   const { createPermittedProvider } = useCreatePermittedProvider();

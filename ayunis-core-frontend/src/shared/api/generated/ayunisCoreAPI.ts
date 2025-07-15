@@ -78,9 +78,11 @@ import type {
   SuccessResponseDto,
   ThreadsControllerAddFileSourceBody,
   UpdateAgentDto,
+  UpdateBillingInfoDto,
   UpdateModelDto,
   UpdatePasswordDto,
   UpdatePromptDto,
+  UpdateSeatsDto,
   UpdateThreadAgentDto,
   UpdateThreadModelDto,
   UpdateUserNameDto,
@@ -5547,6 +5549,134 @@ export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<
 
 
 
+/**
+ * @summary Update the number of seats for the current organization
+ */
+export const subscriptionsControllerUpdateSeats = (
+    updateSeatsDto: UpdateSeatsDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/subscriptions/seats`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSeatsDto
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerUpdateSeatsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext> => {
+
+const mutationKey = ['subscriptionsControllerUpdateSeats'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, {data: UpdateSeatsDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  subscriptionsControllerUpdateSeats(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerUpdateSeatsMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>>
+    export type SubscriptionsControllerUpdateSeatsMutationBody = UpdateSeatsDto
+    export type SubscriptionsControllerUpdateSeatsMutationError = void
+
+    /**
+ * @summary Update the number of seats for the current organization
+ */
+export const useSubscriptionsControllerUpdateSeats = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>,
+        TError,
+        {data: UpdateSeatsDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerUpdateSeatsMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update the billing information for the current organization
+ */
+export const subscriptionsControllerUpdateBillingInfo = (
+    updateBillingInfoDto: UpdateBillingInfoDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/subscriptions/billing-info`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBillingInfoDto
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerUpdateBillingInfoMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext> => {
+
+const mutationKey = ['subscriptionsControllerUpdateBillingInfo'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, {data: UpdateBillingInfoDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  subscriptionsControllerUpdateBillingInfo(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerUpdateBillingInfoMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>>
+    export type SubscriptionsControllerUpdateBillingInfoMutationBody = UpdateBillingInfoDto
+    export type SubscriptionsControllerUpdateBillingInfoMutationError = void
+
+    /**
+ * @summary Update the billing information for the current organization
+ */
+export const useSubscriptionsControllerUpdateBillingInfo = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>,
+        TError,
+        {data: UpdateBillingInfoDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerUpdateBillingInfoMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * @summary Uncancel the subscription for the current organization
  */

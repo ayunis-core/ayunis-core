@@ -1,20 +1,4 @@
 {
-  "layout": {
-    "title": "Settings",
-    "goBack": "Go Back",
-    "returnToMainApp": "Return to main app",
-    "settings": "Settings",
-    "users": "Users",
-    "models": "Models"
-  },
-  "models": {
-    "noModelsAvailable": "No models available. Please check your configuration.",
-    "streaming": "Streaming",
-    "reasoning": "Reasoning",
-    "enableProvider": "Enable Provider",
-    "disableProvider": "Disable Provider",
-    "providerDisabled": "Cannot be enabled because the provider is not enabled."
-  },
   "users": {
     "invites": "Invites",
     "users": "Users",
@@ -28,10 +12,11 @@
     "pending": "pending",
     "accepted": "accepted",
     "rejected": "rejected",
+    "expired": "expired",
     "more": "More",
     "edit": "Edit",
     "delete": "Delete",
-    "changeRole": "Change to {{role}}",
+    "changeRole": "Change to role '{{role}}'",
     "user": "User",
     "admin": "Admin"
   },

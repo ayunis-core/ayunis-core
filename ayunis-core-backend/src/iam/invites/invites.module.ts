@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
@@ -28,6 +28,7 @@ import { InviteResponseMapper } from './presenters/http/mappers/invite-response.
 // External modules
 import { OrgsModule } from '../orgs/orgs.module';
 import { UsersModule } from '../users/users.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { UsersModule } from '../users/users.module';
     }),
     OrgsModule,
     UsersModule,
+    forwardRef(() => SubscriptionsModule),
   ],
   providers: [
     // Mappers

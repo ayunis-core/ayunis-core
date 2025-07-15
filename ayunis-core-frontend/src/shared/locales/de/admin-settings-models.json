@@ -1,0 +1,10 @@
+{
+  "models": {
+    "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
+    "streaming": "Streaming",
+    "reasoning": "Reasoning",
+    "enableProvider": "Provider freischalten",
+    "disableProvider": "Provider deaktivieren",
+    "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist."
+  }
+}

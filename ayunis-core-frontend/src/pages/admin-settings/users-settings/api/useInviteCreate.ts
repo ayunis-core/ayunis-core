@@ -1,10 +1,12 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerCreate,
+  getSubscriptionsControllerGetSubscriptionQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
 import type { InviteCreateData, InviteCreateResponse } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
+import { useRouter } from "@tanstack/react-router";
 
 interface UseInviteCreateOptions {
   onSuccessCallback?: (token: string) => void;
@@ -12,13 +14,11 @@ interface UseInviteCreateOptions {
 
 export function useInviteCreate(options?: UseInviteCreateOptions) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const createInviteMutation = useInvitesControllerCreate({
     mutation: {
       onSuccess: (response: InviteCreateResponse) => {
         showSuccess("Invitation sent successfully!");
-        queryClient.invalidateQueries({
-          queryKey: [getInvitesControllerGetInvitesQueryKey()],
-        });
 
         // Call the success callback with the invite token
         if (options?.onSuccessCallback) {
@@ -27,6 +27,15 @@ export function useInviteCreate(options?: UseInviteCreateOptions) {
       },
       onError: () => {
         showError("Failed to send invitation. Please try again.");
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: getInvitesControllerGetInvitesQueryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
+        });
+        router.invalidate();
       },
     },
   });

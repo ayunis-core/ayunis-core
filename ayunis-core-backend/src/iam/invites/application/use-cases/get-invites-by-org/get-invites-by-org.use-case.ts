@@ -31,7 +31,13 @@ export class GetInvitesByOrgUseCase {
       throw new UnauthorizedInviteAccessError();
     }
 
-    const invites = await this.invitesRepository.findByOrgId(query.orgId);
+    let invites = await this.invitesRepository.findByOrgId(query.orgId);
+    if (query.onlyOpen) {
+      invites = invites.filter(
+        (invite) =>
+          invite.acceptedAt === null || invite.acceptedAt === undefined,
+      );
+    }
 
     this.logger.debug('Found invites', {
       orgId: query.orgId,

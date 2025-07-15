@@ -37,7 +37,7 @@ interface InviteFormData {
 }
 
 export default function InviteUserDialog() {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-users");
   const [isOpen, setIsOpen] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [inviteToken, setInviteToken] = useState("");

@@ -5,10 +5,8 @@ import {
   Delete,
   Body,
   Logger,
+  Put,
   NotFoundException,
-  ConflictException,
-  ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,8 +20,8 @@ import {
   CurrentUser,
   UserProperty,
 } from '../../../authentication/application/decorators/current-user.decorator';
-import { GetSubscriptionUseCase } from '../../application/use-cases/get-subscription/get-subscription.use-case';
-import { GetSubscriptionQuery } from '../../application/use-cases/get-subscription/get-subscription.query';
+import { GetActiveSubscriptionUseCase } from '../../application/use-cases/get-active-subscription/get-active-subscription.use-case';
+import { GetActiveSubscriptionQuery } from '../../application/use-cases/get-active-subscription/get-active-subscription.query';
 import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription/create-subscription.use-case';
 import { CreateSubscriptionCommand } from '../../application/use-cases/create-subscription/create-subscription.command';
 import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-subscription/cancel-subscription.use-case';
@@ -36,14 +34,14 @@ import { ActiveSubscriptionResponseDto } from './dto/active-subscription-respons
 import { SubscriptionResponseMapper } from './mappers/subscription-response.mapper';
 import { HasActiveSubscriptionUseCase } from '../../application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from '../../application/use-cases/has-active-subscription/has-active-subscription.query';
-import {
-  UnauthorizedSubscriptionAccessError,
-  SubscriptionAlreadyExistsError,
-  SubscriptionNotFoundError,
-  SubscriptionAlreadyCancelledError,
-  SubscriptionNotCancelledError,
-  InvalidSubscriptionDataError,
-} from '../../application/subscription.errors';
+import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { UpdateSeatsCommand } from '../../application/use-cases/update-seats/update-seats.command';
+import { UpdateSeatsDto } from './dto/update-seats.dto';
+import { UpdateSeatsUseCase } from '../../application/use-cases/update-seats/update-seats.use-case';
+import { UpdateBillingInfoDto } from './dto/update-billing-info.dto';
+import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-billing-info/update-billing-info.use-case';
+import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
 
 @ApiTags('subscriptions')
 @Controller('subscriptions')
@@ -51,19 +49,23 @@ import {
   SubscriptionResponseDto,
   CreateSubscriptionRequestDto,
   ActiveSubscriptionResponseDto,
+  UpdateBillingInfoDto,
 )
 export class SubscriptionsController {
   private readonly logger = new Logger(SubscriptionsController.name);
 
   constructor(
-    private readonly getSubscriptionUseCase: GetSubscriptionUseCase,
+    private readonly getSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly uncancelSubscriptionUseCase: UncancelSubscriptionUseCase,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly subscriptionResponseMapper: SubscriptionResponseMapper,
+    private readonly updateSeatsUseCase: UpdateSeatsUseCase,
+    private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
   ) {}
 
+  @Roles(UserRole.ADMIN)
   @Get()
   @ApiOperation({
     summary: 'Get subscription details for the current organization',
@@ -94,7 +96,7 @@ export class SubscriptionsController {
   ): Promise<SubscriptionResponseDto> {
     this.logger.log(`Getting subscription for org ${orgId} by user ${userId}`);
 
-    const query = new GetSubscriptionQuery({
+    const query = new GetActiveSubscriptionQuery({
       orgId,
       requestingUserId: userId,
     });
@@ -145,6 +147,7 @@ export class SubscriptionsController {
     return { hasActiveSubscription };
   }
 
+  @Roles(UserRole.ADMIN)
   @Post()
   @ApiOperation({
     summary: 'Create a new subscription for the current organization',
@@ -184,30 +187,106 @@ export class SubscriptionsController {
       orgId,
       requestingUserId: userId,
       noOfSeats: createSubscriptionDto.noOfSeats,
-      renewalCycle: createSubscriptionDto.renewalCycle,
+      companyName: createSubscriptionDto.companyName,
+      subText: createSubscriptionDto.subText,
+      street: createSubscriptionDto.street,
+      houseNumber: createSubscriptionDto.houseNumber,
+      postalCode: createSubscriptionDto.postalCode,
+      city: createSubscriptionDto.city,
+      country: createSubscriptionDto.country,
+      vatNumber: createSubscriptionDto.vatNumber,
     });
 
-    try {
-      await this.createSubscriptionUseCase.execute(command);
-      this.logger.log(`Successfully created subscription for org ${orgId}`);
-    } catch (error) {
-      if (error instanceof UnauthorizedSubscriptionAccessError) {
-        throw new ForbiddenException(
-          'Not authorized to create subscription for this organization',
-        );
-      }
-      if (error instanceof SubscriptionAlreadyExistsError) {
-        throw new ConflictException(
-          'Subscription already exists for this organization',
-        );
-      }
-      if (error instanceof InvalidSubscriptionDataError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+    await this.createSubscriptionUseCase.execute(command);
+    this.logger.log(`Successfully created subscription for org ${orgId}`);
   }
 
+  @Roles(UserRole.ADMIN)
+  @Put('seats')
+  @ApiOperation({
+    summary: 'Update the number of seats for the current organization',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Successfully updated seats',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'User is not authorized to update seats for this organization',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid seat update data provided',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async updateSeats(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Body() updateSeatsDto: UpdateSeatsDto,
+  ): Promise<void> {
+    this.logger.log(`Updating seats for org ${orgId} by user ${userId}`);
+    const command = new UpdateSeatsCommand({
+      orgId,
+      requestingUserId: userId,
+      noOfSeats: updateSeatsDto.noOfSeats,
+    });
+    await this.updateSeatsUseCase.execute(command);
+    this.logger.log(`Successfully updated seats for org ${orgId}`);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Put('billing-info')
+  @ApiOperation({
+    summary: 'Update the billing information for the current organization',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Successfully updated billing information',
+  })
+  @ApiResponse({
+    status: 403,
+    description:
+      'User is not authorized to update billing information for this organization',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid billing information provided',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No subscription found for the organization',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async updateBillingInfo(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Body() updateBillingInfoDto: UpdateBillingInfoDto,
+  ): Promise<void> {
+    this.logger.log(`Updating billing info for org ${orgId} by user ${userId}`);
+    const command = new UpdateBillingInfoCommand({
+      orgId,
+      requestingUserId: userId,
+      billingInfo: {
+        companyName: updateBillingInfoDto.companyName,
+        street: updateBillingInfoDto.street,
+        houseNumber: updateBillingInfoDto.houseNumber,
+        postalCode: updateBillingInfoDto.postalCode,
+        city: updateBillingInfoDto.city,
+        country: updateBillingInfoDto.country,
+        vatNumber: updateBillingInfoDto.vatNumber,
+      },
+    });
+    await this.updateBillingInfoUseCase.execute(command);
+    this.logger.log(`Successfully updated billing info for org ${orgId}`);
+  }
+
+  @Roles(UserRole.ADMIN)
   @Delete()
   @ApiOperation({
     summary: 'Cancel the subscription for the current organization',
@@ -245,28 +324,11 @@ export class SubscriptionsController {
       orgId,
       requestingUserId: userId,
     });
-
-    try {
-      await this.cancelSubscriptionUseCase.execute(command);
-      this.logger.log(`Successfully cancelled subscription for org ${orgId}`);
-    } catch (error) {
-      if (error instanceof UnauthorizedSubscriptionAccessError) {
-        throw new ForbiddenException(
-          'Not authorized to cancel subscription for this organization',
-        );
-      }
-      if (error instanceof SubscriptionNotFoundError) {
-        throw new NotFoundException(
-          'Subscription not found for this organization',
-        );
-      }
-      if (error instanceof SubscriptionAlreadyCancelledError) {
-        throw new ConflictException('Subscription is already cancelled');
-      }
-      throw error;
-    }
+    await this.cancelSubscriptionUseCase.execute(command);
+    this.logger.log(`Successfully cancelled subscription for org ${orgId}`);
   }
 
+  @Roles(UserRole.ADMIN)
   @Post('uncancel')
   @ApiOperation({
     summary: 'Uncancel the subscription for the current organization',
@@ -305,24 +367,7 @@ export class SubscriptionsController {
       requestingUserId: userId,
     });
 
-    try {
-      await this.uncancelSubscriptionUseCase.execute(command);
-      this.logger.log(`Successfully uncancelled subscription for org ${orgId}`);
-    } catch (error) {
-      if (error instanceof UnauthorizedSubscriptionAccessError) {
-        throw new ForbiddenException(
-          'Not authorized to uncancel subscription for this organization',
-        );
-      }
-      if (error instanceof SubscriptionNotFoundError) {
-        throw new NotFoundException(
-          'Subscription not found for this organization',
-        );
-      }
-      if (error instanceof SubscriptionNotCancelledError) {
-        throw new ConflictException('Subscription is not cancelled');
-      }
-      throw error;
-    }
+    await this.uncancelSubscriptionUseCase.execute(command);
+    this.logger.log(`Successfully uncancelled subscription for org ${orgId}`);
   }
 }

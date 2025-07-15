@@ -2,19 +2,21 @@ import UsersSettingsPage from "@/pages/admin-settings/users-settings";
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions } from "@tanstack/react-query";
 import {
+  getInvitesControllerGetInvitesQueryKey,
   invitesControllerGetInvites,
+  getUserControllerGetUsersInOrganizationQueryKey,
   userControllerGetUsersInOrganization,
 } from "@/shared/api/generated/ayunisCoreAPI";
 
 const invitesQueryOptions = () =>
   queryOptions({
-    queryKey: ["invites"],
+    queryKey: getInvitesControllerGetInvitesQueryKey(),
     queryFn: () => invitesControllerGetInvites(),
   });
 
 const usersQueryOptions = () =>
   queryOptions({
-    queryKey: ["users"],
+    queryKey: getUserControllerGetUsersInOrganizationQueryKey(),
     queryFn: () => userControllerGetUsersInOrganization(),
   });
 
@@ -22,8 +24,8 @@ export const Route = createFileRoute("/_authenticated/admin-settings/users")({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     const [invites, users] = await Promise.all([
-      queryClient.ensureQueryData(invitesQueryOptions()),
-      queryClient.ensureQueryData(usersQueryOptions()),
+      queryClient.fetchQuery(invitesQueryOptions()),
+      queryClient.fetchQuery(usersQueryOptions()),
     ]);
     return { invites, users };
   },

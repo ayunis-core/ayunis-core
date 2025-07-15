@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, Brain } from "lucide-react";
+import { ArrowLeft, Users, Brain, CreditCard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 export function AdminSettingsSidebar() {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-layout");
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -55,6 +55,14 @@ export function AdminSettingsSidebar() {
                 <Link to={"/admin-settings/models"}>
                   <Brain />
                   <span>{t("layout.models")}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to={"/admin-settings/billing"}>
+                  <CreditCard />
+                  <span>{t("layout.billing")}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

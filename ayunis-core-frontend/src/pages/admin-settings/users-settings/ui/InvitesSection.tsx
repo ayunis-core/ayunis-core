@@ -16,7 +16,6 @@ import {
 } from "@/shared/ui/shadcn/card";
 import { Table, TableHeader } from "@/shared/ui/shadcn/table";
 import { useInviteDelete } from "../api/useInviteDelete";
-import { useInvites } from "../api/useInvites";
 import type { Invite } from "../model/openapi";
 import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useTranslation } from "react-i18next";
@@ -25,16 +24,11 @@ interface InvitesSectionProps {
   invites: Invite[];
 }
 
-export default function InvitesSection({
-  invites: invitesFromLoader,
-}: InvitesSectionProps) {
-  const { t } = useTranslation("admin-settings");
-  const { invites } = useInvites({ initialData: invitesFromLoader });
+export default function InvitesSection({ invites }: InvitesSectionProps) {
+  const { t } = useTranslation("admin-settings-users");
   const { deleteInvite, isLoading: isDeletingInvite } = useInviteDelete();
   const { confirm } = useConfirmation();
-  const pendingInvites = invites.filter(
-    (invite) => invite.status === "pending",
-  );
+  const pendingInvites = invites.filter((invite) => invite.acceptedAt === null);
   if (pendingInvites.length === 0) {
     return null;
   }

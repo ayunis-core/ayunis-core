@@ -1,0 +1,11 @@
+{
+  "layout": {
+    "title": "Einstellungen",
+    "goBack": "Zurück",
+    "returnToMainApp": "Zur Anwendung zurückkehren",
+    "settings": "Einstellungen",
+    "users": "Benutzer",
+    "models": "Modelle",
+    "billing": "Abrechnung"
+  }
+}

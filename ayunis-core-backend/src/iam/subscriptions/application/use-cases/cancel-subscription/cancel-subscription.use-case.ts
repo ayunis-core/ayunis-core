@@ -7,9 +7,11 @@ import {
   UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
   SubscriptionAlreadyCancelledError,
-  SubscriptionUpdateFailedError,
-  SubscriptionError,
+  UnexpectedSubscriptionError,
 } from '../../subscription.errors';
+import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -17,6 +19,7 @@ export class CancelSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
   ) {}
 
@@ -46,15 +49,19 @@ export class CancelSubscriptionUseCase {
       }
 
       this.logger.debug('Finding subscription');
-      const subscription = await this.subscriptionRepository.findByOrgId(
-        command.orgId,
+      const result = await this.getActiveSubscriptionUseCase.execute(
+        new GetActiveSubscriptionQuery({
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+        }),
       );
-      if (!subscription) {
+      if (!result) {
         this.logger.warn('Subscription not found', {
           orgId: command.orgId,
         });
         throw new SubscriptionNotFoundError(command.orgId);
       }
+      const subscription = result.subscription;
 
       this.logger.debug('Checking if subscription is already cancelled');
       if (subscription.cancelledAt) {
@@ -75,7 +82,7 @@ export class CancelSubscriptionUseCase {
         cancelledAt: subscription.cancelledAt,
       });
     } catch (error) {
-      if (error instanceof SubscriptionError) {
+      if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
@@ -84,9 +91,7 @@ export class CancelSubscriptionUseCase {
         orgId: command.orgId,
         requestingUserId: command.requestingUserId,
       });
-      throw new SubscriptionUpdateFailedError(
-        'Unexpected error during subscription cancellation',
-      );
+      throw new UnexpectedSubscriptionError('Unexpected error');
     }
   }
 }

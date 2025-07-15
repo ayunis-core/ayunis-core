@@ -13,6 +13,7 @@ export enum InvitesErrorCode {
   UNAUTHORIZED_INVITE_ACCESS = 'UNAUTHORIZED_INVITE_ACCESS',
   INVITE_CREATION_FAILED = 'INVITE_CREATION_FAILED',
   INVITE_ROLE_ERROR = 'INVITE_ROLE_ERROR',
+  INVALID_SEATS = 'INVALID_SEATS',
 }
 
 /**
@@ -122,5 +123,14 @@ export class InviteCreationFailedError extends InviteError {
       500,
       metadata,
     );
+  }
+}
+
+/**
+ * Error thrown when seats are invalid
+ */
+export class InvalidSeatsError extends InviteError {
+  constructor(metadata?: ErrorMetadata) {
+    super('Invalid seats', InvitesErrorCode.INVALID_SEATS, 400, metadata);
   }
 }

@@ -15,7 +15,7 @@ const agentQueryOptions = () =>
 export const Route = createFileRoute("/_authenticated/agents/")({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const agents = await queryClient.ensureQueryData(agentQueryOptions());
+    const agents = await queryClient.fetchQuery(agentQueryOptions());
     return agents;
   },
 });

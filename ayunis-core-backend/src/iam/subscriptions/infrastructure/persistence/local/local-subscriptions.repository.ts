@@ -6,6 +6,9 @@ import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SubscriptionRecord } from './schema/subscription.record';
 import { SubscriptionMapper } from './mappers/subscription.mapper';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { SubscriptionBillingInfoRecord } from './schema/subscription-billing-info.record';
+import { SubscriptionBillingInfoMapper } from './mappers/subscription-billing-info.mapper';
 
 @Injectable()
 export class LocalSubscriptionsRepository extends SubscriptionRepository {
@@ -14,23 +17,26 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
   constructor(
     @InjectRepository(SubscriptionRecord)
     private readonly subscriptionRepository: Repository<SubscriptionRecord>,
+    @InjectRepository(SubscriptionBillingInfoRecord)
+    private readonly subscriptionBillingInfoRepository: Repository<SubscriptionBillingInfoRecord>,
     private readonly subscriptionMapper: SubscriptionMapper,
+    private readonly subscriptionBillingInfoMapper: SubscriptionBillingInfoMapper,
   ) {
     super();
   }
 
-  async findByOrgId(orgId: UUID): Promise<Subscription | null> {
+  async findByOrgId(orgId: UUID): Promise<Subscription[]> {
     try {
-      const record = await this.subscriptionRepository.findOne({
-        where: { orgId },
-        relations: ['org'],
+      const records = await this.subscriptionRepository.find({
+        where: {
+          orgId,
+        },
+        relations: {
+          billingInfo: true,
+        },
       });
 
-      if (!record) {
-        return null;
-      }
-
-      return this.subscriptionMapper.toDomain(record);
+      return records.map((record) => this.subscriptionMapper.toDomain(record));
     } catch (error) {
       this.logger.error(`Failed to find subscription by orgId ${orgId}`, error);
       throw error;
@@ -71,6 +77,29 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     } catch (error) {
       this.logger.error(
         `Failed to update subscription with id ${subscription.id}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async updateBillingInfo(
+    subscriptionId: UUID,
+    billingInfo: SubscriptionBillingInfo,
+  ): Promise<SubscriptionBillingInfo> {
+    try {
+      const record = this.subscriptionBillingInfoMapper.toRecord(
+        billingInfo,
+        subscriptionId,
+      );
+      await this.subscriptionBillingInfoRepository.save(record);
+      this.logger.log(
+        `Updated billing info for subscription with id ${subscriptionId}`,
+      );
+      return this.subscriptionBillingInfoMapper.toDomain(record);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update billing info for subscription with id ${subscriptionId}`,
         error,
       );
       throw error;

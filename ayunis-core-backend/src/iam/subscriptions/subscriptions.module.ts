@@ -1,8 +1,7 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
-import { GetSubscriptionUseCase } from './application/use-cases/get-subscription/get-subscription.use-case';
-import { GetDueSubscriptionsInTimeframeUseCase } from './application/use-cases/get-due-subscriptions-in-timeframe/get-due-subscriptions-in-timeframe.use-case';
+import { GetActiveSubscriptionUseCase } from './application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { CreateSubscriptionUseCase } from './application/use-cases/create-subscription/create-subscription.use-case';
 import { CancelSubscriptionUseCase } from './application/use-cases/cancel-subscription/cancel-subscription.use-case';
 import { UncancelSubscriptionUseCase } from './application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
@@ -14,12 +13,19 @@ import { SubscriptionsController } from './presenters/http/subscriptions.control
 import { SubscriptionResponseMapper } from './presenters/http/mappers/subscription-response.mapper';
 import { UsersModule } from '../users/users.module';
 import { InvitesModule } from '../invites/invites.module';
+import { UpdateSeatsUseCase } from './application/use-cases/update-seats/update-seats.use-case';
+import { UpdateBillingInfoUseCase } from './application/use-cases/update-billing-info/update-billing-info.use-case';
+import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/local/mappers/subscription-billing-info.mapper';
+import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SubscriptionRecord]),
+    TypeOrmModule.forFeature([
+      SubscriptionRecord,
+      SubscriptionBillingInfoRecord,
+    ]),
     UsersModule,
-    InvitesModule,
+    forwardRef(() => InvitesModule),
   ],
   controllers: [SubscriptionsController],
   providers: [
@@ -29,20 +35,20 @@ import { InvitesModule } from '../invites/invites.module';
     },
     SubscriptionMapper,
     SubscriptionResponseMapper,
+    SubscriptionBillingInfoMapper,
     HasActiveSubscriptionUseCase,
-    GetSubscriptionUseCase,
-    GetDueSubscriptionsInTimeframeUseCase,
+    GetActiveSubscriptionUseCase,
     CreateSubscriptionUseCase,
     CancelSubscriptionUseCase,
     UncancelSubscriptionUseCase,
+    UpdateSeatsUseCase,
+    UpdateBillingInfoUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
-    GetSubscriptionUseCase,
-    GetDueSubscriptionsInTimeframeUseCase,
+    GetActiveSubscriptionUseCase,
     CreateSubscriptionUseCase,
-    CancelSubscriptionUseCase,
-    UncancelSubscriptionUseCase,
+    UpdateSeatsUseCase,
   ],
 })
 export class SubscriptionsModule {}

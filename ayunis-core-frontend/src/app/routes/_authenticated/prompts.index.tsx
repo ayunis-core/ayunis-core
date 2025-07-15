@@ -12,7 +12,7 @@ const promptQueryOptions = () =>
 export const Route = createFileRoute("/_authenticated/prompts/")({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const prompts = await queryClient.ensureQueryData(promptQueryOptions());
+    const prompts = await queryClient.fetchQuery(promptQueryOptions());
     return prompts;
   },
 });

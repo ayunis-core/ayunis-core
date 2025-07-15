@@ -1,10 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { DeleteInviteCommand } from './delete-invite.command';
-import {
-  InviteNotFoundError,
-  UnauthorizedInviteAccessError,
-} from '../../invites.errors';
+import { InviteNotFoundError } from '../../invites.errors';
 
 @Injectable()
 export class DeleteInviteUseCase {
@@ -23,21 +20,6 @@ export class DeleteInviteUseCase {
     if (!invite) {
       this.logger.error('Invite not found', { inviteId: command.inviteId });
       throw new InviteNotFoundError(command.inviteId);
-    }
-
-    // Check if the requesting user is the one who created the invite
-    // Only the inviter should be able to delete the invite
-    if (invite.inviterId !== command.requestingUserId) {
-      this.logger.error('Unauthorized delete attempt', {
-        inviteId: command.inviteId,
-        inviterId: invite.inviterId,
-        requestingUserId: command.requestingUserId,
-      });
-      throw new UnauthorizedInviteAccessError({
-        inviteId: command.inviteId,
-        inviterId: invite.inviterId,
-        requestingUserId: command.requestingUserId,
-      });
     }
 
     // Delete the invite

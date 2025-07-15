@@ -43,16 +43,16 @@ export const Route = createFileRoute("/_authenticated/chat/")({
     } else if (agentId) {
       selectedAgentId = agentId;
     } else {
-      const defaultModel = await queryClient.ensureQueryData(
+      const defaultModel = await queryClient.fetchQuery(
         queryDefaultModelOptions(),
       );
       selectedModelId = defaultModel.id;
     }
-    const { hasActiveSubscription } = await queryClient.ensureQueryData(
+    const { hasActiveSubscription } = await queryClient.fetchQuery(
       queryHasActiveSubscriptionOptions(),
     );
     const prompt = promptId
-      ? await queryClient.ensureQueryData(queryPromptOptions(promptId))
+      ? await queryClient.fetchQuery(queryPromptOptions(promptId))
       : undefined;
     return {
       selectedModelId,

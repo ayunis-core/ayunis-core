@@ -2,6 +2,51 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { RenewalCycle } from '../../../domain/value-objects/renewal-cycle.enum';
 
+class SubscriptionBillingInfoResponseDto {
+  @ApiProperty({
+    description: 'Company name',
+    example: 'Acme GmbH',
+  })
+  companyName: string;
+
+  @ApiProperty({
+    description: 'Street',
+    example: 'Musterstraße',
+  })
+  street: string;
+
+  @ApiProperty({
+    description: 'Number',
+    example: '123a',
+  })
+  houseNumber: string;
+
+  @ApiProperty({
+    description: 'City',
+    example: 'Musterstadt',
+  })
+  city: string;
+
+  @ApiProperty({
+    description: 'Postal code',
+    example: '12345',
+  })
+  postalCode: string;
+
+  @ApiProperty({
+    description: 'Country',
+    example: 'Deutschland',
+  })
+  country: string;
+
+  @ApiProperty({
+    description: 'USt-ID',
+    example: 'DE1234567890',
+    required: false,
+  })
+  vatNumber?: string;
+}
+
 export class SubscriptionResponseDto {
   @ApiProperty({
     description: 'Unique identifier of the subscription',
@@ -72,4 +117,10 @@ export class SubscriptionResponseDto {
     example: '2024-01-01T10:00:00Z',
   })
   nextRenewalDate: Date;
+
+  @ApiProperty({
+    description: 'Billing information',
+    type: SubscriptionBillingInfoResponseDto,
+  })
+  billingInfo: SubscriptionBillingInfoResponseDto;
 }

@@ -36,7 +36,7 @@ interface UsersSectionProps {
 export default function UsersSection({
   users: usersFromLoader,
 }: UsersSectionProps) {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-users");
   const { users } = useUsers({ initialData: usersFromLoader });
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({

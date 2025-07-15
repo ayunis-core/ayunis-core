@@ -25,6 +25,7 @@ import { Route as AuthenticatedSettingsAccountImport } from './routes/_authentic
 import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
 import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
+import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
 import { Route as onboardingInvitesTokenAcceptImport } from './routes/(onboarding)/invites.$token.accept'
 
 // Create/Update Routes
@@ -121,6 +122,13 @@ const AuthenticatedAdminSettingsModelsRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
+const AuthenticatedAdminSettingsBillingRoute =
+  AuthenticatedAdminSettingsBillingImport.update({
+    id: '/admin-settings/billing',
+    path: '/admin-settings/billing',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
 const onboardingInvitesTokenAcceptRoute =
   onboardingInvitesTokenAcceptImport.update({
     id: '/(onboarding)/invites/$token/accept',
@@ -159,6 +167,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/register'
       preLoaderRoute: typeof onboardingRegisterImport
       parentRoute: typeof rootRoute
+    }
+    '/_authenticated/admin-settings/billing': {
+      id: '/_authenticated/admin-settings/billing'
+      path: '/admin-settings/billing'
+      fullPath: '/admin-settings/billing'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsBillingImport
+      parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/admin-settings/models': {
       id: '/_authenticated/admin-settings/models'
@@ -243,6 +258,7 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
@@ -256,6 +272,8 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminSettingsBillingRoute:
+    AuthenticatedAdminSettingsBillingRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
   AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
@@ -277,6 +295,7 @@ export interface FileRoutesByFullPath {
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
@@ -295,6 +314,7 @@ export interface FileRoutesByTo {
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
@@ -314,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
+  '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
@@ -334,6 +355,7 @@ export interface FileRouteTypes {
     | ''
     | '/login'
     | '/register'
+    | '/admin-settings/billing'
     | '/admin-settings/models'
     | '/admin-settings/users'
     | '/chats/$threadId'
@@ -351,6 +373,7 @@ export interface FileRouteTypes {
     | ''
     | '/login'
     | '/register'
+    | '/admin-settings/billing'
     | '/admin-settings/models'
     | '/admin-settings/users'
     | '/chats/$threadId'
@@ -368,6 +391,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
+    | '/_authenticated/admin-settings/billing'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/users'
     | '/_authenticated/chats/$threadId'
@@ -421,6 +445,7 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
+        "/_authenticated/admin-settings/billing",
         "/_authenticated/admin-settings/models",
         "/_authenticated/admin-settings/users",
         "/_authenticated/chats/$threadId",
@@ -438,6 +463,10 @@ export const routeTree = rootRoute
     },
     "/(onboarding)/register": {
       "filePath": "(onboarding)/register.tsx"
+    },
+    "/_authenticated/admin-settings/billing": {
+      "filePath": "_authenticated/admin-settings.billing.tsx",
+      "parent": "/_authenticated"
     },
     "/_authenticated/admin-settings/models": {
       "filePath": "_authenticated/admin-settings.models.tsx",

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AddSeatCommand } from './add-seat.command';
+import { UpdateSeatsCommand } from './update-seats.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { IsFromOrgUseCase } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.use-case';
 import { IsFromOrgQuery } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.query';
@@ -7,20 +7,30 @@ import {
   UnauthorizedSubscriptionAccessError,
   SubscriptionNotFoundError,
   InvalidSubscriptionDataError,
-  SubscriptionUpdateFailedError,
-  SubscriptionError,
+  TooManyUsedSeatsError,
+  UnexpectedSubscriptionError,
 } from '../../subscription.errors';
+import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
+import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
+import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
+import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
+import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
-export class AddSeatUseCase {
-  private readonly logger = new Logger(AddSeatUseCase.name);
+export class UpdateSeatsUseCase {
+  private readonly logger = new Logger(UpdateSeatsUseCase.name);
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
+    private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
+    private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
   ) {}
 
-  async execute(command: AddSeatCommand): Promise<void> {
+  async execute(command: UpdateSeatsCommand): Promise<void> {
     this.logger.log('Adding seats to subscription', {
       orgId: command.orgId,
       requestingUserId: command.requestingUserId,
@@ -57,23 +67,47 @@ export class AddSeatUseCase {
       }
 
       this.logger.debug('Finding subscription');
-      const subscription = await this.subscriptionRepository.findByOrgId(
-        command.orgId,
+      const result = await this.getActiveSubscriptionUseCase.execute(
+        new GetActiveSubscriptionQuery({
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+        }),
       );
-      if (!subscription) {
+      if (!result) {
         this.logger.warn('Subscription not found', {
           orgId: command.orgId,
         });
         throw new SubscriptionNotFoundError(command.orgId);
       }
+      const subscription = result.subscription;
 
-      this.logger.debug('Adding seats to subscription', {
+      const users = await this.findUsersByOrgIdUseCase.execute(
+        new FindUsersByOrgIdQuery(command.orgId),
+      );
+      const openInvites = await this.getInvitesByOrgUseCase.execute(
+        new GetInvitesByOrgQuery({
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+          onlyOpen: true,
+        }),
+      );
+      if (command.noOfSeats < users.length + openInvites.length) {
+        this.logger.warn('Too many used seats', {
+          orgId: command.orgId,
+          openInvites: openInvites,
+        });
+        throw new TooManyUsedSeatsError({
+          orgId: command.orgId,
+          openInvites: openInvites.length,
+        });
+      }
+
+      this.logger.debug('Updating seats of subscription', {
         currentSeats: subscription.noOfSeats,
-        additionalSeats: command.noOfSeats,
-        newTotal: subscription.noOfSeats + command.noOfSeats,
+        newSeats: command.noOfSeats,
       });
 
-      subscription.noOfSeats += command.noOfSeats;
+      subscription.noOfSeats = command.noOfSeats;
       await this.subscriptionRepository.update(subscription);
 
       this.logger.debug('Seats added successfully', {
@@ -82,7 +116,7 @@ export class AddSeatUseCase {
         totalSeats: subscription.noOfSeats,
       });
     } catch (error) {
-      if (error instanceof SubscriptionError) {
+      if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
@@ -92,7 +126,7 @@ export class AddSeatUseCase {
         requestingUserId: command.requestingUserId,
         noOfSeats: command.noOfSeats,
       });
-      throw new SubscriptionUpdateFailedError(
+      throw new UnexpectedSubscriptionError(
         'Unexpected error during seat addition',
       );
     }

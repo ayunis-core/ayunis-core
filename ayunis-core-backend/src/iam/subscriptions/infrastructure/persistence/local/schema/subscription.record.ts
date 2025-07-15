@@ -2,15 +2,15 @@ import { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
 import { RenewalCycle } from '../../../../domain/value-objects/renewal-cycle.enum';
-import { Entity, OneToOne, JoinColumn, Column, Index } from 'typeorm';
+import { Entity, OneToOne, Column, Index, ManyToOne } from 'typeorm';
+import { SubscriptionBillingInfoRecord } from './subscription-billing-info.record';
 
 @Entity({ name: 'subscriptions' })
 export class SubscriptionRecord extends BaseRecord {
-  @Column({ nullable: true })
-  cancelledAt?: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  cancelledAt: Date | null;
 
-  @OneToOne(() => OrgRecord)
-  @JoinColumn()
+  @ManyToOne(() => OrgRecord)
   org: OrgRecord;
 
   @Column()
@@ -31,4 +31,14 @@ export class SubscriptionRecord extends BaseRecord {
 
   @Column()
   renewalCycleAnchor: Date;
+
+  @OneToOne(
+    () => SubscriptionBillingInfoRecord,
+    (billingInfo) => billingInfo.subscription,
+    {
+      cascade: true,
+      eager: true,
+    },
+  )
+  billingInfo: SubscriptionBillingInfoRecord;
 }

@@ -1,13 +1,16 @@
 import { AccountSettingsPage } from "@/pages/settings/account-settings";
 import { createFileRoute } from "@tanstack/react-router";
-import { authenticationControllerMe } from "@/shared/api";
+import {
+  authenticationControllerMe,
+  getAuthenticationControllerMeQueryKey,
+} from "@/shared/api";
 import { queryOptions } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/settings/account")({
   loader: async ({ context: { queryClient } }) => {
-    const data = await queryClient.ensureQueryData(
+    const data = await queryClient.fetchQuery(
       queryOptions({
-        queryKey: ["me"],
+        queryKey: [getAuthenticationControllerMeQueryKey()],
         queryFn: () => authenticationControllerMe(),
       }),
     );

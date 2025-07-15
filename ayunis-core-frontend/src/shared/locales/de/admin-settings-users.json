@@ -1,20 +1,4 @@
 {
-  "layout": {
-    "title": "Einstellungen",
-    "goBack": "Zurück",
-    "returnToMainApp": "Zur Anwendung zurückkehren",
-    "settings": "Einstellungen",
-    "users": "Benutzer",
-    "models": "Modelle"
-  },
-  "models": {
-    "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
-    "streaming": "Streaming",
-    "reasoning": "Reasoning",
-    "enableProvider": "Provider freischalten",
-    "disableProvider": "Provider deaktivieren",
-    "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist."
-  },
   "users": {
     "invites": "Einladungen",
     "users": "Benutzer",
@@ -28,10 +12,11 @@
     "pending": "ausstehend",
     "accepted": "akzeptiert",
     "rejected": "abgelehnt",
+    "expired": "abgelaufen",
     "more": "Mehr",
     "edit": "Bearbeiten",
     "delete": "Löschen",
-    "changeRole": "Zu {{role}} wechseln",
+    "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
     "admin": "Administrator"
   },

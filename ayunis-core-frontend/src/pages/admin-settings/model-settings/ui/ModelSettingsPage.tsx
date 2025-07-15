@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useModelsWithConfig, useProvidersWithPermittedStatus } from "../api";
 
 export default function ModelSettingsPage() {
-  const { t } = useTranslation("admin-settings");
+  const { t } = useTranslation("admin-settings-models");
   const { models } = useModelsWithConfig();
   const { providers } = useProvidersWithPermittedStatus();
 

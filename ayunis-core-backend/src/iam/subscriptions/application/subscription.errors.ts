@@ -12,15 +12,16 @@ import {
 
 export enum SubscriptionErrorCode {
   SUBSCRIPTION_NOT_FOUND = 'SUBSCRIPTION_NOT_FOUND',
+  MULTIPLE_ACTIVE_SUBSCRIPTIONS = 'MULTIPLE_ACTIVE_SUBSCRIPTIONS',
   SUBSCRIPTION_ALREADY_EXISTS = 'SUBSCRIPTION_ALREADY_EXISTS',
   SUBSCRIPTION_ALREADY_CANCELLED = 'SUBSCRIPTION_ALREADY_CANCELLED',
   SUBSCRIPTION_NOT_CANCELLED = 'SUBSCRIPTION_NOT_CANCELLED',
   INSUFFICIENT_SEATS = 'INSUFFICIENT_SEATS',
+  TOO_MANY_USED_SEATS = 'TOO_MANY_USED_SEATS',
   INVALID_RENEWAL_CYCLE = 'INVALID_RENEWAL_CYCLE',
   UNAUTHORIZED_SUBSCRIPTION_ACCESS = 'UNAUTHORIZED_SUBSCRIPTION_ACCESS',
   INVALID_SUBSCRIPTION_DATA = 'INVALID_SUBSCRIPTION_DATA',
-  SUBSCRIPTION_CREATION_FAILED = 'SUBSCRIPTION_CREATION_FAILED',
-  SUBSCRIPTION_UPDATE_FAILED = 'SUBSCRIPTION_UPDATE_FAILED',
+  UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
 }
 
 /**
@@ -78,6 +79,25 @@ export class SubscriptionNotFoundError extends SubscriptionError {
       `Subscription for organization '${orgId}' not found`,
       SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND,
       404,
+      {
+        orgId,
+        ...metadata,
+      },
+    );
+  }
+}
+
+/**
+ * Error thrown when there are multiple active subscriptions for an organization
+/**
+ * Error thrown when there are multiple active subscriptions for an organization
+ */
+export class MultipleActiveSubscriptionsError extends SubscriptionError {
+  constructor(orgId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Multiple active subscriptions for organization '${orgId}'`,
+      SubscriptionErrorCode.MULTIPLE_ACTIVE_SUBSCRIPTIONS,
+      400,
       {
         orgId,
         ...metadata,
@@ -160,6 +180,22 @@ export class InsufficientSeatsError extends SubscriptionError {
 }
 
 /**
+ * Error thrown when there are too many used seats
+/**
+ * Error thrown when there are too many used seats
+ */
+export class TooManyUsedSeatsError extends SubscriptionError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      `Too many used seats`,
+      SubscriptionErrorCode.TOO_MANY_USED_SEATS,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
  * Error thrown when an invalid renewal cycle is provided
  */
 export class InvalidRenewalCycleError extends SubscriptionError {
@@ -209,27 +245,13 @@ export class InvalidSubscriptionDataError extends SubscriptionError {
 }
 
 /**
- * Error thrown when subscription creation fails
+ * Error thrown when an unexpected error occurs
  */
-export class SubscriptionCreationFailedError extends SubscriptionError {
+export class UnexpectedSubscriptionError extends SubscriptionError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Failed to create subscription${reason ? `: ${reason}` : ''}`,
-      SubscriptionErrorCode.SUBSCRIPTION_CREATION_FAILED,
-      500,
-      metadata,
-    );
-  }
-}
-
-/**
- * Error thrown when subscription update fails
- */
-export class SubscriptionUpdateFailedError extends SubscriptionError {
-  constructor(reason?: string, metadata?: ErrorMetadata) {
-    super(
-      `Failed to update subscription${reason ? `: ${reason}` : ''}`,
-      SubscriptionErrorCode.SUBSCRIPTION_UPDATE_FAILED,
+      `Unexpected error: ${reason ? `: ${reason}` : ''}`,
+      SubscriptionErrorCode.UNEXPECTED_ERROR,
       500,
       metadata,
     );
