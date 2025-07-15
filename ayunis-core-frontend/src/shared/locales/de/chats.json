@@ -6,12 +6,17 @@
     "deleteThreadDescription": "Sind Sie sicher, dass Sie diesen Thread löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteText": "Löschen",
     "cancelText": "Abbrechen",
-    "errorDeleteThread": "Thread konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "errorDeleteThread": "Thread konnte nicht gelöscht werden",
     "aiThinking": "KI denkt nach...",
     "usingTool": "Tool wird verwendet: {{toolName}}",
     "resultFrom": "Ergebnis von {{toolName}}:",
     "unknownMessageType": "Unbekannter Nachrichtentyp",
-    "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden."
+    "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden.",
+    "errorExecutionError": "Fehler beim Abruf der Antwort",
+    "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "errorNoModelFound": "Kein Modell gefunden",
+    "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
+    "errorToolNotFound": "Tool nicht gefunden"
   },
   "newChat": {
     "title": "Wie kann ich Ihnen heute helfen?",

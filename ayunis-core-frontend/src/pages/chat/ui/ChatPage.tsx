@@ -25,6 +25,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useThread } from "../api/useThread";
 import { useUpdateThreadAgent } from "../api/useUpdateThreadAgent";
+import type {
+  RunErrorResponseDto,
+  RunMessageResponseDtoMessage,
+  RunSessionResponseDto,
+  RunThreadResponseDto,
+} from "@/shared/api";
 
 interface ChatPageProps {
   thread: Thread;
@@ -82,7 +88,7 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   }
 
   // Memoize the callback functions to prevent unnecessary reconnections
-  const handleMessage = useCallback((message: any) => {
+  const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
     config.env === "development" && console.log("message", message);
     setMessages((prev) => {
       // Update message if exists, otherwise append
@@ -94,38 +100,42 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     });
   }, []);
 
-  const handleError = useCallback((error: any) => {
-    config.env === "development" && console.log("error", error);
-    showError(error.message);
+  const handleError = useCallback((error: RunErrorResponseDto) => {
+    switch (error.code) {
+      case "EXECUTION_ERROR":
+        showError(t("chat.errorExecutionError"));
+        break;
+      case "RUN_NO_MODEL_FOUND":
+        showError(t("chat.errorNoModelFound"));
+        break;
+      case "RUN_MAX_ITERATIONS_REACHED":
+        showError(t("chat.errorMaxIterationsReached"));
+        break;
+      case "RUN_TOOL_NOT_FOUND":
+        showError(t("chat.errorToolNotFound"));
+        break;
+      default:
+        showError(t("chat.errorUnexpected"));
+    }
   }, []);
 
-  const handleSession = useCallback((session: any) => {
+  const handleSession = useCallback((session: RunSessionResponseDto) => {
     config.env === "development" && console.log("session", session);
     if (session.streaming === true) setIsStreaming(true);
     if (session.streaming === false) setIsStreaming(false);
   }, []);
 
-  const handleThread = useCallback((thread: any) => {
+  const handleThread = useCallback((thread: RunThreadResponseDto) => {
     config.env === "development" && console.log("Thread", thread);
     setThreadTitle(thread.title);
-  }, []);
-
-  const handleConnected = useCallback(() => {
-    config.env === "development" && console.log("Connected");
-  }, []);
-
-  const handleDisconnect = useCallback(() => {
-    config.env === "development" && console.log("Disconnected");
   }, []);
 
   const { isConnected, reconnect } = useMessageEventStream({
     threadId: threadFromLoader.id,
     onMessageEvent: (data) => handleMessage(data.message),
-    onErrorEvent: (data) => handleError(data.message),
-    onSessionEvent: (data) => handleSession(data),
-    onThreadEvent: (data) => handleThread(data),
-    onConnected: handleConnected,
-    onDisconnect: handleDisconnect,
+    onErrorEvent: handleError,
+    onSessionEvent: handleSession,
+    onThreadEvent: handleThread,
   });
 
   // Auto-scroll to bottom when new messages are added - use the local messages state

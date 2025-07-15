@@ -310,9 +310,6 @@ export class RunsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): { success: boolean; message: string } {
-    this.logger.log('sendMessage', { sendMessageDto, userId });
-
-    // Get the session
     const session = this.runSessionManager.getSession(
       sendMessageDto.threadId,
       userId,
@@ -321,28 +318,20 @@ export class RunsController {
       throw new HttpException('Session not found', HttpStatus.BAD_REQUEST);
     }
 
-    try {
-      const input = RunInputMapper.toCommand(sendMessageDto.input);
+    const input = RunInputMapper.toCommand(sendMessageDto.input);
 
-      void this.executeRunInBackground({
-        threadId: sendMessageDto.threadId,
-        input,
-        userId,
-        streaming: sendMessageDto.streaming,
-        orgId,
-      });
+    void this.executeRunInBackground({
+      threadId: sendMessageDto.threadId,
+      input,
+      userId,
+      streaming: sendMessageDto.streaming,
+      orgId,
+    });
 
-      return {
-        success: true,
-        message: 'Message sent to session',
-      };
-    } catch (error) {
-      this.logger.error('Error sending message', error);
-      throw new HttpException(
-        'Failed to send message',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    return {
+      success: true,
+      message: 'Message sent to session',
+    };
   }
 
   private async executeRunInBackground(params: {

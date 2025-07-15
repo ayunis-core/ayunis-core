@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
 import {
-  type ErrorResponseDto,
   type RunMessageResponseDto,
   type RunErrorResponseDto,
   type RunsControllerConnectToStream200,
@@ -15,7 +14,7 @@ interface UseMessageEventStreamParams {
   onMessageEvent: (data: RunMessageResponseDto) => void;
   onSessionEvent: (data: RunSessionResponseDto) => void;
   onThreadEvent: (data: RunThreadResponseDto) => void;
-  onErrorEvent: (data: ErrorResponseDto) => void;
+  onErrorEvent: (data: RunErrorResponseDto) => void;
   onConnected?: () => void;
   onError?: (error: Error) => void;
   onDisconnect?: () => void;

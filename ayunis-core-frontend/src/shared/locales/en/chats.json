@@ -6,12 +6,17 @@
     "deleteThreadDescription": "Are you sure you want to delete this thread? This action cannot be undone.",
     "deleteText": "Delete",
     "cancelText": "Cancel",
-    "errorDeleteThread": "Failed to delete thread. Please try again.",
+    "errorDeleteThread": "Failed to delete thread",
     "aiThinking": "AI is thinking...",
     "usingTool": "Using tool: {{toolName}}",
     "resultFrom": "Result from {{toolName}}:",
     "unknownMessageType": "Unknown message type",
-    "upgradeToProError": "You need to upgrade to a paid plan to use this feature."
+    "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
+    "errorExecutionError": "Error fetching response",
+    "errorUnexpected": "An unexpected error occurred",
+    "errorNoModelFound": "No model found",
+    "errorMaxIterationsReached": "Maximal number of iterations reached",
+    "errorToolNotFound": "Tool not found"
   },
   "newChat": {
     "title": "How can I help you today?",
