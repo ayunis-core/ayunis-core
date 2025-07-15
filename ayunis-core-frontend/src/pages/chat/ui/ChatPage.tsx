@@ -34,7 +34,6 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   const { t } = useTranslation("chats");
   const { pendingMessage, setPendingMessage } = useChatContext();
   const thread = useThread(threadFromLoader.id, threadFromLoader);
-  console.log("thread", thread);
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread!.title,
   );
