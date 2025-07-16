@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import AppLayout from "@/layouts/app-layout";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ChatInterfaceLayout from "@/layouts/chat-interface-layout/ui/ChatInterfaceLayout";
 import ChatMessage from "@/pages/chat/ui/ChatMessage";
 import ChatInput from "@/widgets/chat-input";
@@ -23,7 +22,6 @@ import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useDeleteThread } from "@/features/useDeleteThread";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useThread } from "../api/useThread";
 import { useUpdateThreadAgent } from "../api/useUpdateThreadAgent";
 import type {
   RunErrorResponseDto,
@@ -31,25 +29,28 @@ import type {
   RunSessionResponseDto,
   RunThreadResponseDto,
 } from "@/shared/api";
+import AppLayout from "@/layouts/app-layout";
 
 interface ChatPageProps {
   thread: Thread;
 }
 
-export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
+export default function ChatPage({ thread }: ChatPageProps) {
   const { t } = useTranslation("chats");
   const { pendingMessage, setPendingMessage } = useChatContext();
-  const thread = useThread(threadFromLoader.id, threadFromLoader);
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread!.title,
-  );
-  const [modelOrAgentId, setModelOrAgentId] = useState(
-    thread?.agentId ?? thread?.permittedModelId,
   );
   const [messages, setMessages] = useState<Message[]>(thread!.messages);
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<Element | null>(null);
   const processedPendingMessageRef = useRef<String | null>(null);
+
+  // Memoize sorted messages to avoid sorting on every render
+  const sortedMessages = useMemo(() => {
+    return messages.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+  }, [messages]);
 
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
@@ -66,22 +67,11 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   const { updateModel } = useUpdateThreadModel();
   const { updateAgent } = useUpdateThreadAgent();
 
-  useEffect(() => {
-    setMessages(threadFromLoader.messages);
-    setThreadTitle(threadFromLoader.title);
-    setModelOrAgentId(
-      threadFromLoader.agentId ?? threadFromLoader.permittedModelId,
-    );
-  }, [threadFromLoader]);
-
   const { sendTextMessage } = useMessageSend({
-    threadId: threadFromLoader.id,
+    threadId: thread.id,
   });
 
   async function handleSend(message: string) {
-    if (!isConnected) {
-      await reconnect();
-    }
     sendTextMessage({
       text: message,
     });
@@ -130,17 +120,22 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
     setThreadTitle(thread.title);
   }, []);
 
-  const { isConnected, reconnect } = useMessageEventStream({
-    threadId: threadFromLoader.id,
+  const { isConnected } = useMessageEventStream({
+    threadId: thread.id,
     onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: handleError,
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
   });
 
-  // Auto-scroll to bottom when new messages are added - use the local messages state
   useEffect(() => {
-    if (scrollAreaRef.current) {
+    setMessages(thread.messages);
+    setThreadTitle(thread.title);
+  }, [thread]);
+
+  // Find scroll container once and cache it
+  useEffect(() => {
+    if (scrollAreaRef.current && !scrollContainerRef.current) {
       // Find the scrollable parent container (likely in ChatInterfaceLayout)
       let scrollContainer = scrollAreaRef.current.closest(
         "[data-radix-scroll-area-viewport]",
@@ -172,14 +167,21 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
         }
       }
 
-      // Scroll to bottom with a small delay to ensure content is rendered
-      if (scrollContainer) {
-        requestAnimationFrame(() => {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        });
-      }
+      scrollContainerRef.current = scrollContainer;
     }
-  }, [messages]);
+  }, []);
+
+  // Auto-scroll to bottom when new messages are added - use cached scroll container
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop =
+            scrollContainerRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [sortedMessages]);
 
   // Send pending message from NewChatPage if it exists
   useEffect(() => {
@@ -197,16 +199,14 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   }, [pendingMessage, sendTextMessage, setPendingMessage]);
 
   function handleModelChange(newModelId: string) {
-    setModelOrAgentId(newModelId);
-    updateModel(threadFromLoader.id, newModelId).catch((error) => {
+    updateModel(thread.id, newModelId).catch((error) => {
       console.error("Failed to update thread model", error);
       showError("Failed to update thread model");
     });
   }
 
   function handleAgentChange(newAgentId: string) {
-    setModelOrAgentId(newAgentId);
-    updateAgent(threadFromLoader.id, newAgentId).catch((error) => {
+    updateAgent(thread.id, newAgentId).catch((error) => {
       console.error("Failed to update thread agent", error);
       showError("Failed to update thread agent");
     });
@@ -219,7 +219,7 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
       confirmText: t("chat.deleteText"),
       cancelText: t("chat.cancelText"),
       variant: "destructive",
-      onConfirm: () => deleteChat(threadFromLoader.id),
+      onConfirm: () => deleteChat(thread.id),
     });
   }
 
@@ -263,11 +263,9 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   const chatContent = (
     <div className="p-4 pb-8" ref={scrollAreaRef}>
       <div className="space-y-4">
-        {messages
-          .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1))
-          .map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
+        {sortedMessages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
 
         {/* Loading indicator */}
         {false && <ChatMessage isLoading={true} />}
@@ -278,7 +276,7 @@ export default function ChatPage({ thread: threadFromLoader }: ChatPageProps) {
   // Chat Input
   const chatInput = (
     <ChatInput
-      modelOrAgentId={modelOrAgentId}
+      modelOrAgentId={thread.agentId ?? thread.permittedModelId}
       isStreaming={isStreaming}
       onModelChange={handleModelChange}
       onAgentChange={handleAgentChange}
