@@ -4,8 +4,6 @@ import {
   Logger,
   Sse,
   Post,
-  HttpException,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   MessageEvent,
@@ -31,7 +29,7 @@ import {
   SystemMessageResponseDto,
 } from '../../../threads/presenters/http/dto/message-response.dto';
 import { Observable } from 'rxjs';
-import { RunSessionManager } from './sse/run-session.manager';
+import { ThreadEventBroadcaster } from './sse/thread-event-broadcaster';
 import { RunInputMapper } from './mappers/run-input.mapper';
 import {
   RunSessionResponseDto,
@@ -63,7 +61,7 @@ export class RunsController {
 
   constructor(
     private readonly executeRunAndSetTitleUseCase: ExecuteRunAndSetTitleUseCase,
-    private readonly runSessionManager: RunSessionManager,
+    private readonly threadEventBroadcaster: ThreadEventBroadcaster,
   ) {}
 
   @ApiOperation({
@@ -165,27 +163,27 @@ export class RunsController {
 
     return new Observable((subscriber) => {
       try {
-        // Create a new session
-        const session = this.runSessionManager.createSession(userId, threadId);
+        // Subscribe to thread events (no session creation needed)
+        const threadStream =
+          this.threadEventBroadcaster.getThreadStream(threadId);
 
-        // Send session establishment event
-        const sessionResponse: RunSessionResponseDto = {
+        // Send connection establishment event immediately
+        const connectionResponse: RunSessionResponseDto = {
           type: 'session',
           success: true,
           threadId: threadId,
           timestamp: new Date().toISOString(),
         };
 
-        const sessionEvent: MessageEvent = {
+        const connectionEvent: MessageEvent = {
           id: 'session',
-          data: sessionResponse,
+          data: connectionResponse,
         };
 
-        // Send the session event immediately
-        subscriber.next(sessionEvent);
+        subscriber.next(connectionEvent);
 
-        // Subscribe to messages for this session
-        const messageSubscription = session.messageSubject.subscribe({
+        // Subscribe to thread events
+        const eventSubscription = threadStream.subscribe({
           next: (response: RunResponse) => {
             // Generate appropriate event ID based on response type
             let eventId: string;
@@ -242,10 +240,10 @@ export class RunsController {
           },
         });
 
-        // Handle client disconnect
+        // Handle client disconnect - just unsubscribe from events
         return () => {
-          messageSubscription.unsubscribe();
-          this.runSessionManager.closeSession(threadId, userId);
+          eventSubscription.unsubscribe();
+          this.threadEventBroadcaster.onConnectionDisconnect(threadId);
         };
       } catch (error) {
         this.logger.error('Error in connectToStream', {
@@ -299,7 +297,7 @@ export class RunsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid request payload or session not found',
+    description: 'Invalid request payload',
   })
   @ApiResponse({
     status: 500,
@@ -310,14 +308,7 @@ export class RunsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): { success: boolean; message: string } {
-    const session = this.runSessionManager.getSession(
-      sendMessageDto.threadId,
-      userId,
-    );
-    if (!session) {
-      throw new HttpException('Session not found', HttpStatus.BAD_REQUEST);
-    }
-
+    // No session check needed - directly process message
     const input = RunInputMapper.toCommand(sendMessageDto.input);
 
     void this.executeRunInBackground({
@@ -330,7 +321,7 @@ export class RunsController {
 
     return {
       success: true,
-      message: 'Message sent to session',
+      message: 'Message sent for processing',
     };
   }
 
@@ -353,13 +344,13 @@ export class RunsController {
       const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);
 
       for await (const event of eventGenerator) {
-        const sent = this.runSessionManager.sendMessageToSessions(
+        const sent = this.threadEventBroadcaster.broadcastToThread(
           params.threadId,
           event,
         );
         if (!sent) {
           this.logger.warn(
-            `Failed to send event to session ${params.threadId} - session may have been closed`,
+            `Failed to broadcast event to thread ${params.threadId} - no active listeners`,
           );
           break;
         }
@@ -383,8 +374,8 @@ export class RunsController {
         },
       };
 
-      // Try to send error to session, but don't fail if session is closed
-      this.runSessionManager.sendMessageToSessions(
+      // Try to broadcast error to thread listeners
+      this.threadEventBroadcaster.broadcastToThread(
         params.threadId,
         errorResponse,
       );

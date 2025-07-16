@@ -7,7 +7,7 @@ import { RunsController } from './presenters/http/runs.controller';
 import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
-import { RunSessionManager } from './presenters/http/sse/run-session.manager';
+import { ThreadEventBroadcaster } from './presenters/http/sse/thread-event-broadcaster';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { RunSessionManager } from './presenters/http/sse/run-session.manager';
   providers: [
     ExecuteRunUseCase,
     ExecuteRunAndSetTitleUseCase,
-    RunSessionManager,
+    ThreadEventBroadcaster,
   ],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
