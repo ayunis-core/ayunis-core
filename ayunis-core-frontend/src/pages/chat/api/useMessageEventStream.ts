@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import {
   type RunMessageResponseDto,
   type RunErrorResponseDto,
@@ -34,7 +34,7 @@ export function useMessageEventStream({
   const abortControllerRef = useRef<AbortController | null>(null);
   const isConnectedRef = useRef(false);
 
-  const connect = useCallback(async () => {
+  async function connect() {
     try {
       // Clean up any existing connection
       if (abortControllerRef.current) {
@@ -158,19 +158,9 @@ export function useMessageEventStream({
         onDisconnect?.();
       }
     }
-  }, [
-    threadId,
-    onMessageEvent,
-    onSessionEvent,
-    onThreadEvent,
-    onErrorEvent,
-    onConnected,
-    onError,
-    onDisconnect,
-    queryClient,
-  ]);
+  }
 
-  const disconnect = useCallback(() => {
+  function disconnect() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -180,12 +170,7 @@ export function useMessageEventStream({
     if (wasConnected) {
       onDisconnect?.();
     }
-  }, [onDisconnect]);
-
-  const reconnect = useCallback(async () => {
-    disconnect();
-    await connect();
-  }, [disconnect, connect]);
+  }
 
   // Auto-connect when threadId changes
   useEffect(() => {
@@ -196,7 +181,7 @@ export function useMessageEventStream({
     return () => {
       disconnect();
     };
-  }, [threadId]); // Only depend on threadId
+  }, [threadId]);
 
   // Handle visibility changes
   useEffect(() => {
@@ -221,7 +206,6 @@ export function useMessageEventStream({
   return {
     connect,
     disconnect,
-    reconnect,
     isConnected: isConnectedRef.current,
   };
 }

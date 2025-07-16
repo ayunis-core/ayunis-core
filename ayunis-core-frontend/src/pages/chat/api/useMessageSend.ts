@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import {
   useRunsControllerSendMessage,
   type SendMessageDto,
@@ -27,9 +26,11 @@ interface UseMessageSendParams {
 
 export function useMessageSend(params: UseMessageSendParams) {
   const { t } = useTranslation("chats");
+
   const mutation = useRunsControllerSendMessage({
     mutation: {
       onError: (error: AxiosError) => {
+        console.log("error in useMessageSend", error);
         if (error.response?.status === 403) {
           showError(t("chat.upgradeToProError"));
         }
@@ -37,42 +38,36 @@ export function useMessageSend(params: UseMessageSendParams) {
     },
   });
 
-  const sendTextMessage = useCallback(
-    (input: SendMesageInput) => {
-      const textInput: TextInput = {
-        type: TextInputType.text,
-        text: input.text,
-      };
+  function sendTextMessage(input: SendMesageInput) {
+    const textInput: TextInput = {
+      type: TextInputType.text,
+      text: input.text,
+    };
 
-      const sendMessageDto: SendMessageDto = {
-        threadId: params.threadId,
-        input: textInput,
-        streaming: true,
-      };
+    const sendMessageDto: SendMessageDto = {
+      threadId: params.threadId,
+      input: textInput,
+      streaming: true,
+    };
 
-      return mutation.mutate({ data: sendMessageDto });
-    },
-    [mutation, params.threadId],
-  );
+    return mutation.mutate({ data: sendMessageDto });
+  }
 
-  const sendToolResult = useCallback(
-    (input: SendToolResultInput) => {
-      const toolResultInput: ToolResultInput = {
-        type: ToolResultInputType.tool_result,
-        toolId: input.toolId,
-        toolName: input.toolName,
-        result: input.result,
-      };
+  function sendToolResult(input: SendToolResultInput) {
+    const toolResultInput: ToolResultInput = {
+      type: ToolResultInputType.tool_result,
+      toolId: input.toolId,
+      toolName: input.toolName,
+      result: input.result,
+    };
 
-      const sendMessageDto: SendMessageDto = {
-        threadId: params.threadId,
-        input: toolResultInput,
-      };
+    const sendMessageDto: SendMessageDto = {
+      threadId: params.threadId,
+      input: toolResultInput,
+    };
 
-      return mutation.mutate({ data: sendMessageDto });
-    },
-    [mutation, params.threadId],
-  );
+    return mutation.mutate({ data: sendMessageDto });
+  }
 
   return {
     sendTextMessage,
@@ -81,7 +76,5 @@ export function useMessageSend(params: UseMessageSendParams) {
     isError: mutation.isError,
     error: mutation.error,
     isSuccess: mutation.isSuccess,
-    data: mutation.data,
-    reset: mutation.reset,
   };
 }
