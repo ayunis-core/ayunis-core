@@ -18,6 +18,7 @@ export enum AuthenticationErrorCode {
   INVALID_TOKEN = 'INVALID_TOKEN',
   INVALID_PASSWORD = 'INVALID_PASSWORD',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
+  UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
 }
 
 /**
@@ -132,6 +133,19 @@ export class InvalidPasswordError extends AuthenticationError {
       AuthenticationErrorCode.INVALID_PASSWORD,
       400,
       metadata,
+    );
+  }
+}
+
+export class UnexpectedAuthenticationError extends AuthenticationError {
+  constructor(error: unknown) {
+    super(
+      `Unexpected authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      AuthenticationErrorCode.UNEXPECTED_ERROR,
+      400,
+      {
+        error,
+      },
     );
   }
 }

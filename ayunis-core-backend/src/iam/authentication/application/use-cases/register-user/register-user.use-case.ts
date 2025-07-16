@@ -9,11 +9,13 @@ import { RegisterUserCommand } from './register-user.command';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import {
   InvalidPasswordError,
-  AuthenticationFailedError,
+  UnexpectedAuthenticationError,
 } from '../../authentication.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { CreateTosAcceptanceCommand } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
+import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
+import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -24,6 +26,7 @@ export class RegisterUserUseCase {
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
     private readonly createLegalAcceptanceUseCase: CreateLegalAcceptanceUseCase,
+    private readonly sendEmailUseCase: SendEmailUseCase,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
@@ -72,6 +75,17 @@ export class RegisterUserUseCase {
         }),
       );
 
+      this.logger.debug('Sending welcome email', {
+        userId: user.id,
+      });
+      await this.sendEmailUseCase.execute(
+        new SendEmailCommand(
+          user.email,
+          'Welcome to Ayunis',
+          'Welcome to Ayunis!',
+        ),
+      );
+
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,
       });
@@ -84,15 +98,11 @@ export class RegisterUserUseCase {
         user.name,
       );
     } catch (error: unknown) {
-      if (!(error instanceof ApplicationError)) {
-        this.logger.error('Registration failed', {
-          error,
-          email: command.email,
-        });
-        throw new AuthenticationFailedError('Registration failed');
+      if (error instanceof ApplicationError) {
+        throw error;
       }
 
-      throw error;
+      throw new UnexpectedAuthenticationError(error);
     }
   }
 }

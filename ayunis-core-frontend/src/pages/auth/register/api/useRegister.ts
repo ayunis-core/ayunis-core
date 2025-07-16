@@ -38,9 +38,14 @@ export function useRegister() {
         },
         onError: (error) => {
           console.error("Registration failed:", error);
-          const { message } = extractErrorData(error);
-          if (message) showError(message);
-          else showError("Registration failed");
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case "USER_ALREADY_EXISTS":
+              showError("Email already exists");
+              break;
+            default:
+              showError("Registration failed");
+          }
         },
       },
     );

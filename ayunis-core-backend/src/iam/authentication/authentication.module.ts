@@ -22,6 +22,7 @@ import { RegisterUserUseCase } from './application/use-cases/register-user/regis
 import { GetCurrentUserUseCase } from './application/use-cases/get-current-user/get-current-user.use-case';
 import { MeResponseDtoMapper } from './presenters/http/mappers/me-response-dto.mapper';
 import { LegalAcceptancesModule } from '../legal-acceptances/legal-acceptances.module';
+import { EmailsModule } from 'src/common/emails/emails.module';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -37,6 +38,7 @@ export class AuthenticationModule {
         UsersModule,
         OrgsModule,
         LegalAcceptancesModule,
+        EmailsModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],

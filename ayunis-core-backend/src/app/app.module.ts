@@ -30,6 +30,7 @@ import { appConfig } from '../config/app.config';
 import { adminConfig } from '../config/admin.config';
 import { legalConfig } from '../config/legal.config';
 import { subscriptionsConfig } from '../config/subscriptions.config';
+import { emailsConfig } from '../config/emails.config';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
@@ -51,6 +52,7 @@ import { join } from 'path';
         adminConfig,
         legalConfig,
         subscriptionsConfig,
+        emailsConfig,
       ],
     }),
     ServeStaticModule.forRoot({
