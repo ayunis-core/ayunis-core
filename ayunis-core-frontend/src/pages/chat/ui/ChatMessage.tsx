@@ -127,7 +127,7 @@ const getAvatarStyle = (role: string) => {
 const getCardStyle = (role: string) => {
   switch (role) {
     case "user":
-      return "bg-muted p-1";
+      return "bg-muted p-2 py-0";
     case "system":
       return "bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800";
     case "tool":
