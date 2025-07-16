@@ -1,3 +1,4 @@
+import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import CodeBlock from "./Codeblock";
 
@@ -6,7 +7,7 @@ interface MarkdownProps {
   className?: string;
 }
 
-export default function Markdown({ children, className = "" }: MarkdownProps) {
+function Markdown({ children, className = "" }: MarkdownProps) {
   return (
     <div
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
@@ -61,3 +62,5 @@ export default function Markdown({ children, className = "" }: MarkdownProps) {
     </div>
   );
 }
+
+export default memo(Markdown);
