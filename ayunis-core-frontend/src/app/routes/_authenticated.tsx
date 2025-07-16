@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated")({
   component: Outlet,
   beforeLoad: async ({ context, context: { queryClient } }) => {
     try {
-      const response = await queryClient.ensureQueryData(meQueryOptions());
+      const response = await queryClient.fetchQuery(meQueryOptions());
       if (!response.role) {
         throw new Error("User not found");
       }
