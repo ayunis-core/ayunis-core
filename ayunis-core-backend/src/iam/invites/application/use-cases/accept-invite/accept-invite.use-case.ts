@@ -11,12 +11,16 @@ import {
   InviteAlreadyAcceptedError,
   InvalidInviteTokenError,
   InviteRoleError,
+  PasswordMismatchError,
+  InvalidPasswordError,
 } from '../../invites.errors';
 import { CreateRegularUserUseCase } from 'src/iam/users/application/use-cases/create-regular-user/create-regular-user.use-case';
 import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { CreateAdminUserCommand } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.command';
 import { CreateRegularUserCommand } from 'src/iam/users/application/use-cases/create-regular-user/create-regular-user.command';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
+import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -27,6 +31,7 @@ export class AcceptInviteUseCase {
     private readonly inviteJwtService: InviteJwtService,
     private readonly createRegularUserUseCase: CreateRegularUserUseCase,
     private readonly createAdminUserUseCase: CreateAdminUserUseCase,
+    private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
   ) {}
 
   async execute(
@@ -68,6 +73,17 @@ export class AcceptInviteUseCase {
         inviteId: invite.id,
         expiresAt: invite.expiresAt,
       });
+    }
+    if (command.password !== command.passwordConfirm) {
+      throw new PasswordMismatchError();
+    }
+
+    if (
+      !(await this.isValidPasswordUseCase.execute(
+        new IsValidPasswordQuery(command.password),
+      ))
+    ) {
+      throw new InvalidPasswordError();
     }
 
     if (invite.role === UserRole.ADMIN) {
