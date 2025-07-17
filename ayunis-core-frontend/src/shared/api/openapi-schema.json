@@ -1583,7 +1583,7 @@
             }
           },
           "400": {
-            "description": "Invalid request payload or session not found"
+            "description": "Invalid request payload"
           },
           "500": {
             "description": "Internal server error"
@@ -2448,6 +2448,75 @@
           }
         },
         "summary": "Update user password",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/confirm-email": {
+      "post": {
+        "description": "Confirm a user's email address using a JWT token received via email",
+        "operationId": "UserController_confirmEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email confirmation token",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Email successfully confirmed"
+          },
+          "400": {
+            "description": "Invalid token or token has expired"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while confirming email"
+          }
+        },
+        "summary": "Confirm user email",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/resend-confirmation": {
+      "post": {
+        "description": "Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.",
+        "operationId": "UserController_resendEmailConfirmation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email address to resend confirmation to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailConfirmationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Confirmation email resent (or silently handled)"
+          },
+          "400": {
+            "description": "Invalid email format"
+          },
+          "500": {
+            "description": "Internal server error occurred while sending email"
+          }
+        },
+        "summary": "Resend email confirmation",
         "tags": [
           "Users"
         ]
@@ -4936,6 +5005,33 @@
           "currentPassword",
           "newPassword",
           "newPasswordConfirmation"
+        ]
+      },
+      "ConfirmEmailDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT token for email confirmation",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ResendEmailConfirmationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to resend confirmation to",
+            "example": "user@example.com",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "SubscriptionBillingInfoResponseDto": {

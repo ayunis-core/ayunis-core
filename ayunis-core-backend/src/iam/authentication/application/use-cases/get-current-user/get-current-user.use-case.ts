@@ -11,6 +11,7 @@ import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user
 interface JwtPayload {
   sub: UUID;
   email: string;
+  emailVerified: boolean;
   role: UserRole;
   orgId: UUID;
   name: string;
@@ -53,13 +54,14 @@ export class GetCurrentUserUseCase {
         new FindUserByIdQuery(payload.sub),
       );
 
-      return new ActiveUser(
-        user.id,
-        user.email,
-        user.role,
-        user.orgId,
-        user.name,
-      );
+      return new ActiveUser({
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        role: user.role,
+        orgId: user.orgId,
+        name: user.name,
+      });
     } catch (error: unknown) {
       this.logger.error('Token verification failed', { error });
       throw new InvalidTokenError('Unable to verify access token');

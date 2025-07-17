@@ -10,6 +10,7 @@ import { UserRole } from '../../../users/domain/value-objects/role.object';
 interface JwtPayload {
   sub: UUID;
   email: string;
+  emailVerified: boolean;
   role: UserRole;
   orgId: UUID;
   name: string;
@@ -49,12 +50,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   validate(payload: JwtPayload): ActiveUser {
     this.logger.debug('Validating JWT payload', { payload });
 
-    return new ActiveUser(
-      payload.sub,
-      payload.email,
-      payload.role,
-      payload.orgId,
-      payload.name,
-    );
+    return new ActiveUser({
+      id: payload.sub,
+      email: payload.email,
+      emailVerified: payload.emailVerified,
+      role: payload.role,
+      orgId: payload.orgId,
+      name: payload.name,
+    });
   }
 }

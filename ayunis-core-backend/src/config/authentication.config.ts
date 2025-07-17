@@ -13,6 +13,8 @@ export const authenticationConfig = registerAs('auth', () => ({
     expiresIn: process.env.JWT_EXPIRES_IN || '1h',
     refreshTokenExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     inviteExpiresIn: process.env.JWT_INVITE_EXPIRES_IN || '2d',
+    emailConfirmationExpiresIn:
+      process.env.JWT_EMAIL_CONFIRMATION_EXPIRES_IN || '24h',
   },
 
   cookie: {

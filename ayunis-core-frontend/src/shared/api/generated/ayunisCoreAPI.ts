@@ -30,6 +30,7 @@ import type {
   ActiveSubscriptionResponseDto,
   AdminControllerGetModelParams,
   AgentResponseDto,
+  ConfirmEmailDto,
   CreateAgentDto,
   CreateHttpToolDto,
   CreateInviteDto,
@@ -61,6 +62,7 @@ import type {
   PermittedProviderResponseDto,
   PromptResponseDto,
   RegisterDto,
+  ResendEmailConfirmationDto,
   RetrieveUrlDto,
   RunsControllerConnectToStream200,
   RunsControllerSendMessage200,
@@ -5179,6 +5181,138 @@ export const useUserControllerUpdatePassword = <TError = void,
       > => {
 
       const mutationOptions = getUserControllerUpdatePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Confirm a user's email address using a JWT token received via email
+ * @summary Confirm user email
+ */
+export const userControllerConfirmEmail = (
+    confirmEmailDto: ConfirmEmailDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/confirm-email`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: confirmEmailDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerConfirmEmailMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext> => {
+
+const mutationKey = ['userControllerConfirmEmail'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerConfirmEmail>>, {data: ConfirmEmailDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerConfirmEmail(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerConfirmEmailMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerConfirmEmail>>>
+    export type UserControllerConfirmEmailMutationBody = ConfirmEmailDto
+    export type UserControllerConfirmEmailMutationError = void
+
+    /**
+ * @summary Confirm user email
+ */
+export const useUserControllerConfirmEmail = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerConfirmEmail>>,
+        TError,
+        {data: ConfirmEmailDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerConfirmEmailMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.
+ * @summary Resend email confirmation
+ */
+export const userControllerResendEmailConfirmation = (
+    resendEmailConfirmationDto: ResendEmailConfirmationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/resend-confirmation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resendEmailConfirmationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerResendEmailConfirmationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext> => {
+
+const mutationKey = ['userControllerResendEmailConfirmation'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, {data: ResendEmailConfirmationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerResendEmailConfirmation(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerResendEmailConfirmationMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>>
+    export type UserControllerResendEmailConfirmationMutationBody = ResendEmailConfirmationDto
+    export type UserControllerResendEmailConfirmationMutationError = void
+
+    /**
+ * @summary Resend email confirmation
+ */
+export const useUserControllerResendEmailConfirmation = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>,
+        TError,
+        {data: ResendEmailConfirmationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerResendEmailConfirmationMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

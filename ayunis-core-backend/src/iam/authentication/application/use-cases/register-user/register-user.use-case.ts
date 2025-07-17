@@ -14,8 +14,9 @@ import {
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { CreateTosAcceptanceCommand } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
-import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
-import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
+import { ConfigService } from '@nestjs/config';
+import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
+import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -26,7 +27,8 @@ export class RegisterUserUseCase {
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
     private readonly createLegalAcceptanceUseCase: CreateLegalAcceptanceUseCase,
-    private readonly sendEmailUseCase: SendEmailUseCase,
+    private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
@@ -54,6 +56,13 @@ export class RegisterUserUseCase {
         new CreateOrgCommand(command.orgName),
       );
 
+      const hasEmailConfig =
+        this.configService.get<boolean>('emails.hasConfig');
+      const disableEmailConfirmation = this.configService.get<boolean>(
+        'app.disableEmailConfirmation',
+      );
+      const shouldConfirmEmail = hasEmailConfig && !disableEmailConfirmation;
+
       this.logger.debug('Creating admin user', { orgId: org.id });
       const user = await this.createAdminUserUseCase.execute(
         new CreateAdminUserCommand({
@@ -61,6 +70,7 @@ export class RegisterUserUseCase {
           password: command.password,
           orgId: org.id,
           name: command.userName,
+          emailVerified: shouldConfirmEmail ? false : true,
         }),
       );
 
@@ -75,28 +85,24 @@ export class RegisterUserUseCase {
         }),
       );
 
-      this.logger.debug('Sending welcome email', {
-        userId: user.id,
-      });
-      await this.sendEmailUseCase.execute(
-        new SendEmailCommand(
-          user.email,
-          'Welcome to Ayunis',
-          'Welcome to Ayunis!',
-        ),
-      );
+      if (shouldConfirmEmail) {
+        await this.sendConfirmationEmailUseCase.execute(
+          new SendConfirmationEmailCommand(user),
+        );
+      }
 
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,
       });
 
-      return new ActiveUser(
-        user.id,
-        user.email,
-        user.role,
-        user.orgId,
-        user.name,
-      );
+      return new ActiveUser({
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        role: user.role,
+        orgId: user.orgId,
+        name: user.name,
+      });
     } catch (error: unknown) {
       if (error instanceof ApplicationError) {
         throw error;

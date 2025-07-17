@@ -15,6 +15,8 @@ import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
 import { Route as onboardingRegisterImport } from './routes/(onboarding)/register'
 import { Route as onboardingLoginImport } from './routes/(onboarding)/login'
+import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/email-confirm'
+import { Route as onboardingConfirmEmailImport } from './routes/(onboarding)/confirm-email'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticated/prompts.index'
 import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
@@ -50,6 +52,18 @@ const onboardingRegisterRoute = onboardingRegisterImport.update({
 const onboardingLoginRoute = onboardingLoginImport.update({
   id: '/(onboarding)/login',
   path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const onboardingEmailConfirmRoute = onboardingEmailConfirmImport.update({
+  id: '/(onboarding)/email-confirm',
+  path: '/email-confirm',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const onboardingConfirmEmailRoute = onboardingConfirmEmailImport.update({
+  id: '/(onboarding)/confirm-email',
+  path: '/confirm-email',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -152,6 +166,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof AuthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/confirm-email': {
+      id: '/(onboarding)/confirm-email'
+      path: '/confirm-email'
+      fullPath: '/confirm-email'
+      preLoaderRoute: typeof onboardingConfirmEmailImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/email-confirm': {
+      id: '/(onboarding)/email-confirm'
+      path: '/email-confirm'
+      fullPath: '/email-confirm'
+      preLoaderRoute: typeof onboardingEmailConfirmImport
       parentRoute: typeof rootRoute
     }
     '/(onboarding)/login': {
@@ -293,6 +321,8 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/confirm-email': typeof onboardingConfirmEmailRoute
+  '/email-confirm': typeof onboardingEmailConfirmRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
@@ -312,6 +342,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/confirm-email': typeof onboardingConfirmEmailRoute
+  '/email-confirm': typeof onboardingEmailConfirmRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
@@ -332,6 +364,8 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/(onboarding)/confirm-email': typeof onboardingConfirmEmailRoute
+  '/(onboarding)/email-confirm': typeof onboardingEmailConfirmRoute
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
@@ -353,6 +387,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
+    | '/confirm-email'
+    | '/email-confirm'
     | '/login'
     | '/register'
     | '/admin-settings/billing'
@@ -371,6 +407,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | ''
+    | '/confirm-email'
+    | '/email-confirm'
     | '/login'
     | '/register'
     | '/admin-settings/billing'
@@ -389,6 +427,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/(onboarding)/confirm-email'
+    | '/(onboarding)/email-confirm'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
     | '/_authenticated/admin-settings/billing'
@@ -409,6 +449,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  onboardingConfirmEmailRoute: typeof onboardingConfirmEmailRoute
+  onboardingEmailConfirmRoute: typeof onboardingEmailConfirmRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
   onboardingInvitesTokenAcceptRoute: typeof onboardingInvitesTokenAcceptRoute
@@ -417,6 +459,8 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  onboardingConfirmEmailRoute: onboardingConfirmEmailRoute,
+  onboardingEmailConfirmRoute: onboardingEmailConfirmRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
   onboardingInvitesTokenAcceptRoute: onboardingInvitesTokenAcceptRoute,
@@ -434,6 +478,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/_authenticated",
+        "/(onboarding)/confirm-email",
+        "/(onboarding)/email-confirm",
         "/(onboarding)/login",
         "/(onboarding)/register",
         "/(onboarding)/invites/$token/accept"
@@ -457,6 +503,12 @@ export const routeTree = rootRoute
         "/_authenticated/prompts/",
         "/_authenticated/settings/"
       ]
+    },
+    "/(onboarding)/confirm-email": {
+      "filePath": "(onboarding)/confirm-email.tsx"
+    },
+    "/(onboarding)/email-confirm": {
+      "filePath": "(onboarding)/email-confirm.tsx"
     },
     "/(onboarding)/login": {
       "filePath": "(onboarding)/login.tsx"

@@ -6,6 +6,7 @@ export class UserMapper {
     return new User({
       id: entity.id,
       email: entity.email,
+      emailVerified: entity.emailVerified,
       role: entity.role,
       orgId: entity.orgId,
       passwordHash: entity.passwordHash,
@@ -19,6 +20,7 @@ export class UserMapper {
     const entity = new UserRecord();
     entity.id = domain.id;
     entity.email = domain.email;
+    entity.emailVerified = domain.emailVerified;
     entity.role = domain.role;
     entity.orgId = domain.orgId;
     entity.passwordHash = domain.passwordHash;

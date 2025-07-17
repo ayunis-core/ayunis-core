@@ -34,7 +34,7 @@ export function useRegister() {
       },
       {
         onSuccess: () => {
-          navigate({ to: "/login" });
+          navigate({ to: "/email-confirm" });
         },
         onError: (error) => {
           console.error("Registration failed:", error);

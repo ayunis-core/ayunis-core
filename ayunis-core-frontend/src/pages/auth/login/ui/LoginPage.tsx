@@ -12,10 +12,22 @@ import OnboardingLayout from "@/layouts/onboarding-layout";
 import { useLogin } from "../api/useLogin";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
+import { useRedirectNotification } from "@/features/useRedirectNotification";
 
-export function LoginPage() {
-  const { form, onSubmit, isLoading } = useLogin();
+export function LoginPage({
+  redirect,
+  emailVerified,
+}: {
+  redirect?: string;
+  emailVerified?: boolean;
+}) {
+  const { form, onSubmit, isLoading } = useLogin({ redirect });
   const { t } = useTranslation("auth");
+
+  useRedirectNotification({
+    show: emailVerified ?? false,
+    text: t("login.emailVerified"),
+  });
 
   return (
     <OnboardingLayout

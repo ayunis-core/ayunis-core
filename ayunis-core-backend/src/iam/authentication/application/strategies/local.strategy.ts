@@ -22,13 +22,17 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       const user = await this.validateUserUseCase.execute(
         new ValidateUserQuery(username, password),
       );
-      return new ActiveUser(
-        user.id,
-        user.email,
-        user.role,
-        user.orgId,
-        user.name,
-      );
+      this.logger.debug('LocalStrategy - user', {
+        user,
+      });
+      return new ActiveUser({
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        role: user.role,
+        orgId: user.orgId,
+        name: user.name,
+      });
     } catch (error) {
       if (
         error instanceof UserNotFoundError ||

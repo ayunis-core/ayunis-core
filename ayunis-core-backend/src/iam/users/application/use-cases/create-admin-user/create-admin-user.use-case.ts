@@ -23,6 +23,7 @@ export class CreateAdminUserUseCase {
       orgId: command.orgId,
       name: command.name,
       role: UserRole.ADMIN,
+      emailVerified: command.emailVerified,
     });
 
     return this.createUserUseCase.execute(createUserCommand);

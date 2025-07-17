@@ -42,6 +42,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
       access_token: this.jwtService.sign(
         {
           email: user.email,
+          emailVerified: user.emailVerified,
           sub: user.id,
           orgId: user.orgId,
           role: user.role,

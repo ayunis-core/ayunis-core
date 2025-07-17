@@ -1205,6 +1205,16 @@ export interface UpdatePasswordDto {
   newPasswordConfirmation: string;
 }
 
+export interface ConfirmEmailDto {
+  /** JWT token for email confirmation */
+  token: string;
+}
+
+export interface ResendEmailConfirmationDto {
+  /** Email address to resend confirmation to */
+  email: string;
+}
+
 export interface SubscriptionBillingInfoResponseDto {
   /** Company name */
   companyName: string;

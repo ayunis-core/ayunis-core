@@ -1,10 +1,14 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { authenticationControllerMe } from "@/shared/api";
+import {
+  authenticationControllerMe,
+  getAuthenticationControllerMeQueryKey,
+} from "@/shared/api";
 import { queryOptions } from "@tanstack/react-query";
+import extractErrorData from "@/shared/api/extract-error-data";
 
 const meQueryOptions = () =>
   queryOptions({
-    queryKey: ["me"],
+    queryKey: getAuthenticationControllerMeQueryKey(),
     queryFn: () => authenticationControllerMe(),
   });
 
@@ -18,6 +22,12 @@ export const Route = createFileRoute("/_authenticated")({
       }
       context.user = response;
     } catch (error) {
+      const { code } = extractErrorData(error);
+      if (code === "EMAIL_NOT_VERIFIED") {
+        throw redirect({
+          to: "/email-confirm",
+        });
+      }
       throw redirect({
         to: "/login",
         search: {

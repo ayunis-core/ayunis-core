@@ -11,7 +11,7 @@ import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
 import gradientBg from "@/shared/assets/brand/gradient.png";
 
 interface OnboardingLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title: string;
   description?: React.ReactNode;
   footer?: React.ReactNode;
@@ -50,7 +50,9 @@ export default function OnboardingLayout({
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="px-0">{children}</CardContent>
+              {children && (
+                <CardContent className="px-0">{children}</CardContent>
+              )}
               {footer && (
                 <CardFooter className="flex items-center justify-center gap-2 text-sm">
                   {footer}

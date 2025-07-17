@@ -25,7 +25,8 @@ export class SmptHandler implements EmailHandlerPort {
       from: 'Ayunis <noreply@mails.ayunis.com>',
       to: email.to,
       subject: email.subject,
-      text: email.text,
+      text: email.html ? '' : email.text,
+      html: email.html,
     });
   }
 }

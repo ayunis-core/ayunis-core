@@ -53,7 +53,14 @@ export class UnauthorizedExceptionFilter implements ExceptionFilter {
 
       const tokens = await this.loginUseCase.execute(
         new LoginCommand(
-          new ActiveUser(user.id, user.email, user.role, user.orgId, user.name),
+          new ActiveUser({
+            id: user.id,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            role: user.role,
+            orgId: user.orgId,
+            name: user.name,
+          }),
         ),
       );
       setCookies(response, tokens, this.configService, true); // Include refresh token

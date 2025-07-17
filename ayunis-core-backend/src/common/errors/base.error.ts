@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -52,6 +53,12 @@ export abstract class ApplicationError extends Error {
    */
   toHttpException() {
     switch (this.statusCode) {
+      case 403:
+        return new ForbiddenException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
       case 404:
         return new NotFoundException({
           code: this.code,

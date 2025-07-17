@@ -9,6 +9,9 @@ export class UserRecord extends BaseRecord {
   @Column({ unique: true })
   email: string;
 
+  @Column({ default: true })
+  emailVerified: boolean;
+
   @Column({ nullable: false })
   name: string;
 

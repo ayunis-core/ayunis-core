@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigModule } from '@nestjs/config';
 import { AuthProvider } from 'src/config/authentication.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HashingModule } from '../hashing/hashing.module';
+import { JwtModule } from '@nestjs/jwt';
+import { EmailsModule } from 'src/common/emails/emails.module';
+import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 
 // Import use cases
 import { FindUserByIdUseCase } from './application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -22,13 +25,38 @@ import { IsValidPasswordUseCase } from './application/use-cases/is-valid-passwor
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
 import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
 import { IsFromOrgUseCase } from './application/use-cases/is-from-org/is-from-org.use-case';
+import { ConfirmEmailUseCase } from './application/use-cases/confirm-email/confirm-email.use-case';
+import { ResendEmailConfirmationUseCase } from './application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
+import { EmailConfirmationJwtService } from './application/services/email-confirmation-jwt.service';
 
 // Import controllers and mappers
 import { UserController } from './presenters/http/user.controller';
 import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-dto.mapper';
+import { SendConfirmationEmailUseCase } from './application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserRecord]), HashingModule],
+  imports: [
+    TypeOrmModule.forFeature([UserRecord]),
+    HashingModule,
+    EmailsModule,
+    EmailTemplatesModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>(
+          'auth.jwt.secret',
+          'dev-secret-change-in-production',
+        ),
+        signOptions: {
+          expiresIn: configService.get<string>(
+            'auth.jwt.emailConfirmationExpiresIn',
+            '24h',
+          ),
+        },
+      }),
+    }),
+  ],
   controllers: [UserController],
   providers: [
     {
@@ -56,6 +84,11 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     UpdateUserNameUseCase,
     UpdatePasswordUseCase,
     IsFromOrgUseCase,
+    ConfirmEmailUseCase,
+    ResendEmailConfirmationUseCase,
+    SendConfirmationEmailUseCase,
+    // Services
+    EmailConfirmationJwtService,
     // Mappers
     UserResponseDtoMapper,
   ],
@@ -70,6 +103,8 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     IsFromOrgUseCase,
+    EmailConfirmationJwtService,
+    SendConfirmationEmailUseCase,
   ],
 })
 export class UsersModule {}

@@ -6,6 +6,7 @@ import { Org } from 'src/iam/orgs/domain/org.entity';
 export class User {
   public id: UUID;
   public email: string;
+  public emailVerified: boolean;
   public passwordHash: string;
   public role: UserRole;
   public orgId: UUID;
@@ -16,6 +17,7 @@ export class User {
   constructor(params: {
     id?: UUID;
     email: string;
+    emailVerified: boolean;
     passwordHash: string;
     role: UserRole;
     orgId: UUID;
@@ -26,6 +28,7 @@ export class User {
   }) {
     this.id = params.id ?? randomUUID();
     this.email = params.email;
+    this.emailVerified = params.emailVerified;
     this.passwordHash = params.passwordHash;
     this.role = params.role;
     this.orgId = params.orgId;

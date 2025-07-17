@@ -9,7 +9,6 @@ import { UserMapper } from './mappers/user.mapper';
 import {
   UserNotFoundError,
   UserAlreadyExistsError,
-  UserInvalidInputError,
   UserAuthenticationFailedError,
 } from 'src/iam/users/application/users.errors';
 
@@ -27,56 +26,30 @@ export class LocalUsersRepository extends UsersRepository {
 
   async findOneById(id: UUID): Promise<User | null> {
     this.logger.log('findOneById', { id });
-    try {
-      const userEntity = await this.userRepository.findOne({ where: { id } });
-      if (!userEntity) {
-        this.logger.warn('User not found by ID', { id });
-        return null;
-      }
-      return UserMapper.toDomain(userEntity);
-    } catch (error) {
-      this.logger.error('Failed to find user by ID', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        id,
-      });
-      throw new UserInvalidInputError(`Error finding user with ID ${id}`);
+    const userEntity = await this.userRepository.findOne({ where: { id } });
+    if (!userEntity) {
+      this.logger.warn('User not found by ID', { id });
+      return null;
     }
+    return UserMapper.toDomain(userEntity);
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
     this.logger.log('findOneByEmail', { email });
-    try {
-      const userEntity = await this.userRepository.findOne({
-        where: { email },
-      });
-      if (!userEntity) {
-        this.logger.debug('User not found by email', { email });
-        return null;
-      }
-      return UserMapper.toDomain(userEntity);
-    } catch (error) {
-      this.logger.error('Failed to find user by email', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email,
-      });
-      throw new UserInvalidInputError(`Error finding user with email ${email}`);
+    const userRecord = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (!userRecord) {
+      this.logger.debug('User not found by email', { email });
+      return null;
     }
+    return UserMapper.toDomain(userRecord);
   }
 
   async findOneByOrgId(orgId: UUID): Promise<User[]> {
     this.logger.log('findOneByOrgId', { orgId });
-    try {
-      const userEntities = await this.userRepository.find({ where: { orgId } });
-      return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
-    } catch (error) {
-      this.logger.error('Failed to find users by organization ID', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId,
-      });
-      throw new UserInvalidInputError(
-        `Error finding users for organization ${orgId}`,
-      );
-    }
+    const userEntities = await this.userRepository.find({ where: { orgId } });
+    return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
   }
 
   async findManyByOrgId(orgId: UUID): Promise<User[]> {
@@ -89,99 +62,64 @@ export class LocalUsersRepository extends UsersRepository {
 
   async create(user: User): Promise<User> {
     this.logger.log('create', { userId: user.id, email: user.email });
-    try {
-      // Check if user already exists by email
-      const existingUser = await this.userRepository.findOne({
-        where: { email: user.email },
-      });
+    // Check if user already exists by email
+    const existingUser = await this.userRepository.findOne({
+      where: { email: user.email },
+    });
 
-      if (existingUser) {
-        this.logger.warn('Attempted to create user with existing email', {
-          email: user.email,
-        });
-        throw new UserAlreadyExistsError(
-          `User with email ${user.email} already exists`,
-        );
-      }
-
-      const userEntity = UserMapper.toEntity(user);
-      const savedUserEntity = await this.userRepository.save(userEntity);
-      this.logger.debug('User created successfully', {
-        userId: savedUserEntity.id,
-      });
-      return UserMapper.toDomain(savedUserEntity);
-    } catch (error) {
-      if (error instanceof UserAlreadyExistsError) {
-        throw error;
-      }
-      this.logger.error('Failed to create user', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    if (existingUser) {
+      this.logger.warn('Attempted to create user with existing email', {
         email: user.email,
       });
-      throw new UserInvalidInputError('Failed to create user');
+      throw new UserAlreadyExistsError(
+        `User with email ${user.email} already exists`,
+      );
     }
+
+    const userEntity = UserMapper.toEntity(user);
+    const savedUserEntity = await this.userRepository.save(userEntity);
+    this.logger.debug('User created successfully', {
+      userId: savedUserEntity.id,
+    });
+    return UserMapper.toDomain(savedUserEntity);
   }
 
   async update(user: User): Promise<User> {
     this.logger.log('update', { userId: user.id });
-    try {
-      // Verify user exists
-      const existingUser = await this.userRepository.findOne({
-        where: { id: user.id },
-      });
+    // Verify user exists
+    const existingUser = await this.userRepository.findOne({
+      where: { id: user.id },
+    });
 
-      if (!existingUser) {
-        this.logger.warn('Attempted to update non-existent user', {
-          userId: user.id,
-        });
-        throw new UserNotFoundError(`User with ID ${user.id} not found`);
-      }
-
-      const userEntity = UserMapper.toEntity(user);
-      const savedUserEntity = await this.userRepository.save(userEntity);
-      this.logger.debug('User updated successfully', {
-        user: savedUserEntity,
-      });
-      return UserMapper.toDomain(savedUserEntity);
-    } catch (error) {
-      if (error instanceof UserNotFoundError) {
-        throw error;
-      }
-      this.logger.error('Failed to update user', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    if (!existingUser) {
+      this.logger.warn('Attempted to update non-existent user', {
         userId: user.id,
       });
-      throw new UserInvalidInputError(
-        `Failed to update user with ID ${user.id}`,
-      );
+      throw new UserNotFoundError(`User with ID ${user.id} not found`);
     }
+
+    const userEntity = UserMapper.toEntity(user);
+    const savedUserEntity = await this.userRepository.save(userEntity);
+    this.logger.debug('User updated successfully', {
+      user: savedUserEntity,
+    });
+    return UserMapper.toDomain(savedUserEntity);
   }
 
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
-    try {
-      // Verify user exists
-      const existingUser = await this.userRepository.findOne({ where: { id } });
+    // Verify user exists
+    const existingUser = await this.userRepository.findOne({ where: { id } });
 
-      if (!existingUser) {
-        this.logger.warn('Attempted to delete non-existent user', {
-          userId: id,
-        });
-        throw new UserNotFoundError(`User with ID ${id} not found`);
-      }
-
-      await this.userRepository.delete(id);
-      this.logger.debug('User deleted successfully', { userId: id });
-    } catch (error) {
-      if (error instanceof UserNotFoundError) {
-        throw error;
-      }
-      this.logger.error('Failed to delete user', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    if (!existingUser) {
+      this.logger.warn('Attempted to delete non-existent user', {
         userId: id,
       });
-      throw new UserInvalidInputError(`Failed to delete user with ID ${id}`);
+      throw new UserNotFoundError(`User with ID ${id} not found`);
     }
+
+    await this.userRepository.delete(id);
+    this.logger.debug('User deleted successfully', { userId: id });
   }
 
   async validateUser(email: string, password: string): Promise<User> {

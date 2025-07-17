@@ -7,7 +7,7 @@ import extractErrorData from "@/shared/api/extract-error-data";
 import { showError } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
 
-export function useLogin() {
+export function useLogin({ redirect }: { redirect?: string }) {
   const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const loginMutation = useAuthenticationControllerLogin();
@@ -31,7 +31,7 @@ export function useLogin() {
       {
         onSuccess: () => {
           // With cookie-based auth, the backend automatically sets HTTP-only cookies
-          navigate({ to: "/chat" });
+          navigate({ to: redirect || "/chat" });
         },
         onError: (error) => {
           console.error("Login failed:", error);

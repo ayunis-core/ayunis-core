@@ -1,6 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 export const emailsConfig = registerAs('emails', () => ({
+  hasConfig: process.env.SMTP_HOST && process.env.SMTP_PORT,
   smtp: {
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,

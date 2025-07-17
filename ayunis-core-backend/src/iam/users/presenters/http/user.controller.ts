@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Logger,
   UnauthorizedException,
+  Post,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -34,6 +35,10 @@ import { UpdateUserNameUseCase } from '../../application/use-cases/update-user-n
 import { UpdateUserNameCommand } from '../../application/use-cases/update-user-name/update-user-name.command';
 import { UpdatePasswordUseCase } from '../../application/use-cases/update-password/update-password.use-case';
 import { UpdatePasswordCommand } from '../../application/use-cases/update-password/update-password.command';
+import { ConfirmEmailUseCase } from '../../application/use-cases/confirm-email/confirm-email.use-case';
+import { ConfirmEmailCommand } from '../../application/use-cases/confirm-email/confirm-email.command';
+import { ResendEmailConfirmationUseCase } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
+import { ResendEmailConfirmationCommand } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
 import {
   UsersListResponseDto,
@@ -42,8 +47,11 @@ import {
 import { UpdateUserRoleDto } from './dtos/update-user-role.dto';
 import { UpdateUserNameDto } from './dtos/update-user-name.dto';
 import { UpdatePasswordDto } from './dtos/update-password.dto';
+import { ConfirmEmailDto } from './dtos/confirm-email.dto';
+import { ResendEmailConfirmationDto } from './dtos/resend-email-confirmation.dto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from '../../domain/value-objects/role.object';
+import { Public } from 'src/common/guards/public.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -56,6 +64,8 @@ export class UserController {
     private readonly updateUserRoleUseCase: UpdateUserRoleUseCase,
     private readonly updateUserNameUseCase: UpdateUserNameUseCase,
     private readonly updatePasswordUseCase: UpdatePasswordUseCase,
+    private readonly confirmEmailUseCase: ConfirmEmailUseCase,
+    private readonly resendEmailConfirmationUseCase: ResendEmailConfirmationUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
   ) {}
 
@@ -226,6 +236,73 @@ export class UserController {
         updatePasswordDto.newPassword,
         updatePasswordDto.newPasswordConfirmation,
       ),
+    );
+  }
+
+  @Public()
+  @Post('confirm-email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Confirm user email',
+    description:
+      "Confirm a user's email address using a JWT token received via email",
+  })
+  @ApiBody({
+    type: ConfirmEmailDto,
+    description: 'Email confirmation token',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Email successfully confirmed',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid token or token has expired',
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred while confirming email',
+  })
+  async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto): Promise<void> {
+    this.logger.log('confirmEmail', { hasToken: !!confirmEmailDto.token });
+
+    await this.confirmEmailUseCase.execute(
+      new ConfirmEmailCommand(confirmEmailDto.token),
+    );
+  }
+
+  @Public()
+  @Post('resend-confirmation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Resend email confirmation',
+    description:
+      'Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.',
+  })
+  @ApiBody({
+    type: ResendEmailConfirmationDto,
+    description: 'Email address to resend confirmation to',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Confirmation email resent (or silently handled)',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid email format',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred while sending email',
+  })
+  async resendEmailConfirmation(
+    @Body() resendEmailConfirmationDto: ResendEmailConfirmationDto,
+  ): Promise<void> {
+    this.logger.log('resendEmailConfirmation', {
+      email: resendEmailConfirmationDto.email,
+    });
+
+    await this.resendEmailConfirmationUseCase.execute(
+      new ResendEmailConfirmationCommand(resendEmailConfirmationDto.email),
     );
   }
 

@@ -19,6 +19,9 @@ export enum UserErrorCode {
   USER_UNAUTHORIZED = 'USER_UNAUTHORIZED',
   USER_INVALID_INPUT = 'USER_INVALID_INPUT',
   USER_UNEXPECTED_ERROR = 'USER_UNEXPECTED_ERROR',
+  USER_EMAIL_MISMATCH = 'USER_EMAIL_MISMATCH',
+  INVALID_EMAIL_CONFIRMATION_TOKEN = 'INVALID_EMAIL_CONFIRMATION_TOKEN',
+  EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED',
 }
 
 /**
@@ -145,6 +148,48 @@ export class UserInvalidInputError extends UserError {
     super(
       `Invalid user input: ${reason}`,
       UserErrorCode.USER_INVALID_INPUT,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a user email mismatch is detected
+ */
+export class UserEmailMismatchError extends UserError {
+  constructor(userId: string, metadata?: ErrorMetadata) {
+    super(
+      `User email mismatch for user with ID '${userId}'`,
+      UserErrorCode.USER_EMAIL_MISMATCH,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an email confirmation token is invalid
+ */
+export class InvalidEmailConfirmationTokenError extends UserError {
+  constructor(reason?: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid email confirmation token${reason ? `: ${reason}` : ''}`,
+      UserErrorCode.INVALID_EMAIL_CONFIRMATION_TOKEN,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a user email is already verified
+ */
+export class UserEmailAlreadyVerifiedError extends UserError {
+  constructor(reason?: string, metadata?: ErrorMetadata) {
+    super(
+      `Email already verified${reason ? `: ${reason}` : ''}`,
+      UserErrorCode.EMAIL_ALREADY_VERIFIED,
       400,
       metadata,
     );

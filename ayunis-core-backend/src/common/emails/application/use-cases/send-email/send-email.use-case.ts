@@ -10,7 +10,12 @@ export class SendEmailUseCase {
 
   async execute(command: SendEmailCommand): Promise<void> {
     try {
-      const email = new Email(command.to, command.subject, command.text);
+      const email = new Email({
+        to: command.to,
+        subject: command.subject,
+        text: command.text,
+        html: command.html,
+      });
       await this.emailHandler.sendEmail(email);
     } catch (error: unknown) {
       if (error instanceof Error) {

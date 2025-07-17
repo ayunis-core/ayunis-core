@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import InviteAcceptPage from "@/pages/auth/invite-accept";
 import { queryOptions } from "@tanstack/react-query";
-import { invitesControllerGetInviteByToken } from "@/shared/api";
+import {
+  getInvitesControllerGetInviteByTokenQueryKey,
+  invitesControllerGetInviteByToken,
+} from "@/shared/api";
 
 const inviteQueryOptions = (inviteToken: string) =>
   queryOptions({
-    queryKey: ["invites", inviteToken],
+    queryKey: getInvitesControllerGetInviteByTokenQueryKey(inviteToken),
     queryFn: () => invitesControllerGetInviteByToken(inviteToken),
   });
 

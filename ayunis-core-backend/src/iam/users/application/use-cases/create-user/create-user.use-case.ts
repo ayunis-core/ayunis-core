@@ -60,6 +60,7 @@ export class CreateUserUseCase {
       this.logger.debug('Creating new user');
       const user = new User({
         email: command.email,
+        emailVerified: command.emailVerified,
         passwordHash,
         orgId: command.orgId,
         role: command.role,

@@ -93,6 +93,7 @@ export class AcceptInviteUseCase {
           password: command.password,
           orgId: invite.orgId,
           name: command.userName,
+          emailVerified: true,
         }),
       );
     } else if (invite.role === UserRole.USER) {
@@ -102,6 +103,7 @@ export class AcceptInviteUseCase {
           orgId: invite.orgId,
           name: command.userName,
           password: command.password,
+          emailVerified: true,
         }),
       );
     } else {
