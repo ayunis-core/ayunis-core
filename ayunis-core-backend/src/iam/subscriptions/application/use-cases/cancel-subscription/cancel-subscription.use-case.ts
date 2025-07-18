@@ -12,6 +12,9 @@ import {
 import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-active-subscription.use-case';
 import { GetActiveSubscriptionQuery } from '../get-active-subscription/get-active-subscription.query';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SubscriptionCancelledWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -21,6 +24,7 @@ export class CancelSubscriptionUseCase {
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
   async execute(command: CancelSubscriptionCommand): Promise<void> {
@@ -81,6 +85,13 @@ export class CancelSubscriptionUseCase {
         orgId: command.orgId,
         cancelledAt: subscription.cancelledAt,
       });
+
+      // Send webhook asynchronously (don't block the main operation)
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(
+          new SubscriptionCancelledWebhookEvent(subscription),
+        ),
+      );
     } catch (error) {
       if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow

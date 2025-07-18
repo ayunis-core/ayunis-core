@@ -21,6 +21,9 @@ import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SubscriptionCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-created.webhook-events';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -33,6 +36,7 @@ export class CreateSubscriptionUseCase {
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
   async execute(command: CreateSubscriptionCommand): Promise<Subscription> {
@@ -140,6 +144,13 @@ export class CreateSubscriptionUseCase {
         orgId: command.orgId,
         noOfSeats: command.noOfSeats,
       });
+
+      // Send webhook asynchronously (don't block the main operation)
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(
+          new SubscriptionCreatedWebhookEvent(createdSubscription),
+        ),
+      );
 
       return createdSubscription;
     } catch (error) {

@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WebhooksModule } from '../../common/webhooks/webhooks.module';
 import { HasActiveSubscriptionUseCase } from './application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { GetActiveSubscriptionUseCase } from './application/use-cases/get-active-subscription/get-active-subscription.use-case';
 import { CreateSubscriptionUseCase } from './application/use-cases/create-subscription/create-subscription.use-case';
@@ -26,6 +27,7 @@ import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/loca
     ]),
     UsersModule,
     forwardRef(() => InvitesModule),
+    WebhooksModule,
   ],
   controllers: [SubscriptionsController],
   providers: [

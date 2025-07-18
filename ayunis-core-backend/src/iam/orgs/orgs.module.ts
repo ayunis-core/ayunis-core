@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgRecord } from './infrastructure/repositories/local/schema/org.record';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { WebhooksModule } from '../../common/webhooks/webhooks.module';
 
 // Import use cases
 import { FindOrgByIdUseCase } from './application/use-cases/find-org-by-id/find-org-by-id.use-case';
@@ -15,7 +16,7 @@ import { FindOrgByUserIdUseCase } from './application/use-cases/find-org-by-user
 import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OrgRecord])],
+  imports: [TypeOrmModule.forFeature([OrgRecord]), WebhooksModule],
   providers: [
     {
       provide: OrgsRepository,

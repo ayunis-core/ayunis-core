@@ -15,4 +15,5 @@ export const appConfig = registerAs('app', () => ({
       process.env.INVITE_ACCEPT_ENDPOINT || '/accept-invite',
   },
   disableEmailConfirmation: process.env.DISABLE_EMAIL_CONFIRMATION === 'true',
+  orgEventsWebhookUrl: process.env.ORG_EVENTS_WEBHOOK_URL,
 }));
