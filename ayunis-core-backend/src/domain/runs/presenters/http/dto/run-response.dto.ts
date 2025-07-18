@@ -172,9 +172,41 @@ export class RunMessageResponseDto {
   timestamp: string;
 }
 
+export class RunHeartbeatResponseDto {
+  @ApiProperty({
+    description: 'Response type identifier',
+    example: 'heartbeat',
+    enum: ['heartbeat'],
+    required: true,
+  })
+  type: 'heartbeat';
+
+  @ApiProperty({
+    description: 'Thread ID for the heartbeat',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true,
+  })
+  threadId: string;
+
+  @ApiProperty({
+    description: 'Heartbeat timestamp',
+    example: '2024-01-01T12:00:00.000Z',
+    required: true,
+  })
+  timestamp: string;
+
+  @ApiPropertyOptional({
+    description: 'Heartbeat sequence number for tracking',
+    example: 1,
+    required: false,
+  })
+  sequence?: number;
+}
+
 // Union type for TypeScript usage
 export type RunResponse =
   | RunSessionResponseDto
   | RunMessageResponseDto
   | RunErrorResponseDto
-  | RunThreadResponseDto;
+  | RunThreadResponseDto
+  | RunHeartbeatResponseDto;

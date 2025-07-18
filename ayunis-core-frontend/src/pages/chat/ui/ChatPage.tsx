@@ -71,12 +71,6 @@ export default function ChatPage({ thread }: ChatPageProps) {
     threadId: thread.id,
   });
 
-  async function handleSend(message: string) {
-    sendTextMessage({
-      text: message,
-    });
-  }
-
   // Memoize the callback functions to prevent unnecessary reconnections
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
     config.env === "development" && console.log("message", message);
@@ -120,13 +114,22 @@ export default function ChatPage({ thread }: ChatPageProps) {
     setThreadTitle(thread.title);
   }, []);
 
-  const { isConnected } = useMessageEventStream({
+  const { isConnected, connect } = useMessageEventStream({
     threadId: thread.id,
     onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: handleError,
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
   });
+
+  async function handleSend(message: string) {
+    if (!isConnected) {
+      connect();
+    }
+    sendTextMessage({
+      text: message,
+    });
+  }
 
   useEffect(() => {
     setMessages(thread.messages);

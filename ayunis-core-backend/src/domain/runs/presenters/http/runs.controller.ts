@@ -36,6 +36,7 @@ import {
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunHeartbeatResponseDto,
   RunResponse,
 } from './dto/run-response.dto';
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
@@ -53,6 +54,7 @@ import { RunInput } from '../../domain/run-input.entity';
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunHeartbeatResponseDto,
   SendMessageDto,
 )
 @Controller('runs')
@@ -67,7 +69,7 @@ export class RunsController {
   @ApiOperation({
     summary: 'Connect to the run stream and receive a session ID',
     description:
-      'Establishes a server-sent events connection and returns a session ID for sending messages',
+      'Establishes a server-sent events connection and returns a session ID for sending messages. The connection includes automatic heartbeat events every 30 seconds to keep the connection alive and detect disconnected clients.',
   })
   @ApiResponse({
     status: 200,
@@ -80,6 +82,7 @@ export class RunsController {
             { $ref: getSchemaPath(RunMessageResponseDto) },
             { $ref: getSchemaPath(RunErrorResponseDto) },
             { $ref: getSchemaPath(RunThreadResponseDto) },
+            { $ref: getSchemaPath(RunHeartbeatResponseDto) },
           ],
           discriminator: {
             propertyName: 'type',
@@ -88,6 +91,7 @@ export class RunsController {
               message: getSchemaPath(RunMessageResponseDto),
               error: getSchemaPath(RunErrorResponseDto),
               thread: getSchemaPath(RunThreadResponseDto),
+              heartbeat: getSchemaPath(RunHeartbeatResponseDto),
             },
           },
         },
@@ -136,6 +140,15 @@ export class RunsController {
               timestamp: '2024-01-01T12:00:00.000Z',
             },
           },
+          'heartbeat-event': {
+            summary: 'Heartbeat event to keep connection alive',
+            value: {
+              type: 'heartbeat',
+              threadId: '123e4567-e89b-12d3-a456-426614174000',
+              timestamp: '2024-01-01T12:00:00.000Z',
+              sequence: 1,
+            },
+          },
         },
       },
     },
@@ -182,6 +195,25 @@ export class RunsController {
 
         subscriber.next(connectionEvent);
 
+        // Set up heartbeat mechanism
+        let heartbeatSequence = 0;
+        const heartbeatInterval = setInterval(() => {
+          heartbeatSequence++;
+          const heartbeatResponse: RunHeartbeatResponseDto = {
+            type: 'heartbeat',
+            threadId: threadId,
+            timestamp: new Date().toISOString(),
+            sequence: heartbeatSequence,
+          };
+
+          const heartbeatEvent: MessageEvent = {
+            id: `heartbeat-${heartbeatSequence}`,
+            data: heartbeatResponse,
+          };
+
+          subscriber.next(heartbeatEvent);
+        }, 15000); // Send heartbeat every 15 seconds
+
         // Subscribe to thread events
         const eventSubscription = threadStream.subscribe({
           next: (response: RunResponse) => {
@@ -199,6 +231,9 @@ export class RunsController {
                 break;
               case 'session':
                 eventId = 'session';
+                break;
+              case 'heartbeat':
+                eventId = `heartbeat-${response.sequence || 'unknown'}`;
                 break;
               default:
                 eventId = 'event';
@@ -240,9 +275,10 @@ export class RunsController {
           },
         });
 
-        // Handle client disconnect - just unsubscribe from events
+        // Handle client disconnect - clean up subscriptions and heartbeat
         return () => {
           eventSubscription.unsubscribe();
+          clearInterval(heartbeatInterval);
           this.threadEventBroadcaster.onConnectionDisconnect(threadId);
         };
       } catch (error) {

@@ -1420,7 +1420,7 @@
     },
     "/runs/stream/{threadId}": {
       "get": {
-        "description": "Establishes a server-sent events connection and returns a session ID for sending messages",
+        "description": "Establishes a server-sent events connection and returns a session ID for sending messages. The connection includes automatic heartbeat events every 30 seconds to keep the connection alive and detect disconnected clients.",
         "operationId": "RunsController_connectToStream",
         "parameters": [
           {
@@ -1450,6 +1450,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/RunThreadResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunHeartbeatResponseDto"
                     }
                   ],
                   "discriminator": {
@@ -1458,7 +1461,8 @@
                       "session": "#/components/schemas/RunSessionResponseDto",
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
-                      "thread": "#/components/schemas/RunThreadResponseDto"
+                      "thread": "#/components/schemas/RunThreadResponseDto",
+                      "heartbeat": "#/components/schemas/RunHeartbeatResponseDto"
                     }
                   }
                 },
@@ -1510,6 +1514,15 @@
                       "updateType": "title_updated",
                       "title": "Discussion about AI and machine learning",
                       "timestamp": "2024-01-01T12:00:00.000Z"
+                    }
+                  },
+                  "heartbeat-event": {
+                    "summary": "Heartbeat event to keep connection alive",
+                    "value": {
+                      "type": "heartbeat",
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z",
+                      "sequence": 1
                     }
                   }
                 }
@@ -4435,6 +4448,39 @@
           "threadId",
           "updateType",
           "title",
+          "timestamp"
+        ]
+      },
+      "RunHeartbeatResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Response type identifier",
+            "example": "heartbeat",
+            "enum": [
+              "heartbeat"
+            ]
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID for the heartbeat",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Heartbeat timestamp",
+            "example": "2024-01-01T12:00:00.000Z"
+          },
+          "sequence": {
+            "type": "number",
+            "description": "Heartbeat sequence number for tracking",
+            "example": 1
+          }
+        },
+        "required": [
+          "type",
+          "threadId",
           "timestamp"
         ]
       },

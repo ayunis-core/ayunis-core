@@ -3374,7 +3374,7 @@ export const useAgentsControllerDelete = <TError = void,
     }
     
 /**
- * Establishes a server-sent events connection and returns a session ID for sending messages
+ * Establishes a server-sent events connection and returns a session ID for sending messages. The connection includes automatic heartbeat events every 30 seconds to keep the connection alive and detect disconnected clients.
  * @summary Connect to the run stream and receive a session ID
  */
 export const runsControllerConnectToStream = (
