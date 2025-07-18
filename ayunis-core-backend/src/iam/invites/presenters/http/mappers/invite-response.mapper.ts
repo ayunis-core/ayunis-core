@@ -3,7 +3,6 @@ import { Invite } from '../../../domain/invite.entity';
 import {
   InviteResponseDto,
   InviteStatus,
-  CreateInviteResponseDto,
   InviteDetailResponseDto,
   AcceptInviteResponseDto,
 } from '../dtos/invite-response.dto';
@@ -27,12 +26,6 @@ export class InviteResponseMapper {
 
   toDtoArray(invites: Invite[]): InviteResponseDto[] {
     return invites.map((invite) => this.toDto(invite));
-  }
-
-  toCreateResponseDto(inviteToken: string): CreateInviteResponseDto {
-    return {
-      inviteToken,
-    };
   }
 
   toDetailDto(inviteWithOrg: InviteWithOrgDetails): InviteDetailResponseDto {

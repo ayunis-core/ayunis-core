@@ -2,7 +2,6 @@ import { Button } from "@/shared/ui/shadcn/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -10,38 +9,26 @@ import {
 } from "@/shared/ui/shadcn/form";
 import { Input } from "@/shared/ui/shadcn/input";
 import OnboardingLayout from "@/layouts/onboarding-layout";
-import { useLogin } from "../api/useLogin";
+import { useResetPassword } from "../api/useResetPassword";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { useRedirectNotification } from "@/features/useRedirectNotification";
 
-export function LoginPage({
-  redirect,
-  emailVerified,
-}: {
-  redirect?: string;
-  emailVerified?: boolean;
-}) {
-  const { form, onSubmit, isLoading } = useLogin({ redirect });
+export function ResetPasswordPage({ token }: { token: string }) {
+  const { form, onSubmit, isLoading } = useResetPassword(token);
   const { t } = useTranslation("auth");
-
-  useRedirectNotification({
-    show: emailVerified ?? false,
-    text: t("login.emailVerified"),
-  });
 
   return (
     <OnboardingLayout
-      title={t("login.title")}
-      description={t("login.description")}
+      title={t("resetPassword.title")}
+      description={t("resetPassword.description")}
       footer={
         <>
-          {t("login.noAccount")}{" "}
+          {t("resetPassword.backToLogin")}{" "}
           <Link
-            to="/register"
+            to="/login"
             className="font-medium text-primary hover:underline"
           >
-            {t("login.createAccount")}
+            {t("resetPassword.signIn")}
           </Link>
         </>
       }
@@ -50,14 +37,14 @@ export function LoginPage({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="email"
+            name="newPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("login.email")}</FormLabel>
+                <FormLabel>{t("resetPassword.newPassword")}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("login.emailPlaceholder")}
-                    type="email"
+                    placeholder={t("resetPassword.newPasswordPlaceholder")}
+                    type="password"
                     {...field}
                   />
                 </FormControl>
@@ -67,31 +54,25 @@ export function LoginPage({
           />
           <FormField
             control={form.control}
-            name="password"
+            name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("login.password")}</FormLabel>
+                <FormLabel>{t("resetPassword.confirmPassword")}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("login.passwordPlaceholder")}
+                    placeholder={t("resetPassword.confirmPasswordPlaceholder")}
                     type="password"
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>
-                  <Link
-                    to="/password/forgot"
-                    className="text-sm text-muted-foreground"
-                  >
-                    {t("login.forgotPassword")}
-                  </Link>
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t("login.signingIn") : t("login.signInButton")}
+            {isLoading
+              ? t("resetPassword.resetting")
+              : t("resetPassword.resetPasswordButton")}
           </Button>
         </form>
       </Form>

@@ -8,7 +8,6 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/(onboarding)/confirm-email")({
-  component: RouteComponent,
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { token } }) => {
@@ -27,7 +26,3 @@ export const Route = createFileRoute("/(onboarding)/confirm-email")({
     }
   },
 });
-
-function RouteComponent() {
-  return <div>Hello "/(onboarding)/confirm-email"!</div>;
-}

@@ -4,7 +4,7 @@ import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-e
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { EmailInvitationTemplate } from 'src/common/email-templates/domain/email-template.entity';
+import { InvitationTemplate } from 'src/common/email-templates/domain/email-template.entity';
 import { RenderTemplateUseCase } from 'src/common/email-templates/application/use-cases/render-template/render-template.use-case';
 import { RenderTemplateCommand } from 'src/common/email-templates/application/use-cases/render-template/render-template.command';
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
@@ -55,7 +55,6 @@ export class SendInvitationEmailUseCase {
       );
       const inviteAcceptEndpoint = this.configService.get<string>(
         'app.frontend.inviteAcceptEndpoint',
-        '/accept-invitation',
       );
       const invitationUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${command.invitationToken}`;
 
@@ -64,7 +63,7 @@ export class SendInvitationEmailUseCase {
         inviteId: command.invite.id,
         orgName: org.name,
       });
-      const template = new EmailInvitationTemplate({
+      const template = new InvitationTemplate({
         invitationUrl,
         userEmail: command.invite.email,
         invitingCompanyName: org.name,

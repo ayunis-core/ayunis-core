@@ -46,6 +46,7 @@ import type {
   EmbeddingResultsDto,
   ErrorResponseDto,
   FileSourceResponseDto,
+  ForgotPasswordDto,
   GetThreadResponseDto,
   GetThreadsResponseDtoItem,
   HttpTool,
@@ -62,6 +63,7 @@ import type {
   PromptResponseDto,
   RegisterDto,
   ResendEmailConfirmationDto,
+  ResetPasswordDto,
   RetrieveUrlDto,
   RunsControllerConnectToStream200,
   RunsControllerSendMessage200,
@@ -5375,6 +5377,138 @@ export const useUserControllerDeleteUser = <TError = void,
       > => {
 
       const mutationOptions = getUserControllerDeleteUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
+ * @summary Trigger password reset
+ */
+export const userControllerForgotPassword = (
+    forgotPasswordDto: ForgotPasswordDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/forgot-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: forgotPasswordDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerForgotPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext> => {
+
+const mutationKey = ['userControllerForgotPassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerForgotPassword>>, {data: ForgotPasswordDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerForgotPassword(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerForgotPassword>>>
+    export type UserControllerForgotPasswordMutationBody = ForgotPasswordDto
+    export type UserControllerForgotPasswordMutationError = void
+
+    /**
+ * @summary Trigger password reset
+ */
+export const useUserControllerForgotPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerForgotPassword>>,
+        TError,
+        {data: ForgotPasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerForgotPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Reset user password using the token received via email. The token must be valid and not expired.
+ * @summary Reset password with token
+ */
+export const userControllerResetPassword = (
+    resetPasswordDto: ResetPasswordDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resetPasswordDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerResetPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext> => {
+
+const mutationKey = ['userControllerResetPassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResetPassword>>, {data: ResetPasswordDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerResetPassword(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResetPassword>>>
+    export type UserControllerResetPasswordMutationBody = ResetPasswordDto
+    export type UserControllerResetPasswordMutationError = void
+
+    /**
+ * @summary Reset password with token
+ */
+export const useUserControllerResetPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerResetPassword>>,
+        TError,
+        {data: ResetPasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerResetPasswordMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

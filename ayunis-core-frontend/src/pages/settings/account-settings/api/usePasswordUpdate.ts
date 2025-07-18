@@ -22,7 +22,7 @@ export function usePasswordUpdate() {
     },
   });
 
-  const onSubmit = (values: UpdatePasswordFormValues) => {
+  function onSubmit(values: UpdatePasswordFormValues) {
     updateMutation.mutate(
       {
         data: {
@@ -49,7 +49,7 @@ export function usePasswordUpdate() {
         },
       },
     );
-  };
+  }
 
   return {
     form,

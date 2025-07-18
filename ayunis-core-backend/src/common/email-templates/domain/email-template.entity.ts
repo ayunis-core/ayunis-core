@@ -14,13 +14,22 @@ export interface EmailConfirmationTemplateContent {
   companyName: string;
 }
 
-export interface EmailInvitationTemplateContent {
+export interface InvitationTemplateContent {
   invitationUrl: string;
   userEmail: string;
   invitingCompanyName: string;
   productName: string;
   currentYear: string;
   adminName?: string;
+}
+
+export interface PasswordResetTemplateContent {
+  resetUrl: string;
+  userEmail: string;
+  companyName: string;
+  productName: string;
+  currentYear: string;
+  userName?: string;
 }
 
 export class EmailConfirmationTemplate extends EmailTemplate {
@@ -34,8 +43,8 @@ export class EmailConfirmationTemplate extends EmailTemplate {
   }
 }
 
-export class EmailInvitationTemplate extends EmailTemplate {
-  constructor(public readonly content: EmailInvitationTemplateContent) {
+export class InvitationTemplate extends EmailTemplate {
+  constructor(public readonly content: InvitationTemplateContent) {
     super(EmailTemplateType.INVITATION, {
       invitationUrl: content.invitationUrl,
       userEmail: content.userEmail,
@@ -43,6 +52,19 @@ export class EmailInvitationTemplate extends EmailTemplate {
       productName: content.productName,
       currentYear: content.currentYear,
       adminName: content.adminName || '',
+    });
+  }
+}
+
+export class PasswordResetTemplate extends EmailTemplate {
+  constructor(public readonly content: PasswordResetTemplateContent) {
+    super(EmailTemplateType.PASSWORD_RESET, {
+      resetUrl: content.resetUrl,
+      userEmail: content.userEmail,
+      companyName: content.companyName,
+      productName: content.productName,
+      currentYear: content.currentYear,
+      userName: content.userName || '',
     });
   }
 }

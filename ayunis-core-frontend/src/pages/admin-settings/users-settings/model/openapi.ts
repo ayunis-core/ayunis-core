@@ -1,6 +1,5 @@
 import type {
   CreateInviteDto,
-  CreateInviteResponseDto,
   CreateInviteDtoRole,
   InviteResponseDto,
   UpdateUserRoleDtoRole,
@@ -8,7 +7,6 @@ import type {
 } from "@/shared/api";
 
 export type InviteCreateData = CreateInviteDto;
-export type InviteCreateResponse = CreateInviteResponseDto;
 export type Invite = InviteResponseDto;
 export type InviteRole = CreateInviteDtoRole;
 export type User = UserResponseDto;

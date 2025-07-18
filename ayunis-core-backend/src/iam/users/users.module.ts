@@ -33,6 +33,10 @@ import { EmailConfirmationJwtService } from './application/services/email-confir
 import { UserController } from './presenters/http/user.controller';
 import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-dto.mapper';
 import { SendConfirmationEmailUseCase } from './application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
+import { TriggerPasswordResetUseCase } from './application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
+import { ResetPasswordUseCase } from './application/use-cases/reset-password/reset-password.use-case';
+import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
+import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 
 @Module({
   imports: [
@@ -87,24 +91,25 @@ import { SendConfirmationEmailUseCase } from './application/use-cases/send-confi
     ConfirmEmailUseCase,
     ResendEmailConfirmationUseCase,
     SendConfirmationEmailUseCase,
+    TriggerPasswordResetUseCase,
+    PasswordResetJwtService,
+    SendPasswordResetEmailUseCase,
+    ResetPasswordUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
     UserResponseDtoMapper,
   ],
   exports: [
-    FindUserByIdUseCase,
-    FindUsersByOrgIdUseCase,
-    DeleteUserUseCase,
-    UpdateUserRoleUseCase,
-    CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    SendConfirmationEmailUseCase,
     ValidateUserUseCase,
+    FindUserByIdUseCase,
+    FindUsersByOrgIdUseCase,
     IsValidPasswordUseCase,
     IsFromOrgUseCase,
     EmailConfirmationJwtService,
-    SendConfirmationEmailUseCase,
   ],
 })
 export class UsersModule {}

@@ -5,6 +5,7 @@ import {
   getInvitesControllerGetInviteByTokenQueryKey,
   invitesControllerGetInviteByToken,
 } from "@/shared/api";
+import { z } from "zod";
 
 const inviteQueryOptions = (inviteToken: string) =>
   queryOptions({
@@ -12,8 +13,14 @@ const inviteQueryOptions = (inviteToken: string) =>
     queryFn: () => invitesControllerGetInviteByToken(inviteToken),
   });
 
-export const Route = createFileRoute("/(onboarding)/invites/$token/accept")({
-  loader: async ({ params: { token }, context: { queryClient } }) => {
+const searchSchema = z.object({
+  token: z.string(),
+});
+
+export const Route = createFileRoute("/(onboarding)/accept-invite")({
+  validateSearch: searchSchema,
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps: { token }, context: { queryClient } }) => {
     const invite = await queryClient.ensureQueryData(inviteQueryOptions(token));
     return { invite, token };
   },

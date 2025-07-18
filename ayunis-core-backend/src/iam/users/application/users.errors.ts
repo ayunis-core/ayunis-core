@@ -22,6 +22,8 @@ export enum UserErrorCode {
   USER_EMAIL_MISMATCH = 'USER_EMAIL_MISMATCH',
   INVALID_EMAIL_CONFIRMATION_TOKEN = 'INVALID_EMAIL_CONFIRMATION_TOKEN',
   EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED',
+  UNEXPECTED_USER_ERROR = 'UNEXPECTED_USER_ERROR',
+  PASSWORD_RESET_EMAIL_SENDING_FAILED = 'PASSWORD_RESET_EMAIL_SENDING_FAILED',
 }
 
 /**
@@ -191,6 +193,31 @@ export class UserEmailAlreadyVerifiedError extends UserError {
       `Email already verified${reason ? `: ${reason}` : ''}`,
       UserErrorCode.EMAIL_ALREADY_VERIFIED,
       400,
+      metadata,
+    );
+  }
+}
+
+export class PasswordResetEmailSendingFailedError extends UserError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Failed to send password reset email: ${reason}`,
+      UserErrorCode.PASSWORD_RESET_EMAIL_SENDING_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an unexpected error occurs
+ */
+export class UnexpectedUserError extends UserError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Unexpected user error: ${error.message}`,
+      UserErrorCode.UNEXPECTED_USER_ERROR,
+      500,
       metadata,
     );
   }

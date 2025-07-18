@@ -1210,6 +1210,26 @@ export interface ResendEmailConfirmationDto {
   email: string;
 }
 
+export interface ForgotPasswordDto {
+  /** Email address to send password reset link to */
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  /** Password reset token from email */
+  resetToken: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  newPassword: string;
+  /**
+   * Confirm new password
+   * @minLength 8
+   */
+  newPasswordConfirmation: string;
+}
+
 export interface SubscriptionBillingInfoResponseDto {
   /** Company name */
   companyName: string;

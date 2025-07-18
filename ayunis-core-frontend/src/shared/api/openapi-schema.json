@@ -2552,6 +2552,75 @@
         ]
       }
     },
+    "/users/forgot-password": {
+      "post": {
+        "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
+        "operationId": "UserController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email address to send reset link to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset email sent successfully. This response is returned regardless of whether the email exists to prevent email enumeration."
+          },
+          "400": {
+            "description": "Invalid request format or validation errors"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Trigger password reset",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/reset-password": {
+      "post": {
+        "description": "Reset user password using the token received via email. The token must be valid and not expired.",
+        "operationId": "UserController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Password reset information including token and new password",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset successful."
+          },
+          "400": {
+            "description": "Invalid request format, validation errors, or password requirements not met"
+          },
+          "401": {
+            "description": "Invalid or expired reset token"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Reset password with token",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/subscriptions": {
       "get": {
         "operationId": "SubscriptionsController_getSubscription",
@@ -5012,6 +5081,46 @@
         },
         "required": [
           "email"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to send password reset link to",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "Password reset token from email",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password",
+            "example": "newPassword123!",
+            "minLength": 8
+          },
+          "newPasswordConfirmation": {
+            "type": "string",
+            "description": "Confirm new password",
+            "example": "newPassword123!",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "resetToken",
+          "newPassword",
+          "newPasswordConfirmation"
         ]
       },
       "SubscriptionBillingInfoResponseDto": {

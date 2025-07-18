@@ -17,6 +17,7 @@ import { Route as onboardingRegisterImport } from './routes/(onboarding)/registe
 import { Route as onboardingLoginImport } from './routes/(onboarding)/login'
 import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/email-confirm'
 import { Route as onboardingConfirmEmailImport } from './routes/(onboarding)/confirm-email'
+import { Route as onboardingAcceptInviteImport } from './routes/(onboarding)/accept-invite'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticated/prompts.index'
 import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
@@ -28,7 +29,8 @@ import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
-import { Route as onboardingInvitesTokenAcceptImport } from './routes/(onboarding)/invites.$token.accept'
+import { Route as onboardingPasswordResetImport } from './routes/(onboarding)/password.reset'
+import { Route as onboardingPasswordForgotImport } from './routes/(onboarding)/password.forgot'
 
 // Create/Update Routes
 
@@ -64,6 +66,12 @@ const onboardingEmailConfirmRoute = onboardingEmailConfirmImport.update({
 const onboardingConfirmEmailRoute = onboardingConfirmEmailImport.update({
   id: '/(onboarding)/confirm-email',
   path: '/confirm-email',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const onboardingAcceptInviteRoute = onboardingAcceptInviteImport.update({
+  id: '/(onboarding)/accept-invite',
+  path: '/accept-invite',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -143,12 +151,17 @@ const AuthenticatedAdminSettingsBillingRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
-const onboardingInvitesTokenAcceptRoute =
-  onboardingInvitesTokenAcceptImport.update({
-    id: '/(onboarding)/invites/$token/accept',
-    path: '/invites/$token/accept',
-    getParentRoute: () => rootRoute,
-  } as any)
+const onboardingPasswordResetRoute = onboardingPasswordResetImport.update({
+  id: '/(onboarding)/password/reset',
+  path: '/password/reset',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const onboardingPasswordForgotRoute = onboardingPasswordForgotImport.update({
+  id: '/(onboarding)/password/forgot',
+  path: '/password/forgot',
+  getParentRoute: () => rootRoute,
+} as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -166,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof AuthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/accept-invite': {
+      id: '/(onboarding)/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof onboardingAcceptInviteImport
       parentRoute: typeof rootRoute
     }
     '/(onboarding)/confirm-email': {
@@ -194,6 +214,20 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof onboardingRegisterImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/password/forgot': {
+      id: '/(onboarding)/password/forgot'
+      path: '/password/forgot'
+      fullPath: '/password/forgot'
+      preLoaderRoute: typeof onboardingPasswordForgotImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/password/reset': {
+      id: '/(onboarding)/password/reset'
+      path: '/password/reset'
+      fullPath: '/password/reset'
+      preLoaderRoute: typeof onboardingPasswordResetImport
       parentRoute: typeof rootRoute
     }
     '/_authenticated/admin-settings/billing': {
@@ -273,13 +307,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexImport
       parentRoute: typeof AuthenticatedImport
     }
-    '/(onboarding)/invites/$token/accept': {
-      id: '/(onboarding)/invites/$token/accept'
-      path: '/invites/$token/accept'
-      fullPath: '/invites/$token/accept'
-      preLoaderRoute: typeof onboardingInvitesTokenAcceptImport
-      parentRoute: typeof rootRoute
-    }
   }
 }
 
@@ -321,10 +348,13 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/accept-invite': typeof onboardingAcceptInviteRoute
   '/confirm-email': typeof onboardingConfirmEmailRoute
   '/email-confirm': typeof onboardingEmailConfirmRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/password/forgot': typeof onboardingPasswordForgotRoute
+  '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -336,16 +366,18 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatIndexRoute
   '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
-  '/invites/$token/accept': typeof onboardingInvitesTokenAcceptRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/accept-invite': typeof onboardingAcceptInviteRoute
   '/confirm-email': typeof onboardingConfirmEmailRoute
   '/email-confirm': typeof onboardingEmailConfirmRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/password/forgot': typeof onboardingPasswordForgotRoute
+  '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -357,17 +389,19 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatIndexRoute
   '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
-  '/invites/$token/accept': typeof onboardingInvitesTokenAcceptRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/(onboarding)/accept-invite': typeof onboardingAcceptInviteRoute
   '/(onboarding)/confirm-email': typeof onboardingConfirmEmailRoute
   '/(onboarding)/email-confirm': typeof onboardingEmailConfirmRoute
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
+  '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
+  '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -379,7 +413,6 @@ export interface FileRoutesById {
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/prompts/': typeof AuthenticatedPromptsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/(onboarding)/invites/$token/accept': typeof onboardingInvitesTokenAcceptRoute
 }
 
 export interface FileRouteTypes {
@@ -387,10 +420,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
+    | '/accept-invite'
     | '/confirm-email'
     | '/email-confirm'
     | '/login'
     | '/register'
+    | '/password/forgot'
+    | '/password/reset'
     | '/admin-settings/billing'
     | '/admin-settings/models'
     | '/admin-settings/users'
@@ -402,15 +438,17 @@ export interface FileRouteTypes {
     | '/chat'
     | '/prompts'
     | '/settings'
-    | '/invites/$token/accept'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | ''
+    | '/accept-invite'
     | '/confirm-email'
     | '/email-confirm'
     | '/login'
     | '/register'
+    | '/password/forgot'
+    | '/password/reset'
     | '/admin-settings/billing'
     | '/admin-settings/models'
     | '/admin-settings/users'
@@ -422,15 +460,17 @@ export interface FileRouteTypes {
     | '/chat'
     | '/prompts'
     | '/settings'
-    | '/invites/$token/accept'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/(onboarding)/accept-invite'
     | '/(onboarding)/confirm-email'
     | '/(onboarding)/email-confirm'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
+    | '/(onboarding)/password/forgot'
+    | '/(onboarding)/password/reset'
     | '/_authenticated/admin-settings/billing'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/users'
@@ -442,28 +482,31 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/'
     | '/_authenticated/prompts/'
     | '/_authenticated/settings/'
-    | '/(onboarding)/invites/$token/accept'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  onboardingAcceptInviteRoute: typeof onboardingAcceptInviteRoute
   onboardingConfirmEmailRoute: typeof onboardingConfirmEmailRoute
   onboardingEmailConfirmRoute: typeof onboardingEmailConfirmRoute
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
-  onboardingInvitesTokenAcceptRoute: typeof onboardingInvitesTokenAcceptRoute
+  onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
+  onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  onboardingAcceptInviteRoute: onboardingAcceptInviteRoute,
   onboardingConfirmEmailRoute: onboardingConfirmEmailRoute,
   onboardingEmailConfirmRoute: onboardingEmailConfirmRoute,
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
-  onboardingInvitesTokenAcceptRoute: onboardingInvitesTokenAcceptRoute,
+  onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
+  onboardingPasswordResetRoute: onboardingPasswordResetRoute,
 }
 
 export const routeTree = rootRoute
@@ -478,11 +521,13 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/_authenticated",
+        "/(onboarding)/accept-invite",
         "/(onboarding)/confirm-email",
         "/(onboarding)/email-confirm",
         "/(onboarding)/login",
         "/(onboarding)/register",
-        "/(onboarding)/invites/$token/accept"
+        "/(onboarding)/password/forgot",
+        "/(onboarding)/password/reset"
       ]
     },
     "/": {
@@ -504,6 +549,9 @@ export const routeTree = rootRoute
         "/_authenticated/settings/"
       ]
     },
+    "/(onboarding)/accept-invite": {
+      "filePath": "(onboarding)/accept-invite.tsx"
+    },
     "/(onboarding)/confirm-email": {
       "filePath": "(onboarding)/confirm-email.tsx"
     },
@@ -515,6 +563,12 @@ export const routeTree = rootRoute
     },
     "/(onboarding)/register": {
       "filePath": "(onboarding)/register.tsx"
+    },
+    "/(onboarding)/password/forgot": {
+      "filePath": "(onboarding)/password.forgot.tsx"
+    },
+    "/(onboarding)/password/reset": {
+      "filePath": "(onboarding)/password.reset.tsx"
     },
     "/_authenticated/admin-settings/billing": {
       "filePath": "_authenticated/admin-settings.billing.tsx",
@@ -559,9 +613,6 @@ export const routeTree = rootRoute
     "/_authenticated/settings/": {
       "filePath": "_authenticated/settings.index.ts",
       "parent": "/_authenticated"
-    },
-    "/(onboarding)/invites/$token/accept": {
-      "filePath": "(onboarding)/invites.$token.accept.tsx"
     }
   }
 }

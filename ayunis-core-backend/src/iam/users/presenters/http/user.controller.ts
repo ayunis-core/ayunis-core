@@ -52,6 +52,12 @@ import { ResendEmailConfirmationDto } from './dtos/resend-email-confirmation.dto
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from '../../domain/value-objects/role.object';
 import { Public } from 'src/common/guards/public.guard';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { TriggerPasswordResetCommand } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.command';
+import { TriggerPasswordResetUseCase } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
+import { ResetPasswordUseCase } from '../../application/use-cases/reset-password/reset-password.use-case';
+import { ResetPasswordCommand } from '../../application/use-cases/reset-password/reset-password.command';
 
 @ApiTags('Users')
 @Controller('users')
@@ -67,6 +73,8 @@ export class UserController {
     private readonly confirmEmailUseCase: ConfirmEmailUseCase,
     private readonly resendEmailConfirmationUseCase: ResendEmailConfirmationUseCase,
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
+    private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
   @Get('')
@@ -350,5 +358,78 @@ export class UserController {
         requestUserId: currentUserId,
       }),
     );
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Trigger password reset',
+    description:
+      'Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.',
+  })
+  @ApiBody({
+    type: ForgotPasswordDto,
+    description: 'Email address to send reset link to',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description:
+      'Password reset email sent successfully. This response is returned regardless of whether the email exists to prevent email enumeration.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request format or validation errors',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error while processing the request',
+  })
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    this.logger.log('forgotPassword', { email: body.email });
+
+    await this.triggerPasswordResetUseCase.execute(
+      new TriggerPasswordResetCommand(body.email),
+    );
+
+    return;
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Reset password with token',
+    description:
+      'Reset user password using the token received via email. The token must be valid and not expired.',
+  })
+  @ApiBody({
+    type: ResetPasswordDto,
+    description: 'Password reset information including token and new password',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Password reset successful.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Invalid request format, validation errors, or password requirements not met',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or expired reset token',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error while processing the request',
+  })
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    this.logger.log('resetPassword', { hasToken: !!body.resetToken });
+
+    await this.resetPasswordUseCase.execute(
+      new ResetPasswordCommand(
+        body.resetToken,
+        body.newPassword,
+        body.newPasswordConfirmation,
+      ),
+    );
+
+    return;
   }
 }

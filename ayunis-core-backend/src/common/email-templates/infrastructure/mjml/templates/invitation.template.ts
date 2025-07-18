@@ -1,7 +1,7 @@
 import mjml2html from 'mjml';
-import { EmailInvitationTemplateContent } from '../../../domain/email-template.entity';
+import { InvitationTemplateContent } from '../../../domain/email-template.entity';
 
-export function emailInvitationText(template: EmailInvitationTemplateContent) {
+export function invitationText(template: InvitationTemplateContent) {
   const adminNameText = template.adminName ? ` von ${template.adminName}` : '';
 
   return `${template.productName} – Einladung zu ${template.invitingCompanyName}
@@ -22,7 +22,7 @@ export function emailInvitationText(template: EmailInvitationTemplateContent) {
   `;
 }
 
-export function emailInvitationHtml(template: EmailInvitationTemplateContent) {
+export function invitationHtml(template: InvitationTemplateContent) {
   const adminNameText = template.adminName ? ` von ${template.adminName}` : '';
 
   return mjml2html(`
