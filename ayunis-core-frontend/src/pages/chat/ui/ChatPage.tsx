@@ -125,6 +125,7 @@ export default function ChatPage({ thread }: ChatPageProps) {
   async function handleSend(message: string) {
     if (!isConnected) {
       connect();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     sendTextMessage({
       text: message,
