@@ -44,7 +44,9 @@ export class MistralInferenceHandler extends InferenceHandler {
     const { model, messages, tools, toolChoice } = input;
     const mistralTools = tools?.map(this.convertTool);
     const mistralMessages = this.convertMessages(messages);
-    const systemPrompt = this.convertSystemPrompt(input.systemPrompt);
+    const systemPrompt = input.systemPrompt
+      ? this.convertSystemPrompt(input.systemPrompt)
+      : undefined;
     const mistralToolChoice = toolChoice
       ? this.convertToolChoice(toolChoice)
       : undefined;
@@ -52,7 +54,9 @@ export class MistralInferenceHandler extends InferenceHandler {
     const completionFn = () =>
       this.client.chat.complete({
         model: model.name,
-        messages: [systemPrompt, ...mistralMessages],
+        messages: systemPrompt
+          ? [systemPrompt, ...mistralMessages]
+          : mistralMessages,
         tools: mistralTools,
         toolChoice: mistralToolChoice,
         maxTokens: 1000,

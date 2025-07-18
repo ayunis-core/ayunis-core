@@ -49,11 +49,15 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
         function: { ...tool.function, strict: true },
       }));
       const openAiMessages = this.convertMessages(messages);
-      const systemPrompt = this.convertSystemPrompt(input.systemPrompt);
+      const systemPrompt = input.systemPrompt
+        ? this.convertSystemPrompt(input.systemPrompt)
+        : undefined;
 
       const completionOptions: OpenAI.ChatCompletionCreateParamsStreaming = {
         model: input.model.name,
-        messages: [systemPrompt, ...openAiMessages],
+        messages: systemPrompt
+          ? [systemPrompt, ...openAiMessages]
+          : openAiMessages,
         max_tokens: 10000,
         tools: openAiTools,
         tool_choice: toolChoice

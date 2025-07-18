@@ -61,7 +61,9 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
 
       const completionOptions: ChatCompletionStreamRequest = {
         model: input.model.name,
-        messages: [this.convertSystemPrompt(systemPrompt), ...mistralMessages],
+        messages: systemPrompt
+          ? [this.convertSystemPrompt(systemPrompt), ...mistralMessages]
+          : mistralMessages,
         tools: mistralTools,
         toolChoice: mistralToolChoice,
         maxTokens: 10000,

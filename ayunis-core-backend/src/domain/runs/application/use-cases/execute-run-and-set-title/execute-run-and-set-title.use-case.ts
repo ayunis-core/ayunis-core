@@ -35,11 +35,6 @@ export class ExecuteRunAndSetTitleUseCase {
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunResponse> {
     try {
-      const titleResponse = await this.generateTitleIfNeeded(command);
-      if (titleResponse) {
-        yield titleResponse;
-      }
-
       const streamingStartResponse: RunSessionResponseDto = {
         type: 'session',
         streaming: true,
@@ -47,7 +42,10 @@ export class ExecuteRunAndSetTitleUseCase {
         timestamp: new Date().toISOString(),
       };
       yield streamingStartResponse;
-
+      const titleResponse = await this.generateTitleIfNeeded(command);
+      if (titleResponse) {
+        yield titleResponse;
+      }
       // Execute the run and stream messages
       const messageGenerator = await this.executeRunUseCase.execute(
         new ExecuteRunCommand({
@@ -70,13 +68,6 @@ export class ExecuteRunAndSetTitleUseCase {
         };
         yield messageResponse;
       }
-      const streamingEndResponse: RunSessionResponseDto = {
-        type: 'session',
-        streaming: false,
-        threadId: command.threadId,
-        timestamp: new Date().toISOString(),
-      };
-      yield streamingEndResponse;
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
 
@@ -97,6 +88,7 @@ export class ExecuteRunAndSetTitleUseCase {
       };
 
       yield errorResponse;
+    } finally {
       const streamingEndResponse: RunSessionResponseDto = {
         type: 'session',
         streaming: false,

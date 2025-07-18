@@ -42,10 +42,14 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
         function: { ...tool.function, strict: true },
       }));
       const ollamaMessages = this.convertMessages(messages);
-      const systemPrompt = this.convertSystemPrompt(input.systemPrompt);
+      const systemPrompt = input.systemPrompt
+        ? this.convertSystemPrompt(input.systemPrompt)
+        : undefined;
       const completionOptions: ChatRequest & { stream: false } = {
         model: input.model.name,
-        messages: [systemPrompt, ...ollamaMessages],
+        messages: systemPrompt
+          ? [systemPrompt, ...ollamaMessages]
+          : ollamaMessages,
         tools: ollamaTools,
         stream: false,
       };
