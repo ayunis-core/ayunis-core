@@ -20,6 +20,7 @@ import { AcceptInviteUseCase } from './application/use-cases/accept-invite/accep
 import { DeleteInviteUseCase } from './application/use-cases/delete-invite/delete-invite.use-case';
 import { GetInvitesByOrgUseCase } from './application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInviteByTokenUseCase } from './application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
+import { SendInvitationEmailUseCase } from './application/use-cases/send-invitation-email/send-invitation-email.use-case';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -29,6 +30,8 @@ import { InviteResponseMapper } from './presenters/http/mappers/invite-response.
 import { OrgsModule } from '../orgs/orgs.module';
 import { UsersModule } from '../users/users.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { EmailsModule } from '../../common/emails/emails.module';
+import { EmailTemplatesModule } from '../../common/email-templates/email-templates.module';
 
 @Module({
   imports: [
@@ -53,6 +56,8 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
     OrgsModule,
     UsersModule,
     forwardRef(() => SubscriptionsModule),
+    EmailsModule,
+    EmailTemplatesModule,
   ],
   providers: [
     // Mappers
@@ -74,6 +79,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
     DeleteInviteUseCase,
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
+    SendInvitationEmailUseCase,
   ],
   controllers: [InvitesController],
   exports: [
@@ -82,6 +88,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
     DeleteInviteUseCase,
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
+    SendInvitationEmailUseCase,
     InviteJwtService,
   ],
 })

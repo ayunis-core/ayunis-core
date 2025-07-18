@@ -28,7 +28,6 @@ import { CreateInviteDto } from './dtos/create-invite.dto';
 import { AcceptInviteDto } from './dtos/accept-invite.dto';
 import {
   InviteResponseDto,
-  CreateInviteResponseDto,
   InviteDetailResponseDto,
   AcceptInviteResponseDto,
 } from './dtos/invite-response.dto';
@@ -72,10 +71,10 @@ export class InvitesController {
       'Send an invitation to a user to join an organization with a specific role',
   })
   @ApiBody({ type: CreateInviteDto })
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiResponse({
-    status: 201,
-    description: 'The invite has been successfully created',
-    type: CreateInviteResponseDto,
+    status: 204,
+    description: 'The invite has been successfully created and email sent',
   })
   @ApiResponse({ status: 400, description: 'Invalid invite data' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
@@ -83,7 +82,7 @@ export class InvitesController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() createInviteDto: CreateInviteDto,
-  ): Promise<CreateInviteResponseDto> {
+  ): Promise<void> {
     this.logger.log('create', {
       userId,
       email: createInviteDto.email,
@@ -91,7 +90,7 @@ export class InvitesController {
       role: createInviteDto.role,
     });
 
-    const result = await this.createInviteUseCase.execute(
+    await this.createInviteUseCase.execute(
       new CreateInviteCommand({
         email: createInviteDto.email,
         orgId,
@@ -99,8 +98,6 @@ export class InvitesController {
         userId,
       }),
     );
-
-    return this.inviteResponseMapper.toCreateResponseDto(result.inviteToken);
   }
 
   @Get()

@@ -14,6 +14,15 @@ export interface EmailConfirmationTemplateContent {
   companyName: string;
 }
 
+export interface EmailInvitationTemplateContent {
+  invitationUrl: string;
+  userEmail: string;
+  invitingCompanyName: string;
+  productName: string;
+  currentYear: string;
+  adminName?: string;
+}
+
 export class EmailConfirmationTemplate extends EmailTemplate {
   constructor(public readonly content: EmailConfirmationTemplateContent) {
     super(EmailTemplateType.EMAIL_CONFIRMATION, {
@@ -21,6 +30,19 @@ export class EmailConfirmationTemplate extends EmailTemplate {
       userEmail: content.userEmail,
       currentYear: content.currentYear,
       companyName: content.companyName,
+    });
+  }
+}
+
+export class EmailInvitationTemplate extends EmailTemplate {
+  constructor(public readonly content: EmailInvitationTemplateContent) {
+    super(EmailTemplateType.INVITATION, {
+      invitationUrl: content.invitationUrl,
+      userEmail: content.userEmail,
+      invitingCompanyName: content.invitingCompanyName,
+      productName: content.productName,
+      currentYear: content.currentYear,
+      adminName: content.adminName || '',
     });
   }
 }

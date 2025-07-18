@@ -1018,11 +1018,6 @@ export interface CreateInviteDto {
   role: CreateInviteDtoRole;
 }
 
-export interface CreateInviteResponseDto {
-  /** JWT token for the invite */
-  inviteToken: string;
-}
-
 /**
  * Role assigned to the invited user
  */

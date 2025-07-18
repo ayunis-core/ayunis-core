@@ -11,11 +11,12 @@ export enum InvitesErrorCode {
   INVALID_INVITE_TOKEN = 'INVALID_INVITE_TOKEN',
   INVITE_EMAIL_MISMATCH = 'INVITE_EMAIL_MISMATCH',
   UNAUTHORIZED_INVITE_ACCESS = 'UNAUTHORIZED_INVITE_ACCESS',
-  INVITE_CREATION_FAILED = 'INVITE_CREATION_FAILED',
   INVITE_ROLE_ERROR = 'INVITE_ROLE_ERROR',
   INVALID_SEATS = 'INVALID_SEATS',
   INVALID_PASSWORD = 'INVALID_PASSWORD',
   PASSWORD_MISMATCH = 'PASSWORD_MISMATCH',
+  INVITE_EMAIL_SENDING_FAILED = 'INVITE_EMAIL_SENDING_FAILED',
+  UNEXPECTED_INVITE_ERROR = 'UNEXPECTED_INVITE_ERROR',
 }
 
 /**
@@ -115,20 +116,6 @@ export class UnauthorizedInviteAccessError extends InviteError {
 }
 
 /**
- * Error thrown when invite creation fails
- */
-export class InviteCreationFailedError extends InviteError {
-  constructor(reason?: string, metadata?: ErrorMetadata) {
-    super(
-      `Failed to create invite${reason ? `: ${reason}` : ''}`,
-      InvitesErrorCode.INVITE_CREATION_FAILED,
-      500,
-      metadata,
-    );
-  }
-}
-
-/**
  * Error thrown when seats are invalid
  */
 export class InvalidSeatsError extends InviteError {
@@ -154,6 +141,34 @@ export class PasswordMismatchError extends InviteError {
       'Passwords do not match',
       InvitesErrorCode.PASSWORD_MISMATCH,
       400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when sending invitation email fails
+ */
+export class InviteEmailSendingFailedError extends InviteError {
+  constructor(reason?: string, metadata?: ErrorMetadata) {
+    super(
+      `Failed to send invitation email${reason ? `: ${reason}` : ''}`,
+      InvitesErrorCode.INVITE_EMAIL_SENDING_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an unexpected error occurs
+ */
+export class UnexpectedInviteError extends InviteError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Unexpected invite error: ${error.message}`,
+      InvitesErrorCode.UNEXPECTED_INVITE_ERROR,
+      500,
       metadata,
     );
   }

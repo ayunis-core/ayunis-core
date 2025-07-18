@@ -56,14 +56,6 @@ export class InviteResponseDto {
   acceptedAt?: Date;
 }
 
-export class CreateInviteResponseDto {
-  @ApiProperty({
-    description: 'JWT token for the invite',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  inviteToken: string;
-}
-
 export class InviteDetailResponseDto extends InviteResponseDto {
   @ApiProperty({
     description: 'Name of the organization',

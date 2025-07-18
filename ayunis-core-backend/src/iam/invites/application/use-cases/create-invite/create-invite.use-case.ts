@@ -8,7 +8,10 @@ import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
-import { InvalidSeatsError } from '../../invites.errors';
+import { InvalidSeatsError, UnexpectedInviteError } from '../../invites.errors';
+import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
+import { SendInvitationEmailCommand } from '../send-invitation-email/send-invitation-email.command';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateInviteUseCase {
@@ -20,70 +23,107 @@ export class CreateInviteUseCase {
     private readonly inviteJwtService: InviteJwtService,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
+    private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
   ) {}
 
-  async execute(
-    command: CreateInviteCommand,
-  ): Promise<{ inviteToken: string }> {
+  async execute(command: CreateInviteCommand): Promise<void> {
     this.logger.log('execute', {
       email: command.email,
       orgId: command.orgId,
       userId: command.userId,
     });
-
-    const isCloud = this.configService.get<boolean>('app.isCloudHosted', false);
-    if (isCloud) {
-      const subscription = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.userId,
-        }),
+    try {
+      const isCloud = this.configService.get<boolean>(
+        'app.isCloudHosted',
+        false,
       );
-      if (subscription && subscription.availableSeats < 0) {
-        throw new InvalidSeatsError({
-          orgId: command.orgId,
-          availableSeats: subscription.availableSeats,
-        });
-      }
-      if (subscription && subscription.availableSeats === 0) {
-        await this.updateSeatsUseCase.execute(
-          new UpdateSeatsCommand({
+      if (isCloud) {
+        const subscription = await this.getActiveSubscriptionUseCase.execute(
+          new GetActiveSubscriptionQuery({
             orgId: command.orgId,
             requestingUserId: command.userId,
-            noOfSeats: subscription.subscription.noOfSeats + 1,
           }),
         );
+        if (subscription && subscription.availableSeats < 0) {
+          throw new InvalidSeatsError({
+            orgId: command.orgId,
+            availableSeats: subscription.availableSeats,
+          });
+        }
+        if (subscription && subscription.availableSeats === 0) {
+          await this.updateSeatsUseCase.execute(
+            new UpdateSeatsCommand({
+              orgId: command.orgId,
+              requestingUserId: command.userId,
+              noOfSeats: subscription.subscription.noOfSeats + 1,
+            }),
+          );
+        }
       }
+
+      const validDuration = this.configService.get<string>(
+        'auth.jwt.inviteExpiresIn',
+        '7d',
+      );
+      const inviteExpiresAt = this.getInviteExpiresAt(validDuration);
+
+      const invite = new Invite({
+        email: command.email,
+        orgId: command.orgId,
+        role: command.role,
+        inviterId: command.userId,
+        expiresAt: inviteExpiresAt,
+      });
+      this.logger.debug('Invite to be created', { invite });
+
+      await this.invitesRepository.create(invite);
+
+      // Generate JWT token for the invite
+      const inviteToken = this.inviteJwtService.generateInviteToken({
+        inviteId: invite.id,
+      });
+
+      this.logger.debug('Invite created successfully', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+
+      // Send invitation email if email configuration is available
+      const hasEmailConfig =
+        this.configService.get<boolean>('emails.hasConfig');
+
+      if (hasEmailConfig) {
+        this.logger.debug('Sending invitation email', {
+          inviteId: invite.id,
+          email: invite.email,
+        });
+
+        await this.sendInvitationEmailUseCase.execute(
+          new SendInvitationEmailCommand(invite, inviteToken),
+        );
+
+        this.logger.debug('Invitation email sent successfully', {
+          inviteId: invite.id,
+          email: invite.email,
+        });
+      } else {
+        this.logger.debug(
+          'Email configuration not available, skipping email send',
+          {
+            inviteId: invite.id,
+            email: invite.email,
+          },
+        );
+      }
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      this.logger.error('Error creating invite', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new UnexpectedInviteError(error as Error);
     }
-
-    const validDuration = this.configService.get<string>(
-      'auth.jwt.inviteExpiresIn',
-      '7d',
-    );
-    const inviteExpiresAt = this.getInviteExpiresAt(validDuration);
-
-    const invite = new Invite({
-      email: command.email,
-      orgId: command.orgId,
-      role: command.role,
-      inviterId: command.userId,
-      expiresAt: inviteExpiresAt,
-    });
-    this.logger.debug('Invite to be created', { invite });
-
-    await this.invitesRepository.create(invite);
-
-    // Generate JWT token for the invite
-    const inviteToken = this.inviteJwtService.generateInviteToken({
-      inviteId: invite.id,
-    });
-
-    this.logger.debug('Invite created successfully', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
-
-    return { inviteToken };
   }
 
   private getInviteExpiresAt(inviteExpiresIn: string): Date {

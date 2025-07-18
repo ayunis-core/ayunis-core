@@ -5,7 +5,7 @@ import {
 } from "@/shared/api/generated/ayunisCoreAPI";
 import type { Invite } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
-import { showError, showSuccess } from "@/shared/lib/toast";
+import { showError } from "@/shared/lib/toast";
 import { useRouter } from "@tanstack/react-router";
 import extractErrorData from "@/shared/api/extract-error-data";
 
@@ -29,9 +29,6 @@ export function useInviteDelete() {
           },
         );
         return { previousData };
-      },
-      onSuccess: () => {
-        showSuccess("Invite deleted successfully!");
       },
       onError: (error, _, context) => {
         console.log(error);

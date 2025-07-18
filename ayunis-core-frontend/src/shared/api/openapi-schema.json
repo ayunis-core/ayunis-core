@@ -2116,15 +2116,8 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "The invite has been successfully created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateInviteResponseDto"
-                }
-              }
-            }
+          "204": {
+            "description": "The invite has been successfully created and email sent"
           },
           "400": {
             "description": "Invalid invite data"
@@ -4681,19 +4674,6 @@
         "required": [
           "email",
           "role"
-        ]
-      },
-      "CreateInviteResponseDto": {
-        "type": "object",
-        "properties": {
-          "inviteToken": {
-            "type": "string",
-            "description": "JWT token for the invite",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          }
-        },
-        "required": [
-          "inviteToken"
         ]
       },
       "InviteResponseDto": {
