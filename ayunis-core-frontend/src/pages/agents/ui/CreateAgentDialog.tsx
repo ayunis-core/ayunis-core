@@ -117,7 +117,7 @@ export default function CreateAgentDialog({
                       placeholder={t(
                         "createDialog.form.instructionsPlaceholder",
                       )}
-                      className="min-h-[100px] resize-none"
+                      className="min-h-[150px]"
                       {...field}
                     />
                   </FormControl>
