@@ -10,7 +10,10 @@ import { Switch } from "@/shared/ui/shadcn/switch";
 import { Label } from "@/shared/ui/shadcn/label";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { Badge } from "@/shared/ui/shadcn/badge";
-import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import {
+  ModelProviderWithPermittedStatusResponseDtoHostedIn,
+  type ModelWithConfigResponseDto,
+} from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useCreatePermittedModel } from "../api/useCreatePermittedModel";
 import { useDeletePermittedModel } from "../api/useDeletePermittedModel";
 import { useCreatePermittedProvider } from "../api/useCreatePermittedProvider";
@@ -35,6 +38,17 @@ export default function ModelProviderCard({
   const { deletePermittedModel } = useDeletePermittedModel();
   const { createPermittedProvider } = useCreatePermittedProvider();
   const { deletePermittedProvider } = useDeletePermittedProvider();
+
+  const hostedInLabel: Record<
+    ModelProviderWithPermittedStatusResponseDtoHostedIn,
+    string
+  > = {
+    DE: t("models.hostedIn.de"),
+    US: t("models.hostedIn.us"),
+    EU: t("models.hostedIn.eu"),
+    SELF_HOSTED: t("models.hostedIn.selfHosted"),
+    AYUNIS: t("models.hostedIn.ayunis"),
+  };
 
   function handleProviderToggle() {
     if (provider.isPermitted) {
@@ -71,7 +85,7 @@ export default function ModelProviderCard({
         <CardTitle className="flex items-center gap-2">
           <span>{provider.displayName}</span>
         </CardTitle>
-        <CardDescription>Hosted in {provider.hostedIn}</CardDescription>
+        <CardDescription>{hostedInLabel[provider.hostedIn]}</CardDescription>
         <CardAction>
           <ProviderConfirmationDialog
             provider={provider}

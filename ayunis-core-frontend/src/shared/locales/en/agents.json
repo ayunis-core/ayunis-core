@@ -7,6 +7,7 @@
     "description": "Get started by creating your first AI agent. Agents help you set up specialized AI assistants for specific tasks and workflows."
   },
   "card": {
+    "startChatButton": "Start Chat",
     "editButton": "Edit",
     "deleteButton": "Delete",
     "confirmDelete": {
@@ -27,7 +28,17 @@
       "instructionsLabel": "Instructions",
       "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
       "modelLabel": "Model",
-      "modelPlaceholder": "Select an AI model..."
+      "modelPlaceholder": "Select an AI model...",
+      "capabilitiesLabel": "Capabilities",
+      "capabilitiesTooltip": "Coming soon",
+      "capabilities": {
+        "generateCharts": "Generate Charts",
+        "generateChartsDescription": "Create visual charts and graphs from data",
+        "statisticalCalculations": "Statistical Calculations",
+        "statisticalCalculationsDescription": "Perform complex statistical analysis and computations",
+        "createDocuments": "Generate Documents",
+        "createDocumentsDescription": "Create and format various types of documents"
+      }
     },
     "buttons": {
       "cancel": "Cancel",
@@ -44,7 +55,17 @@
       "instructionsLabel": "Instructions",
       "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
       "modelLabel": "Model",
-      "modelPlaceholder": "Select an AI model..."
+      "modelPlaceholder": "Select an AI model...",
+      "capabilitiesLabel": "Capabilities",
+      "capabilitiesTooltip": "Coming soon",
+      "capabilities": {
+        "generateCharts": "Generate Charts",
+        "generateChartsDescription": "Create visual charts and graphs from data",
+        "statisticalCalculations": "Statistical Calculations",
+        "statisticalCalculationsDescription": "Perform complex statistical analysis and computations",
+        "createDocuments": "Create Documents",
+        "createDocumentsDescription": "Generate and format various types of documents"
+      }
     },
     "buttons": {
       "cancel": "Cancel",

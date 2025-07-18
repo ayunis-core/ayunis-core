@@ -47,7 +47,8 @@ export default function AgentCard({ agent }: AgentCardProps) {
           <div className="flex items-center gap-2">
             <Link to="/chat" search={{ agentId: agent.id }}>
               <Button variant="ghost">
-                <MessageCircle className="h-4 w-4" /> Start Chat
+                <MessageCircle className="h-4 w-4" />{" "}
+                {t("card.startChatButton")}
               </Button>
             </Link>
             <EditAgentDialog

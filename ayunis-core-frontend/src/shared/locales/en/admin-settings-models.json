@@ -5,6 +5,13 @@
     "reasoning": "Reasoning",
     "enableProvider": "Enable Provider",
     "disableProvider": "Disable Provider",
-    "providerDisabled": "Cannot be enabled because the provider is not enabled."
+    "providerDisabled": "Cannot be enabled because the provider is not enabled.",
+    "hostedIn": {
+      "de": "Hosted in 🇩🇪",
+      "us": "Hosted in 🇺🇸",
+      "eu": "Hosted in 🇪🇺",
+      "selfHosted": "Self-Hosted",
+      "ayunis": "Hosted in 🇩🇪 on sovereign cloud"
+    }
   }
 }

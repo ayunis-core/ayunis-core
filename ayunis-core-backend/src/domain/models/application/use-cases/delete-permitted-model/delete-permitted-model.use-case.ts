@@ -8,6 +8,8 @@ import {
 } from '../../models.errors';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultCommand } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
+import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
+import { ReplaceModelWithUserDefaultCommand as ReplaceModelWithUserDefaultCommandAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
 import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { DeleteUserDefaultModelsByModelIdCommand } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
@@ -23,6 +25,7 @@ export class DeletePermittedModelUseCase {
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
+    private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
   ) {}
 
   async execute(command: DeletePermittedModelCommand): Promise<void> {
@@ -84,6 +87,16 @@ export class DeletePermittedModelUseCase {
         new ReplaceModelWithUserDefaultCommand({
           oldPermittedModelId: command.permittedModelId,
         }),
+      );
+
+      this.logger.debug('Replacing model in all agents that use it', {
+        modelId: command.permittedModelId,
+      });
+
+      // Replace the model in all agents that use it
+      // This will fall back to the user's default model or org default model
+      await this.replaceModelWithUserDefaultUseCaseAgents.execute(
+        new ReplaceModelWithUserDefaultCommandAgents(command.permittedModelId),
       );
 
       await this.permittedModelsRepository.delete({

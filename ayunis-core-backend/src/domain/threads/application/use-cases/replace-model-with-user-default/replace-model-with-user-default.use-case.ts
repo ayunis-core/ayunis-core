@@ -58,12 +58,15 @@ export class ReplaceModelWithUserDefaultUseCase {
           );
         }
 
-        await this.threadsRepository.update(
-          new Thread({
-            ...thread,
-            model: defaultModel,
-          }),
-        );
+        this.logger.debug('Updating thread', {
+          threadId: thread.id,
+          newModelId: defaultModel.id,
+        });
+        await this.threadsRepository.updateModel({
+          threadId: thread.id,
+          userId: thread.userId,
+          permittedModelId: defaultModel.id,
+        });
       }
     } catch (error) {
       this.logger.error('Error replacing model with user default', {

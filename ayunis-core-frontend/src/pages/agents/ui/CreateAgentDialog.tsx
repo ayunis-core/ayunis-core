@@ -25,8 +25,15 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
 import { Button } from "@/shared/ui/shadcn/button";
+import { Switch } from "@/shared/ui/shadcn/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/shadcn/tooltip";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Info } from "lucide-react";
 import { useAddAgent } from "../api/useAddAgent";
 import { useTranslation } from "react-i18next";
 import { usePermittedModels } from "@/features/usePermittedModels";
@@ -44,6 +51,9 @@ export default function CreateAgentDialog({
 }: CreateAgentDialogProps) {
   const { t } = useTranslation("agents");
   const [isOpen, setIsOpen] = useState(false);
+  const [generateCharts, setGenerateCharts] = useState(false);
+  const [statisticalCalculations, setStatisticalCalculations] = useState(false);
+  const [createDocuments, setCreateDocuments] = useState(false);
   const { models } = usePermittedModels();
   const { form, onSubmit, resetForm, isLoading } = useAddAgent({
     onSuccessCallback: () => {
@@ -54,6 +64,9 @@ export default function CreateAgentDialog({
 
   const handleCancel = () => {
     resetForm();
+    setGenerateCharts(false);
+    setStatisticalCalculations(false);
+    setCreateDocuments(false);
     setIsOpen(false);
   };
 
@@ -141,6 +154,78 @@ export default function CreateAgentDialog({
                 </FormItem>
               )}
             />
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <FormLabel className="text-sm font-medium">
+                  {t("createDialog.form.capabilitiesLabel")}
+                </FormLabel>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t("createDialog.form.capabilitiesTooltip")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-medium">
+                      {t("createDialog.form.capabilities.generateCharts")}
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "createDialog.form.capabilities.generateChartsDescription",
+                      )}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={generateCharts}
+                    onCheckedChange={setGenerateCharts}
+                    disabled
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-medium">
+                      {t(
+                        "createDialog.form.capabilities.statisticalCalculations",
+                      )}
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "createDialog.form.capabilities.statisticalCalculationsDescription",
+                      )}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={statisticalCalculations}
+                    onCheckedChange={setStatisticalCalculations}
+                    disabled
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-medium">
+                      {t("createDialog.form.capabilities.createDocuments")}
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "createDialog.form.capabilities.createDocumentsDescription",
+                      )}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={createDocuments}
+                    onCheckedChange={setCreateDocuments}
+                    disabled
+                  />
+                </div>
+              </div>
+            </div>
             <DialogFooter>
               <Button
                 type="button"

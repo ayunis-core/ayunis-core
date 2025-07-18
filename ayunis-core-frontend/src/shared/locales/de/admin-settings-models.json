@@ -5,6 +5,13 @@
     "reasoning": "Reasoning",
     "enableProvider": "Provider freischalten",
     "disableProvider": "Provider deaktivieren",
-    "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist."
+    "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist.",
+    "hostedIn": {
+      "de": "Betrieben in 🇩🇪",
+      "us": "Betrieben in 🇺🇸",
+      "eu": "Betrieben in 🇪🇺",
+      "selfHosted": "Betrieben in Ihrem eigenen Rechenzentrum",
+      "ayunis": "Betrieben in 🇩🇪 auf souveränder Cloud"
+    }
   }
 }

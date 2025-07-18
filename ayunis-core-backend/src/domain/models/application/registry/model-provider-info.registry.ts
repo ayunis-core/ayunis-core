@@ -27,7 +27,7 @@ const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
   },
   {
     provider: ModelProvider.SYNAFORCE,
-    displayName: 'Synaforce',
+    displayName: 'Ayunis Sovereign Cloud',
     hostedIn: ModelProviderLocation.AYUNIS,
   },
 ];

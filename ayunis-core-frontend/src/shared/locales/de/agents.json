@@ -7,6 +7,7 @@
     "description": "Beginnen Sie mit der Erstellung Ihres ersten KI-Agenten. Agenten helfen Ihnen dabei, spezialisierte KI-Assistenten für bestimmte Aufgaben und Arbeitsabläufe zu erstellen."
   },
   "card": {
+    "startChatButton": "Chat starten",
     "editButton": "Bearbeiten",
     "deleteButton": "Löschen",
     "confirmDelete": {
@@ -27,7 +28,17 @@
       "instructionsLabel": "Anweisungen",
       "instructionsPlaceholder": "Geben Sie die Anweisungen und das Verhalten des Agenten ein...",
       "modelLabel": "Modell",
-      "modelPlaceholder": "Wählen Sie ein KI-Modell..."
+      "modelPlaceholder": "Wählen Sie ein KI-Modell...",
+      "capabilitiesLabel": "Fähigkeiten",
+      "capabilitiesTooltip": "Demnächst verfügbar",
+      "capabilities": {
+        "generateCharts": "Diagramme erstellen",
+        "generateChartsDescription": "Visuelle Diagramme und Graphen aus Daten erstellen",
+        "statisticalCalculations": "Statistische Berechnungen",
+        "statisticalCalculationsDescription": "Komplexe statistische Analysen und Berechnungen durchführen",
+        "createDocuments": "Dokumente erzeugen",
+        "createDocumentsDescription": "Verschiedene Arten von Dokumenten erstellen und formatieren"
+      }
     },
     "buttons": {
       "cancel": "Abbrechen",
@@ -44,7 +55,17 @@
       "instructionsLabel": "Anweisungen",
       "instructionsPlaceholder": "Geben Sie die Anweisungen und das Verhalten des Agenten ein...",
       "modelLabel": "Modell",
-      "modelPlaceholder": "Wählen Sie ein KI-Modell..."
+      "modelPlaceholder": "Wählen Sie ein KI-Modell...",
+      "capabilitiesLabel": "Fähigkeiten",
+      "capabilitiesTooltip": "Demnächst verfügbar",
+      "capabilities": {
+        "generateCharts": "Diagramme erstellen",
+        "generateChartsDescription": "Visuelle Diagramme und Graphen aus Daten erstellen",
+        "statisticalCalculations": "Statistische Berechnungen",
+        "statisticalCalculationsDescription": "Komplexe statistische Analysen und Berechnungen durchführen",
+        "createDocuments": "Dokumente erzeugen",
+        "createDocumentsDescription": "Verschiedene Arten von Dokumenten erstellen und formatieren"
+      }
     },
     "buttons": {
       "cancel": "Abbrechen",

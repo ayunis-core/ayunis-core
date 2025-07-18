@@ -1,5 +1,8 @@
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
-import { type ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import {
+  ModelWithConfigResponseDtoProvider,
+  type ModelWithConfigResponseDto,
+} from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import ModelProviderCard from "./ModelProviderCard";
 import SettingsLayout from "../../admin-settings-layout";
 import { useTranslation } from "react-i18next";
@@ -17,21 +20,35 @@ export default function ModelSettingsPage() {
       acc[model.provider].push(model);
       return acc;
     },
-    {} as Record<string, ModelWithConfigResponseDto[]>,
+    {} as Record<
+      ModelWithConfigResponseDtoProvider,
+      ModelWithConfigResponseDto[]
+    >,
+  );
+
+  const providerPriority: Array<ModelWithConfigResponseDtoProvider> = [
+    ModelWithConfigResponseDtoProvider.synaforce,
+    ModelWithConfigResponseDtoProvider.mistral,
+    ModelWithConfigResponseDtoProvider.ollama,
+    ModelWithConfigResponseDtoProvider.anthropic,
+    ModelWithConfigResponseDtoProvider.openai,
+  ];
+
+  const modelProviderCards = providerPriority.map((provider) =>
+    groupedModels[provider] ? (
+      <ModelProviderCard
+        key={provider}
+        provider={providers.find((p) => p.provider === provider)!}
+        models={groupedModels[provider]}
+      />
+    ) : null,
   );
 
   return (
     <SettingsLayout>
       <div className="space-y-4">
-        {Object.keys(groupedModels).length > 0 &&
-          Object.entries(groupedModels).map(([provider, providerModels]) => (
-            <ModelProviderCard
-              key={provider}
-              provider={providers.find((p) => p.provider === provider)!}
-              models={providerModels}
-            />
-          ))}
-        {Object.keys(groupedModels).length === 0 && (
+        {modelProviderCards.length > 0 && modelProviderCards}
+        {modelProviderCards.length === 0 && (
           <Card>
             <CardContent>
               <div className="text-center text-muted-foreground">
