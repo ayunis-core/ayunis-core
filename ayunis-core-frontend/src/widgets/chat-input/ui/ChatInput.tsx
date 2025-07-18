@@ -59,6 +59,7 @@ export default function ChatInput({
           <div className="flex flex-col gap-4">
             {/* Textarea at the top */}
             <TextareaAutosize
+              maxRows={10}
               value={message}
               autoFocus
               onChange={(e) => setMessage(e.target.value)}
