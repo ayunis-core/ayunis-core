@@ -5,9 +5,11 @@ import { useAuthenticationControllerRegister } from "@/shared/api/generated/ayun
 import { registerFormSchema, type RegisterFormValues } from "./registerSchema";
 import { showError } from "@/shared/lib/toast";
 import extractErrorData from "@/shared/api/extract-error-data";
+import { useTranslation } from "react-i18next";
 
 export function useRegister() {
   const navigate = useNavigate();
+  const { t } = useTranslation("auth");
   const registerMutation = useAuthenticationControllerRegister();
 
   const form = useForm<RegisterFormValues>({
@@ -41,10 +43,13 @@ export function useRegister() {
           const { code } = extractErrorData(error);
           switch (code) {
             case "USER_ALREADY_EXISTS":
-              showError("Email already exists");
+              showError(t("register.emailAlreadyExists"));
+              break;
+            case "USER_EMAIL_PROVIDER_BLACKLISTED":
+              showError(t("register.emailProviderBlacklisted"));
               break;
             default:
-              showError("Registration failed");
+              showError(t("register.registrationFailed"));
           }
         },
       },

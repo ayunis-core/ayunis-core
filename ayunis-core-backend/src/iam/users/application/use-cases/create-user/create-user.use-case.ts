@@ -8,6 +8,7 @@ import {
   UserAlreadyExistsError,
   UserInvalidInputError,
   UserError,
+  UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';
 
@@ -27,6 +28,32 @@ export class CreateUserUseCase {
       role: command.role,
       name: command.name,
     });
+
+    const emailProviderBlacklist = [
+      'gmail.com',
+      'googlemail.com',
+      'yahoo.com',
+      'hotmail.com',
+      'outlook.com',
+      'icloud.com',
+      'aol.com',
+      'protonmail.com',
+      'tutanota.com',
+      'yandex.com',
+      'zoho.com',
+      'fastmail.com',
+      'gmx.com',
+      'mail.com',
+      'inbox.com',
+      't-online.de',
+      'web.de',
+      'gmx.net',
+    ];
+
+    const emailProvider = command.email.split('@')[1];
+    if (emailProviderBlacklist.includes(emailProvider)) {
+      throw new UserEmailProviderBlacklistedError(emailProvider);
+    }
 
     try {
       this.logger.debug('Checking if user already exists');
