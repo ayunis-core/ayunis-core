@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import InviteAcceptPage from "@/pages/auth/invite-accept";
+import InviteAcceptPage, { InviteErrorPage } from "@/pages/auth/invite-accept";
 import { queryOptions } from "@tanstack/react-query";
 import {
   getInvitesControllerGetInviteByTokenQueryKey,
@@ -25,6 +25,9 @@ export const Route = createFileRoute("/(onboarding)/accept-invite")({
     return { invite, token };
   },
   component: RouteComponent,
+  errorComponent: ({ error }) => {
+    return <InviteErrorPage error={error} />;
+  },
 });
 
 function RouteComponent() {
