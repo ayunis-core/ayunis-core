@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/subscriptions/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { GetTrialQuery } from './get-trial.query';
+import {
+  SubscriptionError,
+  UnexpectedTrialError,
+} from '../../subscription.errors';
 
 @Injectable()
 export class GetTrialUseCase {
@@ -15,6 +19,7 @@ export class GetTrialUseCase {
     });
 
     try {
+      this.logger.debug('Finding trial in repository');
       const trial = await this.trialRepository.findByOrgId(query.orgId);
 
       if (trial) {
@@ -23,6 +28,7 @@ export class GetTrialUseCase {
           orgId: trial.orgId,
           messagesSent: trial.messagesSent,
           maxMessages: trial.maxMessages,
+          remainingMessages: trial.maxMessages - trial.messagesSent,
         });
       } else {
         this.logger.debug('Trial not found', {
@@ -32,11 +38,22 @@ export class GetTrialUseCase {
 
       return trial;
     } catch (error) {
+      if (error instanceof SubscriptionError) {
+        // Already logged and properly typed error, just rethrow
+        throw error;
+      }
       this.logger.error('Failed to get trial', {
         error: error instanceof Error ? error.message : 'Unknown error',
         orgId: query.orgId,
       });
-      throw error;
+      throw new UnexpectedTrialError(
+        query.orgId,
+        'Unexpected error during trial retrieval',
+        {
+          operation: 'get-trial',
+          ...(error instanceof Error && { originalError: error.message }),
+        },
+      );
     }
   }
 }
