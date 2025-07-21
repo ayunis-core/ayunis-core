@@ -6,7 +6,7 @@ export const appConfig = registerAs('app', () => ({
   isSelfHosted: process.env.APP_ENVIRONMENT === 'self-hosted',
   isCloudHosted: process.env.APP_ENVIRONMENT === 'cloud',
   frontend: {
-    baseUrl: process.env.FRONTEND_URL || 'http://localhost:3001',
+    baseUrl: process.env.FRONTEND_BASEURL || 'http://localhost:3001',
     emailConfirmEndpoint:
       process.env.EMAIL_CONFIRM_ENDPOINT || '/confirm-email',
     passwordResetEndpoint:
