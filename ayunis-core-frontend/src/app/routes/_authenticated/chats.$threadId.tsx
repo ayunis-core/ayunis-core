@@ -8,7 +8,7 @@ import ChatPage from "@/pages/chat/";
 
 const threadQueryOptions = (threadId: string) =>
   queryOptions({
-    queryKey: [getThreadsControllerFindOneQueryKey(threadId)],
+    queryKey: getThreadsControllerFindOneQueryKey(threadId),
     queryFn: () => threadsControllerFindOne(threadId),
   });
 
