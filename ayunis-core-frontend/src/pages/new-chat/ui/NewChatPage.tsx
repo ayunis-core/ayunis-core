@@ -10,14 +10,12 @@ interface NewChatPageProps {
   prefilledPrompt?: string;
   selectedModelId?: string;
   selectedAgentId?: string;
-  hasSubscription: boolean;
 }
 
 export default function NewChatPage({
   selectedModelId,
   selectedAgentId,
   prefilledPrompt,
-  hasSubscription,
 }: NewChatPageProps) {
   const { t } = useTranslation("chats");
   const { initiateChat } = useInitiateChat();
@@ -38,10 +36,7 @@ export default function NewChatPage({
       showError(t("newChat.noModelOrAgentError"));
       return;
     }
-    if (!hasSubscription) {
-      showError(t("newChat.upgradeToProError"));
-      return;
-    }
+
     initiateChat(message, modelId, agentId);
   }
 

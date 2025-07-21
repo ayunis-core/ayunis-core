@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   MessageEvent,
+  Req,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -43,6 +44,10 @@ import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execut
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { RunInput } from '../../domain/run-input.entity';
+import { IncrementTrialMessagesUseCase } from 'src/iam/subscriptions/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
+import { IncrementTrialMessagesCommand } from 'src/iam/subscriptions/application/use-cases/increment-trial-messages/increment-trial-messages.command';
+import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
+import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 
 @ApiTags('runs')
 @ApiExtraModels(
@@ -64,6 +69,8 @@ export class RunsController {
   constructor(
     private readonly executeRunAndSetTitleUseCase: ExecuteRunAndSetTitleUseCase,
     private readonly threadEventBroadcaster: ThreadEventBroadcaster,
+    private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
+    private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
   ) {}
 
   @ApiOperation({
@@ -343,6 +350,7 @@ export class RunsController {
     @Body() sendMessageDto: SendMessageDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Req() request: RequestWithSubscriptionContext,
   ): { success: boolean; message: string } {
     // No session check needed - directly process message
     const input = RunInputMapper.toCommand(sendMessageDto.input);
@@ -354,6 +362,22 @@ export class RunsController {
       streaming: sendMessageDto.streaming,
       orgId,
     });
+
+    const subscriptionContext = request.subscriptionContext;
+    if (subscriptionContext?.needsTrialIncrement) {
+      this.logger.debug(
+        'Incrementing trial messages for non-subscription user',
+        {
+          orgId,
+          userId,
+          trialInfo: subscriptionContext.trialInfo,
+        },
+      );
+
+      void this.incrementTrialMessagesUseCase.execute(
+        new IncrementTrialMessagesCommand(orgId),
+      );
+    }
 
     return {
       success: true,

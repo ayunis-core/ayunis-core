@@ -25,6 +25,7 @@ import { LegalAcceptancesModule } from '../legal-acceptances/legal-acceptances.m
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 import { HashingModule } from '../hashing/hashing.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -43,6 +44,7 @@ export class AuthenticationModule {
         EmailsModule,
         EmailTemplatesModule,
         HashingModule,
+        SubscriptionsModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],

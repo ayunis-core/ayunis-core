@@ -935,90 +935,224 @@ export interface SendMessageDto {
   streaming?: boolean;
 }
 
-export interface CreatePromptDto {
-  /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
-   */
-  title: string;
-  /** The content of the prompt */
-  content: string;
+export interface SubscriptionBillingInfoResponseDto {
+  /** Company name */
+  companyName: string;
+  /** Street */
+  street: string;
+  /** Number */
+  houseNumber: string;
+  /** City */
+  city: string;
+  /** Postal code */
+  postalCode: string;
+  /** Country */
+  country: string;
+  /** USt-ID */
+  vatNumber?: string;
 }
 
-export interface PromptResponseDto {
-  /** The unique identifier of the prompt */
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Renewal cycle of the subscription
+ */
+export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubscriptionResponseDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+export interface SubscriptionResponseDto {
+  /** Unique identifier of the subscription */
   id: string;
-  /** The title of the prompt */
-  title: string;
-  /** The content of the prompt */
-  content: string;
-  /** The unique identifier of the user who owns this prompt */
-  userId: string;
-  /** The date and time when the prompt was created */
+  /** Date when the subscription was created */
   createdAt: string;
-  /** The date and time when the prompt was last updated */
+  /** Date when the subscription was last updated */
   updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Number of seats in the subscription */
+  noOfSeats: number;
+  /** Price per seat in the subscription */
+  pricePerSeat: number;
+  /** Renewal cycle of the subscription */
+  renewalCycle: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles */
+  renewalCycleAnchor: string;
+  /** Number of available seats (total seats minus invites) */
+  availableSeats: number;
+  /** Date of the next renewal */
+  nextRenewalDate: string;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
 }
 
-export interface UpdatePromptDto {
+export interface CreateSubscriptionRequestDto {
   /**
-   * The title of the prompt
-   * @minLength 1
-   * @maxLength 255
+   * Number of seats for the subscription
+   * @minimum 1
    */
-  title: string;
-  /** The content of the prompt */
-  content: string;
+  noOfSeats?: number;
+  /** Company name for the subscription */
+  companyName: string;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
 }
 
-export interface LoginDto {
-  /** Email address for authentication */
-  email: string;
-  /** Password for authentication */
-  password: string;
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
 }
 
-export interface SuccessResponseDto {
-  /** Operation success status */
-  success: boolean;
+export interface UpdateBillingInfoDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
 }
 
-export interface ErrorResponseDto {
-  /** Error message */
-  message: string;
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
 }
 
-export interface RegisterDto {
-  /** Email address for the user account */
-  email: string;
-  /** Password for the user account */
-  password: string;
-  /** Organization name */
-  orgName: string;
-  /** User name */
-  userName: string;
-}
+export interface UpdateSeatsDto { [key: string]: unknown }
 
 /**
  * User role
  */
-export type MeResponseDtoRole = typeof MeResponseDtoRole[keyof typeof MeResponseDtoRole];
+export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MeResponseDtoRole = {
+export const UserResponseDtoRole = {
   admin: 'admin',
   user: 'user',
 } as const;
 
-export interface MeResponseDto {
+export interface UserResponseDto {
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
   /** User email address */
   email: string;
   /** User role */
-  role: MeResponseDtoRole;
-  /** User name */
+  role: UserResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /** Date when the user was created */
+  createdAt: string;
+}
+
+export interface UsersListResponseDto {
+  /** List of users in the organization */
+  users: UserResponseDto[];
+}
+
+/**
+ * New role for the user
+ */
+export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserRoleDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface UpdateUserRoleDto {
+  /** New role for the user */
+  role: UpdateUserRoleDtoRole;
+}
+
+export interface UpdateUserNameDto {
+  /**
+   * New name for the user
+   * @minLength 1
+   * @maxLength 100
+   */
   name: string;
+}
+
+export interface UpdatePasswordDto {
+  /**
+   * Current password for verification
+   * @minLength 8
+   */
+  currentPassword: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  newPassword: string;
+  /**
+   * Confirmation of the new password
+   * @minLength 8
+   */
+  newPasswordConfirmation: string;
+}
+
+export interface ConfirmEmailDto {
+  /** JWT token for email confirmation */
+  token: string;
+}
+
+export interface ResendEmailConfirmationDto {
+  /** Email address to resend confirmation to */
+  email: string;
+}
+
+export interface ForgotPasswordDto {
+  /** Email address to send password reset link to */
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  /** Password reset token from email */
+  resetToken: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  newPassword: string;
+  /**
+   * Confirm new password
+   * @minLength 8
+   */
+  newPasswordConfirmation: string;
 }
 
 /**
@@ -1146,225 +1280,91 @@ export interface AcceptInviteResponseDto {
   orgId: string;
 }
 
+export interface CreatePromptDto {
+  /**
+   * The title of the prompt
+   * @minLength 1
+   * @maxLength 255
+   */
+  title: string;
+  /** The content of the prompt */
+  content: string;
+}
+
+export interface PromptResponseDto {
+  /** The unique identifier of the prompt */
+  id: string;
+  /** The title of the prompt */
+  title: string;
+  /** The content of the prompt */
+  content: string;
+  /** The unique identifier of the user who owns this prompt */
+  userId: string;
+  /** The date and time when the prompt was created */
+  createdAt: string;
+  /** The date and time when the prompt was last updated */
+  updatedAt: string;
+}
+
+export interface UpdatePromptDto {
+  /**
+   * The title of the prompt
+   * @minLength 1
+   * @maxLength 255
+   */
+  title: string;
+  /** The content of the prompt */
+  content: string;
+}
+
+export interface LoginDto {
+  /** Email address for authentication */
+  email: string;
+  /** Password for authentication */
+  password: string;
+}
+
+export interface SuccessResponseDto {
+  /** Operation success status */
+  success: boolean;
+}
+
+export interface ErrorResponseDto {
+  /** Error message */
+  message: string;
+}
+
+export interface RegisterDto {
+  /** Email address for the user account */
+  email: string;
+  /** Password for the user account */
+  password: string;
+  /** Organization name */
+  orgName: string;
+  /** User name */
+  userName: string;
+}
+
 /**
  * User role
  */
-export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
+export type MeResponseDtoRole = typeof MeResponseDtoRole[keyof typeof MeResponseDtoRole];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserResponseDtoRole = {
+export const MeResponseDtoRole = {
   admin: 'admin',
   user: 'user',
 } as const;
 
-export interface UserResponseDto {
-  /** User unique identifier */
-  id: string;
-  /** User name */
-  name: string;
+export interface MeResponseDto {
   /** User email address */
   email: string;
   /** User role */
-  role: UserResponseDtoRole;
-  /** Organization ID the user belongs to */
-  orgId: string;
-  /** Date when the user was created */
-  createdAt: string;
-}
-
-export interface UsersListResponseDto {
-  /** List of users in the organization */
-  users: UserResponseDto[];
-}
-
-/**
- * New role for the user
- */
-export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateUserRoleDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface UpdateUserRoleDto {
-  /** New role for the user */
-  role: UpdateUserRoleDtoRole;
-}
-
-export interface UpdateUserNameDto {
-  /**
-   * New name for the user
-   * @minLength 1
-   * @maxLength 100
-   */
+  role: MeResponseDtoRole;
+  /** User name */
   name: string;
 }
-
-export interface UpdatePasswordDto {
-  /**
-   * Current password for verification
-   * @minLength 8
-   */
-  currentPassword: string;
-  /**
-   * New password
-   * @minLength 8
-   */
-  newPassword: string;
-  /**
-   * Confirmation of the new password
-   * @minLength 8
-   */
-  newPasswordConfirmation: string;
-}
-
-export interface ConfirmEmailDto {
-  /** JWT token for email confirmation */
-  token: string;
-}
-
-export interface ResendEmailConfirmationDto {
-  /** Email address to resend confirmation to */
-  email: string;
-}
-
-export interface ForgotPasswordDto {
-  /** Email address to send password reset link to */
-  email: string;
-}
-
-export interface ResetPasswordDto {
-  /** Password reset token from email */
-  resetToken: string;
-  /**
-   * New password
-   * @minLength 8
-   */
-  newPassword: string;
-  /**
-   * Confirm new password
-   * @minLength 8
-   */
-  newPasswordConfirmation: string;
-}
-
-export interface SubscriptionBillingInfoResponseDto {
-  /** Company name */
-  companyName: string;
-  /** Street */
-  street: string;
-  /** Number */
-  houseNumber: string;
-  /** City */
-  city: string;
-  /** Postal code */
-  postalCode: string;
-  /** Country */
-  country: string;
-  /** USt-ID */
-  vatNumber?: string;
-}
-
-/**
- * Date when the subscription was cancelled (if applicable)
- */
-export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
-
-/**
- * Renewal cycle of the subscription
- */
-export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SubscriptionResponseDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-} as const;
-
-export interface SubscriptionResponseDto {
-  /** Unique identifier of the subscription */
-  id: string;
-  /** Date when the subscription was created */
-  createdAt: string;
-  /** Date when the subscription was last updated */
-  updatedAt: string;
-  /** Date when the subscription was cancelled (if applicable) */
-  cancelledAt?: SubscriptionResponseDtoCancelledAt;
-  /** Organization ID associated with the subscription */
-  orgId: string;
-  /** Number of seats in the subscription */
-  noOfSeats: number;
-  /** Price per seat in the subscription */
-  pricePerSeat: number;
-  /** Renewal cycle of the subscription */
-  renewalCycle: SubscriptionResponseDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles */
-  renewalCycleAnchor: string;
-  /** Number of available seats (total seats minus invites) */
-  availableSeats: number;
-  /** Date of the next renewal */
-  nextRenewalDate: string;
-  /** Billing information */
-  billingInfo: SubscriptionBillingInfoResponseDto;
-}
-
-export interface CreateSubscriptionRequestDto {
-  /**
-   * Number of seats for the subscription
-   * @minimum 1
-   */
-  noOfSeats?: number;
-  /** Company name for the subscription */
-  companyName: string;
-  /** Sub text for the subscription */
-  subText?: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface ActiveSubscriptionResponseDto {
-  /** Whether the organization has an active subscription */
-  hasActiveSubscription: boolean;
-}
-
-export interface UpdateBillingInfoDto {
-  /** Company name for the subscription */
-  companyName: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface PriceResponseDto {
-  /** Current price per seat per month in the configured currency */
-  pricePerSeatMonthly: number;
-}
-
-export interface UpdateSeatsDto { [key: string]: unknown }
 
 export interface CreateModelDto { [key: string]: unknown }
 
