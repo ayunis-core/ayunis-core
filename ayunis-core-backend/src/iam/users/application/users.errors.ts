@@ -24,6 +24,7 @@ export enum UserErrorCode {
   EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED',
   UNEXPECTED_USER_ERROR = 'UNEXPECTED_USER_ERROR',
   PASSWORD_RESET_EMAIL_SENDING_FAILED = 'PASSWORD_RESET_EMAIL_SENDING_FAILED',
+  USER_EMAIL_PROVIDER_BLACKLISTED = 'USER_EMAIL_PROVIDER_BLACKLISTED',
 }
 
 /**
@@ -218,6 +219,17 @@ export class UnexpectedUserError extends UserError {
       `Unexpected user error: ${error.message}`,
       UserErrorCode.UNEXPECTED_USER_ERROR,
       500,
+      metadata,
+    );
+  }
+}
+
+export class UserEmailProviderBlacklistedError extends UserError {
+  constructor(emailProvider: string, metadata?: ErrorMetadata) {
+    super(
+      `Email provider blacklisted: ${emailProvider}`,
+      UserErrorCode.USER_EMAIL_PROVIDER_BLACKLISTED,
+      400,
       metadata,
     );
   }
