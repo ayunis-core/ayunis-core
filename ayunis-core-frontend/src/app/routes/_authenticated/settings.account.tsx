@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/settings/account")({
   loader: async ({ context: { queryClient } }) => {
     const data = await queryClient.fetchQuery(
       queryOptions({
-        queryKey: [getAuthenticationControllerMeQueryKey()],
+        queryKey: getAuthenticationControllerMeQueryKey(),
         queryFn: () => authenticationControllerMe(),
       }),
     );

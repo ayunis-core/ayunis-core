@@ -14,15 +14,12 @@ export class StreamInferenceHandlerRegistry {
   }
 
   register(provider: ModelProvider, handler: StreamInferenceHandler): void {
-    this.logger.log('register', provider, handler);
     this.handlers.set(provider, handler);
   }
 
   getHandler(provider: ModelProvider): StreamInferenceHandler {
-    this.logger.log('getHandler', provider);
     const handler = this.handlers.get(provider);
     if (!handler) {
-      this.logger.error('Handler not found', { provider });
       throw new ModelProviderNotSupportedError(provider);
     }
     return handler;
