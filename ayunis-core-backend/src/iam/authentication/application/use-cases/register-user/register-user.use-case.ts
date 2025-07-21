@@ -60,8 +60,9 @@ export class RegisterUserUseCase {
       );
 
       this.logger.debug('Creating trial for organization', { orgId: org.id });
-      const trialMaxMessages =
-        this.configService.get<number>('subscriptions.trialMaxMessages') || 50;
+      const trialMaxMessages = this.configService.get<number>(
+        'subscriptions.trialMaxMessages',
+      )!;
       await this.createTrialUseCase.execute(
         new CreateTrialCommand(org.id, trialMaxMessages),
       );
