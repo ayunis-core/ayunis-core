@@ -4,6 +4,9 @@ export class InitialSchema1750087277319 implements MigrationInterface {
   name = 'InitialSchema1750087277319';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Ensure pgvector extension is available before creating vector columns
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+
     await queryRunner.query(
       `CREATE TABLE "orgs" ("id" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, CONSTRAINT "PK_9eed8bfad4c9e0dc8648e090efe" PRIMARY KEY ("id"))`,
     );
