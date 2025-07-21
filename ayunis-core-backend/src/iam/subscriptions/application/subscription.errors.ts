@@ -22,6 +22,7 @@ export enum SubscriptionErrorCode {
   UNAUTHORIZED_SUBSCRIPTION_ACCESS = 'UNAUTHORIZED_SUBSCRIPTION_ACCESS',
   INVALID_SUBSCRIPTION_DATA = 'INVALID_SUBSCRIPTION_DATA',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
+  PRICE_NOT_FOUND = 'PRICE_NOT_FOUND',
 }
 
 /**
@@ -252,6 +253,20 @@ export class UnexpectedSubscriptionError extends SubscriptionError {
     super(
       `Unexpected error: ${reason ? `: ${reason}` : ''}`,
       SubscriptionErrorCode.UNEXPECTED_ERROR,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when the price is not found
+ */
+export class PriceNotFoundError extends SubscriptionError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      `Price not found`,
+      SubscriptionErrorCode.PRICE_NOT_FOUND,
       500,
       metadata,
     );

@@ -60,6 +60,7 @@ import type {
   ModelWithConfigResponseDto,
   PermittedModelResponseDto,
   PermittedProviderResponseDto,
+  PriceResponseDto,
   PromptResponseDto,
   RegisterDto,
   ResendEmailConfirmationDto,
@@ -5805,6 +5806,94 @@ export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSubscriptionsControllerHasActiveSubscriptionQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get the current price per seat monthly
+ */
+export const subscriptionsControllerGetCurrentPrice = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PriceResponseDto>(
+      {url: `/subscriptions/price`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSubscriptionsControllerGetCurrentPriceQueryKey = () => {
+    return [`/subscriptions/price`] as const;
+    }
+
+    
+export const getSubscriptionsControllerGetCurrentPriceQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerGetCurrentPriceQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>> = ({ signal }) => subscriptionsControllerGetCurrentPrice(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SubscriptionsControllerGetCurrentPriceQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>>
+export type SubscriptionsControllerGetCurrentPriceQueryError = void
+
+
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current price per seat monthly
+ */
+
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSubscriptionsControllerGetCurrentPriceQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

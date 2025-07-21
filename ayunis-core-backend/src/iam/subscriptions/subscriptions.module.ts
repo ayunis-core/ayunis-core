@@ -18,6 +18,7 @@ import { UpdateSeatsUseCase } from './application/use-cases/update-seats/update-
 import { UpdateBillingInfoUseCase } from './application/use-cases/update-billing-info/update-billing-info.use-case';
 import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/local/mappers/subscription-billing-info.mapper';
 import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
+import { GetCurrentPriceUseCase } from './application/use-cases/get-current-price/get-current-price.use-case';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/loca
     UncancelSubscriptionUseCase,
     UpdateSeatsUseCase,
     UpdateBillingInfoUseCase,
+    GetCurrentPriceUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,

@@ -1359,6 +1359,11 @@ export interface UpdateBillingInfoDto {
   vatNumber?: string;
 }
 
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
+}
+
 export interface UpdateSeatsDto { [key: string]: unknown }
 
 export interface CreateModelDto { [key: string]: unknown }

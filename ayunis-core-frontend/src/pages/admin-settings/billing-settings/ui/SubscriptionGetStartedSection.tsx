@@ -10,16 +10,22 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { ArrowRight, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CreateSubscriptionDialog from "./CreateSubscriptionDialog";
+import type { PriceResponseDto } from "@/shared/api";
 
-export default function SubscriptionGetStartedSection() {
+interface SubscriptionGetStartedSectionProps {
+  subscriptionPrice: PriceResponseDto;
+}
+
+export default function SubscriptionGetStartedSection({
+  subscriptionPrice,
+}: SubscriptionGetStartedSectionProps) {
   const { t } = useTranslation("admin-settings-billing");
   const features = [
-    "Manage your subscription",
-    "Manage your seats",
-    "Manage your billing",
-    "Manage your invoices",
-    "Manage your payments",
-    "Manage your customers",
+    t("subscriptionGetStarted.features.unlimitedMessages"),
+    t("subscriptionGetStarted.features.allModels"),
+    t("subscriptionGetStarted.features.unlimitedAgents"),
+    t("subscriptionGetStarted.features.promptLibrary"),
+    t("subscriptionGetStarted.features.futureFeatures"),
   ];
 
   return (
@@ -30,16 +36,32 @@ export default function SubscriptionGetStartedSection() {
           {t("subscriptionGetStarted.description")}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {features.map((feature) => (
-          <div key={feature} className="flex items-center gap-2">
-            <Check className="h-4 w-4" />
-            {feature}
+      <CardContent className="space-y-4">
+        <div className="text-center py-4 border-b">
+          <div className="text-3xl font-bold text-primary">
+            {t("subscriptionGetStarted.pricing.amount", {
+              price: subscriptionPrice.pricePerSeatMonthly,
+            })}
           </div>
-        ))}
+          <div className="text-sm text-muted-foreground">
+            {t("subscriptionGetStarted.pricing.period")}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {t("subscriptionGetStarted.pricing.billing")}
+          </div>
+        </div>
+        <div className="space-y-2">
+          {features.map((feature) => (
+            <div key={feature} className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              {feature}
+            </div>
+          ))}
+        </div>
       </CardContent>
       <CardFooter className="">
         <CreateSubscriptionDialog
+          subscriptionPrice={subscriptionPrice}
           trigger={
             <Button className="w-full">
               {t("subscriptionGetStarted.getStartedNow")}

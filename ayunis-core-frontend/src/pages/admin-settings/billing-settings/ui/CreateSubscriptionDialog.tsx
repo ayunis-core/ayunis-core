@@ -19,18 +19,28 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import { Button } from "@/shared/ui/shadcn/button";
 import { useTranslation } from "react-i18next";
+import { useWatch } from "react-hook-form";
 import useSubscriptionCreate from "../api/useSubscriptionCreate";
 import { ScrollArea } from "@/shared/ui/shadcn/scroll-area";
+import type { PriceResponseDto } from "@/shared/api";
 
 interface CreateSubscriptionDialogProps {
   trigger: React.ReactNode;
+  subscriptionPrice: PriceResponseDto;
 }
 
 export default function CreateSubscriptionDialog({
   trigger,
+  subscriptionPrice,
 }: CreateSubscriptionDialogProps) {
   const { t } = useTranslation("admin-settings-billing");
   const { form, handleSubmit } = useSubscriptionCreate();
+
+  // Watch the noOfSeats field for changes
+  const noOfSeats = useWatch({
+    control: form.control,
+    name: "noOfSeats",
+  });
 
   const handleCancel = () => {
     form.reset();
@@ -203,6 +213,14 @@ export default function CreateSubscriptionDialog({
                   </FormItem>
                 )}
               />
+              <div className="text-center py-4 border-b">
+                <p className="text-sm text-muted-foreground text-center">
+                  {t("subscriptionDialog.totalPrice", {
+                    price:
+                      subscriptionPrice.pricePerSeatMonthly * (noOfSeats || 1),
+                  })}
+                </p>
+              </div>
               <p className="text-sm text-muted-foreground text-center">
                 {t("subscriptionDialog.paymentMethodHint")}
               </p>

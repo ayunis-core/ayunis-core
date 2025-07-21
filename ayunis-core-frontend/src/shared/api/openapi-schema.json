@@ -2757,6 +2757,34 @@
         ]
       }
     },
+    "/subscriptions/price": {
+      "get": {
+        "operationId": "SubscriptionsController_getCurrentPrice",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved current price",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Price not configured"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get the current price per seat monthly",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
     "/subscriptions/seats": {
       "put": {
         "operationId": "SubscriptionsController_updateSeats",
@@ -5427,6 +5455,19 @@
           "postalCode",
           "city",
           "country"
+        ]
+      },
+      "PriceResponseDto": {
+        "type": "object",
+        "properties": {
+          "pricePerSeatMonthly": {
+            "type": "number",
+            "description": "Current price per seat per month in the configured currency",
+            "example": 29.99
+          }
+        },
+        "required": [
+          "pricePerSeatMonthly"
         ]
       },
       "UpdateSeatsDto": {

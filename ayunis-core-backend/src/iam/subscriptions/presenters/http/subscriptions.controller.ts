@@ -42,6 +42,8 @@ import { UpdateSeatsUseCase } from '../../application/use-cases/update-seats/upd
 import { UpdateBillingInfoDto } from './dto/update-billing-info.dto';
 import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-billing-info/update-billing-info.use-case';
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
+import { GetCurrentPriceUseCase } from '../../application/use-cases/get-current-price/get-current-price.use-case';
+import { PriceResponseDto } from './dto/price-response.dto';
 
 @ApiTags('subscriptions')
 @Controller('subscriptions')
@@ -50,6 +52,7 @@ import { UpdateBillingInfoCommand } from '../../application/use-cases/update-bil
   CreateSubscriptionRequestDto,
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
+  PriceResponseDto,
 )
 export class SubscriptionsController {
   private readonly logger = new Logger(SubscriptionsController.name);
@@ -63,6 +66,7 @@ export class SubscriptionsController {
     private readonly subscriptionResponseMapper: SubscriptionResponseMapper,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
+    private readonly getCurrentPriceUseCase: GetCurrentPriceUseCase,
   ) {}
 
   @Roles(UserRole.ADMIN)
@@ -145,6 +149,37 @@ export class SubscriptionsController {
     );
 
     return { hasActiveSubscription };
+  }
+
+  @Get('price')
+  @ApiOperation({
+    summary: 'Get the current price per seat monthly',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved current price',
+    schema: {
+      $ref: getSchemaPath(PriceResponseDto),
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Price not configured',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  getCurrentPrice(): PriceResponseDto {
+    this.logger.log('Getting current price per seat monthly');
+
+    const pricePerSeatMonthly = this.getCurrentPriceUseCase.execute();
+
+    this.logger.log(
+      `Successfully retrieved current price: ${pricePerSeatMonthly}`,
+    );
+
+    return { pricePerSeatMonthly };
   }
 
   @Roles(UserRole.ADMIN)

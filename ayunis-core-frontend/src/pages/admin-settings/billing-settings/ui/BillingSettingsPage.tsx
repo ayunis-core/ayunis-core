@@ -3,16 +3,20 @@ import LicenseSeatsSection from "./LicenseSeatsSection";
 import BillingInfoSection from "./BillingInfoSection";
 import SubscriptionCancellationSection from "./SubscriptionCancellationSection";
 import SubscriptionGetStartedSection from "./SubscriptionGetStartedSection";
-import type { SubscriptionResponseDto } from "@/shared/api";
+import type { PriceResponseDto, SubscriptionResponseDto } from "@/shared/api";
 
 interface BillingSettingsPageProps {
   subscription: SubscriptionResponseDto | null;
+  subscriptionPrice: PriceResponseDto;
 }
 
 export default function BillingSettingsPage({
   subscription,
+  subscriptionPrice,
 }: BillingSettingsPageProps) {
-  const pageContentNoSubscription = <SubscriptionGetStartedSection />;
+  const pageContentNoSubscription = (
+    <SubscriptionGetStartedSection subscriptionPrice={subscriptionPrice} />
+  );
 
   const pageContentSubscription = (
     <div className="space-y-4">

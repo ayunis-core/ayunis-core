@@ -62,7 +62,19 @@
   "subscriptionGetStarted": {
     "title": "Get Started with a Subscription",
     "description": "Unlock the full potential of our platform with unlimited messages and access to all models.",
-    "getStartedNow": "Get Started Now"
+    "getStartedNow": "Get Started Now",
+    "pricing": {
+      "amount": "€{{price}}",
+      "period": "per month per user",
+      "billing": "billed yearly"
+    },
+    "features": {
+      "unlimitedMessages": "Unlimited Messages",
+      "allModels": "Access to the most modern and secure models",
+      "unlimitedAgents": "Unlimited agents for your own use cases",
+      "promptLibrary": "Own prompt library",
+      "futureFeatures": "Access to all future features"
+    }
   },
   "subscriptionDialog": {
     "title": "Create Subscription",
@@ -70,7 +82,8 @@
     "createSubscription": "Pay to Start",
     "creating": "Creating...",
     "paymentMethodHint": "The payment will be processed by invoice.",
-    "noOfSeatsDescription": "You can change the number of seats at any time."
+    "noOfSeatsDescription": "You can change the number of seats at any time.",
+    "totalPrice": "Total price: {{price}}€"
   },
   "subscription": {
     "title": "Subscription",

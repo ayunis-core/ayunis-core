@@ -62,7 +62,19 @@
   "subscriptionGetStarted": {
     "title": "Starten Sie mit einem Abonnement",
     "description": "Entfesseln Sie das volle Potenzial unserer Plattform mit unbegrenzen Nachrichten und Zugang zu allen Modellen.",
-    "getStartedNow": "Jetzt starten"
+    "getStartedNow": "Jetzt starten",
+    "pricing": {
+      "amount": "{{price}}€",
+      "period": "pro Monat pro Benutzer",
+      "billing": "jährlich abgerechnet"
+    },
+    "features": {
+      "unlimitedMessages": "Unbegrenzte Nachrichten",
+      "allModels": "Zugang zu den modernsten und sichersten Modellen",
+      "unlimitedAgents": "Unbegrenzte Agenten für Ihre eigenen Anwendungsfälle",
+      "promptLibrary": "Eigene Prompt-Bibliothek",
+      "futureFeatures": "Zugang zu allen zukünftigen Features"
+    }
   },
   "subscriptionDialog": {
     "title": "Abonnement erstellen",
@@ -70,7 +82,8 @@
     "createSubscription": "Kostenpflichtig starten",
     "creating": "Wird erstellt...",
     "paymentMethodHint": "Die Zahlung wird per Rechnung abgewickelt.",
-    "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern."
+    "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern.",
+    "totalPrice": "Gesamtpreis: {{price}}€"
   },
   "subscription": {
     "title": "Abonnement",
