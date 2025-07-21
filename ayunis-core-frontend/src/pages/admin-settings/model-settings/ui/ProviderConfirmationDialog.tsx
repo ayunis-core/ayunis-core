@@ -11,7 +11,7 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { Checkbox } from "@/shared/ui/shadcn/checkbox";
 import { Label } from "@/shared/ui/shadcn/label";
 import { useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import type { Provider } from "../model/openapi";
 
 interface ProviderConfirmationDialogProps {
@@ -42,14 +42,18 @@ export default function ProviderConfirmationDialog({
         <DialogHeader>
           <DialogTitle>
             {provider.isPermitted
-              ? `${provider.displayName} deaktivieren`
-              : `${provider.displayName} freischalten`}
+              ? t("models.providerConfirmation.disableProvider", {
+                  provider: provider.displayName,
+                })
+              : t("models.providerConfirmation.enableProvider", {
+                  provider: provider.displayName,
+                })}
           </DialogTitle>
         </DialogHeader>
         <p>
           {provider.isPermitted
-            ? `Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen Modelle zugreifen.`
-            : `Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen Modelle zugreifen.`}
+            ? t("models.providerConfirmation.disableProviderDescription")
+            : t("models.providerConfirmation.enableProviderDescription")}
         </p>
         {!provider.isPermitted && (
           <p>
@@ -63,23 +67,19 @@ export default function ProviderConfirmationDialog({
               />
               <Label htmlFor="confirm">
                 <span>
-                  Ich akzeptiere die zusätzlichen{" "}
-                  <a
-                    href="https://ayunis.com/core/terms"
-                    target="_blank"
-                    className="underline"
-                  >
-                    Nutzungsbedingungen
-                  </a>{" "}
-                  und die{" "}
-                  <a
-                    href="https://ayunis.com/core/privacy"
-                    target="_blank"
-                    className="underline"
-                  >
-                    Datenschutzerklärung
-                  </a>
-                  .
+                  <Trans
+                    i18nKey="models.providerConfirmation.acceptTermsAndPrivacy"
+                    ns="admin-settings-models"
+                    components={{
+                      termsLink: (
+                        <a
+                          href="https://www.ayunis.com/besondere-nutzungsbedingungen"
+                          target="_blank"
+                          className="underline"
+                        />
+                      ),
+                    }}
+                  />
                 </span>
               </Label>
             </span>

@@ -12,6 +12,13 @@
       "eu": "Betrieben in 🇪🇺",
       "selfHosted": "Betrieben in Ihrem eigenen Rechenzentrum",
       "ayunis": "Betrieben in 🇩🇪 auf souveränder Cloud"
+    },
+    "providerConfirmation": {
+      "enableProvider": "{{provider}} freischalten",
+      "disableProvider": "{{provider}} deaktivieren",
+      "enableProviderDescription": "Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen freigeschalteten Modelle zugreifen.",
+      "disableProviderDescription": "Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen freigeschalteten Modelle zugreifen.",
+      "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>."
     }
   }
 }
