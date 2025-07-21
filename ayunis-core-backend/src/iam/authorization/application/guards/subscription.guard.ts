@@ -15,12 +15,7 @@ import { REQUIRE_SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
 
 export interface SubscriptionContext {
   hasActiveSubscription: boolean;
-  needsTrialIncrement: boolean;
-  trialInfo?: {
-    messagesSent: number;
-    maxMessages: number;
-    remainingMessages: number;
-  };
+  hasRemainingTrialMessages: boolean;
 }
 
 export interface RequestWithSubscriptionContext extends Request {
@@ -75,10 +70,9 @@ export class SubscriptionGuard implements CanActivate {
           userId: user.id,
         });
 
-        // Store context: has subscription, no trial increment needed
         request.subscriptionContext = {
           hasActiveSubscription: true,
-          needsTrialIncrement: false,
+          hasRemainingTrialMessages: false,
         };
 
         return true;
@@ -114,15 +108,9 @@ export class SubscriptionGuard implements CanActivate {
           remainingMessages,
         });
 
-        // Store context: no subscription, trial increment needed
         request.subscriptionContext = {
           hasActiveSubscription: false,
-          needsTrialIncrement: true,
-          trialInfo: {
-            messagesSent: trial.messagesSent,
-            maxMessages: trial.maxMessages,
-            remainingMessages,
-          },
+          hasRemainingTrialMessages: true,
         };
 
         return true;
