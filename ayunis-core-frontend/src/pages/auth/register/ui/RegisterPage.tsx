@@ -18,6 +18,8 @@ import { Label } from "@/shared/ui/shadcn/label";
 export function RegisterPage() {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation("auth");
+  const agbHref = "https://www.ayunis.com/agb-software-%c3%bcberlassung";
+  const avvHref = "https://www.ayunis.com/avv";
 
   return (
     <OnboardingLayout
@@ -145,7 +147,7 @@ export function RegisterPage() {
                         components={{
                           privacyLink: (
                             <a
-                              href="/privacy-policy"
+                              href={avvHref}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary hover:underline"
@@ -153,7 +155,7 @@ export function RegisterPage() {
                           ),
                           tosLink: (
                             <a
-                              href="/terms-of-service"
+                              href={agbHref}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary hover:underline"
