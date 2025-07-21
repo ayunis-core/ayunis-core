@@ -26,14 +26,10 @@ export function useCreatePermittedModel() {
           queryKey,
           (old) => {
             if (!old) {
-              console.warn("No previous data found for optimistic update");
               return old;
             }
             return old.map((model) => {
               if (model.modelId === data.modelId) {
-                console.log(
-                  "Found matching model, updating isPermitted to true",
-                );
                 return {
                   ...model,
                   isPermitted: true,

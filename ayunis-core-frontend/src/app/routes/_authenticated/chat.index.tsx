@@ -3,23 +3,26 @@ import { NewChatPage, NewChatPageNoModelError } from "@/pages/new-chat";
 import {
   modelsControllerGetEffectiveDefaultModel,
   promptsControllerFindOne,
+  getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
+  getPromptsControllerFindOneQueryKey,
+  getModelsControllerGetEffectiveDefaultModelQueryKey,
 } from "@/shared/api";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { z } from "zod";
 
 const queryDefaultModelOptions = () => ({
-  queryKey: ["models"],
+  queryKey: getModelsControllerGetEffectiveDefaultModelQueryKey(),
   queryFn: () => modelsControllerGetEffectiveDefaultModel(),
 });
 
 const queryPromptOptions = (prompt: string) => ({
-  queryKey: ["prompts", prompt],
+  queryKey: getPromptsControllerFindOneQueryKey(prompt),
   queryFn: () => promptsControllerFindOne(prompt),
 });
 
 const queryHasActiveSubscriptionOptions = () => ({
-  queryKey: ["subscription"],
+  queryKey: getSubscriptionsControllerHasActiveSubscriptionQueryKey(),
   queryFn: () => subscriptionsControllerHasActiveSubscription(),
 });
 

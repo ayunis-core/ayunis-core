@@ -54,7 +54,6 @@ export function useCreatePermittedProvider() {
     });
 
   function createPermittedProvider(provider: CreatePermittedProviderDto) {
-    console.log("Creating permitted provider", provider);
     createPermittedProviderMutation.mutate(
       {
         data: provider,
