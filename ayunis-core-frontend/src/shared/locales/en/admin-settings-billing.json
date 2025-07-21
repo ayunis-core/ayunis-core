@@ -83,7 +83,7 @@
     "creating": "Creating...",
     "paymentMethodHint": "The payment will be processed by invoice.",
     "noOfSeatsDescription": "You can change the number of seats at any time.",
-    "totalPrice": "Total price: {{price}}€"
+    "totalPrice": "Total price: {{price}}€ monthly at yearly contract duration"
   },
   "subscription": {
     "title": "Subscription",

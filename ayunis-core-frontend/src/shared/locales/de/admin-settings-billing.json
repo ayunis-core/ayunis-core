@@ -83,7 +83,7 @@
     "creating": "Wird erstellt...",
     "paymentMethodHint": "Die Zahlung wird per Rechnung abgewickelt.",
     "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern.",
-    "totalPrice": "Gesamtpreis: {{price}}€"
+    "totalPrice": "Gesamtpreis: {{price}}€ monatlich bei jährlicher Vertragslaufzeit"
   },
   "subscription": {
     "title": "Abonnement",
