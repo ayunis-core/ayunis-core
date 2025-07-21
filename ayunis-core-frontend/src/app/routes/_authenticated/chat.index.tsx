@@ -79,14 +79,12 @@ function RouteComponent() {
     selectedModelId,
     selectedAgentId,
     prefilledPrompt,
-    hasActiveSubscription,
   } = Route.useLoaderData();
   return (
     <NewChatPage
       selectedModelId={selectedModelId}
       selectedAgentId={selectedAgentId}
       prefilledPrompt={prefilledPrompt}
-      hasSubscription={hasActiveSubscription}
     />
   );
 }

@@ -8,6 +8,7 @@ import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ThreadEventBroadcaster } from './presenters/http/sse/thread-event-broadcaster';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ThreadEventBroadcaster } from './presenters/http/sse/thread-event-broad
     MessagesModule,
     ToolsModule,
     AgentsModule,
+    SubscriptionsModule,
   ],
   controllers: [RunsController],
   providers: [

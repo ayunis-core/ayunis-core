@@ -17,6 +17,8 @@ import { CreateTosAcceptanceCommand } from 'src/iam/legal-acceptances/applicatio
 import { ConfigService } from '@nestjs/config';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
+import { CreateTrialUseCase } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.use-case';
+import { CreateTrialCommand } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.command';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -28,6 +30,7 @@ export class RegisterUserUseCase {
     private readonly createOrgUseCase: CreateOrgUseCase,
     private readonly createLegalAcceptanceUseCase: CreateLegalAcceptanceUseCase,
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
+    private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -54,6 +57,13 @@ export class RegisterUserUseCase {
       this.logger.debug('Creating organization');
       const org = await this.createOrgUseCase.execute(
         new CreateOrgCommand(command.orgName),
+      );
+
+      this.logger.debug('Creating trial for organization', { orgId: org.id });
+      const trialMaxMessages =
+        this.configService.get<number>('subscriptions.trialMaxMessages') || 50;
+      await this.createTrialUseCase.execute(
+        new CreateTrialCommand(org.id, trialMaxMessages),
       );
 
       const hasEmailConfig =

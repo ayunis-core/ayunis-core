@@ -19,12 +19,19 @@ import { UpdateBillingInfoUseCase } from './application/use-cases/update-billing
 import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/local/mappers/subscription-billing-info.mapper';
 import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { GetCurrentPriceUseCase } from './application/use-cases/get-current-price/get-current-price.use-case';
+import { TrialRecord } from './infrastructure/persistence/local/schema/trial.record';
+import { CreateTrialUseCase } from './application/use-cases/create-trial/create-trial.use-case';
+import { GetTrialUseCase } from './application/use-cases/get-trial/get-trial.use-case';
+import { IncrementTrialMessagesUseCase } from './application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
+import { TrialRepository } from './application/ports/trial.repository';
+import { LocalTrialsRepository } from './infrastructure/persistence/local/local-trials.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       SubscriptionRecord,
       SubscriptionBillingInfoRecord,
+      TrialRecord,
     ]),
     UsersModule,
     forwardRef(() => InvitesModule),
@@ -35,6 +42,10 @@ import { GetCurrentPriceUseCase } from './application/use-cases/get-current-pric
     {
       provide: SubscriptionRepository,
       useClass: LocalSubscriptionsRepository,
+    },
+    {
+      provide: TrialRepository,
+      useClass: LocalTrialsRepository,
     },
     SubscriptionMapper,
     SubscriptionResponseMapper,
@@ -47,12 +58,18 @@ import { GetCurrentPriceUseCase } from './application/use-cases/get-current-pric
     UpdateSeatsUseCase,
     UpdateBillingInfoUseCase,
     GetCurrentPriceUseCase,
+    CreateTrialUseCase,
+    GetTrialUseCase,
+    IncrementTrialMessagesUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
     GetActiveSubscriptionUseCase,
     CreateSubscriptionUseCase,
     UpdateSeatsUseCase,
+    CreateTrialUseCase,
+    GetTrialUseCase,
+    IncrementTrialMessagesUseCase,
   ],
 })
 export class SubscriptionsModule {}
