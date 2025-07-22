@@ -93,7 +93,7 @@ export default function OnboardingLayout({
         {/* Bottom text */}
         <div className="absolute bottom-8 left-8 right-8">
           <div className="flex justify-center items-center gap-2 text-white/90 text-sm">
-            <span>Über 600 Kommunen vertrauen Ayunis bereits.</span>
+            <span>Über 700 Kommunen vertrauen Ayunis bereits.</span>
           </div>
         </div>
       </div>
