@@ -1,4 +1,7 @@
-import { useUserControllerGetUsersInOrganization } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  getUserControllerGetUsersInOrganizationQueryKey,
+  useUserControllerGetUsersInOrganization,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import type { User } from "../model/openapi";
 
 interface UseUsersOptions {
@@ -12,7 +15,7 @@ export function useUsers(options?: UseUsersOptions) {
         initialData: options?.initialData
           ? { users: options.initialData }
           : undefined,
-        queryKey: ["users"],
+        queryKey: getUserControllerGetUsersInOrganizationQueryKey(),
       },
     });
 

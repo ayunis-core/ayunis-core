@@ -2,6 +2,7 @@ import { useUserControllerUpdateUserRole } from "@/shared/api/generated/ayunisCo
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
 import type { UserRole } from "../model/openapi";
+import { useTranslation } from "react-i18next";
 
 interface UserRoleUpdateData {
   id: string;
@@ -14,11 +15,12 @@ interface UseUserRoleUpdateOptions {
 
 export function useUserRoleUpdate(options?: UseUserRoleUpdateOptions) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("admin-settings-users");
   const updateUserRoleMutation = useUserControllerUpdateUserRole({
     mutation: {
       onSuccess: () => {
         console.log("Update user role succeeded, invalidating queries");
-        showSuccess("User role updated successfully!");
+        showSuccess(t("userRoleUpdate.success"));
         queryClient.invalidateQueries({
           queryKey: ["users"],
         });
@@ -30,7 +32,7 @@ export function useUserRoleUpdate(options?: UseUserRoleUpdateOptions) {
       },
       onError: (err) => {
         console.error("Error updating user role", err);
-        showError("Failed to update user role.");
+        showError(t("userRoleUpdate.error"));
       },
     },
   });

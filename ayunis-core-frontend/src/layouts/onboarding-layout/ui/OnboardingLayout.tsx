@@ -27,7 +27,7 @@ export default function OnboardingLayout({
     <div className="h-screen flex">
       {/* Left side - Form */}
       <div className="flex-1 relative overflow-y-auto">
-        <div className="absolute inset-0 h-full flex flex-col gap-4 justify-between">
+        <div className="absolute inset-0 h-full flex flex-col gap-4 justify-between px-4">
           <div>
             {/* Brand Logo */}
             <div className="mb-12 mt-24 text-center">

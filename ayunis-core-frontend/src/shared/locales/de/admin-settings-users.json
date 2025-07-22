@@ -41,7 +41,9 @@
     "inviteToken": "Einladungslink",
     "copiedToClipboard": "Einladungslink in die Zwischenablage kopiert!",
     "clickToCopy": "Klicken Sie auf die Schaltfläche, um den Einladungslink zu kopieren",
-    "close": "Schließen"
+    "close": "Schließen",
+    "success": "Einladung erfolgreich erstellt",
+    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut."
   },
   "confirmations": {
     "deleteInviteTitle": "Einladung löschen",
@@ -54,5 +56,19 @@
     "deleteText": "Löschen",
     "changeRoleText": "Rolle ändern",
     "cancelText": "Abbrechen"
+  },
+  "inviteDelete": {
+    "error": {
+      "inviteNotFound": "Einladung nicht gefunden",
+      "unexpectedError": "Fehler beim Löschen der Einladung. Bitte versuchen Sie es erneut."
+    }
+  },
+  "userDelete": {
+    "success": "Benutzer erfolgreich gelöscht",
+    "error": "Fehler beim Löschen des Benutzers. Bitte versuchen Sie es erneut."
+  },
+  "userRoleUpdate": {
+    "success": "Benutzerrolle erfolgreich geändert",
+    "error": "Fehler beim Ändern der Benutzerrolle. Bitte versuchen Sie es erneut."
   }
 }

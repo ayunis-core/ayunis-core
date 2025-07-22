@@ -50,6 +50,7 @@
     "chat": "Chat",
     "defaultModelSelection": "Standardmodell",
     "defaultModelDescription": "Wählen Sie das Standard-KI-Modell für neue Gespräche",
-    "selectDefaultModel": "Standardmodell auswählen"
+    "selectDefaultModel": "Standardmodell auswählen",
+    "none": "Kein Modell ausgewählt"
   }
 }

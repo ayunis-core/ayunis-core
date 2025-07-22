@@ -50,6 +50,7 @@
     "chat": "Chat",
     "defaultModelSelection": "Default model",
     "defaultModelDescription": "Choose the default AI model for new conversations",
-    "selectDefaultModel": "Select default model"
+    "selectDefaultModel": "Select default model",
+    "none": "No model selected"
   }
 }

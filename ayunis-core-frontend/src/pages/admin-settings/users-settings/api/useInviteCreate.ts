@@ -7,17 +7,19 @@ import type { InviteCreateData } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
 import { useRouter } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 export function useInviteCreate() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { t } = useTranslation("admin-settings-users");
   const createInviteMutation = useInvitesControllerCreate({
     mutation: {
       onSuccess: () => {
-        showSuccess("Invitation sent successfully!");
+        showSuccess(t("inviteCreate.success"));
       },
       onError: () => {
-        showError("Failed to send invitation. Please try again.");
+        showError(t("inviteCreate.error"));
       },
       onSettled: () => {
         queryClient.invalidateQueries({

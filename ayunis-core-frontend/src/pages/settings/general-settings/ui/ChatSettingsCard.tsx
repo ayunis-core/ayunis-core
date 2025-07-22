@@ -41,7 +41,7 @@ export function ChatSettingsCard() {
 
   // Create options including null option and all permitted models
   const defaultSettingsOptions = [
-    { id: "null", label: "None" },
+    { id: "null", label: t("general.none") },
     ...permittedModels.map((model) => ({
       id: model.id,
       label: model.displayName || model.name,

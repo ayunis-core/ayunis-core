@@ -54,5 +54,19 @@
     "deleteText": "Delete",
     "changeRoleText": "Change Role",
     "cancelText": "Cancel"
+  },
+  "inviteDelete": {
+    "error": {
+      "inviteNotFound": "Invite not found",
+      "unexpectedError": "Failed to delete invite. Please try again."
+    }
+  },
+  "userDelete": {
+    "success": "User deleted successfully!",
+    "error": "Failed to delete user. Please try again."
+  },
+  "userRoleUpdate": {
+    "success": "User role updated successfully!",
+    "error": "Failed to update user role. Please try again."
   }
 }
