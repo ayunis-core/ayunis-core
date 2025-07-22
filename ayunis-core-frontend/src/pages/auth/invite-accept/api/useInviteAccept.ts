@@ -7,10 +7,14 @@ import {
   type InviteAcceptFormValues,
 } from "./inviteAcceptSchema";
 import type { Invite } from "../model/openapi";
+import extractErrorData from "@/shared/api/extract-error-data";
+import { showError } from "@/shared/lib/toast";
+import { useTranslation } from "react-i18next";
 
 export function useInviteAccept(invite: Invite, inviteToken: string) {
   const navigate = useNavigate();
   const acceptInviteMutation = useInvitesControllerAcceptInvite();
+  const { t } = useTranslation("auth");
 
   const form = useForm<InviteAcceptFormValues>({
     resolver: zodResolver(inviteAcceptFormSchema),
@@ -40,7 +44,26 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
         },
         onError: (error) => {
           console.error("Invite accept failed:", error);
-          // Handle error (show toast, form errors, etc.)
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case "INVALID_INVITE_TOKEN":
+              showError(t("inviteAccept.invalidInviteToken"));
+              break;
+            case "INVITE_NOT_FOUND":
+              showError(t("inviteAccept.inviteNotFound"));
+              break;
+            case "INVITE_ALREADY_ACCEPTED":
+              showError(t("inviteAccept.inviteAlreadyAccepted"));
+              break;
+            case "INVALID_PASSWORD":
+              showError(t("inviteAccept.invalidPassword"));
+              break;
+            case "PASSWORD_MISMATCH":
+              showError(t("inviteAccept.passwordMismatch"));
+              break;
+            default:
+              throw error;
+          }
         },
       },
     );
