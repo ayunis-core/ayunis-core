@@ -30,6 +30,11 @@ export function LoginPage({
     text: t("login.emailVerified"),
   });
 
+  useRedirectNotification({
+    show: !!redirect,
+    text: t("login.redirect"),
+  });
+
   return (
     <OnboardingLayout
       title={t("login.title")}
