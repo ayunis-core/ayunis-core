@@ -75,7 +75,7 @@ export class SendConfirmationEmailUseCase {
       await this.sendEmailUseCase.execute(
         new SendEmailCommand({
           to: user.email,
-          subject: 'Confirm your email address',
+          subject: 'Ayunis Core – Bestätigen Sie Ihre E-Mail-Adresse',
           html: emailContent.html,
           text: emailContent.text,
         }),

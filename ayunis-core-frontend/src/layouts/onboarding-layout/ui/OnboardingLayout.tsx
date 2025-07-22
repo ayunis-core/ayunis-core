@@ -60,7 +60,7 @@ export default function OnboardingLayout({
               )}
             </Card>
           </div>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
             <a
               href="https://www.ayunis.com/impressum"
               target="_blank"

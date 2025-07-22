@@ -11,11 +11,12 @@ import { Input } from "@/shared/ui/shadcn/input";
 import OnboardingLayout from "@/layouts/onboarding-layout";
 import { useEmailConfirmResend } from "../api/useEmailConfirmResend";
 import { useTranslation } from "react-i18next";
-import { CheckCircleIcon } from "lucide-react";
+import { useState } from "react";
 
 export default function EmailConfirmPage() {
   const { form, onSubmit, isLoading, isSuccess } = useEmailConfirmResend();
   const { t } = useTranslation("auth");
+  const [showResendForm, setShowResendForm] = useState(false);
 
   if (isSuccess) {
     return (
@@ -25,24 +26,13 @@ export default function EmailConfirmPage() {
       />
     );
   }
+
   return (
     <OnboardingLayout
       title={t("emailConfirm.title")}
       description={t("emailConfirm.description")}
     >
-      {isSuccess ? (
-        <div className="flex flex-col items-center space-y-4 text-center">
-          <CheckCircleIcon className="h-12 w-12 text-green-600" />
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium">
-              {t("emailConfirm.successTitle")}
-            </h3>
-            <p className="text-muted-foreground">
-              {t("emailConfirm.successDescription")}
-            </p>
-          </div>
-        </div>
-      ) : (
+      {showResendForm ? (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -67,8 +57,26 @@ export default function EmailConfirmPage() {
                 ? t("emailConfirm.sendingConfirmation")
                 : t("emailConfirm.sendConfirmationButton")}
             </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowResendForm(false)}
+            >
+              {t("emailConfirm.cancel")}
+            </Button>
           </form>
         </Form>
+      ) : (
+        <div className="text-center">
+          <Button
+            variant="link"
+            onClick={() => setShowResendForm(true)}
+            className="text-sm"
+          >
+            {t("emailConfirm.noEmailReceived")}
+          </Button>
+        </div>
       )}
     </OnboardingLayout>
   );
