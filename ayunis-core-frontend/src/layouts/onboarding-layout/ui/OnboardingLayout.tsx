@@ -66,7 +66,7 @@ export default function OnboardingLayout({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Imprint
+              Impressum
             </a>
             <a
               href="https://www.ayunis.com/avv"
