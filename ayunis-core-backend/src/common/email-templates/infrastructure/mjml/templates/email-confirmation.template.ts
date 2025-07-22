@@ -67,16 +67,6 @@ export function emailConfirmationHtml(
         >
           E-Mail-Adresse bestätigen
         </mj-button>
-        
-        <mj-text align="center" color="#6b7280" font-size="14px" padding-top="24px">
-          Falls die Schaltfläche oben nicht funktioniert, können Sie auch den folgenden Link kopieren und in Ihren Browser einfügen:
-        </mj-text>
-        
-        <mj-text align="center" color="#3b82f6" font-size="14px" padding-top="8px">
-          <a href="${template.confirmationUrl}" style="color: #4C1D95; text-decoration: none;">
-            ${template.confirmationUrl}
-          </a>
-        </mj-text>
       </mj-column>
     </mj-section>
 

@@ -82,15 +82,6 @@ export function passwordResetHtml(template: PasswordResetTemplateContent) {
           Passwort zurücksetzen
         </mj-button>
         
-        <mj-text align="center" color="#6b7280" font-size="14px" padding-top="24px">
-          Falls die Schaltfläche oben nicht funktioniert, können Sie auch den folgenden Link kopieren und in Ihren Browser einfügen:
-        </mj-text>
-        
-        <mj-text align="center" color="#3b82f6" font-size="14px" padding-top="8px">
-          <a href="${template.resetUrl}" style="color: #4C1D95; text-decoration: none;">
-            ${template.resetUrl}
-          </a>
-        </mj-text>
       </mj-column>
     </mj-section>
 
