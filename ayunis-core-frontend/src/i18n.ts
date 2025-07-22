@@ -54,7 +54,7 @@ const resources = {
 // Language detector options
 const detectionOptions = {
   // order and from where user language should be detected
-  order: ["localStorage", "navigator", "htmlTag", "path", "subdomain"],
+  order: ["localStorage", "htmlTag", "path", "subdomain"],
 
   // keys or params to lookup language from
   lookupLocalStorage: "ayunis-language",
