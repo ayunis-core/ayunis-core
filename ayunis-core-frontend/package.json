@@ -49,6 +49,7 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
     "react-textarea-autosize": "^8.5.9",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.6",
