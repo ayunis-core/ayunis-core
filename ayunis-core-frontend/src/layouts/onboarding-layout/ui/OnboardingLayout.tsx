@@ -61,8 +61,20 @@ export default function OnboardingLayout({
             </Card>
           </div>
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <span>Imprint</span>
-            <span>Datenschutz</span>
+            <a
+              href="https://www.ayunis.com/impressum"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Imprint
+            </a>
+            <a
+              href="https://www.ayunis.com/avv"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Datenschutz
+            </a>
           </div>
         </div>
       </div>
