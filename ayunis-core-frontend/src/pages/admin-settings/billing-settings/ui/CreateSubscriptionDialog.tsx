@@ -1,5 +1,6 @@
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -225,14 +226,16 @@ export default function CreateSubscriptionDialog({
                 {t("subscriptionDialog.paymentMethodHint")}
               </p>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={form.formState.isSubmitting}
-                >
-                  {t("billingInfo.cancel")}
-                </Button>
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {t("billingInfo.cancel")}
+                  </Button>
+                </DialogClose>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {t("subscriptionDialog.createSubscription")}
                 </Button>
