@@ -44,6 +44,7 @@ import { RefreshTokenCommand } from '../../application/use-cases/refresh-token/r
 import { RegisterUserCommand } from '../../application/use-cases/register-user/register-user.command';
 import { GetCurrentUserCommand } from '../../application/use-cases/get-current-user/get-current-user.command';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
+import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -59,6 +60,7 @@ export class AuthenticationController {
   ) {}
 
   @Public()
+  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 }) // 10 login attempts per 15 minutes
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)

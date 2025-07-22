@@ -49,6 +49,7 @@ import { GetInviteByTokenQuery } from '../../application/use-cases/get-invite-by
 // Import Mappers
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
 import { Public } from 'src/common/guards/public.guard';
+import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
 
 @ApiTags('invites')
 @Controller('invites')
@@ -65,6 +66,7 @@ export class InvitesController {
   ) {}
 
   @Post()
+  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 }) // 10 invites per 15 minutes
   @ApiOperation({
     summary: 'Create a new invite',
     description:

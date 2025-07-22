@@ -2,6 +2,7 @@ import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
 
 export enum AuthorizationErrorCode {
   EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED',
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
 }
 
 export abstract class AuthorizationError extends ApplicationError {
@@ -21,6 +22,17 @@ export class EmailNotVerifiedError extends AuthorizationError {
       reason || 'Email not verified',
       AuthorizationErrorCode.EMAIL_NOT_VERIFIED,
       403,
+      metadata,
+    );
+  }
+}
+
+export class RateLimitExceededError extends AuthorizationError {
+  constructor(reason?: string, metadata?: ErrorMetadata) {
+    super(
+      reason || 'Rate limit exceeded',
+      AuthorizationErrorCode.RATE_LIMIT_EXCEEDED,
+      429,
       metadata,
     );
   }

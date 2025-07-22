@@ -58,6 +58,7 @@ import { TriggerPasswordResetCommand } from '../../application/use-cases/trigger
 import { TriggerPasswordResetUseCase } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password/reset-password.use-case';
 import { ResetPasswordCommand } from '../../application/use-cases/reset-password/reset-password.command';
+import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -281,6 +282,12 @@ export class UserController {
   }
 
   @Public()
+  @RateLimit({
+    limit: 3,
+    windowMs: 5 * 60 * 1000,
+    message:
+      'Too many email confirmation requests. Please wait before trying again.',
+  }) // 3 attempts per 5 minutes
   @Post('resend-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
