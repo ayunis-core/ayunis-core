@@ -45,6 +45,9 @@ export function useRegister() {
             case "USER_ALREADY_EXISTS":
               showError(t("register.emailAlreadyExists"));
               break;
+            case "INVALID_PASSWORD":
+              showError(t("register.invalidPassword"));
+              break;
             case "USER_EMAIL_PROVIDER_BLACKLISTED":
               showError(t("register.emailProviderBlacklisted"));
               break;

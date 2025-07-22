@@ -151,9 +151,6 @@ export class LocalUsersRepository extends UsersRepository {
     if (!/[0-9]/.test(password)) {
       return Promise.resolve(false);
     }
-    if (!/[!@#$%^&*]/.test(password)) {
-      return Promise.resolve(false);
-    }
     if (!/[a-z]/.test(password)) {
       return Promise.resolve(false);
     }
