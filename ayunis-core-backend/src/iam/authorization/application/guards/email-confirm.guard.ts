@@ -39,9 +39,6 @@ export class EmailConfirmGuard implements CanActivate {
       this.logger.warn('User not found in request context');
       return false;
     }
-    this.logger.debug('EmailConfirmGuard - user', {
-      user,
-    });
 
     if (!user.emailVerified) {
       this.logger.warn('User email not verified');
