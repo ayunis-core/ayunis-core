@@ -26,6 +26,7 @@ import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -45,6 +46,7 @@ export class AuthenticationModule {
         EmailTemplatesModule,
         HashingModule,
         SubscriptionsModule,
+        WebhooksModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],

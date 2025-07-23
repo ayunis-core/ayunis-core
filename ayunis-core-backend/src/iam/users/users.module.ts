@@ -37,6 +37,7 @@ import { TriggerPasswordResetUseCase } from './application/use-cases/trigger-pas
 import { ResetPasswordUseCase } from './application/use-cases/reset-password/reset-password.use-case';
 import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
+import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { PasswordResetJwtService } from './application/services/password-reset-j
     PasswordResetJwtService,
     SendPasswordResetEmailUseCase,
     ResetPasswordUseCase,
+    FindUserByEmailUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
@@ -110,6 +112,7 @@ import { PasswordResetJwtService } from './application/services/password-reset-j
     IsValidPasswordUseCase,
     IsFromOrgUseCase,
     EmailConfirmationJwtService,
+    FindUserByEmailUseCase,
   ],
 })
 export class UsersModule {}

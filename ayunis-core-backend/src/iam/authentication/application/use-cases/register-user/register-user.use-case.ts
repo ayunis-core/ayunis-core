@@ -19,12 +19,19 @@ import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-case
 import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
 import { CreateTrialUseCase } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.use-case';
 import { CreateTrialCommand } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.command';
+import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
+import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { OrgCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/org-created.webhook-event';
 
 @Injectable()
 export class RegisterUserUseCase {
   private readonly logger = new Logger(RegisterUserUseCase.name);
 
   constructor(
+    private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
     private readonly createAdminUserUseCase: CreateAdminUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
@@ -32,6 +39,7 @@ export class RegisterUserUseCase {
     private readonly sendConfirmationEmailUseCase: SendConfirmationEmailUseCase,
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
@@ -41,6 +49,14 @@ export class RegisterUserUseCase {
     });
 
     try {
+      const existingUser = await this.findUserByEmailUseCase.execute(
+        new FindUserByEmailQuery(command.email),
+      );
+
+      if (existingUser) {
+        throw new UserAlreadyExistsError(existingUser.id);
+      }
+
       const isValidPassword = await this.isValidPasswordUseCase.execute(
         new IsValidPasswordQuery(command.password),
       );
@@ -97,10 +113,15 @@ export class RegisterUserUseCase {
       );
 
       if (shouldConfirmEmail) {
-        await this.sendConfirmationEmailUseCase.execute(
+        void this.sendConfirmationEmailUseCase.execute(
           new SendConfirmationEmailCommand(user),
         );
       }
+
+      // Send webhook asynchronously (don't block the main operation)
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(new OrgCreatedWebhookEvent(org, user)),
+      );
 
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,

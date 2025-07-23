@@ -65,7 +65,6 @@ export default function useBillingInfoUpdate({
         }
       },
       onSettled: () => {
-        form.reset();
         queryClient.invalidateQueries({
           queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });

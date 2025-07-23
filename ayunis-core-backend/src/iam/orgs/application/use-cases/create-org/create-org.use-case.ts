@@ -3,18 +3,12 @@ import { OrgsRepository } from '../../ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
 import { Org } from '../../../domain/org.entity';
 import { OrgError, OrgCreationFailedError } from '../../orgs.errors';
-import { SendWebhookUseCase } from '../../../../../common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
-import { SendWebhookCommand } from '../../../../../common/webhooks/application/use-cases/send-webhook/send-webhook.command';
-import { OrgCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/org-created.webhook-event';
 
 @Injectable()
 export class CreateOrgUseCase {
   private readonly logger = new Logger(CreateOrgUseCase.name);
 
-  constructor(
-    private readonly orgsRepository: OrgsRepository,
-    private readonly sendWebhookUseCase: SendWebhookUseCase,
-  ) {}
+  constructor(private readonly orgsRepository: OrgsRepository) {}
 
   async execute(command: CreateOrgCommand): Promise<Org> {
     this.logger.log('create', { name: command.name });
@@ -32,11 +26,6 @@ export class CreateOrgUseCase {
         id: createdOrg.id,
         name: createdOrg.name,
       });
-
-      // Send webhook asynchronously (don't block the main operation)
-      void this.sendWebhookUseCase.execute(
-        new SendWebhookCommand(new OrgCreatedWebhookEvent(createdOrg)),
-      );
 
       return createdOrg;
     } catch (error) {

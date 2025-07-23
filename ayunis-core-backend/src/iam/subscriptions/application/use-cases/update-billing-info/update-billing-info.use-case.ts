@@ -9,6 +9,9 @@ import { GetActiveSubscriptionUseCase } from '../get-active-subscription/get-act
 import { UpdateBillingInfoCommand } from './update-billing-info.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 
 @Injectable()
 export class UpdateBillingInfoUseCase {
@@ -17,6 +20,7 @@ export class UpdateBillingInfoUseCase {
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
   async execute(command: UpdateBillingInfoCommand): Promise<void> {
@@ -40,6 +44,16 @@ export class UpdateBillingInfoUseCase {
       await this.subscriptionRepository.updateBillingInfo(
         subscription.subscription.id,
         billingInfo,
+      );
+
+      subscription.subscription.billingInfo = billingInfo;
+
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(
+          new SubscriptionBillingInfoUpdatedWebhookEvent(
+            subscription.subscription,
+          ),
+        ),
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
