@@ -51,6 +51,9 @@ export function useRegister() {
             case "USER_EMAIL_PROVIDER_BLACKLISTED":
               showError(t("register.emailProviderBlacklisted"));
               break;
+            case "REGISTRATION_DISABLED":
+              showError(t("register.registrationDisabled"));
+              break;
             default:
               showError(t("register.registrationFailed"));
           }

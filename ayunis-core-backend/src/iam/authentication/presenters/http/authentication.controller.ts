@@ -123,11 +123,6 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async register(@Body() body: RegisterDto, @Res() res: Response) {
-    if (this.configService.get<boolean>('app.disableRegistration')) {
-      return res.status(HttpStatus.FORBIDDEN).json({
-        message: 'Registration is disabled',
-      });
-    }
     const user = await this.registerUserUseCase.execute(
       new RegisterUserCommand({
         userName: body.userName,

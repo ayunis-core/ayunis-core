@@ -19,6 +19,7 @@ export enum AuthenticationErrorCode {
   INVALID_PASSWORD = 'INVALID_PASSWORD',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
+  REGISTRATION_DISABLED = 'REGISTRATION_DISABLED',
 }
 
 /**
@@ -146,6 +147,17 @@ export class UnexpectedAuthenticationError extends AuthenticationError {
       {
         error,
       },
+    );
+  }
+}
+
+export class RegistrationDisabledError extends AuthenticationError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Registration is disabled',
+      AuthenticationErrorCode.REGISTRATION_DISABLED,
+      403,
+      metadata,
     );
   }
 }

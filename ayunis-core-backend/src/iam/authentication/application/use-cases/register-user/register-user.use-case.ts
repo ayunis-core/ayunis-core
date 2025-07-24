@@ -9,6 +9,7 @@ import { RegisterUserCommand } from './register-user.command';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import {
   InvalidPasswordError,
+  RegistrationDisabledError,
   UnexpectedAuthenticationError,
 } from '../../authentication.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
@@ -47,6 +48,10 @@ export class RegisterUserUseCase {
       email: command.email,
       orgName: command.orgName,
     });
+
+    if (this.configService.get<boolean>('app.disableRegistration')) {
+      throw new RegistrationDisabledError();
+    }
 
     try {
       const existingUser = await this.findUserByEmailUseCase.execute(
