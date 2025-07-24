@@ -8,7 +8,4 @@ export enum ToolType {
 }
 
 export const configurableToolTypes = [ToolType.HTTP];
-export const contextualToolTypes = [
-  ToolType.SOURCE_QUERY,
-  ToolType.INTERNET_SEARCH,
-];
+export const contextualToolTypes = [ToolType.SOURCE_QUERY];

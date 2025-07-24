@@ -36,6 +36,7 @@ import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import internetSearchConfig from 'src/config/internet-search.config';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { join } from 'path';
         legalConfig,
         subscriptionsConfig,
         emailsConfig,
+        internetSearchConfig,
       ],
     }),
     ServeStaticModule.forRoot({

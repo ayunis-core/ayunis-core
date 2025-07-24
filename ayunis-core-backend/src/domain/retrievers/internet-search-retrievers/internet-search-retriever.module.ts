@@ -9,7 +9,6 @@ import { InternetSearchHandler } from './application/ports/internet-search.handl
       provide: InternetSearchHandler,
       useClass: BraveInternetSearchHandler,
     },
-    BraveInternetSearchHandler,
     SearchWebUseCase,
   ],
   exports: [SearchWebUseCase],

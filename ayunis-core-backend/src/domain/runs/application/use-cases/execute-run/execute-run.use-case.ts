@@ -348,7 +348,7 @@ export class ExecuteRunUseCase {
     isFirstIteration: boolean;
     trace: LangfuseTraceClient;
   }): Promise<ToolResultMessageContent[]> {
-    this.logger.debug('collectToolResults', params);
+    this.logger.debug('collectToolResults');
     const { thread, tools, input, isFirstIteration } = params;
 
     const lastMessage = thread.getLastMessage();
@@ -624,14 +624,10 @@ export class ExecuteRunUseCase {
                   parsedArgs,
                 ),
               );
-            } catch (error) {
-              this.logger.warn(
-                `Failed to parse tool arguments for ${toolCall.name}`,
-                {
-                  arguments: toolCall.arguments,
-                  error: error as Error,
-                },
-              );
+            } catch {
+              this.logger.debug(`Incomplete tool call for ${toolCall.name}`, {
+                arguments: toolCall.arguments,
+              });
               // Don't add incomplete tool calls yet
             }
           }

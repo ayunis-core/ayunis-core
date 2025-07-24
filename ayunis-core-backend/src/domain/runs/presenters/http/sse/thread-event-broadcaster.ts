@@ -31,10 +31,6 @@ export class ThreadEventBroadcaster {
 
     try {
       subject.next(event);
-      this.logger.debug(`Broadcasted event to thread ${threadId}`, {
-        eventType: event.type,
-        connections: this.connectionCounts.get(threadId) || 0,
-      });
       return true;
     } catch (error) {
       this.logger.error(`Error broadcasting to thread ${threadId}`, error);

@@ -21,7 +21,7 @@ export class InternetSearchTool extends ContextualTool {
   constructor() {
     super({
       name: ToolType.INTERNET_SEARCH,
-      description: 'Search the internet for information',
+      description: 'Search the internet for up to date information.',
       parameters: internetSearchToolParameters,
       type: ToolType.INTERNET_SEARCH,
     });
