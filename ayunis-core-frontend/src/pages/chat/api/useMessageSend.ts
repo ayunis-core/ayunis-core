@@ -50,7 +50,7 @@ export function useMessageSend(params: UseMessageSendParams) {
       streaming: true,
     };
 
-    return mutation.mutate({ data: sendMessageDto });
+    return mutation.mutateAsync({ data: sendMessageDto });
   }
 
   function sendToolResult(input: SendToolResultInput) {
@@ -66,7 +66,7 @@ export function useMessageSend(params: UseMessageSendParams) {
       input: toolResultInput,
     };
 
-    return mutation.mutate({ data: sendMessageDto });
+    return mutation.mutateAsync({ data: sendMessageDto });
   }
 
   return {

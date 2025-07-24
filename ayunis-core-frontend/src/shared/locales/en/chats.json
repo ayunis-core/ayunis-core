@@ -16,7 +16,8 @@
     "errorUnexpected": "An unexpected error occurred",
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
-    "errorToolNotFound": "Tool not found"
+    "errorToolNotFound": "Tool not found",
+    "errorSendMessage": "Message could not be sent. Please refresh the page and try again."
   },
   "newChat": {
     "title": "How can I help you today?",

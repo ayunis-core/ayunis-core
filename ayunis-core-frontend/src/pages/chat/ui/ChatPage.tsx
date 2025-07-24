@@ -30,6 +30,7 @@ import type {
   RunThreadResponseDto,
 } from "@/shared/api";
 import AppLayout from "@/layouts/app-layout";
+import { AxiosError } from "axios";
 
 interface ChatPageProps {
   thread: Thread;
@@ -127,9 +128,18 @@ export default function ChatPage({ thread }: ChatPageProps) {
       connect();
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    sendTextMessage({
-      text: message,
-    });
+    try {
+      await sendTextMessage({
+        text: message,
+      });
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        showError(t("chat.upgradeToProError"));
+      } else {
+        showError(t("chat.errorSendMessage"));
+      }
+      throw error; // rethrow the error to preserve the message
+    }
   }
 
   useEffect(() => {

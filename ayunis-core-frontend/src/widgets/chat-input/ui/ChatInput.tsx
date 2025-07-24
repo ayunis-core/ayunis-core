@@ -13,7 +13,7 @@ interface ChatInputProps {
   isStreaming?: boolean;
   onModelChange: (modelId: string) => void;
   onAgentChange: (agentId: string) => void;
-  onSend: (message: string) => void;
+  onSend: (message: string) => Promise<void>;
   prefilledPrompt?: string;
 }
 
@@ -33,10 +33,10 @@ export default function ChatInput({
     exclusive: true,
   });
 
-  function handleSend() {
+  async function handleSend() {
     if (!message.trim() || !modelOrAgentId) return;
 
-    onSend(message);
+    await onSend(message);
     setMessage(""); // Clear message after sending
   }
 
