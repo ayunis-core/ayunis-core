@@ -13,6 +13,7 @@ import {
   InviteRoleError,
   PasswordMismatchError,
   InvalidPasswordError,
+  UserAlreadyExistsError,
 } from '../../invites.errors';
 import { CreateRegularUserUseCase } from 'src/iam/users/application/use-cases/create-regular-user/create-regular-user.use-case';
 import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
@@ -21,6 +22,8 @@ import { CreateAdminUserCommand } from 'src/iam/users/application/use-cases/crea
 import { CreateRegularUserCommand } from 'src/iam/users/application/use-cases/create-regular-user/create-regular-user.command';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
+import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -32,6 +35,7 @@ export class AcceptInviteUseCase {
     private readonly createRegularUserUseCase: CreateRegularUserUseCase,
     private readonly createAdminUserUseCase: CreateAdminUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
+    private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
   ) {}
 
   async execute(
@@ -55,6 +59,13 @@ export class AcceptInviteUseCase {
     if (!invite) {
       this.logger.error('Invite not found', { inviteId: payload.inviteId });
       throw new InviteNotFoundError(payload.inviteId);
+    }
+
+    const existingUser = await this.findUserByEmailUseCase.execute(
+      new FindUserByEmailQuery(invite.email),
+    );
+    if (existingUser) {
+      throw new UserAlreadyExistsError();
     }
 
     // Check if invite is already accepted

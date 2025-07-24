@@ -8,10 +8,16 @@ import { GetActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/get-active-subscription/get-active-subscription.query';
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
-import { InvalidSeatsError, UnexpectedInviteError } from '../../invites.errors';
+import {
+  EmailNotAvailableError,
+  InvalidSeatsError,
+  UnexpectedInviteError,
+} from '../../invites.errors';
 import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
 import { SendInvitationEmailCommand } from '../send-invitation-email/send-invitation-email.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 
 @Injectable()
 export class CreateInviteUseCase {
@@ -24,6 +30,7 @@ export class CreateInviteUseCase {
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
+    private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
   ) {}
 
   async execute(command: CreateInviteCommand): Promise<void> {
@@ -33,6 +40,12 @@ export class CreateInviteUseCase {
       userId: command.userId,
     });
     try {
+      const existingUser = await this.findUserByEmailUseCase.execute(
+        new FindUserByEmailQuery(command.email),
+      );
+      if (existingUser) {
+        throw new EmailNotAvailableError();
+      }
       const isCloud = this.configService.get<boolean>(
         'app.isCloudHosted',
         false,

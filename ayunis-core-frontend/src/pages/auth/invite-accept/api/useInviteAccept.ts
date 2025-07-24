@@ -61,6 +61,9 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
             case "PASSWORD_MISMATCH":
               showError(t("inviteAccept.passwordMismatch"));
               break;
+            case "USER_ALREADY_EXISTS":
+              showError(t("inviteAccept.userAlreadyExists"));
+              break;
             default:
               throw error;
           }

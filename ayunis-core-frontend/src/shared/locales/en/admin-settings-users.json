@@ -57,7 +57,8 @@
   },
   "inviteCreate": {
     "success": "Invite created successfully!",
-    "error": "Failed to create invite. Please try again."
+    "error": "Failed to create invite. Please try again.",
+    "emailNotAvailable": "Invite not possible."
   },
   "inviteDelete": {
     "error": {

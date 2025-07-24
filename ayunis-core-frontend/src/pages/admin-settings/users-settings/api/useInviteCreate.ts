@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
 import { useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import extractErrorData from "@/shared/api/extract-error-data";
 
 export function useInviteCreate() {
   const queryClient = useQueryClient();
@@ -18,8 +19,15 @@ export function useInviteCreate() {
       onSuccess: () => {
         showSuccess(t("inviteCreate.success"));
       },
-      onError: () => {
-        showError(t("inviteCreate.error"));
+      onError: (error) => {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case "EMAIL_NOT_AVAILABLE":
+            showError(t("inviteCreate.emailNotAvailable"));
+            break;
+          default:
+            showError(t("inviteCreate.error"));
+        }
       },
       onSettled: () => {
         queryClient.invalidateQueries({

@@ -59,7 +59,8 @@
   },
   "inviteCreate": {
     "success": "Einladung erfolgreich erstellt",
-    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut."
+    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut.",
+    "emailNotAvailable": "Einladung nicht möglich."
   },
   "inviteDelete": {
     "error": {

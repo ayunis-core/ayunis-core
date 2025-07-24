@@ -16,6 +16,8 @@ export enum InvitesErrorCode {
   INVALID_PASSWORD = 'INVALID_PASSWORD',
   PASSWORD_MISMATCH = 'PASSWORD_MISMATCH',
   INVITE_EMAIL_SENDING_FAILED = 'INVITE_EMAIL_SENDING_FAILED',
+  EMAIL_NOT_AVAILABLE = 'EMAIL_NOT_AVAILABLE',
+  USER_ALREADY_EXISTS = 'USER_ALREADY_EXISTS',
   UNEXPECTED_INVITE_ERROR = 'UNEXPECTED_INVITE_ERROR',
 }
 
@@ -140,6 +142,28 @@ export class PasswordMismatchError extends InviteError {
     super(
       'Passwords do not match',
       InvitesErrorCode.PASSWORD_MISMATCH,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class EmailNotAvailableError extends InviteError {
+  constructor(reason?: string, metadata?: ErrorMetadata) {
+    super(
+      `Email not available${reason ? `: ${reason}` : ''}`,
+      InvitesErrorCode.EMAIL_NOT_AVAILABLE,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class UserAlreadyExistsError extends InviteError {
+  constructor(reason?: string, metadata?: ErrorMetadata) {
+    super(
+      `User already exists${reason ? `: ${reason}` : ''}`,
+      InvitesErrorCode.USER_ALREADY_EXISTS,
       400,
       metadata,
     );
