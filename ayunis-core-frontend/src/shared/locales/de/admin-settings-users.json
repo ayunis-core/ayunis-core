@@ -57,6 +57,10 @@
     "changeRoleText": "Rolle ändern",
     "cancelText": "Abbrechen"
   },
+  "inviteCreate": {
+    "success": "Einladung erfolgreich erstellt",
+    "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut."
+  },
   "inviteDelete": {
     "error": {
       "inviteNotFound": "Einladung nicht gefunden",

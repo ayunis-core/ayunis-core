@@ -55,6 +55,10 @@
     "changeRoleText": "Change Role",
     "cancelText": "Cancel"
   },
+  "inviteCreate": {
+    "success": "Invite created successfully!",
+    "error": "Failed to create invite. Please try again."
+  },
   "inviteDelete": {
     "error": {
       "inviteNotFound": "Invite not found",
