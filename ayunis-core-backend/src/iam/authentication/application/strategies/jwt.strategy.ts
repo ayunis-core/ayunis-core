@@ -48,7 +48,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JwtPayload): ActiveUser {
-    this.logger.debug('Validating JWT payload', { payload });
+    this.logger.debug('Validating JWT payload');
 
     return new ActiveUser({
       id: payload.sub,
