@@ -31,7 +31,7 @@ export default function NewChatPage({
     setModelId(undefined);
   }
 
-  function handleSend(message: string) {
+  async function handleSend(message: string) {
     if (!modelId && !agentId) {
       showError(t("newChat.noModelOrAgentError"));
       return;
