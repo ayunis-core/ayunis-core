@@ -364,14 +364,13 @@ export class RunsController {
     });
 
     const subscriptionContext = request.subscriptionContext;
+
     if (subscriptionContext?.hasRemainingTrialMessages) {
       this.logger.debug(
         'Incrementing trial messages for non-subscription user',
         {
           orgId,
           userId,
-          hasRemainingTrialMessages:
-            subscriptionContext.hasRemainingTrialMessages,
         },
       );
 

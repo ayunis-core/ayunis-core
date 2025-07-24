@@ -31,6 +31,7 @@ import type {
 } from "@/shared/api";
 import AppLayout from "@/layouts/app-layout";
 import { AxiosError } from "axios";
+import type { ChatInputRef } from "@/widgets/chat-input/ui/ChatInput";
 
 interface ChatPageProps {
   thread: Thread;
@@ -47,6 +48,7 @@ export default function ChatPage({ thread }: ChatPageProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<Element | null>(null);
   const processedPendingMessageRef = useRef<String | null>(null);
+  const chatInputRef = useRef<ChatInputRef>(null);
 
   // Memoize sorted messages to avoid sorting on every render
   const sortedMessages = useMemo(() => {
@@ -199,17 +201,30 @@ export default function ChatPage({ thread }: ChatPageProps) {
 
   // Send pending message from NewChatPage if it exists
   useEffect(() => {
-    if (
-      pendingMessage &&
-      // avoid sending the same message twice
-      processedPendingMessageRef.current !== pendingMessage
-    ) {
-      processedPendingMessageRef.current = pendingMessage;
-      sendTextMessage({
-        text: pendingMessage,
-      });
-      setPendingMessage("");
+    async function sendPendingMessage() {
+      if (
+        pendingMessage &&
+        // avoid sending the same message twice
+        processedPendingMessageRef.current !== pendingMessage
+      ) {
+        processedPendingMessageRef.current = pendingMessage;
+        try {
+          await sendTextMessage({
+            text: pendingMessage,
+          });
+        } catch (error) {
+          if (error instanceof AxiosError && error.response?.status === 403) {
+            showError(t("chat.upgradeToProError"));
+          } else {
+            showError(t("chat.errorSendMessage"));
+          }
+          chatInputRef.current?.setMessage(pendingMessage);
+        } finally {
+          setPendingMessage("");
+        }
+      }
     }
+    sendPendingMessage();
   }, [pendingMessage, sendTextMessage, setPendingMessage]);
 
   function handleModelChange(newModelId: string) {
@@ -295,6 +310,7 @@ export default function ChatPage({ thread }: ChatPageProps) {
       onModelChange={handleModelChange}
       onAgentChange={handleAgentChange}
       onSend={handleSend}
+      ref={chatInputRef}
     />
   );
 

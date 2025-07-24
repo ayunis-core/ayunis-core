@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/shared/ui/shadcn/button";
 import { ChevronRight, Loader2 } from "lucide-react";
@@ -17,85 +17,102 @@ interface ChatInputProps {
   prefilledPrompt?: string;
 }
 
-export default function ChatInput({
-  modelOrAgentId,
-  isStreaming,
-  onModelChange,
-  onAgentChange,
-  onSend,
-  prefilledPrompt,
-}: ChatInputProps) {
-  const [isFocused, setIsFocused] = useState<boolean>(false);
-  const [message, setMessage] = useState(prefilledPrompt ?? "");
-  const { t } = useTranslation("common");
+export interface ChatInputRef {
+  setMessage: (message: string) => void;
+}
 
-  useKeyboardShortcut(["Enter"], () => isFocused && handleSend(), {
-    exclusive: true,
-  });
+const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
+  (
+    {
+      modelOrAgentId,
+      isStreaming,
+      onModelChange,
+      onAgentChange,
+      onSend,
+      prefilledPrompt,
+    },
+    ref,
+  ) => {
+    const [isFocused, setIsFocused] = useState<boolean>(false);
+    const [message, setMessage] = useState(prefilledPrompt ?? "");
+    const { t } = useTranslation("common");
 
-  async function handleSend() {
-    if (!message.trim() || !modelOrAgentId) return;
+    useImperativeHandle(ref, () => ({
+      setMessage,
+    }));
 
-    await onSend(message);
-    setMessage(""); // Clear message after sending
-  }
+    useKeyboardShortcut(["Enter"], () => isFocused && handleSend(), {
+      exclusive: true,
+    });
 
-  function handlePromptSelect(promptContent: string) {
-    // Add the prompt content to the existing message
-    // If there's already content, add a space before the prompt
-    setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
-  }
+    async function handleSend() {
+      if (!message.trim() || !modelOrAgentId) return;
 
-  return (
-    <div className="w-full space-y-2">
-      {/* Main input section */}
-      <Card className="py-4">
-        <CardContent className="px-4">
-          <div className="flex flex-col gap-4">
-            {/* Textarea at the top */}
-            <TextareaAutosize
-              maxRows={10}
-              value={message}
-              autoFocus
-              onChange={(e) => setMessage(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={t("chatInput.placeholder")}
-              className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
-            />
+      await onSend(message);
+      setMessage(""); // Clear message after sending
+    }
 
-            {/* Bottom row */}
-            <div className="flex items-center justify-between">
-              {/* Left side */}
-              <div className="flex-shrink-0 flex space-x-2">
-                <ModelSelector
-                  selectedModelOrAgentId={modelOrAgentId}
-                  onModelChange={onModelChange}
-                  onAgentChange={onAgentChange}
-                />
-                <PromptLibraryButton onPromptSelect={handlePromptSelect} />
-              </div>
+    function handlePromptSelect(promptContent: string) {
+      // Add the prompt content to the existing message
+      // If there's already content, add a space before the prompt
+      setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
+    }
 
-              {/* Right side */}
-              <div className="flex-shrink-0 flex space-x-2">
-                {isStreaming ? (
-                  <Button size="icon" disabled>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </Button>
-                ) : (
-                  <Button
-                    disabled={!message.trim() || !modelOrAgentId}
-                    size="icon"
-                    onClick={handleSend}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                )}
+    return (
+      <div className="w-full space-y-2">
+        {/* Main input section */}
+        <Card className="py-4">
+          <CardContent className="px-4">
+            <div className="flex flex-col gap-4">
+              {/* Textarea at the top */}
+              <TextareaAutosize
+                maxRows={10}
+                value={message}
+                autoFocus
+                onChange={(e) => setMessage(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder={t("chatInput.placeholder")}
+                className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
+              />
+
+              {/* Bottom row */}
+              <div className="flex items-center justify-between">
+                {/* Left side */}
+                <div className="flex-shrink-0 flex space-x-2">
+                  <ModelSelector
+                    selectedModelOrAgentId={modelOrAgentId}
+                    onModelChange={onModelChange}
+                    onAgentChange={onAgentChange}
+                  />
+                  <PromptLibraryButton onPromptSelect={handlePromptSelect} />
+                </div>
+
+                {/* Right side */}
+                <div className="flex-shrink-0 flex space-x-2">
+                  {isStreaming ? (
+                    <Button size="icon" disabled>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled={!message.trim() || !modelOrAgentId}
+                      size="icon"
+                      onClick={handleSend}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  },
+);
+
+ChatInput.displayName = "ChatInput";
+
+export default ChatInput;
