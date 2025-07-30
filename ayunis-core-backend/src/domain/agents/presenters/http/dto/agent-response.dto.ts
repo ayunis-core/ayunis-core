@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
-class ModelResponseDto {
+export class ModelResponseDto {
   @ApiProperty({
     description: 'The unique identifier of the model',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -27,6 +28,15 @@ class ModelResponseDto {
     example: 'GPT-4',
   })
   displayName: string;
+}
+
+export class ToolResponseDto {
+  @ApiProperty({
+    description: 'The type of the tool',
+    example: 'internet_search',
+    enum: ToolType,
+  })
+  type: ToolType;
 }
 
 export class AgentResponseDto {
@@ -87,14 +97,7 @@ export class AgentResponseDto {
 
   @ApiProperty({
     description: 'The tools assigned to this agent',
-    example: [],
-    type: 'array',
-    items: {
-      type: 'object',
-    },
+    type: [ToolResponseDto],
   })
-  tools: Array<{
-    type: string;
-    configId?: UUID;
-  }>;
+  tools: ToolResponseDto[];
 }

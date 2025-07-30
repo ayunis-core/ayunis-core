@@ -426,34 +426,15 @@ export interface ToolResultMessageContentResponseDto {
   result: string;
 }
 
-/**
- * The provider of the model
- */
-export type ModelResponseDtoProvider = typeof ModelResponseDtoProvider[keyof typeof ModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-} as const;
-
 export interface ModelResponseDto {
-  /** The ID of the model */
+  /** The unique identifier of the model */
   id: string;
   /** The name of the model */
   name: string;
   /** The provider of the model */
-  provider: ModelResponseDtoProvider;
+  provider: string;
   /** The display name of the model */
   displayName: string;
-  /** Whether the model can stream */
-  canStream: boolean;
-  /** Whether the model can reason */
-  isReasoning: boolean;
 }
 
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
@@ -732,7 +713,25 @@ export interface CreateAgentDto {
   toolAssignments: ToolAssignmentDto[];
 }
 
-export type AgentResponseDtoToolsItem = { [key: string]: unknown };
+/**
+ * The type of the tool
+ */
+export type ToolResponseDtoType = typeof ToolResponseDtoType[keyof typeof ToolResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ToolResponseDtoType = {
+  http: 'http',
+  source_query: 'source_query',
+  internet_search: 'internet_search',
+  website_content: 'website_content',
+  custom: 'custom',
+} as const;
+
+export interface ToolResponseDto {
+  /** The type of the tool */
+  type: ToolResponseDtoType;
+}
 
 export interface AgentResponseDto {
   /** The unique identifier of the agent */
@@ -750,7 +749,7 @@ export interface AgentResponseDto {
   /** The model configuration for this agent */
   model: ModelResponseDto;
   /** The tools assigned to this agent */
-  tools: AgentResponseDtoToolsItem[];
+  tools: ToolResponseDto[];
 }
 
 export interface UpdateAgentDto {

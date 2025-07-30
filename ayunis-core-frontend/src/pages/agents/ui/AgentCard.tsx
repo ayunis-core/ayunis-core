@@ -2,8 +2,9 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardAction,
+  CardContent,
+  CardFooter,
 } from "@/shared/ui/shadcn/card";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Edit, MessageCircle, Trash2 } from "lucide-react";
@@ -13,6 +14,7 @@ import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useTranslation } from "react-i18next";
 import type { Agent } from "../model/openapi";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "@/shared/ui/shadcn/badge";
 
 interface AgentCardProps {
   agent: Agent;
@@ -40,9 +42,6 @@ export default function AgentCard({ agent }: AgentCardProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">{agent.name}</CardTitle>
-        <CardDescription className="line-clamp-2 mb-2">
-          {agent.instructions}
-        </CardDescription>
         <CardAction>
           <div className="flex items-center gap-2">
             <Link to="/chat" search={{ agentId: agent.id }}>
@@ -70,6 +69,18 @@ export default function AgentCard({ agent }: AgentCardProps) {
           </div>
         </CardAction>
       </CardHeader>
+      <CardContent>
+        <p className="line-clamp-2">{agent.instructions}</p>
+      </CardContent>
+      {agent.tools.length > 0 && (
+        <CardFooter>
+          <div className="flex flex-col gap-2">
+            {agent.tools.map((tool) => (
+              <Badge variant="outline">{tool.type}</Badge>
+            ))}
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }

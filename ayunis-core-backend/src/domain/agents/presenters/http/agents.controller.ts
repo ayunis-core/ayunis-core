@@ -42,9 +42,12 @@ import { FindAllAgentsByOwnerQuery } from '../../application/use-cases/find-all-
 // Import DTOs and mappers
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { UpdateAgentDto } from './dto/update-agent.dto';
-import { AgentResponseDto } from './dto/agent-response.dto';
+import {
+  AgentResponseDto,
+  ToolResponseDto,
+  ModelResponseDto,
+} from './dto/agent-response.dto';
 import { AgentDtoMapper } from './mappers/agent.mapper';
-import { ModelResponseDto } from 'src/domain/threads/presenters/http/dto/model-response-dto';
 
 @ApiTags('agents')
 @Controller('agents')
@@ -108,7 +111,7 @@ export class AgentsController {
     type: [AgentResponseDto],
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  @ApiExtraModels(ModelResponseDto)
+  @ApiExtraModels(ModelResponseDto, ToolResponseDto)
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<AgentResponseDto[]> {

@@ -3614,49 +3614,31 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "The ID of the model",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
+            "description": "The unique identifier of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
           },
           "name": {
             "type": "string",
             "description": "The name of the model",
-            "example": "gpt-4o"
+            "example": "gpt-4"
           },
           "provider": {
             "type": "string",
             "description": "The provider of the model",
-            "example": "mistral",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce"
-            ]
+            "example": "openai"
           },
           "displayName": {
             "type": "string",
             "description": "The display name of the model",
-            "example": "Mistral"
-          },
-          "canStream": {
-            "type": "boolean",
-            "description": "Whether the model can stream",
-            "example": true
-          },
-          "isReasoning": {
-            "type": "boolean",
-            "description": "Whether the model can reason",
-            "example": true
+            "example": "GPT-4"
           }
         },
         "required": [
           "id",
           "name",
           "provider",
-          "displayName",
-          "canStream",
-          "isReasoning"
+          "displayName"
         ]
       },
       "GetThreadResponseDto": {
@@ -4242,6 +4224,26 @@
           "toolAssignments"
         ]
       },
+      "ToolResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of the tool",
+            "example": "internet_search",
+            "enum": [
+              "http",
+              "source_query",
+              "internet_search",
+              "website_content",
+              "custom"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
       "AgentResponseDto": {
         "type": "object",
         "properties": {
@@ -4293,11 +4295,10 @@
             ]
           },
           "tools": {
-            "type": "array",
             "description": "The tools assigned to this agent",
-            "example": [],
+            "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/ToolResponseDto"
             }
           }
         },
