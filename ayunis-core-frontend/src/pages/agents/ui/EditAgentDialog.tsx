@@ -142,7 +142,7 @@ export default function EditAgentDialog({
                   <FormControl>
                     <Textarea
                       placeholder={t("editDialog.form.instructionsPlaceholder")}
-                      className="min-h-[150px]"
+                      className="min-h-[150px] max-h-[200px]"
                       {...field}
                     />
                   </FormControl>
