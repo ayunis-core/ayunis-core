@@ -48,6 +48,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
           model: {
             model: true,
           },
+          agentTools: {
+            toolConfig: true,
+          },
         },
       },
     });

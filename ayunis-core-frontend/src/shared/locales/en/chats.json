@@ -7,9 +7,6 @@
     "deleteText": "Delete",
     "cancelText": "Cancel",
     "errorDeleteThread": "Failed to delete thread",
-    "aiThinking": "AI is thinking...",
-    "usingTool": "Using tool: {{toolName}}",
-    "resultFrom": "Result from {{toolName}}:",
     "unknownMessageType": "Unknown message type",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",
@@ -17,7 +14,10 @@
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
     "errorToolNotFound": "Tool not found",
-    "errorSendMessage": "Message could not be sent. Please refresh the page and try again."
+    "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
+    "tools": {
+      "internet_search": "Internet Search"
+    }
   },
   "newChat": {
     "title": "How can I help you today?",

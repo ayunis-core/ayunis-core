@@ -8,22 +8,39 @@ import {
   agentsControllerCreate,
   getAgentsControllerFindAllQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
+import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import { useRouter } from "@tanstack/react-router";
 
 const createAgentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   instructions: z.string().min(1, "Instructions are required"),
   modelId: z.string().min(1, "Model is required"),
+  toolAssignments: z.array(
+    z.object({
+      type: z.enum([
+        ToolAssignmentDtoType.http,
+        ToolAssignmentDtoType.source_query,
+        ToolAssignmentDtoType.internet_search,
+        ToolAssignmentDtoType.website_content,
+        ToolAssignmentDtoType.custom,
+      ]),
+      toolConfigId: z.string().optional(),
+    }),
+  ),
 });
 
-type CreateAgentData = z.infer<typeof createAgentSchema>;
+export type CreateAgentData = z.infer<typeof createAgentSchema>;
 
-interface UseAddAgentProps {
+interface UseCreateAgentProps {
   onSuccessCallback?: () => void;
 }
 
-export function useAddAgent({ onSuccessCallback }: UseAddAgentProps = {}) {
+export function useCreateAgent({
+  onSuccessCallback,
+}: UseCreateAgentProps = {}) {
   const { t } = useTranslation("agents");
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const form = useForm<CreateAgentData>({
     resolver: zodResolver(createAgentSchema),
@@ -31,6 +48,7 @@ export function useAddAgent({ onSuccessCallback }: UseAddAgentProps = {}) {
       name: "",
       instructions: "",
       modelId: "",
+      toolAssignments: [],
     },
   });
 
@@ -40,13 +58,20 @@ export function useAddAgent({ onSuccessCallback }: UseAddAgentProps = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [getAgentsControllerFindAllQueryKey()],
+        queryKey: getAgentsControllerFindAllQueryKey(),
       });
       toast.success(t("create.success"));
+      form.reset();
       onSuccessCallback?.();
     },
     onError: () => {
       toast.error(t("create.error"));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getAgentsControllerFindAllQueryKey(),
+      });
+      router.invalidate();
     },
   });
 

@@ -9,6 +9,7 @@ export abstract class AgentRepository {
   abstract findMany(ids: UUID[], userId: UUID): Promise<Agent[]>;
   abstract findAllByOwner(userId: UUID): Promise<Agent[]>;
   abstract findAllByModel(modelId: UUID): Promise<Agent[]>;
+  abstract update(agent: Agent): Promise<Agent>;
   abstract updateModel(
     agentId: UUID,
     userId: UUID,

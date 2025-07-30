@@ -291,9 +291,13 @@ export default function ChatPage({ thread }: ChatPageProps) {
   // Chat Content (Messages only)
   const chatContent = (
     <div className="p-4 pb-8" ref={scrollAreaRef}>
-      <div className="space-y-4">
-        {sortedMessages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+      <div>
+        {sortedMessages.map((message, i) => (
+          <ChatMessage
+            key={message.id}
+            message={message}
+            hideAvatar={i > 0 && sortedMessages[i - 1].role !== "user"}
+          />
         ))}
 
         {/* Loading indicator */}

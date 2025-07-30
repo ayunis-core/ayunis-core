@@ -9,6 +9,7 @@ import { AgentRecord } from './schema/agent.record';
 import { AgentMapper } from './mappers/agent.mapper';
 import { AgentNotFoundError } from '../../../application/agents.errors';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { AgentToolAssignmentRecord } from './schema/agent-tool.record';
 
 @Injectable()
 export class LocalAgentRepository implements AgentRepository {
@@ -54,6 +55,83 @@ export class LocalAgentRepository implements AgentRepository {
         userId: agent.userId,
       });
       throw error;
+    }
+  }
+
+  async update(agent: Agent): Promise<Agent> {
+    this.logger.log('update', {
+      id: agent.id,
+      name: agent.name,
+      userId: agent.userId,
+    });
+
+    // get transaction
+    const queryRunner =
+      this.agentRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+
+    try {
+      await queryRunner.startTransaction();
+
+      const existing = await queryRunner.manager.findOne(AgentRecord, {
+        where: { id: agent.id, userId: agent.userId },
+        relations: {
+          agentTools: {
+            toolConfig: true,
+          },
+          model: {
+            model: true,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new AgentNotFoundError(agent.id);
+      }
+      this.logger.debug('Existing agent', {
+        existing,
+      });
+
+      // delete existing tool assignments if they are not in the new tool assignments
+      const existingToolAssignments = existing.agentTools;
+      const newToolAssignments = agent.toolAssignments;
+      const toolAssignmentsToDelete =
+        existingToolAssignments?.filter(
+          (ta) => !newToolAssignments.some((ta2) => ta2.id === ta.id),
+        ) ?? [];
+      this.logger.debug('Tool assignments to delete', {
+        existingToolAssignments,
+        newToolAssignments,
+        toolAssignmentsToDelete,
+      });
+      for (const ta of toolAssignmentsToDelete) {
+        await queryRunner.manager.delete(AgentToolAssignmentRecord, ta.id);
+      }
+
+      const updatedAgent = new Agent({
+        ...agent,
+        toolAssignments: newToolAssignments,
+      });
+      this.logger.debug('Updated agent', {
+        agent,
+      });
+
+      // update agent with new data
+      const record = this.agentMapper.toRecord(updatedAgent);
+      const updatedRecord = await queryRunner.manager.save(AgentRecord, record);
+      this.logger.debug('Updated record', {
+        updatedRecord,
+      });
+
+      await queryRunner.commitTransaction();
+      return this.agentMapper.toDomain(updatedRecord);
+    } catch (error) {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 

@@ -16,7 +16,7 @@ export class ToolConfigMapper {
 
   toRecord(domain: ToolConfig): ToolConfigRecord {
     if (domain instanceof HttpToolConfig) {
-      return this.httpToolConfigToEntity(domain);
+      return this.httpToolConfigToRecord(domain);
     }
 
     throw new Error('Invalid tool config type: ' + domain.constructor.name);
@@ -33,7 +33,7 @@ export class ToolConfigMapper {
     });
   }
 
-  private httpToolConfigToEntity(domain: HttpToolConfig): HttpToolConfigRecord {
+  private httpToolConfigToRecord(domain: HttpToolConfig): HttpToolConfigRecord {
     const entity = new HttpToolConfigRecord();
     entity.id = domain.id;
     entity.displayName = domain.displayName;

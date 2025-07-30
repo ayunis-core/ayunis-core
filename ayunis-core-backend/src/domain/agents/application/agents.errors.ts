@@ -15,6 +15,7 @@ export enum AgentErrorCode {
   AGENT_NOT_FOUND = 'AGENT_NOT_FOUND',
   AGENT_INVALID_INPUT = 'AGENT_INVALID_INPUT',
   AGENT_EXECUTION_FAILED = 'AGENT_EXECUTION_FAILED',
+  AGENT_TOOL_ASSIGNMENT_NOT_FOUND = 'AGENT_TOOL_ASSIGNMENT_NOT_FOUND',
 }
 
 /**
@@ -94,6 +95,20 @@ export class AgentExecutionFailedError extends AgentError {
       `Agent execution failed: ${reason}`,
       AgentErrorCode.AGENT_EXECUTION_FAILED,
       500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an agent tool assignment is not found
+ */
+export class AgentToolAssignmentNotFoundError extends AgentError {
+  constructor(toolAssignmentId: string, metadata?: ErrorMetadata) {
+    super(
+      `Agent tool assignment with ID ${toolAssignmentId} not found`,
+      AgentErrorCode.AGENT_TOOL_ASSIGNMENT_NOT_FOUND,
+      404,
       metadata,
     );
   }

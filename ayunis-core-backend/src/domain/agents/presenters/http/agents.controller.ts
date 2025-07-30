@@ -86,7 +86,12 @@ export class AgentsController {
         name: createAgentDto.name,
         instructions: createAgentDto.instructions,
         modelId: createAgentDto.modelId,
-        toolAssignments: [], // For now, no tools
+        toolAssignments: createAgentDto.toolAssignments.map(
+          (toolAssignment) => ({
+            toolType: toolAssignment.type,
+            toolConfigId: toolAssignment.toolConfigId ?? null,
+          }),
+        ),
         userId,
         orgId,
       }),
@@ -182,6 +187,12 @@ export class AgentsController {
         updateAgentDto.modelId,
         userId,
         orgId,
+        updateAgentDto.toolAssignments.map((toolAssignment) => ({
+          id: toolAssignment.id,
+          toolType: toolAssignment.type,
+          toolConfigId: toolAssignment.toolConfigId ?? null,
+          isEnabled: toolAssignment.isEnabled,
+        })),
       ),
     );
 

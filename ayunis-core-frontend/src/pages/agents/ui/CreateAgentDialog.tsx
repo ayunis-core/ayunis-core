@@ -34,9 +34,10 @@ import {
 } from "@/shared/ui/shadcn/tooltip";
 import { useState } from "react";
 import { Plus, Info } from "lucide-react";
-import { useAddAgent } from "../api/useAddAgent";
+import { type CreateAgentData, useCreateAgent } from "../api/useCreateAgent";
 import { useTranslation } from "react-i18next";
 import { usePermittedModels } from "@/features/usePermittedModels";
+import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 interface CreateAgentDialogProps {
   buttonText?: string;
@@ -51,22 +52,34 @@ export default function CreateAgentDialog({
 }: CreateAgentDialogProps) {
   const { t } = useTranslation("agents");
   const [isOpen, setIsOpen] = useState(false);
-  const [generateCharts, setGenerateCharts] = useState(false);
-  const [statisticalCalculations, setStatisticalCalculations] = useState(false);
-  const [createDocuments, setCreateDocuments] = useState(false);
+  const [internetSearchEnabled, setInternetSearchEnabled] = useState(false);
   const { models } = usePermittedModels();
-  const { form, onSubmit, resetForm, isLoading } = useAddAgent({
+  const {
+    form,
+    onSubmit: originalOnSubmit,
+    resetForm,
+    isLoading,
+  } = useCreateAgent({
     onSuccessCallback: () => {
       setIsOpen(false);
       resetForm();
     },
   });
 
+  const handleSubmit = (data: CreateAgentData) => {
+    const toolAssignments = internetSearchEnabled
+      ? [{ type: ToolAssignmentDtoType.internet_search }]
+      : [];
+
+    originalOnSubmit({
+      ...data,
+      toolAssignments,
+    });
+  };
+
   const handleCancel = () => {
     resetForm();
-    setGenerateCharts(false);
-    setStatisticalCalculations(false);
-    setCreateDocuments(false);
+    setInternetSearchEnabled(false);
     setIsOpen(false);
   };
 
@@ -87,7 +100,10 @@ export default function CreateAgentDialog({
           <DialogDescription>{t("createDialog.description")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -174,54 +190,16 @@ export default function CreateAgentDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <label className="text-sm font-medium">
-                      {t("createDialog.form.capabilities.generateCharts")}
+                      Internet Search
                     </label>
                     <p className="text-xs text-muted-foreground">
-                      {t(
-                        "createDialog.form.capabilities.generateChartsDescription",
-                      )}
+                      Allow the agent to search the internet for up-to-date
+                      information
                     </p>
                   </div>
                   <Switch
-                    checked={generateCharts}
-                    onCheckedChange={setGenerateCharts}
-                    disabled
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <label className="text-sm font-medium">
-                      {t(
-                        "createDialog.form.capabilities.statisticalCalculations",
-                      )}
-                    </label>
-                    <p className="text-xs text-muted-foreground">
-                      {t(
-                        "createDialog.form.capabilities.statisticalCalculationsDescription",
-                      )}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={statisticalCalculations}
-                    onCheckedChange={setStatisticalCalculations}
-                    disabled
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <label className="text-sm font-medium">
-                      {t("createDialog.form.capabilities.createDocuments")}
-                    </label>
-                    <p className="text-xs text-muted-foreground">
-                      {t(
-                        "createDialog.form.capabilities.createDocumentsDescription",
-                      )}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={createDocuments}
-                    onCheckedChange={setCreateDocuments}
-                    disabled
+                    checked={internetSearchEnabled}
+                    onCheckedChange={setInternetSearchEnabled}
                   />
                 </div>
               </div>

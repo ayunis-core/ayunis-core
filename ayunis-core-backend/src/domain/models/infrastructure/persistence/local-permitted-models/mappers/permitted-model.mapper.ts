@@ -1,24 +1,16 @@
 import { PermittedModel } from '../../../../domain/permitted-model.entity';
 import { PermittedModelRecord } from '../schema/permitted-model.record';
-import { Model } from '../../../../domain/model.entity';
 import { Injectable } from '@nestjs/common';
+import { ModelMapper } from '../../local-models/mappers/model.mapper';
 
 @Injectable()
 export class PermittedModelMapper {
+  constructor(private readonly modelMapper: ModelMapper) {}
+
   toDomain(record: PermittedModelRecord): PermittedModel {
     return new PermittedModel({
       id: record.id,
-      model: new Model({
-        id: record.model.id,
-        name: record.model.name,
-        provider: record.model.provider,
-        displayName: record.model.displayName,
-        canStream: record.model.canStream,
-        isReasoning: record.model.isReasoning,
-        isArchived: record.model.isArchived,
-        createdAt: record.model.createdAt,
-        updatedAt: record.model.updatedAt,
-      }),
+      model: this.modelMapper.toDomain(record.model),
       orgId: record.orgId,
       isDefault: record.isDefault,
       createdAt: record.createdAt,
@@ -30,6 +22,7 @@ export class PermittedModelMapper {
     const record = new PermittedModelRecord();
     record.id = domain.id;
     record.modelId = domain.model.id;
+    record.model = this.modelMapper.toRecord(domain.model);
     record.orgId = domain.orgId;
     record.isDefault = domain.isDefault;
     record.createdAt = domain.createdAt;

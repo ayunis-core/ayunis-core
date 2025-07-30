@@ -7,9 +7,6 @@
     "deleteText": "Löschen",
     "cancelText": "Abbrechen",
     "errorDeleteThread": "Thread konnte nicht gelöscht werden",
-    "aiThinking": "KI denkt nach...",
-    "usingTool": "Tool wird verwendet: {{toolName}}",
-    "resultFrom": "Ergebnis von {{toolName}}:",
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",
@@ -17,7 +14,10 @@
     "errorNoModelFound": "Kein Modell gefunden",
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
     "errorToolNotFound": "Tool nicht gefunden",
-    "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut."
+    "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "tools": {
+      "internet_search": "Internet-Suche"
+    }
   },
   "newChat": {
     "title": "Wie kann ich Ihnen heute helfen?",

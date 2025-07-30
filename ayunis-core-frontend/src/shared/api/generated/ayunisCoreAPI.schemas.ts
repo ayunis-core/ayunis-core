@@ -695,6 +695,28 @@ export interface EmbeddingResultsDto {
   results: EmbeddingResultDto[];
 }
 
+/**
+ * The type of tool to assign
+ */
+export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ToolAssignmentDtoType = {
+  http: 'http',
+  source_query: 'source_query',
+  internet_search: 'internet_search',
+  website_content: 'website_content',
+  custom: 'custom',
+} as const;
+
+export interface ToolAssignmentDto {
+  /** The type of tool to assign */
+  type: ToolAssignmentDtoType;
+  /** The ID of the tool configuration to assign */
+  toolConfigId?: string;
+}
+
 export interface CreateAgentDto {
   /**
    * The name of the agent
@@ -706,6 +728,8 @@ export interface CreateAgentDto {
   instructions: string;
   /** The ID of the permitted model to use for this agent */
   modelId: string;
+  /** The tools to assign to the agent */
+  toolAssignments: ToolAssignmentDto[];
 }
 
 export type AgentResponseDtoToolsItem = { [key: string]: unknown };
@@ -740,6 +764,8 @@ export interface UpdateAgentDto {
   instructions: string;
   /** The ID of the permitted model to use for this agent */
   modelId: string;
+  /** The tool assignments for the agent */
+  toolAssignments: ToolAssignmentDto[];
 }
 
 /**

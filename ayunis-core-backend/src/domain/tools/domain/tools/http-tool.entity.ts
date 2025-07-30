@@ -22,12 +22,16 @@ export class HttpToolConfig extends ToolConfig {
     userId: UUID;
     method: HttpToolMethod;
     endpointUrl: string;
+    createdAt?: Date;
+    updatedAt?: Date;
   }) {
     super({
       id: params.id,
       type: ToolType.HTTP,
       displayName: params.displayName,
       userId: params.userId,
+      createdAt: params.createdAt,
+      updatedAt: params.updatedAt,
     });
     this.method = params.method;
     this.endpointUrl = params.endpointUrl;

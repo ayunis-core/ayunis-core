@@ -25,11 +25,20 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
 import { Button } from "@/shared/ui/shadcn/button";
+import { Switch } from "@/shared/ui/shadcn/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/shadcn/tooltip";
 import { useState } from "react";
+import { Info } from "lucide-react";
 import { useUpdateAgent } from "../api/useUpdateAgent";
 import { useTranslation } from "react-i18next";
 import type { Agent } from "../model/openapi";
 import { usePermittedModels } from "@/features/usePermittedModels";
+import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 interface EditAgentDialogProps {
   selectedAgent: Agent;
@@ -42,8 +51,14 @@ export default function EditAgentDialog({
 }: EditAgentDialogProps) {
   const { t } = useTranslation("agents");
   const [isOpen, setIsOpen] = useState(false);
+  const [internetSearchEnabled, setInternetSearchEnabled] = useState(false);
   const { models } = usePermittedModels();
-  const { form, onSubmit, resetForm, isLoading } = useUpdateAgent({
+  const {
+    form,
+    onSubmit: originalOnSubmit,
+    resetForm,
+    isLoading,
+  } = useUpdateAgent({
     agentId: selectedAgent.id,
     onSuccessCallback: () => {
       setIsOpen(false);
@@ -51,19 +66,38 @@ export default function EditAgentDialog({
     },
   });
 
+  const handleSubmit = (data: Parameters<typeof originalOnSubmit>[0]) => {
+    const toolAssignments = internetSearchEnabled
+      ? [{ type: ToolAssignmentDtoType.internet_search, isEnabled: true }]
+      : [];
+
+    originalOnSubmit({
+      ...data,
+      toolAssignments,
+    });
+  };
+
   const handleCancel = () => {
     resetForm();
+    setInternetSearchEnabled(false);
     setIsOpen(false);
   };
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open) {
+      // Check if agent has internet search tool
+      const hasInternetSearch = selectedAgent.tools?.some(
+        (tool: any) => tool.type === ToolAssignmentDtoType.internet_search,
+      );
+      setInternetSearchEnabled(hasInternetSearch || false);
+
       // Reset form with current agent data when opening
       form.reset({
         name: selectedAgent.name,
         instructions: selectedAgent.instructions,
         modelId: (selectedAgent.model as any)?.id || "",
+        toolAssignments: [],
       });
     }
   };
@@ -77,7 +111,10 @@ export default function EditAgentDialog({
           <DialogDescription>{t("editDialog.description")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -139,6 +176,40 @@ export default function EditAgentDialog({
                 </FormItem>
               )}
             />
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <FormLabel className="text-sm font-medium">
+                  {t("editDialog.form.capabilitiesLabel")}
+                </FormLabel>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t("editDialog.form.capabilitiesTooltip")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-medium">
+                      Internet Search
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Allow the agent to search the internet for up-to-date
+                      information
+                    </p>
+                  </div>
+                  <Switch
+                    checked={internetSearchEnabled}
+                    onCheckedChange={setInternetSearchEnabled}
+                  />
+                </div>
+              </div>
+            </div>
             <DialogFooter>
               <Button
                 type="button"

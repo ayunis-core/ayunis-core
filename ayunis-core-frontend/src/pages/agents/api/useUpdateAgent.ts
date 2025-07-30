@@ -9,11 +9,26 @@ import {
   getAgentsControllerFindAllQueryKey,
   getAgentsControllerFindOneQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
+import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 const updateAgentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   instructions: z.string().min(1, "Instructions are required"),
   modelId: z.string().min(1, "Model is required"),
+  toolAssignments: z.array(
+    z.object({
+      id: z.string().optional(),
+      type: z.enum([
+        ToolAssignmentDtoType.http,
+        ToolAssignmentDtoType.source_query,
+        ToolAssignmentDtoType.internet_search,
+        ToolAssignmentDtoType.website_content,
+        ToolAssignmentDtoType.custom,
+      ]),
+      toolConfigId: z.string().optional(),
+      isEnabled: z.boolean(),
+    }),
+  ),
 });
 
 type UpdateAgentData = z.infer<typeof updateAgentSchema>;
@@ -36,6 +51,7 @@ export function useUpdateAgent({
       name: "",
       instructions: "",
       modelId: "",
+      toolAssignments: [],
     },
   });
 

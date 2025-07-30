@@ -5,6 +5,12 @@ import { Agent } from '../../../domain/agent.entity';
 import { AgentNotFoundError } from '../../agents.errors';
 import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
 import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
+import {
+  FindOneConfigurableToolQuery,
+  FindOneToolQuery,
+} from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
+import { FindOneToolUseCase } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.use-case';
+import { AgentToolAssignment } from 'src/domain/agents/domain/agent-tool-assignment.entity';
 
 @Injectable()
 export class UpdateAgentUseCase {
@@ -13,6 +19,7 @@ export class UpdateAgentUseCase {
   constructor(
     private readonly agentRepository: AgentRepository,
     private readonly getPermittedModelUseCase: GetPermittedModelUseCase,
+    private readonly findOneToolUseCase: FindOneToolUseCase,
   ) {}
 
   async execute(command: UpdateAgentCommand): Promise<Agent> {
@@ -40,18 +47,48 @@ export class UpdateAgentUseCase {
       }),
     );
 
+    // create enabled tool assignments
+    const toolAssignments = await Promise.all(
+      command.toolAssignments
+        .filter((t) => t.isEnabled)
+        .map(async (toolAssignment) => {
+          if (toolAssignment.toolConfigId) {
+            const tool = await this.findOneToolUseCase.execute(
+              new FindOneConfigurableToolQuery({
+                type: toolAssignment.toolType,
+                configId: toolAssignment.toolConfigId,
+                userId: command.userId,
+              }),
+            );
+            return new AgentToolAssignment({
+              id: toolAssignment.id,
+              tool,
+            });
+          }
+          const tool = await this.findOneToolUseCase.execute(
+            new FindOneToolQuery({
+              type: toolAssignment.toolType,
+            }),
+          );
+          return new AgentToolAssignment({
+            id: toolAssignment.id,
+            tool,
+          });
+        }),
+    );
+
     // Create updated agent
     const updatedAgent = new Agent({
       id: existingAgent.id,
       name: command.name,
       instructions: command.instructions,
       model,
-      tools: existingAgent.tools, // Keep existing tools for now
+      toolAssignments,
       userId: command.userId,
       createdAt: existingAgent.createdAt,
       updatedAt: new Date(),
     });
 
-    return this.agentRepository.create(updatedAgent);
+    return this.agentRepository.update(updatedAgent);
   }
 }

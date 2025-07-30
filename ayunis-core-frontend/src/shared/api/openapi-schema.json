@@ -4180,6 +4180,32 @@
           "results"
         ]
       },
+      "ToolAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of tool to assign",
+            "example": "internet_search",
+            "enum": [
+              "http",
+              "source_query",
+              "internet_search",
+              "website_content",
+              "custom"
+            ]
+          },
+          "toolConfigId": {
+            "type": "string",
+            "description": "The ID of the tool configuration to assign",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
       "CreateAgentDto": {
         "type": "object",
         "properties": {
@@ -4200,12 +4226,20 @@
             "description": "The ID of the permitted model to use for this agent",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "toolAssignments": {
+            "description": "The tools to assign to the agent",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolAssignmentDto"
+            }
           }
         },
         "required": [
           "name",
           "instructions",
-          "modelId"
+          "modelId",
+          "toolAssignments"
         ]
       },
       "AgentResponseDto": {
@@ -4298,12 +4332,20 @@
             "description": "The ID of the permitted model to use for this agent",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "toolAssignments": {
+            "description": "The tool assignments for the agent",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolAssignmentDto"
+            }
           }
         },
         "required": [
           "name",
           "instructions",
-          "modelId"
+          "modelId",
+          "toolAssignments"
         ]
       },
       "RunSessionResponseDto": {

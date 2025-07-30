@@ -17,7 +17,7 @@ export class AgentMapper {
       name: record.name,
       instructions: record.instructions,
       model: this.permittedModelMapper.toDomain(record.model),
-      tools: record.agentTools?.map((toolRecord) =>
+      toolAssignments: record.agentTools?.map((toolRecord) =>
         this.agentToolMapper.toDomain(toolRecord),
       ),
       userId: record.userId,
@@ -31,10 +31,11 @@ export class AgentMapper {
     entity.id = domain.id;
     entity.name = domain.name;
     entity.instructions = domain.instructions;
+    entity.modelId = domain.model.id;
     entity.model = this.permittedModelMapper.toRecord(domain.model);
     entity.userId = domain.userId;
-    entity.agentTools = domain.tools.map((tool) =>
-      this.agentToolMapper.toRecord(tool, domain.id),
+    entity.agentTools = domain.toolAssignments.map((toolAssignment) =>
+      this.agentToolMapper.toRecord(toolAssignment, domain.id),
     );
     return entity;
   }

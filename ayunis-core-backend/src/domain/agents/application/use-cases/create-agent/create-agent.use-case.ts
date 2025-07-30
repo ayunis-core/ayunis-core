@@ -9,6 +9,7 @@ import {
 } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
 import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
 import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
+import { AgentToolAssignment } from 'src/domain/agents/domain/agent-tool-assignment.entity';
 
 @Injectable()
 export class CreateAgentUseCase {
@@ -48,12 +49,19 @@ export class CreateAgentUseCase {
       }),
     );
 
+    const toolAssignments = tools.map(
+      (tool) =>
+        new AgentToolAssignment({
+          tool,
+        }),
+    );
+
     // Create agent
     const agent = new Agent({
       name: command.name,
       instructions: command.instructions,
       model,
-      tools,
+      toolAssignments,
       userId: command.userId,
     });
 
