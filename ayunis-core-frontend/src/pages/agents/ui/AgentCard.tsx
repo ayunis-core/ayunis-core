@@ -76,7 +76,9 @@ export default function AgentCard({ agent }: AgentCardProps) {
         <CardFooter>
           <div className="flex flex-col gap-2">
             {agent.tools.map((tool) => (
-              <Badge variant="outline">{tool.type}</Badge>
+              <Badge key={tool.type} variant="outline">
+                {tool.type}
+              </Badge>
             ))}
           </div>
         </CardFooter>

@@ -8,7 +8,7 @@ import {
 
 const agentQueryOptions = () =>
   queryOptions({
-    queryKey: [getAgentsControllerFindAllQueryKey()],
+    queryKey: getAgentsControllerFindAllQueryKey(),
     queryFn: () => agentsControllerFindAll(),
   });
 

@@ -11,7 +11,7 @@ export function useAgents() {
     refetch,
   } = useAgentsControllerFindAll({
     query: {
-      queryKey: [getAgentsControllerFindAllQueryKey()],
+      queryKey: getAgentsControllerFindAllQueryKey(),
     },
   });
 
