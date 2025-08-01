@@ -556,8 +556,6 @@ export interface SourceResponseDto {
   id: string;
   /** Thread ID this source belongs to */
   threadId: string;
-  /** User ID who owns this source */
-  userId: string;
   /** Type of source */
   type: SourceResponseDtoType;
   /** Creation timestamp */
@@ -583,8 +581,6 @@ export interface FileSourceResponseDto {
   id: string;
   /** Thread ID this source belongs to */
   threadId: string;
-  /** User ID who owns this source */
-  userId: string;
   /** Type of source */
   type: FileSourceResponseDtoType;
   /** Creation timestamp */
@@ -618,123 +614,6 @@ export interface CreateHttpToolDto {
 }
 
 export interface HttpTool { [key: string]: unknown }
-
-export interface CreateUrlSourceDto {
-  /** Thread ID (optional) */
-  threadId?: string;
-  /** URL to create source from */
-  url: string;
-}
-
-export interface MatchSourceDto {
-  /** Source ID to search within */
-  sourceId: string;
-  /** Query text to search for */
-  query: string;
-  /**
-   * Similarity threshold (0.0 = identical, 2.0 = opposite)
-   * @minimum 0
-   * @maximum 2
-   */
-  similarityThreshold?: number;
-  /**
-   * Maximum number of results to return
-   * @minimum 1
-   * @maximum 100
-   */
-  limit?: number;
-}
-
-export interface RetrieveUrlDto {
-  /** URL to retrieve content from */
-  url: string;
-}
-
-export interface SplitterMetadataDto {
-  /** Number of text chunks or lines per segment */
-  chunkSize?: number;
-  /** Number of characters to overlap between chunks */
-  chunkOverlap?: number;
-  /** For CSV files: whether to preserve header in each chunk */
-  preserveHeader?: boolean;
-  /** For CSV files: whether to skip blank lines */
-  skipBlankLines?: boolean;
-  /** For CSV files: whether to handle quoted fields that span multiple lines */
-  detectQuotes?: boolean;
-  /** For CSV files: custom header row to use instead of first line */
-  headerRow?: string;
-}
-
-/**
- * The splitter provider to use
- */
-export type SplitTextDtoProvider = typeof SplitTextDtoProvider[keyof typeof SplitTextDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SplitTextDtoProvider = {
-  recursive: 'recursive',
-  line: 'line',
-} as const;
-
-export interface SplitTextDto {
-  /** The text content to split */
-  text: string;
-  /** The splitter provider to use */
-  provider: SplitTextDtoProvider;
-  /** Metadata for customizing the splitting behavior */
-  metadata?: SplitterMetadataDto;
-}
-
-/**
- * Metadata about the chunk
- */
-export type TextChunkDtoMetadata = { [key: string]: unknown };
-
-export interface TextChunkDto {
-  /** The text content of the chunk */
-  text: string;
-  /** Metadata about the chunk */
-  metadata?: TextChunkDtoMetadata;
-}
-
-/**
- * Metadata about the split operation
- */
-export type SplitResultDtoMetadata = { [key: string]: unknown };
-
-export interface SplitResultDto {
-  /** The chunks of text produced by the splitting operation */
-  chunks: TextChunkDto[];
-  /** Metadata about the split operation */
-  metadata: SplitResultDtoMetadata;
-}
-
-export interface EmbedTextDto {
-  /** The text to embed */
-  texts: string;
-}
-
-/**
- * Metadata about the embedding process
- */
-export type EmbeddingResultDtoMetadata = { [key: string]: unknown };
-
-export interface EmbeddingResultDto {
-  /** The vector representation of the embedded text */
-  vector: number[];
-  /** The original text that was embedded */
-  text: string;
-  /** The dimension (length) of the embedding vector */
-  dimension: number;
-  /** Metadata about the embedding process */
-  metadata: EmbeddingResultDtoMetadata;
-}
-
-export interface EmbeddingResultsDto {
-  /** The list of embeddings */
-  results: EmbeddingResultDto[];
-}
 
 /**
  * The type of tool to assign
@@ -825,6 +704,37 @@ export interface UpdateAgentDto {
   modelId: string;
   /** The tool assignments for the agent */
   toolAssignments: ToolAssignmentDto[];
+}
+
+export interface RetrieveUrlDto {
+  /** URL to retrieve content from */
+  url: string;
+}
+
+export interface EmbedTextDto {
+  /** The text to embed */
+  texts: string;
+}
+
+/**
+ * Metadata about the embedding process
+ */
+export type EmbeddingResultDtoMetadata = { [key: string]: unknown };
+
+export interface EmbeddingResultDto {
+  /** The vector representation of the embedded text */
+  vector: number[];
+  /** The original text that was embedded */
+  text: string;
+  /** The dimension (length) of the embedding vector */
+  dimension: number;
+  /** Metadata about the embedding process */
+  metadata: EmbeddingResultDtoMetadata;
+}
+
+export interface EmbeddingResultsDto {
+  /** The list of embeddings */
+  results: EmbeddingResultDto[];
 }
 
 /**
@@ -1462,39 +1372,10 @@ export interface UpdateEmbeddingModelDto { [key: string]: unknown }
 export type ThreadsControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
-  /** The ID of the user who owns this source */
-  userId: string;
   /** The display name for the file source */
   name?: string;
   /** A description of the file source */
   description?: string;
-};
-
-export type SourcesControllerGetSourcesByThreadIdParams = {
-/**
- * Thread ID
- */
-threadId: string;
-};
-
-export type SourcesControllerCreateFileSourceBody = {
-  file?: Blob;
-  threadId?: string;
-  fileName?: string;
-  fileType?: string;
-};
-
-export type SplitterControllerGetAvailableProviders200ProvidersItem = typeof SplitterControllerGetAvailableProviders200ProvidersItem[keyof typeof SplitterControllerGetAvailableProviders200ProvidersItem];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SplitterControllerGetAvailableProviders200ProvidersItem = {
-  recursive: 'recursive',
-  line: 'line',
-} as const;
-
-export type SplitterControllerGetAvailableProviders200 = {
-  providers?: SplitterControllerGetAvailableProviders200ProvidersItem[];
 };
 
 export type RunsControllerConnectToStream200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunHeartbeatResponseDto;

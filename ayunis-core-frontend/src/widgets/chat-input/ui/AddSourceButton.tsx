@@ -14,7 +14,7 @@ import {
 } from "@/shared/ui/shadcn/tooltip";
 import { Link, Upload, Loader2, Paperclip } from "lucide-react";
 import AddUrlSourceDialog from "./AddUrlSourceDialog";
-import { useSources } from "../api/useSources";
+import { useFileSource } from "../api/useFileSource";
 
 interface AddSourceButtonProps {
   threadId?: string;
@@ -25,7 +25,7 @@ export default function AddSourceButton({ threadId }: AddSourceButtonProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { uploadFile, isCreatingFileSource } = useSources({
+  const { uploadFile, isLoading: isCreatingFileSource } = useFileSource({
     threadId,
     onSuccess: () => {
       console.log("File uploaded successfully");
@@ -39,7 +39,9 @@ export default function AddSourceButton({ threadId }: AddSourceButtonProps) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      uploadFile(file);
+      uploadFile({
+        file,
+      });
       // Reset the input
       event.target.value = "";
     }

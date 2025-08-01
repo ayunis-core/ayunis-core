@@ -320,11 +320,6 @@ export class ThreadsController {
           format: 'binary',
           description: 'The file to upload',
         },
-        userId: {
-          type: 'string',
-          format: 'uuid',
-          description: 'The ID of the user who owns this source',
-        },
         name: {
           type: 'string',
           description: 'The display name for the file source',
@@ -334,7 +329,7 @@ export class ThreadsController {
           description: 'A description of the file source',
         },
       },
-      required: ['file', 'userId'],
+      required: ['file'],
     },
   })
   @ApiResponse({
@@ -356,6 +351,7 @@ export class ThreadsController {
   )
   async addFileSource(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Body() addFileSourceDto: AddFileSourceToThreadDto,
     @UploadedFile()
@@ -386,7 +382,7 @@ export class ThreadsController {
 
     // Add the source to the thread
     const thread = await this.findThreadUseCase.execute(
-      new FindThreadQuery(threadId, addFileSourceDto.userId),
+      new FindThreadQuery(threadId, userId),
     );
 
     await this.addSourceToThreadUseCase.execute(

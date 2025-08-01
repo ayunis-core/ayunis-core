@@ -41,7 +41,6 @@ import type {
   CreatePromptDto,
   CreateSubscriptionRequestDto,
   CreateThreadDto,
-  CreateUrlSourceDto,
   DeletePermittedProviderDto,
   EmbedTextDto,
   EmbeddingResultsDto,
@@ -54,7 +53,6 @@ import type {
   InviteDetailResponseDto,
   InviteResponseDto,
   LoginDto,
-  MatchSourceDto,
   MeResponseDto,
   ModelProviderInfoResponseDto,
   ModelProviderWithPermittedStatusResponseDto,
@@ -74,11 +72,6 @@ import type {
   SetOrgDefaultModelDto,
   SetUserDefaultModelDto,
   SourceResponseDto,
-  SourcesControllerCreateFileSourceBody,
-  SourcesControllerGetSourcesByThreadIdParams,
-  SplitResultDto,
-  SplitTextDto,
-  SplitterControllerGetAvailableProviders200,
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
   SuccessResponseDto,
@@ -1962,7 +1955,6 @@ export const threadsControllerAddFileSource = (
       
       const formData = new FormData();
 formData.append(`file`, threadsControllerAddFileSourceBody.file)
-formData.append(`userId`, threadsControllerAddFileSourceBody.userId)
 if(threadsControllerAddFileSourceBody.name !== undefined) {
  formData.append(`name`, threadsControllerAddFileSourceBody.name)
  }
@@ -2212,887 +2204,6 @@ export const useToolsControllerDeleteTool = <TError = unknown,
       > => {
 
       const mutationOptions = getToolsControllerDeleteToolMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Get source by ID
- */
-export const sourcesControllerGetSourceById = (
-    id: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/sources/${id}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSourcesControllerGetSourceByIdQueryKey = (id: string,) => {
-    return [`/sources/${id}`] as const;
-    }
-
-    
-export const getSourcesControllerGetSourceByIdQueryOptions = <TData = Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSourcesControllerGetSourceByIdQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>> = ({ signal }) => sourcesControllerGetSourceById(id, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SourcesControllerGetSourceByIdQueryResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>>
-export type SourcesControllerGetSourceByIdQueryError = void
-
-
-export function useSourcesControllerGetSourceById<TData = Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sourcesControllerGetSourceById>>,
-          TError,
-          Awaited<ReturnType<typeof sourcesControllerGetSourceById>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSourcesControllerGetSourceById<TData = Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sourcesControllerGetSourceById>>,
-          TError,
-          Awaited<ReturnType<typeof sourcesControllerGetSourceById>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSourcesControllerGetSourceById<TData = Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get source by ID
- */
-
-export function useSourcesControllerGetSourceById<TData = Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourceById>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSourcesControllerGetSourceByIdQueryOptions(id,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Delete source by ID
- */
-export const sourcesControllerDeleteSource = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/sources/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getSourcesControllerDeleteSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerDeleteSource>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerDeleteSource>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['sourcesControllerDeleteSource'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sourcesControllerDeleteSource>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  sourcesControllerDeleteSource(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SourcesControllerDeleteSourceMutationResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerDeleteSource>>>
-    
-    export type SourcesControllerDeleteSourceMutationError = void
-
-    /**
- * @summary Delete source by ID
- */
-export const useSourcesControllerDeleteSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerDeleteSource>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sourcesControllerDeleteSource>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getSourcesControllerDeleteSourceMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Get sources by thread ID
- */
-export const sourcesControllerGetSourcesByThreadId = (
-    params: SourcesControllerGetSourcesByThreadIdParams,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/sources`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-  
-
-export const getSourcesControllerGetSourcesByThreadIdQueryKey = (params: SourcesControllerGetSourcesByThreadIdParams,) => {
-    return [`/sources`, ...(params ? [params]: [])] as const;
-    }
-
-    
-export const getSourcesControllerGetSourcesByThreadIdQueryOptions = <TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError = unknown>(params: SourcesControllerGetSourcesByThreadIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSourcesControllerGetSourcesByThreadIdQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>> = ({ signal }) => sourcesControllerGetSourcesByThreadId(params, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SourcesControllerGetSourcesByThreadIdQueryResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>>
-export type SourcesControllerGetSourcesByThreadIdQueryError = unknown
-
-
-export function useSourcesControllerGetSourcesByThreadId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError = unknown>(
- params: SourcesControllerGetSourcesByThreadIdParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>,
-          TError,
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSourcesControllerGetSourcesByThreadId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError = unknown>(
- params: SourcesControllerGetSourcesByThreadIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>,
-          TError,
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSourcesControllerGetSourcesByThreadId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError = unknown>(
- params: SourcesControllerGetSourcesByThreadIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get sources by thread ID
- */
-
-export function useSourcesControllerGetSourcesByThreadId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError = unknown>(
- params: SourcesControllerGetSourcesByThreadIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByThreadId>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSourcesControllerGetSourcesByThreadIdQueryOptions(params,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get sources by user
- */
-export const sourcesControllerGetSourcesByUserId = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/sources/user/sources`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSourcesControllerGetSourcesByUserIdQueryKey = () => {
-    return [`/sources/user/sources`] as const;
-    }
-
-    
-export const getSourcesControllerGetSourcesByUserIdQueryOptions = <TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSourcesControllerGetSourcesByUserIdQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>> = ({ signal }) => sourcesControllerGetSourcesByUserId(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SourcesControllerGetSourcesByUserIdQueryResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>>
-export type SourcesControllerGetSourcesByUserIdQueryError = unknown
-
-
-export function useSourcesControllerGetSourcesByUserId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>,
-          TError,
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSourcesControllerGetSourcesByUserId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>,
-          TError,
-          Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSourcesControllerGetSourcesByUserId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get sources by user
- */
-
-export function useSourcesControllerGetSourcesByUserId<TData = Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sourcesControllerGetSourcesByUserId>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSourcesControllerGetSourcesByUserIdQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Create a file source
- */
-export const sourcesControllerCreateFileSource = (
-    sourcesControllerCreateFileSourceBody: SourcesControllerCreateFileSourceBody,
- signal?: AbortSignal
-) => {
-      
-      const formData = new FormData();
-if(sourcesControllerCreateFileSourceBody.file !== undefined) {
- formData.append(`file`, sourcesControllerCreateFileSourceBody.file)
- }
-if(sourcesControllerCreateFileSourceBody.threadId !== undefined) {
- formData.append(`threadId`, sourcesControllerCreateFileSourceBody.threadId)
- }
-if(sourcesControllerCreateFileSourceBody.fileName !== undefined) {
- formData.append(`fileName`, sourcesControllerCreateFileSourceBody.fileName)
- }
-if(sourcesControllerCreateFileSourceBody.fileType !== undefined) {
- formData.append(`fileType`, sourcesControllerCreateFileSourceBody.fileType)
- }
-
-      return customAxiosInstance<void>(
-      {url: `/sources/file`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-  
-
-
-export const getSourcesControllerCreateFileSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerCreateFileSource>>, TError,{data: SourcesControllerCreateFileSourceBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerCreateFileSource>>, TError,{data: SourcesControllerCreateFileSourceBody}, TContext> => {
-
-const mutationKey = ['sourcesControllerCreateFileSource'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sourcesControllerCreateFileSource>>, {data: SourcesControllerCreateFileSourceBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  sourcesControllerCreateFileSource(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SourcesControllerCreateFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerCreateFileSource>>>
-    export type SourcesControllerCreateFileSourceMutationBody = SourcesControllerCreateFileSourceBody
-    export type SourcesControllerCreateFileSourceMutationError = void
-
-    /**
- * @summary Create a file source
- */
-export const useSourcesControllerCreateFileSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerCreateFileSource>>, TError,{data: SourcesControllerCreateFileSourceBody}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sourcesControllerCreateFileSource>>,
-        TError,
-        {data: SourcesControllerCreateFileSourceBody},
-        TContext
-      > => {
-
-      const mutationOptions = getSourcesControllerCreateFileSourceMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Create a URL source
- */
-export const sourcesControllerCreateUrlSource = (
-    createUrlSourceDto: CreateUrlSourceDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/sources/url`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createUrlSourceDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSourcesControllerCreateUrlSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerCreateUrlSource>>, TError,{data: CreateUrlSourceDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerCreateUrlSource>>, TError,{data: CreateUrlSourceDto}, TContext> => {
-
-const mutationKey = ['sourcesControllerCreateUrlSource'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sourcesControllerCreateUrlSource>>, {data: CreateUrlSourceDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  sourcesControllerCreateUrlSource(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SourcesControllerCreateUrlSourceMutationResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerCreateUrlSource>>>
-    export type SourcesControllerCreateUrlSourceMutationBody = CreateUrlSourceDto
-    export type SourcesControllerCreateUrlSourceMutationError = void
-
-    /**
- * @summary Create a URL source
- */
-export const useSourcesControllerCreateUrlSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerCreateUrlSource>>, TError,{data: CreateUrlSourceDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sourcesControllerCreateUrlSource>>,
-        TError,
-        {data: CreateUrlSourceDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSourcesControllerCreateUrlSourceMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Search/match source content chunks
- */
-export const sourcesControllerMatchSourceContentChunks = (
-    matchSourceDto: MatchSourceDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/sources/search`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: matchSourceDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSourcesControllerMatchSourceContentChunksMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerMatchSourceContentChunks>>, TError,{data: MatchSourceDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerMatchSourceContentChunks>>, TError,{data: MatchSourceDto}, TContext> => {
-
-const mutationKey = ['sourcesControllerMatchSourceContentChunks'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sourcesControllerMatchSourceContentChunks>>, {data: MatchSourceDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  sourcesControllerMatchSourceContentChunks(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SourcesControllerMatchSourceContentChunksMutationResult = NonNullable<Awaited<ReturnType<typeof sourcesControllerMatchSourceContentChunks>>>
-    export type SourcesControllerMatchSourceContentChunksMutationBody = MatchSourceDto
-    export type SourcesControllerMatchSourceContentChunksMutationError = void
-
-    /**
- * @summary Search/match source content chunks
- */
-export const useSourcesControllerMatchSourceContentChunks = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sourcesControllerMatchSourceContentChunks>>, TError,{data: MatchSourceDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sourcesControllerMatchSourceContentChunks>>,
-        TError,
-        {data: MatchSourceDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSourcesControllerMatchSourceContentChunksMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Process content from a file
- */
-export const fileRetrieversControllerRetrieveFile = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/retrievers/file`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getFileRetrieversControllerRetrieveFileMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fileRetrieversControllerRetrieveFile>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof fileRetrieversControllerRetrieveFile>>, TError,void, TContext> => {
-
-const mutationKey = ['fileRetrieversControllerRetrieveFile'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fileRetrieversControllerRetrieveFile>>, void> = () => {
-          
-
-          return  fileRetrieversControllerRetrieveFile()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FileRetrieversControllerRetrieveFileMutationResult = NonNullable<Awaited<ReturnType<typeof fileRetrieversControllerRetrieveFile>>>
-    
-    export type FileRetrieversControllerRetrieveFileMutationError = unknown
-
-    /**
- * @summary Process content from a file
- */
-export const useFileRetrieversControllerRetrieveFile = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fileRetrieversControllerRetrieveFile>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof fileRetrieversControllerRetrieveFile>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getFileRetrieversControllerRetrieveFileMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Retrieve content from a URL
- */
-export const urlRetrieverControllerRetrieveUrl = (
-    retrieveUrlDto: RetrieveUrlDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/retrievers/url`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: retrieveUrlDto, signal
-    },
-      );
-    }
-  
-
-
-export const getUrlRetrieverControllerRetrieveUrlMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext> => {
-
-const mutationKey = ['urlRetrieverControllerRetrieveUrl'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, {data: RetrieveUrlDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  urlRetrieverControllerRetrieveUrl(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UrlRetrieverControllerRetrieveUrlMutationResult = NonNullable<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>>
-    export type UrlRetrieverControllerRetrieveUrlMutationBody = RetrieveUrlDto
-    export type UrlRetrieverControllerRetrieveUrlMutationError = unknown
-
-    /**
- * @summary Retrieve content from a URL
- */
-export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>,
-        TError,
-        {data: RetrieveUrlDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUrlRetrieverControllerRetrieveUrlMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Get available text splitter providers
- */
-export const splitterControllerGetAvailableProviders = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SplitterControllerGetAvailableProviders200>(
-      {url: `/splitter/providers`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSplitterControllerGetAvailableProvidersQueryKey = () => {
-    return [`/splitter/providers`] as const;
-    }
-
-    
-export const getSplitterControllerGetAvailableProvidersQueryOptions = <TData = Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSplitterControllerGetAvailableProvidersQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>> = ({ signal }) => splitterControllerGetAvailableProviders(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SplitterControllerGetAvailableProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>>
-export type SplitterControllerGetAvailableProvidersQueryError = unknown
-
-
-export function useSplitterControllerGetAvailableProviders<TData = Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>,
-          TError,
-          Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSplitterControllerGetAvailableProviders<TData = Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>,
-          TError,
-          Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSplitterControllerGetAvailableProviders<TData = Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get available text splitter providers
- */
-
-export function useSplitterControllerGetAvailableProviders<TData = Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof splitterControllerGetAvailableProviders>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSplitterControllerGetAvailableProvidersQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Split text using the specified provider
- */
-export const splitterControllerSplitText = (
-    splitTextDto: SplitTextDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SplitResultDto>(
-      {url: `/splitter/split`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: splitTextDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSplitterControllerSplitTextMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof splitterControllerSplitText>>, TError,{data: SplitTextDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof splitterControllerSplitText>>, TError,{data: SplitTextDto}, TContext> => {
-
-const mutationKey = ['splitterControllerSplitText'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof splitterControllerSplitText>>, {data: SplitTextDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  splitterControllerSplitText(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SplitterControllerSplitTextMutationResult = NonNullable<Awaited<ReturnType<typeof splitterControllerSplitText>>>
-    export type SplitterControllerSplitTextMutationBody = SplitTextDto
-    export type SplitterControllerSplitTextMutationError = void
-
-    /**
- * @summary Split text using the specified provider
- */
-export const useSplitterControllerSplitText = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof splitterControllerSplitText>>, TError,{data: SplitTextDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof splitterControllerSplitText>>,
-        TError,
-        {data: SplitTextDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSplitterControllerSplitTextMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Embed text into a vector using the specified provider
- */
-export const embeddingsControllerEmbedText = (
-    embedTextDto: EmbedTextDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<EmbeddingResultsDto>(
-      {url: `/embeddings/embed`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: embedTextDto, signal
-    },
-      );
-    }
-  
-
-
-export const getEmbeddingsControllerEmbedTextMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext> => {
-
-const mutationKey = ['embeddingsControllerEmbedText'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, {data: EmbedTextDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  embeddingsControllerEmbedText(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EmbeddingsControllerEmbedTextMutationResult = NonNullable<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>>
-    export type EmbeddingsControllerEmbedTextMutationBody = EmbedTextDto
-    export type EmbeddingsControllerEmbedTextMutationError = void
-
-    /**
- * @summary Embed text into a vector using the specified provider
- */
-export const useEmbeddingsControllerEmbedText = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof embeddingsControllerEmbedText>>,
-        TError,
-        {data: EmbedTextDto},
-        TContext
-      > => {
-
-      const mutationOptions = getEmbeddingsControllerEmbedTextMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -3461,6 +2572,136 @@ export const useAgentsControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getAgentsControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Retrieve content from a URL
+ */
+export const urlRetrieverControllerRetrieveUrl = (
+    retrieveUrlDto: RetrieveUrlDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/retrievers/url`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: retrieveUrlDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUrlRetrieverControllerRetrieveUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext> => {
+
+const mutationKey = ['urlRetrieverControllerRetrieveUrl'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, {data: RetrieveUrlDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  urlRetrieverControllerRetrieveUrl(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UrlRetrieverControllerRetrieveUrlMutationResult = NonNullable<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>>
+    export type UrlRetrieverControllerRetrieveUrlMutationBody = RetrieveUrlDto
+    export type UrlRetrieverControllerRetrieveUrlMutationError = unknown
+
+    /**
+ * @summary Retrieve content from a URL
+ */
+export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>,
+        TError,
+        {data: RetrieveUrlDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUrlRetrieverControllerRetrieveUrlMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Embed text into a vector using the specified provider
+ */
+export const embeddingsControllerEmbedText = (
+    embedTextDto: EmbedTextDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<EmbeddingResultsDto>(
+      {url: `/embeddings/embed`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: embedTextDto, signal
+    },
+      );
+    }
+  
+
+
+export const getEmbeddingsControllerEmbedTextMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext> => {
+
+const mutationKey = ['embeddingsControllerEmbedText'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, {data: EmbedTextDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  embeddingsControllerEmbedText(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmbeddingsControllerEmbedTextMutationResult = NonNullable<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>>
+    export type EmbeddingsControllerEmbedTextMutationBody = EmbedTextDto
+    export type EmbeddingsControllerEmbedTextMutationError = void
+
+    /**
+ * @summary Embed text into a vector using the specified provider
+ */
+export const useEmbeddingsControllerEmbedText = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof embeddingsControllerEmbedText>>,
+        TError,
+        {data: EmbedTextDto},
+        TContext
+      > => {
+
+      const mutationOptions = getEmbeddingsControllerEmbedTextMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

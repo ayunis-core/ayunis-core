@@ -789,11 +789,6 @@
                     "format": "binary",
                     "description": "The file to upload"
                   },
-                  "userId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "The ID of the user who owns this source"
-                  },
                   "name": {
                     "type": "string",
                     "description": "The display name for the file source"
@@ -804,8 +799,7 @@
                   }
                 },
                 "required": [
-                  "file",
-                  "userId"
+                  "file"
                 ]
               }
             }
@@ -921,350 +915,6 @@
         "summary": "Delete a tool by ID",
         "tags": [
           "tools"
-        ]
-      }
-    },
-    "/sources/{id}": {
-      "get": {
-        "operationId": "SourcesController_getSourceById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Source ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Source found"
-          },
-          "404": {
-            "description": "Source not found"
-          }
-        },
-        "summary": "Get source by ID",
-        "tags": [
-          "sources"
-        ]
-      },
-      "delete": {
-        "operationId": "SourcesController_deleteSource",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Source ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Source deleted successfully"
-          },
-          "404": {
-            "description": "Source not found"
-          }
-        },
-        "summary": "Delete source by ID",
-        "tags": [
-          "sources"
-        ]
-      }
-    },
-    "/sources": {
-      "get": {
-        "operationId": "SourcesController_getSourcesByThreadId",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "query",
-            "description": "Thread ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Sources found"
-          }
-        },
-        "summary": "Get sources by thread ID",
-        "tags": [
-          "sources"
-        ]
-      }
-    },
-    "/sources/user/sources": {
-      "get": {
-        "operationId": "SourcesController_getSourcesByUserId",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "User sources found"
-          }
-        },
-        "summary": "Get sources by user",
-        "tags": [
-          "sources"
-        ]
-      }
-    },
-    "/sources/file": {
-      "post": {
-        "operationId": "SourcesController_createFileSource",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "threadId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "fileName": {
-                    "type": "string"
-                  },
-                  "fileType": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "File source created successfully"
-          },
-          "400": {
-            "description": "Invalid file or request data"
-          }
-        },
-        "summary": "Create a file source",
-        "tags": [
-          "sources"
-        ]
-      }
-    },
-    "/sources/url": {
-      "post": {
-        "operationId": "SourcesController_createUrlSource",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUrlSourceDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "URL source created successfully"
-          },
-          "400": {
-            "description": "Invalid URL or request data"
-          }
-        },
-        "summary": "Create a URL source",
-        "tags": [
-          "sources"
-        ]
-      }
-    },
-    "/sources/search": {
-      "post": {
-        "operationId": "SourcesController_matchSourceContentChunks",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MatchSourceDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Source content chunks matching the query"
-          },
-          "400": {
-            "description": "Invalid search parameters"
-          }
-        },
-        "summary": "Search/match source content chunks",
-        "tags": [
-          "sources"
-        ]
-      }
-    },
-    "/retrievers/file": {
-      "post": {
-        "operationId": "FileRetrieversController_retrieveFile",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "The file has been successfully processed"
-          }
-        },
-        "summary": "Process content from a file",
-        "tags": [
-          "retrievers"
-        ]
-      }
-    },
-    "/retrievers/url": {
-      "post": {
-        "operationId": "UrlRetrieverController_retrieveUrl",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RetrieveUrlDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The content has been successfully retrieved"
-          }
-        },
-        "summary": "Retrieve content from a URL",
-        "tags": [
-          "retrievers"
-        ]
-      }
-    },
-    "/splitter/providers": {
-      "get": {
-        "operationId": "SplitterController_getAvailableProviders",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of available splitter providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "providers": {
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "enum": [
-                          "recursive",
-                          "line"
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get available text splitter providers",
-        "tags": [
-          "splitter"
-        ]
-      }
-    },
-    "/splitter/split": {
-      "post": {
-        "operationId": "SplitterController_splitText",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SplitTextDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The text has been successfully split into chunks",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SplitResultDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - validation error"
-          },
-          "404": {
-            "description": "Splitter provider not found"
-          }
-        },
-        "summary": "Split text using the specified provider",
-        "tags": [
-          "splitter"
-        ]
-      }
-    },
-    "/embeddings/embed": {
-      "post": {
-        "operationId": "EmbeddingsController_embedText",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmbedTextDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The text has been successfully embedded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmbeddingResultsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - validation error"
-          },
-          "404": {
-            "description": "Embeddings provider not found"
-          }
-        },
-        "summary": "Embed text into a vector using the specified provider",
-        "tags": [
-          "embeddings"
         ]
       }
     },
@@ -1448,6 +1098,69 @@
         "summary": "Delete an agent",
         "tags": [
           "agents"
+        ]
+      }
+    },
+    "/retrievers/url": {
+      "post": {
+        "operationId": "UrlRetrieverController_retrieveUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The content has been successfully retrieved"
+          }
+        },
+        "summary": "Retrieve content from a URL",
+        "tags": [
+          "retrievers"
+        ]
+      }
+    },
+    "/embeddings/embed": {
+      "post": {
+        "operationId": "EmbeddingsController_embedText",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbedTextDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The text has been successfully embedded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResultsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error"
+          },
+          "404": {
+            "description": "Embeddings provider not found"
+          }
+        },
+        "summary": "Embed text into a vector using the specified provider",
+        "tags": [
+          "embeddings"
         ]
       }
     },
@@ -3941,10 +3654,6 @@
             "type": "string",
             "description": "Thread ID this source belongs to"
           },
-          "userId": {
-            "type": "string",
-            "description": "User ID who owns this source"
-          },
           "type": {
             "type": "string",
             "description": "Type of source",
@@ -3965,7 +3674,6 @@
         "required": [
           "id",
           "threadId",
-          "userId",
           "type",
           "createdAt",
           "updatedAt"
@@ -3981,10 +3689,6 @@
           "threadId": {
             "type": "string",
             "description": "Thread ID this source belongs to"
-          },
-          "userId": {
-            "type": "string",
-            "description": "User ID who owns this source"
           },
           "type": {
             "type": "string",
@@ -4018,7 +3722,6 @@
         "required": [
           "id",
           "threadId",
-          "userId",
           "type",
           "createdAt",
           "updatedAt",
@@ -4076,255 +3779,6 @@
       "HttpTool": {
         "type": "object",
         "properties": {}
-      },
-      "CreateUrlSourceDto": {
-        "type": "object",
-        "properties": {
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID (optional)",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "url": {
-            "type": "string",
-            "description": "URL to create source from",
-            "example": "https://example.com/document"
-          }
-        },
-        "required": [
-          "url"
-        ]
-      },
-      "MatchSourceDto": {
-        "type": "object",
-        "properties": {
-          "sourceId": {
-            "type": "string",
-            "description": "Source ID to search within",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "query": {
-            "type": "string",
-            "description": "Query text to search for",
-            "example": "machine learning algorithms"
-          },
-          "similarityThreshold": {
-            "type": "number",
-            "description": "Similarity threshold (0.0 = identical, 2.0 = opposite)",
-            "example": 0.8,
-            "minimum": 0,
-            "maximum": 2
-          },
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of results to return",
-            "example": 10,
-            "minimum": 1,
-            "maximum": 100
-          }
-        },
-        "required": [
-          "sourceId",
-          "query"
-        ]
-      },
-      "RetrieveUrlDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL to retrieve content from",
-            "example": "https://example.com/article"
-          }
-        },
-        "required": [
-          "url"
-        ]
-      },
-      "SplitterMetadataDto": {
-        "type": "object",
-        "properties": {
-          "chunkSize": {
-            "type": "number",
-            "description": "Number of text chunks or lines per segment",
-            "example": 1000
-          },
-          "chunkOverlap": {
-            "type": "number",
-            "description": "Number of characters to overlap between chunks",
-            "example": 200
-          },
-          "preserveHeader": {
-            "type": "boolean",
-            "description": "For CSV files: whether to preserve header in each chunk",
-            "default": true
-          },
-          "skipBlankLines": {
-            "type": "boolean",
-            "description": "For CSV files: whether to skip blank lines",
-            "default": true
-          },
-          "detectQuotes": {
-            "type": "boolean",
-            "description": "For CSV files: whether to handle quoted fields that span multiple lines",
-            "default": true
-          },
-          "headerRow": {
-            "type": "string",
-            "description": "For CSV files: custom header row to use instead of first line"
-          }
-        }
-      },
-      "SplitTextDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The text content to split",
-            "example": "This is a sample text that needs to be split into chunks..."
-          },
-          "provider": {
-            "type": "string",
-            "description": "The splitter provider to use",
-            "enum": [
-              "recursive",
-              "line"
-            ],
-            "example": "recursive"
-          },
-          "metadata": {
-            "description": "Metadata for customizing the splitting behavior",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SplitterMetadataDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "text",
-          "provider"
-        ]
-      },
-      "TextChunkDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "The text content of the chunk"
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Metadata about the chunk",
-            "example": {
-              "index": 0,
-              "lineCount": 5,
-              "hasHeader": true,
-              "startLine": 1,
-              "endLine": 5
-            }
-          }
-        },
-        "required": [
-          "text"
-        ]
-      },
-      "SplitResultDto": {
-        "type": "object",
-        "properties": {
-          "chunks": {
-            "description": "The chunks of text produced by the splitting operation",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TextChunkDto"
-            }
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Metadata about the split operation",
-            "example": {
-              "provider": "recursive",
-              "chunkSize": 1000,
-              "chunkOverlap": 200,
-              "totalChunks": 5
-            }
-          }
-        },
-        "required": [
-          "chunks",
-          "metadata"
-        ]
-      },
-      "EmbedTextDto": {
-        "type": "object",
-        "properties": {
-          "texts": {
-            "type": "string",
-            "description": "The text to embed",
-            "example": "This is a sample text that needs to be embedded into a vector."
-          }
-        },
-        "required": [
-          "texts"
-        ]
-      },
-      "EmbeddingResultDto": {
-        "type": "object",
-        "properties": {
-          "vector": {
-            "description": "The vector representation of the embedded text",
-            "example": [
-              0.01,
-              -0.02,
-              0.03,
-              -0.04,
-              0.05
-            ],
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          },
-          "text": {
-            "type": "string",
-            "description": "The original text that was embedded"
-          },
-          "dimension": {
-            "type": "number",
-            "description": "The dimension (length) of the embedding vector",
-            "example": 384
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Metadata about the embedding process",
-            "example": {
-              "provider": "openai",
-              "model": "text-embedding-3-small",
-              "dimension": 1536
-            }
-          }
-        },
-        "required": [
-          "vector",
-          "text",
-          "dimension",
-          "metadata"
-        ]
-      },
-      "EmbeddingResultsDto": {
-        "type": "object",
-        "properties": {
-          "results": {
-            "description": "The list of embeddings",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EmbeddingResultDto"
-            }
-          }
-        },
-        "required": [
-          "results"
-        ]
       },
       "ToolAssignmentDto": {
         "type": "object",
@@ -4511,6 +3965,90 @@
           "instructions",
           "modelId",
           "toolAssignments"
+        ]
+      },
+      "RetrieveUrlDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to retrieve content from",
+            "example": "https://example.com/article"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "EmbedTextDto": {
+        "type": "object",
+        "properties": {
+          "texts": {
+            "type": "string",
+            "description": "The text to embed",
+            "example": "This is a sample text that needs to be embedded into a vector."
+          }
+        },
+        "required": [
+          "texts"
+        ]
+      },
+      "EmbeddingResultDto": {
+        "type": "object",
+        "properties": {
+          "vector": {
+            "description": "The vector representation of the embedded text",
+            "example": [
+              0.01,
+              -0.02,
+              0.03,
+              -0.04,
+              0.05
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "text": {
+            "type": "string",
+            "description": "The original text that was embedded"
+          },
+          "dimension": {
+            "type": "number",
+            "description": "The dimension (length) of the embedding vector",
+            "example": 384
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the embedding process",
+            "example": {
+              "provider": "openai",
+              "model": "text-embedding-3-small",
+              "dimension": 1536
+            }
+          }
+        },
+        "required": [
+          "vector",
+          "text",
+          "dimension",
+          "metadata"
+        ]
+      },
+      "EmbeddingResultsDto": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "description": "The list of embeddings",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmbeddingResultDto"
+            }
+          }
+        },
+        "required": [
+          "results"
         ]
       },
       "RunSessionResponseDto": {
