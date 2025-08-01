@@ -3,14 +3,14 @@ import { AgentRepository } from '../../ports/agent.repository';
 import { UpdateAgentCommand } from './update-agent.command';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentNotFoundError } from '../../agents.errors';
-import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
-import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
 import {
   FindOneConfigurableToolQuery,
   FindOneToolQuery,
 } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
 import { FindOneToolUseCase } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.use-case';
 import { AgentToolAssignment } from 'src/domain/agents/domain/agent-tool-assignment.entity';
+import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
+import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 
 @Injectable()
 export class UpdateAgentUseCase {
@@ -18,7 +18,7 @@ export class UpdateAgentUseCase {
 
   constructor(
     private readonly agentRepository: AgentRepository,
-    private readonly getPermittedModelUseCase: GetPermittedModelUseCase,
+    private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly findOneToolUseCase: FindOneToolUseCase,
   ) {}
 
@@ -40,9 +40,9 @@ export class UpdateAgentUseCase {
     }
 
     // Get the permitted model
-    const model = await this.getPermittedModelUseCase.execute(
-      new GetPermittedModelQuery({
-        permittedModelId: command.modelId,
+    const model = await this.getPermittedLanguageModelUseCase.execute(
+      new GetPermittedLanguageModelQuery({
+        id: command.modelId,
         orgId: command.orgId,
       }),
     );

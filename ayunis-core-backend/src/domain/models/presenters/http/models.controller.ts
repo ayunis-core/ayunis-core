@@ -17,7 +17,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { GetAvailableModelsQuery } from '../../application/use-cases/get-available-models/get-available-models.query';
-import { GetInferenceUseCase } from '../../application/use-cases/get-inference/get-inference.use-case';
 import { GetAvailableModelsUseCase } from '../../application/use-cases/get-available-models/get-available-models.use-case';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 import { UserProperty } from 'src/iam/authentication/application/decorators/current-user.decorator';
@@ -25,17 +24,16 @@ import { CurrentUser } from 'src/iam/authentication/application/decorators/curre
 import { UUID } from 'crypto';
 import { GetDefaultModelQuery } from '../../application/use-cases/get-default-model/get-default-model.query';
 import { GetDefaultModelUseCase } from '../../application/use-cases/get-default-model/get-default-model.use-case';
-import { PermittedModelResponseDto } from './dto/permitted-model-response.dto';
+import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
+import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
 import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
-import { GetPermittedModelUseCase } from '../../application/use-cases/get-permitted-model/get-permitted-model.use-case';
+
 import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
-import { GetAvailableModelQuery } from '../../application/use-cases/get-available-model/get-available-model.query';
-import { GetAvailableModelUseCase } from '../../application/use-cases/get-available-model/get-available-model.use-case';
 import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
 import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
 import { ManageUserDefaultModelUseCase } from '../../application/use-cases/manage-user-default-model/manage-user-default-model.use-case';
@@ -50,8 +48,6 @@ import { GetOrgDefaultModelQuery } from '../../application/use-cases/get-org-def
 import { ManageOrgDefaultModelUseCase } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
 import { ManageOrgDefaultModelCommand } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.command';
 import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
-import { CreateCustomToolUseCase } from 'src/domain/tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
-import { MessageRequestDtoMapper } from './mappers/message-request-dto.mapper';
 import { GetModelProviderInfoUseCase } from '../../application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
 import { GetModelProviderInfoQuery } from '../../application/use-cases/get-model-provider-info/get-model-provider-info.query';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
@@ -67,13 +63,17 @@ import { GetAllPermittedProvidersUseCase } from '../../application/use-cases/get
 import { CreatePermittedProviderCommand } from '../../application/use-cases/create-permitted-provider/create-permitted-provider.command';
 import { DeletePermittedProviderCommand } from '../../application/use-cases/delete-permitted-provider/delete-permitted-provider.command';
 import { GetAllPermittedProvidersQuery } from '../../application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
-import { PermittedProvider } from '../../domain/permitted-model-provider.entity';
 import { ModelProviderWithPermittedStatusResponseDto } from './dto/model-provider-with-permitted-status-response.dto';
 import { ModelProviderWithPermittedStatusResponseDtoMapper } from './mappers/model-provider-with-permitted-status-response-dto.mapper';
 import { GetAllModelProviderInfosWithPermittedStatusUseCase } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
 import { GetAllModelProviderInfosWithPermittedStatusQuery } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.query';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { GetPermittedLanguageModelsQuery } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
+import { GetPermittedLanguageModelsUseCase } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
+import { GetPermittedEmbeddingModelsQuery } from '../../application/use-cases/get-permitted-embedding-models/get-permitted-embedding-models.query';
+import { GetPermittedEmbeddingModelsUseCase } from '../../application/use-cases/get-permitted-embedding-models/get-permitted-embedding-models.use-case';
+import { PermittedProvider } from '../../domain/permitted-model-provider.entity';
 
 @ApiTags('models')
 @Controller('models')
@@ -81,12 +81,9 @@ export class ModelsController {
   private readonly logger = new Logger(ModelsController.name);
 
   constructor(
-    private readonly triggerInferenceUseCase: GetInferenceUseCase,
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
-    private readonly getAvailableModelUseCase: GetAvailableModelUseCase,
     private readonly getAvailableModelsUseCase: GetAvailableModelsUseCase,
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
-    private readonly getPermittedModelUseCase: GetPermittedModelUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
     private readonly manageUserDefaultModelUseCase: ManageUserDefaultModelUseCase,
@@ -94,18 +91,18 @@ export class ModelsController {
     private readonly getUserDefaultModelUseCase: GetUserDefaultModelUseCase,
     private readonly getOrgDefaultModelUseCase: GetOrgDefaultModelUseCase,
     private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
-    private readonly createCustomToolUseCase: CreateCustomToolUseCase,
     private readonly getModelProviderInfoUseCase: GetModelProviderInfoUseCase,
     private readonly createPermittedProviderUseCase: CreatePermittedProviderUseCase,
     private readonly deletePermittedProviderUseCase: DeletePermittedProviderUseCase,
     private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
     private readonly getAllModelProviderInfosWithPermittedStatusUseCase: GetAllModelProviderInfosWithPermittedStatusUseCase,
-    private readonly messageRequestDtoMapper: MessageRequestDtoMapper,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
     private readonly modelProviderInfoResponseDtoMapper: ModelProviderInfoResponseDtoMapper,
     private readonly permittedProviderResponseDtoMapper: PermittedProviderResponseDtoMapper,
     private readonly modelProviderWithPermittedStatusResponseDtoMapper: ModelProviderWithPermittedStatusResponseDtoMapper,
+    private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
+    private readonly getPermittedEmbeddingModelsUseCase: GetPermittedEmbeddingModelsUseCase,
   ) {}
 
   @Get('available')
@@ -147,6 +144,7 @@ export class ModelsController {
   }
 
   @Post('permitted')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a permitted model' })
   @ApiBody({ type: CreatePermittedModelDto })
   @ApiResponse({
@@ -165,55 +163,24 @@ export class ModelsController {
   async createPermittedModel(
     @Body() createPermittedModelDto: CreatePermittedModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedModelResponseDto> {
+  ): Promise<void> {
     const command = new CreatePermittedModelCommand(
       createPermittedModelDto.modelId,
       orgId,
     );
-    const permittedModel =
-      await this.createPermittedModelUseCase.execute(command);
-    const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(permittedModel.model.id),
-    );
-    return this.modelResponseDtoMapper.toDto(modelWithConfig, permittedModel);
-  }
-
-  @Get('permitted')
-  @ApiOperation({ summary: 'Get all permitted models' })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved all permitted models',
-    schema: {
-      type: 'array',
-      items: {
-        $ref: getSchemaPath(PermittedModelResponseDto),
-      },
-    },
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  @ApiExtraModels(PermittedModelResponseDto)
-  async getPermittedModels(
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedModelResponseDto[]> {
-    const query = new GetPermittedModelsQuery(orgId);
-    const models = await this.getPermittedModelsUseCase.execute(query);
-    const permittedModelResponse = models.map((model) => {
-      const modelWithConfig = this.getAvailableModelUseCase.execute(
-        new GetAvailableModelQuery(model.model.id),
-      );
-      return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
-    });
-    return permittedModelResponse;
+    await this.createPermittedModelUseCase.execute(command);
   }
 
   @Delete('permitted/:id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete a permitted model' })
   @ApiResponse({
     status: 200,
     description: 'Successfully deleted a permitted model',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
   })
   async deletePermittedModel(
     @Param('id') id: UUID,
@@ -226,6 +193,61 @@ export class ModelsController {
     await this.deletePermittedModelUseCase.execute(command);
   }
 
+  @Get('permitted/language-models')
+  @ApiOperation({ summary: 'Get all permitted language models' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved all permitted language models',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(PermittedLanguageModelResponseDto)
+  async getPermittedLanguageModels(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<PermittedLanguageModelResponseDto[]> {
+    const query = new GetPermittedLanguageModelsQuery(orgId);
+    const models = await this.getPermittedLanguageModelsUseCase.execute(query);
+    return models.map((model) =>
+      this.modelResponseDtoMapper.toLanguageModelDto(model),
+    );
+  }
+
+  @Get('permitted/embedding-models')
+  @ApiOperation({ summary: 'Get all permitted embedding models' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved all permitted embedding models',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(PermittedEmbeddingModelResponseDto),
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiExtraModels(PermittedEmbeddingModelResponseDto)
+  async getPermittedEmbeddingModels(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<PermittedEmbeddingModelResponseDto[]> {
+    const query = new GetPermittedEmbeddingModelsQuery(orgId);
+    const models = await this.getPermittedEmbeddingModelsUseCase.execute(query);
+    const permittedModelResponse = models.map((model) => {
+      return this.modelResponseDtoMapper.toEmbeddingModelDto(model);
+    });
+    return permittedModelResponse;
+  }
+
   @Get('default')
   @ApiOperation({
     summary: 'Get the effective default model for the user',
@@ -236,7 +258,7 @@ export class ModelsController {
     status: 200,
     description: 'Successfully retrieved the effective default model',
     schema: {
-      $ref: getSchemaPath(PermittedModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
   @ApiResponse({
@@ -246,13 +268,10 @@ export class ModelsController {
   async getEffectiveDefaultModel(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<PermittedModelResponseDto> {
+  ): Promise<PermittedLanguageModelResponseDto> {
     const query = new GetDefaultModelQuery({ orgId, userId });
     const model = await this.getDefaultModelUseCase.execute(query);
-    const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.id),
-    );
-    return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
+    return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
   @Get('org/default')
@@ -265,7 +284,7 @@ export class ModelsController {
     status: 200,
     description: 'Successfully retrieved the organization default model',
     schema: {
-      $ref: getSchemaPath(PermittedModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
   @ApiResponse({
@@ -274,18 +293,13 @@ export class ModelsController {
   })
   async getOrgSpecificDefaultModel(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedModelResponseDto | null> {
+  ): Promise<PermittedLanguageModelResponseDto | null> {
     const query = new GetOrgDefaultModelQuery(orgId);
     const model = await this.getOrgDefaultModelUseCase.execute(query);
-
     if (!model) {
       return null;
     }
-
-    const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.id),
-    );
-    return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
+    return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
   @Get('user/default')
@@ -298,7 +312,7 @@ export class ModelsController {
     status: 200,
     description: 'Successfully retrieved the user-specific default model',
     schema: {
-      $ref: getSchemaPath(PermittedModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
   @ApiResponse({
@@ -307,7 +321,7 @@ export class ModelsController {
   })
   async getUserSpecificDefaultModel(
     @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<PermittedModelResponseDto | null> {
+  ): Promise<PermittedLanguageModelResponseDto | null> {
     const query = new GetUserDefaultModelQuery(userId);
     const model = await this.getUserDefaultModelUseCase.execute(query);
 
@@ -315,10 +329,7 @@ export class ModelsController {
       return null;
     }
 
-    const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.id),
-    );
-    return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
+    return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
   @Put('user/default')
@@ -332,7 +343,7 @@ export class ModelsController {
     status: 200,
     description: 'Successfully set or updated the user default model',
     schema: {
-      $ref: getSchemaPath(PermittedModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
   @ApiResponse({
@@ -348,17 +359,14 @@ export class ModelsController {
     @Body() setUserDefaultModelDto: SetUserDefaultModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<PermittedModelResponseDto> {
+  ): Promise<PermittedLanguageModelResponseDto> {
     const command = new ManageUserDefaultModelCommand(
       userId,
       setUserDefaultModelDto.permittedModelId,
       orgId,
     );
     const model = await this.manageUserDefaultModelUseCase.execute(command);
-    const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.id),
-    );
-    return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
+    return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
   @Delete('user/default')
@@ -389,7 +397,7 @@ export class ModelsController {
     status: 200,
     description: 'Successfully set or updated the organization default model',
     schema: {
-      $ref: getSchemaPath(PermittedModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
     },
   })
   @ApiResponse({
@@ -404,16 +412,13 @@ export class ModelsController {
   async manageOrgDefaultModel(
     @Body() setOrgDefaultModelDto: SetOrgDefaultModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedModelResponseDto> {
+  ): Promise<PermittedLanguageModelResponseDto> {
     const command = new ManageOrgDefaultModelCommand(
       setOrgDefaultModelDto.permittedModelId,
       orgId,
     );
     const model = await this.manageOrgDefaultModelUseCase.execute(command);
-    const modelWithConfig = this.getAvailableModelUseCase.execute(
-      new GetAvailableModelQuery(model.model.id),
-    );
-    return this.modelResponseDtoMapper.toDto(modelWithConfig, model);
+    return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
   @Get('provider/:provider')

@@ -2,12 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { UpdateThreadModelCommand } from './update-thread-model.command';
 import { ThreadNotFoundError, ThreadUpdateError } from '../../threads.errors';
+import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
+import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 
 @Injectable()
 export class UpdateThreadModelUseCase {
   private readonly logger = new Logger(UpdateThreadModelUseCase.name);
 
-  constructor(private readonly threadsRepository: ThreadsRepository) {}
+  constructor(
+    private readonly threadsRepository: ThreadsRepository,
+    private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
+  ) {}
 
   async execute(command: UpdateThreadModelCommand): Promise<void> {
     this.logger.log('updateModel', {
@@ -23,10 +28,17 @@ export class UpdateThreadModelUseCase {
       if (!thread) {
         throw new ThreadNotFoundError(command.threadId, command.userId);
       }
+      const permittedModel =
+        await this.getPermittedLanguageModelUseCase.execute(
+          new GetPermittedLanguageModelQuery({
+            id: command.modelId,
+            orgId: command.orgId,
+          }),
+        );
       await this.threadsRepository.updateModel({
         threadId: command.threadId,
         userId: command.userId,
-        permittedModelId: command.modelId,
+        permittedModelId: permittedModel.id,
       });
     } catch (error) {
       this.logger.error('Failed to update thread model', {

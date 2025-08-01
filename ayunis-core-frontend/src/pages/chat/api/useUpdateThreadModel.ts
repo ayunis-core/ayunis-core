@@ -3,14 +3,20 @@ import {
   useThreadsControllerUpdateModel,
 } from "@/shared/api/generated/ayunisCoreAPI";
 import type { UpdateThreadModelDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import { showError } from "@/shared/lib/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
-export function useUpdateThreadModel() {
+export function useUpdateThreadModel({ threadId }: { threadId: string }) {
+  const { t } = useTranslation("chat");
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useThreadsControllerUpdateModel({
     mutation: {
+      onError: () => {
+        showError(t("chat.errorUpdateModel"));
+      },
       onSettled: (_, __, { id: threadId }) => {
         queryClient.invalidateQueries({
           queryKey: getThreadsControllerFindOneQueryKey(threadId),
@@ -20,11 +26,11 @@ export function useUpdateThreadModel() {
     },
   });
 
-  async function updateModel(threadId: string, modelId: string): Promise<void> {
+  async function updateModel(modelId: string): Promise<void> {
     const data: UpdateThreadModelDto = {
       modelId,
     };
-    await mutation.mutateAsync({ id: threadId, data });
+    mutation.mutate({ id: threadId, data });
   }
 
   return {

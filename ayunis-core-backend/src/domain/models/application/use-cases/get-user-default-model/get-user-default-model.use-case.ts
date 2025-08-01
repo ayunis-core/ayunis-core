@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetUserDefaultModelQuery } from './get-user-default-model.query';
-import { PermittedModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { ModelError } from '../../models.errors';
 
@@ -14,7 +14,7 @@ export class GetUserDefaultModelUseCase {
 
   async execute(
     query: GetUserDefaultModelQuery,
-  ): Promise<PermittedModel | null> {
+  ): Promise<PermittedLanguageModel | null> {
     this.logger.log('execute', {
       userId: query.userId,
     });

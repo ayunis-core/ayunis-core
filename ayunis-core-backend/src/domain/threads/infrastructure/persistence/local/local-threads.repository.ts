@@ -106,7 +106,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       { id: params.threadId, userId: params.userId },
       { title: params.title },
     );
-    if (result.affected === 0) {
+    if (!result.affected || result.affected === 0) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
   }
@@ -121,10 +121,18 @@ export class LocalThreadsRepository extends ThreadsRepository {
       userId: params.userId,
       permittedModelId: params.permittedModelId,
     });
-    const result = await this.threadRepository.update(
-      { id: params.threadId, userId: params.userId },
-      { modelId: params.permittedModelId },
-    );
+    const result = await this.threadRepository
+      .createQueryBuilder()
+      .update(ThreadRecord)
+      .set({
+        modelId: params.permittedModelId,
+        agentId: () => 'NULL',
+      })
+      .where('id = :threadId AND userId = :userId', {
+        threadId: params.threadId,
+        userId: params.userId,
+      })
+      .execute();
     if (!result.affected || result.affected === 0) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
@@ -136,10 +144,18 @@ export class LocalThreadsRepository extends ThreadsRepository {
     agentId: UUID;
   }): Promise<void> {
     this.logger.log('updateAgent', { params });
-    const result = await this.threadRepository.update(
-      { id: params.threadId, userId: params.userId },
-      { agentId: params.agentId },
-    );
+    const result = await this.threadRepository
+      .createQueryBuilder()
+      .update(ThreadRecord)
+      .set({
+        agentId: params.agentId,
+        modelId: () => 'NULL',
+      })
+      .where('id = :threadId AND userId = :userId', {
+        threadId: params.threadId,
+        userId: params.userId,
+      })
+      .execute();
     if (!result.affected || result.affected === 0) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }

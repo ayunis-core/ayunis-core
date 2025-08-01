@@ -4,12 +4,21 @@ import {
   FindOneParams,
   PermittedModelsRepository,
 } from 'src/domain/models/application/ports/permitted-models.repository';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import {
+  PermittedEmbeddingModel,
+  PermittedLanguageModel,
+  PermittedModel,
+} from 'src/domain/models/domain/permitted-model.entity';
 import { Repository } from 'typeorm';
 import { PermittedModelRecord } from './schema/permitted-model.record';
 import { UUID } from 'crypto';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import {
+  EmbeddingModelRecord,
+  LanguageModelRecord,
+} from '../local-models/schema/model.record';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -43,7 +52,9 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     );
   }
 
-  async findDefault(orgId: UUID): Promise<PermittedModel | undefined> {
+  async findOrgDefaultLanguage(
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel | undefined> {
     this.logger.log('findDefault', {
       orgId,
     });
@@ -51,12 +62,15 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       orgId,
       isDefault: true,
     });
+    if (!permittedModel || !(permittedModel.model instanceof LanguageModel)) {
+      return undefined;
+    }
     this.logger.debug('Default model found', {
       permittedModel,
     });
-    return permittedModel
-      ? this.permittedModelMapper.toDomain(permittedModel)
-      : undefined;
+    return this.permittedModelMapper.toDomain(
+      permittedModel,
+    ) as PermittedLanguageModel;
   }
 
   async findOne(params: FindOneParams): Promise<PermittedModel | undefined> {
@@ -67,9 +81,91 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
     });
-    return permittedModel
-      ? this.permittedModelMapper.toDomain(permittedModel)
-      : undefined;
+    if (!permittedModel) {
+      return undefined;
+    }
+    return this.permittedModelMapper.toDomain(permittedModel);
+  }
+
+  async findOneLanguage(
+    params: FindOneParams,
+  ): Promise<PermittedLanguageModel | undefined> {
+    const where =
+      'id' in params
+        ? { id: params.id, orgId: params.orgId }
+        : { name: params.name, provider: params.provider, orgId: params.orgId };
+    const permittedModel = await this.permittedModelRepository.findOne({
+      where,
+      relations: {
+        model: true,
+      },
+    });
+    if (
+      !permittedModel ||
+      !(permittedModel.model instanceof LanguageModelRecord)
+    ) {
+      return undefined;
+    }
+    return this.permittedModelMapper.toDomain(
+      permittedModel,
+    ) as PermittedLanguageModel;
+  }
+
+  async findOneEmbedding(
+    params: FindOneParams,
+  ): Promise<PermittedEmbeddingModel | undefined> {
+    const where =
+      'id' in params
+        ? { id: params.id, orgId: params.orgId }
+        : { name: params.name, provider: params.provider, orgId: params.orgId };
+    const permittedModel = await this.permittedModelRepository.findOne({
+      where,
+      relations: {
+        model: true,
+      },
+    });
+    if (
+      !permittedModel ||
+      !(permittedModel.model instanceof EmbeddingModelRecord)
+    ) {
+      return undefined;
+    }
+    return this.permittedModelMapper.toDomain(
+      permittedModel,
+    ) as PermittedEmbeddingModel;
+  }
+
+  async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
+    const permittedModels = await this.permittedModelRepository.find({
+      where: { orgId },
+      relations: {
+        model: true,
+      },
+    });
+    return permittedModels
+      .filter(
+        (permittedModel) => permittedModel.model instanceof LanguageModelRecord,
+      )
+      .map((permittedModel) =>
+        this.permittedModelMapper.toDomain(permittedModel),
+      ) as PermittedLanguageModel[];
+  }
+
+  async findManyEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel[]> {
+    const permittedModels = await this.permittedModelRepository.find({
+      where: { orgId },
+      relations: {
+        model: true,
+      },
+    });
+    return permittedModels
+      .filter(
+        (permittedModel) =>
+          permittedModel.model instanceof EmbeddingModelRecord,
+      )
+      .map((permittedModel) =>
+        this.permittedModelMapper.toDomain(permittedModel),
+      ) as PermittedEmbeddingModel[];
   }
 
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
@@ -99,7 +195,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async setAsDefault(params: {
     id: UUID;
     orgId: UUID;
-  }): Promise<PermittedModel> {
+  }): Promise<PermittedLanguageModel> {
     this.logger.log('setAsDefault', {
       id: params.id,
       orgId: params.orgId,
@@ -108,7 +204,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     // Start a transaction to ensure consistency
     return await this.permittedModelRepository.manager.transaction(
       async (manager) => {
-        // First, unset any existing default for this organization
+        // Unset any existing default for this organization
         await manager.update(
           PermittedModelRecord,
           { orgId: params.orgId, isDefault: true },
@@ -147,7 +243,9 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
           modelProvider: updatedModel.model.provider,
         });
 
-        return this.permittedModelMapper.toDomain(updatedModel);
+        return this.permittedModelMapper.toDomain(
+          updatedModel,
+        ) as PermittedLanguageModel;
       },
     );
   }

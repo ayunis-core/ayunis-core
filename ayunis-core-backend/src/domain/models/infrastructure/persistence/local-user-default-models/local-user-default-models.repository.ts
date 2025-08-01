@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { UserDefaultModelsRepository } from '../../../application/ports/user-default-models.repository';
-import { PermittedModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { UserDefaultModelRecord } from './schema/user-default-model.record';
 import { UserDefaultModelMapper } from './mappers/user-default-model.mapper';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 @Injectable()
 export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepository {
@@ -19,7 +20,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     super();
   }
 
-  async findByUserId(userId: UUID): Promise<PermittedModel | null> {
+  async findByUserId(userId: UUID): Promise<PermittedLanguageModel | null> {
     this.logger.log('findByUserId', { userId });
 
     const userDefaultModel = await this.userDefaultModelRepository.findOne({
@@ -27,7 +28,10 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       relations: ['model'],
     });
 
-    if (!userDefaultModel) {
+    if (
+      !userDefaultModel ||
+      !(userDefaultModel.model instanceof LanguageModel)
+    ) {
       this.logger.debug('No user default model found', { userId });
       return null;
     }
@@ -37,13 +41,15 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       model: userDefaultModel,
     });
 
-    return this.userDefaultModelMapper.toDomain(userDefaultModel);
+    return this.userDefaultModelMapper.toDomain(
+      userDefaultModel,
+    ) as PermittedLanguageModel;
   }
 
   async create(
-    permittedModel: PermittedModel,
+    permittedModel: PermittedLanguageModel,
     userId: UUID,
-  ): Promise<PermittedModel> {
+  ): Promise<PermittedLanguageModel> {
     this.logger.log('create', { userId, modelId: permittedModel.id });
 
     // First, delete any existing default model for this user
@@ -62,13 +68,15 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       modelId: savedEntity.model.id,
     });
 
-    return this.userDefaultModelMapper.toDomain(savedEntity);
+    return this.userDefaultModelMapper.toDomain(
+      savedEntity,
+    ) as PermittedLanguageModel;
   }
 
   async update(
-    permittedModel: PermittedModel,
+    permittedModel: PermittedLanguageModel,
     userId: UUID,
-  ): Promise<PermittedModel> {
+  ): Promise<PermittedLanguageModel> {
     this.logger.log('update', { userId, modelId: permittedModel.id });
 
     // Delete existing and create new (simpler than complex update logic)
@@ -87,13 +95,15 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       modelId: savedEntity.model.id,
     });
 
-    return this.userDefaultModelMapper.toDomain(savedEntity);
+    return this.userDefaultModelMapper.toDomain(
+      savedEntity,
+    ) as PermittedLanguageModel;
   }
 
   async setAsDefault(
-    permittedModel: PermittedModel,
+    permittedModel: PermittedLanguageModel,
     userId: UUID,
-  ): Promise<PermittedModel> {
+  ): Promise<PermittedLanguageModel> {
     this.logger.log('setAsDefault', { userId, modelId: permittedModel.id });
 
     // Delete any existing default model for this user (handles both create and update)
@@ -124,10 +134,15 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       modelId: reloadedEntity.model.id,
     });
 
-    return this.userDefaultModelMapper.toDomain(reloadedEntity);
+    return this.userDefaultModelMapper.toDomain(
+      reloadedEntity,
+    ) as PermittedLanguageModel;
   }
 
-  async delete(permittedModel: PermittedModel, userId: UUID): Promise<void> {
+  async delete(
+    permittedModel: PermittedLanguageModel,
+    userId: UUID,
+  ): Promise<void> {
     this.logger.log('delete', { userId, modelId: permittedModel.id });
 
     const result = await this.userDefaultModelRepository.delete({

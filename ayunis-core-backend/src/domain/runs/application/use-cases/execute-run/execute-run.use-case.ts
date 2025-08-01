@@ -34,7 +34,6 @@ import {
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ToolExecutionFailedError } from '../../../../tools/application/tools.errors';
 import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
-import { Model } from 'src/domain/models/domain/model.entity';
 import { FindContextualToolsQuery } from '../../../../tools/application/use-cases/find-contextual-tools/find-contextual-tools.query';
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -49,6 +48,7 @@ import { UUID } from 'crypto';
 import langfuse from 'src/common/evals/langfuse';
 import { LangfuseTraceClient } from 'langfuse';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -146,7 +146,7 @@ export class ExecuteRunUseCase {
   private async *executeRunInternal(params: {
     thread: Thread;
     tools: Tool[];
-    model: Model;
+    model: LanguageModel;
     input: RunTextInput | RunToolResultInput;
     instructions?: string;
     streaming?: boolean;
@@ -496,7 +496,7 @@ export class ExecuteRunUseCase {
   }
 
   private async *executeStreamingInference(params: {
-    model: Model;
+    model: LanguageModel;
     messages: Message[];
     tools: Tool[];
     instructions?: string;

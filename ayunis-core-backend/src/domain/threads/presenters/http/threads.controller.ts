@@ -195,6 +195,7 @@ export class ThreadsController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async updateModel(
     @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Body() updateModelDto: UpdateThreadModelDto,
   ): Promise<void> {
@@ -203,11 +204,12 @@ export class ThreadsController {
       modelId: updateModelDto.modelId,
     });
 
-    const command = new UpdateThreadModelCommand(
+    const command = new UpdateThreadModelCommand({
       threadId,
       userId,
-      updateModelDto.modelId,
-    );
+      modelId: updateModelDto.modelId,
+      orgId,
+    });
 
     await this.updateThreadModelUseCase.execute(command);
   }

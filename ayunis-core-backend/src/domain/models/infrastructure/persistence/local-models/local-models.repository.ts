@@ -7,8 +7,14 @@ import {
   ModelsRepository,
 } from '../../../application/ports/models.repository';
 import { Model } from '../../../domain/model.entity';
-import { ModelRecord } from './schema/model.record';
+import {
+  EmbeddingModelRecord,
+  LanguageModelRecord,
+  ModelRecord,
+} from './schema/model.record';
 import { ModelMapper } from './mappers/model.mapper';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 
 @Injectable()
 export class LocalModelsRepository extends ModelsRepository {
@@ -45,20 +51,38 @@ export class LocalModelsRepository extends ModelsRepository {
     return model ? this.localModelMapper.toDomain(model) : undefined;
   }
 
-  async create(model: Model): Promise<Model> {
-    this.logger.log('create', {
+  async findOneLanguage(id: UUID): Promise<LanguageModel | undefined> {
+    const model = await this.localModelRepository.findOneBy({
+      id,
+    });
+    if (!model || !(model instanceof LanguageModelRecord)) {
+      return undefined;
+    }
+    return this.localModelMapper.toDomain(model) as LanguageModel;
+  }
+
+  async findOneEmbedding(id: UUID): Promise<EmbeddingModel | undefined> {
+    const model = await this.localModelRepository.findOneBy({
+      id,
+    });
+    if (!model || !(model instanceof EmbeddingModelRecord)) {
+      return undefined;
+    }
+    return this.localModelMapper.toDomain(model) as EmbeddingModel;
+  }
+
+  async save(model: Model): Promise<void> {
+    this.logger.log('save', {
       modelName: model.name,
       modelProvider: model.provider,
       displayName: model.displayName,
     });
 
     const modelEntity = this.localModelMapper.toRecord(model);
-    const savedModel = await this.localModelRepository.save(modelEntity);
-
-    return this.localModelMapper.toDomain(savedModel);
+    await this.localModelRepository.save(modelEntity);
   }
 
-  async update(id: UUID, model: Model): Promise<Model> {
+  async update<T extends Model>(id: UUID, model: T): Promise<T> {
     this.logger.log('update', {
       id,
       modelName: model.name,
@@ -71,7 +95,8 @@ export class LocalModelsRepository extends ModelsRepository {
 
     const savedModel = await this.localModelRepository.save(modelEntity);
 
-    return this.localModelMapper.toDomain(savedModel);
+    // Type assertion: we know the mapper will return the same concrete type
+    return this.localModelMapper.toDomain(savedModel) as T;
   }
 
   async delete(id: UUID): Promise<void> {

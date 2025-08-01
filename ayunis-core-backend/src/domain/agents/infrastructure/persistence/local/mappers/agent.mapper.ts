@@ -3,6 +3,7 @@ import { AgentRecord } from '../schema/agent.record';
 import { Injectable } from '@nestjs/common';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { AgentToolMapper } from './agent-tool.mapper';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class AgentMapper {
@@ -16,7 +17,9 @@ export class AgentMapper {
       id: record.id,
       name: record.name,
       instructions: record.instructions,
-      model: this.permittedModelMapper.toDomain(record.model),
+      model: this.permittedModelMapper.toDomain(
+        record.model,
+      ) as PermittedLanguageModel,
       toolAssignments: record.agentTools?.map((toolRecord) =>
         this.agentToolMapper.toDomain(toolRecord),
       ),

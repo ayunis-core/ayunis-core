@@ -42,6 +42,8 @@ export interface ModelWithConfigResponseDto {
   isPermitted: boolean;
   /** Whether the model is the default model */
   isDefault: boolean;
+  /** Whether the model is an embedding model */
+  isEmbedding: boolean;
 }
 
 export interface CreatePermittedModelDto {
@@ -52,11 +54,11 @@ export interface CreatePermittedModelDto {
 /**
  * The provider of the model
  */
-export type PermittedModelResponseDtoProvider = typeof PermittedModelResponseDtoProvider[keyof typeof PermittedModelResponseDtoProvider];
+export type PermittedLanguageModelResponseDtoProvider = typeof PermittedLanguageModelResponseDtoProvider[keyof typeof PermittedLanguageModelResponseDtoProvider];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedModelResponseDtoProvider = {
+export const PermittedLanguageModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
   mistral: 'mistral',
@@ -64,19 +66,77 @@ export const PermittedModelResponseDtoProvider = {
   synaforce: 'synaforce',
 } as const;
 
-export interface PermittedModelResponseDto {
+/**
+ * The type of the model (always language)
+ */
+export type PermittedLanguageModelResponseDtoType = typeof PermittedLanguageModelResponseDtoType[keyof typeof PermittedLanguageModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedLanguageModelResponseDtoType = {
+  language: 'language',
+} as const;
+
+export interface PermittedLanguageModelResponseDto {
   /** The id of the permitted model */
   id: string;
   /** The name of the model */
   name: string;
   /** The provider of the model */
-  provider: PermittedModelResponseDtoProvider;
+  provider: PermittedLanguageModelResponseDtoProvider;
   /** The display name of the model */
   displayName: string;
+  /** The type of the model (always language) */
+  type: PermittedLanguageModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
   /** Whether the model can stream */
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedEmbeddingModelResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+} as const;
+
+/**
+ * The type of the model (always embedding)
+ */
+export type PermittedEmbeddingModelResponseDtoType = typeof PermittedEmbeddingModelResponseDtoType[keyof typeof PermittedEmbeddingModelResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedEmbeddingModelResponseDtoType = {
+  embedding: 'embedding',
+} as const;
+
+export interface PermittedEmbeddingModelResponseDto {
+  /** The id of the permitted model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: PermittedEmbeddingModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always embedding) */
+  type: PermittedEmbeddingModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The number of dimensions for embeddings */
+  dimensions: number;
 }
 
 export interface SetUserDefaultModelDto {
@@ -1391,9 +1451,13 @@ export interface MeResponseDto {
   name: string;
 }
 
-export interface CreateModelDto { [key: string]: unknown }
+export interface CreateLanguageModelDto { [key: string]: unknown }
 
-export interface UpdateModelDto { [key: string]: unknown }
+export interface CreateEmbeddingModelDto { [key: string]: unknown }
+
+export interface UpdateLanguageModelDto { [key: string]: unknown }
+
+export interface UpdateEmbeddingModelDto { [key: string]: unknown }
 
 export type ThreadsControllerAddFileSourceBody = {
   /** The file to upload */

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetDefaultModelQuery } from './get-default-model.query';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { DefaultModelNotFoundError, ModelError } from '../../models.errors';
@@ -14,7 +14,7 @@ export class GetDefaultModelUseCase {
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
   ) {}
 
-  async execute(query: GetDefaultModelQuery): Promise<PermittedModel> {
+  async execute(query: GetDefaultModelQuery): Promise<PermittedLanguageModel> {
     this.logger.log('execute', {
       query,
     });
@@ -50,9 +50,10 @@ export class GetDefaultModelUseCase {
         orgId: query.orgId,
       });
 
-      const defaultModel = await this.permittedModelsRepository.findDefault(
-        query.orgId,
-      );
+      const defaultModel =
+        await this.permittedModelsRepository.findOrgDefaultLanguage(
+          query.orgId,
+        );
 
       if (defaultModel) {
         this.logger.debug('Organization default model found', {
@@ -70,9 +71,8 @@ export class GetDefaultModelUseCase {
         },
       );
 
-      const availableModels = await this.permittedModelsRepository.findAll(
-        query.orgId,
-      );
+      const availableModels =
+        await this.permittedModelsRepository.findManyLanguage(query.orgId);
 
       let index = 0;
       while (index < availableModels.length) {

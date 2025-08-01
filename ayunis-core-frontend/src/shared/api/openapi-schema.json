@@ -72,32 +72,6 @@
         "tags": [
           "models"
         ]
-      },
-      "get": {
-        "operationId": "ModelsController_getPermittedModels",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all permitted models",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PermittedModelResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all permitted models",
-        "tags": [
-          "models"
-        ]
       }
     },
     "/models/permitted/{id}": {
@@ -116,9 +90,68 @@
         "responses": {
           "200": {
             "description": "Successfully deleted a permitted model"
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         },
         "summary": "Delete a permitted model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/permitted/language-models": {
+      "get": {
+        "operationId": "ModelsController_getPermittedLanguageModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all permitted language models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all permitted language models",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/models/permitted/embedding-models": {
+      "get": {
+        "operationId": "ModelsController_getPermittedEmbeddingModels",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all permitted embedding models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all permitted embedding models",
         "tags": [
           "models"
         ]
@@ -135,7 +168,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
                 }
               }
             }
@@ -161,7 +194,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
                 }
               }
             }
@@ -195,7 +228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
                 }
               }
             }
@@ -224,7 +257,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
                 }
               }
             }
@@ -258,7 +291,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
                 }
               }
             }
@@ -2895,28 +2928,6 @@
         "tags": [
           "Admin"
         ]
-      },
-      "post": {
-        "operationId": "AdminController_createModel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Admin"
-        ]
       }
     },
     "/admin/model": {
@@ -2942,9 +2953,57 @@
         ]
       }
     },
-    "/admin/models/{id}": {
+    "/admin/language-models": {
+      "post": {
+        "operationId": "AdminController_createLanguageModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLanguageModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/embedding-models": {
+      "post": {
+        "operationId": "AdminController_createEmbeddingModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmbeddingModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/language-models/{id}": {
       "put": {
-        "operationId": "AdminController_updateModel",
+        "operationId": "AdminController_updateLanguageModel",
         "parameters": [
           {
             "name": "id",
@@ -2960,7 +3019,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateModelDto"
+                "$ref": "#/components/schemas/UpdateLanguageModelDto"
               }
             }
           }
@@ -2973,7 +3032,42 @@
         "tags": [
           "Admin"
         ]
-      },
+      }
+    },
+    "/admin/embedding-models/{id}": {
+      "put": {
+        "operationId": "AdminController_updateEmbeddingModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmbeddingModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/models/{id}": {
       "delete": {
         "operationId": "AdminController_deleteModel",
         "parameters": [
@@ -3058,6 +3152,10 @@
           "isDefault": {
             "type": "boolean",
             "description": "Whether the model is the default model"
+          },
+          "isEmbedding": {
+            "type": "boolean",
+            "description": "Whether the model is an embedding model"
           }
         },
         "required": [
@@ -3069,7 +3167,8 @@
           "canStream",
           "isReasoning",
           "isPermitted",
-          "isDefault"
+          "isDefault",
+          "isEmbedding"
         ]
       },
       "CreatePermittedModelDto": {
@@ -3085,7 +3184,7 @@
           "modelId"
         ]
       },
-      "PermittedModelResponseDto": {
+      "PermittedLanguageModelResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -3111,6 +3210,17 @@
             "type": "string",
             "description": "The display name of the model"
           },
+          "type": {
+            "type": "string",
+            "enum": [
+              "language"
+            ],
+            "description": "The type of the model (always language)"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived"
+          },
           "canStream": {
             "type": "boolean",
             "description": "Whether the model can stream"
@@ -3125,8 +3235,62 @@
           "name",
           "provider",
           "displayName",
+          "type",
+          "isArchived",
           "canStream",
           "isReasoning"
+        ]
+      },
+      "PermittedEmbeddingModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the permitted model"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "ollama",
+              "synaforce"
+            ],
+            "description": "The provider of the model"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "embedding"
+            ],
+            "description": "The type of the model (always embedding)"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived"
+          },
+          "dimensions": {
+            "type": "number",
+            "description": "The number of dimensions for embeddings"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "type",
+          "isArchived",
+          "dimensions"
         ]
       },
       "SetUserDefaultModelDto": {
@@ -5517,11 +5681,19 @@
           "name"
         ]
       },
-      "CreateModelDto": {
+      "CreateLanguageModelDto": {
         "type": "object",
         "properties": {}
       },
-      "UpdateModelDto": {
+      "CreateEmbeddingModelDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateLanguageModelDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateEmbeddingModelDto": {
         "type": "object",
         "properties": {}
       }

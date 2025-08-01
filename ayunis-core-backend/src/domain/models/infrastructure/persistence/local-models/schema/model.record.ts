@@ -1,10 +1,12 @@
+import { ModelType } from '../../../../domain/value-objects/model-type.enum';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
 
 @Entity({ name: 'models' })
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
 @Index(['name', 'provider'], { unique: true })
-export class ModelRecord extends BaseRecord {
+export abstract class ModelRecord extends BaseRecord {
   @Column()
   name: string;
 
@@ -21,6 +23,15 @@ export class ModelRecord extends BaseRecord {
     type: 'boolean',
     default: false,
   })
+  isArchived: boolean;
+}
+
+@ChildEntity(ModelType.LANGUAGE)
+export class LanguageModelRecord extends ModelRecord {
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
   canStream: boolean;
 
   @Column({
@@ -28,10 +39,12 @@ export class ModelRecord extends BaseRecord {
     default: false,
   })
   isReasoning: boolean;
+}
 
+@ChildEntity(ModelType.EMBEDDING)
+export class EmbeddingModelRecord extends ModelRecord {
   @Column({
-    type: 'boolean',
-    default: false,
+    type: 'integer',
   })
-  isArchived: boolean;
+  dimensions: number;
 }

@@ -1,11 +1,11 @@
-import { useModelsControllerGetPermittedModels } from "@/shared/api/generated/ayunisCoreAPI";
+import { useModelsControllerGetPermittedLanguageModels } from "@/shared/api/generated/ayunisCoreAPI";
 
 export function usePermittedModels() {
   const {
     data: permittedModels,
     isLoading,
     error,
-  } = useModelsControllerGetPermittedModels();
+  } = useModelsControllerGetPermittedLanguageModels();
 
   const getPlaceholder = (): string => {
     if (isLoading) return "Loading models...";

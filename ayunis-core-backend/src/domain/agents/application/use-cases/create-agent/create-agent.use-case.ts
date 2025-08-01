@@ -7,9 +7,9 @@ import {
   FindOneConfigurableToolQuery,
   FindOneToolQuery,
 } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
-import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
-import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
 import { AgentToolAssignment } from 'src/domain/agents/domain/agent-tool-assignment.entity';
+import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
+import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 
 @Injectable()
 export class CreateAgentUseCase {
@@ -18,14 +18,14 @@ export class CreateAgentUseCase {
   constructor(
     private readonly agentRepository: AgentRepository,
     private readonly findOneToolUseCase: FindOneToolUseCase,
-    private readonly getPermittedModelUseCase: GetPermittedModelUseCase,
+    private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
   ) {}
 
   async execute(command: CreateAgentCommand): Promise<Agent> {
     this.logger.log('Creating agent', { name: command.name });
-    const model = await this.getPermittedModelUseCase.execute(
-      new GetPermittedModelQuery({
-        permittedModelId: command.modelId,
+    const model = await this.getPermittedLanguageModelUseCase.execute(
+      new GetPermittedLanguageModelQuery({
+        id: command.modelId,
         orgId: command.orgId,
       }),
     );

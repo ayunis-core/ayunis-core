@@ -1,20 +1,23 @@
 import { UUID } from 'crypto';
-import { PermittedModel } from '../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from '../../domain/permitted-model.entity';
 
 export abstract class UserDefaultModelsRepository {
-  abstract findByUserId(userId: UUID): Promise<PermittedModel | null>;
+  abstract findByUserId(userId: UUID): Promise<PermittedLanguageModel | null>;
   abstract create(
-    permittedModel: PermittedModel,
+    permittedModel: PermittedLanguageModel,
     userId: UUID,
-  ): Promise<PermittedModel>;
+  ): Promise<PermittedLanguageModel>;
   abstract update(
-    permittedModel: PermittedModel,
+    permittedModel: PermittedLanguageModel,
     userId: UUID,
-  ): Promise<PermittedModel>;
+  ): Promise<PermittedLanguageModel>;
   abstract setAsDefault(
-    permittedModel: PermittedModel,
+    permittedModel: PermittedLanguageModel,
     userId: UUID,
-  ): Promise<PermittedModel>;
-  abstract delete(permittedModel: PermittedModel, userId: UUID): Promise<void>;
+  ): Promise<PermittedLanguageModel>;
+  abstract delete(
+    permittedModel: PermittedLanguageModel,
+    userId: UUID,
+  ): Promise<void>;
   abstract deleteByModelId(modelId: UUID): Promise<void>;
 }

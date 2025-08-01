@@ -3,7 +3,7 @@ import {
   type ModelWithConfigResponseDto,
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
-  getModelsControllerGetPermittedModelsQueryKey,
+  getModelsControllerGetPermittedLanguageModelsQueryKey,
 } from "@/shared/api";
 import { type Model } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,7 +51,7 @@ export function useCreatePermittedModel() {
       onSettled: () => {
         const queryKeys = [
           getModelsControllerGetAvailableModelsWithConfigQueryKey(),
-          getModelsControllerGetPermittedModelsQueryKey(),
+          getModelsControllerGetPermittedLanguageModelsQueryKey(),
           getModelsControllerGetUserSpecificDefaultModelQueryKey(),
         ];
         queryKeys.forEach((queryKey) => {

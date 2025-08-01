@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
-  ModelError,
   PermittedModelDeletionFailedError,
   UnexpectedModelError,
 } from '../../models.errors';
@@ -14,7 +13,12 @@ import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-
 import { DeleteUserDefaultModelsByModelIdCommand } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
-import { ThreadError } from 'src/domain/threads/application/threads.errors';
+import {
+  PermittedEmbeddingModel,
+  PermittedLanguageModel,
+} from 'src/domain/models/domain/permitted-model.entity';
+import { UUID } from 'crypto';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeletePermittedModelUseCase {
@@ -36,75 +40,38 @@ export class DeletePermittedModelUseCase {
     try {
       // TODO: Make this a single transaction
 
-      // Check if the model is the last one in the organization
-      const permittedModels = await this.getPermittedModelsUseCase.execute(
-        new GetPermittedModelsQuery(command.orgId),
-      );
-      if (
-        permittedModels.length === 1 &&
-        permittedModels[0].id === command.permittedModelId
-      ) {
-        throw new PermittedModelDeletionFailedError(
-          'Cannot delete the last permitted model in an organization',
-        );
-      }
-
-      // Check if the model is the default model in the organization
-      const modelToDelete = permittedModels.find(
-        (model) => model.id === command.permittedModelId,
-      );
-      if (!modelToDelete) {
+      const model = await this.permittedModelsRepository.findOne({
+        id: command.permittedModelId,
+        orgId: command.orgId,
+      });
+      if (!model) {
+        this.logger.error('Model not found', {
+          modelId: command.permittedModelId,
+          orgId: command.orgId,
+        });
         throw new PermittedModelDeletionFailedError('Model not found', {
           modelId: command.permittedModelId,
         });
       }
-      if (modelToDelete.isDefault) {
+
+      if (model instanceof PermittedLanguageModel) {
+        return this.deletePermittedLanguageModel(command.orgId, model);
+      } else if (model instanceof PermittedEmbeddingModel) {
+        return this.deletePermittedEmbeddingModel(command.orgId, model);
+      } else {
+        this.logger.error('Model is not a language or embedding model', {
+          modelId: command.permittedModelId,
+          orgId: command.orgId,
+        });
         throw new PermittedModelDeletionFailedError(
-          'Cannot delete the default model in an organization',
-          { modelId: command.permittedModelId },
+          'Model is not a language or embedding model',
+          {
+            modelId: command.permittedModelId,
+          },
         );
       }
-      this.logger.debug(
-        'Deleting user default models that reference this model',
-        {
-          modelId: command.permittedModelId,
-        },
-      );
-
-      // Delete all user default models that reference this model
-      await this.deleteUserDefaultModelByModelIdUseCase.execute(
-        new DeleteUserDefaultModelsByModelIdCommand(command.permittedModelId),
-      );
-
-      this.logger.debug('Replacing model in all threads that use it', {
-        modelId: command.permittedModelId,
-      });
-
-      // Replace the model in all threads that use it
-      // Because the user default model is deleted, this will fall back
-      // to the org default model or the first available model
-      await this.replaceModelWithUserDefaultUseCase.execute(
-        new ReplaceModelWithUserDefaultCommand({
-          oldPermittedModelId: command.permittedModelId,
-        }),
-      );
-
-      this.logger.debug('Replacing model in all agents that use it', {
-        modelId: command.permittedModelId,
-      });
-
-      // Replace the model in all agents that use it
-      // This will fall back to the user's default model or org default model
-      await this.replaceModelWithUserDefaultUseCaseAgents.execute(
-        new ReplaceModelWithUserDefaultCommandAgents(command.permittedModelId),
-      );
-
-      await this.permittedModelsRepository.delete({
-        id: command.permittedModelId,
-        orgId: command.orgId,
-      });
     } catch (error) {
-      if (error instanceof ModelError || error instanceof ThreadError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Error deleting permitted model', error);
@@ -112,5 +79,90 @@ export class DeletePermittedModelUseCase {
         error instanceof Error ? error : new Error('Unknown error'),
       );
     }
+  }
+
+  private async deletePermittedLanguageModel(
+    orgId: UUID,
+    model: PermittedLanguageModel,
+  ): Promise<void> {
+    // Check if the model is the last language model in the organization
+    const permittedModels = (
+      await this.getPermittedModelsUseCase.execute(
+        new GetPermittedModelsQuery(orgId),
+      )
+    ).filter((model) => model instanceof PermittedLanguageModel);
+    if (permittedModels.length === 1 && permittedModels[0].id === model.id) {
+      throw new PermittedModelDeletionFailedError(
+        'Cannot delete the last permitted language model in an organization',
+      );
+    }
+
+    // Check if the model is the default model in the organization
+    const modelToDelete = permittedModels.find(
+      (model) => model.id === model.id,
+    );
+    if (!modelToDelete) {
+      throw new PermittedModelDeletionFailedError('Model not found', {
+        modelId: model.id,
+      });
+    }
+    if (modelToDelete.isDefault) {
+      throw new PermittedModelDeletionFailedError(
+        'Cannot delete the default model in an organization',
+        { modelId: model.id },
+      );
+    }
+    this.logger.debug(
+      'Deleting user default models that reference this model',
+      {
+        modelId: model.id,
+      },
+    );
+
+    // Delete all user default models that reference this model
+    await this.deleteUserDefaultModelByModelIdUseCase.execute(
+      new DeleteUserDefaultModelsByModelIdCommand(model.id),
+    );
+
+    this.logger.debug('Replacing model in all threads that use it', {
+      modelId: model.id,
+    });
+
+    // Replace the model in all threads that use it
+    // Because the user default model is deleted, this will fall back
+    // to the org default model or the first available model
+    await this.replaceModelWithUserDefaultUseCase.execute(
+      new ReplaceModelWithUserDefaultCommand({
+        oldPermittedModelId: model.id,
+      }),
+    );
+
+    this.logger.debug('Replacing model in all agents that use it', {
+      modelId: model.id,
+    });
+
+    // Replace the model in all agents that use it
+    // This will fall back to the user's default model or org default model
+    await this.replaceModelWithUserDefaultUseCaseAgents.execute(
+      new ReplaceModelWithUserDefaultCommandAgents(model.id),
+    );
+
+    await this.permittedModelsRepository.delete({
+      id: model.id,
+      orgId: orgId,
+    });
+  }
+
+  private async deletePermittedEmbeddingModel(
+    orgId: UUID,
+    model: PermittedEmbeddingModel,
+  ): Promise<void> {
+    console.log('deletePermittedEmbeddingModel', {
+      orgId,
+      model,
+    });
+    return Promise.reject(
+      new Error('Deleting embedding models is not implemented'),
+    );
   }
 }

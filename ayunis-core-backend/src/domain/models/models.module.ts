@@ -19,7 +19,6 @@ import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persist
 import { LocalModelsRepositoryModule } from './infrastructure/persistence/local-models/local-models-repository.module';
 import { CreatePermittedModelUseCase } from './application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelUseCase } from './application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
-import { GetAvailableModelUseCase } from './application/use-cases/get-available-model/get-available-model.use-case';
 import { StreamInferenceUseCase } from './application/use-cases/stream-inference/stream-inference.use-case';
 import { StreamInferenceHandlerRegistry } from './application/registry/stream-inference-handler.registry';
 import { AnthropicStreamInferenceHandler } from './infrastructure/stream-inference/anthropic.stream-inference';
@@ -32,11 +31,14 @@ import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org
 import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
 import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
 import { MistralStreamInferenceHandler } from './infrastructure/stream-inference/mistral.stream-inference';
-import { CreateModelUseCase } from './application/use-cases/create-model/create-model.use-case';
-import { UpdateModelUseCase } from './application/use-cases/update-model/update-model.use-case';
+import { CreateLanguageModelUseCase } from './application/use-cases/create-language-model/create-language-model.use-case';
+import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embedding-model/create-embedding-model.use-case';
+import { UpdateLanguageModelUseCase } from './application/use-cases/update-language-model/update-language-model.use-case';
+import { UpdateEmbeddingModelUseCase } from './application/use-cases/update-embedding-model/update-embedding-model.use-case';
 import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
 import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
 import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-model.use-case';
+
 import { ModelProviderInfoRegistry } from './application/registry/model-provider-info.registry';
 import { GetModelProviderInfoUseCase } from './application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
 import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/model-provider-info-response-dto.mapper';
@@ -57,6 +59,10 @@ import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ol
 import { LocalOllamaStreamInferenceHandler } from './infrastructure/stream-inference/local-ollama.stream-inference';
 import { SynaforceInferenceHandler } from './infrastructure/inference/synaforce.inference';
 import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inference/synaforce.stream-inference';
+import { GetPermittedEmbeddingModelsUseCase } from './application/use-cases/get-permitted-embedding-models/get-permitted-embedding-models.use-case';
+import { GetPermittedLanguageModelsUseCase } from './application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
+import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
+import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 
 @Module({
   imports: [
@@ -144,8 +150,9 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
     CreateCustomToolUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
-    GetAvailableModelUseCase,
     GetPermittedModelUseCase,
+    GetPermittedLanguageModelUseCase,
+    GetPermittedEmbeddingModelUseCase,
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
@@ -153,6 +160,8 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
     StreamInferenceUseCase,
     GetAvailableModelsUseCase,
     GetModelProviderInfoUseCase,
+    GetPermittedLanguageModelsUseCase,
+    GetPermittedEmbeddingModelsUseCase,
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
     DeleteUserDefaultModelUseCase,
@@ -162,8 +171,10 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
     // Org Default Model Use Cases
     ManageOrgDefaultModelUseCase,
     // Model Management Use Cases
-    CreateModelUseCase,
-    UpdateModelUseCase,
+    CreateLanguageModelUseCase,
+    CreateEmbeddingModelUseCase,
+    UpdateLanguageModelUseCase,
+    UpdateEmbeddingModelUseCase,
     GetModelUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
@@ -179,8 +190,9 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
     ModelRegistry,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
-    GetAvailableModelUseCase,
     GetPermittedModelUseCase,
+    GetPermittedLanguageModelUseCase,
+    GetPermittedEmbeddingModelUseCase,
     GetPermittedModelsUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
@@ -197,8 +209,10 @@ import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inferen
     // Org Default Model Use Cases
     ManageOrgDefaultModelUseCase,
     // Model Management Use Cases
-    CreateModelUseCase,
-    UpdateModelUseCase,
+    CreateLanguageModelUseCase,
+    CreateEmbeddingModelUseCase,
+    UpdateLanguageModelUseCase,
+    UpdateEmbeddingModelUseCase,
     GetModelUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,

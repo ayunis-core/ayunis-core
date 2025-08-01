@@ -58,4 +58,10 @@ export class ModelWithConfigResponseDto {
     description: 'Whether the model is the default model',
   })
   isDefault: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Whether the model is an embedding model',
+  })
+  isEmbedding: boolean;
 }

@@ -1,15 +1,15 @@
 import { randomUUID, UUID } from 'crypto';
 import { ModelProvider } from './value-objects/model-provider.enum';
+import { ModelType } from './value-objects/model-type.enum';
 
-export class Model {
+export abstract class Model {
   public readonly id: UUID;
   public readonly name: string;
   public readonly provider: ModelProvider;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
   public readonly displayName: string;
-  public readonly canStream: boolean;
-  public readonly isReasoning: boolean;
+  public readonly type: ModelType;
   public readonly isArchived: boolean;
 
   constructor(params: {
@@ -19,8 +19,7 @@ export class Model {
     createdAt?: Date;
     updatedAt?: Date;
     displayName: string;
-    canStream: boolean;
-    isReasoning: boolean;
+    type: ModelType;
     isArchived: boolean;
   }) {
     this.id = params.id ?? randomUUID();
@@ -29,8 +28,7 @@ export class Model {
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     this.displayName = params.displayName;
-    this.canStream = params.canStream;
-    this.isReasoning = params.isReasoning;
+    this.type = params.type;
     this.isArchived = params.isArchived;
   }
 }

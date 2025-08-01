@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetOrgDefaultModelQuery } from './get-org-default-model.query';
-import { PermittedModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelError } from '../../models.errors';
 
@@ -14,16 +14,17 @@ export class GetOrgDefaultModelUseCase {
 
   async execute(
     query: GetOrgDefaultModelQuery,
-  ): Promise<PermittedModel | null> {
+  ): Promise<PermittedLanguageModel | null> {
     this.logger.log('execute', {
       orgId: query.orgId,
     });
 
     try {
       // Get only the organization's specific default model
-      const orgDefaultModel = await this.permittedModelsRepository.findDefault(
-        query.orgId,
-      );
+      const orgDefaultModel =
+        await this.permittedModelsRepository.findOrgDefaultLanguage(
+          query.orgId,
+        );
 
       if (orgDefaultModel) {
         this.logger.debug('Organization default model found', {

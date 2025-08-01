@@ -5,6 +5,7 @@ import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/lo
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { AgentMapper } from 'src/domain/agents/infrastructure/persistence/local/mappers/agent.mapper';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class ThreadMapper {
@@ -44,7 +45,9 @@ export class ThreadMapper {
       userId: threadEntity.userId,
       model:
         threadEntity.modelId && threadEntity.model
-          ? this.permittedModelMapper.toDomain(threadEntity.model)
+          ? (this.permittedModelMapper.toDomain(
+              threadEntity.model,
+            ) as PermittedLanguageModel)
           : undefined,
       agent:
         threadEntity.agentId && threadEntity.agent

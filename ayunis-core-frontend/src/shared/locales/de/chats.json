@@ -15,6 +15,8 @@
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
     "errorToolNotFound": "Tool nicht gefunden",
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
+    "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "tools": {
       "internet_search": "Internet-Suche"
     }

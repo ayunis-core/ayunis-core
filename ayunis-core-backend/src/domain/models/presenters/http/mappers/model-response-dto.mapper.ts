@@ -1,24 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { Model } from 'src/domain/models/domain/model.entity';
-import { PermittedModelResponseDto } from '../dto/permitted-model-response.dto';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { PermittedLanguageModelResponseDto } from '../dto/permitted-language-model-response.dto';
+import { PermittedEmbeddingModelResponseDto } from '../dto/permitted-embedding-model-response.dto';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedEmbeddingModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class ModelResponseDtoMapper {
-  toDto(
-    model: Model,
-    permittedModel: PermittedModel,
-  ): PermittedModelResponseDto {
-    if (model.id !== permittedModel.model.id) {
-      throw new Error('Model and permitted model do not match');
-    }
+  toLanguageModelDto(
+    permittedModel: PermittedLanguageModel,
+  ): PermittedLanguageModelResponseDto {
     return {
       id: permittedModel.id,
-      name: model.name,
-      provider: model.provider,
-      displayName: model.displayName,
-      canStream: model.canStream,
-      isReasoning: model.isReasoning,
+      name: permittedModel.model.name,
+      provider: permittedModel.model.provider,
+      displayName: permittedModel.model.displayName,
+      type: ModelType.LANGUAGE,
+      isArchived: permittedModel.model.isArchived,
+      canStream: permittedModel.model.canStream,
+      isReasoning: permittedModel.model.isReasoning,
+    };
+  }
+
+  toEmbeddingModelDto(
+    permittedModel: PermittedEmbeddingModel,
+  ): PermittedEmbeddingModelResponseDto {
+    return {
+      id: permittedModel.id,
+      name: permittedModel.model.name,
+      provider: permittedModel.model.provider,
+      displayName: permittedModel.model.displayName,
+      type: ModelType.EMBEDDING,
+      isArchived: permittedModel.model.isArchived,
+      dimensions: permittedModel.model.dimensions,
     };
   }
 }

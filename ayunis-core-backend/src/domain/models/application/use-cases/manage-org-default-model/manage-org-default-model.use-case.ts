@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ManageOrgDefaultModelCommand } from './manage-org-default-model.command';
-import { PermittedModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
 
@@ -14,7 +14,7 @@ export class ManageOrgDefaultModelUseCase {
 
   async execute(
     command: ManageOrgDefaultModelCommand,
-  ): Promise<PermittedModel> {
+  ): Promise<PermittedLanguageModel> {
     this.logger.log('execute', {
       permittedModelId: command.permittedModelId,
       orgId: command.orgId,
@@ -36,9 +36,10 @@ export class ManageOrgDefaultModelUseCase {
       }
 
       // Check if there's already a default model
-      const existingDefault = await this.permittedModelsRepository.findDefault(
-        command.orgId,
-      );
+      const existingDefault =
+        await this.permittedModelsRepository.findOrgDefaultLanguage(
+          command.orgId,
+        );
 
       const action = existingDefault ? 'updating' : 'setting';
       this.logger.debug(

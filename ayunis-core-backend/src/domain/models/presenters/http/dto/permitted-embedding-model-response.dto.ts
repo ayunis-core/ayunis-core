@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 
-export class PermittedModelResponseDto {
+export class PermittedEmbeddingModelResponseDto {
   @ApiProperty({
     type: 'string',
     description: 'The id of the permitted model',
@@ -29,14 +30,21 @@ export class PermittedModelResponseDto {
   displayName: string;
 
   @ApiProperty({
-    type: 'boolean',
-    description: 'Whether the model can stream',
+    type: 'string',
+    enum: [ModelType.EMBEDDING],
+    description: 'The type of the model (always embedding)',
   })
-  canStream: boolean;
+  type: ModelType.EMBEDDING;
 
   @ApiProperty({
     type: 'boolean',
-    description: 'Whether the model can reason',
+    description: 'Whether the model is archived',
   })
-  isReasoning: boolean;
+  isArchived: boolean;
+
+  @ApiProperty({
+    type: 'number',
+    description: 'The number of dimensions for embeddings',
+  })
+  dimensions: number;
 }

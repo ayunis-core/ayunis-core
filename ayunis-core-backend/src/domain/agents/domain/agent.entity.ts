@@ -1,5 +1,5 @@
 import { randomUUID, UUID } from 'crypto';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ContextualTool } from 'src/domain/tools/domain/contextual-tool.entity';
 import { ConfigurableTool } from 'src/domain/tools/domain/configurable-tool.entity';
@@ -10,7 +10,7 @@ export class Agent {
   public readonly id: UUID;
   public readonly name: string;
   public readonly instructions: string;
-  public readonly model: PermittedModel;
+  public readonly model: PermittedLanguageModel;
   public readonly toolAssignments: Array<AgentToolAssignment>;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
@@ -20,7 +20,7 @@ export class Agent {
     id?: UUID;
     name: string;
     instructions: string;
-    model: PermittedModel;
+    model: PermittedLanguageModel;
     toolAssignments?: Array<AgentToolAssignment>;
     userId: UUID;
     createdAt?: Date;

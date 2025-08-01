@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ManageUserDefaultModelCommand } from './manage-user-default-model.command';
-import { PermittedModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
@@ -16,7 +16,7 @@ export class ManageUserDefaultModelUseCase {
 
   async execute(
     command: ManageUserDefaultModelCommand,
-  ): Promise<PermittedModel> {
+  ): Promise<PermittedLanguageModel> {
     this.logger.log('execute', {
       userId: command.userId,
       permittedModelId: command.permittedModelId,
@@ -25,10 +25,11 @@ export class ManageUserDefaultModelUseCase {
 
     try {
       // First, verify that the permitted model exists and belongs to the organization
-      const permittedModel = await this.permittedModelsRepository.findOne({
-        id: command.permittedModelId,
-        orgId: command.orgId,
-      });
+      const permittedModel =
+        await this.permittedModelsRepository.findOneLanguage({
+          id: command.permittedModelId,
+          orgId: command.orgId,
+        });
 
       if (!permittedModel) {
         this.logger.error('Permitted model not found', {

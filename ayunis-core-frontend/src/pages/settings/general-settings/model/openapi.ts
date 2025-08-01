@@ -1,3 +1,3 @@
-import type { PermittedModelResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import type { PermittedLanguageModelResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
-export type UserDefaultModel = PermittedModelResponseDto;
+export type UserDefaultModel = PermittedLanguageModelResponseDto;

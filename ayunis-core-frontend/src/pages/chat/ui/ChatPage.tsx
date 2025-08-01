@@ -67,8 +67,8 @@ export default function ChatPage({ thread }: ChatPageProps) {
     },
   });
 
-  const { updateModel } = useUpdateThreadModel();
-  const { updateAgent } = useUpdateThreadAgent();
+  const { updateModel } = useUpdateThreadModel({ threadId: thread.id });
+  const { updateAgent } = useUpdateThreadAgent({ threadId: thread.id });
 
   const { sendTextMessage } = useMessageSend({
     threadId: thread.id,
@@ -227,20 +227,6 @@ export default function ChatPage({ thread }: ChatPageProps) {
     sendPendingMessage();
   }, [pendingMessage, sendTextMessage, setPendingMessage]);
 
-  function handleModelChange(newModelId: string) {
-    updateModel(thread.id, newModelId).catch((error) => {
-      console.error("Failed to update thread model", error);
-      showError("Failed to update thread model");
-    });
-  }
-
-  function handleAgentChange(newAgentId: string) {
-    updateAgent(thread.id, newAgentId).catch((error) => {
-      console.error("Failed to update thread agent", error);
-      showError("Failed to update thread agent");
-    });
-  }
-
   function handleDeleteThread() {
     confirm({
       title: t("chat.deleteThreadTitle"),
@@ -311,8 +297,8 @@ export default function ChatPage({ thread }: ChatPageProps) {
     <ChatInput
       modelOrAgentId={thread.agentId ?? thread.permittedModelId}
       isStreaming={isStreaming}
-      onModelChange={handleModelChange}
-      onAgentChange={handleAgentChange}
+      onModelChange={updateModel}
+      onAgentChange={updateAgent}
       onSend={handleSend}
       ref={chatInputRef}
     />

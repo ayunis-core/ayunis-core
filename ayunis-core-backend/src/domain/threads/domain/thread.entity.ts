@@ -1,13 +1,13 @@
 import { UUID, randomUUID } from 'crypto';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 
 export class Thread {
   id: UUID;
   userId: UUID;
-  model?: PermittedModel;
+  model?: PermittedLanguageModel;
   agent?: Agent;
   title?: string;
   messages: Message[];
@@ -18,7 +18,7 @@ export class Thread {
   constructor(params: {
     id?: UUID;
     userId: UUID;
-    model?: PermittedModel;
+    model?: PermittedLanguageModel;
     agent?: Agent;
     title?: string;
     messages: Message[];

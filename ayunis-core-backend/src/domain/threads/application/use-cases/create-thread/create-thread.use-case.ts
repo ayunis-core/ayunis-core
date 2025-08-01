@@ -7,10 +7,10 @@ import {
   ThreadCreationError,
   ThreadError,
 } from '../../threads.errors';
-import { GetPermittedModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.use-case';
+import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { ModelError } from 'src/domain/models/application/models.errors';
-import { GetPermittedModelQuery } from 'src/domain/models/application/use-cases/get-permitted-model/get-permitted-model.query';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { GetAgentUseCase } from 'src/domain/agents/application/use-cases/get-agent/get-agent.use-case';
 import { GetAgentQuery } from 'src/domain/agents/application/use-cases/get-agent/get-agent.query';
@@ -21,20 +21,20 @@ export class CreateThreadUseCase {
 
   constructor(
     private readonly threadsRepository: ThreadsRepository,
-    private readonly getPermittedModelUseCase: GetPermittedModelUseCase,
+    private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly getAgentUseCase: GetAgentUseCase,
   ) {}
 
   async execute(command: CreateThreadCommand): Promise<Thread> {
     this.logger.log('execute', { userId: command.userId });
     try {
-      let model: PermittedModel | undefined;
+      let model: PermittedLanguageModel | undefined;
       let agent: Agent | undefined;
 
       if (command.modelId) {
-        model = await this.getPermittedModelUseCase.execute(
-          new GetPermittedModelQuery({
-            permittedModelId: command.modelId,
+        model = await this.getPermittedLanguageModelUseCase.execute(
+          new GetPermittedLanguageModelQuery({
+            id: command.modelId,
             orgId: command.orgId,
           }),
         );

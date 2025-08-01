@@ -5,7 +5,7 @@ import {
   getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey,
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
-  getModelsControllerGetPermittedModelsQueryKey,
+  getModelsControllerGetPermittedLanguageModelsQueryKey,
 } from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -40,7 +40,7 @@ export function useCreatePermittedProvider() {
           const queryKeys = [
             getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey(),
             getModelsControllerGetAvailableModelsWithConfigQueryKey(),
-            getModelsControllerGetPermittedModelsQueryKey(),
+            getModelsControllerGetPermittedLanguageModelsQueryKey(),
             getModelsControllerGetUserSpecificDefaultModelQueryKey(),
           ];
 
