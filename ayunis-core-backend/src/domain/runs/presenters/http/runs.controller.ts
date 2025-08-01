@@ -28,7 +28,7 @@ import {
   AssistantMessageResponseDto,
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
-} from '../../../threads/presenters/http/dto/message-response.dto';
+} from '../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 import { Observable } from 'rxjs';
 import { ThreadEventBroadcaster } from './sse/thread-event-broadcaster';
 import { RunInputMapper } from './mappers/run-input.mapper';

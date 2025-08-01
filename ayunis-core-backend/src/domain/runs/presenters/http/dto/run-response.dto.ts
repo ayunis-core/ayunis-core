@@ -8,7 +8,7 @@ import {
   AssistantMessageResponseDto,
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
-} from '../../../../threads/presenters/http/dto/message-response.dto';
+} from '../../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 
 export class RunSessionResponseDto {
   @ApiProperty({

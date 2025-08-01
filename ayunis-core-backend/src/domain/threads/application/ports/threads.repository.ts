@@ -1,3 +1,4 @@
+import { SourceAssignment } from '../../domain/thread-source-assignment.entity';
 import { Thread } from '../../domain/thread.entity';
 import { UUID } from 'crypto';
 
@@ -22,6 +23,11 @@ export abstract class ThreadsRepository {
     threadId: UUID;
     userId: UUID;
     title: string;
+  }): Promise<void>;
+  abstract updateSourceAssignments(params: {
+    threadId: UUID;
+    userId: UUID;
+    sourceAssignments: SourceAssignment[];
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
 }

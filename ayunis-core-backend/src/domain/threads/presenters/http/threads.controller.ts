@@ -59,7 +59,7 @@ import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
 import {
   SourceResponseDto,
   FileSourceResponseDto,
-} from './dto/source-response.dto';
+} from './dto/get-thread-response.dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
 import { UpdateThreadModelDto } from './dto/update-thread-model.dto';
 import { CreateThreadDto } from './dto/create-thread.dto';
@@ -73,6 +73,7 @@ import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import { UpdateThreadAgentCommand } from '../../application/use-cases/update-thread-agent/update-thread-agent.command';
 import { UpdateThreadAgentUseCase } from '../../application/use-cases/update-thread-agent/update-thread-agent.use-case';
 import { UpdateThreadAgentDto } from './dto/update-thread-agent.dto';
+import * as fs from 'fs';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -367,12 +368,15 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
 
+    // Read file data from disk since we're using diskStorage
+    const fileData = fs.readFileSync(file.path);
+
     // Create the file source
     const createFileSourceCommand = new CreateFileSourceCommand({
       orgId,
       fileType: file.mimetype,
       fileSize: file.size,
-      fileData: file.buffer,
+      fileData: fileData,
       fileName: file.originalname,
     });
 
@@ -388,6 +392,9 @@ export class ThreadsController {
     await this.addSourceToThreadUseCase.execute(
       new AddSourceCommand(thread, fileSource),
     );
+
+    // Clean up the uploaded file
+    fs.unlinkSync(file.path);
 
     return;
   }

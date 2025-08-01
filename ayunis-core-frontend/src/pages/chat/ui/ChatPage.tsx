@@ -38,6 +38,7 @@ interface ChatPageProps {
 }
 
 export default function ChatPage({ thread }: ChatPageProps) {
+  console.log("thread", thread);
   const { t } = useTranslation("chats");
   const { pendingMessage, setPendingMessage } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
@@ -301,6 +302,7 @@ export default function ChatPage({ thread }: ChatPageProps) {
       onAgentChange={updateAgent}
       onSend={handleSend}
       ref={chatInputRef}
+      threadId={thread.id}
     />
   );
 

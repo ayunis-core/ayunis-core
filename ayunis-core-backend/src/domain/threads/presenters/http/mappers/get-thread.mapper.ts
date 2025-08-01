@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
 import { GetThreadResponseDto } from '../dto/get-thread-response.dto';
 import { MessageDtoMapper } from './message.mapper';
+import { SourceDtoMapper } from './source.mapper';
 
 @Injectable()
 export class GetThreadDtoMapper {
-  constructor(private readonly messageDtoMapper: MessageDtoMapper) {}
+  constructor(
+    private readonly messageDtoMapper: MessageDtoMapper,
+    private readonly sourceDtoMapper: SourceDtoMapper,
+  ) {}
 
   toDto(thread: Thread): GetThreadResponseDto {
     return {
@@ -14,6 +18,10 @@ export class GetThreadDtoMapper {
       permittedModelId: thread.model?.id,
       agentId: thread.agent?.id,
       title: thread.title,
+      sources:
+        thread.sourceAssignments?.map((sourceAssignment) =>
+          this.sourceDtoMapper.toDto(sourceAssignment.source),
+        ) ?? [],
       messages: this.messageDtoMapper.toDtoArray(thread.messages),
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),

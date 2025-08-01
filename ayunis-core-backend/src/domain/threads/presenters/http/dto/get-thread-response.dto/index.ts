@@ -16,6 +16,7 @@ import {
 } from './message-response.dto';
 import { ModelResponseDto } from './model-response-dto';
 import { UUID } from 'crypto';
+import { SourceResponseDto } from './source-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -71,6 +72,13 @@ export class GetThreadResponseDto {
     },
   })
   messages: MessageResponseDto[];
+
+  @ApiProperty({
+    description: 'Array of sources in the thread',
+    type: 'array',
+    items: { $ref: getSchemaPath(SourceResponseDto) },
+  })
+  sources: SourceResponseDto[];
 
   @ApiProperty({
     description: 'Creation timestamp',

@@ -5,6 +5,7 @@ import { ChevronRight, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import ModelSelector from "./ModelSelector";
 import PromptLibraryButton from "./PromptLibraryButton";
+import AddSourceButton from "./AddSourceButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +16,7 @@ interface ChatInputProps {
   onAgentChange: (agentId: string) => void;
   onSend: (message: string) => Promise<void>;
   prefilledPrompt?: string;
+  threadId?: string;
 }
 
 export interface ChatInputRef {
@@ -30,6 +32,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onAgentChange,
       onSend,
       prefilledPrompt,
+      threadId,
     },
     ref,
   ) => {
@@ -86,6 +89,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     onAgentChange={onAgentChange}
                   />
                   <PromptLibraryButton onPromptSelect={handlePromptSelect} />
+                  <AddSourceButton threadId={threadId} />
                 </div>
 
                 {/* Right side */}

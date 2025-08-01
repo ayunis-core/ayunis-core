@@ -31,10 +31,12 @@ describe('ProcessFileUseCase', () => {
   });
 
   it('should process file successfully', async () => {
-    const command = new ProcessFileCommand(
-      Buffer.from('test file content'),
-      'test.txt',
-    );
+    const command = new ProcessFileCommand({
+      orgId: '123e4567-e89b-12d3-a456-426614174000' as any,
+      fileData: Buffer.from('test file content'),
+      fileName: 'test.txt',
+      fileType: 'text/plain',
+    });
     const expectedResult = new FileRetrieverResult([
       new FileRetrieverPage('processed content', 1),
     ]);
@@ -48,6 +50,7 @@ describe('ProcessFileUseCase', () => {
       expect.objectContaining({
         fileData: command.fileData,
         filename: command.fileName,
+        fileType: command.fileType,
       }),
     );
   });

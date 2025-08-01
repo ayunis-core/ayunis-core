@@ -11,8 +11,8 @@ import {
   TextMessageContentResponseDto,
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
-} from './message-response.dto';
-import { ModelResponseDto } from './model-response-dto';
+} from './get-thread-response.dto/message-response.dto';
+import { ModelResponseDto } from './get-thread-response.dto/model-response-dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,

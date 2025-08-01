@@ -37,7 +37,7 @@ export class ProcessFileUseCase {
       FileRetrieverType.MISTRAL,
     );
 
-    const file = new File(command.fileData, command.fileName);
+    const file = new File(command.fileData, command.fileName, command.fileType);
     return handler.processFile(file);
   }
 }

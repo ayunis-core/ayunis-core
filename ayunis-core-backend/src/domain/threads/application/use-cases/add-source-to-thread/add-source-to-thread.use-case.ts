@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
 import { SourceAdditionError } from '../../threads.errors';
@@ -12,7 +11,7 @@ export class AddSourceToThreadUseCase {
 
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
-  async execute(command: AddSourceCommand): Promise<Thread> {
+  async execute(command: AddSourceCommand): Promise<void> {
     this.logger.log('addSource', {
       threadId: command.thread.id,
       sourceId: command.source.id,
@@ -32,10 +31,14 @@ export class AddSourceToThreadUseCase {
           source: command.source,
         });
         command.thread.sourceAssignments.push(sourceAssignment);
-        return await this.threadsRepository.update(command.thread);
+        return await this.threadsRepository.updateSourceAssignments({
+          threadId: command.thread.id,
+          userId: command.thread.userId,
+          sourceAssignments: command.thread.sourceAssignments,
+        });
       }
 
-      return command.thread;
+      return;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

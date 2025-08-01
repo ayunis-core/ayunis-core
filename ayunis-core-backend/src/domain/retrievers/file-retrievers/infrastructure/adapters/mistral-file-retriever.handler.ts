@@ -26,14 +26,17 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 
   async processFile(file: File): Promise<FileRetrieverResult> {
     try {
-      this.logger.debug(`Processing file with Mistral OCR`);
+      this.logger.debug(
+        `Processing file with Mistral OCR: ${file.filename} (${file.fileType})`,
+      );
+
+      // Convert Buffer to Blob for Mistral API with the correct MIME type
+      const fileBlob = new Blob([file.fileData], { type: file.fileType });
+
       const uploaded_pdf = await retryWithBackoff({
         fn: () =>
           this.client.files.upload({
-            file: {
-              fileName: file.filename,
-              content: file.fileData,
-            },
+            file: fileBlob,
             purpose: 'ocr',
           }),
         maxRetries: 3,
@@ -113,7 +116,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       return new FileRetrieverPage(p.markdown, p.index + 1);
     });
 
-    if (!pages) {
+    if (pages.length === 0) {
       throw new FileRetrieverProcessingError(
         'Empty response from Mistral API',
         {

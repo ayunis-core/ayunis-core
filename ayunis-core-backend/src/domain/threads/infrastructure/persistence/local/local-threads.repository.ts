@@ -7,6 +7,7 @@ import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -120,6 +121,21 @@ export class LocalThreadsRepository extends ThreadsRepository {
     const result = await this.threadRepository.update(
       { id: params.threadId, userId: params.userId },
       { title: params.title },
+    );
+    if (!result.affected || result.affected === 0) {
+      throw new ThreadNotFoundError(params.threadId, params.userId);
+    }
+  }
+
+  async updateSourceAssignments(params: {
+    threadId: UUID;
+    userId: UUID;
+    sourceAssignments: SourceAssignment[];
+  }): Promise<void> {
+    this.logger.log('updateSourceAssignments', { params });
+    const result = await this.threadRepository.update(
+      { id: params.threadId, userId: params.userId },
+      { sourceAssignments: params.sourceAssignments },
     );
     if (!result.affected || result.affected === 0) {
       throw new ThreadNotFoundError(params.threadId, params.userId);

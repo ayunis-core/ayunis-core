@@ -26,7 +26,8 @@
     "placeholder": "Ask a question in Ayunis Core...",
     "selectPrompt": "Add a prompt from your library",
     "promptsLoadError": "Error loading prompts",
-    "noPromptsAvailable": "No prompts available"
+    "noPromptsAvailable": "No prompts available",
+    "fileSourceUploadError": "Error uploading file"
   },
   "common": {
     "loading": "Loading..."

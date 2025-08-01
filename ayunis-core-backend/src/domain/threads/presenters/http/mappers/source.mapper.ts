@@ -8,7 +8,7 @@ import {
   SourceResponseDto,
   FileSourceResponseDto,
   UrlSourceResponseDto,
-} from '../dto/source-response.dto';
+} from '../dto/get-thread-response.dto/source-response.dto';
 
 @Injectable()
 export class SourceDtoMapper {

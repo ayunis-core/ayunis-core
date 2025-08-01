@@ -11,8 +11,12 @@ export class ParentChildIndexerMapper {
     parentChunkRecord.id = parentChunk.id;
     parentChunkRecord.relatedDocumentId = parentChunk.relatedDocumentId;
     parentChunkRecord.relatedChunkId = parentChunk.relatedChunkId;
-    parentChunkRecord.createdAt = new Date();
-    parentChunkRecord.updatedAt = new Date();
+    parentChunkRecord.content = parentChunk.content;
+    parentChunkRecord.children = parentChunk.children.map((child) =>
+      this.toChildChunkRecord(child),
+    );
+    parentChunkRecord.createdAt = parentChunk.createdAt;
+    parentChunkRecord.updatedAt = parentChunk.updatedAt;
     return parentChunkRecord;
   }
 
@@ -29,6 +33,7 @@ export class ParentChildIndexerMapper {
       id: input.id,
       relatedDocumentId: input.relatedDocumentId,
       relatedChunkId: input.relatedChunkId,
+      content: input.content,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
       children: input.children.map((child) => this.toChildChunkEntity(child)),

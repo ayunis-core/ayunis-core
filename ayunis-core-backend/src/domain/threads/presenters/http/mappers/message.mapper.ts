@@ -13,7 +13,7 @@ import {
   TextMessageContentResponseDto,
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
-} from '../dto/message-response.dto';
+} from '../dto/get-thread-response.dto/message-response.dto';
 
 @Injectable()
 export class MessageDtoMapper {

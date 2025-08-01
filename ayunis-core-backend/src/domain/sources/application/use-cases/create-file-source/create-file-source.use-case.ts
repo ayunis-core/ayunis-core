@@ -36,6 +36,7 @@ export class CreateFileSourceUseCase {
         orgId: command.orgId,
         fileData: command.fileData,
         fileName: command.fileName,
+        fileType: command.fileType,
       }),
     );
 

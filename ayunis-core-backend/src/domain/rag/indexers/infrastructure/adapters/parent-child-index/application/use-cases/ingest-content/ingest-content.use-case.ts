@@ -35,6 +35,7 @@ export class IngestContentUseCase {
       relatedDocumentId: input.relatedDocumentId,
       relatedChunkId: input.relatedChunkId,
       children: childChunks,
+      content: content,
     });
     await this.parentChildIndexerRepository.save(parentChunk);
   }
