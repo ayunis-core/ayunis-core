@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { UrlSource } from '../../../domain/sources/url-source.entity';
 import { SourceContent } from '../../../domain/source-content.entity';
-import { SourceContentChunk } from '../../../domain/source-content-chunk.entity';
 import {
   SourceRepository,
   SOURCE_REPOSITORY,
@@ -10,11 +9,12 @@ import {
 import { CreateUrlSourceCommand } from './create-url-source.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
-import { ProcessTextUseCase } from 'src/domain/splitter/application/use-cases/process-text/process-text.use-case';
-import { ProcessTextCommand } from 'src/domain/splitter/application/use-cases/process-text/process-text.command';
-import { SplitterProvider } from 'src/domain/splitter/domain/splitter-provider.enum';
-import { EmbedTextUseCase } from 'src/domain/embeddings/application/use-cases/embed-text/embed-text.use-case';
-import { EmbedTextCommand } from 'src/domain/embeddings/application/use-cases/embed-text/embed-text.command';
+import { ProcessTextUseCase } from 'src/domain/rag/splitters/application/use-cases/process-text/process-text.use-case';
+import { ProcessTextCommand } from 'src/domain/rag/splitters/application/use-cases/process-text/process-text.command';
+import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
+import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
+import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
+import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 
 @Injectable()
 export class CreateUrlSourceUseCase {
@@ -25,21 +25,17 @@ export class CreateUrlSourceUseCase {
     private readonly sourceRepository: SourceRepository,
     private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
     private readonly processTextUseCase: ProcessTextUseCase,
-    private readonly embedTextUseCase: EmbedTextUseCase,
+    private readonly ingestContentUseCase: IngestContentUseCase,
   ) {}
 
   async execute(command: CreateUrlSourceCommand): Promise<UrlSource> {
-    this.logger.debug(
-      `Creating URL source for thread: ${command.threadId}, URL: ${command.url}`,
-    );
+    this.logger.debug(`Creating URL source for URL: ${command.url}`);
 
     const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
       new RetrieveUrlCommand(command.url),
     );
 
     const urlSource = new UrlSource({
-      threadId: command.threadId,
-      userId: command.userId,
       url: command.url,
       content: [],
     });
@@ -58,18 +54,14 @@ export class CreateUrlSourceUseCase {
     const savedUrlSource =
       await this.sourceRepository.createUrlSource(urlSource);
 
-    const chunks = await this.getChunksFromContents(
-      savedUrlSource.id,
-      savedUrlSource.content,
-    );
-    this.logger.debug(`Creating ${chunks.length} chunks`);
-    await this.sourceRepository.createSourceContentChunks(chunks);
+    // Index the content using the indexers module
+    await this.indexSourceContent(savedUrlSource);
 
     return savedUrlSource;
   }
 
   /**
-   * Process text content into source contents with chunks
+   * Process text content into source contents
    */
   private getSourceContentsFromText(
     sourceId: UUID,
@@ -80,7 +72,7 @@ export class CreateUrlSourceUseCase {
 
     // Split text into content blocks
     const contentBlocks = this.processTextUseCase.execute(
-      new ProcessTextCommand(text, SplitterProvider.RECURSIVE, {
+      new ProcessTextCommand(text, SplitterType.RECURSIVE, {
         chunkSize: 2000,
         chunkOverlap: 200,
       }),
@@ -100,58 +92,25 @@ export class CreateUrlSourceUseCase {
     return sourceContents;
   }
 
-  private async getChunksFromContents(
-    sourceId: UUID,
-    sourceContents: SourceContent[],
-  ): Promise<SourceContentChunk[]> {
-    const sourceContentChunks: SourceContentChunk[] = [];
-    this.logger.debug(`Getting chunks from ${sourceContents.length} contents`);
+  /**
+   * Index source content using the indexers module
+   */
+  private async indexSourceContent(source: UrlSource): Promise<void> {
+    this.logger.debug(`Indexing content for source: ${source.id}`);
 
-    for (const sourceContent of sourceContents) {
-      this.logger.debug(`Getting chunks from content: ${sourceContent.id}`);
-      // Split content into smaller chunks for embedding
-      const contentChunks = this.processTextUseCase.execute(
-        new ProcessTextCommand(
-          sourceContent.content,
-          SplitterProvider.RECURSIVE,
-          {
-            chunkSize: 400,
-            chunkOverlap: 40,
-          },
-        ),
-      );
-      this.logger.debug(
-        `Got ${contentChunks.chunks.length} chunks from content: ${sourceContent.id}`,
-      );
-      const chunkTexts = contentChunks.chunks.map((chunk) => chunk.text);
-      this.logger.debug(
-        `Embedding ${chunkTexts.length} chunks from content: ${sourceContent.id}`,
-      );
-      const embeddings = await this.embedTextUseCase.execute(
-        new EmbedTextCommand(chunkTexts),
-      );
-      this.logger.debug(
-        `Got ${embeddings.length} embeddings from content: ${sourceContent.id}`,
-      );
-
-      const chunks = embeddings.map((embedding) => {
-        return new SourceContentChunk({
-          sourceId: sourceId,
-          sourceContent,
-          content: embedding.text,
-          embedding: embedding.vector,
-          embeddingModel: embedding.model,
-        });
+    for (const content of source.content) {
+      const ingestCommand = new IngestContentCommand({
+        documentId: source.id,
+        chunkId: content.id,
+        content: content.content,
+        type: IndexType.PARENT_CHILD,
       });
-      this.logger.debug(
-        `Created ${chunks.length} chunks from content: ${sourceContent.id}`,
-      );
-      sourceContentChunks.push(...chunks);
-    }
-    this.logger.debug(
-      `Created ${sourceContentChunks.length} chunks from ${sourceContents.length} contents`,
-    );
 
-    return sourceContentChunks;
+      await this.ingestContentUseCase.execute(ingestCommand);
+    }
+
+    this.logger.debug(
+      `Successfully indexed ${source.content.length} content blocks for source: ${source.id}`,
+    );
   }
 }

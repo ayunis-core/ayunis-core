@@ -1,19 +1,26 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MistralFileRetrieverHandler } from './infrastructure/adapters/mistral-file-retriever.handler';
-import { FileRetrieverHandler } from './application/ports/file-retriever.handler';
-import { FileRetrieversController } from './presenters/http/file-retrievers.controller';
+import { FileRetrieverRegistry } from './application/file-retriever-handler.registry';
 import { ProcessFileUseCase } from './application/use-cases/process-file/process-file.use-case';
+import { FileRetrieverType } from './domain/value-objects/file-retriever-type.enum';
+import { ModelsModule } from 'src/domain/models/models.module';
 
 @Module({
+  imports: [forwardRef(() => ModelsModule)],
   providers: [
-    {
-      provide: FileRetrieverHandler,
-      useClass: MistralFileRetrieverHandler,
-    },
-    ProcessFileUseCase,
+    FileRetrieverRegistry,
     MistralFileRetrieverHandler,
+    ProcessFileUseCase,
+    {
+      provide: FileRetrieverRegistry,
+      useFactory: (mistralHandler: MistralFileRetrieverHandler) => {
+        const registry = new FileRetrieverRegistry();
+        registry.registerHandler(FileRetrieverType.MISTRAL, mistralHandler);
+        return registry;
+      },
+      inject: [MistralFileRetrieverHandler],
+    },
   ],
-  controllers: [FileRetrieversController],
-  exports: [ProcessFileUseCase],
+  exports: [ProcessFileUseCase, FileRetrieverRegistry],
 })
 export class FileRetrieverModule {}

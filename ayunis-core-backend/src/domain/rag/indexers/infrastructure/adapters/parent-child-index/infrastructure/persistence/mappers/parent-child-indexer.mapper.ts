@@ -1,0 +1,48 @@
+import { Injectable } from '@nestjs/common';
+import { ParentChunkRecord } from '../schema/parent-chunk.record';
+import { ChildChunkRecord } from '../schema/child-chunk.record';
+import { ParentChunk } from '../../../domain/parent-chunk.entity';
+import { ChildChunk } from '../../../domain/child-chunk.entity';
+
+@Injectable()
+export class ParentChildIndexerMapper {
+  toParentChunkRecord(parentChunk: ParentChunk): ParentChunkRecord {
+    const parentChunkRecord = new ParentChunkRecord();
+    parentChunkRecord.id = parentChunk.id;
+    parentChunkRecord.relatedDocumentId = parentChunk.relatedDocumentId;
+    parentChunkRecord.relatedChunkId = parentChunk.relatedChunkId;
+    parentChunkRecord.createdAt = new Date();
+    parentChunkRecord.updatedAt = new Date();
+    return parentChunkRecord;
+  }
+
+  toChildChunkRecord(childChunk: ChildChunk): ChildChunkRecord {
+    const childChunkRecord = new ChildChunkRecord();
+    childChunkRecord.id = childChunk.id;
+    childChunkRecord.embedding = childChunk.embedding;
+    childChunkRecord.parentId = childChunk.parentId;
+    return childChunkRecord;
+  }
+
+  toParentChunkEntity(input: ParentChunkRecord): ParentChunk {
+    const parentChunk = new ParentChunk({
+      id: input.id,
+      relatedDocumentId: input.relatedDocumentId,
+      relatedChunkId: input.relatedChunkId,
+      createdAt: input.createdAt,
+      updatedAt: input.updatedAt,
+      children: input.children.map((child) => this.toChildChunkEntity(child)),
+    });
+    return parentChunk;
+  }
+
+  toChildChunkEntity(input: ChildChunkRecord): ChildChunk {
+    return new ChildChunk({
+      id: input.id,
+      embedding: input.embedding,
+      parentId: input.parentId,
+      createdAt: input.createdAt,
+      updatedAt: input.updatedAt,
+    });
+  }
+}

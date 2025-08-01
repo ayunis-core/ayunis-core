@@ -4,9 +4,9 @@ import { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { MatchSourceContentChunksUseCase } from 'src/domain/sources/application/use-cases/match-source-content-chunks/match-source-content-chunks.use-case';
+import { QuerySourceUseCase } from 'src/domain/sources/application/use-cases/query-source/query-source.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
-import { MatchSourceCommand } from 'src/domain/sources/application/use-cases/match-source-content-chunks/match-source.command';
+import { QuerySourceCommand } from 'src/domain/sources/application/use-cases/query-source/query-source.command';
 
 @Injectable()
 export class SourceQueryToolHandler extends BaseExecutionHandler {
@@ -14,7 +14,7 @@ export class SourceQueryToolHandler extends BaseExecutionHandler {
 
   constructor(
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
-    private readonly matchSourceContentChunksUseCase: MatchSourceContentChunksUseCase,
+    private readonly matchSourceContentChunksUseCase: QuerySourceUseCase,
   ) {
     super();
   }
@@ -34,7 +34,7 @@ export class SourceQueryToolHandler extends BaseExecutionHandler {
       }
 
       const matchedChunks = await this.matchSourceContentChunksUseCase.execute(
-        new MatchSourceCommand(
+        new QuerySourceCommand(
           {
             sourceId: source.id,
           },

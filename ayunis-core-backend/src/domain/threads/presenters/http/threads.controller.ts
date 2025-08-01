@@ -297,7 +297,9 @@ export class ThreadsController {
     const sources = await this.getThreadSourcesUseCase.execute(
       new FindThreadSourcesQuery(threadId, userId),
     );
-    return sources.map((source) => this.sourceDtoMapper.toDto(source));
+    return sources.map((source) =>
+      this.sourceDtoMapper.toDto(source, threadId),
+    );
   }
 
   @Post(':id/sources/file')
@@ -353,6 +355,7 @@ export class ThreadsController {
     }),
   )
   async addFileSource(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Body() addFileSourceDto: AddFileSourceToThreadDto,
     @UploadedFile()
@@ -365,13 +368,12 @@ export class ThreadsController {
       buffer: Buffer;
       path: string;
     },
-  ): Promise<FileSourceResponseDto> {
+  ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
 
     // Create the file source
     const createFileSourceCommand = new CreateFileSourceCommand({
-      threadId,
-      userId: addFileSourceDto.userId,
+      orgId,
       fileType: file.mimetype,
       fileSize: file.size,
       fileData: file.buffer,
@@ -391,7 +393,7 @@ export class ThreadsController {
       new AddSourceCommand(thread, fileSource),
     );
 
-    return fileSource as unknown as FileSourceResponseDto;
+    return;
   }
 
   // @Post(':id/sources/url')
@@ -475,8 +477,6 @@ export class ThreadsController {
     );
 
     // Delete the source
-    await this.deleteSourceUseCase.execute(
-      new DeleteSourceCommand(sourceId, userId),
-    );
+    await this.deleteSourceUseCase.execute(new DeleteSourceCommand(sourceId));
   }
 }

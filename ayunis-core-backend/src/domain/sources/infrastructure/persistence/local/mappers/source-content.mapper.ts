@@ -9,6 +9,9 @@ export class SourceContentMapper {
     entity.id = sourceContent.id;
     entity.content = sourceContent.content;
     entity.sourceId = sourceContent.sourceId;
+    entity.meta = sourceContent.meta;
+    entity.createdAt = sourceContent.createdAt;
+    entity.updatedAt = sourceContent.updatedAt;
     return entity;
   }
 
@@ -17,7 +20,9 @@ export class SourceContentMapper {
       id: entity.id,
       sourceId: entity.sourceId,
       content: entity.content,
-      meta: {},
+      meta: entity.meta || {},
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     });
   }
 }

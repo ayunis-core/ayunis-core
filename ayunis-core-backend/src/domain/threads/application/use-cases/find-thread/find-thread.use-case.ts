@@ -3,6 +3,7 @@ import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { FindThreadQuery } from './find-thread.query';
 import { ThreadNotFoundError } from '../../threads.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class FindThreadUseCase {
@@ -24,7 +25,7 @@ export class FindThreadUseCase {
         ...thread,
       });
     } catch (error) {
-      if (error instanceof ThreadNotFoundError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Failed to find thread', {

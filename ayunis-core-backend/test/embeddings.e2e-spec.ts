@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app/app.module';
-import { EmbeddingsProvider } from '../src/domain/embeddings/domain/embeddings-provider.enum';
+import { EmbeddingsProvider } from '../src/domain/rag/embeddings/domain/embeddings-provider.enum';
 
 describe('Embeddings API (e2e)', () => {
   let app: INestApplication;

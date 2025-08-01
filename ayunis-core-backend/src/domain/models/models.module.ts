@@ -194,6 +194,7 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
     GetPermittedModelsUseCase,
+    GetAllPermittedProvidersUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     // Use Cases

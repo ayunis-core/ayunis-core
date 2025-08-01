@@ -26,8 +26,6 @@ export class SourceMapper {
   private fileSourceToDomain(entity: FileSourceRecord): FileSource {
     return new FileSource({
       id: entity.id,
-      threadId: entity.threadId,
-      userId: entity.userId,
       fileType: entity.fileType,
       fileSize: entity.fileSize,
       fileName: entity.fileName,
@@ -50,8 +48,6 @@ export class SourceMapper {
   private urlSourceToDomain(entity: UrlSourceRecord): UrlSource {
     return new UrlSource({
       id: entity.id,
-      threadId: entity.threadId,
-      userId: entity.userId,
       url: entity.url,
       content: entity.content.map(
         (c) =>
@@ -82,8 +78,6 @@ export class SourceMapper {
   fileSourceToEntity(source: FileSource): FileSourceRecord {
     const entity = new FileSourceRecord();
     entity.id = source.id;
-    entity.threadId = source.threadId;
-    entity.userId = source.userId;
     entity.type = SourceType.FILE;
     entity.fileType = source.fileType;
     entity.fileSize = source.fileSize;
@@ -100,8 +94,6 @@ export class SourceMapper {
   urlSourceToEntity(source: UrlSource): UrlSourceRecord {
     const entity = new UrlSourceRecord();
     entity.id = source.id;
-    entity.threadId = source.threadId;
-    entity.userId = source.userId;
     entity.type = SourceType.URL;
     entity.url = source.url;
     entity.content = source.content.map((c) =>

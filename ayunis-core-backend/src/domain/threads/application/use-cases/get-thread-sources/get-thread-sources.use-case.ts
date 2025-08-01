@@ -4,6 +4,7 @@ import { FindThreadSourcesQuery } from './get-thread-sources.query';
 import { FindThreadUseCase } from '../find-thread/find-thread.use-case';
 import { FindThreadQuery } from '../find-thread/find-thread.query';
 import { ThreadNotFoundError } from '../../threads.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetThreadSourcesUseCase {
@@ -21,19 +22,14 @@ export class GetThreadSourcesUseCase {
       const thread = await this.findThreadUseCase.execute(
         new FindThreadQuery(query.threadId, query.userId),
       );
-      return thread.sources || [];
+      return (
+        thread.sourceAssignments?.map((assignment) => assignment.source) || []
+      );
     } catch (error) {
-      if (error instanceof ThreadNotFoundError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
-
-      this.logger.error('Failed to get thread sources', {
-        threadId: query.threadId,
-        userId: query.userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-
-      throw error;
+      throw new ThreadNotFoundError(query.threadId, query.userId);
     }
   }
 }

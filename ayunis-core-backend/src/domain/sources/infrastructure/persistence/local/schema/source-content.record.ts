@@ -1,6 +1,5 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { SourceRecord } from './source.record';
-import { SourceContentChunkRecord } from './source-content-chunk.record';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UUID } from 'crypto';
 
@@ -18,9 +17,6 @@ export class SourceContentRecord extends BaseRecord {
   })
   source: SourceRecord;
 
-  @OneToMany(() => SourceContentChunkRecord, (chunk) => chunk.sourceContent)
-  chunks: SourceContentChunkRecord[];
-
-  //@Column({ type: 'jsonb' })
-  //meta: Record<string, any>;
+  @Column({ type: 'jsonb' })
+  meta: Record<string, any>;
 }

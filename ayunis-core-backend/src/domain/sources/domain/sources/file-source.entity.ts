@@ -10,8 +10,6 @@ export class FileSource extends Source {
 
   constructor(params: {
     id?: UUID;
-    threadId?: UUID;
-    userId: UUID;
     fileType: string;
     fileSize: number;
     fileName: string;
@@ -21,8 +19,6 @@ export class FileSource extends Source {
   }) {
     super({
       id: params.id,
-      threadId: params.threadId,
-      userId: params.userId,
       type: SourceType.FILE,
       content: params.content,
       createdAt: params.createdAt,

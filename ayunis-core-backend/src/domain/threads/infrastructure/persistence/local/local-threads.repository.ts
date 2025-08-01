@@ -26,7 +26,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
     const savedThreadEntity = await this.threadRepository.save(threadEntity);
     const reloadedThreadEntity = await this.threadRepository.findOne({
       where: { id: savedThreadEntity.id },
-      relations: ['messages', 'sources', 'model'],
+      relations: [
+        'messages',
+        'model',
+        'sourceAssignments',
+        'sourceAssignments.source',
+      ],
     });
     if (!reloadedThreadEntity) {
       throw new ThreadNotFoundError(
@@ -52,6 +57,11 @@ export class LocalThreadsRepository extends ThreadsRepository {
             toolConfig: true,
           },
         },
+        sourceAssignments: {
+          source: {
+            content: true,
+          },
+        },
       },
     });
     if (!threadEntity) {
@@ -66,6 +76,11 @@ export class LocalThreadsRepository extends ThreadsRepository {
       where: { userId },
       relations: {
         messages: true,
+        sourceAssignments: {
+          source: {
+            content: true,
+          },
+        },
       },
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));

@@ -3,6 +3,7 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import { FileSource } from 'src/domain/sources/domain/sources/file-source.entity';
 import { UrlSource } from 'src/domain/sources/domain/sources/url-source.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import { UUID } from 'crypto';
 import {
   SourceResponseDto,
   FileSourceResponseDto,
@@ -13,17 +14,17 @@ import {
 export class SourceDtoMapper {
   toDto(
     source: Source,
+    threadId?: UUID,
   ): SourceResponseDto | FileSourceResponseDto | UrlSourceResponseDto {
     if (source instanceof FileSource) {
-      return this.fileSourceToDto(source);
+      return this.fileSourceToDto(source, threadId);
     } else if (source instanceof UrlSource) {
-      return this.urlSourceToDto(source);
+      return this.urlSourceToDto(source, threadId);
     }
 
     const baseDto = new SourceResponseDto();
     baseDto.id = source.id;
-    baseDto.threadId = source.threadId;
-    baseDto.userId = source.userId;
+    baseDto.threadId = threadId;
     baseDto.type = source.type;
     baseDto.createdAt = source.createdAt.toISOString();
     baseDto.updatedAt = source.updatedAt.toISOString();
@@ -31,11 +32,13 @@ export class SourceDtoMapper {
     return baseDto;
   }
 
-  private fileSourceToDto(source: FileSource): FileSourceResponseDto {
+  private fileSourceToDto(
+    source: FileSource,
+    threadId?: UUID,
+  ): FileSourceResponseDto {
     const fileDto = new FileSourceResponseDto();
     fileDto.id = source.id;
-    fileDto.threadId = source.threadId;
-    fileDto.userId = source.userId;
+    fileDto.threadId = threadId;
     fileDto.type = SourceType.FILE;
     fileDto.fileType = source.fileType;
     fileDto.fileSize = source.fileSize;
@@ -45,11 +48,13 @@ export class SourceDtoMapper {
     return fileDto;
   }
 
-  private urlSourceToDto(source: UrlSource): UrlSourceResponseDto {
+  private urlSourceToDto(
+    source: UrlSource,
+    threadId?: UUID,
+  ): UrlSourceResponseDto {
     const urlDto = new UrlSourceResponseDto();
     urlDto.id = source.id;
-    urlDto.threadId = source.threadId;
-    urlDto.userId = source.userId;
+    urlDto.threadId = threadId;
     urlDto.type = SourceType.URL;
     urlDto.url = source.url;
     urlDto.createdAt = source.createdAt.toISOString();

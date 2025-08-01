@@ -35,7 +35,9 @@ export class SourceQueryTool extends ContextualTool {
 
   isAvailable(ctx: unknown): boolean {
     if (ctx instanceof Thread) {
-      return (ctx.sources && ctx.sources.length > 0) || false;
+      return (
+        (ctx.sourceAssignments && ctx.sourceAssignments.length > 0) || false
+      );
     }
     return false;
   }

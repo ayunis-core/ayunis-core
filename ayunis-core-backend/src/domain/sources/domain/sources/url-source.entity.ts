@@ -8,8 +8,6 @@ export class UrlSource extends Source {
 
   constructor(params: {
     id?: UUID;
-    threadId?: UUID;
-    userId: UUID;
     url: string;
     content: SourceContent[];
     createdAt?: Date;
@@ -17,8 +15,6 @@ export class UrlSource extends Source {
   }) {
     super({
       id: params.id,
-      threadId: params.threadId,
-      userId: params.userId,
       type: SourceType.URL,
       content: params.content,
       createdAt: params.createdAt,

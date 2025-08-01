@@ -1,44 +1,36 @@
 import { Module } from '@nestjs/common';
 import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/local-source-repository.module';
-import { SplitterModule } from '../splitter/splitter.module';
-import { EmbeddingsModule } from '../embeddings/embeddings.module';
+import { SplitterModule } from '../rag/splitters/splitter.module';
 import { RetrieverModule } from '../retrievers/retriever.module';
-import { SourcesController } from './presenters/http/sources.controller';
+import { IndexersModule } from '../rag/indexers/indexers.module';
 
 // Import all use cases
 import { GetSourceByIdUseCase } from './application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { GetSourcesByThreadIdUseCase } from './application/use-cases/get-sources-by-thread-id/get-sources-by-thread-id.use-case';
-import { GetSourcesByUserIdUseCase } from './application/use-cases/get-sources-by-user-id/get-sources-by-user-id.use-case';
 import { DeleteSourceUseCase } from './application/use-cases/delete-source/delete-source.use-case';
 import { CreateFileSourceUseCase } from './application/use-cases/create-file-source/create-file-source.use-case';
 import { CreateUrlSourceUseCase } from './application/use-cases/create-url-source/create-url-source.use-case';
-import { MatchSourceContentChunksUseCase } from './application/use-cases/match-source-content-chunks/match-source-content-chunks.use-case';
+import { QuerySourceUseCase } from './application/use-cases/query-source/query-source.use-case';
 
 @Module({
   imports: [
     LocalSourceRepositoryModule,
     RetrieverModule,
     SplitterModule,
-    EmbeddingsModule,
+    IndexersModule,
   ],
-  controllers: [SourcesController],
   providers: [
     GetSourceByIdUseCase,
-    GetSourcesByThreadIdUseCase,
-    GetSourcesByUserIdUseCase,
     DeleteSourceUseCase,
     CreateFileSourceUseCase,
     CreateUrlSourceUseCase,
-    MatchSourceContentChunksUseCase,
+    QuerySourceUseCase,
   ],
   exports: [
     GetSourceByIdUseCase,
-    GetSourcesByThreadIdUseCase,
-    GetSourcesByUserIdUseCase,
     DeleteSourceUseCase,
     CreateFileSourceUseCase,
     CreateUrlSourceUseCase,
-    MatchSourceContentChunksUseCase,
+    QuerySourceUseCase,
   ],
 })
 export class SourcesModule {}

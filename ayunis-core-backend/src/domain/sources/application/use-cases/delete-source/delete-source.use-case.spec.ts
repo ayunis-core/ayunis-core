@@ -35,11 +35,10 @@ describe('DeleteSourceUseCase', () => {
 
   it('should delete a source successfully', async () => {
     const sourceId = randomUUID();
-    const userId = randomUUID();
 
     (mockSourceRepository.delete as jest.Mock).mockResolvedValue(undefined);
 
-    await useCase.execute(new DeleteSourceCommand(sourceId, userId));
+    await useCase.execute(new DeleteSourceCommand(sourceId));
 
     expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
   });
@@ -47,12 +46,11 @@ describe('DeleteSourceUseCase', () => {
   it('should handle repository errors', async () => {
     const sourceId = randomUUID();
     const error = new Error('Repository error');
-    const userId = randomUUID();
 
     (mockSourceRepository.delete as jest.Mock).mockRejectedValue(error);
 
     await expect(
-      useCase.execute(new DeleteSourceCommand(sourceId, userId)),
+      useCase.execute(new DeleteSourceCommand(sourceId)),
     ).rejects.toThrow('Repository error');
     expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
   });

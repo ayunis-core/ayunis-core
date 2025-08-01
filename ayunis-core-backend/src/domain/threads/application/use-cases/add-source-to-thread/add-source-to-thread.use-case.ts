@@ -3,6 +3,8 @@ import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
 import { SourceAdditionError } from '../../threads.errors';
+import { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class AddSourceToThreadUseCase {
@@ -16,33 +18,29 @@ export class AddSourceToThreadUseCase {
       sourceId: command.source.id,
     });
     try {
-      if (!command.thread.sources) {
-        command.thread.sources = [];
+      if (!command.thread.sourceAssignments) {
+        command.thread.sourceAssignments = [];
       }
 
       // Check if source already exists in thread
-      const sourceExists = command.thread.sources.some(
-        (source) => source.id === command.source.id,
+      const sourceExists = command.thread.sourceAssignments.some(
+        (assignment) => assignment.source.id === command.source.id,
       );
 
       if (!sourceExists) {
-        command.thread.sources.push(command.source); // TODO: Optimize this
+        const sourceAssignment = new SourceAssignment({
+          source: command.source,
+        });
+        command.thread.sourceAssignments.push(sourceAssignment);
         return await this.threadsRepository.update(command.thread);
       }
 
       return command.thread;
     } catch (error) {
-      this.logger.error('Failed to add source to thread', {
-        threadId: command.thread.id,
-        sourceId: command.source.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error instanceof Error
-        ? new SourceAdditionError(command.thread.id, error)
-        : new SourceAdditionError(
-            command.thread.id,
-            new Error('Unknown error'),
-          );
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      throw new SourceAdditionError(command.thread.id, error as Error);
     }
   }
 }

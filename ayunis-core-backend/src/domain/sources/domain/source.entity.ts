@@ -4,8 +4,6 @@ import { SourceContent } from './source-content.entity';
 
 export abstract class Source {
   id: UUID;
-  threadId?: UUID;
-  userId: UUID;
   type: SourceType;
   createdAt: Date;
   updatedAt: Date;
@@ -13,16 +11,12 @@ export abstract class Source {
 
   constructor(params: {
     id?: UUID;
-    threadId?: UUID;
-    userId: UUID;
     type: SourceType;
     content: SourceContent[];
     createdAt?: Date;
     updatedAt?: Date;
   }) {
     this.id = params.id ?? randomUUID();
-    this.threadId = params.threadId;
-    this.userId = params.userId;
     this.type = params.type;
     this.content = params.content;
     this.createdAt = params.createdAt ?? new Date();
