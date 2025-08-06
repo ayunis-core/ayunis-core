@@ -50,6 +50,8 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { ConfigService } from '@nestjs/config';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -68,6 +70,7 @@ export class ExecuteRunUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly assembleToolsUseCase: AssembleToolUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(
@@ -79,13 +82,7 @@ export class ExecuteRunUseCase {
         new FindThreadQuery(command.threadId, command.userId),
       );
       const tools = await this.assembleTools(thread, command.userId);
-      const model = thread.agent ? thread.agent.model : thread.model;
-      if (!model) {
-        throw new RunNoModelFoundError({
-          threadId: thread.id,
-          userId: command.userId,
-        });
-      }
+      const model = this.pickModel(thread);
       const instructions = this.assemblySystemPrompt(thread);
 
       const trace = langfuse.trace({
@@ -120,6 +117,7 @@ export class ExecuteRunUseCase {
   }
 
   private async assembleTools(thread: Thread, userId: UUID): Promise<Tool[]> {
+    const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
     const tools: Tool[] = [];
     if (thread.agent) {
       tools.push(
@@ -140,14 +138,17 @@ export class ExecuteRunUseCase {
     );
 
     // Internet search tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.INTERNET_SEARCH,
-          userId,
-        }),
-      ),
-    );
+    // TODO: remove the self hosting constraint
+    if (isSelfhosted) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({
+            type: ToolType.INTERNET_SEARCH,
+            userId,
+          }),
+        ),
+      );
+    }
 
     // Source query tool is available if there are sources in the thread
     if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
@@ -165,6 +166,19 @@ export class ExecuteRunUseCase {
     }
 
     return tools;
+  }
+
+  private pickModel(thread: Thread): PermittedLanguageModel {
+    if (thread.agent) {
+      return thread.agent.model;
+    }
+    if (thread.model) {
+      return thread.model;
+    }
+    throw new RunNoModelFoundError({
+      threadId: thread.id,
+      userId: thread.userId,
+    });
   }
 
   private assemblySystemPrompt(thread: Thread): string {
