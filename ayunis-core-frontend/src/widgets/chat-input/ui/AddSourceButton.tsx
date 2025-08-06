@@ -6,28 +6,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/shadcn/tooltip";
-import { Loader2, Paperclip } from "lucide-react";
-import { useFileSource } from "../api/useFileSource";
+import { Loader2, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AddSourceButtonProps {
-  threadId?: string;
+  onFileUpload: (file: File) => void;
+  isCreatingFileSource?: boolean;
 }
 
-export default function AddSourceButton({ threadId }: AddSourceButtonProps) {
+export default function AddSourceButton({
+  onFileUpload,
+  isCreatingFileSource,
+}: AddSourceButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { uploadFile, isLoading: isCreatingFileSource } = useFileSource({
-    threadId,
-  });
+  const { t } = useTranslation("common");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      uploadFile({
-        file,
-        name: file.name,
-        description: `File source: ${file.name}`,
-      });
+      onFileUpload(file);
     }
   };
 
@@ -51,19 +48,19 @@ export default function AddSourceButton({ threadId }: AddSourceButtonProps) {
             <Button
               size="icon"
               variant="outline"
-              className="flex items-center gap-2"
-              disabled={isCreatingFileSource}
+              className="flex items-center gap-2 h-6 w-6"
+              disabled={isCreatingFileSource ?? false}
               onClick={handleFileUpload}
             >
               {isCreatingFileSource ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="animate-spin" />
               ) : (
-                <Paperclip className="h-4 w-4" />
+                <Plus />
               )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Upload file</p>
+            <p>{t("chatInput.uploadFile")}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

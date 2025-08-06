@@ -17,12 +17,12 @@ export class AgentToolMapper {
   toDomain(record: AgentToolAssignmentRecord): AgentToolAssignment {
     return new AgentToolAssignment({
       id: record.id,
-      tool: this.toolFactory.createTool(
-        record.toolType,
-        record.toolConfig
+      tool: this.toolFactory.createTool({
+        type: record.toolType,
+        config: record.toolConfig
           ? this.toolConfigMapper.toDomain(record.toolConfig)
           : undefined,
-      ),
+      }),
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });

@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ToolsController } from './presenters/http/tools.controller';
 import { ToolHandlerRegistry } from './application/tool-handler.registry';
 import { HttpToolHandler } from './application/handlers/http-tool.handler';
 import { SourceQueryToolHandler } from './application/handlers/source-query-tool.handler';
@@ -11,32 +10,18 @@ import { LocalToolConfigRepositoryModule } from './infrastructure/persistence/lo
 import { InternetSearchToolHandler } from './application/handlers/internet-search-tool.handler';
 import { WebsiteContentToolHandler } from './application/handlers/website-content-tool.handler';
 import { RetrieverModule } from '../retrievers/retriever.module';
-
-// Import all use cases
-import { CreateToolUseCase } from './application/use-cases/create-tool/create-tool.use-case';
-import { FindOneToolUseCase } from './application/use-cases/find-one-tool/find-one-tool.use-case';
-import { FindAllUserToolsUseCase } from './application/use-cases/find-all-user-tools/find-all-user-tools.use-case';
-import { FindManyToolsUseCase } from './application/use-cases/find-many-tools/find-many-tools.use-case';
-import { FindContextualToolsUseCase } from './application/use-cases/find-contextual-tools/find-contextual-tools.use-case';
-import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
-import { DeleteToolUseCase } from './application/use-cases/delete-tool/delete-tool.use-case';
-import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/tool-config.mapper';
+import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assemble-tool.use-case';
+import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
+import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 
 @Module({
   imports: [SourcesModule, LocalToolConfigRepositoryModule, RetrieverModule],
-  controllers: [ToolsController],
   providers: [
     // Use cases
-    CreateToolUseCase,
-    FindOneToolUseCase,
-    FindAllUserToolsUseCase,
-    FindManyToolsUseCase,
-    FindContextualToolsUseCase,
+    AssembleToolUseCase,
     ExecuteToolUseCase,
-    DeleteToolUseCase,
     CheckToolCapabilitiesUseCase,
-
     // Core services and registries
     ToolHandlerRegistry,
     HttpToolHandler,
@@ -59,15 +44,9 @@ import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/too
   ],
   exports: [
     // Export use cases
-    CreateToolUseCase,
-    FindOneToolUseCase,
-    FindAllUserToolsUseCase,
-    FindManyToolsUseCase,
-    FindContextualToolsUseCase,
+    AssembleToolUseCase,
     ExecuteToolUseCase,
-    DeleteToolUseCase,
     CheckToolCapabilitiesUseCase,
-
     // Export core services
     ToolHandlerRegistry,
     ToolFactory,

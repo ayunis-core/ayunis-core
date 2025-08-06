@@ -10,7 +10,6 @@ import { CreateUserMessageCommand } from '../../../../messages/application/use-c
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import { ToolUseMessageContent } from '../../../../messages/domain/message-contents/tool-use.message-content.entity';
-import { FindContextualToolsUseCase } from '../../../../tools/application/use-cases/find-contextual-tools/find-contextual-tools.use-case';
 import { ExecuteToolUseCase } from '../../../../tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from '../../../../tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { ExecuteToolCommand } from '../../../../tools/application/use-cases/execute-tool/execute-tool.command';
@@ -34,7 +33,6 @@ import {
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { ToolExecutionFailedError } from '../../../../tools/application/tools.errors';
 import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
-import { FindContextualToolsQuery } from '../../../../tools/application/use-cases/find-contextual-tools/find-contextual-tools.query';
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -49,6 +47,9 @@ import langfuse from 'src/common/evals/langfuse';
 import { LangfuseTraceClient } from 'langfuse';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
+import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -60,13 +61,13 @@ export class ExecuteRunUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
-    private readonly findContextualToolsUseCase: FindContextualToolsUseCase,
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly triggerInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
+    private readonly assembleToolsUseCase: AssembleToolUseCase,
   ) {}
 
   async execute(
@@ -77,7 +78,7 @@ export class ExecuteRunUseCase {
       const thread = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId, command.userId),
       );
-      const tools = this.assembleTools(thread);
+      const tools = await this.assembleTools(thread, command.userId);
       const model = thread.agent ? thread.agent.model : thread.model;
       if (!model) {
         throw new RunNoModelFoundError({
@@ -85,7 +86,7 @@ export class ExecuteRunUseCase {
           userId: command.userId,
         });
       }
-      const instructions = thread.agent?.instructions;
+      const instructions = this.assemblySystemPrompt(thread);
 
       const trace = langfuse.trace({
         name: 'execute_run',
@@ -118,29 +119,61 @@ export class ExecuteRunUseCase {
     }
   }
 
-  private assembleTools(thread: Thread): Tool[] {
-    let tools: Tool[] = [];
+  private async assembleTools(thread: Thread, userId: UUID): Promise<Tool[]> {
+    const tools: Tool[] = [];
     if (thread.agent) {
-      tools = thread.agent.tools;
+      tools.push(
+        ...thread.agent.tools.filter(
+          (tool) => tool.type !== ToolType.INTERNET_SEARCH,
+        ),
+      );
     }
 
-    const contextualTools = this.findContextualToolsUseCase.execute(
-      new FindContextualToolsQuery({ thread }),
+    // Website content tool is always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.WEBSITE_CONTENT,
+          userId,
+        }),
+      ),
     );
-    // TODO: add tools from thread
 
-    // Create a map of existing tool names
-    const existingToolNames = new Set(tools.map((tool) => tool.name));
+    // Internet search tool is always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.INTERNET_SEARCH,
+          userId,
+        }),
+      ),
+    );
 
-    // Add only tools that don't exist yet
-    for (const tool of [...contextualTools]) {
-      if (!existingToolNames.has(tool.name)) {
-        tools.push(tool);
-        existingToolNames.add(tool.name);
-      }
+    // Source query tool is available if there are sources in the thread
+    if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({
+            type: ToolType.SOURCE_QUERY,
+            context: thread.sourceAssignments.map(
+              (assignment) => assignment.source,
+            ),
+            userId,
+          }),
+        ),
+      );
     }
 
     return tools;
+  }
+
+  private assemblySystemPrompt(thread: Thread): string {
+    const currentTime = new Date().toISOString();
+    const agentInstructions = thread.agent?.instructions;
+    if (!agentInstructions) {
+      return `Current time: ${currentTime}`;
+    }
+    return `Current time: ${currentTime}\n\n${agentInstructions}`;
   }
 
   private async *executeRunInternal(params: {

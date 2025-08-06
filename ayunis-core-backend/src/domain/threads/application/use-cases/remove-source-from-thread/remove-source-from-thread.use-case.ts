@@ -3,12 +3,17 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveSourceCommand } from './remove-source.command';
 import { SourceRemovalError, SourceNotFoundError } from '../../threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
+import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 
 @Injectable()
 export class RemoveSourceFromThreadUseCase {
   private readonly logger = new Logger(RemoveSourceFromThreadUseCase.name);
 
-  constructor(private readonly threadsRepository: ThreadsRepository) {}
+  constructor(
+    private readonly threadsRepository: ThreadsRepository,
+    private readonly deleteSourceUseCase: DeleteSourceUseCase,
+  ) {}
 
   async execute(command: RemoveSourceCommand): Promise<void> {
     this.logger.log('removeSource', {
@@ -21,16 +26,27 @@ export class RemoveSourceFromThreadUseCase {
         throw new SourceNotFoundError(command.sourceId, command.thread.id);
       }
 
-      const assignmentIndex = command.thread.sourceAssignments.findIndex(
+      const assignmentToRemove = command.thread.sourceAssignments.find(
         (assignment) => assignment.source.id === command.sourceId,
       );
 
-      if (assignmentIndex === -1) {
+      if (!assignmentToRemove) {
         throw new SourceNotFoundError(command.sourceId, command.thread.id);
       }
 
-      command.thread.sourceAssignments.splice(assignmentIndex, 1);
-      await this.threadsRepository.update(command.thread);
+      const updatedAssignments = command.thread.sourceAssignments.filter(
+        (assignment) => assignment.source.id !== assignmentToRemove.source.id,
+      );
+
+      await this.threadsRepository.updateSourceAssignments({
+        threadId: command.thread.id,
+        userId: command.thread.userId,
+        sourceAssignments: updatedAssignments,
+      });
+
+      await this.deleteSourceUseCase.execute(
+        new DeleteSourceCommand(assignmentToRemove.source),
+      );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

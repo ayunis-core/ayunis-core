@@ -3518,6 +3518,47 @@
           "displayName"
         ]
       },
+      "SourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "file",
+              "url"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "name",
+          "type",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "GetThreadResponseDto": {
         "type": "object",
         "properties": {
@@ -3566,6 +3607,13 @@
               ]
             }
           },
+          "sources": {
+            "type": "array",
+            "description": "Array of sources in the thread",
+            "items": {
+              "$ref": "#/components/schemas/SourceResponseDto"
+            }
+          },
           "createdAt": {
             "type": "string",
             "description": "Creation timestamp",
@@ -3583,6 +3631,7 @@
           "permittedModelId",
           "agentId",
           "messages",
+          "sources",
           "createdAt",
           "updatedAt"
         ]
@@ -3643,42 +3692,6 @@
           "agentId"
         ]
       },
-      "SourceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the source"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID this source belongs to"
-          },
-          "type": {
-            "type": "string",
-            "description": "Type of source",
-            "enum": [
-              "file",
-              "url"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp"
-          }
-        },
-        "required": [
-          "id",
-          "threadId",
-          "type",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
       "FileSourceResponseDto": {
         "type": "object",
         "properties": {
@@ -3689,6 +3702,10 @@
           "threadId": {
             "type": "string",
             "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
           },
           "type": {
             "type": "string",
@@ -3722,6 +3739,7 @@
         "required": [
           "id",
           "threadId",
+          "name",
           "type",
           "createdAt",
           "updatedAt",

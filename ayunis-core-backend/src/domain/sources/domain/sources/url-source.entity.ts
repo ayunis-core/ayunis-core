@@ -10,6 +10,7 @@ export class UrlSource extends Source {
     id?: UUID;
     url: string;
     content: SourceContent[];
+    websiteTitle: string;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -17,6 +18,7 @@ export class UrlSource extends Source {
       id: params.id,
       type: SourceType.URL,
       content: params.content,
+      name: params.websiteTitle,
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
     });

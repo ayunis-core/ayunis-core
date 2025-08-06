@@ -38,6 +38,7 @@ export class CreateUrlSourceUseCase {
     const urlSource = new UrlSource({
       url: command.url,
       content: [],
+      websiteTitle: urlRetrieverResult.websiteTitle,
     });
     // TODO: This is a hack to get the id of the source
     // Because cascading is not working as expected

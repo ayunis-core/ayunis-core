@@ -11,5 +11,5 @@ export abstract class SourceRepository {
   abstract createFileSource(source: FileSource): Promise<FileSource>;
   abstract createUrlSource(source: UrlSource): Promise<UrlSource>;
   abstract update(source: Source): Promise<Source>;
-  abstract delete(id: UUID): Promise<void>;
+  abstract delete(source: Source): Promise<void>;
 }

@@ -25,7 +25,6 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
 import { Button } from "@/shared/ui/shadcn/button";
-import { Switch } from "@/shared/ui/shadcn/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -51,6 +50,8 @@ export default function EditAgentDialog({
 }: EditAgentDialogProps) {
   const { t } = useTranslation("agents");
   const [isOpen, setIsOpen] = useState(false);
+  // TODO: This is still here to keep the pattern of the create agent dialog
+  // And should be extended as soon as there are agent tools
   const [internetSearchEnabled, setInternetSearchEnabled] = useState(false);
   const { models } = usePermittedModels();
   const {
@@ -191,23 +192,6 @@ export default function EditAgentDialog({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <label className="text-sm font-medium">
-                      Internet Search
-                    </label>
-                    <p className="text-xs text-muted-foreground">
-                      Allow the agent to search the internet for up-to-date
-                      information
-                    </p>
-                  </div>
-                  <Switch
-                    checked={internetSearchEnabled}
-                    onCheckedChange={setInternetSearchEnabled}
-                  />
-                </div>
               </div>
             </div>
             <DialogFooter>

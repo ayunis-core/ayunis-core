@@ -43,6 +43,7 @@ export class AddSourceToThreadUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
+      this.logger.error('addSource', error);
       throw new SourceAdditionError(command.thread.id, error as Error);
     }
   }

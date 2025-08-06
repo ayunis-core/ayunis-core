@@ -27,6 +27,7 @@ import { SourceResponseDto } from './source-response.dto';
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
   ModelResponseDto,
+  SourceResponseDto,
 )
 export class GetThreadResponseDto {
   @ApiProperty({

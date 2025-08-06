@@ -8,7 +8,6 @@ const config = {
       import.meta.env.MODE === "production"
         ? "/api"
         : import.meta.env.VITE_API_BASE_URL,
-    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || "10000"),
   },
   app: {
     name: "Ayunis Core",

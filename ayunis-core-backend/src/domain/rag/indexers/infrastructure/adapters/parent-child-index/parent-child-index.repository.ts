@@ -66,43 +66,30 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
         .leftJoinAndSelect('parentChunk.children', 'children')
         // Add cosine similarity as calculated field (1 - cosine distance)
         .addSelect(
-          `1 - (children.vector <=> :queryVector)`,
+          `1 - (children.embedding <=> :queryVector)`,
           'cosine_similarity',
         )
         // Use built-in where methods for standard comparisons
         .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
           relatedDocumentId,
         })
-        .andWhere('children.vector IS NOT NULL')
+        .andWhere('children.embedding IS NOT NULL')
         // Use cosine similarity threshold (higher is better, so use >=)
-        .andWhere('1 - (children.vector <=> :queryVector) >= :threshold', {
+        .andWhere('1 - (children.embedding <=> :queryVector) >= :threshold', {
           queryVector: queryVectorString,
           threshold: similarityThreshold,
         })
         // Order by cosine similarity DESC (highest similarity first)
-        .orderBy('1 - (children.vector <=> :queryVector)', 'DESC')
+        .orderBy('1 - (children.embedding <=> :queryVector)', 'DESC')
         .setParameter('queryVector', queryVectorString)
         .limit(limit);
 
       // Get both raw results (with cosine similarity) and entities
-      const { entities, raw } = await queryBuilder.getRawAndEntities();
-
-      this.logger.debug(
-        `Found ${entities.length} similar chunks for vector search in relatedDocumentId ${relatedDocumentId} ` +
-          `(threshold: ${similarityThreshold}, vector dim: ${queryVector.length}, limit: ${limit}, cosine similarity: ${raw
-            .filter(
-              (r: { cosine_similarity: number }) =>
-                r.cosine_similarity !== null,
-            )
-            .map((r: { cosine_similarity: number }) =>
-              r.cosine_similarity.toFixed(2),
-            )
-            .join(', ')})`,
-      );
+      const { entities } = await queryBuilder.getRawAndEntities();
 
       // Return the properly mapped entities
       return entities.map((entity) =>
-        this.parentChildIndexerMapper.toParentChunkRecord(entity),
+        this.parentChildIndexerMapper.toParentChunkEntity(entity),
       );
     } catch (error) {
       this.logger.error(

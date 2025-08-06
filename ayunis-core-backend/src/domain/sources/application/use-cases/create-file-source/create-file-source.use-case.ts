@@ -103,16 +103,18 @@ export class CreateFileSourceUseCase {
   private async indexSourceContent(source: FileSource): Promise<void> {
     this.logger.debug(`Indexing content for source: ${source.id}`);
 
-    for (const content of source.content) {
-      const ingestCommand = new IngestContentCommand({
-        documentId: source.id,
-        chunkId: content.id,
-        content: content.content,
-        type: IndexType.PARENT_CHILD,
-      });
+    await Promise.all(
+      source.content.map(async (content) => {
+        const ingestCommand = new IngestContentCommand({
+          documentId: source.id,
+          chunkId: content.id,
+          content: content.content,
+          type: IndexType.PARENT_CHILD,
+        });
 
-      await this.ingestContentUseCase.execute(ingestCommand);
-    }
+        await this.ingestContentUseCase.execute(ingestCommand);
+      }),
+    );
 
     this.logger.debug(
       `Successfully indexed ${source.content.length} content blocks for source: ${source.id}`,

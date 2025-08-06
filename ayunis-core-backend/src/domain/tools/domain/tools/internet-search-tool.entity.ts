@@ -1,8 +1,7 @@
 import { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { ContextualTool } from '../contextual-tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 import Ajv from 'ajv';
-import { Thread } from '../../../threads/domain/thread.entity';
+import { Tool } from '../tool.entity';
 
 const internetSearchToolParameters = {
   type: 'object' as const,
@@ -17,7 +16,7 @@ type InternetSearchToolParameters = FromSchema<
   typeof internetSearchToolParameters
 >;
 
-export class InternetSearchTool extends ContextualTool {
+export class InternetSearchTool extends Tool {
   constructor() {
     super({
       name: ToolType.INTERNET_SEARCH,
@@ -26,13 +25,6 @@ export class InternetSearchTool extends ContextualTool {
       parameters: internetSearchToolParameters,
       type: ToolType.INTERNET_SEARCH,
     });
-  }
-
-  isAvailable(ctx: unknown): boolean {
-    if (ctx instanceof Thread) {
-      return false;
-    }
-    return false;
   }
 
   validateParams(params: Record<string, any>): InternetSearchToolParameters {

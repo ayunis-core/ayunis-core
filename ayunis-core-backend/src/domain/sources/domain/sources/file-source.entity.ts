@@ -6,7 +6,6 @@ import { SourceContent } from '../source-content.entity';
 export class FileSource extends Source {
   fileType: string;
   fileSize: number;
-  fileName: string;
 
   constructor(params: {
     id?: UUID;
@@ -21,11 +20,11 @@ export class FileSource extends Source {
       id: params.id,
       type: SourceType.FILE,
       content: params.content,
+      name: params.fileName,
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
     });
     this.fileType = params.fileType;
     this.fileSize = params.fileSize;
-    this.fileName = params.fileName;
   }
 }

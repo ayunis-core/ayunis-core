@@ -1,8 +1,12 @@
-import { threadsControllerAddFileSource } from "@/shared/api";
+import {
+  getThreadsControllerFindOneQueryKey,
+  threadsControllerAddFileSource,
+} from "@/shared/api";
 import type { ThreadsControllerAddFileSourceBody } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { showError } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 
 interface UseFileSourceProps {
   threadId?: string;
@@ -14,10 +18,12 @@ interface UploadFileParams {
   description?: string;
 }
 
-export function useFileSource({ threadId }: UseFileSourceProps = {}) {
+export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const { t } = useTranslation("common");
-
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const createFileSourceMutation = useMutation({
+    retry: 0,
     mutationFn: async ({
       id,
       data,
@@ -43,14 +49,20 @@ export function useFileSource({ threadId }: UseFileSourceProps = {}) {
         throw error;
       }
     },
-    onSuccess: () => {},
     onError: (error: unknown) => {
       console.error("Failed to create file source:", error);
       showError(t("chatInput.fileSourceUploadError"));
     },
+    onSettled: () => {
+      if (!threadId) return;
+      queryClient.invalidateQueries({
+        queryKey: getThreadsControllerFindOneQueryKey(threadId),
+      });
+      router.invalidate();
+    },
   });
 
-  const uploadFile = ({ file, name, description }: UploadFileParams) => {
+  function createFileSource({ file, name, description }: UploadFileParams) {
     if (!threadId) {
       console.error("Thread ID is required");
       showError("Thread ID is required");
@@ -64,10 +76,31 @@ export function useFileSource({ threadId }: UseFileSourceProps = {}) {
     };
 
     createFileSourceMutation.mutate({ id: threadId, data });
-  };
+  }
+
+  function createFileSourceAsync({
+    file,
+    name,
+    description,
+  }: UploadFileParams) {
+    if (!threadId) {
+      console.error("Thread ID is required");
+      showError("Thread ID is required");
+      return;
+    }
+
+    const data: ThreadsControllerAddFileSourceBody = {
+      file,
+      name: name || file.name,
+      description,
+    };
+
+    return createFileSourceMutation.mutateAsync({ id: threadId, data });
+  }
 
   return {
-    uploadFile,
+    createFileSource,
+    createFileSourceAsync,
     isLoading: createFileSourceMutation.isPending,
     error: createFileSourceMutation.error,
     reset: createFileSourceMutation.reset,

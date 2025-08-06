@@ -67,8 +67,6 @@ import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { CreateFileSourceUseCase } from '../../../sources/application/use-cases/create-file-source/create-file-source.use-case';
-import { DeleteSourceUseCase } from '../../../sources/application/use-cases/delete-source/delete-source.use-case';
-import { DeleteSourceCommand } from '../../../sources/application/use-cases/delete-source/delete-source.command';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import { UpdateThreadAgentCommand } from '../../application/use-cases/update-thread-agent/update-thread-agent.command';
 import { UpdateThreadAgentUseCase } from '../../application/use-cases/update-thread-agent/update-thread-agent.use-case';
@@ -90,7 +88,6 @@ export class ThreadsController {
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
     private readonly updateThreadModelUseCase: UpdateThreadModelUseCase,
     private readonly createFileSourceUseCase: CreateFileSourceUseCase,
-    private readonly deleteSourceUseCase: DeleteSourceUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
@@ -367,36 +364,41 @@ export class ThreadsController {
     },
   ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
+    try {
+      // Read file data from disk since we're using diskStorage
+      const fileData = fs.readFileSync(file.path);
 
-    // Read file data from disk since we're using diskStorage
-    const fileData = fs.readFileSync(file.path);
+      // Create the file source
+      const createFileSourceCommand = new CreateFileSourceCommand({
+        orgId,
+        fileType: file.mimetype,
+        fileSize: file.size,
+        fileData: fileData,
+        fileName: file.originalname,
+      });
 
-    // Create the file source
-    const createFileSourceCommand = new CreateFileSourceCommand({
-      orgId,
-      fileType: file.mimetype,
-      fileSize: file.size,
-      fileData: fileData,
-      fileName: file.originalname,
-    });
+      const fileSource = await this.createFileSourceUseCase.execute(
+        createFileSourceCommand,
+      );
 
-    const fileSource = await this.createFileSourceUseCase.execute(
-      createFileSourceCommand,
-    );
+      // Add the source to the thread
+      const thread = await this.findThreadUseCase.execute(
+        new FindThreadQuery(threadId, userId),
+      );
 
-    // Add the source to the thread
-    const thread = await this.findThreadUseCase.execute(
-      new FindThreadQuery(threadId, userId),
-    );
+      await this.addSourceToThreadUseCase.execute(
+        new AddSourceCommand(thread, fileSource),
+      );
 
-    await this.addSourceToThreadUseCase.execute(
-      new AddSourceCommand(thread, fileSource),
-    );
-
-    // Clean up the uploaded file
-    fs.unlinkSync(file.path);
-
-    return;
+      // Clean up the uploaded file
+      fs.unlinkSync(file.path);
+      return;
+    } catch (error: unknown) {
+      this.logger.error('addFileSource', { error });
+      // Clean up the uploaded file
+      fs.unlinkSync(file.path);
+      throw error;
+    }
   }
 
   // @Post(':id/sources/url')
@@ -478,8 +480,5 @@ export class ThreadsController {
     await this.removeSourceFromThreadUseCase.execute(
       new RemoveSourceCommand(thread, sourceId),
     );
-
-    // Delete the source
-    await this.deleteSourceUseCase.execute(new DeleteSourceCommand(sourceId));
   }
 }

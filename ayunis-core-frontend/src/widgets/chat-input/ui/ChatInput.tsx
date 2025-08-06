@@ -1,22 +1,27 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/shared/ui/shadcn/button";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, XIcon } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import ModelSelector from "./ModelSelector";
 import PromptLibraryButton from "./PromptLibraryButton";
 import AddSourceButton from "./AddSourceButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import { useTranslation } from "react-i18next";
+import type { SourceResponseDtoType } from "@/shared/api";
+import { Badge } from "@/shared/ui/shadcn/badge";
 
 interface ChatInputProps {
   modelOrAgentId: string | undefined;
+  sources: { id: string; name: string; type: SourceResponseDtoType }[];
   isStreaming?: boolean;
+  isCreatingFileSource?: boolean;
   onModelChange: (modelId: string) => void;
   onAgentChange: (agentId: string) => void;
+  onFileUpload: (file: File) => void;
+  onRemoveSource: (sourceId: string) => void;
   onSend: (message: string) => Promise<void>;
   prefilledPrompt?: string;
-  threadId?: string;
 }
 
 export interface ChatInputRef {
@@ -27,12 +32,15 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   (
     {
       modelOrAgentId,
+      sources,
       isStreaming,
+      isCreatingFileSource,
       onModelChange,
       onAgentChange,
+      onFileUpload,
+      onRemoveSource,
       onSend,
       prefilledPrompt,
-      threadId,
     },
     ref,
   ) => {
@@ -67,6 +75,25 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         <Card className="py-4">
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
+              {/* Sources and Add Source Button */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <AddSourceButton
+                  onFileUpload={onFileUpload}
+                  isCreatingFileSource={isCreatingFileSource}
+                />
+                {sources.map((source) => (
+                  <Badge
+                    key={source.id}
+                    variant="secondary"
+                    className="flex items-center gap-1 cursor-pointer"
+                    onClick={() => onRemoveSource(source.id)}
+                  >
+                    <XIcon className="h-3 w-3" />
+                    {source.name}
+                  </Badge>
+                ))}
+              </div>
+
               {/* Textarea at the top */}
               <TextareaAutosize
                 maxRows={10}
@@ -89,7 +116,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     onAgentChange={onAgentChange}
                   />
                   <PromptLibraryButton onPromptSelect={handlePromptSelect} />
-                  <AddSourceButton threadId={threadId} />
                 </div>
 
                 {/* Right side */}

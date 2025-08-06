@@ -34,24 +34,26 @@ const renderTextContent = (content: TextMessageContent) => {
 // Helper function to render tool use content
 const renderToolUseContent = (content: ToolUseMessageContent, t: any) => {
   return (
-    <Collapsible key={content.name}>
-      <CollapsibleTrigger asChild>
-        <Badge
-          variant="outline"
-          className="text-sm font-medium text-muted-foreground cursor-pointer"
-        >
-          <Wrench className="h-4 w-4" />{" "}
-          {t(`chat.tools.${content.name.toLowerCase()}`)}
-        </Badge>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <Badge variant="outline">
-          <pre className="whitespace-pre-wrap">
-            {JSON.stringify(content.params, null, 2)}
-          </pre>
-        </Badge>
-      </CollapsibleContent>
-    </Collapsible>
+    <div className="my-2" key={content.name}>
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <Badge
+            variant="outline"
+            className="text-sm font-medium text-muted-foreground cursor-pointer"
+          >
+            <Wrench className="h-4 w-4" />{" "}
+            {t(`chat.tools.${content.name.toLowerCase()}`)}
+          </Badge>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <Badge variant="outline">
+            <pre className="whitespace-pre-wrap">
+              {JSON.stringify(content.params, null, 2)}
+            </pre>
+          </Badge>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 };
 

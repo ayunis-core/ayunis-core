@@ -6,29 +6,56 @@ import {
   HttpToolConfig,
   HttpTool,
 } from 'src/domain/tools/domain/tools/http-tool.entity';
-import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
+import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
+import {
+  ToolInvalidConfigError,
+  ToolInvalidContextError,
+  ToolInvalidTypeError,
+} from './tools.errors';
+import { Source } from 'src/domain/sources/domain/source.entity';
 
 @Injectable()
 export class ToolFactory {
-  createTool(type: ToolType, config?: ToolConfig): Tool {
-    switch (type) {
+  createTool(params: {
+    type: ToolType;
+    config?: ToolConfig;
+    context?: unknown;
+  }): Tool {
+    switch (params.type) {
       case ToolType.HTTP:
-        if (config && config instanceof HttpToolConfig) {
-          return new HttpTool(config);
+        if (params.config && params.config instanceof HttpToolConfig) {
+          return new HttpTool(params.config);
         }
-        throw new Error(
-          `Invalid config type for HTTP tool: ${config?.constructor.name || 'null'}`,
-        );
+        throw new ToolInvalidConfigError({
+          toolName: 'HTTP',
+          metadata: {
+            configType: params.config?.constructor.name || 'null',
+          },
+        });
       case ToolType.INTERNET_SEARCH:
         return new InternetSearchTool();
-      case ToolType.SOURCE_QUERY:
-        return new SourceQueryTool();
       case ToolType.WEBSITE_CONTENT:
         return new WebsiteContentTool();
+      case ToolType.SOURCE_QUERY:
+        if (
+          params.context &&
+          params.context instanceof Array &&
+          params.context.every((source: unknown) => source instanceof Source)
+        ) {
+          return new SourceQueryTool(params.context);
+        }
+        throw new ToolInvalidContextError({
+          toolType: params.type,
+          metadata: {
+            contextType: params.context?.constructor.name || 'null',
+          },
+        });
       default:
-        throw new Error(`Unsupported tool type: ${type as string}`);
+        throw new ToolInvalidTypeError({
+          toolType: params.type,
+        });
     }
   }
 

@@ -12,6 +12,9 @@ export abstract class SourceRecord extends BaseRecord {
   })
   type: SourceType;
 
+  @Column()
+  name: string;
+
   @OneToMany(() => SourceContentRecord, (content) => content.source, {
     cascade: true,
   })

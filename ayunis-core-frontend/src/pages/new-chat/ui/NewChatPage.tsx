@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { showError } from "@/shared/lib/toast";
+import type { SourceResponseDtoType } from "@/shared/api";
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -21,6 +22,25 @@ export default function NewChatPage({
   const { initiateChat } = useInitiateChat();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
+  const [sources, setSources] = useState<
+    Array<{
+      id: string;
+      name: string;
+      type: SourceResponseDtoType;
+      file: File;
+    }>
+  >([]);
+
+  function handleFileUpload(file: File) {
+    setSources([
+      ...sources,
+      { id: crypto.randomUUID(), name: file.name, type: "file", file },
+    ]);
+  }
+
+  function handleRemoveSource(sourceId: string) {
+    setSources(sources.filter((source) => source.id !== sourceId));
+  }
 
   function handleModelChange(modelId: string) {
     setModelId(modelId);
@@ -37,7 +57,7 @@ export default function NewChatPage({
       return;
     }
 
-    initiateChat(message, modelId, agentId);
+    initiateChat(message, modelId, agentId, sources);
   }
 
   return (
@@ -51,10 +71,13 @@ export default function NewChatPage({
       <div className="w-full flex flex-col gap-4">
         <ChatInput
           modelOrAgentId={modelId ?? agentId}
+          sources={sources}
           onModelChange={handleModelChange}
           onAgentChange={handleAgentChange}
           onSend={handleSend}
           prefilledPrompt={prefilledPrompt}
+          onFileUpload={handleFileUpload}
+          onRemoveSource={handleRemoveSource}
         />
       </div>
     </NewChatPageLayout>

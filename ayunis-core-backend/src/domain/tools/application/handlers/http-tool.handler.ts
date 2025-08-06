@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BaseExecutionHandler } from './base.handler';
 import { ToolExecutionFailedError } from '../tools.errors';
 import { HttpTool, HttpToolMethod } from '../../domain/tools/http-tool.entity';
+import { ToolExecutionHandler } from '../ports/execution.handler';
 
 @Injectable()
-export class HttpToolHandler extends BaseExecutionHandler {
+export class HttpToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(HttpToolHandler.name);
 
   async execute(

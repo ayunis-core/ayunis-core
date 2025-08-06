@@ -8,6 +8,9 @@ export class SourceResponseDto {
   @ApiProperty({ description: 'Thread ID this source belongs to' })
   threadId?: string;
 
+  @ApiProperty({ description: 'Name of the source' })
+  name: string;
+
   @ApiProperty({ description: 'Type of source', enum: SourceType })
   type: string;
 

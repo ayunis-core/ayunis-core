@@ -28,7 +28,7 @@ export class SourceMapper {
       id: entity.id,
       fileType: entity.fileType,
       fileSize: entity.fileSize,
-      fileName: entity.fileName,
+      fileName: entity.name,
       content: entity.content.map(
         (c) =>
           new SourceContent({
@@ -49,6 +49,7 @@ export class SourceMapper {
     return new UrlSource({
       id: entity.id,
       url: entity.url,
+      websiteTitle: entity.name,
       content: entity.content.map(
         (c) =>
           new SourceContent({
@@ -65,23 +66,23 @@ export class SourceMapper {
     });
   }
 
-  toEntity(source: Source): SourceRecord {
+  toRecord(source: Source): SourceRecord {
     if (source instanceof FileSource) {
-      return this.fileSourceToEntity(source);
+      return this.fileSourceToRecord(source);
     } else if (source instanceof UrlSource) {
-      return this.urlSourceToEntity(source);
+      return this.urlSourceToRecord(source);
     }
 
     throw new Error('Invalid source type: ' + source.type);
   }
 
-  fileSourceToEntity(source: FileSource): FileSourceRecord {
+  fileSourceToRecord(source: FileSource): FileSourceRecord {
     const entity = new FileSourceRecord();
     entity.id = source.id;
     entity.type = SourceType.FILE;
     entity.fileType = source.fileType;
     entity.fileSize = source.fileSize;
-    entity.fileName = source.fileName;
+    entity.name = source.name;
     entity.content = source.content.map((c) =>
       this.sourceContentMapper.toEntity(c),
     );
@@ -91,11 +92,12 @@ export class SourceMapper {
     return entity;
   }
 
-  urlSourceToEntity(source: UrlSource): UrlSourceRecord {
+  urlSourceToRecord(source: UrlSource): UrlSourceRecord {
     const entity = new UrlSourceRecord();
     entity.id = source.id;
     entity.type = SourceType.URL;
     entity.url = source.url;
+    entity.name = source.name;
     entity.content = source.content.map((c) =>
       this.sourceContentMapper.toEntity(c),
     );

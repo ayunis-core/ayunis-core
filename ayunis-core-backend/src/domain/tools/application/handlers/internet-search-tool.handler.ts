@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BaseExecutionHandler } from './base.handler';
 import { Tool } from '../../domain/tool.entity';
 import { SearchWebUseCase } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.use-case';
 import { SearchWebCommand } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.command';
+import { ToolExecutionHandler } from '../ports/execution.handler';
 
 @Injectable()
-export class InternetSearchToolHandler extends BaseExecutionHandler {
+export class InternetSearchToolHandler extends ToolExecutionHandler {
   constructor(private readonly searchWebUseCase: SearchWebUseCase) {
     super();
   }

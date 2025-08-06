@@ -29,7 +29,6 @@ import { GetUserDefaultModelUseCase } from './application/use-cases/get-user-def
 import { GetOrgDefaultModelUseCase } from './application/use-cases/get-org-default-model/get-org-default-model.use-case';
 import { ManageOrgDefaultModelUseCase } from './application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
 import { MessageRequestDtoMapper } from './presenters/http/mappers/message-request-dto.mapper';
-import { CreateCustomToolUseCase } from '../tools/application/use-cases/create-custom-tool/create-custom-tool.use-case';
 import { MistralStreamInferenceHandler } from './infrastructure/stream-inference/mistral.stream-inference';
 import { CreateLanguageModelUseCase } from './application/use-cases/create-language-model/create-language-model.use-case';
 import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embedding-model/create-embedding-model.use-case';
@@ -147,7 +146,6 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
       ],
     },
     // Use Cases
-    CreateCustomToolUseCase,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
     GetPermittedModelUseCase,

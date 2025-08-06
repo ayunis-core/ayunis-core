@@ -1,7 +1,6 @@
 import { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { ContextualTool } from '../contextual-tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { Thread } from '../../../threads/domain/thread.entity';
+import { Tool } from '../tool.entity';
 import Ajv from 'ajv';
 
 const websiteContentToolParameters = {
@@ -9,27 +8,22 @@ const websiteContentToolParameters = {
   properties: {
     url: { type: 'string' as const },
   },
+  additionalProperties: false,
+  required: ['url'],
 } as const satisfies JSONSchema;
 
 type WebsiteContentToolParameters = FromSchema<
   typeof websiteContentToolParameters
 >;
 
-export class WebsiteContentTool extends ContextualTool {
+export class WebsiteContentTool extends Tool {
   constructor() {
     super({
       name: ToolType.WEBSITE_CONTENT,
-      description: 'Get the content of a website',
+      description: 'Get the content of a website through a URL',
       parameters: websiteContentToolParameters,
       type: ToolType.WEBSITE_CONTENT,
     });
-  }
-
-  isAvailable(ctx: unknown): boolean {
-    if (ctx instanceof Thread) {
-      return true; // TODO: Check if the thread has website content enabled
-    }
-    return false;
   }
 
   validateParams(params: Record<string, any>): WebsiteContentToolParameters {

@@ -3,7 +3,6 @@ import config from "../config";
 
 const axiosInstance = axios.create({
   baseURL: config.api.baseUrl,
-  timeout: config.api.timeout,
   withCredentials: true,
 });
 

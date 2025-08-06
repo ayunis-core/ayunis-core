@@ -18,7 +18,11 @@ export class ThreadSourceAssignmentRecord extends BaseRecord {
   @Index()
   sourceId: UUID;
 
-  @ManyToOne(() => SourceRecord, { onDelete: 'CASCADE' })
+  @ManyToOne(() => SourceRecord, {
+    onDelete: 'CASCADE',
+    cascade: true,
+    eager: true,
+  })
   @JoinColumn({ name: 'sourceId' })
   source: SourceRecord;
 }

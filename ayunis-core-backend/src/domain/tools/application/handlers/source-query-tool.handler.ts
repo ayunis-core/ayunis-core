@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BaseExecutionHandler } from './base.handler';
 import { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
@@ -7,9 +6,10 @@ import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/g
 import { QuerySourceUseCase } from 'src/domain/sources/application/use-cases/query-source/query-source.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { QuerySourceCommand } from 'src/domain/sources/application/use-cases/query-source/query-source.command';
+import { ToolExecutionHandler } from '../ports/execution.handler';
 
 @Injectable()
-export class SourceQueryToolHandler extends BaseExecutionHandler {
+export class SourceQueryToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(SourceQueryToolHandler.name);
 
   constructor(
@@ -25,21 +25,36 @@ export class SourceQueryToolHandler extends BaseExecutionHandler {
   ): Promise<string> {
     this.logger.log('execute', tool, input);
     try {
-      const validatedInput = tool.validateParams(input);
+      const isValid = tool.validateParams(input);
+      if (!isValid) {
+        this.logger.error('Invalid input', input);
+        throw new ToolExecutionFailedError({
+          toolName: tool.name,
+          message:
+            'You did not pass valid parameters to the tool. Please check the parameters and try again.',
+          exposeToLLM: true,
+        });
+      }
       const source = await this.getSourceByIdUseCase.execute(
-        new GetSourceByIdQuery(validatedInput.sourceId as UUID),
+        new GetSourceByIdQuery(input.sourceId as UUID),
       );
       if (!source) {
-        throw new Error('Source not found');
+        this.logger.error('Source not found', input);
+        throw new ToolExecutionFailedError({
+          toolName: tool.name,
+          message: 'Source not found',
+          exposeToLLM: true,
+        });
       }
 
       const matchedChunks = await this.matchSourceContentChunksUseCase.execute(
-        new QuerySourceCommand(
-          {
+        new QuerySourceCommand({
+          filter: {
             sourceId: source.id,
+            userId: input.userId as UUID,
           },
-          validatedInput.query,
-        ),
+          query: input.query as string,
+        }),
       );
 
       const result = matchedChunks.map((chunk) => {

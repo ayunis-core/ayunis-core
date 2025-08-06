@@ -2,14 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AgentRepository } from '../../ports/agent.repository';
 import { CreateAgentCommand } from './create-agent.command';
 import { Agent } from '../../../domain/agent.entity';
-import { FindOneToolUseCase } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.use-case';
-import {
-  FindOneConfigurableToolQuery,
-  FindOneToolQuery,
-} from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
 import { AgentToolAssignment } from 'src/domain/agents/domain/agent-tool-assignment.entity';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
+import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
+import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 
 @Injectable()
 export class CreateAgentUseCase {
@@ -17,7 +14,7 @@ export class CreateAgentUseCase {
 
   constructor(
     private readonly agentRepository: AgentRepository,
-    private readonly findOneToolUseCase: FindOneToolUseCase,
+    private readonly assembleToolUseCase: AssembleToolUseCase,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
   ) {}
 
@@ -33,17 +30,18 @@ export class CreateAgentUseCase {
     const tools = await Promise.all(
       command.toolAssignments.map((toolAssignment) => {
         if (toolAssignment.toolConfigId) {
-          return this.findOneToolUseCase.execute(
-            new FindOneConfigurableToolQuery({
+          return this.assembleToolUseCase.execute(
+            new AssembleToolCommand({
               type: toolAssignment.toolType,
               configId: toolAssignment.toolConfigId,
               userId: command.userId,
             }),
           );
         }
-        return this.findOneToolUseCase.execute(
-          new FindOneToolQuery({
+        return this.assembleToolUseCase.execute(
+          new AssembleToolCommand({
             type: toolAssignment.toolType,
+            userId: command.userId,
           }),
         );
       }),

@@ -2,9 +2,10 @@ import { useChatContext } from "@/shared/contexts/chat/useChatContext";
 import { useNavigate } from "@tanstack/react-router";
 import { useThreadsControllerCreate } from "@/shared/api/generated/ayunisCoreAPI";
 import type { CreateThreadData } from "../model/openapi";
+import type { SourceResponseDtoType } from "@/shared/api";
 
 export const useInitiateChat = () => {
-  const { setPendingMessage } = useChatContext();
+  const { setPendingMessage, setSources } = useChatContext();
   const navigate = useNavigate();
 
   const createThreadMutation = useThreadsControllerCreate({
@@ -24,9 +25,20 @@ export const useInitiateChat = () => {
     },
   });
 
-  function initiateChat(message: string, modelId?: string, agentId?: string) {
+  function initiateChat(
+    message: string,
+    modelId?: string,
+    agentId?: string,
+    sources?: Array<{
+      id: string;
+      name: string;
+      type: SourceResponseDtoType;
+      file: File;
+    }>,
+  ) {
     // Store the message as pending
     setPendingMessage(message);
+    setSources(sources ?? []);
 
     // Create thread data
     const createThreadData: CreateThreadData = {

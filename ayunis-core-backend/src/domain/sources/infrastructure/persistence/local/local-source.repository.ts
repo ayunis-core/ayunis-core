@@ -22,7 +22,12 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findById(id: UUID): Promise<Source | null> {
-    const entity = await this.sourceRepository.findOne({ where: { id } });
+    const entity = await this.sourceRepository.findOne({
+      where: { id },
+      relations: {
+        content: true,
+      },
+    });
 
     if (!entity) {
       return null;
@@ -32,14 +37,14 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async create(source: Source): Promise<Source> {
-    const entity = this.sourceMapper.toEntity(source);
+    const entity = this.sourceMapper.toRecord(source);
     const savedEntity = await this.sourceRepository.save(entity);
 
     return this.sourceMapper.toDomain(savedEntity);
   }
 
   async createFileSource(source: FileSource): Promise<FileSource> {
-    const entity = this.sourceMapper.fileSourceToEntity(source);
+    const entity = this.sourceMapper.fileSourceToRecord(source);
     this.logger.debug(`Saving file source`, {
       entity,
     });
@@ -49,7 +54,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async createUrlSource(source: UrlSource): Promise<UrlSource> {
-    const entity = this.sourceMapper.urlSourceToEntity(source);
+    const entity = this.sourceMapper.urlSourceToRecord(source);
     this.logger.debug(`Saving URL source: ${JSON.stringify(entity)}`, {
       entity,
     });
@@ -59,13 +64,14 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async update(source: Source): Promise<Source> {
-    const entity = this.sourceMapper.toEntity(source);
+    const entity = this.sourceMapper.toRecord(source);
     const savedEntity = await this.sourceRepository.save(entity);
 
     return this.sourceMapper.toDomain(savedEntity);
   }
 
-  async delete(id: UUID): Promise<void> {
-    await this.sourceRepository.delete(id);
+  async delete(source: Source): Promise<void> {
+    const record = this.sourceMapper.toRecord(source);
+    await this.sourceRepository.remove(record);
   }
 }

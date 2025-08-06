@@ -1,9 +1,6 @@
 import { randomUUID, UUID } from 'crypto';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { ContextualTool } from 'src/domain/tools/domain/contextual-tool.entity';
-import { ConfigurableTool } from 'src/domain/tools/domain/configurable-tool.entity';
-import { ToolConfig } from 'src/domain/tools/domain/tool-config.entity';
 import { AgentToolAssignment } from './agent-tool-assignment.entity';
 
 export class Agent {
@@ -38,22 +35,5 @@ export class Agent {
 
   get tools(): Array<Tool> {
     return this.toolAssignments.map((assignment) => assignment.tool);
-  }
-
-  /**
-   * Get all contextual tools
-   */
-  get contextualTools(): Array<ContextualTool> {
-    return this.tools.filter((tool) => tool instanceof ContextualTool);
-  }
-
-  /**
-   * Get all configurable tools
-   */
-  get configurableTools(): Array<ConfigurableTool<ToolConfig>> {
-    return this.tools.filter(
-      (tool): tool is ConfigurableTool<ToolConfig> =>
-        tool instanceof ConfigurableTool,
-    );
   }
 }

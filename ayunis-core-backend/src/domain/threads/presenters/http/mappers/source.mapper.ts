@@ -26,6 +26,7 @@ export class SourceDtoMapper {
     baseDto.id = source.id;
     baseDto.threadId = threadId;
     baseDto.type = source.type;
+    baseDto.name = source.name;
     baseDto.createdAt = source.createdAt.toISOString();
     baseDto.updatedAt = source.updatedAt.toISOString();
 
@@ -42,6 +43,7 @@ export class SourceDtoMapper {
     fileDto.type = SourceType.FILE;
     fileDto.fileType = source.fileType;
     fileDto.fileSize = source.fileSize;
+    fileDto.name = source.name;
     fileDto.createdAt = source.createdAt.toISOString();
     fileDto.updatedAt = source.updatedAt.toISOString();
 
@@ -57,6 +59,7 @@ export class SourceDtoMapper {
     urlDto.threadId = threadId;
     urlDto.type = SourceType.URL;
     urlDto.url = source.url;
+    urlDto.name = source.name;
     urlDto.createdAt = source.createdAt.toISOString();
     urlDto.updatedAt = source.updatedAt.toISOString();
 

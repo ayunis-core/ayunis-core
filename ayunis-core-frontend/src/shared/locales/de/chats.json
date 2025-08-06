@@ -18,7 +18,9 @@
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "tools": {
-      "internet_search": "Internet-Suche"
+      "internet_search": "Im Internet suchen",
+      "website_content": "Website abfragen",
+      "source_query": "Quelle durchsuchen"
     }
   },
   "newChat": {

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { BaseExecutionHandler } from './base.handler';
 import { Tool } from '../../domain/tool.entity';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
+import { ToolExecutionHandler } from '../ports/execution.handler';
 
 @Injectable()
-export class WebsiteContentToolHandler extends BaseExecutionHandler {
+export class WebsiteContentToolHandler extends ToolExecutionHandler {
   constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {
     super();
   }

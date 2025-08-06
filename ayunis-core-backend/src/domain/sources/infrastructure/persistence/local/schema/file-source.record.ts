@@ -9,7 +9,4 @@ export class FileSourceRecord extends SourceRecord {
 
   @Column()
   fileSize: number;
-
-  @Column()
-  fileName: string;
 }

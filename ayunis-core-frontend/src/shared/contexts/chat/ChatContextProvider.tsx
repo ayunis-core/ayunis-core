@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { ChatContext } from "./chatContext";
+import type { SourceResponseDtoType } from "@/shared/api";
 
 export const ChatContextProvider = ({
   children,
@@ -7,14 +8,24 @@ export const ChatContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [pendingMessage, setPendingMessage] = useState("");
+  const [sources, setSources] = useState<
+    Array<{
+      id: string;
+      name: string;
+      type: SourceResponseDtoType;
+      file: File;
+    }>
+  >([]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
     () => ({
       pendingMessage,
       setPendingMessage,
+      sources,
+      setSources,
     }),
-    [pendingMessage, setPendingMessage],
+    [pendingMessage, setPendingMessage, sources, setSources],
   );
 
   return (

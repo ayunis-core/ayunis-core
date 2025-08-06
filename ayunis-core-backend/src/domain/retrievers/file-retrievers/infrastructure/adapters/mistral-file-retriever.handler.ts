@@ -41,6 +41,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           }),
         maxRetries: 3,
         delay: 1000,
+      }).catch((error) => {
+        this.logger.debug('File upload to Mistral failed', {
+          error: error as Error,
+        });
+        this.logger.error('File upload to Mistral failed');
+        throw error;
       });
 
       const signedUrl = await retryWithBackoff({
@@ -61,6 +67,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         throw error;
       });
 
+      this.logger.debug('signed URL', { signedUrl });
       const ocrResponse = await retryWithBackoff({
         fn: () =>
           this.client.ocr.process({

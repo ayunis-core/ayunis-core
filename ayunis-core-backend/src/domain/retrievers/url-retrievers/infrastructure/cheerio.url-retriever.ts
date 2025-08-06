@@ -67,7 +67,10 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
           // Clean up the text (remove extra whitespace)
           const cleanedText = textContent.replace(/\s+/g, ' ').trim();
 
-          return new UrlRetrieverResult(cleanedText, input.url);
+          // Get the website title
+          const websiteTitle = $('title').text();
+
+          return new UrlRetrieverResult(cleanedText, input.url, websiteTitle);
         } catch (error) {
           throw new UrlRetrieverParsingError(
             input.url,

@@ -497,6 +497,33 @@ export interface ModelResponseDto {
   displayName: string;
 }
 
+/**
+ * Type of source
+ */
+export type SourceResponseDtoType = typeof SourceResponseDtoType[keyof typeof SourceResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SourceResponseDtoType = {
+  file: 'file',
+  url: 'url',
+} as const;
+
+export interface SourceResponseDto {
+  /** Unique identifier for the source */
+  id: string;
+  /** Thread ID this source belongs to */
+  threadId: string;
+  /** Name of the source */
+  name: string;
+  /** Type of source */
+  type: SourceResponseDtoType;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
@@ -512,6 +539,8 @@ export interface GetThreadResponseDto {
   title?: string;
   /** Array of messages in the thread (role-specific types) */
   messages: GetThreadResponseDtoMessagesItem[];
+  /** Array of sources in the thread */
+  sources: SourceResponseDto[];
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -542,31 +571,6 @@ export interface UpdateThreadAgentDto {
 /**
  * Type of source
  */
-export type SourceResponseDtoType = typeof SourceResponseDtoType[keyof typeof SourceResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SourceResponseDtoType = {
-  file: 'file',
-  url: 'url',
-} as const;
-
-export interface SourceResponseDto {
-  /** Unique identifier for the source */
-  id: string;
-  /** Thread ID this source belongs to */
-  threadId: string;
-  /** Type of source */
-  type: SourceResponseDtoType;
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
-}
-
-/**
- * Type of source
- */
 export type FileSourceResponseDtoType = typeof FileSourceResponseDtoType[keyof typeof FileSourceResponseDtoType];
 
 
@@ -581,6 +585,8 @@ export interface FileSourceResponseDto {
   id: string;
   /** Thread ID this source belongs to */
   threadId: string;
+  /** Name of the source */
+  name: string;
   /** Type of source */
   type: FileSourceResponseDtoType;
   /** Creation timestamp */

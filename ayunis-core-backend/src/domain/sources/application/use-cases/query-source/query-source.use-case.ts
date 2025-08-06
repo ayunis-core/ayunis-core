@@ -20,6 +20,7 @@ export class QuerySourceUseCase {
   ) {}
 
   async execute(command: QuerySourceCommand): Promise<SourceContent[]> {
+    this.logger.debug('execute', command);
     // Validate input
     if (!command.query || command.query.trim().length === 0) {
       this.logger.warn('Empty query provided for vector search');
@@ -36,7 +37,7 @@ export class QuerySourceUseCase {
         documentId: command.filter.sourceId,
         query: command.query,
         type: IndexType.PARENT_CHILD,
-        limit: command.options?.limit,
+        limit: 50,
       });
 
       const indexEntries = await this.searchContentUseCase.execute(searchQuery);

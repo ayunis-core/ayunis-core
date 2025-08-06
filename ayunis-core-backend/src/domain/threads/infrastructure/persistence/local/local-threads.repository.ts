@@ -8,6 +8,8 @@ import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
+import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -16,7 +18,10 @@ export class LocalThreadsRepository extends ThreadsRepository {
   constructor(
     @InjectRepository(ThreadRecord)
     private readonly threadRepository: Repository<ThreadRecord>,
+    @InjectRepository(ThreadSourceAssignmentRecord)
+    private readonly threadSourceAssignmentRepository: Repository<ThreadSourceAssignmentRecord>,
     private readonly threadMapper: ThreadMapper,
+    private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
   ) {
     super();
   }
@@ -133,13 +138,40 @@ export class LocalThreadsRepository extends ThreadsRepository {
     sourceAssignments: SourceAssignment[];
   }): Promise<void> {
     this.logger.log('updateSourceAssignments', { params });
-    const result = await this.threadRepository.update(
-      { id: params.threadId, userId: params.userId },
-      { sourceAssignments: params.sourceAssignments },
-    );
-    if (!result.affected || result.affected === 0) {
+
+    // Find the thread with existing source assignments
+    const threadEntity = await this.threadRepository.findOne({
+      where: { id: params.threadId, userId: params.userId },
+      relations: ['sourceAssignments'],
+    });
+
+    if (!threadEntity) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
+
+    // Delete the source assignments that are not in the new list
+    const sourceAssignmentsToDelete =
+      threadEntity.sourceAssignments?.filter(
+        (assignment) =>
+          !params.sourceAssignments.some(
+            (s) => s.source.id === assignment.source.id,
+          ),
+      ) ?? [];
+
+    await this.threadSourceAssignmentRepository.remove(
+      sourceAssignmentsToDelete,
+    );
+
+    // Map domain source assignments to records
+    const sourceAssignmentRecords = params.sourceAssignments.map((assignment) =>
+      this.sourceAssignmentMapper.toRecord(assignment, params.threadId),
+    );
+
+    // Update the source assignments (cascade will handle the database operations)
+    threadEntity.sourceAssignments = sourceAssignmentRecords;
+
+    // Save the thread with updated source assignments
+    await this.threadRepository.save(threadEntity);
   }
 
   async updateModel(params: {

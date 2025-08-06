@@ -32,20 +32,24 @@ import type {
 import AppLayout from "@/layouts/app-layout";
 import { AxiosError } from "axios";
 import type { ChatInputRef } from "@/widgets/chat-input/ui/ChatInput";
+import { useCreateFileSource } from "@/pages/chat/api/useCreateFileSource";
+import { useDeleteFileSource } from "../api/useDeleteFileSource";
 
 interface ChatPageProps {
   thread: Thread;
 }
 
 export default function ChatPage({ thread }: ChatPageProps) {
-  console.log("thread", thread);
   const { t } = useTranslation("chats");
-  const { pendingMessage, setPendingMessage } = useChatContext();
+  const { pendingMessage, setPendingMessage, sources, setSources } =
+    useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread!.title,
   );
   const [messages, setMessages] = useState<Message[]>(thread!.messages);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isProcessingPendingSources, setIsProcessingPendingSources] =
+    useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<Element | null>(null);
   const processedPendingMessageRef = useRef<String | null>(null);
@@ -70,14 +74,28 @@ export default function ChatPage({ thread }: ChatPageProps) {
 
   const { updateModel } = useUpdateThreadModel({ threadId: thread.id });
   const { updateAgent } = useUpdateThreadAgent({ threadId: thread.id });
+  const {
+    createFileSource,
+    createFileSourceAsync,
+    isLoading: isCreatingFileSource,
+    reset: resetCreateFileSourceMutation,
+  } = useCreateFileSource({
+    threadId: thread.id,
+  });
+  const { deleteFileSource } = useDeleteFileSource({
+    threadId: thread.id,
+  });
 
   const { sendTextMessage } = useMessageSend({
     threadId: thread.id,
   });
 
+  // Combine both loading states - use our local state for bulk operations
+  const isTotallyCreatingFileSource =
+    isCreatingFileSource || isProcessingPendingSources;
+
   // Memoize the callback functions to prevent unnecessary reconnections
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
-    config.env === "development" && console.log("message", message);
     setMessages((prev) => {
       // Update message if exists, otherwise append
       const existing = prev.find((m) => m.id === message.id);
@@ -87,6 +105,17 @@ export default function ChatPage({ thread }: ChatPageProps) {
       return [...prev, message];
     });
   }, []);
+
+  const handleFileUpload = useCallback(
+    (file: File) => {
+      createFileSource({
+        file,
+        name: file.name,
+        description: `File source: ${file.name}`,
+      });
+    },
+    [createFileSource],
+  );
 
   const handleError = useCallback((error: RunErrorResponseDto) => {
     switch (error.code) {
@@ -210,6 +239,21 @@ export default function ChatPage({ thread }: ChatPageProps) {
       ) {
         processedPendingMessageRef.current = pendingMessage;
         try {
+          if (sources.length > 0) {
+            setIsProcessingPendingSources(true);
+            await Promise.all(
+              sources.map((source) =>
+                createFileSourceAsync({
+                  file: source.file,
+                  name: source.name,
+                  description: `File source: ${source.name}`,
+                }),
+              ),
+            );
+            // Reset the mutation state to ensure isPending goes to false
+            resetCreateFileSourceMutation();
+          }
+          setSources([]);
           await sendTextMessage({
             text: pendingMessage,
           });
@@ -221,12 +265,23 @@ export default function ChatPage({ thread }: ChatPageProps) {
           }
           chatInputRef.current?.setMessage(pendingMessage);
         } finally {
+          setIsProcessingPendingSources(false);
           setPendingMessage("");
         }
       }
     }
     sendPendingMessage();
-  }, [pendingMessage, sendTextMessage, setPendingMessage]);
+  }, [
+    pendingMessage,
+    sendTextMessage,
+    setPendingMessage,
+    sources,
+    createFileSourceAsync,
+    setSources,
+    chatInputRef,
+    t,
+    resetCreateFileSourceMutation,
+  ]);
 
   function handleDeleteThread() {
     confirm({
@@ -296,13 +351,16 @@ export default function ChatPage({ thread }: ChatPageProps) {
   // Chat Input
   const chatInput = (
     <ChatInput
+      ref={chatInputRef}
       modelOrAgentId={thread.agentId ?? thread.permittedModelId}
+      sources={thread.sources}
       isStreaming={isStreaming}
+      isCreatingFileSource={isTotallyCreatingFileSource}
       onModelChange={updateModel}
       onAgentChange={updateAgent}
+      onFileUpload={handleFileUpload}
+      onRemoveSource={deleteFileSource}
       onSend={handleSend}
-      ref={chatInputRef}
-      threadId={thread.id}
     />
   );
 

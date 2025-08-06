@@ -27,7 +27,9 @@
     "selectPrompt": "Add a prompt from your library",
     "promptsLoadError": "Error loading prompts",
     "noPromptsAvailable": "No prompts available",
-    "fileSourceUploadError": "Error uploading file"
+    "fileSourceUploadError": "Error uploading file",
+    "fileSourceDeleteError": "Error deleting file",
+    "uploadFile": "Upload file"
   },
   "common": {
     "loading": "Loading..."

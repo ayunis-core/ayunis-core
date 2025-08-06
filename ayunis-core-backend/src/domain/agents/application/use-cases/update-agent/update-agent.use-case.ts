@@ -3,14 +3,11 @@ import { AgentRepository } from '../../ports/agent.repository';
 import { UpdateAgentCommand } from './update-agent.command';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentNotFoundError } from '../../agents.errors';
-import {
-  FindOneConfigurableToolQuery,
-  FindOneToolQuery,
-} from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.query';
-import { FindOneToolUseCase } from 'src/domain/tools/application/use-cases/find-one-tool/find-one-tool.use-case';
 import { AgentToolAssignment } from 'src/domain/agents/domain/agent-tool-assignment.entity';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
+import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
+import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 
 @Injectable()
 export class UpdateAgentUseCase {
@@ -19,7 +16,7 @@ export class UpdateAgentUseCase {
   constructor(
     private readonly agentRepository: AgentRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
-    private readonly findOneToolUseCase: FindOneToolUseCase,
+    private readonly assembleToolUseCase: AssembleToolUseCase,
   ) {}
 
   async execute(command: UpdateAgentCommand): Promise<Agent> {
@@ -53,8 +50,8 @@ export class UpdateAgentUseCase {
         .filter((t) => t.isEnabled)
         .map(async (toolAssignment) => {
           if (toolAssignment.toolConfigId) {
-            const tool = await this.findOneToolUseCase.execute(
-              new FindOneConfigurableToolQuery({
+            const tool = await this.assembleToolUseCase.execute(
+              new AssembleToolCommand({
                 type: toolAssignment.toolType,
                 configId: toolAssignment.toolConfigId,
                 userId: command.userId,
@@ -65,9 +62,10 @@ export class UpdateAgentUseCase {
               tool,
             });
           }
-          const tool = await this.findOneToolUseCase.execute(
-            new FindOneToolQuery({
+          const tool = await this.assembleToolUseCase.execute(
+            new AssembleToolCommand({
               type: toolAssignment.toolType,
+              userId: command.userId,
             }),
           );
           return new AgentToolAssignment({
