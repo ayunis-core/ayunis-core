@@ -105,6 +105,7 @@ export class ExecuteRunUseCase {
         instructions,
         streaming: command.streaming,
         trace,
+        orgId: command.orgId,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
@@ -198,6 +199,7 @@ export class ExecuteRunUseCase {
     instructions?: string;
     streaming?: boolean;
     trace: LangfuseTraceClient;
+    orgId: UUID;
   }): AsyncGenerator<Message, void, void> {
     this.logger.log('executeRunInternal', { threadId: params.thread.id });
 
@@ -232,6 +234,7 @@ export class ExecuteRunUseCase {
           isFirstIteration,
           input: toolResultInput,
           trace: params.trace,
+          orgId: params.orgId,
         });
 
         // Add tool result messages to traces and thread if there were any
@@ -394,9 +397,10 @@ export class ExecuteRunUseCase {
     input: RunToolResultInput | null;
     isFirstIteration: boolean;
     trace: LangfuseTraceClient;
+    orgId: UUID;
   }): Promise<ToolResultMessageContent[]> {
     this.logger.debug('collectToolResults');
-    const { thread, tools, input, isFirstIteration } = params;
+    const { thread, tools, input, isFirstIteration, orgId } = params;
 
     const lastMessage = thread.getLastMessage();
     const toolUseMessageContent = lastMessage
@@ -453,7 +457,7 @@ export class ExecuteRunUseCase {
             },
           });
           let result = await this.executeToolUseCase
-            .execute(new ExecuteToolCommand(tool, content.params))
+            .execute(new ExecuteToolCommand(tool, content.params, orgId))
             .catch((error) => {
               span.update({
                 metadata: {

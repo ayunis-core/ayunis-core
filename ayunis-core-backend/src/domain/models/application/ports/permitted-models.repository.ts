@@ -27,16 +27,15 @@ export abstract class PermittedModelsRepository {
   ): Promise<PermittedModel[]>;
   abstract findOrgDefaultLanguage(
     orgId: UUID,
-  ): Promise<PermittedLanguageModel | undefined>;
-  abstract findOne(params: FindOneParams): Promise<PermittedModel | undefined>;
+  ): Promise<PermittedLanguageModel | null>;
+  abstract findOne(params: FindOneParams): Promise<PermittedModel | null>;
   abstract findOneLanguage(
     params: FindOneParams,
-  ): Promise<PermittedLanguageModel | undefined>;
+  ): Promise<PermittedLanguageModel | null>;
   abstract findOneEmbedding(
-    params: FindOneParams,
-  ): Promise<PermittedEmbeddingModel | undefined>;
+    orgId: UUID,
+  ): Promise<PermittedEmbeddingModel | null>;
   abstract findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]>;
-  abstract findManyEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel[]>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
   abstract setAsDefault(params: {

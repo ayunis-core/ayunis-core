@@ -12,11 +12,11 @@ export class SplitterHandlerRegistry {
   private readonly handlers = new Map<SplitterType, SplitterHandler>();
 
   registerHandler(type: SplitterType, handler: SplitterHandler): void {
-    this.logger.debug(`Registering splitter handler for type: ${type}`);
     this.handlers.set(type, handler);
   }
 
   getHandler(type: SplitterType): SplitterHandler {
+    this.logger.debug('getHandler', { type });
     const handler = this.handlers.get(type);
 
     if (!handler) {
@@ -31,6 +31,7 @@ export class SplitterHandlerRegistry {
   }
 
   getAvailableTypes(): SplitterType[] {
+    this.logger.debug('getAvailableTypes');
     return Array.from(this.handlers.entries())
       .filter(([, handler]) => handler.isAvailable())
       .map(([type]) => type);

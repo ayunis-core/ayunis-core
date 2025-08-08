@@ -53,6 +53,7 @@ export class ExecuteRunAndSetTitleUseCase {
           input: command.input,
           userId: command.userId,
           streaming: command.streaming,
+          orgId: command.orgId,
         }),
       );
 

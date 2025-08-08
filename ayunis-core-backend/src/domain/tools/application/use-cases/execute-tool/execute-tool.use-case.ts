@@ -36,7 +36,11 @@ export class ExecuteToolUseCase {
 
     try {
       const handler = this.toolHandlerRegistry.getHandler(command.tool);
-      return await handler.execute(command.tool, command.input);
+      return await handler.execute({
+        tool: command.tool,
+        input: command.input,
+        orgId: command.orgId,
+      });
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

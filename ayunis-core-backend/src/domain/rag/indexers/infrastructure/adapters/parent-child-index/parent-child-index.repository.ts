@@ -51,6 +51,27 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       return [];
     }
 
+    this.logger.debug(
+      `Starting vector search for document ${relatedDocumentId} with vector of dimension ${queryVector.length}`,
+    );
+
+    // Check if we have any indexed content for this document first
+    const existingChunksCount = await this.parentChunkRepository
+      .createQueryBuilder('parentChunk')
+      .leftJoin('parentChunk.children', 'children')
+      .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
+        relatedDocumentId,
+      })
+      .andWhere('children.embedding IS NOT NULL')
+      .getCount();
+
+    if (existingChunksCount === 0) {
+      this.logger.warn(
+        `No indexed content found for document ${relatedDocumentId}`,
+      );
+      return [];
+    }
+
     try {
       // Use provided options or defaults
       const similarityThreshold = 0.6;
@@ -69,11 +90,13 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
           `1 - (children.embedding <=> :queryVector)`,
           'cosine_similarity',
         )
-        // Use built-in where methods for standard comparisons
         .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
           relatedDocumentId,
         })
         .andWhere('children.embedding IS NOT NULL')
+        .andWhere('vector_dims(children.embedding) = :queryVectorLength', {
+          queryVectorLength: queryVector.length,
+        })
         // Use cosine similarity threshold (higher is better, so use >=)
         .andWhere('1 - (children.embedding <=> :queryVector) >= :threshold', {
           queryVector: queryVectorString,
@@ -85,7 +108,12 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
         .limit(limit);
 
       // Get both raw results (with cosine similarity) and entities
-      const { entities } = await queryBuilder.getRawAndEntities();
+      this.logger.debug('Executing vector similarity query...');
+      const { entities, raw } = await queryBuilder.getRawAndEntities();
+
+      this.logger.debug(
+        `Vector search found ${entities.length} parent chunks with ${raw.length} raw results`,
+      );
 
       // Return the properly mapped entities
       return entities.map((entity) =>
@@ -94,7 +122,12 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     } catch (error) {
       this.logger.error(
         `Error performing vector search in relatedDocumentId ${relatedDocumentId}:`,
-        error,
+        {
+          error: error instanceof Error ? error.message : String(error),
+          queryVectorLength: queryVector.length,
+          relatedDocumentId,
+          stack: error instanceof Error ? error.stack : undefined,
+        },
       );
       throw new Error(
         `Vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`,

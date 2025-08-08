@@ -60,7 +60,7 @@ export class CreateFileSourceUseCase {
       await this.sourceRepository.createFileSource(fileSource);
 
     // Index the content using the indexers module
-    await this.indexSourceContent(savedFileSource);
+    await this.indexSourceContent(savedFileSource, command.orgId);
 
     return savedFileSource;
   }
@@ -100,12 +100,16 @@ export class CreateFileSourceUseCase {
   /**
    * Index source content using the indexers module
    */
-  private async indexSourceContent(source: FileSource): Promise<void> {
+  private async indexSourceContent(
+    source: FileSource,
+    orgId: UUID,
+  ): Promise<void> {
     this.logger.debug(`Indexing content for source: ${source.id}`);
 
     await Promise.all(
       source.content.map(async (content) => {
         const ingestCommand = new IngestContentCommand({
+          orgId,
           documentId: source.id,
           chunkId: content.id,
           content: content.content,

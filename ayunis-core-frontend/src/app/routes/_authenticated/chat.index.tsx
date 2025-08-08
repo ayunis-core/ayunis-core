@@ -7,6 +7,8 @@ import {
   subscriptionsControllerHasActiveSubscription,
   getPromptsControllerFindOneQueryKey,
   getModelsControllerGetEffectiveDefaultModelQueryKey,
+  getModelsControllerIsEmbeddingModelEnabledQueryKey,
+  modelsControllerIsEmbeddingModelEnabled,
 } from "@/shared/api";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { z } from "zod";
@@ -24,6 +26,11 @@ const queryPromptOptions = (prompt: string) => ({
 const queryHasActiveSubscriptionOptions = () => ({
   queryKey: getSubscriptionsControllerHasActiveSubscriptionQueryKey(),
   queryFn: () => subscriptionsControllerHasActiveSubscription(),
+});
+
+const queryIsEmbeddingModelEnabledOptions = () => ({
+  queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
+  queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
 });
 
 const searchSchema = z.object({
@@ -51,6 +58,9 @@ export const Route = createFileRoute("/_authenticated/chat/")({
       );
       selectedModelId = defaultModel.id;
     }
+    const { isEmbeddingModelEnabled } = await queryClient.fetchQuery(
+      queryIsEmbeddingModelEnabledOptions(),
+    );
     const { hasActiveSubscription } = await queryClient.fetchQuery(
       queryHasActiveSubscriptionOptions(),
     );
@@ -62,6 +72,7 @@ export const Route = createFileRoute("/_authenticated/chat/")({
       selectedAgentId,
       prefilledPrompt: prompt?.content,
       hasActiveSubscription,
+      isEmbeddingModelEnabled,
     };
   },
   errorComponent: ({ error }) => {
@@ -79,12 +90,14 @@ function RouteComponent() {
     selectedModelId,
     selectedAgentId,
     prefilledPrompt,
+    isEmbeddingModelEnabled,
   } = Route.useLoaderData();
   return (
     <NewChatPage
       selectedModelId={selectedModelId}
       selectedAgentId={selectedAgentId}
       prefilledPrompt={prefilledPrompt}
+      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />
   );
 }

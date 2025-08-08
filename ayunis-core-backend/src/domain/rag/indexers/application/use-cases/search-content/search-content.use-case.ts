@@ -14,6 +14,7 @@ export class SearchContentUseCase {
     try {
       const index = this.indexRegistry.get(query.type);
       return index.search({
+        orgId: query.orgId,
         documentId: query.documentId,
         query: query.query,
         filter: { limit: query.limit ?? undefined },

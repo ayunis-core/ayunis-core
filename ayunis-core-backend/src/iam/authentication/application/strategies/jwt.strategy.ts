@@ -32,9 +32,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
         if (!token) {
           this.logger.debug(`No JWT token found in cookie: ${cookieName}`);
-          this.logger.debug(
-            `Available cookies: ${Object.keys(req.cookies || {}).join(', ')}`,
-          );
         }
 
         return token;
@@ -48,8 +45,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JwtPayload): ActiveUser {
-    this.logger.debug('Validating JWT payload');
-
     return new ActiveUser({
       id: payload.sub,
       email: payload.email,

@@ -4,7 +4,7 @@ import { ModelType } from '../value-objects/model-type.enum';
 import { UUID } from 'crypto';
 
 export class EmbeddingModel extends Model {
-  public readonly dimensions: number;
+  public readonly dimensions?: number;
 
   constructor(params: {
     id?: UUID;
@@ -14,7 +14,7 @@ export class EmbeddingModel extends Model {
     updatedAt?: Date;
     displayName: string;
     isArchived: boolean;
-    dimensions: number;
+    dimensions?: number;
   }) {
     super({ ...params, type: ModelType.EMBEDDING });
     this.dimensions = params.dimensions;

@@ -21,32 +21,23 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    this.logger.debug('JwtAuthGuard canActivate');
-
     // Check if route is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
     if (isPublic) {
-      this.logger.debug('JwtAuthGuard canActivate: isPublic');
       return true;
     }
-
-    this.logger.debug('JwtAuthGuard canActivate: is not public');
 
     // Try normal JWT validation first
     try {
       const result = await super.canActivate(context);
       if (result) {
-        this.logger.debug('JwtAuthGuard canActivate: access token valid');
         return true;
       }
-    } catch (error) {
-      this.logger.debug(
-        'JwtAuthGuard canActivate: access token invalid, trying refresh token',
-        { error: error instanceof Error ? error.message : String(error) },
-      );
+    } catch {
+      // Access token validation failed, try refresh token
     }
 
     // Access token validation failed, try refresh token
@@ -61,13 +52,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const refreshToken = request.cookies?.[refreshTokenName] as string;
 
     if (!refreshToken) {
-      this.logger.debug('JwtAuthGuard canActivate: no refresh token found');
       return false;
     }
 
     try {
       // Try to refresh the tokens
-      this.logger.debug('JwtAuthGuard canActivate: attempting token refresh');
       const newTokens = await this.refreshTokenUseCase.execute(
         new RefreshTokenCommand(refreshToken),
       );
@@ -85,9 +74,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       // Try JWT validation again with the new token
       const result = await super.canActivate(context);
       if (result) {
-        this.logger.debug(
-          'JwtAuthGuard canActivate: token refreshed successfully',
-        );
         return true;
       }
     } catch (error) {

@@ -29,7 +29,8 @@
     "noPromptsAvailable": "Keine Prompts verfügbar",
     "fileSourceUploadError": "Fehler beim Hochladen der Datei",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
-    "uploadFile": "Datei hochladen"
+    "uploadFile": "Datei hochladen",
+    "noEmbeddingModelEnabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
   },
   "common": {
     "loading": "Laden..."

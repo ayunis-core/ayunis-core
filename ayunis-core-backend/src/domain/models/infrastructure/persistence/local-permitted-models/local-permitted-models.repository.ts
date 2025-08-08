@@ -19,6 +19,7 @@ import {
   EmbeddingModelRecord,
   LanguageModelRecord,
 } from '../local-models/schema/model.record';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -54,7 +55,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
 
   async findOrgDefaultLanguage(
     orgId: UUID,
-  ): Promise<PermittedLanguageModel | undefined> {
+  ): Promise<PermittedLanguageModel | null> {
     this.logger.log('findDefault', {
       orgId,
     });
@@ -63,7 +64,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       isDefault: true,
     });
     if (!permittedModel || !(permittedModel.model instanceof LanguageModel)) {
-      return undefined;
+      return null;
     }
     this.logger.debug('Default model found', {
       permittedModel,
@@ -73,7 +74,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     ) as PermittedLanguageModel;
   }
 
-  async findOne(params: FindOneParams): Promise<PermittedModel | undefined> {
+  async findOne(params: FindOneParams): Promise<PermittedModel | null> {
     const where =
       'id' in params
         ? { id: params.id, orgId: params.orgId }
@@ -82,14 +83,14 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       where,
     });
     if (!permittedModel) {
-      return undefined;
+      return null;
     }
     return this.permittedModelMapper.toDomain(permittedModel);
   }
 
   async findOneLanguage(
     params: FindOneParams,
-  ): Promise<PermittedLanguageModel | undefined> {
+  ): Promise<PermittedLanguageModel | null> {
     const where =
       'id' in params
         ? { id: params.id, orgId: params.orgId }
@@ -104,32 +105,37 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       !permittedModel ||
       !(permittedModel.model instanceof LanguageModelRecord)
     ) {
-      return undefined;
+      return null;
     }
     return this.permittedModelMapper.toDomain(
       permittedModel,
     ) as PermittedLanguageModel;
   }
 
-  async findOneEmbedding(
-    params: FindOneParams,
-  ): Promise<PermittedEmbeddingModel | undefined> {
-    const where =
-      'id' in params
-        ? { id: params.id, orgId: params.orgId }
-        : { name: params.name, provider: params.provider, orgId: params.orgId };
-    const permittedModel = await this.permittedModelRepository.findOne({
-      where,
+  async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
+    this.logger.debug('findOneEmbedding', { orgId });
+    const permittedModels = await this.permittedModelRepository.find({
+      where: { orgId },
       relations: {
         model: true,
       },
     });
-    if (
-      !permittedModel ||
-      !(permittedModel.model instanceof EmbeddingModelRecord)
-    ) {
-      return undefined;
+    const permittedEmbeddingModels = permittedModels.filter(
+      (permittedModel) => permittedModel.model instanceof EmbeddingModelRecord,
+    );
+    if (permittedEmbeddingModels.length === 0) {
+      return null;
     }
+    if (permittedEmbeddingModels.length > 1) {
+      this.logger.error('Multiple embedding models found', {
+        orgId,
+        permittedEmbeddingModels,
+      });
+      throw new Error(
+        `Multiple embedding models found for orgId ${orgId}. This should not happen.`,
+      );
+    }
+    const permittedModel = permittedEmbeddingModels[0];
     return this.permittedModelMapper.toDomain(
       permittedModel,
     ) as PermittedEmbeddingModel;
@@ -151,24 +157,27 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       ) as PermittedLanguageModel[];
   }
 
-  async findManyEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel[]> {
-    const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId },
-      relations: {
-        model: true,
-      },
-    });
-    return permittedModels
-      .filter(
-        (permittedModel) =>
-          permittedModel.model instanceof EmbeddingModelRecord,
-      )
-      .map((permittedModel) =>
-        this.permittedModelMapper.toDomain(permittedModel),
-      ) as PermittedEmbeddingModel[];
-  }
-
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
+    // Enforce single permitted embedding model per org at repository layer
+    if (permittedModel.model instanceof EmbeddingModel) {
+      const existingEmbedding = await this.findOneEmbedding(
+        permittedModel.orgId,
+      );
+      if (existingEmbedding) {
+        this.logger.error(
+          'Attempt to create a second permitted embedding model for org',
+          {
+            orgId: permittedModel.orgId,
+            existingPermittedEmbeddingModelId: existingEmbedding.id,
+            newModelId: permittedModel.model.id,
+          },
+        );
+        throw new Error(
+          `Only one permitted embedding model is allowed per organization (${permittedModel.orgId}). Delete the existing one before creating a new one.`,
+        );
+      }
+    }
+
     const permittedModelEntity =
       this.permittedModelMapper.toRecord(permittedModel);
     const savedPermittedModel =

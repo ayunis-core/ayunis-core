@@ -129,34 +129,6 @@
         ]
       }
     },
-    "/models/permitted/embedding-models": {
-      "get": {
-        "operationId": "ModelsController_getPermittedEmbeddingModels",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all permitted embedding models",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all permitted embedding models",
-        "tags": [
-          "models"
-        ]
-      }
-    },
     "/models/default": {
       "get": {
         "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
@@ -494,6 +466,375 @@
         "summary": "Get all model provider infos with permitted status (Admin only)",
         "tags": [
           "models"
+        ]
+      }
+    },
+    "/models/embedding/enabled": {
+      "get": {
+        "operationId": "ModelsController_isEmbeddingModelEnabled",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully checked embedding model status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingModelEnabledResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Check if an embedding model is enabled for this org",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "description": "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+        "operationId": "UserController_getUsersInOrganization",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved users in the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error occurred while retrieving users"
+          }
+        },
+        "summary": "Get users in current organization",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/role": {
+      "patch": {
+        "description": "Update the role of a user. You cannot update your own role.",
+        "operationId": "UserController_updateUserRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to update role for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "New role information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User role successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid role value"
+          },
+          "401": {
+            "description": "User not authenticated or trying to update own role"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user role"
+          }
+        },
+        "summary": "Update user role",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/name": {
+      "patch": {
+        "description": "Update the name of a user. Users can only update their own name.",
+        "operationId": "UserController_updateUserName",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "New name information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserNameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User name successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name value"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized to update this user"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating user name"
+          }
+        },
+        "summary": "Update user name",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/password": {
+      "patch": {
+        "description": "Update the password of the current authenticated user. Requires current password for verification.",
+        "operationId": "UserController_updatePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Password update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password successfully updated"
+          },
+          "400": {
+            "description": "Invalid password values or passwords do not match"
+          },
+          "401": {
+            "description": "User not authenticated or current password is incorrect"
+          },
+          "500": {
+            "description": "Internal server error occurred while updating password"
+          }
+        },
+        "summary": "Update user password",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/confirm-email": {
+      "post": {
+        "description": "Confirm a user's email address using a JWT token received via email",
+        "operationId": "UserController_confirmEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email confirmation token",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Email successfully confirmed"
+          },
+          "400": {
+            "description": "Invalid token or token has expired"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while confirming email"
+          }
+        },
+        "summary": "Confirm user email",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/resend-confirmation": {
+      "post": {
+        "description": "Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.",
+        "operationId": "UserController_resendEmailConfirmation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email address to resend confirmation to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailConfirmationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Confirmation email resent (or silently handled)"
+          },
+          "400": {
+            "description": "Invalid email format"
+          },
+          "500": {
+            "description": "Internal server error occurred while sending email"
+          }
+        },
+        "summary": "Resend email confirmation",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "description": "Delete a user by their ID. Only users within the same organization can be deleted.",
+        "operationId": "UserController_deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully deleted"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while deleting user"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/forgot-password": {
+      "post": {
+        "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
+        "operationId": "UserController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Email address to send reset link to",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset email sent successfully. This response is returned regardless of whether the email exists to prevent email enumeration."
+          },
+          "400": {
+            "description": "Invalid request format or validation errors"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Trigger password reset",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/reset-password": {
+      "post": {
+        "description": "Reset user password using the token received via email. The token must be valid and not expired.",
+        "operationId": "UserController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Password reset information including token and new password",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password reset successful."
+          },
+          "400": {
+            "description": "Invalid request format, validation errors, or password requirements not met"
+          },
+          "401": {
+            "description": "Invalid or expired reset token"
+          },
+          "500": {
+            "description": "Internal server error while processing the request"
+          }
+        },
+        "summary": "Reset password with token",
+        "tags": [
+          "Users"
         ]
       }
     },
@@ -862,62 +1203,6 @@
         ]
       }
     },
-    "/tools/http": {
-      "post": {
-        "operationId": "ToolsController_createHttpTool",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateHttpToolDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The HTTP tool has been successfully created.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpTool"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Create a new HTTP tool for current user",
-        "tags": [
-          "tools"
-        ]
-      }
-    },
-    "/tools/{id}": {
-      "delete": {
-        "operationId": "ToolsController_deleteTool",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The tool has been successfully deleted."
-          }
-        },
-        "summary": "Delete a tool by ID",
-        "tags": [
-          "tools"
-        ]
-      }
-    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -1123,44 +1408,6 @@
         "summary": "Retrieve content from a URL",
         "tags": [
           "retrievers"
-        ]
-      }
-    },
-    "/embeddings/embed": {
-      "post": {
-        "operationId": "EmbeddingsController_embedText",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmbedTextDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The text has been successfully embedded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmbeddingResultsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - validation error"
-          },
-          "404": {
-            "description": "Embeddings provider not found"
-          }
-        },
-        "summary": "Embed text into a vector using the specified provider",
-        "tags": [
-          "embeddings"
         ]
       }
     },
@@ -1600,350 +1847,6 @@
         "summary": "Uncancel the subscription for the current organization",
         "tags": [
           "subscriptions"
-        ]
-      }
-    },
-    "/users": {
-      "get": {
-        "description": "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
-        "operationId": "UserController_getUsersInOrganization",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved users in the organization",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsersListResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "500": {
-            "description": "Internal server error occurred while retrieving users"
-          }
-        },
-        "summary": "Get users in current organization",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/{id}/role": {
-      "patch": {
-        "description": "Update the role of a user. You cannot update your own role.",
-        "operationId": "UserController_updateUserRole",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "User ID to update role for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "New role information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserRoleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User role successfully updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid role value"
-          },
-          "401": {
-            "description": "User not authenticated or trying to update own role"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating user role"
-          }
-        },
-        "summary": "Update user role",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/name": {
-      "patch": {
-        "description": "Update the name of a user. Users can only update their own name.",
-        "operationId": "UserController_updateUserName",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "New name information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserNameDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User name successfully updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid name value"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized to update this user"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating user name"
-          }
-        },
-        "summary": "Update user name",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/password": {
-      "patch": {
-        "description": "Update the password of the current authenticated user. Requires current password for verification.",
-        "operationId": "UserController_updatePassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Password update information",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Password successfully updated"
-          },
-          "400": {
-            "description": "Invalid password values or passwords do not match"
-          },
-          "401": {
-            "description": "User not authenticated or current password is incorrect"
-          },
-          "500": {
-            "description": "Internal server error occurred while updating password"
-          }
-        },
-        "summary": "Update user password",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/confirm-email": {
-      "post": {
-        "description": "Confirm a user's email address using a JWT token received via email",
-        "operationId": "UserController_confirmEmail",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email confirmation token",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfirmEmailDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Email successfully confirmed"
-          },
-          "400": {
-            "description": "Invalid token or token has expired"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while confirming email"
-          }
-        },
-        "summary": "Confirm user email",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/resend-confirmation": {
-      "post": {
-        "description": "Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.",
-        "operationId": "UserController_resendEmailConfirmation",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email address to resend confirmation to",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendEmailConfirmationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Confirmation email resent (or silently handled)"
-          },
-          "400": {
-            "description": "Invalid email format"
-          },
-          "500": {
-            "description": "Internal server error occurred while sending email"
-          }
-        },
-        "summary": "Resend email confirmation",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/{id}": {
-      "delete": {
-        "description": "Delete a user by their ID. Only users within the same organization can be deleted.",
-        "operationId": "UserController_deleteUser",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "User ID to delete",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "User successfully deleted"
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "500": {
-            "description": "Internal server error occurred while deleting user"
-          }
-        },
-        "summary": "Delete a user",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/forgot-password": {
-      "post": {
-        "description": "Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.",
-        "operationId": "UserController_forgotPassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email address to send reset link to",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Password reset email sent successfully. This response is returned regardless of whether the email exists to prevent email enumeration."
-          },
-          "400": {
-            "description": "Invalid request format or validation errors"
-          },
-          "500": {
-            "description": "Internal server error while processing the request"
-          }
-        },
-        "summary": "Trigger password reset",
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/users/reset-password": {
-      "post": {
-        "description": "Reset user password using the token received via email. The token must be valid and not expired.",
-        "operationId": "UserController_resetPassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Password reset information including token and new password",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Password reset successful."
-          },
-          "400": {
-            "description": "Invalid request format, validation errors, or password requirements not met"
-          },
-          "401": {
-            "description": "Invalid or expired reset token"
-          },
-          "500": {
-            "description": "Internal server error while processing the request"
-          }
-        },
-        "summary": "Reset password with token",
-        "tags": [
-          "Users"
         ]
       }
     },
@@ -2954,58 +2857,6 @@
           "isReasoning"
         ]
       },
-      "PermittedEmbeddingModelResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The id of the permitted model"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the model"
-          },
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce"
-            ],
-            "description": "The provider of the model"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The display name of the model"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "embedding"
-            ],
-            "description": "The type of the model (always embedding)"
-          },
-          "isArchived": {
-            "type": "boolean",
-            "description": "Whether the model is archived"
-          },
-          "dimensions": {
-            "type": "number",
-            "description": "The number of dimensions for embeddings"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "provider",
-          "displayName",
-          "type",
-          "isArchived",
-          "dimensions"
-        ]
-      },
       "SetUserDefaultModelDto": {
         "type": "object",
         "properties": {
@@ -3193,6 +3044,211 @@
           "displayName",
           "hostedIn",
           "isPermitted"
+        ]
+      },
+      "EmbeddingModelEnabledResponseDto": {
+        "type": "object",
+        "properties": {
+          "isEmbeddingModelEnabled": {
+            "type": "boolean",
+            "description": "Whether the organization has an embedding model enabled",
+            "example": true
+          }
+        },
+        "required": [
+          "isEmbeddingModelEnabled"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "john.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174001",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the user was created",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "createdAt"
+        ]
+      },
+      "UsersListResponseDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "description": "List of users in the organization",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDto"
+            }
+          }
+        },
+        "required": [
+          "users"
+        ]
+      },
+      "UpdateUserRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "New role for the user",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "admin"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "UpdateUserNameDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name for the user",
+            "example": "John Doe",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdatePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "description": "Current password for verification",
+            "example": "currentPassword123",
+            "minLength": 8
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password",
+            "example": "newPassword123!",
+            "minLength": 8
+          },
+          "newPasswordConfirmation": {
+            "type": "string",
+            "description": "Confirmation of the new password",
+            "example": "newPassword123!",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword",
+          "newPasswordConfirmation"
+        ]
+      },
+      "ConfirmEmailDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT token for email confirmation",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ResendEmailConfirmationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to resend confirmation to",
+            "example": "user@example.com",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to send password reset link to",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "Password reset token from email",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password",
+            "example": "newPassword123!",
+            "minLength": 8
+          },
+          "newPasswordConfirmation": {
+            "type": "string",
+            "description": "Confirm new password",
+            "example": "newPassword123!",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "resetToken",
+          "newPassword",
+          "newPasswordConfirmation"
         ]
       },
       "CreateThreadDto": {
@@ -3748,56 +3804,6 @@
           "filePath"
         ]
       },
-      "CreateHttpToolDto": {
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": "string",
-            "description": "Display name of the tool"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of what the tool does"
-          },
-          "parameters": {
-            "type": "object",
-            "description": "JSON Schema defining the parameters the tool accepts",
-            "example": {
-              "type": "object",
-              "required": [
-                "query"
-              ],
-              "properties": {
-                "query": {
-                  "type": "string",
-                  "description": "Search query"
-                }
-              }
-            }
-          },
-          "endpointUrl": {
-            "type": "string",
-            "description": "Endpoint URL for the HTTP tool",
-            "example": "https://api.example.com/search"
-          },
-          "method": {
-            "type": "string",
-            "description": "HTTP method for the HTTP tool",
-            "example": "GET"
-          }
-        },
-        "required": [
-          "displayName",
-          "description",
-          "parameters",
-          "endpointUrl",
-          "method"
-        ]
-      },
-      "HttpTool": {
-        "type": "object",
-        "properties": {}
-      },
       "ToolAssignmentDto": {
         "type": "object",
         "properties": {
@@ -3809,8 +3815,7 @@
               "http",
               "source_query",
               "internet_search",
-              "website_content",
-              "custom"
+              "website_content"
             ]
           },
           "toolConfigId": {
@@ -3871,8 +3876,7 @@
               "http",
               "source_query",
               "internet_search",
-              "website_content",
-              "custom"
+              "website_content"
             ]
           }
         },
@@ -3996,77 +4000,6 @@
         },
         "required": [
           "url"
-        ]
-      },
-      "EmbedTextDto": {
-        "type": "object",
-        "properties": {
-          "texts": {
-            "type": "string",
-            "description": "The text to embed",
-            "example": "This is a sample text that needs to be embedded into a vector."
-          }
-        },
-        "required": [
-          "texts"
-        ]
-      },
-      "EmbeddingResultDto": {
-        "type": "object",
-        "properties": {
-          "vector": {
-            "description": "The vector representation of the embedded text",
-            "example": [
-              0.01,
-              -0.02,
-              0.03,
-              -0.04,
-              0.05
-            ],
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          },
-          "text": {
-            "type": "string",
-            "description": "The original text that was embedded"
-          },
-          "dimension": {
-            "type": "number",
-            "description": "The dimension (length) of the embedding vector",
-            "example": 384
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Metadata about the embedding process",
-            "example": {
-              "provider": "openai",
-              "model": "text-embedding-3-small",
-              "dimension": 1536
-            }
-          }
-        },
-        "required": [
-          "vector",
-          "text",
-          "dimension",
-          "metadata"
-        ]
-      },
-      "EmbeddingResultsDto": {
-        "type": "object",
-        "properties": {
-          "results": {
-            "description": "The list of embeddings",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EmbeddingResultDto"
-            }
-          }
-        },
-        "required": [
-          "results"
         ]
       },
       "RunSessionResponseDto": {
@@ -4641,198 +4574,6 @@
       "UpdateSeatsDto": {
         "type": "object",
         "properties": {}
-      },
-      "UserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "User unique identifier",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "User name",
-            "example": "John Doe"
-          },
-          "email": {
-            "type": "string",
-            "description": "User email address",
-            "example": "john.doe@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "User role",
-            "enum": [
-              "admin",
-              "user"
-            ],
-            "example": "user"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID the user belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174001",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the user was created",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "email",
-          "role",
-          "orgId",
-          "createdAt"
-        ]
-      },
-      "UsersListResponseDto": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "description": "List of users in the organization",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserResponseDto"
-            }
-          }
-        },
-        "required": [
-          "users"
-        ]
-      },
-      "UpdateUserRoleDto": {
-        "type": "object",
-        "properties": {
-          "role": {
-            "type": "string",
-            "description": "New role for the user",
-            "enum": [
-              "admin",
-              "user"
-            ],
-            "example": "admin"
-          }
-        },
-        "required": [
-          "role"
-        ]
-      },
-      "UpdateUserNameDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "New name for the user",
-            "example": "John Doe",
-            "minLength": 1,
-            "maxLength": 100
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "UpdatePasswordDto": {
-        "type": "object",
-        "properties": {
-          "currentPassword": {
-            "type": "string",
-            "description": "Current password for verification",
-            "example": "currentPassword123",
-            "minLength": 8
-          },
-          "newPassword": {
-            "type": "string",
-            "description": "New password",
-            "example": "newPassword123!",
-            "minLength": 8
-          },
-          "newPasswordConfirmation": {
-            "type": "string",
-            "description": "Confirmation of the new password",
-            "example": "newPassword123!",
-            "minLength": 8
-          }
-        },
-        "required": [
-          "currentPassword",
-          "newPassword",
-          "newPasswordConfirmation"
-        ]
-      },
-      "ConfirmEmailDto": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "description": "JWT token for email confirmation",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          }
-        },
-        "required": [
-          "token"
-        ]
-      },
-      "ResendEmailConfirmationDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address to resend confirmation to",
-            "example": "user@example.com",
-            "format": "email"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "ForgotPasswordDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address to send password reset link to",
-            "example": "user@example.com"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "ResetPasswordDto": {
-        "type": "object",
-        "properties": {
-          "resetToken": {
-            "type": "string",
-            "description": "Password reset token from email",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          },
-          "newPassword": {
-            "type": "string",
-            "description": "New password",
-            "example": "newPassword123!",
-            "minLength": 8
-          },
-          "newPasswordConfirmation": {
-            "type": "string",
-            "description": "Confirm new password",
-            "example": "newPassword123!",
-            "minLength": 8
-          }
-        },
-        "required": [
-          "resetToken",
-          "newPassword",
-          "newPasswordConfirmation"
-        ]
       },
       "CreateInviteDto": {
         "type": "object",

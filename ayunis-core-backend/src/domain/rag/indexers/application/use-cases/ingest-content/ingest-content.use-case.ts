@@ -13,13 +13,14 @@ export class IngestContentUseCase {
   async execute(command: IngestContentCommand): Promise<void> {
     try {
       const index = this.indexRegistry.get(command.type);
-      return index.ingest(
-        new IndexEntry({
+      return index.ingest({
+        orgId: command.orgId,
+        indexEntry: new IndexEntry({
           relatedDocumentId: command.documentId,
           relatedChunkId: command.chunkId,
         }),
-        command.content,
-      );
+        content: command.content,
+      });
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

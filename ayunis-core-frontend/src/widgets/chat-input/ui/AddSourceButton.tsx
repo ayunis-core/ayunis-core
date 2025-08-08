@@ -12,11 +12,13 @@ import { useTranslation } from "react-i18next";
 interface AddSourceButtonProps {
   onFileUpload: (file: File) => void;
   isCreatingFileSource?: boolean;
+  disabled?: boolean;
 }
 
 export default function AddSourceButton({
   onFileUpload,
   isCreatingFileSource,
+  disabled,
 }: AddSourceButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation("common");
@@ -49,7 +51,7 @@ export default function AddSourceButton({
               size="icon"
               variant="outline"
               className="flex items-center gap-2 h-6 w-6"
-              disabled={isCreatingFileSource ?? false}
+              disabled={disabled ?? isCreatingFileSource ?? false}
               onClick={handleFileUpload}
             >
               {isCreatingFileSource ? (

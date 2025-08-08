@@ -56,7 +56,7 @@ export class CreateUrlSourceUseCase {
       await this.sourceRepository.createUrlSource(urlSource);
 
     // Index the content using the indexers module
-    await this.indexSourceContent(savedUrlSource);
+    await this.indexSourceContent(savedUrlSource, command.orgId);
 
     return savedUrlSource;
   }
@@ -96,7 +96,10 @@ export class CreateUrlSourceUseCase {
   /**
    * Index source content using the indexers module
    */
-  private async indexSourceContent(source: UrlSource): Promise<void> {
+  private async indexSourceContent(
+    source: UrlSource,
+    orgId: UUID,
+  ): Promise<void> {
     this.logger.debug(`Indexing content for source: ${source.id}`);
 
     for (const content of source.content) {
@@ -105,6 +108,7 @@ export class CreateUrlSourceUseCase {
         chunkId: content.id,
         content: content.content,
         type: IndexType.PARENT_CHILD,
+        orgId: orgId,
       });
 
       await this.ingestContentUseCase.execute(ingestCommand);

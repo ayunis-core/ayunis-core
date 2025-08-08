@@ -29,7 +29,8 @@
     "noPromptsAvailable": "No prompts available",
     "fileSourceUploadError": "Error uploading file",
     "fileSourceDeleteError": "Error deleting file",
-    "uploadFile": "Upload file"
+    "uploadFile": "Upload file",
+    "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled."
   },
   "common": {
     "loading": "Loading..."

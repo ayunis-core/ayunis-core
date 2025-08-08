@@ -34,6 +34,7 @@ export class QuerySourceUseCase {
 
       // Use the searchContentUseCase to search for relevant content
       const searchQuery = new SearchContentQuery({
+        orgId: command.orgId,
         documentId: command.filter.sourceId,
         query: command.query,
         type: IndexType.PARENT_CHILD,

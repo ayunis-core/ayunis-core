@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
 
@@ -23,12 +23,14 @@ import { ParentChildIndexerAdapter } from './application/parent-child-indexer.ad
 
 // Splitter
 import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
+import { ModelsModule } from 'src/domain/models/models.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ParentChunkRecord, ChildChunkRecord]),
     EmbeddingsModule,
     SplitterModule,
+    forwardRef(() => ModelsModule),
   ],
   providers: [
     // Repository

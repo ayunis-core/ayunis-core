@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
 
-export class GetPermittedEmbeddingModelsQuery {
+export class IsEmbeddingModelEnabledQuery {
   constructor(public readonly orgId: UUID) {}
 }

@@ -45,6 +45,7 @@ export class PermittedEmbeddingModelResponseDto {
   @ApiProperty({
     type: 'number',
     description: 'The number of dimensions for embeddings',
+    nullable: true,
   })
-  dimensions: number;
+  dimensions?: number;
 }

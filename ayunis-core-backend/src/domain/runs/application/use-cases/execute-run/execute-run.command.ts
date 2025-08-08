@@ -7,6 +7,7 @@ export class ExecuteRunCommand {
   // stored alongside results from tools collected by the run
   input: RunInput;
   userId: UUID;
+  orgId: UUID;
   // Enable streaming mode for real-time responses
   streaming?: boolean;
 
@@ -14,11 +15,13 @@ export class ExecuteRunCommand {
     threadId: UUID;
     input: RunInput;
     userId: UUID;
+    orgId: UUID;
     streaming?: boolean;
   }) {
     this.threadId = params.threadId;
     this.input = params.input;
     this.userId = params.userId;
+    this.orgId = params.orgId;
     this.streaming = true;
   }
 }

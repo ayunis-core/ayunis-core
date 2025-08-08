@@ -33,7 +33,6 @@ import type {
   ConfirmEmailDto,
   CreateAgentDto,
   CreateEmbeddingModelDto,
-  CreateHttpToolDto,
   CreateInviteDto,
   CreateLanguageModelDto,
   CreatePermittedModelDto,
@@ -42,14 +41,12 @@ import type {
   CreateSubscriptionRequestDto,
   CreateThreadDto,
   DeletePermittedProviderDto,
-  EmbedTextDto,
-  EmbeddingResultsDto,
+  EmbeddingModelEnabledResponseDto,
   ErrorResponseDto,
   FileSourceResponseDto,
   ForgotPasswordDto,
   GetThreadResponseDto,
   GetThreadsResponseDtoItem,
-  HttpTool,
   InviteDetailResponseDto,
   InviteResponseDto,
   LoginDto,
@@ -57,7 +54,6 @@ import type {
   ModelProviderInfoResponseDto,
   ModelProviderWithPermittedStatusResponseDto,
   ModelWithConfigResponseDto,
-  PermittedEmbeddingModelResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedProviderResponseDto,
   PriceResponseDto,
@@ -470,94 +466,6 @@ export function useModelsControllerGetPermittedLanguageModels<TData = Awaited<Re
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsControllerGetPermittedLanguageModelsQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get all permitted embedding models
- */
-export const modelsControllerGetPermittedEmbeddingModels = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedEmbeddingModelResponseDto[]>(
-      {url: `/models/permitted/embedding-models`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getModelsControllerGetPermittedEmbeddingModelsQueryKey = () => {
-    return [`/models/permitted/embedding-models`] as const;
-    }
-
-    
-export const getModelsControllerGetPermittedEmbeddingModelsQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetPermittedEmbeddingModelsQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>> = ({ signal }) => modelsControllerGetPermittedEmbeddingModels(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ModelsControllerGetPermittedEmbeddingModelsQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>>
-export type ModelsControllerGetPermittedEmbeddingModelsQueryError = void
-
-
-export function useModelsControllerGetPermittedEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetPermittedEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetPermittedEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all permitted embedding models
- */
-
-export function useModelsControllerGetPermittedEmbeddingModels<TData = Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetPermittedEmbeddingModels>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getModelsControllerGetPermittedEmbeddingModelsQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1424,6 +1332,706 @@ export function useModelsControllerGetAllModelProviderInfosWithPermittedStatus<T
 
 
 /**
+ * @summary Check if an embedding model is enabled for this org
+ */
+export const modelsControllerIsEmbeddingModelEnabled = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<EmbeddingModelEnabledResponseDto>(
+      {url: `/models/embedding/enabled`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getModelsControllerIsEmbeddingModelEnabledQueryKey = () => {
+    return [`/models/embedding/enabled`] as const;
+    }
+
+    
+export const getModelsControllerIsEmbeddingModelEnabledQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerIsEmbeddingModelEnabledQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>> = ({ signal }) => modelsControllerIsEmbeddingModelEnabled(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerIsEmbeddingModelEnabledQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>>
+export type ModelsControllerIsEmbeddingModelEnabledQueryError = void
+
+
+export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Check if an embedding model is enabled for this org
+ */
+
+export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerIsEmbeddingModelEnabled>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerIsEmbeddingModelEnabledQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
+ * @summary Get users in current organization
+ */
+export const userControllerGetUsersInOrganization = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UsersListResponseDto>(
+      {url: `/users`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getUserControllerGetUsersInOrganizationQueryKey = () => {
+    return [`/users`] as const;
+    }
+
+    
+export const getUserControllerGetUsersInOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUserControllerGetUsersInOrganizationQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>> = ({ signal }) => userControllerGetUsersInOrganization(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UserControllerGetUsersInOrganizationQueryResult = NonNullable<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>>
+export type UserControllerGetUsersInOrganizationQueryError = void
+
+
+export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get users in current organization
+ */
+
+export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserControllerGetUsersInOrganizationQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Update the role of a user. You cannot update your own role.
+ * @summary Update user role
+ */
+export const userControllerUpdateUserRole = (
+    id: string,
+    updateUserRoleDto: UpdateUserRoleDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserResponseDto>(
+      {url: `/users/${id}/role`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserRoleDto
+    },
+      );
+    }
+  
+
+
+export const getUserControllerUpdateUserRoleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, TError,{id: string;data: UpdateUserRoleDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, TError,{id: string;data: UpdateUserRoleDto}, TContext> => {
+
+const mutationKey = ['userControllerUpdateUserRole'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, {id: string;data: UpdateUserRoleDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  userControllerUpdateUserRole(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerUpdateUserRoleMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdateUserRole>>>
+    export type UserControllerUpdateUserRoleMutationBody = UpdateUserRoleDto
+    export type UserControllerUpdateUserRoleMutationError = void
+
+    /**
+ * @summary Update user role
+ */
+export const useUserControllerUpdateUserRole = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, TError,{id: string;data: UpdateUserRoleDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerUpdateUserRole>>,
+        TError,
+        {id: string;data: UpdateUserRoleDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerUpdateUserRoleMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update the name of a user. Users can only update their own name.
+ * @summary Update user name
+ */
+export const userControllerUpdateUserName = (
+    updateUserNameDto: UpdateUserNameDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserResponseDto>(
+      {url: `/users/name`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateUserNameDto
+    },
+      );
+    }
+  
+
+
+export const getUserControllerUpdateUserNameMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext> => {
+
+const mutationKey = ['userControllerUpdateUserName'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdateUserName>>, {data: UpdateUserNameDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerUpdateUserName(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerUpdateUserNameMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdateUserName>>>
+    export type UserControllerUpdateUserNameMutationBody = UpdateUserNameDto
+    export type UserControllerUpdateUserNameMutationError = void
+
+    /**
+ * @summary Update user name
+ */
+export const useUserControllerUpdateUserName = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerUpdateUserName>>,
+        TError,
+        {data: UpdateUserNameDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerUpdateUserNameMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update the password of the current authenticated user. Requires current password for verification.
+ * @summary Update user password
+ */
+export const userControllerUpdatePassword = (
+    updatePasswordDto: UpdatePasswordDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/password`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePasswordDto
+    },
+      );
+    }
+  
+
+
+export const getUserControllerUpdatePasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext> => {
+
+const mutationKey = ['userControllerUpdatePassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdatePassword>>, {data: UpdatePasswordDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerUpdatePassword(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerUpdatePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdatePassword>>>
+    export type UserControllerUpdatePasswordMutationBody = UpdatePasswordDto
+    export type UserControllerUpdatePasswordMutationError = void
+
+    /**
+ * @summary Update user password
+ */
+export const useUserControllerUpdatePassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerUpdatePassword>>,
+        TError,
+        {data: UpdatePasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerUpdatePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Confirm a user's email address using a JWT token received via email
+ * @summary Confirm user email
+ */
+export const userControllerConfirmEmail = (
+    confirmEmailDto: ConfirmEmailDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/confirm-email`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: confirmEmailDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerConfirmEmailMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext> => {
+
+const mutationKey = ['userControllerConfirmEmail'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerConfirmEmail>>, {data: ConfirmEmailDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerConfirmEmail(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerConfirmEmailMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerConfirmEmail>>>
+    export type UserControllerConfirmEmailMutationBody = ConfirmEmailDto
+    export type UserControllerConfirmEmailMutationError = void
+
+    /**
+ * @summary Confirm user email
+ */
+export const useUserControllerConfirmEmail = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerConfirmEmail>>,
+        TError,
+        {data: ConfirmEmailDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerConfirmEmailMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.
+ * @summary Resend email confirmation
+ */
+export const userControllerResendEmailConfirmation = (
+    resendEmailConfirmationDto: ResendEmailConfirmationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/resend-confirmation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resendEmailConfirmationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerResendEmailConfirmationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext> => {
+
+const mutationKey = ['userControllerResendEmailConfirmation'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, {data: ResendEmailConfirmationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerResendEmailConfirmation(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerResendEmailConfirmationMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>>
+    export type UserControllerResendEmailConfirmationMutationBody = ResendEmailConfirmationDto
+    export type UserControllerResendEmailConfirmationMutationError = void
+
+    /**
+ * @summary Resend email confirmation
+ */
+export const useUserControllerResendEmailConfirmation = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>,
+        TError,
+        {data: ResendEmailConfirmationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerResendEmailConfirmationMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete a user by their ID. Only users within the same organization can be deleted.
+ * @summary Delete a user
+ */
+export const userControllerDeleteUser = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getUserControllerDeleteUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerDeleteUser>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerDeleteUser>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['userControllerDeleteUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerDeleteUser>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  userControllerDeleteUser(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerDeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerDeleteUser>>>
+    
+    export type UserControllerDeleteUserMutationError = void
+
+    /**
+ * @summary Delete a user
+ */
+export const useUserControllerDeleteUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerDeleteUser>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerDeleteUser>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerDeleteUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
+ * @summary Trigger password reset
+ */
+export const userControllerForgotPassword = (
+    forgotPasswordDto: ForgotPasswordDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/forgot-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: forgotPasswordDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerForgotPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext> => {
+
+const mutationKey = ['userControllerForgotPassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerForgotPassword>>, {data: ForgotPasswordDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerForgotPassword(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerForgotPassword>>>
+    export type UserControllerForgotPasswordMutationBody = ForgotPasswordDto
+    export type UserControllerForgotPasswordMutationError = void
+
+    /**
+ * @summary Trigger password reset
+ */
+export const useUserControllerForgotPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerForgotPassword>>,
+        TError,
+        {data: ForgotPasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerForgotPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Reset user password using the token received via email. The token must be valid and not expired.
+ * @summary Reset password with token
+ */
+export const userControllerResetPassword = (
+    resetPasswordDto: ResetPasswordDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resetPasswordDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerResetPasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext> => {
+
+const mutationKey = ['userControllerResetPassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResetPassword>>, {data: ResetPasswordDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  userControllerResetPassword(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResetPassword>>>
+    export type UserControllerResetPasswordMutationBody = ResetPasswordDto
+    export type UserControllerResetPasswordMutationError = void
+
+    /**
+ * @summary Reset password with token
+ */
+export const useUserControllerResetPassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerResetPassword>>,
+        TError,
+        {data: ResetPasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerResetPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * @summary Create a new thread
  */
 export const threadsControllerCreate = (
@@ -2082,133 +2690,6 @@ export const useThreadsControllerRemoveSource = <TError = void,
     }
     
 /**
- * @summary Create a new HTTP tool for current user
- */
-export const toolsControllerCreateHttpTool = (
-    createHttpToolDto: CreateHttpToolDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<HttpTool>(
-      {url: `/tools/http`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createHttpToolDto, signal
-    },
-      );
-    }
-  
-
-
-export const getToolsControllerCreateHttpToolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext> => {
-
-const mutationKey = ['toolsControllerCreateHttpTool'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, {data: CreateHttpToolDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  toolsControllerCreateHttpTool(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ToolsControllerCreateHttpToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>>
-    export type ToolsControllerCreateHttpToolMutationBody = CreateHttpToolDto
-    export type ToolsControllerCreateHttpToolMutationError = unknown
-
-    /**
- * @summary Create a new HTTP tool for current user
- */
-export const useToolsControllerCreateHttpTool = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>, TError,{data: CreateHttpToolDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof toolsControllerCreateHttpTool>>,
-        TError,
-        {data: CreateHttpToolDto},
-        TContext
-      > => {
-
-      const mutationOptions = getToolsControllerCreateHttpToolMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Delete a tool by ID
- */
-export const toolsControllerDeleteTool = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/tools/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getToolsControllerDeleteToolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['toolsControllerDeleteTool'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  toolsControllerDeleteTool(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ToolsControllerDeleteToolMutationResult = NonNullable<Awaited<ReturnType<typeof toolsControllerDeleteTool>>>
-    
-    export type ToolsControllerDeleteToolMutationError = unknown
-
-    /**
- * @summary Delete a tool by ID
- */
-export const useToolsControllerDeleteTool = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toolsControllerDeleteTool>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof toolsControllerDeleteTool>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getToolsControllerDeleteToolMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
  * @summary Create a new agent
  */
 export const agentsControllerCreate = (
@@ -2637,71 +3118,6 @@ export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
       > => {
 
       const mutationOptions = getUrlRetrieverControllerRetrieveUrlMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Embed text into a vector using the specified provider
- */
-export const embeddingsControllerEmbedText = (
-    embedTextDto: EmbedTextDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<EmbeddingResultsDto>(
-      {url: `/embeddings/embed`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: embedTextDto, signal
-    },
-      );
-    }
-  
-
-
-export const getEmbeddingsControllerEmbedTextMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext> => {
-
-const mutationKey = ['embeddingsControllerEmbedText'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, {data: EmbedTextDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  embeddingsControllerEmbedText(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EmbeddingsControllerEmbedTextMutationResult = NonNullable<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>>
-    export type EmbeddingsControllerEmbedTextMutationBody = EmbedTextDto
-    export type EmbeddingsControllerEmbedTextMutationError = void
-
-    /**
- * @summary Embed text into a vector using the specified provider
- */
-export const useEmbeddingsControllerEmbedText = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof embeddingsControllerEmbedText>>, TError,{data: EmbedTextDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof embeddingsControllerEmbedText>>,
-        TError,
-        {data: EmbedTextDto},
-        TContext
-      > => {
-
-      const mutationOptions = getEmbeddingsControllerEmbedTextMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -3439,618 +3855,6 @@ export const useSubscriptionsControllerUncancelSubscription = <TError = void,
       > => {
 
       const mutationOptions = getSubscriptionsControllerUncancelSubscriptionMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
- * @summary Get users in current organization
- */
-export const userControllerGetUsersInOrganization = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<UsersListResponseDto>(
-      {url: `/users`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getUserControllerGetUsersInOrganizationQueryKey = () => {
-    return [`/users`] as const;
-    }
-
-    
-export const getUserControllerGetUsersInOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUserControllerGetUsersInOrganizationQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>> = ({ signal }) => userControllerGetUsersInOrganization(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UserControllerGetUsersInOrganizationQueryResult = NonNullable<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>>
-export type UserControllerGetUsersInOrganizationQueryError = void
-
-
-export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>,
-          TError,
-          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>,
-          TError,
-          Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get users in current organization
- */
-
-export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUserControllerGetUsersInOrganizationQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Update the role of a user. You cannot update your own role.
- * @summary Update user role
- */
-export const userControllerUpdateUserRole = (
-    id: string,
-    updateUserRoleDto: UpdateUserRoleDto,
- ) => {
-      
-      
-      return customAxiosInstance<UserResponseDto>(
-      {url: `/users/${id}/role`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateUserRoleDto
-    },
-      );
-    }
-  
-
-
-export const getUserControllerUpdateUserRoleMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, TError,{id: string;data: UpdateUserRoleDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, TError,{id: string;data: UpdateUserRoleDto}, TContext> => {
-
-const mutationKey = ['userControllerUpdateUserRole'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, {id: string;data: UpdateUserRoleDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  userControllerUpdateUserRole(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerUpdateUserRoleMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdateUserRole>>>
-    export type UserControllerUpdateUserRoleMutationBody = UpdateUserRoleDto
-    export type UserControllerUpdateUserRoleMutationError = void
-
-    /**
- * @summary Update user role
- */
-export const useUserControllerUpdateUserRole = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserRole>>, TError,{id: string;data: UpdateUserRoleDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerUpdateUserRole>>,
-        TError,
-        {id: string;data: UpdateUserRoleDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerUpdateUserRoleMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Update the name of a user. Users can only update their own name.
- * @summary Update user name
- */
-export const userControllerUpdateUserName = (
-    updateUserNameDto: UpdateUserNameDto,
- ) => {
-      
-      
-      return customAxiosInstance<UserResponseDto>(
-      {url: `/users/name`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateUserNameDto
-    },
-      );
-    }
-  
-
-
-export const getUserControllerUpdateUserNameMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext> => {
-
-const mutationKey = ['userControllerUpdateUserName'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdateUserName>>, {data: UpdateUserNameDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  userControllerUpdateUserName(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerUpdateUserNameMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdateUserName>>>
-    export type UserControllerUpdateUserNameMutationBody = UpdateUserNameDto
-    export type UserControllerUpdateUserNameMutationError = void
-
-    /**
- * @summary Update user name
- */
-export const useUserControllerUpdateUserName = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdateUserName>>, TError,{data: UpdateUserNameDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerUpdateUserName>>,
-        TError,
-        {data: UpdateUserNameDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerUpdateUserNameMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Update the password of the current authenticated user. Requires current password for verification.
- * @summary Update user password
- */
-export const userControllerUpdatePassword = (
-    updatePasswordDto: UpdatePasswordDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/users/password`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updatePasswordDto
-    },
-      );
-    }
-  
-
-
-export const getUserControllerUpdatePasswordMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext> => {
-
-const mutationKey = ['userControllerUpdatePassword'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerUpdatePassword>>, {data: UpdatePasswordDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  userControllerUpdatePassword(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerUpdatePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerUpdatePassword>>>
-    export type UserControllerUpdatePasswordMutationBody = UpdatePasswordDto
-    export type UserControllerUpdatePasswordMutationError = void
-
-    /**
- * @summary Update user password
- */
-export const useUserControllerUpdatePassword = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerUpdatePassword>>, TError,{data: UpdatePasswordDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerUpdatePassword>>,
-        TError,
-        {data: UpdatePasswordDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerUpdatePasswordMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Confirm a user's email address using a JWT token received via email
- * @summary Confirm user email
- */
-export const userControllerConfirmEmail = (
-    confirmEmailDto: ConfirmEmailDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/users/confirm-email`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: confirmEmailDto, signal
-    },
-      );
-    }
-  
-
-
-export const getUserControllerConfirmEmailMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext> => {
-
-const mutationKey = ['userControllerConfirmEmail'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerConfirmEmail>>, {data: ConfirmEmailDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  userControllerConfirmEmail(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerConfirmEmailMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerConfirmEmail>>>
-    export type UserControllerConfirmEmailMutationBody = ConfirmEmailDto
-    export type UserControllerConfirmEmailMutationError = void
-
-    /**
- * @summary Confirm user email
- */
-export const useUserControllerConfirmEmail = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerConfirmEmail>>, TError,{data: ConfirmEmailDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerConfirmEmail>>,
-        TError,
-        {data: ConfirmEmailDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerConfirmEmailMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Resend a confirmation email to the specified email address. Silently succeeds even if email is already verified or user does not exist for security reasons.
- * @summary Resend email confirmation
- */
-export const userControllerResendEmailConfirmation = (
-    resendEmailConfirmationDto: ResendEmailConfirmationDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/users/resend-confirmation`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: resendEmailConfirmationDto, signal
-    },
-      );
-    }
-  
-
-
-export const getUserControllerResendEmailConfirmationMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext> => {
-
-const mutationKey = ['userControllerResendEmailConfirmation'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, {data: ResendEmailConfirmationDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  userControllerResendEmailConfirmation(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerResendEmailConfirmationMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>>
-    export type UserControllerResendEmailConfirmationMutationBody = ResendEmailConfirmationDto
-    export type UserControllerResendEmailConfirmationMutationError = void
-
-    /**
- * @summary Resend email confirmation
- */
-export const useUserControllerResendEmailConfirmation = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>, TError,{data: ResendEmailConfirmationDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerResendEmailConfirmation>>,
-        TError,
-        {data: ResendEmailConfirmationDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerResendEmailConfirmationMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Delete a user by their ID. Only users within the same organization can be deleted.
- * @summary Delete a user
- */
-export const userControllerDeleteUser = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/users/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getUserControllerDeleteUserMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerDeleteUser>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerDeleteUser>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['userControllerDeleteUser'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerDeleteUser>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  userControllerDeleteUser(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerDeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerDeleteUser>>>
-    
-    export type UserControllerDeleteUserMutationError = void
-
-    /**
- * @summary Delete a user
- */
-export const useUserControllerDeleteUser = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerDeleteUser>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerDeleteUser>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerDeleteUserMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
- * @summary Trigger password reset
- */
-export const userControllerForgotPassword = (
-    forgotPasswordDto: ForgotPasswordDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/users/forgot-password`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: forgotPasswordDto, signal
-    },
-      );
-    }
-  
-
-
-export const getUserControllerForgotPasswordMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext> => {
-
-const mutationKey = ['userControllerForgotPassword'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerForgotPassword>>, {data: ForgotPasswordDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  userControllerForgotPassword(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerForgotPassword>>>
-    export type UserControllerForgotPasswordMutationBody = ForgotPasswordDto
-    export type UserControllerForgotPasswordMutationError = void
-
-    /**
- * @summary Trigger password reset
- */
-export const useUserControllerForgotPassword = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerForgotPassword>>, TError,{data: ForgotPasswordDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerForgotPassword>>,
-        TError,
-        {data: ForgotPasswordDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerForgotPasswordMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Reset user password using the token received via email. The token must be valid and not expired.
- * @summary Reset password with token
- */
-export const userControllerResetPassword = (
-    resetPasswordDto: ResetPasswordDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/users/reset-password`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: resetPasswordDto, signal
-    },
-      );
-    }
-  
-
-
-export const getUserControllerResetPasswordMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext> => {
-
-const mutationKey = ['userControllerResetPassword'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerResetPassword>>, {data: ResetPasswordDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  userControllerResetPassword(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserControllerResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerResetPassword>>>
-    export type UserControllerResetPasswordMutationBody = ResetPasswordDto
-    export type UserControllerResetPasswordMutationError = void
-
-    /**
- * @summary Reset password with token
- */
-export const useUserControllerResetPassword = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerResetPassword>>, TError,{data: ResetPasswordDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof userControllerResetPassword>>,
-        TError,
-        {data: ResetPasswordDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUserControllerResetPasswordMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

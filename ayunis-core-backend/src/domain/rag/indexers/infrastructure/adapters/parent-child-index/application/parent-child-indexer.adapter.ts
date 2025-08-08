@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   IndexerPort,
+  IngestInput,
   SearchInput,
 } from 'src/domain/rag/indexers/application/ports/indexer';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
@@ -20,8 +21,8 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     super();
   }
 
-  async ingest(input: IndexEntry, content: string): Promise<void> {
-    await this.ingestContentUseCase.execute(input, content);
+  async ingest(params: IngestInput): Promise<void> {
+    await this.ingestContentUseCase.execute(params);
   }
 
   async search(input: SearchInput): Promise<IndexEntry[]> {

@@ -3,6 +3,7 @@
     "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
     "streaming": "Streaming",
     "reasoning": "Reasoning",
+    "embedding": "Embedding",
     "enableProvider": "Provider freischalten",
     "disableProvider": "Provider deaktivieren",
     "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist.",
@@ -10,8 +11,8 @@
       "de": "Betrieben in 🇩🇪",
       "us": "Betrieben in 🇺🇸",
       "eu": "Betrieben in 🇪🇺",
-      "selfHosted": "Betrieben in Ihrem eigenen Rechenzentrum",
-      "ayunis": "Betrieben in 🇩🇪 auf souveränder Cloud"
+      "selfHosted": "Betrieben auf Ihrer eigenen Infrastruktur",
+      "ayunis": "Betrieben in 🇩🇪 in souveräner Cloud"
     },
     "providerConfirmation": {
       "enableProvider": "{{provider}} freischalten",
@@ -19,6 +20,12 @@
       "enableProviderDescription": "Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen freigeschalteten Modelle zugreifen.",
       "disableProviderDescription": "Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen freigeschalteten Modelle zugreifen.",
       "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>."
+    },
+    "deletePermittedModel": {
+      "title": "Model löschen",
+      "description": "Sind Sie sicher, dass Sie dieses Modell löschen möchten? Wenn Sie ein Embedding-Modell löschen, werden alle Quellen, die mit diesem Modell verknüpft sind, ebenfalls gelöscht. Wenn Sie ein Sprachmodell löschen, fallen alle Threads, die mit diesem Modell verknüpft sind, auf ein anderes Modell zurück.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
     }
   }
 }

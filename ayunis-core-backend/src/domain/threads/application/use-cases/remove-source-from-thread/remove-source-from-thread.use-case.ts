@@ -34,15 +34,15 @@ export class RemoveSourceFromThreadUseCase {
         throw new SourceNotFoundError(command.sourceId, command.thread.id);
       }
 
-      const updatedAssignments = command.thread.sourceAssignments.filter(
-        (assignment) => assignment.source.id !== assignmentToRemove.source.id,
-      );
+      // const updatedAssignments = command.thread.sourceAssignments.filter(
+      //   (assignment) => assignment.source.id !== assignmentToRemove.source.id,
+      // );
 
-      await this.threadsRepository.updateSourceAssignments({
-        threadId: command.thread.id,
-        userId: command.thread.userId,
-        sourceAssignments: updatedAssignments,
-      });
+      // await this.threadsRepository.updateSourceAssignments({
+      //   threadId: command.thread.id,
+      //   userId: command.thread.userId,
+      //   sourceAssignments: updatedAssignments,
+      // });
 
       await this.deleteSourceUseCase.execute(
         new DeleteSourceCommand(assignmentToRemove.source),

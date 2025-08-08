@@ -11,12 +11,14 @@ interface NewChatPageProps {
   prefilledPrompt?: string;
   selectedModelId?: string;
   selectedAgentId?: string;
+  isEmbeddingModelEnabled: boolean;
 }
 
 export default function NewChatPage({
   selectedModelId,
   selectedAgentId,
   prefilledPrompt,
+  isEmbeddingModelEnabled,
 }: NewChatPageProps) {
   const { t } = useTranslation("chats");
   const { initiateChat } = useInitiateChat();
@@ -78,6 +80,7 @@ export default function NewChatPage({
           prefilledPrompt={prefilledPrompt}
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}
+          isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         />
       </div>
     </NewChatPageLayout>

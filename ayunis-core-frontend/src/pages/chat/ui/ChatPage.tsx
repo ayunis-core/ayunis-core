@@ -37,9 +37,13 @@ import { useDeleteFileSource } from "../api/useDeleteFileSource";
 
 interface ChatPageProps {
   thread: Thread;
+  isEmbeddingModelEnabled: boolean;
 }
 
-export default function ChatPage({ thread }: ChatPageProps) {
+export default function ChatPage({
+  thread,
+  isEmbeddingModelEnabled,
+}: ChatPageProps) {
   const { t } = useTranslation("chats");
   const { pendingMessage, setPendingMessage, sources, setSources } =
     useChatContext();
@@ -361,6 +365,7 @@ export default function ChatPage({ thread }: ChatPageProps) {
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onSend={handleSend}
+      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />
   );
 

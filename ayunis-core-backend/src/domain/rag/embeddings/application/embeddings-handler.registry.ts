@@ -7,21 +7,19 @@ import {
 } from './embeddings.errors';
 
 @Injectable()
-export class EmbeddingsProviderRegistry {
-  private readonly logger = new Logger(EmbeddingsProviderRegistry.name);
+export class EmbeddingsHandlerRegistry {
+  private readonly logger = new Logger(EmbeddingsHandlerRegistry.name);
   private readonly handlers = new Map<EmbeddingsProvider, EmbeddingsHandler>();
 
   registerHandler(
     provider: EmbeddingsProvider,
     handler: EmbeddingsHandler,
   ): void {
-    this.logger.debug(
-      `Registering embeddings handler for provider: ${provider}`,
-    );
     this.handlers.set(provider, handler);
   }
 
   getHandler(provider: EmbeddingsProvider): EmbeddingsHandler {
+    this.logger.debug('getHandler', { provider });
     const handler = this.handlers.get(provider);
 
     if (!handler) {
@@ -36,6 +34,7 @@ export class EmbeddingsProviderRegistry {
   }
 
   getAvailableProviders(): EmbeddingsProvider[] {
+    this.logger.debug('getAvailableProviders');
     return Array.from(this.handlers.entries())
       .filter(([, handler]) => handler.isAvailable())
       .map(([provider]) => provider);

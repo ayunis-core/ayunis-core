@@ -72,11 +72,6 @@ export class PromptsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() createPromptDto: CreatePromptDto,
   ): Promise<PromptResponseDto> {
-    this.logger.log('create', {
-      userId,
-      title: createPromptDto.title,
-    });
-
     const prompt = await this.createPromptUseCase.execute(
       new CreatePromptCommand(
         createPromptDto.title,
@@ -99,8 +94,6 @@ export class PromptsController {
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<PromptResponseDto[]> {
-    this.logger.log('findAll', { userId });
-
     const prompts = await this.getAllPromptsByUserUseCase.execute(
       new GetAllPromptsByUserQuery(userId),
     );
@@ -127,8 +120,6 @@ export class PromptsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<PromptResponseDto> {
-    this.logger.log('findOne', { id, userId });
-
     const prompt = await this.getPromptUseCase.execute(
       new GetPromptQuery(id, userId),
     );
@@ -158,8 +149,6 @@ export class PromptsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updatePromptDto: UpdatePromptDto,
   ): Promise<PromptResponseDto> {
-    this.logger.log('update', { id, userId, title: updatePromptDto.title });
-
     const prompt = await this.updatePromptUseCase.execute(
       new UpdatePromptCommand(
         id,
@@ -191,8 +180,6 @@ export class PromptsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<void> {
-    this.logger.log('delete', { id, userId });
-
     await this.deletePromptUseCase.execute(new DeletePromptCommand(id, userId));
   }
 }

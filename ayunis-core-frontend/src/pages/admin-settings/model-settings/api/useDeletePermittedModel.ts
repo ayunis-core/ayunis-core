@@ -7,10 +7,14 @@ import {
   getAgentsControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
 } from "@/shared/api";
+import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export function useDeletePermittedModel() {
+  const { t } = useTranslation("admin-settings-models");
   const queryClient = useQueryClient();
+  const { confirm } = useConfirmation();
   const deletePermittedModelMutation = useModelsControllerDeletePermittedModel({
     mutation: {
       onMutate: async ({ id }) => {
@@ -72,9 +76,15 @@ export function useDeletePermittedModel() {
   });
 
   function deletePermittedModel(id: string) {
-    console.log("Deleting permitted model with permittedModelId:", id);
-    deletePermittedModelMutation.mutate({
-      id,
+    confirm({
+      title: t("models.deletePermittedModel.title"),
+      description: t("models.deletePermittedModel.description"),
+      confirmText: t("models.deletePermittedModel.confirmText"),
+      cancelText: t("models.deletePermittedModel.cancelText"),
+      variant: "destructive",
+      onConfirm: () => {
+        deletePermittedModelMutation.mutate({ id });
+      },
     });
   }
 

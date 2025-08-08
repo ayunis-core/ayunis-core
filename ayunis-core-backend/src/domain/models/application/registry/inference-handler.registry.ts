@@ -14,7 +14,6 @@ export class InferenceHandlerRegistry {
   }
 
   register(provider: ModelProvider, handler: InferenceHandler): void {
-    this.logger.log('register', provider, handler);
     this.handlers.set(provider, handler);
   }
 

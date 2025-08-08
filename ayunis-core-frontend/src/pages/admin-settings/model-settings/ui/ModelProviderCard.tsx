@@ -124,6 +124,11 @@ export default function ModelProviderCard({
                             {t("models.reasoning")}
                           </Badge>
                         )}
+                        {model.isEmbedding && (
+                          <Badge variant="outline" className="text-xs">
+                            {t("models.embedding")}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">

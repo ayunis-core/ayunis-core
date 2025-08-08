@@ -22,6 +22,7 @@ interface ChatInputProps {
   onRemoveSource: (sourceId: string) => void;
   onSend: (message: string) => Promise<void>;
   prefilledPrompt?: string;
+  isEmbeddingModelEnabled: boolean;
 }
 
 export interface ChatInputRef {
@@ -41,6 +42,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onRemoveSource,
       onSend,
       prefilledPrompt,
+      isEmbeddingModelEnabled,
     },
     ref,
   ) => {
@@ -68,6 +70,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       // If there's already content, add a space before the prompt
       setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
     }
+    console.log("isEmbeddingModelEnabled", isEmbeddingModelEnabled);
 
     return (
       <div className="w-full space-y-2">
@@ -76,23 +79,25 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
               {/* Sources and Add Source Button */}
-              <div className="flex flex-wrap gap-2 items-center">
-                <AddSourceButton
-                  onFileUpload={onFileUpload}
-                  isCreatingFileSource={isCreatingFileSource}
-                />
-                {sources.map((source) => (
-                  <Badge
-                    key={source.id}
-                    variant="secondary"
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => onRemoveSource(source.id)}
-                  >
-                    <XIcon className="h-3 w-3" />
-                    {source.name}
-                  </Badge>
-                ))}
-              </div>
+              {isEmbeddingModelEnabled && (
+                <div className="flex flex-wrap gap-2 items-center">
+                  <AddSourceButton
+                    onFileUpload={onFileUpload}
+                    isCreatingFileSource={isCreatingFileSource}
+                  />
+                  {sources.map((source) => (
+                    <Badge
+                      key={source.id}
+                      variant="secondary"
+                      className="flex items-center gap-1 cursor-pointer"
+                      onClick={() => onRemoveSource(source.id)}
+                    >
+                      <XIcon className="h-3 w-3" />
+                      {source.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Textarea at the top */}
               <TextareaAutosize

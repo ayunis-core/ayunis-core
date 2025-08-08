@@ -5,14 +5,14 @@ export class CreateEmbeddingModelCommand {
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
-  dimensions: number;
+  dimensions?: number;
 
   constructor(params: {
     name: string;
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
-    dimensions: number;
+    dimensions?: number;
   }) {
     this.name = params.name;
     this.provider = params.provider;

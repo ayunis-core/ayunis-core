@@ -16,20 +16,12 @@ export class EmailConfirmGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    this.logger.debug('EmailConfirmGuard canActivate');
-
     // Check if route is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    this.logger.debug('EmailConfirmGuard - IS_PUBLIC_KEY check', {
-      isPublic,
-      handlerName: context.getHandler().name,
-      className: context.getClass().name,
-    });
     if (isPublic) {
-      this.logger.debug('EmailConfirmGuard canActivate: isPublic');
       return true;
     }
 

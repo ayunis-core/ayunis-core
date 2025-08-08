@@ -8,7 +8,6 @@ import { EmbeddingModel } from '../../domain/embedding-model.entity';
 @Injectable()
 export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
   private readonly openai: OpenAI;
-  private readonly model = 'text-embedding-3-small';
 
   constructor(private readonly configService: ConfigService) {
     super();
@@ -19,11 +18,9 @@ export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
 
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
     const result = await this.openai.embeddings.create({
-      model: this.model,
+      model: model.name,
       input: input,
-      // This reduces the number of dimensions to 1536,
-      // so that we can save it to the database
-      dimensions: 1536,
+      dimensions: model.dimensions,
     });
 
     return result.data.map((data) => {

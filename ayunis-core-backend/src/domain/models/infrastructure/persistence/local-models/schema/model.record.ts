@@ -45,6 +45,7 @@ export class LanguageModelRecord extends ModelRecord {
 export class EmbeddingModelRecord extends ModelRecord {
   @Column({
     type: 'integer',
+    nullable: true,
   })
-  dimensions: number;
+  dimensions?: number;
 }

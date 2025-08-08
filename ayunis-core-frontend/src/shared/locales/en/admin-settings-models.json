@@ -3,6 +3,7 @@
     "noModelsAvailable": "No models available. Please check your configuration.",
     "streaming": "Streaming",
     "reasoning": "Reasoning",
+    "embedding": "Embedding",
     "enableProvider": "Enable Provider",
     "disableProvider": "Disable Provider",
     "providerDisabled": "Cannot be enabled because the provider is not enabled.",
@@ -19,6 +20,12 @@
       "enableProviderDescription": "If you enable this provider, all users can use this provider and access its enabled models.",
       "disableProviderDescription": "If you disable this provider, users cannot access its enabled models.",
       "acceptTermsAndPrivacy": "I accept the <termsLink>additional Terms of Service</termsLink>."
+    },
+    "deletePermittedModel": {
+      "title": "Delete Permitted Model",
+      "description": "Are you sure you want to delete this permitted model? If you delete an embedding model, all sources associated with it will be deleted. If you delete a language model, all threads associated with it will fall back to another model.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
     }
   }
 }

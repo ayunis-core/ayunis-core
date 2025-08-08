@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetAvailableProvidersUseCase } from './get-available-providers.use-case';
-import { EmbeddingsProviderRegistry } from '../../embeddings-provider.registry';
+import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
 import { GetAvailableProvidersQuery } from './get-available-providers.query';
 import { EmbeddingsProvider } from '../../../domain/embeddings-provider.enum';
 
 describe('GetAvailableProvidersUseCase', () => {
   let useCase: GetAvailableProvidersUseCase;
-  let mockProviderRegistry: Partial<EmbeddingsProviderRegistry>;
+  let mockProviderRegistry: Partial<EmbeddingsHandlerRegistry>;
 
   beforeEach(async () => {
     mockProviderRegistry = {
@@ -18,7 +18,7 @@ describe('GetAvailableProvidersUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetAvailableProvidersUseCase,
-        { provide: EmbeddingsProviderRegistry, useValue: mockProviderRegistry },
+        { provide: EmbeddingsHandlerRegistry, useValue: mockProviderRegistry },
       ],
     }).compile();
 

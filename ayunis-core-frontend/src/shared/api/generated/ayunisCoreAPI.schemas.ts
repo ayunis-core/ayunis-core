@@ -96,49 +96,6 @@ export interface PermittedLanguageModelResponseDto {
   isReasoning: boolean;
 }
 
-/**
- * The provider of the model
- */
-export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-} as const;
-
-/**
- * The type of the model (always embedding)
- */
-export type PermittedEmbeddingModelResponseDtoType = typeof PermittedEmbeddingModelResponseDtoType[keyof typeof PermittedEmbeddingModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
-} as const;
-
-export interface PermittedEmbeddingModelResponseDto {
-  /** The id of the permitted model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: PermittedEmbeddingModelResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always embedding) */
-  type: PermittedEmbeddingModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /** The number of dimensions for embeddings */
-  dimensions: number;
-}
-
 export interface SetUserDefaultModelDto {
   /** The ID of the permitted model to set as default */
   permittedModelId: string;
@@ -306,6 +263,117 @@ export interface ModelProviderWithPermittedStatusResponseDto {
   hostedIn: ModelProviderWithPermittedStatusResponseDtoHostedIn;
   /** Whether this provider is permitted for the organization */
   isPermitted: boolean;
+}
+
+export interface EmbeddingModelEnabledResponseDto {
+  /** Whether the organization has an embedding model enabled */
+  isEmbeddingModelEnabled: boolean;
+}
+
+/**
+ * User role
+ */
+export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface UserResponseDto {
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: UserResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /** Date when the user was created */
+  createdAt: string;
+}
+
+export interface UsersListResponseDto {
+  /** List of users in the organization */
+  users: UserResponseDto[];
+}
+
+/**
+ * New role for the user
+ */
+export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserRoleDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface UpdateUserRoleDto {
+  /** New role for the user */
+  role: UpdateUserRoleDtoRole;
+}
+
+export interface UpdateUserNameDto {
+  /**
+   * New name for the user
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+}
+
+export interface UpdatePasswordDto {
+  /**
+   * Current password for verification
+   * @minLength 8
+   */
+  currentPassword: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  newPassword: string;
+  /**
+   * Confirmation of the new password
+   * @minLength 8
+   */
+  newPasswordConfirmation: string;
+}
+
+export interface ConfirmEmailDto {
+  /** JWT token for email confirmation */
+  token: string;
+}
+
+export interface ResendEmailConfirmationDto {
+  /** Email address to resend confirmation to */
+  email: string;
+}
+
+export interface ForgotPasswordDto {
+  /** Email address to send password reset link to */
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  /** Password reset token from email */
+  resetToken: string;
+  /**
+   * New password
+   * @minLength 8
+   */
+  newPassword: string;
+  /**
+   * Confirm new password
+   * @minLength 8
+   */
+  newPasswordConfirmation: string;
 }
 
 export interface CreateThreadDto {
@@ -602,26 +670,6 @@ export interface FileSourceResponseDto {
 }
 
 /**
- * JSON Schema defining the parameters the tool accepts
- */
-export type CreateHttpToolDtoParameters = { [key: string]: unknown };
-
-export interface CreateHttpToolDto {
-  /** Display name of the tool */
-  displayName: string;
-  /** Description of what the tool does */
-  description: string;
-  /** JSON Schema defining the parameters the tool accepts */
-  parameters: CreateHttpToolDtoParameters;
-  /** Endpoint URL for the HTTP tool */
-  endpointUrl: string;
-  /** HTTP method for the HTTP tool */
-  method: string;
-}
-
-export interface HttpTool { [key: string]: unknown }
-
-/**
  * The type of tool to assign
  */
 export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
@@ -633,7 +681,6 @@ export const ToolAssignmentDtoType = {
   source_query: 'source_query',
   internet_search: 'internet_search',
   website_content: 'website_content',
-  custom: 'custom',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -670,7 +717,6 @@ export const ToolResponseDtoType = {
   source_query: 'source_query',
   internet_search: 'internet_search',
   website_content: 'website_content',
-  custom: 'custom',
 } as const;
 
 export interface ToolResponseDto {
@@ -715,32 +761,6 @@ export interface UpdateAgentDto {
 export interface RetrieveUrlDto {
   /** URL to retrieve content from */
   url: string;
-}
-
-export interface EmbedTextDto {
-  /** The text to embed */
-  texts: string;
-}
-
-/**
- * Metadata about the embedding process
- */
-export type EmbeddingResultDtoMetadata = { [key: string]: unknown };
-
-export interface EmbeddingResultDto {
-  /** The vector representation of the embedded text */
-  vector: number[];
-  /** The original text that was embedded */
-  text: string;
-  /** The dimension (length) of the embedding vector */
-  dimension: number;
-  /** Metadata about the embedding process */
-  metadata: EmbeddingResultDtoMetadata;
-}
-
-export interface EmbeddingResultsDto {
-  /** The list of embeddings */
-  results: EmbeddingResultDto[];
 }
 
 /**
@@ -1049,112 +1069,6 @@ export interface PriceResponseDto {
 }
 
 export interface UpdateSeatsDto { [key: string]: unknown }
-
-/**
- * User role
- */
-export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface UserResponseDto {
-  /** User unique identifier */
-  id: string;
-  /** User name */
-  name: string;
-  /** User email address */
-  email: string;
-  /** User role */
-  role: UserResponseDtoRole;
-  /** Organization ID the user belongs to */
-  orgId: string;
-  /** Date when the user was created */
-  createdAt: string;
-}
-
-export interface UsersListResponseDto {
-  /** List of users in the organization */
-  users: UserResponseDto[];
-}
-
-/**
- * New role for the user
- */
-export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateUserRoleDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface UpdateUserRoleDto {
-  /** New role for the user */
-  role: UpdateUserRoleDtoRole;
-}
-
-export interface UpdateUserNameDto {
-  /**
-   * New name for the user
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-}
-
-export interface UpdatePasswordDto {
-  /**
-   * Current password for verification
-   * @minLength 8
-   */
-  currentPassword: string;
-  /**
-   * New password
-   * @minLength 8
-   */
-  newPassword: string;
-  /**
-   * Confirmation of the new password
-   * @minLength 8
-   */
-  newPasswordConfirmation: string;
-}
-
-export interface ConfirmEmailDto {
-  /** JWT token for email confirmation */
-  token: string;
-}
-
-export interface ResendEmailConfirmationDto {
-  /** Email address to resend confirmation to */
-  email: string;
-}
-
-export interface ForgotPasswordDto {
-  /** Email address to send password reset link to */
-  email: string;
-}
-
-export interface ResetPasswordDto {
-  /** Password reset token from email */
-  resetToken: string;
-  /**
-   * New password
-   * @minLength 8
-   */
-  newPassword: string;
-  /**
-   * Confirm new password
-   * @minLength 8
-   */
-  newPasswordConfirmation: string;
-}
 
 /**
  * Role to assign to the invited user

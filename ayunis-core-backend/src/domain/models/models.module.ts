@@ -58,10 +58,12 @@ import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ol
 import { LocalOllamaStreamInferenceHandler } from './infrastructure/stream-inference/local-ollama.stream-inference';
 import { SynaforceInferenceHandler } from './infrastructure/inference/synaforce.inference';
 import { SynaforceStreamInferenceHandler } from './infrastructure/stream-inference/synaforce.stream-inference';
-import { GetPermittedEmbeddingModelsUseCase } from './application/use-cases/get-permitted-embedding-models/get-permitted-embedding-models.use-case';
 import { GetPermittedLanguageModelsUseCase } from './application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
+import { UsersModule } from 'src/iam/users/users.module';
+import { SourcesModule } from '../sources/sources.module';
+import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
     LocalPermittedProvidersRepositoryModule,
     LegalAcceptancesModule,
     OrgsModule,
+    UsersModule,
+    SourcesModule,
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
@@ -159,7 +163,7 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
     GetAvailableModelsUseCase,
     GetModelProviderInfoUseCase,
     GetPermittedLanguageModelsUseCase,
-    GetPermittedEmbeddingModelsUseCase,
+    IsEmbeddingModelEnabledUseCase,
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
     DeleteUserDefaultModelUseCase,
@@ -199,6 +203,7 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
     GetInferenceUseCase,
     StreamInferenceUseCase,
     GetAvailableModelsUseCase,
+    IsEmbeddingModelEnabledUseCase,
     // User Default Model Use Cases
     ManageUserDefaultModelUseCase,
     DeleteUserDefaultModelUseCase,

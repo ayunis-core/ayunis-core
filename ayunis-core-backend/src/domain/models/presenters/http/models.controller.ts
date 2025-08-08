@@ -25,7 +25,6 @@ import { UUID } from 'crypto';
 import { GetDefaultModelQuery } from '../../application/use-cases/get-default-model/get-default-model.query';
 import { GetDefaultModelUseCase } from '../../application/use-cases/get-default-model/get-default-model.use-case';
 import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
-import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
@@ -71,9 +70,10 @@ import { Roles } from 'src/iam/authorization/application/decorators/roles.decora
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetPermittedLanguageModelsQuery } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
 import { GetPermittedLanguageModelsUseCase } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
-import { GetPermittedEmbeddingModelsQuery } from '../../application/use-cases/get-permitted-embedding-models/get-permitted-embedding-models.query';
-import { GetPermittedEmbeddingModelsUseCase } from '../../application/use-cases/get-permitted-embedding-models/get-permitted-embedding-models.use-case';
 import { PermittedProvider } from '../../domain/permitted-model-provider.entity';
+import { IsEmbeddingModelEnabledUseCase } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
+import { IsEmbeddingModelEnabledQuery } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.query';
+import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
 
 @ApiTags('models')
 @Controller('models')
@@ -102,7 +102,7 @@ export class ModelsController {
     private readonly permittedProviderResponseDtoMapper: PermittedProviderResponseDtoMapper,
     private readonly modelProviderWithPermittedStatusResponseDtoMapper: ModelProviderWithPermittedStatusResponseDtoMapper,
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
-    private readonly getPermittedEmbeddingModelsUseCase: GetPermittedEmbeddingModelsUseCase,
+    private readonly isEmbeddingModelEnabledUseCase: IsEmbeddingModelEnabledUseCase,
   ) {}
 
   @Get('available')
@@ -218,34 +218,6 @@ export class ModelsController {
     return models.map((model) =>
       this.modelResponseDtoMapper.toLanguageModelDto(model),
     );
-  }
-
-  @Get('permitted/embedding-models')
-  @ApiOperation({ summary: 'Get all permitted embedding models' })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved all permitted embedding models',
-    schema: {
-      type: 'array',
-      items: {
-        $ref: getSchemaPath(PermittedEmbeddingModelResponseDto),
-      },
-    },
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  @ApiExtraModels(PermittedEmbeddingModelResponseDto)
-  async getPermittedEmbeddingModels(
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedEmbeddingModelResponseDto[]> {
-    const query = new GetPermittedEmbeddingModelsQuery(orgId);
-    const models = await this.getPermittedEmbeddingModelsUseCase.execute(query);
-    const permittedModelResponse = models.map((model) => {
-      return this.modelResponseDtoMapper.toEmbeddingModelDto(model);
-    });
-    return permittedModelResponse;
   }
 
   @Get('default')
@@ -596,6 +568,26 @@ export class ModelsController {
     return this.modelProviderWithPermittedStatusResponseDtoMapper.toDtoArray(
       providerInfos,
     );
+  }
+
+  @Get('embedding/enabled')
+  @ApiOperation({
+    summary: 'Check if an embedding model is enabled for this org',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully checked embedding model status',
+    schema: { $ref: getSchemaPath(EmbeddingModelEnabledResponseDto) },
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiExtraModels(EmbeddingModelEnabledResponseDto)
+  async isEmbeddingModelEnabled(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<EmbeddingModelEnabledResponseDto> {
+    const query = new IsEmbeddingModelEnabledQuery(orgId);
+    const isEmbeddingModelEnabled =
+      await this.isEmbeddingModelEnabledUseCase.execute(query);
+    return { isEmbeddingModelEnabled };
   }
 
   /**

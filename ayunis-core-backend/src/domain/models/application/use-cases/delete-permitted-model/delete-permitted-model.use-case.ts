@@ -19,6 +19,12 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
+import { FindAllThreadsQuery } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.query';
+import { FindAllThreadsUseCase } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.use-case';
+import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
+import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 
 @Injectable()
 export class DeletePermittedModelUseCase {
@@ -30,6 +36,9 @@ export class DeletePermittedModelUseCase {
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
     private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
+    private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
+    private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
 
   async execute(command: DeletePermittedModelCommand): Promise<void> {
@@ -157,12 +166,28 @@ export class DeletePermittedModelUseCase {
     orgId: UUID,
     model: PermittedEmbeddingModel,
   ): Promise<void> {
-    console.log('deletePermittedEmbeddingModel', {
-      orgId,
-      model,
-    });
-    return Promise.reject(
-      new Error('Deleting embedding models is not implemented'),
+    const users = await this.findUsersByOrgIdUseCase.execute(
+      new FindUsersByOrgIdQuery(orgId),
     );
+
+    for (const user of users) {
+      const threads = await this.findAllThreadsUseCase.execute(
+        new FindAllThreadsQuery(user.id),
+      );
+      for (const thread of threads) {
+        if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
+          for (const sourceAssignment of thread.sourceAssignments) {
+            await this.deleteSourceUseCase.execute(
+              new DeleteSourceCommand(sourceAssignment.source),
+            );
+          }
+        }
+      }
+    }
+
+    await this.permittedModelsRepository.delete({
+      id: model.id,
+      orgId: orgId,
+    });
   }
 }
