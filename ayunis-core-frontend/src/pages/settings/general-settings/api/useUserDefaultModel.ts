@@ -33,7 +33,6 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
     useModelsControllerManageUserDefaultModel({
       mutation: {
         onMutate: async ({ data }: { data: SetUserDefaultModelDto }) => {
-          console.log("Managing user default model");
           for (const queryKey of queryKeys) {
             await queryClient.cancelQueries({
               queryKey,

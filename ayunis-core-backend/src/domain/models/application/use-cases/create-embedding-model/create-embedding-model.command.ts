@@ -1,18 +1,19 @@
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
 export class CreateEmbeddingModelCommand {
   name: string;
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
-  dimensions?: number;
+  dimensions: EmbeddingDimensions;
 
   constructor(params: {
     name: string;
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
-    dimensions?: number;
+    dimensions: EmbeddingDimensions;
   }) {
     this.name = params.name;
     this.provider = params.provider;

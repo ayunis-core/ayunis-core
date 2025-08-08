@@ -23,7 +23,21 @@ export class ParentChildIndexerMapper {
   toChildChunkRecord(childChunk: ChildChunk): ChildChunkRecord {
     const childChunkRecord = new ChildChunkRecord();
     childChunkRecord.id = childChunk.id;
-    childChunkRecord.embedding = childChunk.embedding;
+    // Route to the correct column by dimension
+    if (Array.isArray(childChunk.embedding)) {
+      const len = childChunk.embedding.length;
+      if (len === 1024) {
+        childChunkRecord.embedding1024 = childChunk.embedding;
+        childChunkRecord.embedding1536 = null;
+      } else if (len === 1536) {
+        childChunkRecord.embedding1024 = null;
+        childChunkRecord.embedding1536 = childChunk.embedding;
+      } else {
+        // Unknown dimension: do not write into any column
+        childChunkRecord.embedding1024 = null;
+        childChunkRecord.embedding1536 = null;
+      }
+    }
     childChunkRecord.parentId = childChunk.parentId;
     return childChunkRecord;
   }
@@ -42,9 +56,14 @@ export class ParentChildIndexerMapper {
   }
 
   toChildChunkEntity(input: ChildChunkRecord): ChildChunk {
+    // Prefer 1536 if present, otherwise 1024
+    const embedding =
+      (input.embedding1536 as unknown as number[]) ||
+      (input.embedding1024 as unknown as number[]) ||
+      [];
     return new ChildChunk({
       id: input.id,
-      embedding: input.embedding,
+      embedding,
       parentId: input.parentId,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,

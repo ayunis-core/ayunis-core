@@ -1,6 +1,7 @@
 import { ModelType } from '../../../../domain/value-objects/model-type.enum';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
+import { EmbeddingDimensions } from '../../../../domain/value-objects/embedding-dimensions.enum';
 import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
 
 @Entity({ name: 'models' })
@@ -45,7 +46,6 @@ export class LanguageModelRecord extends ModelRecord {
 export class EmbeddingModelRecord extends ModelRecord {
   @Column({
     type: 'integer',
-    nullable: true,
   })
-  dimensions?: number;
+  dimensions: EmbeddingDimensions;
 }

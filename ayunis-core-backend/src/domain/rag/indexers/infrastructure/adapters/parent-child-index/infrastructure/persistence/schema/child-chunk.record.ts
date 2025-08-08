@@ -15,18 +15,29 @@ export class ChildChunkRecord extends BaseRecord {
 
   // Hack until typeorm supports vector column type
   // https://github.com/typeorm/typeorm/pull/11437
-  // Note: Flexible dimensions to support multiple embedding models
+  // We use two explicit columns to avoid mixing dimensions
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  @Column({ type: 'vector' as any, nullable: true })
-  embedding: number[];
+  @Column({ name: 'embedding_1024', type: 'vector' as any, nullable: true })
+  embedding1024: number[] | null;
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  @Column({ name: 'embedding_1536', type: 'vector' as any, nullable: true })
+  embedding1536: number[] | null;
 
   @BeforeUpdate()
   @BeforeInsert()
-  stringifyVector() {
-    // Convert number array to string format, so that Postgres understands it as a vector
+  stringifyVectorColumns() {
+    // Convert number array(s) to string format so Postgres understands it as a vector
     // e.g. '[0.9, 0.1, 0.7]'
-    if (this.embedding && Array.isArray(this.embedding)) {
-      this.embedding = JSON.stringify(this.embedding) as unknown as number[]; // This is a hack to make typeorm understand the vector column
+    if (this.embedding1024 && Array.isArray(this.embedding1024)) {
+      this.embedding1024 = JSON.stringify(
+        this.embedding1024,
+      ) as unknown as number[];
+    }
+    if (this.embedding1536 && Array.isArray(this.embedding1536)) {
+      this.embedding1536 = JSON.stringify(
+        this.embedding1536,
+      ) as unknown as number[];
     }
   }
 }

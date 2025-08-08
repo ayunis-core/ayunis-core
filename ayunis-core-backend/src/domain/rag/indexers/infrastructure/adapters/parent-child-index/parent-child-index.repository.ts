@@ -55,6 +55,22 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       `Starting vector search for document ${relatedDocumentId} with vector of dimension ${queryVector.length}`,
     );
 
+    // Determine which column to use based on query dimension
+    const queryDims = queryVector.length;
+    const embeddingColumn =
+      queryDims === 1536
+        ? 'children.embedding_1536'
+        : queryDims === 1024
+          ? 'children.embedding_1024'
+          : null;
+
+    if (!embeddingColumn) {
+      this.logger.warn(
+        `Unsupported query vector dimension ${queryDims}. Only 1024 and 1536 are supported.`,
+      );
+      return [];
+    }
+
     // Check if we have any indexed content for this document first
     const existingChunksCount = await this.parentChunkRepository
       .createQueryBuilder('parentChunk')
@@ -62,7 +78,7 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
         relatedDocumentId,
       })
-      .andWhere('children.embedding IS NOT NULL')
+      .andWhere(`${embeddingColumn} IS NOT NULL`)
       .getCount();
 
     if (existingChunksCount === 0) {
@@ -87,23 +103,26 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
         .leftJoinAndSelect('parentChunk.children', 'children')
         // Add cosine similarity as calculated field (1 - cosine distance)
         .addSelect(
-          `1 - (children.embedding <=> :queryVector)`,
+          `1 - (${embeddingColumn} <=> :queryVector)`,
           'cosine_similarity',
         )
         .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
           relatedDocumentId,
         })
-        .andWhere('children.embedding IS NOT NULL')
-        .andWhere('vector_dims(children.embedding) = :queryVectorLength', {
+        .andWhere(`${embeddingColumn} IS NOT NULL`)
+        .andWhere('vector_dims(' + embeddingColumn + ') = :queryVectorLength', {
           queryVectorLength: queryVector.length,
         })
         // Use cosine similarity threshold (higher is better, so use >=)
-        .andWhere('1 - (children.embedding <=> :queryVector) >= :threshold', {
-          queryVector: queryVectorString,
-          threshold: similarityThreshold,
-        })
+        .andWhere(
+          '1 - (' + embeddingColumn + ' <=> :queryVector) >= :threshold',
+          {
+            queryVector: queryVectorString,
+            threshold: similarityThreshold,
+          },
+        )
         // Order by cosine similarity DESC (highest similarity first)
-        .orderBy('1 - (children.embedding <=> :queryVector)', 'DESC')
+        .orderBy('1 - (' + embeddingColumn + ' <=> :queryVector)', 'DESC')
         .setParameter('queryVector', queryVectorString)
         .limit(limit);
 

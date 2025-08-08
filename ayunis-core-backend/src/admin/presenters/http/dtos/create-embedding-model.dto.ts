@@ -5,8 +5,8 @@ import {
   IsString,
   IsNumber,
   IsPositive,
-  IsOptional,
 } from 'class-validator';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export class CreateEmbeddingModelDto {
@@ -27,6 +27,6 @@ export class CreateEmbeddingModelDto {
 
   @IsNumber()
   @IsPositive()
-  @IsOptional()
-  dimensions?: number;
+  @IsEnum(EmbeddingDimensions)
+  dimensions: EmbeddingDimensions;
 }

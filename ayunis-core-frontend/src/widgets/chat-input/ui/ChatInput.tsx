@@ -70,7 +70,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       // If there's already content, add a space before the prompt
       setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
     }
-    console.log("isEmbeddingModelEnabled", isEmbeddingModelEnabled);
 
     return (
       <div className="w-full space-y-2">
