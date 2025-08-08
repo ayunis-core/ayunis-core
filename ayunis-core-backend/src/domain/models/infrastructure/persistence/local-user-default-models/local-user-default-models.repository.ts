@@ -6,7 +6,6 @@ import { UserDefaultModelsRepository } from '../../../application/ports/user-def
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { UserDefaultModelRecord } from './schema/user-default-model.record';
 import { UserDefaultModelMapper } from './mappers/user-default-model.mapper';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 @Injectable()
 export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepository {
@@ -28,10 +27,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
       relations: ['model'],
     });
 
-    if (
-      !userDefaultModel ||
-      !(userDefaultModel.model instanceof LanguageModel)
-    ) {
+    if (!userDefaultModel) {
       this.logger.debug('No user default model found', { userId });
       return null;
     }
@@ -55,7 +51,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     // First, delete any existing default model for this user
     await this.userDefaultModelRepository.delete({ userId });
 
-    const userDefaultModelEntity = this.userDefaultModelMapper.toEntity(
+    const userDefaultModelEntity = this.userDefaultModelMapper.toRecord(
       permittedModel,
       userId,
     );
@@ -82,7 +78,7 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     // Delete existing and create new (simpler than complex update logic)
     await this.userDefaultModelRepository.delete({ userId });
 
-    const userDefaultModelEntity = this.userDefaultModelMapper.toEntity(
+    const userDefaultModelEntity = this.userDefaultModelMapper.toRecord(
       permittedModel,
       userId,
     );
@@ -109,12 +105,15 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     // Delete any existing default model for this user (handles both create and update)
     await this.userDefaultModelRepository.delete({ userId });
 
-    const userDefaultModelEntity = this.userDefaultModelMapper.toEntity(
+    const userDefaultModelRecord = this.userDefaultModelMapper.toRecord(
       permittedModel,
       userId,
     );
+    this.logger.debug('userDefaultModelRecord save', {
+      userDefaultModelRecord,
+    });
     const savedEntity = await this.userDefaultModelRepository.save(
-      userDefaultModelEntity,
+      userDefaultModelRecord,
     );
 
     // Reload the saved entity with its relations

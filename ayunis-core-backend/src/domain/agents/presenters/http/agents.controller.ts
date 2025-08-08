@@ -219,10 +219,13 @@ export class AgentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<void> {
     this.logger.log('delete', { id, userId });
 
-    await this.deleteAgentUseCase.execute(new DeleteAgentCommand(id, userId));
+    await this.deleteAgentUseCase.execute(
+      new DeleteAgentCommand({ agentId: id, userId, orgId }),
+    );
   }
 }

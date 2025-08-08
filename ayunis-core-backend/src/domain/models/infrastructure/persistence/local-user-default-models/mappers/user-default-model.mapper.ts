@@ -15,7 +15,7 @@ export class UserDefaultModelMapper {
     return this.permittedModelMapper.toDomain(entity.model);
   }
 
-  toEntity(domain: PermittedModel, userId: UUID): UserDefaultModelRecord {
+  toRecord(domain: PermittedModel, userId: UUID): UserDefaultModelRecord {
     const entity = new UserDefaultModelRecord();
     entity.id = domain.id;
     entity.model = this.permittedModelMapper.toRecord(domain);

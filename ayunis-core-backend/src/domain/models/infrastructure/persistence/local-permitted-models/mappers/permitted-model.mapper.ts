@@ -4,7 +4,7 @@ import {
   PermittedModel,
 } from '../../../../domain/permitted-model.entity';
 import { PermittedModelRecord } from '../schema/permitted-model.record';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ModelMapper } from '../../local-models/mappers/model.mapper';
 import {
   EmbeddingModelRecord,
@@ -15,9 +15,11 @@ import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model'
 
 @Injectable()
 export class PermittedModelMapper {
+  private readonly logger = new Logger(PermittedModelMapper.name);
   constructor(private readonly modelMapper: ModelMapper) {}
 
   toDomain(record: PermittedModelRecord): PermittedModel {
+    this.logger.debug('toDomain', { record });
     if (record.model instanceof LanguageModelRecord) {
       return new PermittedLanguageModel({
         id: record.id,

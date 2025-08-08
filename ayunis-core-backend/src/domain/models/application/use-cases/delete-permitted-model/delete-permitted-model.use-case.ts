@@ -142,6 +142,7 @@ export class DeletePermittedModelUseCase {
     // to the org default model or the first available model
     await this.replaceModelWithUserDefaultUseCase.execute(
       new ReplaceModelWithUserDefaultCommand({
+        orgId,
         oldPermittedModelId: model.id,
       }),
     );

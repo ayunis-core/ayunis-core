@@ -105,7 +105,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findAllByAgent', { agentId });
     const threadEntities = await this.threadRepository.find({
       where: { agentId },
-      relations: ['messages', 'agent'],
+      relations: {
+        messages: true,
+        agent: {
+          model: {
+            model: true,
+          },
+        },
+      },
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }

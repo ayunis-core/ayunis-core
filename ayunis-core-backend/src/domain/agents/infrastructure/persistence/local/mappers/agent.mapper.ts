@@ -1,18 +1,20 @@
 import { Agent } from '../../../../domain/agent.entity';
 import { AgentRecord } from '../schema/agent.record';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { AgentToolMapper } from './agent-tool.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
 export class AgentMapper {
+  private readonly logger = new Logger(AgentMapper.name);
   constructor(
     private readonly permittedModelMapper: PermittedModelMapper,
     private readonly agentToolMapper: AgentToolMapper,
   ) {}
 
   toDomain(record: AgentRecord): Agent {
+    this.logger.debug('toDomain', { record });
     return new Agent({
       id: record.id,
       name: record.name,

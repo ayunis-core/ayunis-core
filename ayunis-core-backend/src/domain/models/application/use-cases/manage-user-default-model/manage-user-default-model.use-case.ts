@@ -45,9 +45,6 @@ export class ManageUserDefaultModelUseCase {
 
       const action = existingUserDefault ? 'updating' : 'setting';
       this.logger.debug(`Permitted model found, ${action} user default`, {
-        userId: command.userId,
-        permittedModelId: command.permittedModelId,
-        orgId: command.orgId,
         modelName: permittedModel.model.name,
         modelProvider: permittedModel.model.provider,
         existingDefaultId: existingUserDefault?.id,

@@ -16,7 +16,7 @@ export class ReplaceModelWithUserDefaultUseCase {
   ) {}
 
   async execute(command: ReplaceModelWithUserDefaultCommand): Promise<void> {
-    this.logger.debug('Replacing model with user default', {
+    this.logger.debug('execute', {
       command,
     });
     try {
@@ -35,12 +35,9 @@ export class ReplaceModelWithUserDefaultUseCase {
       });
       // TODO: Make this a single transaction
       for (const thread of threads) {
-        if (!thread.model) {
-          continue;
-        }
         const defaultModel = await this.getDefaultModelUseCase.execute(
           new GetDefaultModelQuery({
-            orgId: thread.model.orgId,
+            orgId: command.orgId,
             userId: thread.userId,
             blacklistedModelIds: command.oldPermittedModelId
               ? [command.oldPermittedModelId]

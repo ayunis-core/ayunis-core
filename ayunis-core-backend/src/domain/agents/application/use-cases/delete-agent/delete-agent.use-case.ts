@@ -28,6 +28,7 @@ export class DeleteAgentUseCase {
 
     await this.replaceModelWithUserDefaultUseCase.execute(
       new ReplaceModelWithUserDefaultCommand({
+        orgId: command.orgId,
         oldAgentId: command.agentId,
       }),
     );
