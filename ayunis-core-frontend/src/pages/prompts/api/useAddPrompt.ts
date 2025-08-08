@@ -1,6 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { usePromptsControllerCreate } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  usePromptsControllerCreate,
+  getPromptsControllerFindAllQueryKey,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import {
   createPromptFormSchema,
   type CreatePromptFormValues,
@@ -34,7 +37,9 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["prompts"] });
+          queryClient.invalidateQueries({
+            queryKey: getPromptsControllerFindAllQueryKey(),
+          });
           showSuccess("Prompt created");
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();
