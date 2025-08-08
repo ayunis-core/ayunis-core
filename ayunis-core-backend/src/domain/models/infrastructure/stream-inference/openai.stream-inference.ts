@@ -58,7 +58,6 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
         messages: systemPrompt
           ? [systemPrompt, ...openAiMessages]
           : openAiMessages,
-        max_tokens: 10000,
         tools: openAiTools,
         tool_choice: toolChoice
           ? this.convertToolChoice(toolChoice)

@@ -51,7 +51,6 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         tool_choice: toolChoice
           ? this.convertToolChoice(toolChoice)
           : undefined,
-        max_tokens: 1000,
       };
       this.logger.debug('completionOptions', completionOptions);
       const completionFn = () =>
