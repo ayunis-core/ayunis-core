@@ -22,7 +22,6 @@ const createAgentSchema = z.object({
         ToolAssignmentDtoType.source_query,
         ToolAssignmentDtoType.internet_search,
         ToolAssignmentDtoType.website_content,
-        ToolAssignmentDtoType.custom,
       ]),
       toolConfigId: z.string().optional(),
     }),
