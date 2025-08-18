@@ -19,7 +19,7 @@ export function RegisterPage() {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation("auth");
   const agbHref = "https://www.ayunis.com/agb-software-%c3%bcberlassung";
-  const avvHref = "https://www.ayunis.com/avv";
+  const privacyPolicyRef = "https://www.ayunis.com/datenschutz-core";
 
   return (
     <OnboardingLayout
@@ -147,7 +147,7 @@ export function RegisterPage() {
                         components={{
                           privacyLink: (
                             <a
-                              href={avvHref}
+                              href={privacyPolicyRef}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary hover:underline"
