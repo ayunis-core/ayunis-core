@@ -75,8 +75,8 @@ function SidebarProvider({
     if (isMobile && openMobile) {
       setOpenMobile(false);
 
-      // Enhanced cleanup after a small delay to ensure Radix cleanup completes
-      setTimeout(() => {
+      // Enhanced cleanup with multiple passes to handle Chrome's different rendering behavior
+      const performCleanup = () => {
         // Remove any lingering inert attributes
         document.querySelectorAll("[inert]").forEach((el) => {
           el.removeAttribute("inert");
@@ -96,9 +96,72 @@ function SidebarProvider({
             el.remove();
           });
 
+        // Chrome-specific: Also remove any radix overlays with different selectors
+        document
+          .querySelectorAll("[data-radix-dismissable-layer]")
+          .forEach((el) => {
+            if (
+              el.getAttribute("data-state") === "closed" ||
+              !el.closest('[data-slot="sidebar"]')
+            ) {
+              el.remove();
+            }
+          });
+
         // Ensure body doesn't have pointer-events disabled
         document.body.style.pointerEvents = "";
-      }, 50);
+        document.body.style.overflow = "";
+
+        // Chrome-specific: Reset any transform or position styles that might interfere
+        document.body.style.transform = "";
+        document.body.style.position = "";
+
+        // Force re-enable interactions on main content areas
+        document
+          .querySelectorAll('[data-slot="sidebar-inset"]')
+          .forEach((el) => {
+            (el as HTMLElement).style.pointerEvents = "";
+          });
+
+        // Chrome-specific: Remove any lingering event capture layers
+        document.querySelectorAll("[data-radix-focus-guard]").forEach((el) => {
+          if (!el.closest('[data-state="open"]')) {
+            el.remove();
+          }
+        });
+
+        // Chrome-specific: Reset scroll lock and focus management
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.paddingRight = "";
+
+        // Remove any style tags that might have been injected by Radix for scroll lock
+        document
+          .querySelectorAll("style[data-radix-scroll-area-viewport]")
+          .forEach((el) => {
+            el.remove();
+          });
+
+        // Force focus back to document if it's trapped
+        if (
+          document.activeElement &&
+          document.activeElement.closest('[data-slot="sheet-content"]')
+        ) {
+          (document.activeElement as HTMLElement).blur();
+          document.body.focus();
+        }
+
+        // Chrome-specific: Force a reflow to ensure styles are properly applied
+        document.body.offsetHeight;
+      };
+
+      // Immediate cleanup
+      performCleanup();
+
+      // First delayed cleanup - for standard Radix cleanup
+      setTimeout(performCleanup, 50);
+
+      // Second delayed cleanup - Chrome needs more time sometimes
+      setTimeout(performCleanup, 150);
     }
   }, [isMobile, openMobile]);
 
