@@ -3,11 +3,10 @@ import ChatInterfaceLayout from "@/layouts/chat-interface-layout/ui/ChatInterfac
 import ChatMessage from "@/pages/chat/ui/ChatMessage";
 import ChatInput from "@/widgets/chat-input";
 import { useChatContext } from "@/shared/contexts/chat/useChatContext";
-import { useMessageEventStream } from "../api/useMessageEventStream";
 import { useMessageSend } from "../api/useMessageSend";
 import { useUpdateThreadModel } from "../api/useUpdateThreadModel";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { Dot, MoreVertical, Trash2 } from "lucide-react";
+import { MoreVertical, Trash2 } from "lucide-react";
 import type { Thread, Message } from "../model/openapi";
 import { showError } from "@/shared/lib/toast";
 import config from "@/shared/config";
@@ -45,6 +44,14 @@ export default function ChatPage({
   isEmbeddingModelEnabled,
 }: ChatPageProps) {
   const { t } = useTranslation("chats");
+  const { confirm } = useConfirmation();
+  const navigate = useNavigate();
+
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<Element | null>(null);
+  const processedPendingMessageRef = useRef<String | null>(null);
+  const chatInputRef = useRef<ChatInputRef>(null);
+
   const { pendingMessage, setPendingMessage, sources, setSources } =
     useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
@@ -54,18 +61,12 @@ export default function ChatPage({
   const [isStreaming, setIsStreaming] = useState(false);
   const [isProcessingPendingSources, setIsProcessingPendingSources] =
     useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<Element | null>(null);
-  const processedPendingMessageRef = useRef<String | null>(null);
-  const chatInputRef = useRef<ChatInputRef>(null);
 
   // Memoize sorted messages to avoid sorting on every render
   const sortedMessages = useMemo(() => {
     return messages.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
   }, [messages]);
 
-  const { confirm } = useConfirmation();
-  const navigate = useNavigate();
   const { deleteChat } = useDeleteThread({
     onSuccess: () => {
       navigate({ to: "/chat" });
@@ -90,15 +91,10 @@ export default function ChatPage({
     threadId: thread.id,
   });
 
-  const { sendTextMessage } = useMessageSend({
-    threadId: thread.id,
-  });
-
   // Combine both loading states - use our local state for bulk operations
   const isTotallyCreatingFileSource =
     isCreatingFileSource || isProcessingPendingSources;
 
-  // Memoize the callback functions to prevent unnecessary reconnections
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
     setMessages((prev) => {
       // Update message if exists, otherwise append
@@ -151,24 +147,33 @@ export default function ChatPage({
     setThreadTitle(thread.title);
   }, []);
 
-  const { isConnected, connect } = useMessageEventStream({
+  const { sendTextMessage } = useMessageSend({
     threadId: thread.id,
     onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: handleError,
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
+    onError: (error) => {
+      console.error("Error in useMessageSend:", error);
+      showError(t("chat.errorSendMessage"));
+    },
+    onComplete: () => {
+      console.log("Message sending completed");
+      setIsStreaming(false);
+    },
   });
 
   async function handleSend(message: string) {
-    if (!isConnected) {
-      connect();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
     try {
+      setIsStreaming(true);
+      chatInputRef.current?.setMessage("");
+
       await sendTextMessage({
         text: message,
       });
     } catch (error) {
+      chatInputRef.current?.setMessage(message);
+      setIsStreaming(false);
       if (error instanceof AxiosError && error.response?.status === 403) {
         showError(t("chat.upgradeToProError"));
       } else {
@@ -304,13 +309,6 @@ export default function ChatPage({
       title={
         <span className="inline-flex items-center gap-1">
           {threadTitle || t("chat.untitled")}
-          <span className="">
-            {isConnected ? (
-              <Dot className="text-green-400 p-0" />
-            ) : (
-              <Dot className="text-red-400 p-0" />
-            )}
-          </span>
         </span>
       }
       action={

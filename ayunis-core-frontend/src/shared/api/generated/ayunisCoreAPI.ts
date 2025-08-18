@@ -63,7 +63,6 @@ import type {
   ResendEmailConfirmationDto,
   ResetPasswordDto,
   RetrieveUrlDto,
-  RunsControllerConnectToStream200,
   RunsControllerSendMessage200,
   SendMessageDto,
   SetOrgDefaultModelDto,
@@ -3130,97 +3129,8 @@ export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
     }
     
 /**
- * Establishes a server-sent events connection and returns a session ID for sending messages. The connection includes automatic heartbeat events every 30 seconds to keep the connection alive and detect disconnected clients.
- * @summary Connect to the run stream and receive a session ID
- */
-export const runsControllerConnectToStream = (
-    threadId: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<RunsControllerConnectToStream200>(
-      {url: `/runs/stream/${threadId}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getRunsControllerConnectToStreamQueryKey = (threadId: string,) => {
-    return [`/runs/stream/${threadId}`] as const;
-    }
-
-    
-export const getRunsControllerConnectToStreamQueryOptions = <TData = Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError = unknown>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRunsControllerConnectToStreamQueryKey(threadId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof runsControllerConnectToStream>>> = ({ signal }) => runsControllerConnectToStream(threadId, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(threadId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RunsControllerConnectToStreamQueryResult = NonNullable<Awaited<ReturnType<typeof runsControllerConnectToStream>>>
-export type RunsControllerConnectToStreamQueryError = unknown
-
-
-export function useRunsControllerConnectToStream<TData = Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError = unknown>(
- threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof runsControllerConnectToStream>>,
-          TError,
-          Awaited<ReturnType<typeof runsControllerConnectToStream>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRunsControllerConnectToStream<TData = Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError = unknown>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof runsControllerConnectToStream>>,
-          TError,
-          Awaited<ReturnType<typeof runsControllerConnectToStream>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRunsControllerConnectToStream<TData = Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError = unknown>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Connect to the run stream and receive a session ID
- */
-
-export function useRunsControllerConnectToStream<TData = Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError = unknown>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof runsControllerConnectToStream>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRunsControllerConnectToStreamQueryOptions(threadId,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Sends a user message to the specified session and triggers AI processing
- * @summary Send a message to an active session
+ * Sends a user message and returns a server-sent events stream with the AI response and any processing events. The stream automatically closes when processing is complete.
+ * @summary Send a message and receive streaming response
  */
 export const runsControllerSendMessage = (
     sendMessageDto: SendMessageDto,
@@ -3268,7 +3178,7 @@ const {mutation: mutationOptions} = options ?
     export type RunsControllerSendMessageMutationError = void
 
     /**
- * @summary Send a message to an active session
+ * @summary Send a message and receive streaming response
  */
 export const useRunsControllerSendMessage = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: SendMessageDto}, TContext>, }

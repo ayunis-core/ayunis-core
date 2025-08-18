@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Logger,
-  Sse,
-  Post,
-  Param,
-  ParseUUIDPipe,
-  MessageEvent,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import {
   ApiOperation,
   ApiBody,
@@ -29,16 +19,12 @@ import {
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
 } from '../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
-import { Observable } from 'rxjs';
-import { ThreadEventBroadcaster } from './sse/thread-event-broadcaster';
 import { RunInputMapper } from './mappers/run-input.mapper';
 import {
   RunSessionResponseDto,
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
-  RunHeartbeatResponseDto,
-  RunResponse,
 } from './dto/run-response.dto';
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
@@ -48,6 +34,7 @@ import { IncrementTrialMessagesUseCase } from 'src/iam/subscriptions/application
 import { IncrementTrialMessagesCommand } from 'src/iam/subscriptions/application/use-cases/increment-trial-messages/increment-trial-messages.command';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
+import { Response } from 'express';
 
 @ApiTags('runs')
 @ApiExtraModels(
@@ -59,7 +46,6 @@ import { RequestWithSubscriptionContext } from 'src/iam/authorization/applicatio
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
-  RunHeartbeatResponseDto,
   SendMessageDto,
 )
 @Controller('runs')
@@ -68,16 +54,18 @@ export class RunsController {
 
   constructor(
     private readonly executeRunAndSetTitleUseCase: ExecuteRunAndSetTitleUseCase,
-    private readonly threadEventBroadcaster: ThreadEventBroadcaster,
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
   ) {}
 
+  @Post('send-message')
+  @RequireSubscription()
   @ApiOperation({
-    summary: 'Connect to the run stream and receive a session ID',
+    summary: 'Send a message and receive streaming response',
     description:
-      'Establishes a server-sent events connection and returns a session ID for sending messages. The connection includes automatic heartbeat events every 30 seconds to keep the connection alive and detect disconnected clients.',
+      'Sends a user message and returns a server-sent events stream with the AI response and any processing events. The stream automatically closes when processing is complete.',
   })
+  @ApiBody({ type: SendMessageDto })
   @ApiResponse({
     status: 200,
     description: 'Server-sent events stream with discriminated response types',
@@ -89,7 +77,6 @@ export class RunsController {
             { $ref: getSchemaPath(RunMessageResponseDto) },
             { $ref: getSchemaPath(RunErrorResponseDto) },
             { $ref: getSchemaPath(RunThreadResponseDto) },
-            { $ref: getSchemaPath(RunHeartbeatResponseDto) },
           ],
           discriminator: {
             propertyName: 'type',
@@ -98,7 +85,6 @@ export class RunsController {
               message: getSchemaPath(RunMessageResponseDto),
               error: getSchemaPath(RunErrorResponseDto),
               thread: getSchemaPath(RunThreadResponseDto),
-              heartbeat: getSchemaPath(RunHeartbeatResponseDto),
             },
           },
         },
@@ -110,6 +96,7 @@ export class RunsController {
               success: true,
               threadId: '123e4567-e89b-12d3-a456-426614174000',
               timestamp: '2024-01-01T12:00:00.000Z',
+              streaming: true,
             },
           },
           'message-event': {
@@ -147,15 +134,6 @@ export class RunsController {
               timestamp: '2024-01-01T12:00:00.000Z',
             },
           },
-          'heartbeat-event': {
-            summary: 'Heartbeat event to keep connection alive',
-            value: {
-              type: 'heartbeat',
-              threadId: '123e4567-e89b-12d3-a456-426614174000',
-              timestamp: '2024-01-01T12:00:00.000Z',
-              sequence: 1,
-            },
-          },
         },
       },
     },
@@ -174,223 +152,123 @@ export class RunsController {
       },
     },
   })
-  @Sse('stream/:threadId')
-  connectToStream(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Param('threadId', ParseUUIDPipe) threadId: UUID,
-  ): Observable<MessageEvent> {
-    this.logger.log('connectToStream', { userId, threadId });
-
-    return new Observable((subscriber) => {
-      try {
-        // Subscribe to thread events (no session creation needed)
-        const threadStream =
-          this.threadEventBroadcaster.getThreadStream(threadId);
-
-        // Send connection establishment event immediately
-        const connectionResponse: RunSessionResponseDto = {
-          type: 'session',
-          success: true,
-          threadId: threadId,
-          timestamp: new Date().toISOString(),
-        };
-
-        const connectionEvent: MessageEvent = {
-          id: 'session',
-          data: connectionResponse,
-        };
-
-        subscriber.next(connectionEvent);
-
-        // Set up heartbeat mechanism
-        let heartbeatSequence = 0;
-        const heartbeatInterval = setInterval(() => {
-          heartbeatSequence++;
-          const heartbeatResponse: RunHeartbeatResponseDto = {
-            type: 'heartbeat',
-            threadId: threadId,
-            timestamp: new Date().toISOString(),
-            sequence: heartbeatSequence,
-          };
-
-          const heartbeatEvent: MessageEvent = {
-            id: `heartbeat-${heartbeatSequence}`,
-            data: heartbeatResponse,
-          };
-
-          subscriber.next(heartbeatEvent);
-        }, 15000); // Send heartbeat every 15 seconds
-
-        // Subscribe to thread events
-        const eventSubscription = threadStream.subscribe({
-          next: (response: RunResponse) => {
-            // Generate appropriate event ID based on response type
-            let eventId: string;
-            switch (response.type) {
-              case 'message':
-                eventId = response.message.id;
-                break;
-              case 'thread':
-                eventId = `thread-${response.threadId}`;
-                break;
-              case 'error':
-                eventId = 'error';
-                break;
-              case 'session':
-                eventId = 'session';
-                break;
-              case 'heartbeat':
-                eventId = `heartbeat-${response.sequence || 'unknown'}`;
-                break;
-              default:
-                eventId = 'event';
-            }
-
-            const messageEvent: MessageEvent = {
-              id: eventId,
-              data: response,
-            };
-            subscriber.next(messageEvent);
-          },
-          error: (error) => {
-            // Send error response through the stream
-            const errorResponse: RunErrorResponseDto = {
-              type: 'error',
-              message:
-                error instanceof Error
-                  ? error.message
-                  : 'An error occurred in the message stream',
-              threadId: threadId,
-              timestamp: new Date().toISOString(),
-              code: 'STREAM_ERROR',
-              details: {
-                error:
-                  error instanceof Error ? error.toString() : 'Unknown error',
-              },
-            };
-
-            const errorEvent: MessageEvent = {
-              id: 'stream-error',
-              data: errorResponse,
-            };
-
-            subscriber.next(errorEvent);
-            subscriber.error(error);
-          },
-          complete: () => {
-            subscriber.complete();
-          },
-        });
-
-        // Handle client disconnect - clean up subscriptions and heartbeat
-        return () => {
-          eventSubscription.unsubscribe();
-          clearInterval(heartbeatInterval);
-          this.threadEventBroadcaster.onConnectionDisconnect(threadId);
-        };
-      } catch (error) {
-        this.logger.error('Error in connectToStream', {
-          userId,
-          threadId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-
-        // Send error response for connection errors
-        const errorResponse: RunErrorResponseDto = {
-          type: 'error',
-          message: 'Failed to establish connection',
-          threadId: threadId,
-          timestamp: new Date().toISOString(),
-          code: 'CONNECTION_ERROR',
-          details: {
-            error: error instanceof Error ? error.toString() : 'Unknown error',
-          },
-        };
-
-        const errorEvent: MessageEvent = {
-          id: 'connection-error',
-          data: errorResponse,
-        };
-
-        subscriber.next(errorEvent);
-        subscriber.error(error);
-      }
-    });
-  }
-
-  @Post('send-message')
-  @RequireSubscription()
-  @ApiOperation({
-    summary: 'Send a message to an active session',
-    description:
-      'Sends a user message to the specified session and triggers AI processing',
-  })
-  @ApiBody({ type: SendMessageDto })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Message sent successfully. Response will be streamed to the SSE connection.',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Message sent to session' },
-      },
-    },
-  })
   @ApiResponse({
     status: 400,
     description: 'Invalid request payload',
   })
   @ApiResponse({
+    status: 403,
+    description: 'Subscription required',
+  })
+  @ApiResponse({
     status: 500,
     description: 'Internal server error',
   })
-  sendMessage(
+  async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Req() request: RequestWithSubscriptionContext,
-  ): { success: boolean; message: string } {
-    // No session check needed - directly process message
-    const input = RunInputMapper.toCommand(sendMessageDto.input);
-
-    void this.executeRunInBackground({
-      threadId: sendMessageDto.threadId,
-      input,
+    @Res() response: Response,
+  ): Promise<void> {
+    this.logger.log('sendMessage', {
       userId,
+      threadId: sendMessageDto.threadId,
       streaming: sendMessageDto.streaming,
-      orgId,
     });
 
-    const subscriptionContext = request.subscriptionContext;
+    // Set SSE headers
+    response.setHeader('Content-Type', 'text/event-stream');
+    response.setHeader('Cache-Control', 'no-cache');
+    response.setHeader('Connection', 'keep-alive');
+    response.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
+    response.setHeader(
+      'Access-Control-Allow-Headers',
+      'Cache-Control, Content-Type',
+    );
+    response.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    if (subscriptionContext?.hasRemainingTrialMessages) {
-      this.logger.debug(
-        'Incrementing trial messages for non-subscription user',
-        {
-          orgId,
-          userId,
+    // Send initial connection confirmation
+    response.write(': connection established\n\n');
+
+    try {
+      // Send session establishment event immediately
+      const sessionResponse: RunSessionResponseDto = {
+        type: 'session',
+        success: true,
+        threadId: sendMessageDto.threadId,
+        timestamp: new Date().toISOString(),
+        streaming: sendMessageDto.streaming ?? false,
+      };
+
+      this.writeSSEEvent(response, 'session', sessionResponse);
+
+      // Handle subscription context
+      const subscriptionContext = request.subscriptionContext;
+
+      if (subscriptionContext?.hasRemainingTrialMessages) {
+        this.logger.debug(
+          'Incrementing trial messages for non-subscription user',
+          {
+            orgId,
+            userId,
+          },
+        );
+
+        void this.incrementTrialMessagesUseCase.execute(
+          new IncrementTrialMessagesCommand(orgId),
+        );
+      }
+
+      // Execute run and stream events
+      await this.executeRunAndStream({
+        threadId: sendMessageDto.threadId,
+        input: RunInputMapper.toCommand(sendMessageDto.input),
+        userId,
+        streaming: sendMessageDto.streaming,
+        orgId,
+        response,
+      });
+
+      // Close the connection
+      response.end();
+    } catch (error) {
+      this.logger.error('Error in sendMessage', {
+        userId,
+        threadId: sendMessageDto.threadId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      // Send error response for connection errors
+      const errorResponse: RunErrorResponseDto = {
+        type: 'error',
+        message: 'Failed to process message',
+        threadId: sendMessageDto.threadId,
+        timestamp: new Date().toISOString(),
+        code: 'CONNECTION_ERROR',
+        details: {
+          error: error instanceof Error ? error.toString() : 'Unknown error',
         },
-      );
+      };
 
-      void this.incrementTrialMessagesUseCase.execute(
-        new IncrementTrialMessagesCommand(orgId),
-      );
+      this.writeSSEEvent(response, 'connection-error', errorResponse);
+      response.end();
     }
-
-    return {
-      success: true,
-      message: 'Message sent for processing',
-    };
   }
 
-  private async executeRunInBackground(params: {
+  private writeSSEEvent(response: Response, id: string, data: any): void {
+    response.write(`id: ${id}\n`);
+    response.write(`data: ${JSON.stringify(data)}\n`);
+    response.write('\n'); // Double newline to separate events
+  }
+
+  private async executeRunAndStream(params: {
     threadId: UUID;
     input: RunInput;
     userId: UUID;
     streaming?: boolean;
     orgId: UUID;
+    response: Response;
   }) {
     try {
       const command = new ExecuteRunAndSetTitleCommand({
@@ -404,19 +282,29 @@ export class RunsController {
       const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);
 
       for await (const event of eventGenerator) {
-        const sent = this.threadEventBroadcaster.broadcastToThread(
-          params.threadId,
-          event,
-        );
-        if (!sent) {
-          this.logger.warn(
-            `Failed to broadcast event to thread ${params.threadId} - no active listeners`,
-          );
-          break;
+        // Generate appropriate event ID based on response type
+        let eventId: string;
+        switch (event.type) {
+          case 'message':
+            eventId = event.message.id;
+            break;
+          case 'thread':
+            eventId = `thread-${event.threadId}`;
+            break;
+          case 'error':
+            eventId = 'error';
+            break;
+          case 'session':
+            eventId = 'session';
+            break;
+          default:
+            eventId = 'event';
         }
+
+        this.writeSSEEvent(params.response, eventId, event);
       }
     } catch (error) {
-      this.logger.error('Error in executeRunInBackground', error);
+      this.logger.error('Error in executeRunAndStream', error);
 
       // Send structured error response
       const errorResponse: RunErrorResponseDto = {
@@ -430,15 +318,11 @@ export class RunsController {
         code: 'EXECUTION_ERROR',
         details: {
           error: error instanceof Error ? error.toString() : 'Unknown error',
-          stack: error instanceof Error ? error.stack : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
         },
       };
 
-      // Try to broadcast error to thread listeners
-      this.threadEventBroadcaster.broadcastToThread(
-        params.threadId,
-        errorResponse,
-      );
+      this.writeSSEEvent(params.response, 'execution-error', errorResponse);
     }
   }
 }

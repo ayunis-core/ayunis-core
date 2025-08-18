@@ -7,7 +7,6 @@ import { RunsController } from './presenters/http/runs.controller';
 import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
-import { ThreadEventBroadcaster } from './presenters/http/sse/thread-event-broadcaster';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 
 @Module({
@@ -20,11 +19,7 @@ import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module'
     SubscriptionsModule,
   ],
   controllers: [RunsController],
-  providers: [
-    ExecuteRunUseCase,
-    ExecuteRunAndSetTitleUseCase,
-    ThreadEventBroadcaster,
-  ],
+  providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
 export class RunsModule {}

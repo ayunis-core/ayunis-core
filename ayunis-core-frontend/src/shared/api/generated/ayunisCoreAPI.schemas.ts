@@ -886,28 +886,6 @@ export interface RunThreadResponseDto {
 }
 
 /**
- * Response type identifier
- */
-export type RunHeartbeatResponseDtoType = typeof RunHeartbeatResponseDtoType[keyof typeof RunHeartbeatResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const RunHeartbeatResponseDtoType = {
-  heartbeat: 'heartbeat',
-} as const;
-
-export interface RunHeartbeatResponseDto {
-  /** Response type identifier */
-  type: RunHeartbeatResponseDtoType;
-  /** Thread ID for the heartbeat */
-  threadId: string;
-  /** Heartbeat timestamp */
-  timestamp: string;
-  /** Heartbeat sequence number for tracking */
-  sequence?: number;
-}
-
-/**
  * The type of input
  */
 export type TextInputType = typeof TextInputType[keyof typeof TextInputType];
@@ -1303,12 +1281,7 @@ export type ThreadsControllerAddFileSourceBody = {
   description?: string;
 };
 
-export type RunsControllerConnectToStream200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunHeartbeatResponseDto;
-
-export type RunsControllerSendMessage200 = {
-  success?: boolean;
-  message?: string;
-};
+export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
 
 export type StorageControllerUploadFileBody = {
   file?: Blob;

@@ -1419,20 +1419,21 @@
         ]
       }
     },
-    "/runs/stream/{threadId}": {
-      "get": {
-        "description": "Establishes a server-sent events connection and returns a session ID for sending messages. The connection includes automatic heartbeat events every 30 seconds to keep the connection alive and detect disconnected clients.",
-        "operationId": "RunsController_connectToStream",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
+    "/runs/send-message": {
+      "post": {
+        "description": "Sends a user message and returns a server-sent events stream with the AI response and any processing events. The stream automatically closes when processing is complete.",
+        "operationId": "RunsController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageDto"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Server-sent events stream with discriminated response types",
@@ -1451,9 +1452,6 @@
                     },
                     {
                       "$ref": "#/components/schemas/RunThreadResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/RunHeartbeatResponseDto"
                     }
                   ],
                   "discriminator": {
@@ -1462,8 +1460,7 @@
                       "session": "#/components/schemas/RunSessionResponseDto",
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
-                      "thread": "#/components/schemas/RunThreadResponseDto",
-                      "heartbeat": "#/components/schemas/RunHeartbeatResponseDto"
+                      "thread": "#/components/schemas/RunThreadResponseDto"
                     }
                   }
                 },
@@ -1474,7 +1471,8 @@
                       "type": "session",
                       "success": true,
                       "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                      "timestamp": "2024-01-01T12:00:00.000Z"
+                      "timestamp": "2024-01-01T12:00:00.000Z",
+                      "streaming": true
                     }
                   },
                   "message-event": {
@@ -1516,15 +1514,6 @@
                       "title": "Discussion about AI and machine learning",
                       "timestamp": "2024-01-01T12:00:00.000Z"
                     }
-                  },
-                  "heartbeat-event": {
-                    "summary": "Heartbeat event to keep connection alive",
-                    "value": {
-                      "type": "heartbeat",
-                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                      "timestamp": "2024-01-01T12:00:00.000Z",
-                      "sequence": 1
-                    }
                   }
                 }
               }
@@ -1552,58 +1541,18 @@
                 }
               }
             }
-          }
-        },
-        "summary": "Connect to the run stream and receive a session ID",
-        "tags": [
-          "runs"
-        ]
-      }
-    },
-    "/runs/send-message": {
-      "post": {
-        "description": "Sends a user message to the specified session and triggers AI processing",
-        "operationId": "RunsController_sendMessage",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendMessageDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Message sent successfully. Response will be streamed to the SSE connection.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Message sent to session"
-                    }
-                  }
-                }
-              }
-            }
           },
           "400": {
             "description": "Invalid request payload"
+          },
+          "403": {
+            "description": "Subscription required"
           },
           "500": {
             "description": "Internal server error"
           }
         },
-        "summary": "Send a message to an active session",
+        "summary": "Send a message and receive streaming response",
         "tags": [
           "runs"
         ]
@@ -4193,39 +4142,6 @@
           "threadId",
           "updateType",
           "title",
-          "timestamp"
-        ]
-      },
-      "RunHeartbeatResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Response type identifier",
-            "example": "heartbeat",
-            "enum": [
-              "heartbeat"
-            ]
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID for the heartbeat",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "timestamp": {
-            "type": "string",
-            "description": "Heartbeat timestamp",
-            "example": "2024-01-01T12:00:00.000Z"
-          },
-          "sequence": {
-            "type": "number",
-            "description": "Heartbeat sequence number for tracking",
-            "example": 1
-          }
-        },
-        "required": [
-          "type",
-          "threadId",
           "timestamp"
         ]
       },
