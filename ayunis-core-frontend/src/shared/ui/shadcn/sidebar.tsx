@@ -2,6 +2,7 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
 
 import { useIsMobile } from "@/shared/hooks/shadcn/use-mobile";
 import { cn } from "@/shared/lib/shadcn/utils";
@@ -38,6 +39,7 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  closeMobileWithCleanup: () => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
@@ -66,6 +68,39 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const { location } = useRouterState();
+
+  // Centralized cleanup function to avoid duplication
+  const cleanupMobileSidebar = React.useCallback(() => {
+    if (isMobile && openMobile) {
+      setOpenMobile(false);
+
+      // Enhanced cleanup after a small delay to ensure Radix cleanup completes
+      setTimeout(() => {
+        // Remove any lingering inert attributes
+        document.querySelectorAll("[inert]").forEach((el) => {
+          el.removeAttribute("inert");
+        });
+
+        // Remove any lingering aria-hidden on body children
+        document
+          .querySelectorAll('body > *[aria-hidden="true"]')
+          .forEach((el) => {
+            el.removeAttribute("aria-hidden");
+          });
+
+        // Remove any sheet overlays that might still exist
+        document
+          .querySelectorAll('[data-slot="sheet-overlay"]')
+          .forEach((el) => {
+            el.remove();
+          });
+
+        // Ensure body doesn't have pointer-events disabled
+        document.body.style.pointerEvents = "";
+      }, 50);
+    }
+  }, [isMobile, openMobile]);
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -107,6 +142,12 @@ function SidebarProvider({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [toggleSidebar]);
 
+  // Close mobile sidebar on route changes to prevent overlay blocking content
+  React.useEffect(() => {
+    cleanupMobileSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.href]);
+
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? "expanded" : "collapsed";
@@ -120,8 +161,18 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      closeMobileWithCleanup: cleanupMobileSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      cleanupMobileSidebar,
+    ],
   );
 
   return (

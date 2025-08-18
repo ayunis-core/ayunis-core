@@ -14,12 +14,21 @@ import { useTranslation, Trans } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { Checkbox } from "@/shared/ui/shadcn/checkbox";
 import { Label } from "@/shared/ui/shadcn/label";
+import { useGtm } from "@/features/useGtm";
+import config from "@/shared/config";
 
-export function RegisterPage() {
+export function RegisterPage({ isCloud }: { isCloud: boolean }) {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation("auth");
   const agbHref = "https://www.ayunis.com/agb-software-%c3%bcberlassung";
   const privacyPolicyRef = "https://www.ayunis.com/datenschutz-core";
+  const gtmEnabled =
+    isCloud && import.meta.env.PROD && config.analytics.gtmContainerId;
+
+  useGtm({
+    containerId: config.analytics.gtmContainerId || "",
+    enabled: gtmEnabled,
+  });
 
   return (
     <OnboardingLayout
@@ -27,7 +36,7 @@ export function RegisterPage() {
       description={t("register.description")}
       footer={
         <>
-          {t("register.or")}{" "}
+          {t("register.or")} {""}
           <Link
             to="/login"
             className="font-medium text-primary hover:underline"

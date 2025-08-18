@@ -5,6 +5,11 @@
  * The Ayunis Core API description
  * OpenAPI spec version: 1.0
  */
+export interface IsCloudResponseDto {
+  /** Whether the deployment is running in a cloud environment */
+  isCloud: boolean;
+}
+
 /**
  * The provider of the model
  */

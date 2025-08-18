@@ -37,6 +37,7 @@ import { useNavigate } from "@tanstack/react-router";
 import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
 import brandFullDark from "@/shared/assets/brand/brand-full-dark.svg";
 import { useTheme } from "@/features/theme";
+import { useSidebar } from "@/shared/ui/shadcn/sidebar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -44,6 +45,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { logout } = useLogout();
   const { t } = useTranslation("common");
   const navigate = useNavigate();
+  const { closeMobileWithCleanup } = useSidebar();
+
   useKeyboardShortcut(["j", "Meta"], () => {
     navigate({ to: "/chat" });
   });
@@ -135,19 +138,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 align="end"
                 sideOffset={4}
               >
-                <Link to="/settings/general">
-                  <DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings/general" onClick={closeMobileWithCleanup}>
                     <User2 />
                     {t("sidebar.accountSettings")}
-                  </DropdownMenuItem>
-                </Link>
+                  </Link>
+                </DropdownMenuItem>
                 {user?.role === "admin" && (
-                  <Link to="/admin-settings">
-                    <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin-settings" onClick={closeMobileWithCleanup}>
                       <Settings2 />
                       {t("sidebar.adminSettings")}
-                    </DropdownMenuItem>
-                  </Link>
+                    </Link>
+                  </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={logout}>
                   <LogOut />

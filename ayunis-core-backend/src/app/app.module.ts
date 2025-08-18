@@ -1,8 +1,7 @@
 import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from '../domain/models/models.module';
 import { AgentsModule } from '../domain/agents/agents.module';
 import { MessagesModule } from '../domain/messages/messages.module';
@@ -37,6 +36,7 @@ import { SecurityHeadersMiddleware } from '../common/middleware/security-headers
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
+import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 
 @Module({
   imports: [
@@ -92,10 +92,10 @@ import internetSearchConfig from 'src/config/internet-search.config';
   ],
   controllers: [AppController],
   providers: [
-    AppService,
     Logger,
     CookieParserMiddleware,
     SecurityHeadersMiddleware,
+    IsCloudUseCase,
   ],
 })
 export class AppModule implements NestModule {

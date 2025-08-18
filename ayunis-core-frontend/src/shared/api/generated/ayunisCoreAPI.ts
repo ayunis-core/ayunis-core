@@ -49,6 +49,7 @@ import type {
   GetThreadsResponseDtoItem,
   InviteDetailResponseDto,
   InviteResponseDto,
+  IsCloudResponseDto,
   LoginDto,
   MeResponseDto,
   ModelProviderInfoResponseDto,
@@ -92,77 +93,83 @@ import { customAxiosInstance } from '../client';
 
 
 
-export const appControllerGetHello = (
+/**
+ * @summary Check if the deployment is running in a cloud environment
+ */
+export const appControllerIsCloud = (
     
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<void>(
+      return customAxiosInstance<IsCloudResponseDto>(
       {url: `/`, method: 'GET', signal
     },
       );
     }
   
 
-export const getAppControllerGetHelloQueryKey = () => {
+export const getAppControllerIsCloudQueryKey = () => {
     return [`/`] as const;
     }
 
     
-export const getAppControllerGetHelloQueryOptions = <TData = Awaited<ReturnType<typeof appControllerGetHello>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetHello>>, TError, TData>>, }
+export const getAppControllerIsCloudQueryOptions = <TData = Awaited<ReturnType<typeof appControllerIsCloud>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerIsCloud>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAppControllerGetHelloQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getAppControllerIsCloudQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerGetHello>>> = ({ signal }) => appControllerGetHello(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerIsCloud>>> = ({ signal }) => appControllerIsCloud(signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appControllerGetHello>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appControllerIsCloud>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AppControllerGetHelloQueryResult = NonNullable<Awaited<ReturnType<typeof appControllerGetHello>>>
-export type AppControllerGetHelloQueryError = unknown
+export type AppControllerIsCloudQueryResult = NonNullable<Awaited<ReturnType<typeof appControllerIsCloud>>>
+export type AppControllerIsCloudQueryError = unknown
 
 
-export function useAppControllerGetHello<TData = Awaited<ReturnType<typeof appControllerGetHello>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetHello>>, TError, TData>> & Pick<
+export function useAppControllerIsCloud<TData = Awaited<ReturnType<typeof appControllerIsCloud>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerIsCloud>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof appControllerGetHello>>,
+          Awaited<ReturnType<typeof appControllerIsCloud>>,
           TError,
-          Awaited<ReturnType<typeof appControllerGetHello>>
+          Awaited<ReturnType<typeof appControllerIsCloud>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAppControllerGetHello<TData = Awaited<ReturnType<typeof appControllerGetHello>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetHello>>, TError, TData>> & Pick<
+export function useAppControllerIsCloud<TData = Awaited<ReturnType<typeof appControllerIsCloud>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerIsCloud>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof appControllerGetHello>>,
+          Awaited<ReturnType<typeof appControllerIsCloud>>,
           TError,
-          Awaited<ReturnType<typeof appControllerGetHello>>
+          Awaited<ReturnType<typeof appControllerIsCloud>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAppControllerGetHello<TData = Awaited<ReturnType<typeof appControllerGetHello>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetHello>>, TError, TData>>, }
+export function useAppControllerIsCloud<TData = Awaited<ReturnType<typeof appControllerIsCloud>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerIsCloud>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Check if the deployment is running in a cloud environment
+ */
 
-export function useAppControllerGetHello<TData = Awaited<ReturnType<typeof appControllerGetHello>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerGetHello>>, TError, TData>>, }
+export function useAppControllerIsCloud<TData = Awaited<ReturnType<typeof appControllerIsCloud>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerIsCloud>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAppControllerGetHelloQueryOptions(options)
+  const queryOptions = getAppControllerIsCloudQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

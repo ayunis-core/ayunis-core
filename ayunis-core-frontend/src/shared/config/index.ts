@@ -16,6 +16,9 @@ const config = {
   features: {
     devtools: import.meta.env.MODE !== "production",
   },
+  analytics: {
+    gtmContainerId: import.meta.env.VITE_GTM_CONTAINER_ID,
+  },
 } as const;
 
 export default config;

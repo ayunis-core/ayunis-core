@@ -3,15 +3,23 @@
   "paths": {
     "/": {
       "get": {
-        "operationId": "AppController_getHello",
+        "operationId": "AppController_isCloud",
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Cloud deployment status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsCloudResponseDto"
+                }
+              }
+            }
           }
         },
+        "summary": "Check if the deployment is running in a cloud environment",
         "tags": [
-          "App"
+          "app"
         ]
       }
     },
@@ -2722,6 +2730,19 @@
   "servers": [],
   "components": {
     "schemas": {
+      "IsCloudResponseDto": {
+        "type": "object",
+        "properties": {
+          "isCloud": {
+            "type": "boolean",
+            "description": "Whether the deployment is running in a cloud environment",
+            "example": true
+          }
+        },
+        "required": [
+          "isCloud"
+        ]
+      },
       "ModelWithConfigResponseDto": {
         "type": "object",
         "properties": {
