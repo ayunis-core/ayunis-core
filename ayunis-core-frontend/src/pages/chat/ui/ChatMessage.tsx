@@ -34,7 +34,10 @@ const renderTextContent = (content: TextMessageContent) => {
 // Helper function to render tool use content
 const renderToolUseContent = (content: ToolUseMessageContent, t: any) => {
   return (
-    <div className="my-2" key={content.name}>
+    <div
+      className="my-2"
+      key={`${content.name}-${JSON.stringify(content.params)}`}
+    >
       <Collapsible>
         <CollapsibleTrigger asChild>
           <Badge
