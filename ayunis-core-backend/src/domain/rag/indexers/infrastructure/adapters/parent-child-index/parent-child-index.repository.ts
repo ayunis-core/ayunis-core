@@ -71,70 +71,28 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       return [];
     }
 
-    // Check if we have any indexed content for this document first
-    const existingChunksCount = await this.parentChunkRepository
-      .createQueryBuilder('parentChunk')
-      .leftJoin('parentChunk.children', 'children')
-      .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
-        relatedDocumentId,
-      })
-      .andWhere(`${embeddingColumn} IS NOT NULL`)
-      .getCount();
-
-    if (existingChunksCount === 0) {
-      this.logger.warn(
-        `No indexed content found for document ${relatedDocumentId}`,
-      );
-      return [];
-    }
-
     try {
-      // Use provided options or defaults
-      const similarityThreshold = 0.6;
       const limit = 10;
 
       // Convert the vector to PostgreSQL array format
       const queryVectorString = JSON.stringify(queryVector);
 
-      // Build the query using TypeORM query builder
+      // Build the exact search query using cosine distance ordering (ASC)
       const queryBuilder = this.parentChunkRepository
         .createQueryBuilder('parentChunk')
-        // Join with sourceContent to ensure the relationship is loaded
         .leftJoinAndSelect('parentChunk.children', 'children')
-        // Add cosine similarity as calculated field (1 - cosine distance)
-        .addSelect(
-          `1 - (${embeddingColumn} <=> :queryVector)`,
-          'cosine_similarity',
-        )
         .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
           relatedDocumentId,
         })
         .andWhere(`${embeddingColumn} IS NOT NULL`)
-        .andWhere('vector_dims(' + embeddingColumn + ') = :queryVectorLength', {
-          queryVectorLength: queryVector.length,
-        })
-        // Use cosine similarity threshold (higher is better, so use >=)
-        .andWhere(
-          '1 - (' + embeddingColumn + ' <=> :queryVector) >= :threshold',
-          {
-            queryVector: queryVectorString,
-            threshold: similarityThreshold,
-          },
-        )
-        // Order by cosine similarity DESC (highest similarity first)
-        .orderBy('1 - (' + embeddingColumn + ' <=> :queryVector)', 'DESC')
+        // Order by cosine distance ascending (closest first)
+        .orderBy(`${embeddingColumn} <=> :queryVector::vector`, 'ASC')
         .setParameter('queryVector', queryVectorString)
         .limit(limit);
 
-      // Get both raw results (with cosine similarity) and entities
-      this.logger.debug('Executing vector similarity query...');
-      const { entities, raw } = await queryBuilder.getRawAndEntities();
+      const { entities } = await queryBuilder.getRawAndEntities();
 
-      this.logger.debug(
-        `Vector search found ${entities.length} parent chunks with ${raw.length} raw results`,
-      );
-
-      // Return the properly mapped entities
+      // Map and return unique parent entities
       return entities.map((entity) =>
         this.parentChildIndexerMapper.toParentChunkEntity(entity),
       );

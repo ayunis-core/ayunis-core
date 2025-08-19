@@ -1,10 +1,18 @@
 import { BaseRecord } from '../../../../../../../../../common/db/base-record';
-import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  ManyToOne,
+  Index,
+} from 'typeorm';
 import { ParentChunkRecord } from './parent-chunk.record';
 import { UUID } from 'crypto';
 
 @Entity({ name: 'child_chunks' })
 export class ChildChunkRecord extends BaseRecord {
+  @Index()
   @Column()
   parentId: UUID;
 
@@ -16,6 +24,7 @@ export class ChildChunkRecord extends BaseRecord {
   // !! IMPORTANT !!
   // We use two explicit columns to avoid mixing dimensions
   // If you add new dimensions, you need to update the embedding-dimensions.enum.ts
+  // and the parent_child_indexer repository.
 
   // Hack until typeorm supports vector column type
   // https://github.com/typeorm/typeorm/pull/11437

@@ -1,10 +1,11 @@
 import { BaseRecord } from '../../../../../../../../../common/db/base-record';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany, Index } from 'typeorm';
 import { UUID } from 'crypto';
 import { ChildChunkRecord } from './child-chunk.record';
 
 @Entity({ name: 'parent_chunks' })
 export class ParentChunkRecord extends BaseRecord {
+  @Index()
   @Column()
   relatedDocumentId: UUID;
 

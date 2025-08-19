@@ -6,7 +6,7 @@ import {
 } from 'src/domain/rag/indexers/application/ports/indexer';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { IngestContentUseCase } from './use-cases/ingest-content/ingest-content.use-case';
-import { SearchContentUseCase } from './use-cases/search-content/ingest-content.use-case';
+import { SearchContentUseCase } from './use-cases/search-content/search-content.use-case';
 import { UUID } from 'crypto';
 import { DeleteContentUseCase } from './use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from './use-cases/delete-content/delete-content.command';

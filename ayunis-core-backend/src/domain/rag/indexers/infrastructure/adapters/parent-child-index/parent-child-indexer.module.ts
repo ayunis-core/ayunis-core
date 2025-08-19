@@ -15,7 +15,7 @@ import { ParentChildIndexerRepositoryPort } from './application/ports/parent-chi
 
 // Use Cases
 import { IngestContentUseCase } from './application/use-cases/ingest-content/ingest-content.use-case';
-import { SearchContentUseCase } from './application/use-cases/search-content/ingest-content.use-case';
+import { SearchContentUseCase } from './application/use-cases/search-content/search-content.use-case';
 import { DeleteContentUseCase } from './application/use-cases/delete-content/delete-content.use-case';
 
 // Adapter
