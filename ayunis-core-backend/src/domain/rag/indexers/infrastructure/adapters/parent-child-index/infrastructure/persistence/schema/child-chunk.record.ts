@@ -13,9 +13,12 @@ export class ChildChunkRecord extends BaseRecord {
   })
   parent: ParentChunkRecord;
 
+  // !! IMPORTANT !!
+  // We use two explicit columns to avoid mixing dimensions
+  // If you add new dimensions, you need to update the embedding-dimensions.enum.ts
+
   // Hack until typeorm supports vector column type
   // https://github.com/typeorm/typeorm/pull/11437
-  // We use two explicit columns to avoid mixing dimensions
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   @Column({ name: 'embedding_1024', type: 'vector' as any, nullable: true })
   embedding1024: number[] | null;
