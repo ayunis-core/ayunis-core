@@ -1,0 +1,15 @@
+{
+  "title": "Academy",
+  "subtitle": "Master Ayunis Core with our comprehensive video tutorials",
+  "categories": {
+    "all": "All",
+    "introduction": "Introduction", 
+    "agents": "Agents",
+    "prompts": "Prompts",
+    "models": "Models"
+  },
+  "duration": "Duration",
+  "videoModal": {
+    "close": "Close video"
+  }
+}

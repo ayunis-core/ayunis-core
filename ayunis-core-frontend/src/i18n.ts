@@ -23,6 +23,8 @@ import enPrompts from "./shared/locales/en/prompts.json";
 import dePrompts from "./shared/locales/de/prompts.json";
 import enAgents from "./shared/locales/en/agents.json";
 import deAgents from "./shared/locales/de/agents.json";
+import enAcademy from "./shared/locales/en/academy.json";
+import deAcademy from "./shared/locales/de/academy.json";
 
 const resources = {
   en: {
@@ -36,6 +38,7 @@ const resources = {
     chats: enChats,
     prompts: enPrompts,
     agents: enAgents,
+    academy: enAcademy,
   },
   de: {
     auth: deAuth,
@@ -48,6 +51,7 @@ const resources = {
     chats: deChats,
     prompts: dePrompts,
     agents: deAgents,
+    academy: deAcademy,
   },
 };
 

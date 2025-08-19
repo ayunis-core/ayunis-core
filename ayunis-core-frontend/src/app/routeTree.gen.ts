@@ -23,6 +23,7 @@ import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticate
 import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAgentsIndexImport } from './routes/_authenticated/agents.index'
 import { Route as AuthenticatedAdminSettingsIndexImport } from './routes/_authenticated/admin-settings.index'
+import { Route as onboardingAcademyIndexImport } from './routes/(onboarding)/academy.index'
 import { Route as AuthenticatedSettingsGeneralImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
@@ -107,6 +108,12 @@ const AuthenticatedAdminSettingsIndexRoute =
     path: '/admin-settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+
+const onboardingAcademyIndexRoute = onboardingAcademyIndexImport.update({
+  id: '/(onboarding)/academy/',
+  path: '/academy/',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AuthenticatedSettingsGeneralRoute =
   AuthenticatedSettingsGeneralImport.update({
@@ -272,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsGeneralImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/(onboarding)/academy/': {
+      id: '/(onboarding)/academy/'
+      path: '/academy'
+      fullPath: '/academy'
+      preLoaderRoute: typeof onboardingAcademyIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/_authenticated/admin-settings/': {
       id: '/_authenticated/admin-settings/'
       path: '/admin-settings'
@@ -361,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/academy': typeof onboardingAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -384,6 +399,7 @@ export interface FileRoutesByTo {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/academy': typeof onboardingAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -408,6 +424,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/(onboarding)/academy/': typeof onboardingAcademyIndexRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -433,6 +450,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/settings/account'
     | '/settings/general'
+    | '/academy'
     | '/admin-settings'
     | '/agents'
     | '/chat'
@@ -455,6 +473,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/settings/account'
     | '/settings/general'
+    | '/academy'
     | '/admin-settings'
     | '/agents'
     | '/chat'
@@ -477,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/general'
+    | '/(onboarding)/academy/'
     | '/_authenticated/admin-settings/'
     | '/_authenticated/agents/'
     | '/_authenticated/chat/'
@@ -495,6 +515,7 @@ export interface RootRouteChildren {
   onboardingRegisterRoute: typeof onboardingRegisterRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
+  onboardingAcademyIndexRoute: typeof onboardingAcademyIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -507,6 +528,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingRegisterRoute: onboardingRegisterRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
+  onboardingAcademyIndexRoute: onboardingAcademyIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -527,7 +549,8 @@ export const routeTree = rootRoute
         "/(onboarding)/login",
         "/(onboarding)/register",
         "/(onboarding)/password/forgot",
-        "/(onboarding)/password/reset"
+        "/(onboarding)/password/reset",
+        "/(onboarding)/academy/"
       ]
     },
     "/": {
@@ -593,6 +616,9 @@ export const routeTree = rootRoute
     "/_authenticated/settings/general": {
       "filePath": "_authenticated/settings.general.tsx",
       "parent": "/_authenticated"
+    },
+    "/(onboarding)/academy/": {
+      "filePath": "(onboarding)/academy.index.tsx"
     },
     "/_authenticated/admin-settings/": {
       "filePath": "_authenticated/admin-settings.index.tsx",

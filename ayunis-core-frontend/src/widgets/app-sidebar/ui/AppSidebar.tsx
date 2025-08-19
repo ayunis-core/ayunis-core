@@ -7,6 +7,7 @@ import {
   LogOut,
   Plus,
   Bot,
+  GraduationCap,
 } from "lucide-react";
 
 import {
@@ -40,7 +41,7 @@ import { useTheme } from "@/features/theme";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
-  const { user } = useMe();
+  const { user, error: userError } = useMe();
   const { logout } = useLogout();
   const { t } = useTranslation("common");
   const navigate = useNavigate();
@@ -48,8 +49,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navigate({ to: "/chat" });
   });
 
-  // Menu items.
-  const items = [
+  
+  const isAuthenticated = user && !userError;
+
+  const items = isAuthenticated ? [
     {
       title: t("sidebar.newChat"),
       url: "/chat",
@@ -65,6 +68,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("sidebar.agents"),
       url: "/agents",
       icon: Bot,
+    },
+    {
+      title: t("sidebar.academy"),
+      url: "/academy",
+      icon: GraduationCap,
+    },
+  ] : [
+    {
+      title: t("sidebar.academy"),
+      url: "/academy",
+      icon: GraduationCap,
     },
   ];
 
@@ -107,54 +121,66 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
 
-        <SubscriptionHintButton />
+        {isAuthenticated && <SubscriptionHintButton />}
 
-        <ChatsSidebarGroup />
+        {isAuthenticated && <ChatsSidebarGroup />}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <User2 className="size-4" />
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">{user?.name}</span>
+                      <span className="truncate text-xs">{user?.email}</span>
+                    </div>
+                    <ChevronUp className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
                 >
-                  <User2 className="size-4" />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.name}</span>
-                    <span className="truncate text-xs">{user?.email}</span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
-                align="end"
-                sideOffset={4}
-              >
-                <Link to="/settings/general">
-                  <DropdownMenuItem>
-                    <User2 />
-                    {t("sidebar.accountSettings")}
-                  </DropdownMenuItem>
-                </Link>
-                {user?.role === "admin" && (
-                  <Link to="/admin-settings">
+                  <Link to="/settings/general">
                     <DropdownMenuItem>
-                      <Settings2 />
-                      {t("sidebar.adminSettings")}
+                      <User2 />
+                      {t("sidebar.accountSettings")}
                     </DropdownMenuItem>
                   </Link>
-                )}
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut />
-                  {t("sidebar.signOut")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {user?.role === "admin" && (
+                    <Link to="/admin-settings">
+                      <DropdownMenuItem>
+                        <Settings2 />
+                        {t("sidebar.adminSettings")}
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut />
+                    {t("sidebar.signOut")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <SidebarMenuButton size="lg" asChild>
+                <Link to="/login">
+                  <User2 className="size-4" />
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">{t("sidebar.signIn")}</span>
+                    <span className="truncate text-xs">{t("sidebar.accessYourAccount")}</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

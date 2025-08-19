@@ -6,7 +6,7 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { resolve } from "node:path";
 
 // Get port from environment or use default
-const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3002;
 
 // https://vitejs.dev/config/
 export default defineConfig({

@@ -5,12 +5,19 @@ interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;
   contentArea: React.ReactNode;
   className?: string;
+  contentWidth?: "md" | "lg";
 }
+
+const maxWidths = {
+  md: "max-w-[800px]",
+  lg: "max-w-[1200px]",
+};
 
 export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
   contentHeader,
   contentArea,
   className = "",
+  contentWidth = "md",
 }) => {
   return (
     <div className={`flex flex-col absolute inset-0 ${className} px-4 pb-4`}>
@@ -22,7 +29,7 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
       )}
 
       {/* Content Area - takes up remaining space with scrollable content */}
-      <div className="flex-1 overflow-hidden  w-full max-w-[800px] mx-auto">
+      <div className={`flex-1 overflow-hidden w-full ${maxWidths[contentWidth]} mx-auto`}>
         <ScrollArea className="h-full">{contentArea}</ScrollArea>
       </div>
     </div>

@@ -1,0 +1,15 @@
+{
+  "title": "Akademie",
+  "subtitle": "Meistern Sie Ayunis Core mit unseren umfassenden Video-Tutorials",
+  "categories": {
+    "all": "Alle",
+    "introduction": "Einführung",
+    "agents": "Agenten", 
+    "prompts": "Prompts",
+    "models": "Modelle"
+  },
+  "duration": "Dauer",
+  "videoModal": {
+    "close": "Video schließen"
+  }
+}

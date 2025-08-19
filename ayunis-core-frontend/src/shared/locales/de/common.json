@@ -5,6 +5,7 @@
     "newChat": "Neuer Chat",
     "prompts": "Prompts",
     "agents": "Agenten",
+    "academy": "Akademie",
     "upgrade": "Upgrade",
     "accountSettings": "Konto-Einstellungen",
     "adminSettings": "Admin-Einstellungen",
@@ -20,7 +21,9 @@
     "deleteChatTitle": "Chat löschen",
     "deleteChatDescription": "Sind Sie sicher, dass Sie diesen Chat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteChatConfirm": "Löschen",
-    "deleteChatCancel": "Abbrechen"
+    "deleteChatCancel": "Abbrechen",
+    "signIn": "Anmelden",
+    "accessYourAccount": "Zugang zu Ihrem Konto"
   },
   "chatInput": {
     "placeholder": "Stellen Sie eine Frage in Ayunis Core...",
