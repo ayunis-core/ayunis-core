@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import { Avatar, AvatarFallback } from "@/shared/ui/shadcn/avatar";
-import { Bot, Loader2, Wrench } from "lucide-react";
+import { Bot, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   Message,
@@ -12,92 +12,15 @@ import brandIconLight from "@/shared/assets/brand/brand-icon-round-light.svg";
 import brandIconDark from "@/shared/assets/brand/brand-icon-round-dark.svg";
 import { useTheme } from "@/features/theme";
 import { Markdown } from "@/widgets/markdown";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/shared/ui/shadcn/collapsible";
-import { Badge } from "@/shared/ui/shadcn/badge";
 import { cn } from "@/shared/lib/shadcn/utils";
 import SendEmailWidget from "./chat-widgets/SendEmailWidget";
+import ExecutableToolWidget from "./chat-widgets/ExecutableToolWidget";
+import ToolUseSkeleton from "./chat-widgets/ToolUseSkeleton";
 
 interface ChatMessageProps {
   message?: Message;
   isLoading?: boolean;
   hideAvatar?: boolean;
-}
-
-// Helper function to render text content
-function renderTextContent(content: TextMessageContent) {
-  return <Markdown key={content.text}>{content.text}</Markdown>;
-}
-
-// Helper function to render tool use content
-function renderToolUseContent(content: ToolUseMessageContent, t: any) {
-  if (content.name === "send_email") {
-    return <SendEmailWidget content={content} />;
-  }
-  return (
-    <div
-      className="my-2"
-      key={`${content.name}-${JSON.stringify(content.params)}`}
-    >
-      <Collapsible>
-        <CollapsibleTrigger asChild>
-          <Badge
-            variant="outline"
-            className="text-sm font-medium text-muted-foreground cursor-pointer"
-          >
-            <Wrench className="h-4 w-4" /> {t(`chat.tools.${content.name}`)}
-          </Badge>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <Badge variant="outline">
-            <pre className="whitespace-pre-wrap">
-              {JSON.stringify(content.params, null, 2)}
-            </pre>
-          </Badge>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
-  );
-}
-
-function renderToolUseSkeleton(t: any) {
-  return (
-    <div className="my-2">
-      <Badge variant="outline">
-        <Loader2 className="h-4 w-4 animate-spin" /> {t("chat.tools.tool_use")}
-      </Badge>
-    </div>
-  );
-}
-
-// Helper function to render message content based on type
-function renderMessageContent(message: Message, t: any) {
-  switch (message.role) {
-    case "user":
-    case "system":
-      return message.content.map((content) => renderTextContent(content));
-
-    case "assistant":
-      // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
-      if (!message.content || message.content.length === 0) {
-        return renderToolUseSkeleton(t);
-      }
-
-      return message.content.map((content: AssistantMessageContent) => {
-        if (content.type === "text") {
-          return renderTextContent(content as TextMessageContent);
-        } else if (content.type === "tool_use") {
-          return renderToolUseContent(content as ToolUseMessageContent, t);
-        }
-        return null;
-      });
-
-    default:
-      return null;
-  }
 }
 
 export default function ChatMessage({
@@ -141,7 +64,7 @@ export default function ChatMessage({
         <div className="max-w-2xl min-w-0 space-y-1">
           <Card className={`p-2 py-0 bg-muted `}>
             <CardContent className="p-2 space-y-2 min-w-0 overflow-hidden">
-              {renderMessageContent(message, t)}
+              {renderMessageContent(message)}
             </CardContent>
           </Card>
         </div>
@@ -168,7 +91,7 @@ export default function ChatMessage({
         )}
         <div className="max-w-2xl min-w-0 space-y-1 w-full">
           <div className="space-y-2 overflow-hidden w-full">
-            {renderMessageContent(message, t)}
+            {renderMessageContent(message)}
           </div>
         </div>
       </div>
@@ -176,4 +99,41 @@ export default function ChatMessage({
   }
 
   return null;
+}
+
+function renderMessageContent(message: Message) {
+  switch (message.role) {
+    case "user":
+    case "system":
+      return message.content.map((content) => (
+        <Markdown key={content.text}>{content.text}</Markdown>
+      ));
+
+    case "assistant":
+      // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
+      if (!message.content || message.content.length === 0) {
+        return <ToolUseSkeleton />;
+      }
+
+      return message.content.map((content: AssistantMessageContent) => {
+        if (content.type === "text") {
+          const textMessageContent = content as TextMessageContent;
+          return (
+            <Markdown key={textMessageContent.text}>
+              {textMessageContent.text}
+            </Markdown>
+          );
+        } else if (content.type === "tool_use") {
+          const toolUseMessageContent = content as ToolUseMessageContent;
+          if (toolUseMessageContent.name === "send_email") {
+            return <SendEmailWidget content={toolUseMessageContent} />;
+          }
+          return <ExecutableToolWidget content={toolUseMessageContent} />;
+        }
+        return null;
+      });
+
+    default:
+      return null;
+  }
 }
