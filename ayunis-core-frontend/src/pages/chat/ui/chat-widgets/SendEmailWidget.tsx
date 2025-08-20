@@ -88,7 +88,7 @@ export default function SendEmailWidget({
           placeholder={t("chat.tools.send_email.bodyPlaceholder")}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          className="min-h-32"
+          className="h-40"
         />
       </div>
       <div className="w-full flex gap-2">
