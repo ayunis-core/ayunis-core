@@ -6,9 +6,22 @@ import { DisplayableTool } from '../displayable-tool.entity';
 const sendEmailToolParameters = {
   type: 'object' as const,
   properties: {
-    subject: { type: 'string' as const },
-    body: { type: 'string' as const },
+    subject: {
+      type: 'string' as const,
+      description: 'The subject of the email',
+    },
+    body: {
+      type: 'string' as const,
+      description: 'The body of the email',
+    },
+    to: {
+      type: 'string' as const,
+      description:
+        'The recipients of the email. If there is no recipient, provide an empty string.',
+    },
   },
+  required: ['subject', 'body', 'to'],
+  additionalProperties: false,
 } as const satisfies JSONSchema;
 
 type SendEmailToolParameters = FromSchema<typeof sendEmailToolParameters>;

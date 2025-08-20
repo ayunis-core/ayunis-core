@@ -24,7 +24,13 @@
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",
-        "open": "In E-Mail App öffnen"
+        "to": "Empfänger",
+        "toPlaceholder": "E-Mail-Adresse eingeben",
+        "subjectPlaceholder": "Betreff eingeben",
+        "bodyPlaceholder": "Nachricht eingeben",
+        "open": "In E-Mail App öffnen",
+        "copyBody": "Text kopieren",
+        "copied": "Kopiert"
       },
       "tool_use": "Generiere Antwort"
     }

@@ -24,7 +24,13 @@
       "send_email": {
         "subject": "Subject",
         "body": "Body",
-        "open": "Open in email app"
+        "to": "To",
+        "toPlaceholder": "Enter email address",
+        "subjectPlaceholder": "Enter email subject",
+        "bodyPlaceholder": "Write your email body",
+        "open": "Open in email app",
+        "copyBody": "Copy body",
+        "copied": "Copied"
       },
       "tool_use": "Generate answer"
     }

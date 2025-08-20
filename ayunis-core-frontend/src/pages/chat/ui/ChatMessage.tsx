@@ -60,7 +60,7 @@ export default function ChatMessage({
   // User messages
   if (isUserMessage) {
     return (
-      <div className="flex justify-end">
+      <div className="flex justify-end my-4">
         <div className="max-w-2xl min-w-0 space-y-1">
           <Card className={`p-2 py-0 bg-muted `}>
             <CardContent className="p-2 space-y-2 min-w-0 overflow-hidden">
