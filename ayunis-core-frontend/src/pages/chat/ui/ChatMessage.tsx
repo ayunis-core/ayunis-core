@@ -19,6 +19,7 @@ import {
 } from "@/shared/ui/shadcn/collapsible";
 import { Badge } from "@/shared/ui/shadcn/badge";
 import { cn } from "@/shared/lib/shadcn/utils";
+import SendEmailWidget from "./chat-widgets/SendEmailWidget";
 
 interface ChatMessageProps {
   message?: Message;
@@ -27,12 +28,15 @@ interface ChatMessageProps {
 }
 
 // Helper function to render text content
-const renderTextContent = (content: TextMessageContent) => {
+function renderTextContent(content: TextMessageContent) {
   return <Markdown key={content.text}>{content.text}</Markdown>;
-};
+}
 
 // Helper function to render tool use content
-const renderToolUseContent = (content: ToolUseMessageContent, t: any) => {
+function renderToolUseContent(content: ToolUseMessageContent, t: any) {
+  if (content.name === "send_email") {
+    return <SendEmailWidget content={content} />;
+  }
   return (
     <div
       className="my-2"
@@ -44,8 +48,7 @@ const renderToolUseContent = (content: ToolUseMessageContent, t: any) => {
             variant="outline"
             className="text-sm font-medium text-muted-foreground cursor-pointer"
           >
-            <Wrench className="h-4 w-4" />{" "}
-            {t(`chat.tools.${content.name.toLowerCase()}`)}
+            <Wrench className="h-4 w-4" /> {t(`chat.tools.${content.name}`)}
           </Badge>
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -58,16 +61,31 @@ const renderToolUseContent = (content: ToolUseMessageContent, t: any) => {
       </Collapsible>
     </div>
   );
-};
+}
+
+function renderToolUseSkeleton(t: any) {
+  return (
+    <div className="my-2">
+      <Badge variant="outline">
+        <Loader2 className="h-4 w-4 animate-spin" /> {t("chat.tools.tool_use")}
+      </Badge>
+    </div>
+  );
+}
 
 // Helper function to render message content based on type
-const renderMessageContent = (message: Message, t: any) => {
+function renderMessageContent(message: Message, t: any) {
   switch (message.role) {
     case "user":
     case "system":
       return message.content.map((content) => renderTextContent(content));
 
     case "assistant":
+      // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
+      if (!message.content || message.content.length === 0) {
+        return renderToolUseSkeleton(t);
+      }
+
       return message.content.map((content: AssistantMessageContent) => {
         if (content.type === "text") {
           return renderTextContent(content as TextMessageContent);
@@ -80,18 +98,7 @@ const renderMessageContent = (message: Message, t: any) => {
     default:
       return null;
   }
-};
-
-// Helper function to get avatar icon based on role
-const getAvatarIcon = (theme: string) => {
-  return (
-    <img
-      src={theme === "dark" ? brandIconDark : brandIconLight}
-      alt="Ayunis Logo"
-      className="h-8 w-8 object-contain"
-    />
-  );
-};
+}
 
 export default function ChatMessage({
   hideAvatar = false,
@@ -150,11 +157,17 @@ export default function ChatMessage({
       >
         {!hideAvatar && (
           <Avatar className="h-8 w-8">
-            <AvatarFallback>{getAvatarIcon(theme)}</AvatarFallback>
+            <AvatarFallback>
+              <img
+                src={theme === "dark" ? brandIconDark : brandIconLight}
+                alt="Ayunis Logo"
+                className="h-8 w-8 object-contain"
+              />
+            </AvatarFallback>
           </Avatar>
         )}
-        <div className="max-w-2xl min-w-0 space-y-1">
-          <div className="space-y-2 overflow-hidden">
+        <div className="max-w-2xl min-w-0 space-y-1 w-full">
+          <div className="space-y-2 overflow-hidden w-full">
             {renderMessageContent(message, t)}
           </div>
         </div>

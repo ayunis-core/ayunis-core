@@ -15,6 +15,7 @@ import {
   ToolInvalidTypeError,
 } from './tools.errors';
 import { Source } from 'src/domain/sources/domain/source.entity';
+import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
 
 @Injectable()
 export class ToolFactory {
@@ -52,6 +53,8 @@ export class ToolFactory {
             contextType: params.context?.constructor.name || 'null',
           },
         });
+      case ToolType.SEND_EMAIL:
+        return new SendEmailTool();
       default:
         throw new ToolInvalidTypeError({
           toolType: params.type,

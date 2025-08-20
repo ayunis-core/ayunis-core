@@ -20,7 +20,13 @@
     "tools": {
       "internet_search": "Im Internet suchen",
       "website_content": "Website abfragen",
-      "source_query": "Quelle durchsuchen"
+      "source_query": "Quelle durchsuchen",
+      "send_email": {
+        "subject": "Betreff",
+        "body": "Nachricht",
+        "open": "In E-Mail App öffnen"
+      },
+      "tool_use": "Generiere Antwort"
     }
   },
   "newChat": {

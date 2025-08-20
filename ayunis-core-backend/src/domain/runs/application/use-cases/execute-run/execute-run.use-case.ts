@@ -120,6 +120,8 @@ export class ExecuteRunUseCase {
   private async assembleTools(thread: Thread, userId: UUID): Promise<Tool[]> {
     const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
     const tools: Tool[] = [];
+
+    // Add tools from the agent if there is one
     if (thread.agent) {
       tools.push(
         ...thread.agent.tools.filter(
@@ -133,6 +135,16 @@ export class ExecuteRunUseCase {
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
           type: ToolType.WEBSITE_CONTENT,
+          userId,
+        }),
+      ),
+    );
+
+    // E-Mail tool is always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.SEND_EMAIL,
           userId,
         }),
       ),

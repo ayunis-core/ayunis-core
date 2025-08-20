@@ -3785,7 +3785,8 @@
               "http",
               "source_query",
               "internet_search",
-              "website_content"
+              "website_content",
+              "send_email"
             ]
           },
           "toolConfigId": {
@@ -3846,7 +3847,8 @@
               "http",
               "source_query",
               "internet_search",
-              "website_content"
+              "website_content",
+              "send_email"
             ]
           }
         },

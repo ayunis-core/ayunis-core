@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
 import { Tool } from '../../../domain/tool.entity';
+import { DisplayableTool } from '../../../domain/displayable-tool.entity';
 
 export interface ToolCapabilities {
   isDisplayable: boolean;
@@ -21,14 +22,12 @@ export class CheckToolCapabilitiesUseCase {
   }
 
   isDisplayable(tool: Tool): boolean {
-    // TODO: Implement
-    console.log('isDisplayable', tool);
-    return false;
+    return tool instanceof DisplayableTool;
   }
 
   isExecutable(tool: Tool): boolean {
-    // TODO: Implement
-    console.log('isExecutable', tool);
-    return true;
+    // TODO: This is a temporary solution until we
+    // introduce tools which are both displayable and executable
+    return !this.isDisplayable(tool);
   }
 }

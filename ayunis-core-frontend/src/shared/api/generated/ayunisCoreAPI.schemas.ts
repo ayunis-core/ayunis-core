@@ -686,6 +686,7 @@ export const ToolAssignmentDtoType = {
   source_query: 'source_query',
   internet_search: 'internet_search',
   website_content: 'website_content',
+  send_email: 'send_email',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -722,6 +723,7 @@ export const ToolResponseDtoType = {
   source_query: 'source_query',
   internet_search: 'internet_search',
   website_content: 'website_content',
+  send_email: 'send_email',
 } as const;
 
 export interface ToolResponseDto {
