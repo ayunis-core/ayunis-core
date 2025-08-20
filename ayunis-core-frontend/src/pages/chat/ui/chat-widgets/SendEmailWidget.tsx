@@ -16,21 +16,15 @@ export default function SendEmailWidget({
   const params = (content.params || {}) as {
     subject?: string;
     body?: string;
-    to?: string[];
+    to?: string;
   };
   const [subject, setSubject] = useState<string>(params.subject || "");
   const [body, setBody] = useState<string>(params.body || "");
-  const [to, setTo] = useState<string[]>(params.to || []);
+  const [to, setTo] = useState<string>(params.to || "");
   const [copied, setCopied] = useState<boolean>(false);
 
   const mailtoHref = useMemo(() => {
-    const recipients = (to || [])
-      .map((addr) => addr.trim())
-      .filter((addr) => addr.length > 0);
-
-    const mailtoPath = recipients.length
-      ? recipients.map((addr) => encodeURIComponent(addr)).join(",")
-      : "";
+    const mailtoPath = to ? encodeURIComponent(to) : "";
 
     // Normalize line breaks, then force CRLF in the percent-encoded output for maximum client compatibility
     const normalizedBody = (body || "").replace(/\r\n|\r|\n/g, "\n");
@@ -62,9 +56,8 @@ export default function SendEmailWidget({
           className="w-full"
           id={`send-email-to-${content.id}`}
           placeholder={t("chat.tools.send_email.toPlaceholder")}
-          value={to.join(",")}
-          onChange={(e) => setTo(e.target.value.split(","))}
-          multiple
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
         />
       </div>
       <div className="space-y-2 w-full">
