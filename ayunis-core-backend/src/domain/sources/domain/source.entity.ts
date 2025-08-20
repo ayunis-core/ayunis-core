@@ -6,6 +6,7 @@ export abstract class Source {
   id: UUID;
   type: SourceType;
   name: string;
+  text: string;
   createdAt: Date;
   updatedAt: Date;
   content: SourceContent[];
@@ -15,6 +16,7 @@ export abstract class Source {
     type: SourceType;
     content: SourceContent[];
     name: string;
+    text: string;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -22,6 +24,7 @@ export abstract class Source {
     this.type = params.type;
     this.content = params.content;
     this.name = params.name;
+    this.text = params.text;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

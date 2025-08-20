@@ -140,7 +140,10 @@ export class ExecuteRunUseCase {
 
     // Internet search tool is always available
     // TODO: remove the self hosting constraint
-    if (isSelfhosted) {
+    if (
+      isSelfhosted &&
+      this.configService.get<boolean>('internetSearch.isAvailable')
+    ) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({

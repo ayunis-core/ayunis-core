@@ -85,6 +85,7 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
           relatedDocumentId,
         })
         .andWhere(`${embeddingColumn} IS NOT NULL`)
+        .setParameter('maxDistance', 0.35)
         // Order by cosine distance ascending (closest first)
         .orderBy(`${embeddingColumn} <=> :queryVector::vector`, 'ASC')
         .setParameter('queryVector', queryVectorString)

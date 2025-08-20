@@ -9,12 +9,12 @@ import {
 import { CreateUrlSourceCommand } from './create-url-source.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
-import { ProcessTextUseCase } from 'src/domain/rag/splitters/application/use-cases/process-text/process-text.use-case';
-import { ProcessTextCommand } from 'src/domain/rag/splitters/application/use-cases/process-text/process-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
 import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
+import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
+import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 
 @Injectable()
 export class CreateUrlSourceUseCase {
@@ -24,7 +24,7 @@ export class CreateUrlSourceUseCase {
     @Inject(SOURCE_REPOSITORY)
     private readonly sourceRepository: SourceRepository,
     private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
-    private readonly processTextUseCase: ProcessTextUseCase,
+    private readonly splitTextUseCase: SplitTextUseCase,
     private readonly ingestContentUseCase: IngestContentUseCase,
   ) {}
 
@@ -38,6 +38,7 @@ export class CreateUrlSourceUseCase {
     const urlSource = new UrlSource({
       url: command.url,
       content: [],
+      text: urlRetrieverResult.content,
       websiteTitle: urlRetrieverResult.websiteTitle,
     });
     // TODO: This is a hack to get the id of the source
@@ -72,8 +73,8 @@ export class CreateUrlSourceUseCase {
     const sourceContents: SourceContent[] = [];
 
     // Split text into content blocks
-    const contentBlocks = this.processTextUseCase.execute(
-      new ProcessTextCommand(text, SplitterType.RECURSIVE, {
+    const contentBlocks = this.splitTextUseCase.execute(
+      new SplitTextCommand(text, SplitterType.RECURSIVE, {
         chunkSize: 2000,
         chunkOverlap: 200,
       }),

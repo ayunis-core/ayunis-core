@@ -29,6 +29,7 @@ export class SourceMapper {
       fileType: entity.fileType,
       fileSize: entity.fileSize,
       fileName: entity.name,
+      text: entity.text,
       content: entity.content.map(
         (c) =>
           new SourceContent({
@@ -50,6 +51,7 @@ export class SourceMapper {
       id: entity.id,
       url: entity.url,
       websiteTitle: entity.name,
+      text: entity.text,
       content: entity.content.map(
         (c) =>
           new SourceContent({
@@ -83,6 +85,7 @@ export class SourceMapper {
     entity.fileType = source.fileType;
     entity.fileSize = source.fileSize;
     entity.name = source.name;
+    entity.text = source.text;
     entity.content = source.content.map((c) =>
       this.sourceContentMapper.toEntity(c),
     );
@@ -98,6 +101,7 @@ export class SourceMapper {
     entity.type = SourceType.URL;
     entity.url = source.url;
     entity.name = source.name;
+    entity.text = source.text;
     entity.content = source.content.map((c) =>
       this.sourceContentMapper.toEntity(c),
     );

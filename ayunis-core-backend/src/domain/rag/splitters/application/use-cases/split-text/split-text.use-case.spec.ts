@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProcessTextUseCase } from './process-text.use-case';
-import { ProcessTextCommand } from './process-text.command';
+import { SplitTextUseCase } from './split-text.use-case';
+import { SplitTextCommand } from './split-text.command';
 import { SplitterHandlerRegistry } from '../../splitter-handler.registry';
 import { SplitterType } from '../../../domain/splitter-type.enum';
 import { SplitResult, TextChunk } from '../../../domain/split-result.entity';
 
 describe('ProcessTextUseCase', () => {
-  let useCase: ProcessTextUseCase;
+  let useCase: SplitTextUseCase;
   let mockProviderRegistry: Partial<SplitterHandlerRegistry>;
 
   beforeEach(async () => {
@@ -21,7 +21,7 @@ describe('ProcessTextUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ProcessTextUseCase,
+        SplitTextUseCase,
         {
           provide: SplitterHandlerRegistry,
           useValue: mockProviderRegistry,
@@ -29,7 +29,7 @@ describe('ProcessTextUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<ProcessTextUseCase>(ProcessTextUseCase);
+    useCase = module.get<SplitTextUseCase>(SplitTextUseCase);
   });
 
   it('should be defined', () => {
@@ -38,7 +38,7 @@ describe('ProcessTextUseCase', () => {
 
   describe('execute', () => {
     it('should process text successfully', () => {
-      const command = new ProcessTextCommand(
+      const command = new SplitTextCommand(
         'This is test text',
         SplitterType.RECURSIVE,
         { chunkSize: 100 },
@@ -70,7 +70,7 @@ describe('ProcessTextUseCase', () => {
     });
 
     it('should handle different splitter providers', () => {
-      const command = new ProcessTextCommand('Test text', SplitterType.LINE);
+      const command = new SplitTextCommand('Test text', SplitterType.LINE);
 
       const expectedResult = new SplitResult([new TextChunk('Test text')]);
 
@@ -93,7 +93,7 @@ describe('ProcessTextUseCase', () => {
 
     it('should pass metadata to handler when provided', () => {
       const metadata = { chunkSize: 200, chunkOverlap: 20 };
-      const command = new ProcessTextCommand(
+      const command = new SplitTextCommand(
         'Test text',
         SplitterType.RECURSIVE,
         metadata,
@@ -117,10 +117,7 @@ describe('ProcessTextUseCase', () => {
     });
 
     it('should handle missing metadata', () => {
-      const command = new ProcessTextCommand(
-        'Test text',
-        SplitterType.RECURSIVE,
-      );
+      const command = new SplitTextCommand('Test text', SplitterType.RECURSIVE);
 
       const mockHandler = {
         processText: jest.fn().mockReturnValue(new SplitResult([])),

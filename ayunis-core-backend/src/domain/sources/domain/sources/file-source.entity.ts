@@ -13,6 +13,7 @@ export class FileSource extends Source {
     fileSize: number;
     fileName: string;
     content: SourceContent[];
+    text: string;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -21,6 +22,7 @@ export class FileSource extends Source {
       type: SourceType.FILE,
       content: params.content,
       name: params.fileName,
+      text: params.text,
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
     });

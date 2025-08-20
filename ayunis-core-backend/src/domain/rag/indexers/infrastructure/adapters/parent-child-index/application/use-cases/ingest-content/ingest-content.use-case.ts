@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
 import { ParentChunk } from '../../../domain/parent-chunk.entity';
-import { ProcessTextUseCase } from 'src/domain/rag/splitters/application/use-cases/process-text/process-text.use-case';
-import { ProcessTextCommand } from 'src/domain/rag/splitters/application/use-cases/process-text/process-text.command';
+import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
+import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { ChildChunk } from '../../../domain/child-chunk.entity';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
@@ -16,7 +16,7 @@ export class IngestContentUseCase {
   private readonly logger = new Logger(IngestContentUseCase.name);
   constructor(
     private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
-    private readonly processTextUseCase: ProcessTextUseCase,
+    private readonly splitTextUseCase: SplitTextUseCase,
     private readonly embedTextUseCase: EmbedTextUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
   ) {}
@@ -28,8 +28,8 @@ export class IngestContentUseCase {
     await this.parentChildIndexerRepository.delete(
       command.indexEntry.relatedDocumentId,
     );
-    const textChunks = this.processTextUseCase.execute(
-      new ProcessTextCommand(command.content, SplitterType.RECURSIVE),
+    const textChunks = this.splitTextUseCase.execute(
+      new SplitTextCommand(command.content, SplitterType.RECURSIVE),
     );
     const model = await this.getPermittedEmbeddingModelUseCase.execute(
       new GetPermittedEmbeddingModelQuery({

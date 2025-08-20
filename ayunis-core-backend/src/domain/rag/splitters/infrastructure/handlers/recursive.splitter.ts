@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   SplitterHandler,
   SplitterInput,
@@ -15,7 +14,7 @@ export class RecursiveSplitterHandler extends SplitterHandler {
   private readonly DEFAULT_CHUNK_SIZE = 1000;
   private readonly DEFAULT_CHUNK_OVERLAP = 200;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor() {
     super();
     this.logger.log('Initializing Recursive Text Splitter handler');
   }

@@ -3,7 +3,7 @@ import { RecursiveSplitterHandler } from './infrastructure/handlers/recursive.sp
 import { LineSplitterHandler } from './infrastructure/handlers/line.splitter';
 import { SplitterType } from './domain/splitter-type.enum';
 import { SplitterHandlerRegistry } from './application/splitter-handler.registry';
-import { ProcessTextUseCase } from './application/use-cases/process-text/process-text.use-case';
+import { SplitTextUseCase } from './application/use-cases/split-text/split-text.use-case';
 
 @Module({
   providers: [
@@ -23,10 +23,10 @@ import { ProcessTextUseCase } from './application/use-cases/process-text/process
       },
       inject: [RecursiveSplitterHandler, LineSplitterHandler],
     },
-    ProcessTextUseCase,
+    SplitTextUseCase,
     RecursiveSplitterHandler,
     LineSplitterHandler,
   ],
-  exports: [ProcessTextUseCase],
+  exports: [SplitTextUseCase],
 })
 export class SplitterModule {}
