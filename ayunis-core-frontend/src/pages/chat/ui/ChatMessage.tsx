@@ -124,11 +124,15 @@ function renderMessageContent(message: Message) {
             </Markdown>
           );
         } else if (content.type === "tool_use") {
-          const toolUseMessageContent = content as ToolUseMessageContent;
-          if (toolUseMessageContent.name === "send_email") {
-            return <SendEmailWidget content={toolUseMessageContent} />;
+          try {
+            const toolUseMessageContent = content as ToolUseMessageContent;
+            if (toolUseMessageContent.name === "send_email") {
+              return <SendEmailWidget content={toolUseMessageContent} />;
+            }
+            return <ExecutableToolWidget content={toolUseMessageContent} />;
+          } catch (e) {
+            return <Markdown>{"Error rendering tool use message"}</Markdown>;
           }
-          return <ExecutableToolWidget content={toolUseMessageContent} />;
         }
         return null;
       });
