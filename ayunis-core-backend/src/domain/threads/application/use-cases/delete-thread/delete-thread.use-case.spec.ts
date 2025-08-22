@@ -4,10 +4,12 @@ import { DeleteThreadUseCase } from './delete-thread.use-case';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { ThreadNotFoundError } from '../../threads.errors';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
+  let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as any;
@@ -20,15 +22,24 @@ describe('DeleteThreadUseCase', () => {
       update: jest.fn(),
     };
 
+    const mockContextService = {
+      get: jest.fn((key: string) => {
+        if (key === 'userId') return mockUserId;
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ContextService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteThreadUseCase,
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
     useCase = module.get<DeleteThreadUseCase>(DeleteThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
+    contextService = module.get(ContextService);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -42,7 +53,7 @@ describe('DeleteThreadUseCase', () => {
   describe('execute', () => {
     it('should delete thread successfully when thread exists', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       const mockThread = {
         id: mockThreadId,
@@ -72,7 +83,6 @@ describe('DeleteThreadUseCase', () => {
 
       expect(logSpy).toHaveBeenCalledWith('delete', {
         threadId: mockThreadId,
-        userId: mockUserId,
       });
       expect(logSpy).toHaveBeenCalledWith('Thread deleted successfully', {
         threadId: mockThreadId,
@@ -82,7 +92,7 @@ describe('DeleteThreadUseCase', () => {
 
     it('should throw ThreadNotFoundError when thread does not exist', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       threadsRepository.findOne.mockResolvedValue(null);
 
@@ -100,7 +110,7 @@ describe('DeleteThreadUseCase', () => {
 
     it('should throw ThreadNotFoundError when thread belongs to different user', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       threadsRepository.findOne.mockResolvedValue(null); // Repository returns null for threads not belonging to user
 
@@ -118,7 +128,7 @@ describe('DeleteThreadUseCase', () => {
 
     it('should re-throw ThreadNotFoundError without wrapping', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       const threadNotFoundError = new ThreadNotFoundError(
         mockThreadId,
@@ -135,7 +145,7 @@ describe('DeleteThreadUseCase', () => {
 
     it('should handle repository errors during deletion', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       const mockThread = {
         id: mockThreadId,
@@ -169,7 +179,7 @@ describe('DeleteThreadUseCase', () => {
 
     it('should handle unknown error types during deletion', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       const mockThread = {
         id: mockThreadId,
@@ -196,7 +206,7 @@ describe('DeleteThreadUseCase', () => {
 
     it('should log initial delete request', async () => {
       // Arrange
-      const command = new DeleteThreadCommand(mockThreadId, mockUserId);
+      const command = new DeleteThreadCommand(mockThreadId);
 
       const mockThread = {
         id: mockThreadId,
@@ -217,7 +227,6 @@ describe('DeleteThreadUseCase', () => {
       // Assert
       expect(logSpy).toHaveBeenCalledWith('delete', {
         threadId: mockThreadId,
-        userId: mockUserId,
       });
     });
   });

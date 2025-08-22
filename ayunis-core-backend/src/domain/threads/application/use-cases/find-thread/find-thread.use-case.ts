@@ -1,25 +1,30 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { FindThreadQuery } from './find-thread.query';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class FindThreadUseCase {
   private readonly logger = new Logger(FindThreadUseCase.name);
 
-  constructor(private readonly threadsRepository: ThreadsRepository) {}
+  constructor(
+    private readonly threadsRepository: ThreadsRepository,
+    private readonly contextService: ContextService,
+  ) {}
 
   async execute(query: FindThreadQuery): Promise<Thread> {
-    this.logger.log('findOne', { threadId: query.id, userId: query.userId });
+    this.logger.log('findOne', { threadId: query.id });
     try {
-      const thread = await this.threadsRepository.findOne(
-        query.id,
-        query.userId,
-      );
+      const userId = this.contextService.get('userId');
+      if (!userId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
+      const thread = await this.threadsRepository.findOne(query.id, userId);
       if (!thread) {
-        throw new ThreadNotFoundError(query.id, query.userId);
+        throw new ThreadNotFoundError(query.id, userId);
       }
       return new Thread({
         ...thread,
@@ -30,7 +35,6 @@ export class FindThreadUseCase {
       }
       this.logger.error('Failed to find thread', {
         threadId: query.id,
-        userId: query.userId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;

@@ -9,8 +9,6 @@ export class CreateAgentCommand {
     toolType: ToolType;
     toolConfigId: UUID | null;
   }>;
-  userId: UUID;
-  orgId: UUID;
 
   constructor(params: {
     name: string;
@@ -20,14 +18,10 @@ export class CreateAgentCommand {
       toolType: ToolType;
       toolConfigId: UUID | null;
     }>;
-    userId: UUID;
-    orgId: UUID;
   }) {
     this.name = params.name;
     this.instructions = params.instructions;
     this.modelId = params.modelId;
     this.toolAssignments = params.toolAssignments;
-    this.userId = params.userId;
-    this.orgId = params.orgId;
   }
 }

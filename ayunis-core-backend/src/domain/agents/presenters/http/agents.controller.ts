@@ -95,8 +95,6 @@ export class AgentsController {
             toolConfigId: toolAssignment.toolConfigId ?? null,
           }),
         ),
-        userId,
-        orgId,
       }),
     );
 
@@ -146,7 +144,7 @@ export class AgentsController {
     this.logger.log('findOne', { id, userId });
 
     const agent = await this.findAgentUseCase.execute(
-      new GetAgentQuery({ id, userId }),
+      new GetAgentQuery({ id }),
     );
 
     return this.agentDtoMapper.toDto(agent);
@@ -183,20 +181,20 @@ export class AgentsController {
     });
 
     const agent = await this.updateAgentUseCase.execute(
-      new UpdateAgentCommand(
-        id,
-        updateAgentDto.name,
-        updateAgentDto.instructions,
-        updateAgentDto.modelId,
-        userId,
-        orgId,
-        updateAgentDto.toolAssignments.map((toolAssignment) => ({
-          id: toolAssignment.id,
-          toolType: toolAssignment.type,
-          toolConfigId: toolAssignment.toolConfigId ?? null,
-          isEnabled: toolAssignment.isEnabled,
-        })),
-      ),
+      new UpdateAgentCommand({
+        agentId: id,
+        name: updateAgentDto.name,
+        instructions: updateAgentDto.instructions,
+        modelId: updateAgentDto.modelId,
+        toolAssignments: updateAgentDto.toolAssignments.map(
+          (toolAssignment) => ({
+            id: toolAssignment.id,
+            toolType: toolAssignment.type,
+            toolConfigId: toolAssignment.toolConfigId ?? null,
+            isEnabled: toolAssignment.isEnabled,
+          }),
+        ),
+      }),
     );
 
     return this.agentDtoMapper.toDto(agent);

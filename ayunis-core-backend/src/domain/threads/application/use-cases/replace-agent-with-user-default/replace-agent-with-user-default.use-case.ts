@@ -22,6 +22,12 @@ export class ReplaceAgentWithUserDefaultUseCase {
 
     const threads = await this.threadsRepository.findAllByAgent(
       command.oldAgentId,
+      {
+        withModel: true,
+        withAgent: true,
+        withSources: true,
+        withMessages: true,
+      },
     );
     this.logger.debug('Found threads', {
       threads,

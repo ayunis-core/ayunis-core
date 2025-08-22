@@ -29,7 +29,7 @@ export class ThreadMapper {
       ? this.agentMapper.toRecord(thread.agent)
       : undefined;
     record.title = thread.title;
-    record.messages = thread.messages.map((message) =>
+    record.messages = thread.messages?.map((message) =>
       this.messageMapper.toRecord(message),
     );
     record.sourceAssignments = thread.sourceAssignments?.map((assignment) =>

@@ -1,8 +1,11 @@
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
+import {
+  ThreadsFindAllOptions,
+  ThreadsRepository,
+} from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsRelations, Repository } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -76,45 +79,64 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.threadMapper.toDomain(threadEntity);
   }
 
-  async findAll(userId: UUID): Promise<Thread[]> {
+  async findAll(
+    userId: UUID,
+    options?: ThreadsFindAllOptions,
+  ): Promise<Thread[]> {
     this.logger.log('findAll', { userId });
     const threadEntities = await this.threadRepository.find({
       where: { userId },
-      relations: {
-        messages: true,
-        sourceAssignments: {
-          source: {
-            content: true,
-          },
-        },
-      },
+      relations: this.getRelations(options),
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 
-  async findAllByModel(modelId: UUID): Promise<Thread[]> {
+  async findAllByModel(
+    modelId: UUID,
+    options?: ThreadsFindAllOptions,
+  ): Promise<Thread[]> {
     this.logger.log('findAllByModel', { modelId });
     const threadEntities = await this.threadRepository.find({
       where: { modelId },
-      relations: ['messages', 'model', 'agent'],
+      relations: this.getRelations(options),
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 
-  async findAllByAgent(agentId: UUID): Promise<Thread[]> {
+  async findAllByAgent(
+    agentId: UUID,
+    options?: ThreadsFindAllOptions,
+  ): Promise<Thread[]> {
     this.logger.log('findAllByAgent', { agentId });
     const threadEntities = await this.threadRepository.find({
       where: { agentId },
-      relations: {
-        messages: true,
-        agent: {
-          model: {
-            model: true,
-          },
-        },
-      },
+      relations: this.getRelations(options),
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+  }
+
+  private getRelations(
+    options?: ThreadsFindAllOptions,
+  ): FindOptionsRelations<ThreadRecord> {
+    const relations: FindOptionsRelations<ThreadRecord> = {
+      messages: options?.withMessages ? true : false,
+      sourceAssignments: options?.withSources
+        ? {
+            source: {
+              content: true,
+            },
+          }
+        : false,
+      agent: options?.withAgent
+        ? {
+            model: {
+              model: true,
+            },
+          }
+        : false,
+      model: options?.withModel ? true : false,
+    };
+    return relations;
   }
 
   async update(thread: Thread): Promise<Thread> {

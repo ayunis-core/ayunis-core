@@ -1,6 +1,6 @@
 import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from '../domain/models/models.module';
 import { AgentsModule } from '../domain/agents/agents.module';
@@ -37,6 +37,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
+import { ClsModule } from 'nestjs-cls';
+import { ContextModule } from 'src/common/context/context.module';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 
 @Module({
   imports: [
@@ -57,6 +61,22 @@ import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-ca
         internetSearchConfig,
       ],
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
+      plugins: [
+        new ClsPluginTransactional({
+          imports: [
+            // module in which the database instance is provided
+            TypeOrmModule,
+          ],
+          adapter: new TransactionalAdapterTypeOrm({
+            // the injection token of the database instance
+            dataSourceToken: getDataSourceToken(),
+          }),
+        }),
+      ],
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'frontend'),
     }),
@@ -72,6 +92,7 @@ import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-ca
         return dataSource;
       },
     }),
+    ContextModule, // Global
     ModelsModule,
     AgentsModule,
     MessagesModule,

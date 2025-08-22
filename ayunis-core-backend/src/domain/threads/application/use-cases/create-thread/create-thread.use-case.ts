@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
@@ -14,6 +14,7 @@ import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { GetAgentUseCase } from 'src/domain/agents/application/use-cases/get-agent/get-agent.use-case';
 import { GetAgentQuery } from 'src/domain/agents/application/use-cases/get-agent/get-agent.query';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -23,11 +24,16 @@ export class CreateThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly getAgentUseCase: GetAgentUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CreateThreadCommand): Promise<Thread> {
-    this.logger.log('execute', { userId: command.userId });
+    this.logger.log('execute');
     try {
+      const userId = this.contextService.get('userId');
+      if (!userId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
       let model: PermittedLanguageModel | undefined;
       let agent: Agent | undefined;
 
@@ -35,7 +41,6 @@ export class CreateThreadUseCase {
         model = await this.getPermittedLanguageModelUseCase.execute(
           new GetPermittedLanguageModelQuery({
             id: command.modelId,
-            orgId: command.orgId,
           }),
         );
       }
@@ -44,17 +49,16 @@ export class CreateThreadUseCase {
         agent = await this.getAgentUseCase.execute(
           new GetAgentQuery({
             id: command.agentId,
-            userId: command.userId,
           }),
         );
       }
       if (!model && !agent) {
-        throw new NoModelOrAgentProvidedError(command.userId);
+        throw new NoModelOrAgentProvidedError(userId);
       }
 
       try {
         const thread = new Thread({
-          userId: command.userId,
+          userId,
           model: model,
           agent: agent,
           messages: [],
@@ -65,22 +69,21 @@ export class CreateThreadUseCase {
         });
       } catch (error) {
         this.logger.error('Failed to create thread', {
-          userId: command.userId,
+          userId,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
-        throw new ThreadCreationError(error as Error, command.userId);
+        throw new ThreadCreationError(error as Error, userId);
       }
     } catch (error) {
       if (error instanceof ModelError || error instanceof ThreadError) {
         throw error;
       }
       this.logger.error('Failed to create thread', {
-        userId: command.userId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error instanceof Error
-        ? new ThreadCreationError(error, command.userId)
-        : new ThreadCreationError(new Error('Unknown error'), command.userId);
+        ? new ThreadCreationError(error)
+        : new ThreadCreationError(new Error('Unknown error'));
     }
   }
 }

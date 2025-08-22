@@ -10,7 +10,7 @@ import { AuthProvider } from '../../config/authentication.config';
 import { LocalAuthenticationRepository } from './infrastructure/repositories/local/local-authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from './application/tokens/authentication-repository.token';
 import { JwtAuthGuard } from './application/guards/jwt-auth.guard';
-import { APP_GUARD, APP_FILTER } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { OrgsModule } from '../orgs/orgs.module';
 import { UnauthorizedExceptionFilter } from './application/filters/unauthorized-exception.filter';
@@ -27,6 +27,8 @@ import { EmailTemplatesModule } from 'src/common/email-templates/email-templates
 import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { ClsModule } from 'nestjs-cls';
+import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -60,6 +62,7 @@ export class AuthenticationModule {
             },
           }),
         }),
+        ClsModule.forFeature(),
       ],
       providers: [
         {
@@ -104,6 +107,10 @@ export class AuthenticationModule {
         {
           provide: APP_FILTER,
           useClass: UnauthorizedExceptionFilter,
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: UserContextInterceptor,
         },
         MeResponseDtoMapper,
       ],

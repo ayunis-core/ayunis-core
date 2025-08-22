@@ -6,13 +6,15 @@ import {
   ModelNotFoundByIdError,
   UnexpectedModelError,
 } from '../../models.errors';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class GetPermittedLanguageModelUseCase {
   private readonly logger = new Logger(GetPermittedLanguageModelUseCase.name);
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
@@ -21,8 +23,15 @@ export class GetPermittedLanguageModelUseCase {
     this.logger.log('getPermittedLanguageModel', {
       query,
     });
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     try {
-      const model = await this.permittedModelsRepository.findOneLanguage(query);
+      const model = await this.permittedModelsRepository.findOneLanguage({
+        id: query.id,
+        orgId,
+      });
       if (!model) {
         this.logger.error('model not found', {
           query,

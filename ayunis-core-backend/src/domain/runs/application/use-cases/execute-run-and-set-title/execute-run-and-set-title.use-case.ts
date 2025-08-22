@@ -51,9 +51,7 @@ export class ExecuteRunAndSetTitleUseCase {
         new ExecuteRunCommand({
           threadId: command.threadId,
           input: command.input,
-          userId: command.userId,
           streaming: command.streaming,
-          orgId: command.orgId,
         }),
       );
 
@@ -105,7 +103,7 @@ export class ExecuteRunAndSetTitleUseCase {
   ): Promise<RunThreadResponseDto | null> {
     try {
       const thread = await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId, command.userId),
+        new FindThreadQuery(command.threadId),
       );
       this.logger.debug('retrieved thread', { thread });
 
@@ -133,7 +131,6 @@ export class ExecuteRunAndSetTitleUseCase {
       if (!model) {
         throw new RunNoModelFoundError({
           threadId: command.threadId,
-          userId: command.userId,
         });
       }
 
@@ -142,7 +139,6 @@ export class ExecuteRunAndSetTitleUseCase {
           thread,
           model: model.model,
           message: firstUserMessage,
-          userId: command.userId,
         }),
       );
 

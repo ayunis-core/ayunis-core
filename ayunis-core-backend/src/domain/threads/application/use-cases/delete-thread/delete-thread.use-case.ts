@@ -1,34 +1,40 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ThreadNotFoundError } from '../../threads.errors';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class DeleteThreadUseCase {
   private readonly logger = new Logger(DeleteThreadUseCase.name);
 
-  constructor(private readonly threadsRepository: ThreadsRepository) {}
+  constructor(
+    private readonly threadsRepository: ThreadsRepository,
+    private readonly contextService: ContextService,
+  ) {}
 
   async execute(command: DeleteThreadCommand): Promise<void> {
-    this.logger.log('delete', { threadId: command.id, userId: command.userId });
+    this.logger.log('delete', { threadId: command.id });
+
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
 
     try {
       // First verify the thread exists and belongs to the user
-      const thread = await this.threadsRepository.findOne(
-        command.id,
-        command.userId,
-      );
+      const thread = await this.threadsRepository.findOne(command.id, userId);
 
       if (!thread) {
-        throw new ThreadNotFoundError(command.id, command.userId);
+        throw new ThreadNotFoundError(command.id, userId);
       }
 
       // Delete the thread
-      await this.threadsRepository.delete(command.id, command.userId);
+      await this.threadsRepository.delete(command.id, userId);
 
       this.logger.log('Thread deleted successfully', {
         threadId: command.id,
-        userId: command.userId,
+        userId,
       });
     } catch (error) {
       if (error instanceof ThreadNotFoundError) {
@@ -36,7 +42,7 @@ export class DeleteThreadUseCase {
       }
       this.logger.error('Failed to delete thread', {
         threadId: command.id,
-        userId: command.userId,
+        userId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;

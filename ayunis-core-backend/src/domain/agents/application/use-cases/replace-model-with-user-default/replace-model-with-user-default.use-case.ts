@@ -22,7 +22,7 @@ export class ReplaceModelWithUserDefaultUseCase {
       command.oldPermittedModelId,
     );
 
-    this.logger.log('Found agents using model', {
+    this.logger.debug('Found agents using model', {
       count: agents.length,
       modelId: command.oldPermittedModelId,
       agentIds: agents.map((a) => a.id),

@@ -6,6 +6,7 @@ import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted
 import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
 import { DeletePermittedModelUseCase } from '../delete-permitted-model/delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from '../delete-permitted-model/delete-permitted-model.command';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeletePermittedProviderUseCase {
@@ -17,13 +18,12 @@ export class DeletePermittedProviderUseCase {
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: DeletePermittedProviderCommand): Promise<void> {
     try {
       this.logger.debug(
         `Deleting permitted provider ${command.permittedProvider.provider} for organization ${command.orgId}`,
       );
-
-      // TODO: Make this a single transaction
 
       const permittedModels = await this.getPermittedModelsUseCase.execute(
         new GetPermittedModelsQuery(command.orgId, {

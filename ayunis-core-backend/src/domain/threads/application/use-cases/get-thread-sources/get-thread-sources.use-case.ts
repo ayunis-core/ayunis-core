@@ -15,12 +15,11 @@ export class GetThreadSourcesUseCase {
   async execute(query: FindThreadSourcesQuery): Promise<Source[]> {
     this.logger.log('getThreadSources', {
       threadId: query.threadId,
-      userId: query.userId,
     });
 
     try {
       const thread = await this.findThreadUseCase.execute(
-        new FindThreadQuery(query.threadId, query.userId),
+        new FindThreadQuery(query.threadId),
       );
       return (
         thread.sourceAssignments?.map((assignment) => assignment.source) || []
@@ -29,7 +28,7 @@ export class GetThreadSourcesUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      throw new ThreadNotFoundError(query.threadId, query.userId);
+      throw new ThreadNotFoundError(query.threadId);
     }
   }
 }

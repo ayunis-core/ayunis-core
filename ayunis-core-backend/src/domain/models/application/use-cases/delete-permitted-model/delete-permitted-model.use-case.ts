@@ -25,6 +25,7 @@ import { FindAllThreadsQuery } from 'src/domain/threads/application/use-cases/fi
 import { FindAllThreadsUseCase } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.use-case';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeletePermittedModelUseCase {
@@ -41,14 +42,13 @@ export class DeletePermittedModelUseCase {
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: DeletePermittedModelCommand): Promise<void> {
     this.logger.log('execute', {
       modelId: command.permittedModelId,
       orgId: command.orgId,
     });
     try {
-      // TODO: Make this a single transaction
-
       const model = await this.permittedModelsRepository.findOne({
         id: command.permittedModelId,
         orgId: command.orgId,
@@ -173,7 +173,9 @@ export class DeletePermittedModelUseCase {
 
     for (const user of users) {
       const threads = await this.findAllThreadsUseCase.execute(
-        new FindAllThreadsQuery(user.id),
+        new FindAllThreadsQuery(user.id, {
+          withSources: true,
+        }),
       );
       for (const thread of threads) {
         if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AgentRepository } from '../../ports/agent.repository';
 import { UpdateAgentCommand } from './update-agent.command';
 import { Agent } from '../../../domain/agent.entity';
@@ -8,6 +8,7 @@ import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class UpdateAgentUseCase {
@@ -17,19 +18,24 @@ export class UpdateAgentUseCase {
     private readonly agentRepository: AgentRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly assembleToolUseCase: AssembleToolUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UpdateAgentCommand): Promise<Agent> {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     this.logger.log('Updating agent', {
       agentId: command.agentId,
       name: command.name,
-      userId: command.userId,
+      userId,
     });
 
     // Check if agent exists and belongs to user
     const existingAgent = await this.agentRepository.findOne(
       command.agentId,
-      command.userId,
+      userId,
     );
 
     if (!existingAgent) {
@@ -40,7 +46,6 @@ export class UpdateAgentUseCase {
     const model = await this.getPermittedLanguageModelUseCase.execute(
       new GetPermittedLanguageModelQuery({
         id: command.modelId,
-        orgId: command.orgId,
       }),
     );
 
@@ -54,7 +59,6 @@ export class UpdateAgentUseCase {
               new AssembleToolCommand({
                 type: toolAssignment.toolType,
                 configId: toolAssignment.toolConfigId,
-                userId: command.userId,
               }),
             );
             return new AgentToolAssignment({
@@ -65,7 +69,6 @@ export class UpdateAgentUseCase {
           const tool = await this.assembleToolUseCase.execute(
             new AssembleToolCommand({
               type: toolAssignment.toolType,
-              userId: command.userId,
             }),
           );
           return new AgentToolAssignment({
@@ -82,7 +85,7 @@ export class UpdateAgentUseCase {
       instructions: command.instructions,
       model,
       toolAssignments,
-      userId: command.userId,
+      userId,
       createdAt: existingAgent.createdAt,
       updatedAt: new Date(),
     });

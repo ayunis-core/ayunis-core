@@ -68,7 +68,10 @@ export class GenerateAndSetThreadTitleUseCase {
 
       // Update thread with new title
       await this.updateThreadTitleUseCase.execute(
-        new UpdateThreadTitleCommand(command.thread.id, command.userId, title),
+        new UpdateThreadTitleCommand({
+          threadId: command.thread.id,
+          title,
+        }),
       );
       return title;
     } catch (error) {

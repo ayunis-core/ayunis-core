@@ -5,17 +5,10 @@ export class AssembleToolCommand {
   public readonly type: ToolType;
   public readonly configId?: UUID;
   public readonly context?: unknown;
-  public readonly userId: UUID;
 
-  constructor(params: {
-    type: ToolType;
-    configId?: UUID;
-    context?: unknown;
-    userId: UUID;
-  }) {
+  constructor(params: { type: ToolType; configId?: UUID; context?: unknown }) {
     this.type = params.type;
     this.configId = params.configId;
     this.context = params.context;
-    this.userId = params.userId;
   }
 }

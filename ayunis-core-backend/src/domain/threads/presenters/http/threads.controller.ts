@@ -105,18 +105,13 @@ export class ThreadsController {
   @ApiResponse({ status: 400, description: 'Invalid model data' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async create(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() createThreadDto: CreateThreadDto,
   ): Promise<GetThreadResponseDto> {
     this.logger.log('create', {
-      userId,
       modelId: createThreadDto.modelId,
     });
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
-        userId,
-        orgId,
         modelId: createThreadDto.modelId,
         agentId: createThreadDto.agentId,
       }),
@@ -165,12 +160,11 @@ export class ThreadsController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(GetThreadsResponseDtoItem)
   async findOne(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<GetThreadResponseDto> {
     this.logger.log('findOne', { id });
     const thread = await this.findThreadUseCase.execute(
-      new FindThreadQuery(id, userId),
+      new FindThreadQuery(id),
     );
     return this.getThreadDtoMapper.toDto(thread);
   }
@@ -192,8 +186,6 @@ export class ThreadsController {
   @ApiResponse({ status: 400, description: 'Invalid model data' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async updateModel(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Body() updateModelDto: UpdateThreadModelDto,
   ): Promise<void> {
@@ -204,9 +196,7 @@ export class ThreadsController {
 
     const command = new UpdateThreadModelCommand({
       threadId,
-      userId,
       modelId: updateModelDto.modelId,
-      orgId,
     });
 
     await this.updateThreadModelUseCase.execute(command);
@@ -262,12 +252,9 @@ export class ThreadsController {
   @ApiResponse({ status: 404, description: 'Thread not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Param('id', ParseUUIDPipe) id: UUID,
-  ): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
     this.logger.log('delete', { id });
-    await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id, userId));
+    await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id));
   }
 
   // Source Management Endpoints
@@ -288,12 +275,11 @@ export class ThreadsController {
   @ApiResponse({ status: 404, description: 'Thread not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async getThreadSources(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
   ): Promise<SourceResponseDto[]> {
     this.logger.log('getThreadSources', { threadId });
     const sources = await this.getThreadSourcesUseCase.execute(
-      new FindThreadSourcesQuery(threadId, userId),
+      new FindThreadSourcesQuery(threadId),
     );
     return sources.map((source) =>
       this.sourceDtoMapper.toDto(source, threadId),
@@ -349,7 +335,6 @@ export class ThreadsController {
   )
   async addFileSource(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Body() addFileSourceDto: AddFileSourceToThreadDto,
     @UploadedFile()
@@ -383,7 +368,7 @@ export class ThreadsController {
 
       // Add the source to the thread
       const thread = await this.findThreadUseCase.execute(
-        new FindThreadQuery(threadId, userId),
+        new FindThreadQuery(threadId),
       );
 
       await this.addSourceToThreadUseCase.execute(
@@ -465,7 +450,6 @@ export class ThreadsController {
   @ApiResponse({ status: 404, description: 'Thread or source not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeSource(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
@@ -473,7 +457,7 @@ export class ThreadsController {
 
     // First get the thread
     const thread = await this.findThreadUseCase.execute(
-      new FindThreadQuery(threadId, userId),
+      new FindThreadQuery(threadId),
     );
 
     // Remove the source from the thread

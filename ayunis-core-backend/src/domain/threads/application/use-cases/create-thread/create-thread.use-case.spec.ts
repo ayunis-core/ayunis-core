@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreateThreadUseCase } from './create-thread.use-case';
@@ -5,21 +6,27 @@ import { CreateThreadCommand } from './create-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetAgentUseCase } from 'src/domain/agents/application/use-cases/get-agent/get-agent.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   NoModelOrAgentProvidedError,
   ThreadCreationError,
 } from '../../threads.errors';
+import { UUID } from 'crypto';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
   let getAgentUseCase: jest.Mocked<GetAgentUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
-  const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as any;
-  const mockAgentId = '123e4567-e89b-12d3-a456-426614174003' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
+  const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
     const mockThreadsRepository = {
@@ -37,6 +44,14 @@ describe('CreateThreadUseCase', () => {
       execute: jest.fn(),
     };
 
+    const mockContextService = {
+      get: jest.fn((key: string) => {
+        if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ContextService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateThreadUseCase,
@@ -46,6 +61,7 @@ describe('CreateThreadUseCase', () => {
           useValue: mockGetPermittedLanguageModelUseCase,
         },
         { provide: GetAgentUseCase, useValue: mockGetAgentUseCase },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -55,6 +71,7 @@ describe('CreateThreadUseCase', () => {
       GetPermittedLanguageModelUseCase,
     );
     getAgentUseCase = module.get(GetAgentUseCase);
+    contextService = module.get(ContextService);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -69,63 +86,71 @@ describe('CreateThreadUseCase', () => {
     it('should create a thread with model successfully', async () => {
       // Arrange
       const command = new CreateThreadCommand({
-        userId: mockUserId,
-        orgId: mockOrgId,
         modelId: mockModelId,
       });
 
-      const mockModel = {
-        id: mockModelId,
+      const now = new Date();
+      const languageModel = new LanguageModel({
         name: 'Test Model',
-        model: { id: mockModelId, name: 'Test Model' } as any,
+        provider: ModelProvider.OPENAI,
+        displayName: 'Test Model',
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const mockModel = new PermittedLanguageModel({
+        id: mockModelId,
+        model: languageModel,
         orgId: mockOrgId,
         isDefault: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        createdAt: now,
+        updatedAt: now,
+      });
 
-      const mockCreatedThread = {
-        id: '123e4567-e89b-12d3-a456-426614174004' as any,
-        userId: command.userId,
+      const mockCreatedThread = new Thread({
+        userId: mockUserId,
         model: mockModel,
         agent: undefined,
         messages: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        createdAt: now,
+        updatedAt: now,
+      });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
+      threadsRepository.create.mockResolvedValue(mockCreatedThread);
+
+      const getModelExecuteSpy = jest.spyOn(
+        getPermittedLanguageModelUseCase,
+        'execute',
       );
-      threadsRepository.create.mockResolvedValue(mockCreatedThread as any);
+      const getAgentExecuteSpy = jest.spyOn(getAgentUseCase, 'execute');
 
       // Act
       const result = await useCase.execute(command);
 
       // Assert
-      expect(getPermittedLanguageModelUseCase.execute).toHaveBeenCalledWith(
+      expect(getModelExecuteSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           id: command.modelId,
-          orgId: command.orgId,
         }),
       );
-      expect(getAgentUseCase.execute).not.toHaveBeenCalled();
+      expect(getAgentExecuteSpy).not.toHaveBeenCalled();
       expect(threadsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: command.userId,
+          userId: mockUserId,
           model: mockModel,
           agent: undefined,
         }),
       );
+      expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(result).toBeTruthy();
     });
 
     it('should throw NoModelOrAgentProvidedError when neither model nor agent is provided', async () => {
       // Arrange
-      const command = new CreateThreadCommand({
-        userId: mockUserId,
-        orgId: mockOrgId,
-      });
+      const command = new CreateThreadCommand({});
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -139,82 +164,101 @@ describe('CreateThreadUseCase', () => {
     it('should log execution details', async () => {
       // Arrange
       const command = new CreateThreadCommand({
-        userId: mockUserId,
-        orgId: mockOrgId,
         modelId: mockModelId,
       });
 
-      const mockModel = {
-        id: mockModelId,
+      const now = new Date();
+      const languageModel = new LanguageModel({
         name: 'Test Model',
-        model: { id: mockModelId, name: 'Test Model' } as any,
+        provider: ModelProvider.OPENAI,
+        displayName: 'Test Model',
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const mockModel = new PermittedLanguageModel({
+        id: mockModelId,
+        model: languageModel,
         orgId: mockOrgId,
         isDefault: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        createdAt: now,
+        updatedAt: now,
+      });
 
-      const mockCreatedThread = {
-        id: '123e4567-e89b-12d3-a456-426614174004' as any,
-        userId: command.userId,
+      const mockCreatedThread = new Thread({
+        userId: mockUserId,
         model: mockModel,
         agent: undefined,
         messages: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        createdAt: now,
+        updatedAt: now,
+      });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
-      threadsRepository.create.mockResolvedValue(mockCreatedThread as any);
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
+      threadsRepository.create.mockResolvedValue(mockCreatedThread);
 
       const logSpy = jest.spyOn(Logger.prototype, 'log');
+      const getModelExecuteSpy = jest.spyOn(
+        getPermittedLanguageModelUseCase,
+        'execute',
+      );
 
       // Act
       await useCase.execute(command);
 
       // Assert
-      expect(logSpy).toHaveBeenCalledWith('execute', {
-        userId: command.userId,
-      });
+      expect(logSpy).toHaveBeenCalledWith('execute');
+      expect(getModelExecuteSpy).toHaveBeenCalled();
     });
 
     it('should handle repository creation errors', async () => {
       // Arrange
       const command = new CreateThreadCommand({
-        userId: mockUserId,
-        orgId: mockOrgId,
         modelId: mockModelId,
       });
 
-      const mockModel = {
-        id: mockModelId,
+      const now = new Date();
+      const languageModel = new LanguageModel({
         name: 'Test Model',
-        model: { id: mockModelId, name: 'Test Model' } as any,
+        provider: ModelProvider.OPENAI,
+        displayName: 'Test Model',
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const mockModel = new PermittedLanguageModel({
+        id: mockModelId,
+        model: languageModel,
         orgId: mockOrgId,
         isDefault: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+        createdAt: now,
+        updatedAt: now,
+      });
 
-      getPermittedLanguageModelUseCase.execute.mockResolvedValue(
-        mockModel as any,
-      );
+      getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
 
       const repositoryError = new Error('Database connection failed');
       threadsRepository.create.mockRejectedValue(repositoryError);
 
       const errorSpy = jest.spyOn(Logger.prototype, 'error');
+      const getModelExecuteSpy = jest.spyOn(
+        getPermittedLanguageModelUseCase,
+        'execute',
+      );
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
         ThreadCreationError,
       );
       expect(errorSpy).toHaveBeenCalledWith('Failed to create thread', {
-        userId: command.userId,
+        userId: mockUserId,
         error: 'Database connection failed',
       });
+      expect(getModelExecuteSpy).toHaveBeenCalled();
     });
   });
 });

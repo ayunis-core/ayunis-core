@@ -274,9 +274,7 @@ export class RunsController {
       const command = new ExecuteRunAndSetTitleCommand({
         threadId: params.threadId,
         input: params.input,
-        userId: params.userId,
         streaming: params.streaming,
-        orgId: params.orgId,
       });
 
       const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);

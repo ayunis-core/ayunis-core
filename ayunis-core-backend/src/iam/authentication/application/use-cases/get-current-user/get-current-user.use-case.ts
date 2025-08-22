@@ -7,6 +7,7 @@ import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 interface JwtPayload {
   sub: UUID;
@@ -63,6 +64,9 @@ export class GetCurrentUserUseCase {
         name: user.name,
       });
     } catch (error: unknown) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
       this.logger.error('Token verification failed', { error });
       throw new InvalidTokenError('Unable to verify access token');
     }

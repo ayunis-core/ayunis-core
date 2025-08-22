@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ToolResultMessageContent } from '../../../../messages/domain/message-contents/tool-result.message-content.entity';
 import { Message } from '../../../../messages/domain/message.entity';
 import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
@@ -52,6 +52,7 @@ import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/asse
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { ConfigService } from '@nestjs/config';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ContextService } from 'src/common/context/services/context.service';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -71,6 +72,7 @@ export class ExecuteRunUseCase {
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly assembleToolsUseCase: AssembleToolUseCase,
     private readonly configService: ConfigService,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
@@ -78,16 +80,21 @@ export class ExecuteRunUseCase {
   ): Promise<AsyncGenerator<Message, void, void>> {
     this.logger.log('executeRun', command);
     try {
+      const userId = this.contextService.get('userId');
+      const orgId = this.contextService.get('orgId');
+      if (!userId || !orgId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
       const thread = await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId, command.userId),
+        new FindThreadQuery(command.threadId),
       );
-      const tools = await this.assembleTools(thread, command.userId);
+      const tools = await this.assembleTools(thread);
       const model = this.pickModel(thread);
       const instructions = this.assemblySystemPrompt(thread);
 
       const trace = langfuse.trace({
         name: 'execute_run',
-        userId: command.userId,
+        userId: userId,
         metadata: {
           threadId: thread.id,
           model: model.model.name,
@@ -105,7 +112,7 @@ export class ExecuteRunUseCase {
         instructions,
         streaming: command.streaming,
         trace,
-        orgId: command.orgId,
+        orgId,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
@@ -117,7 +124,7 @@ export class ExecuteRunUseCase {
     }
   }
 
-  private async assembleTools(thread: Thread, userId: UUID): Promise<Tool[]> {
+  private async assembleTools(thread: Thread): Promise<Tool[]> {
     const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
     const tools: Tool[] = [];
 
@@ -135,7 +142,6 @@ export class ExecuteRunUseCase {
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
           type: ToolType.WEBSITE_CONTENT,
-          userId,
         }),
       ),
     );
@@ -145,7 +151,6 @@ export class ExecuteRunUseCase {
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
           type: ToolType.SEND_EMAIL,
-          userId,
         }),
       ),
     );
@@ -160,7 +165,6 @@ export class ExecuteRunUseCase {
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.INTERNET_SEARCH,
-            userId,
           }),
         ),
       );
@@ -175,7 +179,6 @@ export class ExecuteRunUseCase {
             context: thread.sourceAssignments.map(
               (assignment) => assignment.source,
             ),
-            userId,
           }),
         ),
       );

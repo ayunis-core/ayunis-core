@@ -11,12 +11,14 @@ import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('CreateAgentUseCase', () => {
   let useCase: CreateAgentUseCase;
   let agentRepository: jest.Mocked<AgentRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
   let assembleToolUseCase: jest.Mocked<AssembleToolUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
@@ -38,6 +40,14 @@ describe('CreateAgentUseCase', () => {
       execute: jest.fn(),
     };
 
+    const mockContextService = {
+      get: jest.fn((key: string) => {
+        if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ContextService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateAgentUseCase,
@@ -47,6 +57,7 @@ describe('CreateAgentUseCase', () => {
           useValue: mockGetPermittedLanguageModelUseCase,
         },
         { provide: AssembleToolUseCase, useValue: mockAssembleToolUseCase },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -56,6 +67,7 @@ describe('CreateAgentUseCase', () => {
       GetPermittedLanguageModelUseCase,
     );
     assembleToolUseCase = module.get(AssembleToolUseCase);
+    contextService = module.get(ContextService);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -78,8 +90,6 @@ describe('CreateAgentUseCase', () => {
             toolConfigId: null,
           },
         ],
-        userId: mockUserId,
-        orgId: mockOrgId,
       });
 
       const mockModel = new PermittedLanguageModel({
@@ -106,7 +116,7 @@ describe('CreateAgentUseCase', () => {
         instructions: command.instructions,
         model: mockModel,
         toolAssignments: [new AgentToolAssignment({ tool: mockTool })],
-        userId: command.userId,
+        userId: mockUserId,
       });
 
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(
@@ -122,13 +132,11 @@ describe('CreateAgentUseCase', () => {
       expect(getPermittedLanguageModelUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           id: command.modelId,
-          orgId: command.orgId,
         }),
       );
       expect(assembleToolUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           type: ToolType.INTERNET_SEARCH,
-          userId: command.userId,
         }),
       );
       expect(agentRepository.create).toHaveBeenCalledWith(expect.any(Agent));
@@ -148,8 +156,6 @@ describe('CreateAgentUseCase', () => {
             toolConfigId: toolConfigId,
           },
         ],
-        userId: mockUserId,
-        orgId: mockOrgId,
       });
 
       const mockModel = new PermittedLanguageModel({
@@ -176,7 +182,7 @@ describe('CreateAgentUseCase', () => {
         instructions: command.instructions,
         model: mockModel,
         toolAssignments: [new AgentToolAssignment({ tool: mockTool })],
-        userId: command.userId,
+        userId: mockUserId,
       });
 
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(
@@ -193,7 +199,6 @@ describe('CreateAgentUseCase', () => {
         expect.objectContaining({
           type: ToolType.SEND_EMAIL,
           configId: toolConfigId,
-          userId: command.userId,
         }),
       );
     });
@@ -214,8 +219,6 @@ describe('CreateAgentUseCase', () => {
             toolConfigId: '123e4567-e89b-12d3-a456-426614174003' as any,
           },
         ],
-        userId: mockUserId,
-        orgId: mockOrgId,
       });
 
       const mockModel = new PermittedLanguageModel({
@@ -252,7 +255,7 @@ describe('CreateAgentUseCase', () => {
           new AgentToolAssignment({ tool: mockTool1 }),
           new AgentToolAssignment({ tool: mockTool2 }),
         ],
-        userId: command.userId,
+        userId: mockUserId,
       });
 
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(
@@ -278,8 +281,6 @@ describe('CreateAgentUseCase', () => {
         instructions: 'Test instructions',
         modelId: mockModelId,
         toolAssignments: [],
-        userId: mockUserId,
-        orgId: mockOrgId,
       });
 
       const mockModel = new PermittedLanguageModel({
@@ -299,7 +300,7 @@ describe('CreateAgentUseCase', () => {
         instructions: command.instructions,
         model: mockModel,
         toolAssignments: [],
-        userId: command.userId,
+        userId: mockUserId,
       });
 
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(
