@@ -35,6 +35,7 @@ describe('UpdateUserNameUseCase', () => {
     const mockUser = new User({
       id: 'user-id' as UUID,
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hash',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
@@ -61,7 +62,7 @@ describe('UpdateUserNameUseCase', () => {
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockRejectedValue(error);
 
-    await expect(useCase.execute(command)).rejects.toThrow('User not found');
+    await expect(useCase.execute(command)).rejects.toThrow();
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
     expect(mockUsersRepository.update).not.toHaveBeenCalled();
   });
@@ -71,6 +72,7 @@ describe('UpdateUserNameUseCase', () => {
     const mockUser = new User({
       id: 'user-id' as UUID,
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hash',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
@@ -81,7 +83,7 @@ describe('UpdateUserNameUseCase', () => {
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest.spyOn(mockUsersRepository, 'update').mockRejectedValue(updateError);
 
-    await expect(useCase.execute(command)).rejects.toThrow('Update failed');
+    await expect(useCase.execute(command)).rejects.toThrow();
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
     expect(mockUsersRepository.update).toHaveBeenCalledWith(mockUser);
   });

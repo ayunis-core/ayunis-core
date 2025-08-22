@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RegisterUserUseCase } from './register-user.use-case';
+import { UnexpectedAuthenticationError } from '../../authentication.errors';
 import { RegisterUserCommand } from './register-user.command';
 import { CreateAdminUserUseCase } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { IsValidPasswordUseCase } from '../../../../users/application/use-cases/is-valid-password/is-valid-password.use-case';
@@ -13,12 +14,24 @@ import {
   AuthenticationFailedError,
 } from '../../authentication.errors';
 import { UUID } from 'crypto';
+import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
+import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
+import { CreateTrialUseCase } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.use-case';
+import { ConfigService } from '@nestjs/config';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { FindUserByEmailUseCase } from '../../../../users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
   let mockCreateAdminUserUseCase: Partial<CreateAdminUserUseCase>;
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockCreateOrgUseCase: Partial<CreateOrgUseCase>;
+  let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
+  let mockCreateLegalAcceptanceUseCase: any;
+  let mockSendConfirmationEmailUseCase: any;
+  let mockCreateTrialUseCase: any;
+  let mockConfigService: any;
+  let mockSendWebhookUseCase: any;
 
   beforeEach(async () => {
     mockCreateAdminUserUseCase = {
@@ -30,10 +43,17 @@ describe('RegisterUserUseCase', () => {
     mockCreateOrgUseCase = {
       execute: jest.fn(),
     };
+    mockFindUserByEmailUseCase = {
+      execute: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegisterUserUseCase,
+        {
+          provide: FindUserByEmailUseCase,
+          useValue: mockFindUserByEmailUseCase,
+        },
         {
           provide: CreateAdminUserUseCase,
           useValue: mockCreateAdminUserUseCase,
@@ -43,6 +63,20 @@ describe('RegisterUserUseCase', () => {
           useValue: mockIsValidPasswordUseCase,
         },
         { provide: CreateOrgUseCase, useValue: mockCreateOrgUseCase },
+        {
+          provide: CreateLegalAcceptanceUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: SendConfirmationEmailUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        { provide: CreateTrialUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(false) },
+        },
+        { provide: SendWebhookUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -64,6 +98,7 @@ describe('RegisterUserUseCase', () => {
     const mockUser = new User({
       id: 'user-id' as UUID,
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hashedPassword',
       role: UserRole.ADMIN,
       orgId: 'org-id' as UUID,
@@ -127,7 +162,7 @@ describe('RegisterUserUseCase', () => {
       .mockRejectedValue(new Error('Database error'));
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      AuthenticationFailedError,
+      UnexpectedAuthenticationError,
     );
   });
 });

@@ -23,6 +23,12 @@ describe('DeleteSourceUseCase', () => {
           provide: SOURCE_REPOSITORY,
           useValue: mockSourceRepository,
         },
+        {
+          provide:
+            require('src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case')
+              .DeleteContentUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -38,9 +44,11 @@ describe('DeleteSourceUseCase', () => {
 
     (mockSourceRepository.delete as jest.Mock).mockResolvedValue(undefined);
 
-    await useCase.execute(new DeleteSourceCommand(sourceId));
+    await useCase.execute(new DeleteSourceCommand({ id: sourceId } as any));
 
-    expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
+    expect(mockSourceRepository.delete).toHaveBeenCalledWith({
+      id: sourceId,
+    } as any);
   });
 
   it('should handle repository errors', async () => {
@@ -50,8 +58,10 @@ describe('DeleteSourceUseCase', () => {
     (mockSourceRepository.delete as jest.Mock).mockRejectedValue(error);
 
     await expect(
-      useCase.execute(new DeleteSourceCommand(sourceId)),
+      useCase.execute(new DeleteSourceCommand({ id: sourceId } as any)),
     ).rejects.toThrow('Repository error');
-    expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);
+    expect(mockSourceRepository.delete).toHaveBeenCalledWith({
+      id: sourceId,
+    } as any);
   });
 });

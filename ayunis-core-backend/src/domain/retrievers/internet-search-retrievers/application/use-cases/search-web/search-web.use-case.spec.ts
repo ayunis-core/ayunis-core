@@ -3,6 +3,7 @@ import { SearchWebUseCase } from './search-web.use-case';
 import { SearchWebCommand } from './search-web.command';
 import { InternetSearchHandler } from '../../ports/internet-search.handler';
 import { InternetSearchResult } from '../../../domain/internet-search-result.entity';
+import { InternetSearchResultType } from '../../../domain/value-objects/internet-search-result-type.enum';
 
 describe('SearchWebUseCase', () => {
   let useCase: SearchWebUseCase;
@@ -30,11 +31,12 @@ describe('SearchWebUseCase', () => {
   it('should search web successfully', async () => {
     const command = new SearchWebCommand('test query');
     const expectedResults = [
-      new InternetSearchResult(
-        'Test Title',
-        'Test snippet',
-        'https://example.com',
-      ),
+      new InternetSearchResult({
+        title: 'Test Title',
+        description: 'Test snippet',
+        url: 'https://example.com',
+        type: InternetSearchResultType.WEB,
+      }),
     ];
 
     jest.spyOn(mockHandler, 'search').mockResolvedValue(expectedResults);

@@ -35,13 +35,14 @@ describe('LoginUseCase', () => {
   });
 
   it('should login user successfully', async () => {
-    const activeUser = new ActiveUser(
-      'user-id' as UUID,
-      'test@example.com',
-      UserRole.USER,
-      'org-id' as UUID,
-      'name',
-    );
+    const activeUser = new ActiveUser({
+      id: 'user-id' as UUID,
+      email: 'test@example.com',
+      emailVerified: false,
+      role: UserRole.USER,
+      orgId: 'org-id' as UUID,
+      name: 'name',
+    });
     const command = new LoginCommand(activeUser);
     const expectedTokens = new AuthTokens('access-token', 'refresh-token');
 

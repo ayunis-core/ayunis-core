@@ -35,7 +35,7 @@ describe('RetrieveUrlUseCase', () => {
     const expectedResult = new UrlRetrieverResult(
       'Retrieved content',
       'https://example.com',
-      {},
+      'https://example.com',
     );
 
     jest.spyOn(mockHandler, 'retrieveUrl').mockResolvedValue(expectedResult);

@@ -3,11 +3,11 @@ import { DeleteAgentUseCase } from './delete-agent.use-case';
 import { AgentRepository } from '../../ports/agent.repository';
 import { DeleteAgentCommand } from './delete-agent.command';
 import { Agent } from '../../../domain/agent.entity';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { AgentNotFoundError } from '../../agents.errors';
 import { randomUUID } from 'crypto';
-import { Model } from 'src/domain/models/domain/model.entity';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 describe('DeleteAgentUseCase', () => {
   let useCase: DeleteAgentUseCase;
@@ -26,6 +26,12 @@ describe('DeleteAgentUseCase', () => {
       providers: [
         DeleteAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
+        {
+          provide:
+            require('src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case')
+              .ReplaceModelWithUserDefaultUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -41,12 +47,23 @@ describe('DeleteAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const command = new DeleteAgentCommand(agentId, userId);
+      const command = new DeleteAgentCommand({
+        agentId,
+        userId,
+        orgId: randomUUID(),
+      });
 
-      const mockModel = new PermittedModel({
+      const mockModel = new PermittedLanguageModel({
         id: randomUUID(),
         orgId: randomUUID(),
-        model: new Model('gpt-4', ModelProvider.OPENAI),
+        model: new LanguageModel({
+          name: 'gpt-4',
+          displayName: 'gpt-4',
+          provider: ModelProvider.OPENAI,
+          canStream: true,
+          isReasoning: false,
+          isArchived: false,
+        }),
       });
       const existingAgent = new Agent({
         name: 'Test Agent',
@@ -73,7 +90,11 @@ describe('DeleteAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const command = new DeleteAgentCommand(agentId, userId);
+      const command = new DeleteAgentCommand({
+        agentId,
+        userId,
+        orgId: randomUUID(),
+      });
 
       jest.spyOn(mockAgentRepository, 'findOne').mockResolvedValue(null);
 
@@ -89,7 +110,11 @@ describe('DeleteAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const command = new DeleteAgentCommand(agentId, userId);
+      const command = new DeleteAgentCommand({
+        agentId,
+        userId,
+        orgId: randomUUID(),
+      });
 
       // Mock repository to return null (agent not found for this user)
       jest.spyOn(mockAgentRepository, 'findOne').mockResolvedValue(null);
@@ -106,12 +131,23 @@ describe('DeleteAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const command = new DeleteAgentCommand(agentId, userId);
+      const command = new DeleteAgentCommand({
+        agentId,
+        userId,
+        orgId: randomUUID(),
+      });
 
-      const mockModel = new PermittedModel({
+      const mockModel = new PermittedLanguageModel({
         id: randomUUID(),
         orgId: randomUUID(),
-        model: new Model('gpt-4', ModelProvider.OPENAI),
+        model: new LanguageModel({
+          name: 'gpt-4',
+          displayName: 'gpt-4',
+          provider: ModelProvider.OPENAI,
+          canStream: true,
+          isReasoning: false,
+          isArchived: false,
+        }),
       });
       const existingAgent = new Agent({
         name: 'Test Agent',
@@ -139,7 +175,11 @@ describe('DeleteAgentUseCase', () => {
       // Arrange
       const agentId = randomUUID();
       const userId = randomUUID();
-      const command = new DeleteAgentCommand(agentId, userId);
+      const command = new DeleteAgentCommand({
+        agentId,
+        userId,
+        orgId: randomUUID(),
+      });
 
       const findError = new Error('Database connection failed');
       jest.spyOn(mockAgentRepository, 'findOne').mockRejectedValue(findError);

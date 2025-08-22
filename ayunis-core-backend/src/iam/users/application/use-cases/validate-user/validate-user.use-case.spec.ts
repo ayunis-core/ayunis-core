@@ -44,6 +44,7 @@ describe('ValidateUserUseCase', () => {
     const mockUser = new User({
       id: 'user-id' as UUID,
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hashedPassword',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
@@ -77,6 +78,7 @@ describe('ValidateUserUseCase', () => {
     const mockUser = new User({
       id: 'user-id' as UUID,
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hashedPassword',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,

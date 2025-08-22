@@ -6,6 +6,7 @@ import { RegisterUserUseCase } from '../../application/use-cases/register-user/r
 import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import { Request, Response } from 'express';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { ActiveUser } from '../../domain/active-user.entity';
@@ -51,6 +52,10 @@ describe('AuthenticationController', () => {
         { provide: GetCurrentUserUseCase, useValue: mockGetCurrentUserUseCase },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: JwtService, useValue: mockJwtService },
+        {
+          provide: MeResponseDtoMapper,
+          useValue: { toDto: (u: any) => ({ email: u.email, role: u.role }) },
+        },
       ],
     }).compile();
 
@@ -78,13 +83,14 @@ describe('AuthenticationController', () => {
     });
 
     it('should return user info when access token is valid', async () => {
-      const mockUser = new ActiveUser(
-        'user-id' as UUID,
-        'test@example.com',
-        UserRole.USER,
-        'org-id' as UUID,
-        'name',
-      );
+      const mockUser = new ActiveUser({
+        id: 'user-id' as UUID,
+        email: 'test@example.com',
+        emailVerified: false,
+        role: UserRole.USER,
+        orgId: 'org-id' as UUID,
+        name: 'name',
+      });
 
       // Mock config
       jest.spyOn(mockConfigService, 'get').mockImplementation((key) => {
@@ -116,13 +122,14 @@ describe('AuthenticationController', () => {
     });
 
     it('should refresh tokens and return user info when access token is invalid but refresh token is valid', async () => {
-      const mockUser = new ActiveUser(
-        'user-id' as UUID,
-        'test@example.com',
-        UserRole.ADMIN,
-        'org-id' as UUID,
-        'name',
-      );
+      const mockUser = new ActiveUser({
+        id: 'user-id' as UUID,
+        email: 'test@example.com',
+        emailVerified: false,
+        role: UserRole.ADMIN,
+        orgId: 'org-id' as UUID,
+        name: 'name',
+      });
       const mockTokens = new AuthTokens(
         'new-access-token',
         'new-refresh-token',

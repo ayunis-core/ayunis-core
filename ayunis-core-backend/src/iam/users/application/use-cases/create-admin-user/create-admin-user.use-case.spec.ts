@@ -7,11 +7,13 @@ import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UserAlreadyExistsError } from '../../users.errors';
 import { UUID } from 'crypto';
+import { CreateUserUseCase } from '../create-user/create-user.use-case';
 
 describe('CreateAdminUserUseCase', () => {
   let useCase: CreateAdminUserUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
   let mockHashTextUseCase: Partial<HashTextUseCase>;
+  let mockCreateUserUseCase: Partial<CreateUserUseCase>;
 
   beforeEach(async () => {
     mockUsersRepository = {
@@ -21,12 +23,16 @@ describe('CreateAdminUserUseCase', () => {
     mockHashTextUseCase = {
       execute: jest.fn(),
     };
+    mockCreateUserUseCase = {
+      execute: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateAdminUserUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: HashTextUseCase, useValue: mockHashTextUseCase },
+        { provide: CreateUserUseCase, useValue: mockCreateUserUseCase },
       ],
     }).compile();
 
@@ -43,10 +49,12 @@ describe('CreateAdminUserUseCase', () => {
       password: 'password123',
       orgId: 'org-id' as UUID,
       name: 'Admin User',
+      emailVerified: false,
     });
     const mockUser = new User({
       id: 'user-id' as UUID,
       email: 'admin@example.com',
+      emailVerified: false,
       passwordHash: 'hashedPassword',
       role: UserRole.ADMIN,
       orgId: 'org-id' as UUID,
@@ -57,16 +65,13 @@ describe('CreateAdminUserUseCase', () => {
     jest
       .spyOn(mockHashTextUseCase, 'execute')
       .mockResolvedValue('hashedPassword');
-    jest.spyOn(mockUsersRepository, 'create').mockResolvedValue(mockUser);
+    jest.spyOn(mockCreateUserUseCase, 'execute').mockResolvedValue(mockUser);
 
     const result = await useCase.execute(command);
 
     expect(result).toBe(mockUser);
-    expect(mockUsersRepository.findOneByEmail).toHaveBeenCalledWith(
-      'admin@example.com',
-    );
-    expect(mockHashTextUseCase.execute).toHaveBeenCalled();
-    expect(mockUsersRepository.create).toHaveBeenCalledWith(expect.any(User));
+    expect(mockCreateUserUseCase.execute).toHaveBeenCalled();
+    expect(mockCreateUserUseCase.execute).toHaveBeenCalled();
   });
 
   it('should throw UserAlreadyExistsError when user exists', async () => {
@@ -75,10 +80,12 @@ describe('CreateAdminUserUseCase', () => {
       password: 'password123',
       orgId: 'org-id' as UUID,
       name: 'Admin User',
+      emailVerified: false,
     });
     const existingUser = new User({
       id: 'existing-id' as UUID,
       email: 'admin@example.com',
+      emailVerified: false,
       passwordHash: 'hash',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
@@ -86,8 +93,8 @@ describe('CreateAdminUserUseCase', () => {
     });
 
     jest
-      .spyOn(mockUsersRepository, 'findOneByEmail')
-      .mockResolvedValue(existingUser);
+      .spyOn(mockCreateUserUseCase, 'execute')
+      .mockRejectedValue(new UserAlreadyExistsError('User already exists'));
 
     await expect(useCase.execute(command)).rejects.toThrow(
       UserAlreadyExistsError,

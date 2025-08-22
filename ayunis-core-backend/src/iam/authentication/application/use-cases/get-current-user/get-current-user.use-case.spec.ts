@@ -6,20 +6,23 @@ import { ActiveUser } from '../../../domain/active-user.entity';
 import { InvalidTokenError } from '../../authentication.errors';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 
 describe('GetCurrentUserUseCase', () => {
   let useCase: GetCurrentUserUseCase;
   let mockJwtService: Partial<JwtService>;
+  let mockFindUserByIdUseCase: Partial<FindUserByIdUseCase>;
 
   beforeEach(async () => {
-    mockJwtService = {
-      verify: jest.fn(),
-    };
+    mockJwtService = { verify: jest.fn() };
+    mockFindUserByIdUseCase = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetCurrentUserUseCase,
         { provide: JwtService, useValue: mockJwtService },
+        { provide: FindUserByIdUseCase, useValue: mockFindUserByIdUseCase },
       ],
     }).compile();
 
@@ -35,11 +38,20 @@ describe('GetCurrentUserUseCase', () => {
     const mockPayload = {
       sub: 'user-id-123' as UUID,
       email: 'test@example.com',
+      name: 'Test User',
       role: UserRole.USER,
       orgId: 'org-id-123' as UUID,
     };
 
     jest.spyOn(mockJwtService, 'verify').mockReturnValue(mockPayload);
+    (mockFindUserByIdUseCase.execute as jest.Mock).mockResolvedValue({
+      id: mockPayload.sub,
+      email: mockPayload.email,
+      emailVerified: false,
+      role: mockPayload.role,
+      orgId: mockPayload.orgId,
+      name: mockPayload.name,
+    });
 
     const result = await useCase.execute(command);
 

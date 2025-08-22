@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProcessFileUseCase } from './process-file.use-case';
 import { ProcessFileCommand } from './process-file.command';
 import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
+import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
+import { GetAllPermittedProvidersUseCase } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
 import {
   FileRetrieverResult,
   FileRetrieverPage,
@@ -10,16 +12,26 @@ import {
 describe('ProcessFileUseCase', () => {
   let useCase: ProcessFileUseCase;
   let mockHandler: Partial<FileRetrieverHandler>;
+  let mockRegistry: Partial<FileRetrieverRegistry>;
+  let mockGetProviders: Partial<GetAllPermittedProvidersUseCase>;
 
   beforeEach(async () => {
-    mockHandler = {
-      processFile: jest.fn(),
-    };
+    mockHandler = { processFile: jest.fn() };
+    mockRegistry = {
+      getHandler: jest.fn().mockReturnValue(mockHandler),
+    } as any;
+    mockGetProviders = {
+      execute: jest.fn().mockResolvedValue([{ provider: 'mistral' }]),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProcessFileUseCase,
-        { provide: FileRetrieverHandler, useValue: mockHandler },
+        { provide: FileRetrieverRegistry, useValue: mockRegistry },
+        {
+          provide: GetAllPermittedProvidersUseCase,
+          useValue: mockGetProviders,
+        },
       ],
     }).compile();
 

@@ -52,6 +52,7 @@ describe('RefreshTokenUseCase', () => {
     const mockUser = new User({
       id: 'user-id-123' as UUID,
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hash',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,

@@ -3,8 +3,8 @@ import {
   HttpToolConfig,
   HttpToolMethod,
   HttpTool,
-} from '../domain/tools/http-tool.entity';
-import { ToolType } from '../domain/value-objects/tool-type.enum';
+} from 'src/domain/tools/domain/tools/http-tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { UUID } from 'crypto';
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
@@ -27,7 +27,10 @@ describe('ToolFactory', () => {
         endpointUrl: 'https://api.example.com/test',
       });
 
-      const tool = factory.createTool(ToolType.HTTP, config) as HttpTool;
+      const tool = factory.createTool({
+        type: ToolType.HTTP,
+        config,
+      }) as HttpTool;
 
       expect(tool).toBeInstanceOf(HttpTool);
       expect(tool.name).toBe('http_test_http_tool');
@@ -35,24 +38,27 @@ describe('ToolFactory', () => {
     });
 
     it('should create an InternetSearchTool', () => {
-      const tool = factory.createTool(ToolType.INTERNET_SEARCH);
+      const tool = factory.createTool({ type: ToolType.INTERNET_SEARCH });
       expect(tool).toBeInstanceOf(InternetSearchTool);
     });
 
     it('should create an SourceQueryTool', () => {
-      const tool = factory.createTool(ToolType.SOURCE_QUERY);
+      const tool = factory.createTool({
+        type: ToolType.SOURCE_QUERY,
+        context: [],
+      });
       expect(tool).toBeInstanceOf(SourceQueryTool);
     });
 
     it('should create a WebsiteContentTool', () => {
-      const tool = factory.createTool(ToolType.WEBSITE_CONTENT);
+      const tool = factory.createTool({ type: ToolType.WEBSITE_CONTENT });
       expect(tool).toBeInstanceOf(WebsiteContentTool);
     });
 
     it('should throw error for unsupported tool type', () => {
       expect(() =>
-        factory.createTool('UNSUPPORTED' as unknown as ToolType),
-      ).toThrow('Unsupported tool type: UNSUPPORTED');
+        factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
+      ).toThrow('Invalid tool type: UNSUPPORTED');
     });
 
     it('should throw error for invalid config type', () => {
@@ -60,9 +66,9 @@ describe('ToolFactory', () => {
         displayName: 'Test Tool',
       } as unknown as HttpToolConfig;
 
-      expect(() => factory.createTool(ToolType.HTTP, invalidConfig)).toThrow(
-        'Invalid config type for HTTP tool',
-      );
+      expect(() =>
+        factory.createTool({ type: ToolType.HTTP, config: invalidConfig }),
+      ).toThrow('Invalid config for tool: HTTP');
     });
   });
 
@@ -75,7 +81,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.INTERNET_SEARCH);
       expect(types).toContain(ToolType.WEBSITE_CONTENT);
 
-      expect(types.length).toBe(4);
+      expect(types.length).toBe(5);
     });
   });
 });

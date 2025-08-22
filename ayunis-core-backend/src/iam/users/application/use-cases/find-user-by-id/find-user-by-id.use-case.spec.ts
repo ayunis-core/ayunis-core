@@ -35,6 +35,7 @@ describe('FindUserByIdUseCase', () => {
       id: 'user-id' as UUID,
       name: 'Test User',
       email: 'test@example.com',
+      emailVerified: false,
       passwordHash: 'hash',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,

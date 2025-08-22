@@ -11,6 +11,7 @@ describe('DeleteUserUseCase', () => {
   beforeEach(async () => {
     mockUsersRepository = {
       delete: jest.fn(),
+      findOneById: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,11 +35,18 @@ describe('DeleteUserUseCase', () => {
       requestUserId: '123e4567-e89b-12d3-a456-426614174000',
     });
 
+    jest
+      .spyOn(mockUsersRepository, 'findOneById')
+      .mockResolvedValue({
+        id: command.requestUserId,
+        role: 'admin',
+        orgId: command.orgId,
+      } as any);
     jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
 
     await useCase.execute(command);
 
-    expect(mockUsersRepository.delete).toHaveBeenCalledWith('user-id');
+    expect(mockUsersRepository.delete).toHaveBeenCalledWith(command.userId);
   });
 
   it('should handle repository errors', async () => {
@@ -49,9 +57,16 @@ describe('DeleteUserUseCase', () => {
     });
     const error = new Error('Repository error');
 
+    jest
+      .spyOn(mockUsersRepository, 'findOneById')
+      .mockResolvedValue({
+        id: command.requestUserId,
+        role: 'admin',
+        orgId: command.orgId,
+      } as any);
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);
 
     await expect(useCase.execute(command)).rejects.toThrow('Repository error');
-    expect(mockUsersRepository.delete).toHaveBeenCalledWith('user-id');
+    expect(mockUsersRepository.delete).toHaveBeenCalledWith(command.userId);
   });
 });

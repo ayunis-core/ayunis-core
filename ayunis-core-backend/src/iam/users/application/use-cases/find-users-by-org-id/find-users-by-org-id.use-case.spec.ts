@@ -35,6 +35,7 @@ describe('FindUsersByOrgIdUseCase', () => {
       new User({
         id: 'user-1' as UUID,
         email: 'user1@example.com',
+        emailVerified: false,
         passwordHash: 'hash1',
         role: UserRole.USER,
         orgId: 'org-id' as UUID,
@@ -43,6 +44,7 @@ describe('FindUsersByOrgIdUseCase', () => {
       new User({
         id: 'user-2' as UUID,
         email: 'user2@example.com',
+        emailVerified: false,
         passwordHash: 'hash2',
         role: UserRole.USER,
         orgId: 'org-id' as UUID,
