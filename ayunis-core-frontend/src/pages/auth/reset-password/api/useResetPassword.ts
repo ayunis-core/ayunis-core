@@ -1,20 +1,31 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  resetPasswordFormSchema,
-  type ResetPasswordFormValues,
-} from "../model/resetPasswordSchema";
 import { showError, showSuccess } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
 import { useUserControllerResetPassword } from "@/shared/api";
 import extractErrorData from "@/shared/api/extract-error-data";
+import * as z from "zod";
 
 export function useResetPassword(token: string) {
   const { t } = useTranslation("auth");
   const navigate = useNavigate();
 
-  const form = useForm<ResetPasswordFormValues>({
+  const resetPasswordFormSchema = z
+    .object({
+      newPassword: z.string().min(8, {
+        message: t("resetPassword.passwordTooShort"),
+      }),
+      confirmPassword: z.string().min(8, {
+        message: t("resetPassword.passwordTooShort"),
+      }),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("resetPassword.passwordsDontMatch"),
+      path: ["confirmPassword"],
+    });
+
+  const form = useForm<z.infer<typeof resetPasswordFormSchema>>({
     resolver: zodResolver(resetPasswordFormSchema),
     defaultValues: {
       newPassword: "",
@@ -41,7 +52,7 @@ export function useResetPassword(token: string) {
     },
   });
 
-  async function onSubmit(values: ResetPasswordFormValues) {
+  async function onSubmit(values: z.infer<typeof resetPasswordFormSchema>) {
     resetPassword({
       data: {
         resetToken: token,

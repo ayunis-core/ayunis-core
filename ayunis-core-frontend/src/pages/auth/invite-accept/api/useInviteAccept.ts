@@ -2,21 +2,37 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useInvitesControllerAcceptInvite } from "@/shared/api/generated/ayunisCoreAPI";
-import {
-  inviteAcceptFormSchema,
-  type InviteAcceptFormValues,
-} from "./inviteAcceptSchema";
 import type { Invite } from "../model/openapi";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { showError } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
+import * as z from "zod";
 
 export function useInviteAccept(invite: Invite, inviteToken: string) {
   const navigate = useNavigate();
   const acceptInviteMutation = useInvitesControllerAcceptInvite();
   const { t } = useTranslation("auth");
 
-  const form = useForm<InviteAcceptFormValues>({
+  const inviteAcceptFormSchema = z
+    .object({
+      email: z.string().email(),
+      name: z.string().min(1, {
+        message: t("inviteAccept.nameRequired"),
+      }),
+      password: z.string().min(8, {
+        message: t("inviteAccept.passwordTooShort"),
+      }),
+      confirmPassword: z.string().min(8, {
+        message: t("inviteAccept.passwordTooShort"),
+      }),
+      inviteToken: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("inviteAccept.passwordsDontMatch"),
+      path: ["confirmPassword"],
+    });
+
+  const form = useForm<z.infer<typeof inviteAcceptFormSchema>>({
     resolver: zodResolver(inviteAcceptFormSchema),
     defaultValues: {
       email: invite.email,
@@ -27,7 +43,7 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
     },
   });
 
-  const onSubmit = (values: InviteAcceptFormValues) => {
+  const onSubmit = (values: z.infer<typeof inviteAcceptFormSchema>) => {
     acceptInviteMutation.mutate(
       {
         data: {

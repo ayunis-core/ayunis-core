@@ -2,17 +2,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuthenticationControllerLogin } from "@/shared/api/generated/ayunisCoreAPI";
-import { loginFormSchema, type LoginFormValues } from "../model/loginSchema";
 import extractErrorData from "@/shared/api/extract-error-data";
 import { showError } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
+import * as z from "zod";
 
 export function useLogin({ redirect }: { redirect?: string }) {
   const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const loginMutation = useAuthenticationControllerLogin();
 
-  const form = useForm<LoginFormValues>({
+  const loginFormSchema = z.object({
+    email: z.string().email({
+      message: t("login.emailInvalid"),
+    }),
+    password: z.string().min(1, {
+      message: t("login.passwordRequired"),
+    }),
+  });
+
+  const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
@@ -20,7 +29,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
     },
   });
 
-  const onSubmit = (values: LoginFormValues) => {
+  const onSubmit = (values: z.infer<typeof loginFormSchema>) => {
     loginMutation.mutate(
       {
         data: {
