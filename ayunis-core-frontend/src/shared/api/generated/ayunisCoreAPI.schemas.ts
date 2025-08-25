@@ -748,6 +748,8 @@ export interface AgentResponseDto {
   model: ModelResponseDto;
   /** The tools assigned to this agent */
   tools: ToolResponseDto[];
+  /** The sources assigned to this agent */
+  sources: SourceResponseDto[];
 }
 
 export interface UpdateAgentDto {
@@ -1275,6 +1277,15 @@ export interface UpdateLanguageModelDto { [key: string]: unknown }
 export interface UpdateEmbeddingModelDto { [key: string]: unknown }
 
 export type ThreadsControllerAddFileSourceBody = {
+  /** The file to upload */
+  file: Blob;
+  /** The display name for the file source */
+  name?: string;
+  /** A description of the file source */
+  description?: string;
+};
+
+export type AgentsControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
   /** The display name for the file source */

@@ -84,5 +84,34 @@
   "delete": {
     "success": "Agent deleted successfully!",
     "error": "Failed to delete agent. Please try again."
+  },
+  "sources": {
+    "title": "Knowledge Sources",
+    "add": "Add Source",
+    "empty": "No sources added yet. Upload files to give your agent access to specific knowledge.",
+    "remove": "Remove source",
+    "openExternal": "Open external link",
+    "loadError": "Failed to load sources. Please try again.",
+    "addSuccess": "Source added successfully!",
+    "addError": "Failed to add source. Please try again.",
+    "removeSuccess": "Source removed successfully!",
+    "removeError": "Failed to remove source. Please try again.",
+    "confirmRemove": {
+      "title": "Remove Source",
+      "description": "Are you sure you want to remove \"{{name}}\"? This action cannot be undone.",
+      "confirmText": "Remove",
+      "cancelText": "Cancel"
+    },
+    "addDialog": {
+      "title": "Add Knowledge Source",
+      "description": "Upload a file to give your agent access to specific knowledge and information.",
+      "fileName": "File Name",
+      "selectFile": "Select File",
+      "upload": "Upload",
+      "dropzone": {
+        "title": "Drop your file here, or click to select",
+        "subtitle": "Supports PDF, DOC, TXT, MD, CSV, JSON, XML files"
+      }
+    }
   }
 }

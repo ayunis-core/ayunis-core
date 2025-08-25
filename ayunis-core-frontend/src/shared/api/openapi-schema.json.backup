@@ -1394,139 +1394,6 @@
         ]
       }
     },
-    "/agents/{id}/sources": {
-      "get": {
-        "operationId": "AgentsController_getAgentSources",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the agent",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns all sources for the agent",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SourceResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Agent not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all sources for an agent",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
-    "/agents/{id}/sources/file": {
-      "post": {
-        "operationId": "AgentsController_addFileSource",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the agent",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "The file to upload"
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "The display name for the file source"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "A description of the file source"
-                  }
-                },
-                "required": ["file"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The file source has been successfully added to the agent"
-          }
-        },
-        "summary": "Add a file source to an agent",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
-    "/agents/{id}/sources/{sourceId}": {
-      "delete": {
-        "operationId": "AgentsController_removeSource",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the agent",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sourceId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the source to remove",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The source has been successfully removed from the agent"
-          },
-          "404": {
-            "description": "Agent or source not found"
-          }
-        },
-        "summary": "Remove a source from an agent",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
     "/retrievers/url": {
       "post": {
         "operationId": "UrlRetrieverController_retrieveUrl",
@@ -4045,13 +3912,6 @@
             "items": {
               "$ref": "#/components/schemas/ToolResponseDto"
             }
-          },
-          "sources": {
-            "description": "The sources assigned to this agent",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SourceResponseDto"
-            }
           }
         },
         "required": [
@@ -4062,8 +3922,7 @@
           "createdAt",
           "updatedAt",
           "model",
-          "tools",
-          "sources"
+          "tools"
         ]
       },
       "UpdateAgentDto": {

@@ -30,6 +30,7 @@ import type {
   ActiveSubscriptionResponseDto,
   AdminControllerGetModelParams,
   AgentResponseDto,
+  AgentsControllerAddFileSourceBody,
   ConfirmEmailDto,
   CreateAgentDto,
   CreateEmbeddingModelDto,
@@ -3059,6 +3060,231 @@ export const useAgentsControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getAgentsControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Get all sources for an agent
+ */
+export const agentsControllerGetAgentSources = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SourceResponseDto[]>(
+      {url: `/agents/${id}/sources`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAgentsControllerGetAgentSourcesQueryKey = (id: string,) => {
+    return [`/agents/${id}/sources`] as const;
+    }
+
+    
+export const getAgentsControllerGetAgentSourcesQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerGetAgentSourcesQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>> = ({ signal }) => agentsControllerGetAgentSources(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AgentsControllerGetAgentSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>>
+export type AgentsControllerGetAgentSourcesQueryError = void
+
+
+export function useAgentsControllerGetAgentSources<TData = Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerGetAgentSources>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerGetAgentSources>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerGetAgentSources<TData = Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerGetAgentSources>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerGetAgentSources>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerGetAgentSources<TData = Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all sources for an agent
+ */
+
+export function useAgentsControllerGetAgentSources<TData = Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerGetAgentSources>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAgentsControllerGetAgentSourcesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Add a file source to an agent
+ */
+export const agentsControllerAddFileSource = (
+    id: string,
+    agentsControllerAddFileSourceBody: AgentsControllerAddFileSourceBody,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, agentsControllerAddFileSourceBody.file)
+if(agentsControllerAddFileSourceBody.name !== undefined) {
+ formData.append(`name`, agentsControllerAddFileSourceBody.name)
+ }
+if(agentsControllerAddFileSourceBody.description !== undefined) {
+ formData.append(`description`, agentsControllerAddFileSourceBody.description)
+ }
+
+      return customAxiosInstance<void>(
+      {url: `/agents/${id}/sources/file`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getAgentsControllerAddFileSourceMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAddFileSource>>, TError,{id: string;data: AgentsControllerAddFileSourceBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAddFileSource>>, TError,{id: string;data: AgentsControllerAddFileSourceBody}, TContext> => {
+
+const mutationKey = ['agentsControllerAddFileSource'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerAddFileSource>>, {id: string;data: AgentsControllerAddFileSourceBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  agentsControllerAddFileSource(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AgentsControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerAddFileSource>>>
+    export type AgentsControllerAddFileSourceMutationBody = AgentsControllerAddFileSourceBody
+    export type AgentsControllerAddFileSourceMutationError = unknown
+
+    /**
+ * @summary Add a file source to an agent
+ */
+export const useAgentsControllerAddFileSource = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAddFileSource>>, TError,{id: string;data: AgentsControllerAddFileSourceBody}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof agentsControllerAddFileSource>>,
+        TError,
+        {id: string;data: AgentsControllerAddFileSourceBody},
+        TContext
+      > => {
+
+      const mutationOptions = getAgentsControllerAddFileSourceMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Remove a source from an agent
+ */
+export const agentsControllerRemoveSource = (
+    id: string,
+    sourceId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/agents/${id}/sources/${sourceId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getAgentsControllerRemoveSourceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
+
+const mutationKey = ['agentsControllerRemoveSource'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
+          const {id,sourceId} = props ?? {};
+
+          return  agentsControllerRemoveSource(id,sourceId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AgentsControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerRemoveSource>>>
+    
+    export type AgentsControllerRemoveSourceMutationError = void
+
+    /**
+ * @summary Remove a source from an agent
+ */
+export const useAgentsControllerRemoveSource = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof agentsControllerRemoveSource>>,
+        TError,
+        {id: string;sourceId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAgentsControllerRemoveSourceMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
