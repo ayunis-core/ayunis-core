@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { SourceResponseDto } from '../../../threads/presenters/http/dto/get-thread-response.dto/source-response.dto';
 
 export class ModelResponseDto {
   @ApiProperty({
@@ -100,4 +101,10 @@ export class AgentResponseDto {
     type: [ToolResponseDto],
   })
   tools: ToolResponseDto[];
+
+  @ApiProperty({
+    description: 'The sources assigned to this agent',
+    type: [SourceResponseDto],
+  })
+  sources: SourceResponseDto[];
 }
