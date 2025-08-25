@@ -7,7 +7,7 @@ import {
   CardFooter,
 } from "@/shared/ui/shadcn/card";
 import { Button } from "@/shared/ui/shadcn/button";
-import { Edit, MessageCircle, Trash2 } from "lucide-react";
+import { Edit, MessageCircle, Trash2, Settings } from "lucide-react";
 import EditAgentDialog from "./EditAgentDialog";
 import { useDeleteAgent } from "../api/useDeleteAgent";
 import { useConfirmation } from "@/widgets/confirmation-modal";
@@ -44,6 +44,11 @@ export default function AgentCard({ agent }: AgentCardProps) {
         <CardTitle className="text-lg">{agent.name}</CardTitle>
         <CardAction>
           <div className="flex items-center gap-2">
+            <Link to="/agents/$agentId" params={{ agentId: agent.id }}>
+              <Button variant="ghost" size="icon" title="View Details">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
             <Link to="/chat" search={{ agentId: agent.id }}>
               <Button variant="ghost">
                 <MessageCircle className="h-4 w-4" />{" "}
@@ -72,14 +77,21 @@ export default function AgentCard({ agent }: AgentCardProps) {
       <CardContent>
         <p className="line-clamp-2">{agent.instructions}</p>
       </CardContent>
-      {agent.tools.length > 0 && (
+      {(agent.tools.length > 0 || agent.sources.length > 0) && (
         <CardFooter>
           <div className="flex flex-col gap-2">
-            {agent.tools.map((tool) => (
-              <Badge key={tool.type} variant="outline">
-                {tool.type}
-              </Badge>
-            ))}
+            <div className="flex flex-wrap gap-2">
+              {agent.tools.map((tool) => (
+                <Badge key={tool.type} variant="outline">
+                  {tool.type}
+                </Badge>
+              ))}
+              {agent.sources.length > 0 && (
+                <Badge variant="secondary">
+                  {agent.sources.length} {agent.sources.length === 1 ? 'source' : 'sources'}
+                </Badge>
+              )}
+            </div>
           </div>
         </CardFooter>
       )}

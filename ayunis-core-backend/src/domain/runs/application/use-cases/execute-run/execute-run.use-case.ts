@@ -170,15 +170,30 @@ export class ExecuteRunUseCase {
       );
     }
 
-    // Source query tool is available if there are sources in the thread
+    // Collect all sources from thread and agent
+    const allSources = [];
+    
+    // Add thread sources
     if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
+      allSources.push(
+        ...thread.sourceAssignments.map((assignment) => assignment.source),
+      );
+    }
+    
+    // Add agent sources
+    if (thread.agent && thread.agent.sourceAssignments && thread.agent.sourceAssignments.length > 0) {
+      allSources.push(
+        ...thread.agent.sourceAssignments.map((assignment) => assignment.source),
+      );
+    }
+
+    // Source query tool is available if there are any sources (from thread or agent)
+    if (allSources.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
-            context: thread.sourceAssignments.map(
-              (assignment) => assignment.source,
-            ),
+            context: allSources,
           }),
         ),
       );
