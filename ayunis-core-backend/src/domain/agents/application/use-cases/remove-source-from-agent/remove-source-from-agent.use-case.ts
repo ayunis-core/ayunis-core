@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RemoveSourceFromAgentCommand } from './remove-source-from-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
 import { Agent } from '../../../domain/agent.entity';
+import { AgentSourceNotFoundError } from '../../agents.errors';
 
 @Injectable()
 export class RemoveSourceFromAgentUseCase {
@@ -14,6 +15,15 @@ export class RemoveSourceFromAgentUseCase {
       agentId: command.agent.id,
       sourceId: command.sourceId,
     });
+
+    // Check if the source assignment exists
+    const existingAssignment = command.agent.sourceAssignments.find(
+      (assignment) => assignment.source.id === command.sourceId,
+    );
+
+    if (!existingAssignment) {
+      throw new AgentSourceNotFoundError(command.sourceId, command.agent.id);
+    }
 
     // Filter out the source assignment to remove
     const updatedSourceAssignments = command.agent.sourceAssignments.filter(

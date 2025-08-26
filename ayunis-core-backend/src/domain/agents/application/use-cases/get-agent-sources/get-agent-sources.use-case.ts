@@ -29,7 +29,7 @@ export class GetAgentSourcesUseCase {
 
     const sources = agent.sourceAssignments.map((assignment) => assignment.source);
 
-    this.logger.debug('Agent sources retrieved', {
+    this.logger.debug('Retrieved agent sources successfully', {
       agentId: query.agentId,
       sourceCount: sources.length,
     });
