@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminSettingsIndexImport } from './routes/_authen
 import { Route as AuthenticatedSettingsGeneralImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
+import { Route as AuthenticatedAgentsAgentIdImport } from './routes/_authenticated/agents.$agentId'
 import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
@@ -126,6 +127,14 @@ const AuthenticatedChatsThreadIdRoute = AuthenticatedChatsThreadIdImport.update(
   {
     id: '/chats/$threadId',
     path: '/chats/$threadId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any,
+)
+
+const AuthenticatedAgentsAgentIdRoute = AuthenticatedAgentsAgentIdImport.update(
+  {
+    id: '/agents/$agentId',
+    path: '/agents/$agentId',
     getParentRoute: () => AuthenticatedRoute,
   } as any,
 )
@@ -251,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsUsersImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/agents/$agentId': {
+      id: '/_authenticated/agents/$agentId'
+      path: '/agents/$agentId'
+      fullPath: '/agents/$agentId'
+      preLoaderRoute: typeof AuthenticatedAgentsAgentIdImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/chats/$threadId': {
       id: '/_authenticated/chats/$threadId'
       path: '/chats/$threadId'
@@ -316,6 +332,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
+  AuthenticatedAgentsAgentIdRoute: typeof AuthenticatedAgentsAgentIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
@@ -331,6 +348,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminSettingsBillingRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
   AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
+  AuthenticatedAgentsAgentIdRoute: AuthenticatedAgentsAgentIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
@@ -358,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -381,6 +400,7 @@ export interface FileRoutesByTo {
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -405,6 +425,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/_authenticated/agents/$agentId': typeof AuthenticatedAgentsAgentIdRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -430,6 +451,7 @@ export interface FileRouteTypes {
     | '/admin-settings/billing'
     | '/admin-settings/models'
     | '/admin-settings/users'
+    | '/agents/$agentId'
     | '/chats/$threadId'
     | '/settings/account'
     | '/settings/general'
@@ -452,6 +474,7 @@ export interface FileRouteTypes {
     | '/admin-settings/billing'
     | '/admin-settings/models'
     | '/admin-settings/users'
+    | '/agents/$agentId'
     | '/chats/$threadId'
     | '/settings/account'
     | '/settings/general'
@@ -474,6 +497,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/billing'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/users'
+    | '/_authenticated/agents/$agentId'
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/general'
@@ -539,6 +563,7 @@ export const routeTree = rootRoute
         "/_authenticated/admin-settings/billing",
         "/_authenticated/admin-settings/models",
         "/_authenticated/admin-settings/users",
+        "/_authenticated/agents/$agentId",
         "/_authenticated/chats/$threadId",
         "/_authenticated/settings/account",
         "/_authenticated/settings/general",
@@ -580,6 +605,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/admin-settings/users": {
       "filePath": "_authenticated/admin-settings.users.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/agents/$agentId": {
+      "filePath": "_authenticated/agents.$agentId.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/chats/$threadId": {

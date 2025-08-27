@@ -33,6 +33,8 @@
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled."
   },
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "uploading": "Uploading..."
   }
 }

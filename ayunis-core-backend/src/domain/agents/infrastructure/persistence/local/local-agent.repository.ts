@@ -10,6 +10,7 @@ import { AgentMapper } from './mappers/agent.mapper';
 import { AgentNotFoundError } from '../../../application/agents.errors';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { AgentToolAssignmentRecord } from './schema/agent-tool.record';
+import { AgentSourceAssignmentRecord } from './schema/agent-source-assignment.record';
 
 @Injectable()
 export class LocalAgentRepository implements AgentRepository {
@@ -40,7 +41,7 @@ export class LocalAgentRepository implements AgentRepository {
       // Load the agent with relations to return complete data
       const agentWithRelations = await this.agentRepository.findOne({
         where: { id: savedAgent.id },
-        relations: ['agentTools'],
+        relations: ['agentTools', 'agentSources'],
       });
 
       if (!agentWithRelations) {
@@ -79,6 +80,7 @@ export class LocalAgentRepository implements AgentRepository {
           agentTools: {
             toolConfig: true,
           },
+          agentSources: true,
           model: {
             model: true,
           },
@@ -108,9 +110,26 @@ export class LocalAgentRepository implements AgentRepository {
         await queryRunner.manager.delete(AgentToolAssignmentRecord, ta.id);
       }
 
+      // delete existing source assignments if they are not in the new source assignments
+      const existingSourceAssignments = existing.agentSources;
+      const newSourceAssignments = agent.sourceAssignments;
+      const sourceAssignmentsToDelete =
+        existingSourceAssignments?.filter(
+          (sa) => !newSourceAssignments.some((sa2) => sa2.id === sa.id),
+        ) ?? [];
+      this.logger.debug('Source assignments to delete', {
+        existingSourceAssignments,
+        newSourceAssignments,
+        sourceAssignmentsToDelete,
+      });
+      for (const sa of sourceAssignmentsToDelete) {
+        await queryRunner.manager.delete(AgentSourceAssignmentRecord, sa.id);
+      }
+
       const updatedAgent = new Agent({
         ...agent,
         toolAssignments: newToolAssignments,
+        sourceAssignments: newSourceAssignments,
       });
       this.logger.debug('Updated agent', {
         agent,
@@ -165,7 +184,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntity = await this.agentRepository.findOne({
         where: { id, userId },
-        relations: ['agentTools', 'model'],
+        relations: ['agentTools', 'agentSources', 'model'],
       });
 
       if (!agentEntity) {
@@ -195,7 +214,7 @@ export class LocalAgentRepository implements AgentRepository {
           id: In(ids),
           userId,
         },
-        relations: ['agentTools', 'model'],
+        relations: ['agentTools', 'agentSources', 'model'],
       });
 
       this.logger.debug('Agents found', { count: agentEntities.length });
@@ -216,7 +235,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntities = await this.agentRepository.find({
         where: { userId },
-        relations: ['agentTools'], // Include agentTools relation
+        relations: ['agentTools', 'agentSources'], // Include agentTools and agentSources relations
       });
 
       this.logger.debug('Agents found for user', {
@@ -239,7 +258,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntities = await this.agentRepository.find({
         where: { modelId },
-        relations: ['agentTools'],
+        relations: ['agentTools', 'agentSources'],
       });
 
       this.logger.debug('Agents found for model', {
