@@ -1,0 +1,38 @@
+{
+	"compilerOptions": {
+		"module": "esnext",
+		"target": "esnext",
+		"types": ["cypress"],
+		"baseUrl": "cypress",
+		"paths": {
+			"@pages/*": ["pages/*"],
+			"@data/*": ["data/*"]
+		},
+
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+
+		// Style Options
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"noPropertyAccessFromIndexSignature": true,
+
+		// Recommended Options
+		"strict": true,
+		"jsx": "react-jsx",
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"noUncheckedSideEffectImports": true,
+		"moduleDetection": "force",
+		"skipLibCheck": true
+	},
+	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts"],
+	"exclude": ["node_modules"]
+}
