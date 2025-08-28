@@ -14,6 +14,7 @@ export enum ThreadErrorCode {
   THREAD_UPDATE_FAILED = 'THREAD_UPDATE_FAILED',
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
   NO_MODEL_OR_AGENT_PROVIDED = 'NO_MODEL_OR_AGENT_PROVIDED',
+  UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
 }
 
 /**
@@ -157,6 +158,19 @@ export class NoModelOrAgentProvidedError extends ThreadError {
       400,
       {
         ...(userId && { userId }),
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class UnexpecteThreadError extends ThreadError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'Unexpected thread error',
+      ThreadErrorCode.UNEXPECTED_THREAD_ERROR,
+      500,
+      {
         ...metadata,
       },
     );

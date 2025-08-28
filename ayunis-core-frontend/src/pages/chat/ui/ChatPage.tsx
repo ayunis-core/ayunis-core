@@ -33,6 +33,8 @@ import { AxiosError } from "axios";
 import type { ChatInputRef } from "@/widgets/chat-input/ui/ChatInput";
 import { useCreateFileSource } from "@/pages/chat/api/useCreateFileSource";
 import { useDeleteFileSource } from "../api/useDeleteFileSource";
+import { useRemoveThreadAgent } from "../api/useRemoveThreadAgent";
+import { useAgents } from "@/features/useAgents";
 
 interface ChatPageProps {
   thread: Thread;
@@ -46,6 +48,8 @@ export default function ChatPage({
   const { t } = useTranslation("chats");
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
+  const { agents } = useAgents();
+  const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<Element | null>(null);
@@ -79,6 +83,8 @@ export default function ChatPage({
 
   const { updateModel } = useUpdateThreadModel({ threadId: thread.id });
   const { updateAgent } = useUpdateThreadAgent({ threadId: thread.id });
+  const { removeAgent } = useRemoveThreadAgent({ threadId: thread.id });
+
   const {
     createFileSource,
     createFileSourceAsync,
@@ -354,12 +360,20 @@ export default function ChatPage({
   const chatInput = (
     <ChatInput
       ref={chatInputRef}
-      modelOrAgentId={thread.agentId ?? thread.permittedModelId}
+      modelId={
+        // If the thread has an agent, use the agent's model,
+        // but disable the model selection
+        // to only show the model that the agent uses
+        thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
+      }
+      isModelChangeDisabled={!!thread.agentId}
+      agentId={thread.agentId}
       sources={thread.sources}
       isStreaming={isStreaming}
       isCreatingFileSource={isTotallyCreatingFileSource}
       onModelChange={updateModel}
       onAgentChange={updateAgent}
+      onAgentRemove={removeAgent}
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onSend={handleSend}

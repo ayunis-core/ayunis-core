@@ -30,7 +30,15 @@
     "fileSourceUploadError": "Error uploading file",
     "fileSourceDeleteError": "Error deleting file",
     "uploadFile": "Upload file",
-    "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled."
+    "addPrompt": "Add Prompt",
+    "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
+    "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",
+    "tools": {
+      "title": "Tools",
+      "internet_search": "Internet Search",
+      "send_email": "Prepare Emails",
+      "cannot_disable": "This function cannot be disabled."
+    }
   },
   "common": {
     "loading": "Loading..."

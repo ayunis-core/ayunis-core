@@ -1067,6 +1067,36 @@
         "tags": [
           "threads"
         ]
+      },
+      "delete": {
+        "operationId": "ThreadsController_removeAgent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread to remove the agent from",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The agent has been successfully removed from the thread"
+          },
+          "404": {
+            "description": "Thread not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Remove agent from thread",
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}/sources": {

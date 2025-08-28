@@ -2473,6 +2473,68 @@ export const useThreadsControllerUpdateAgent = <TError = void,
     }
     
 /**
+ * @summary Remove agent from thread
+ */
+export const threadsControllerRemoveAgent = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/agent`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerRemoveAgentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['threadsControllerRemoveAgent'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  threadsControllerRemoveAgent(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerRemoveAgentMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>>
+    
+    export type ThreadsControllerRemoveAgentMutationError = void
+
+    /**
+ * @summary Remove agent from thread
+ */
+export const useThreadsControllerRemoveAgent = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerRemoveAgent>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerRemoveAgentMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * @summary Get all sources for a thread
  */
 export const threadsControllerGetThreadSources = (

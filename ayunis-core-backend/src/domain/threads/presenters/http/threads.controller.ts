@@ -72,6 +72,8 @@ import { UpdateThreadAgentCommand } from '../../application/use-cases/update-thr
 import { UpdateThreadAgentUseCase } from '../../application/use-cases/update-thread-agent/update-thread-agent.use-case';
 import { UpdateThreadAgentDto } from './dto/update-thread-agent.dto';
 import * as fs from 'fs';
+import { RemoveAgentFromThreadCommand } from '../../application/use-cases/remove-agent-from-thread/remove-agent-from-thread.command';
+import { RemoveAgentFromThreadUseCase } from '../../application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -92,6 +94,7 @@ export class ThreadsController {
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
     private readonly updateThreadAgentUseCase: UpdateThreadAgentUseCase,
+    private readonly removeAgentFromThreadUseCase: RemoveAgentFromThreadUseCase,
   ) {}
 
   @Post()
@@ -235,6 +238,28 @@ export class ThreadsController {
     });
 
     await this.updateThreadAgentUseCase.execute(command);
+  }
+
+  @Delete(':id/agent')
+  @ApiOperation({ summary: 'Remove agent from thread' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the thread to remove the agent from',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'The agent has been successfully removed from the thread',
+  })
+  @ApiResponse({ status: 404, description: 'Thread not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeAgent(@Param('id', ParseUUIDPipe) threadId: UUID): Promise<void> {
+    this.logger.log('removeAgent', { threadId });
+    await this.removeAgentFromThreadUseCase.execute(
+      new RemoveAgentFromThreadCommand({ threadId }),
+    );
   }
 
   @Delete(':id')

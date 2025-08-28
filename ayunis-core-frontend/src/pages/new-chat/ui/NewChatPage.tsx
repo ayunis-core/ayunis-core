@@ -5,12 +5,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { showError } from "@/shared/lib/toast";
-import type { SourceResponseDtoType } from "@/shared/api";
+import type { AgentResponseDto, SourceResponseDtoType } from "@/shared/api";
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
   selectedModelId?: string;
   selectedAgentId?: string;
+  agents: AgentResponseDto[];
   isEmbeddingModelEnabled: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function NewChatPage({
   selectedAgentId,
   prefilledPrompt,
   isEmbeddingModelEnabled,
+  agents,
 }: NewChatPageProps) {
   const { t } = useTranslation("chats");
   const { initiateChat } = useInitiateChat();
@@ -32,6 +34,7 @@ export default function NewChatPage({
       file: File;
     }>
   >([]);
+  const selectedAgent = agents.find((agent) => agent.id === agentId);
 
   function handleFileUpload(file: File) {
     setSources([
@@ -48,9 +51,15 @@ export default function NewChatPage({
     setModelId(modelId);
     setAgentId(undefined);
   }
+
   function handleAgentChange(agentId: string) {
     setAgentId(agentId);
     setModelId(undefined);
+  }
+
+  function handleAgentRemove() {
+    setAgentId(undefined);
+    setModelId(selectedModelId);
   }
 
   async function handleSend(message: string) {
@@ -63,19 +72,24 @@ export default function NewChatPage({
   }
 
   return (
-    <NewChatPageLayout header={<ContentAreaHeader title="New Chat" />}>
+    <NewChatPageLayout
+      header={<ContentAreaHeader title={t("newChat.newChat")} />}
+    >
       <div className="text-center">
         <h1 className="text-2xl font-bold">{t("newChat.title")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t("newChat.description")}
-        </p>
       </div>
-      <div className="w-full flex flex-col gap-4">
+      <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
-          modelOrAgentId={modelId ?? agentId}
+          // If an agent is selected, use the agent's model,
+          // but disable the model selection
+          // to only show the model that the agent uses
+          modelId={agentId ? selectedAgent?.model.id : modelId}
+          isModelChangeDisabled={!!agentId}
+          agentId={agentId}
           sources={sources}
           onModelChange={handleModelChange}
           onAgentChange={handleAgentChange}
+          onAgentRemove={handleAgentRemove}
           onSend={handleSend}
           prefilledPrompt={prefilledPrompt}
           onFileUpload={handleFileUpload}

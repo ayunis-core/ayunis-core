@@ -1,23 +1,28 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/shared/ui/shadcn/button";
-import { ChevronRight, Loader2, XIcon } from "lucide-react";
+import { ArrowUp, Bot, Loader2, XIcon } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
-import ModelSelector from "./ModelSelector";
-import PromptLibraryButton from "./PromptLibraryButton";
-import AddSourceButton from "./AddSourceButton";
+import AgentButton from "./AgentButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import { useTranslation } from "react-i18next";
 import type { SourceResponseDtoType } from "@/shared/api";
 import { Badge } from "@/shared/ui/shadcn/badge";
+import PlusButton from "./PlusButton";
+import ModelSelector from "./ModelSelector";
+import { useAgents } from "../../../features/useAgents";
+import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
 
 interface ChatInputProps {
-  modelOrAgentId: string | undefined;
+  modelId: string | undefined;
+  agentId: string | undefined;
   sources: { id: string; name: string; type: SourceResponseDtoType }[];
   isStreaming?: boolean;
   isCreatingFileSource?: boolean;
+  isModelChangeDisabled: boolean;
   onModelChange: (modelId: string) => void;
   onAgentChange: (agentId: string) => void;
+  onAgentRemove: (agentId: string) => void;
   onFileUpload: (file: File) => void;
   onRemoveSource: (sourceId: string) => void;
   onSend: (message: string) => Promise<void>;
@@ -32,12 +37,15 @@ export interface ChatInputRef {
 const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   (
     {
-      modelOrAgentId,
+      modelId,
+      agentId,
       sources,
       isStreaming,
       isCreatingFileSource,
+      isModelChangeDisabled,
       onModelChange,
       onAgentChange,
+      onAgentRemove,
       onFileUpload,
       onRemoveSource,
       onSend,
@@ -49,6 +57,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const [message, setMessage] = useState(prefilledPrompt ?? "");
     const { t } = useTranslation("common");
+    const { agents } = useAgents();
 
     useImperativeHandle(ref, () => ({
       setMessage,
@@ -59,7 +68,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     });
 
     async function handleSend() {
-      if (!message.trim() || !modelOrAgentId) return;
+      if (!message.trim() || !(modelId || agentId)) return;
 
       await onSend(message);
       setMessage(""); // Clear message after sending
@@ -77,13 +86,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         <Card className="py-4">
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
-              {/* Sources and Add Source Button */}
-              {isEmbeddingModelEnabled && (
+              {/* Sources */}
+              {sources.length > 0 && (
                 <div className="flex flex-wrap gap-2 items-center">
-                  <AddSourceButton
-                    onFileUpload={onFileUpload}
-                    isCreatingFileSource={isCreatingFileSource}
-                  />
                   {sources.map((source) => (
                     <Badge
                       key={source.id}
@@ -113,28 +118,55 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               {/* Bottom row */}
               <div className="flex items-center justify-between">
                 {/* Left side */}
+
                 <div className="flex-shrink-0 flex space-x-2">
-                  <ModelSelector
-                    selectedModelOrAgentId={modelOrAgentId}
-                    onModelChange={onModelChange}
+                  <PlusButton
+                    onFileUpload={onFileUpload}
+                    isFileSourceDisabled={!isEmbeddingModelEnabled}
+                    isCreatingFileSource={isCreatingFileSource}
+                    onPromptSelect={handlePromptSelect}
+                  />
+                  <AgentButton
+                    selectedAgentId={agentId}
                     onAgentChange={onAgentChange}
                   />
-                  <PromptLibraryButton onPromptSelect={handlePromptSelect} />
+                  {agentId && (
+                    <Badge
+                      variant="outline"
+                      className="flex items-center gap-1 rounded-full border-none"
+                      onClick={() => onAgentRemove(agentId)}
+                    >
+                      <Bot className="h-3 w-3" />
+                      {agents.find((a) => a.id === agentId)?.name}
+                      <XIcon className="h-3 w-3 cursor-pointer" />
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Right side */}
                 <div className="flex-shrink-0 flex space-x-2">
+                  <TooltipIf
+                    condition={isModelChangeDisabled}
+                    tooltip={t("chatInput.modelChangeDisabledTooltip")}
+                  >
+                    <ModelSelector
+                      isDisabled={isModelChangeDisabled}
+                      selectedModelId={modelId}
+                      onModelChange={onModelChange}
+                    />
+                  </TooltipIf>
                   {isStreaming ? (
-                    <Button size="icon" disabled>
+                    <Button size="icon" className="rounded-full" disabled>
                       <Loader2 className="h-4 w-4 animate-spin" />
                     </Button>
                   ) : (
                     <Button
-                      disabled={!message.trim() || !modelOrAgentId}
+                      disabled={!message.trim() || !(modelId || agentId)}
+                      className="rounded-full"
                       size="icon"
                       onClick={handleSend}
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ArrowUp className="h-4 w-4" />
                     </Button>
                   )}
                 </div>

@@ -17,6 +17,7 @@
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
+    "errorRemoveAgent": "Agent konnte nicht entfernt werden",
     "tools": {
       "internet_search": "Im Internet suchen",
       "website_content": "Website abfragen",
@@ -36,8 +37,8 @@
     }
   },
   "newChat": {
-    "title": "Wie kann ich Ihnen heute helfen?",
-    "description": "Fragen Sie mich alles über Dokumente, Websites oder Code.",
+    "newChat": "Neuer Chat",
+    "title": "Wie kann ich Ihnen helfen?",
     "noModelTitle": "Kein Modell verfügbar",
     "noModelDescription": "Es konnte kein KI-Modell gefunden werden. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
     "configureModel": "Modell konfigurieren",

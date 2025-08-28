@@ -28,6 +28,7 @@ import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/repl
 import { ReplaceAgentWithUserDefaultUseCase } from './application/use-cases/replace-agent-with-user-default/replace-agent-with-user-default.use-case';
 import { AgentsModule } from '../agents/agents.module';
 import { UpdateThreadAgentUseCase } from './application/use-cases/update-thread-agent/update-thread-agent.use-case';
+import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
 
 @Module({
   imports: [
@@ -59,7 +60,7 @@ import { UpdateThreadAgentUseCase } from './application/use-cases/update-thread-
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
     ReplaceAgentWithUserDefaultUseCase,
-
+    RemoveAgentFromThreadUseCase,
     // Mappers
     SourceDtoMapper,
     GetThreadDtoMapper,

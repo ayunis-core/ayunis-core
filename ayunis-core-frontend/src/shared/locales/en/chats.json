@@ -17,6 +17,7 @@
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",
+    "errorRemoveAgent": "Agent could not be removed",
     "tools": {
       "internet_search": "Search the internet",
       "website_content": "Query website",
@@ -36,8 +37,8 @@
     }
   },
   "newChat": {
-    "title": "How can I help you today?",
-    "description": "Ask me anything about documents, websites, or code.",
+    "newChat": "New Chat",
+    "title": "How can I help you?",
     "noModelTitle": "No Model Available",
     "noModelDescription": "No AI model could be found. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
     "configureModel": "Configure Model",
