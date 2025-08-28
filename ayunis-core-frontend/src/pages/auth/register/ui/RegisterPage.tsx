@@ -23,11 +23,15 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
   const agbHref = "https://www.ayunis.com/agb-software-%c3%bcberlassung";
   const privacyPolicyRef = "https://www.ayunis.com/datenschutz-core";
   const gtmEnabled =
-    isCloud && import.meta.env.PROD && config.analytics.gtmContainerId;
+    isCloud &&
+    import.meta.env.PROD &&
+    config.analytics.gtmContainerId &&
+    config.analytics.usercentricsSettingsId;
 
   useGtm({
     containerId: config.analytics.gtmContainerId || "",
     enabled: gtmEnabled,
+    ucSettingsId: config.analytics.usercentricsSettingsId,
   });
 
   return (

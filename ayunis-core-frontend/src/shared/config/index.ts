@@ -18,6 +18,7 @@ const config = {
   },
   analytics: {
     gtmContainerId: import.meta.env.VITE_GTM_CONTAINER_ID,
+    usercentricsSettingsId: import.meta.env.VITE_USERCENTRICS_SETTINGS_ID,
   },
 } as const;
 

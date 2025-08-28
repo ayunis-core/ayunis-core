@@ -3,9 +3,50 @@ import { useEffect } from "react";
 export interface UsePageScopedGtmOptions {
   containerId: string; // e.g., "GTM-XXXXXXX"
   enabled: boolean;
+  ucSettingsId?: string;
 }
 
 export function useGtm(options: UsePageScopedGtmOptions): void {
+  // Inject/remove Usercentrics CMP scripts (must come before other consent scripts)
+  useEffect(() => {
+    const { ucSettingsId } = options;
+    if (!ucSettingsId) return;
+
+    const autoBlockerScriptId = "usercentrics-autoblocker";
+    const cmpScriptId = "usercentrics-cmp";
+
+    // Add autoblocker script
+    if (!document.getElementById(autoBlockerScriptId)) {
+      const autoBlockerScript = document.createElement("script");
+      autoBlockerScript.id = autoBlockerScriptId;
+      autoBlockerScript.src =
+        "https://web.cmp.usercentrics.eu/modules/autoblocker.js";
+      document.head.appendChild(autoBlockerScript);
+    }
+
+    // Add main CMP script
+    if (!document.getElementById(cmpScriptId)) {
+      const cmpScript = document.createElement("script");
+      cmpScript.id = cmpScriptId;
+      cmpScript.src = "https://web.cmp.usercentrics.eu/ui/loader.js";
+      cmpScript.setAttribute("data-settings-id", ucSettingsId);
+      cmpScript.async = true;
+      document.head.appendChild(cmpScript);
+    }
+
+    return () => {
+      const existingAutoblocker = document.getElementById(autoBlockerScriptId);
+      if (existingAutoblocker && existingAutoblocker.parentNode) {
+        existingAutoblocker.parentNode.removeChild(existingAutoblocker);
+      }
+
+      const existingCmp = document.getElementById(cmpScriptId);
+      if (existingCmp && existingCmp.parentNode) {
+        existingCmp.parentNode.removeChild(existingCmp);
+      }
+    };
+  }, [options.ucSettingsId]);
+
   // Inject/remove Google Consent Mode script (must come before GTM)
   useEffect(() => {
     const { enabled } = options;
