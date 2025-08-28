@@ -3,6 +3,7 @@ import { AgentRecord } from '../schema/agent.record';
 import { Injectable, Logger } from '@nestjs/common';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { AgentToolMapper } from './agent-tool.mapper';
+import { AgentSourceAssignmentMapper } from './agent-source-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AgentMapper {
   constructor(
     private readonly permittedModelMapper: PermittedModelMapper,
     private readonly agentToolMapper: AgentToolMapper,
+    private readonly agentSourceAssignmentMapper: AgentSourceAssignmentMapper,
   ) {}
 
   toDomain(record: AgentRecord): Agent {
@@ -24,6 +26,9 @@ export class AgentMapper {
       ) as PermittedLanguageModel,
       toolAssignments: record.agentTools?.map((toolRecord) =>
         this.agentToolMapper.toDomain(toolRecord),
+      ),
+      sourceAssignments: record.sourceAssignments?.map((sourceRecord) =>
+        this.agentSourceAssignmentMapper.toDomain(sourceRecord),
       ),
       userId: record.userId,
       createdAt: record.createdAt,
@@ -41,6 +46,10 @@ export class AgentMapper {
     entity.userId = domain.userId;
     entity.agentTools = domain.toolAssignments.map((toolAssignment) =>
       this.agentToolMapper.toRecord(toolAssignment, domain.id),
+    );
+    entity.sourceAssignments = domain.sourceAssignments?.map(
+      (sourceAssignment) =>
+        this.agentSourceAssignmentMapper.toRecord(sourceAssignment, domain.id),
     );
     return entity;
   }

@@ -5,7 +5,7 @@ import { CreateThreadUseCase } from './create-thread.use-case';
 import { CreateThreadCommand } from './create-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
-import { GetAgentUseCase } from 'src/domain/agents/application/use-cases/get-agent/get-agent.use-case';
+import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -21,7 +21,7 @@ describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
-  let getAgentUseCase: jest.Mocked<GetAgentUseCase>;
+  let findOneAgentUseCase: jest.Mocked<FindOneAgentUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -60,7 +60,7 @@ describe('CreateThreadUseCase', () => {
           provide: GetPermittedLanguageModelUseCase,
           useValue: mockGetPermittedLanguageModelUseCase,
         },
-        { provide: GetAgentUseCase, useValue: mockGetAgentUseCase },
+        { provide: FindOneAgentUseCase, useValue: mockGetAgentUseCase },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
@@ -70,7 +70,7 @@ describe('CreateThreadUseCase', () => {
     getPermittedLanguageModelUseCase = module.get(
       GetPermittedLanguageModelUseCase,
     );
-    getAgentUseCase = module.get(GetAgentUseCase);
+    findOneAgentUseCase = module.get(FindOneAgentUseCase);
     contextService = module.get(ContextService);
 
     // Mock logger
@@ -125,7 +125,7 @@ describe('CreateThreadUseCase', () => {
         getPermittedLanguageModelUseCase,
         'execute',
       );
-      const getAgentExecuteSpy = jest.spyOn(getAgentUseCase, 'execute');
+      const getAgentExecuteSpy = jest.spyOn(findOneAgentUseCase, 'execute');
 
       // Act
       const result = await useCase.execute(command);
@@ -157,7 +157,7 @@ describe('CreateThreadUseCase', () => {
         NoModelOrAgentProvidedError,
       );
       expect(getPermittedLanguageModelUseCase.execute).not.toHaveBeenCalled();
-      expect(getAgentUseCase.execute).not.toHaveBeenCalled();
+      expect(findOneAgentUseCase.execute).not.toHaveBeenCalled();
       expect(threadsRepository.create).not.toHaveBeenCalled();
     });
 

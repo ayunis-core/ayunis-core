@@ -1394,6 +1394,142 @@
         ]
       }
     },
+    "/agents/{id}/sources": {
+      "get": {
+        "operationId": "AgentsController_getAgentSources",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all sources for the agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentSourceResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all sources for an agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{id}/sources/file": {
+      "post": {
+        "operationId": "AgentsController_addFileSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The file source has been successfully added to the agent"
+          },
+          "400": {
+            "description": "Invalid file"
+          },
+          "404": {
+            "description": "Agent not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Add a file source to an agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{id}/sources/{sourceAssignmentId}": {
+      "delete": {
+        "operationId": "AgentsController_removeSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceAssignmentId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the source assignment to remove",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The source has been successfully removed from the agent"
+          },
+          "404": {
+            "description": "Agent or source assignment not found"
+          }
+        },
+        "summary": "Remove a source from an agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
     "/retrievers/url": {
       "post": {
         "operationId": "UrlRetrieverController_retrieveUrl",
@@ -3856,6 +3992,43 @@
           "type"
         ]
       },
+      "AgentSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the source assignment",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "The unique identifier of the source",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the source",
+            "example": "Project Documentation"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of source",
+            "example": "file",
+            "enum": [
+              "file",
+              "url"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "sourceId",
+          "name",
+          "type"
+        ]
+      },
       "AgentResponseDto": {
         "type": "object",
         "properties": {
@@ -3912,6 +4085,13 @@
             "items": {
               "$ref": "#/components/schemas/ToolResponseDto"
             }
+          },
+          "sources": {
+            "description": "The sources assigned to this agent",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentSourceResponseDto"
+            }
           }
         },
         "required": [
@@ -3922,7 +4102,8 @@
           "createdAt",
           "updatedAt",
           "model",
-          "tools"
+          "tools",
+          "sources"
         ]
       },
       "UpdateAgentDto": {

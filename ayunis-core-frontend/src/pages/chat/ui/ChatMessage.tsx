@@ -105,8 +105,10 @@ function renderMessageContent(message: Message) {
   switch (message.role) {
     case "user":
     case "system":
-      return message.content.map((content) => (
-        <Markdown key={content.text}>{content.text}</Markdown>
+      return message.content.map((content, index) => (
+        <Markdown key={`${content.type}-${index}-${content.text.slice(0, 50)}`}>
+          {content.text}
+        </Markdown>
       ));
 
     case "assistant":
@@ -115,11 +117,13 @@ function renderMessageContent(message: Message) {
         return <ToolUseSkeleton />;
       }
 
-      return message.content.map((content: AssistantMessageContent) => {
+      return message.content.map((content: AssistantMessageContent, index) => {
         if (content.type === "text") {
           const textMessageContent = content as TextMessageContent;
           return (
-            <Markdown key={textMessageContent.text}>
+            <Markdown
+              key={`text-${index}-${textMessageContent.text.slice(0, 50)}`}
+            >
               {textMessageContent.text}
             </Markdown>
           );
@@ -127,11 +131,25 @@ function renderMessageContent(message: Message) {
           try {
             const toolUseMessageContent = content as ToolUseMessageContent;
             if (toolUseMessageContent.name === "send_email") {
-              return <SendEmailWidget content={toolUseMessageContent} />;
+              return (
+                <SendEmailWidget
+                  key={`tool-${index}-${toolUseMessageContent.name}-${toolUseMessageContent.id}`}
+                  content={toolUseMessageContent}
+                />
+              );
             }
-            return <ExecutableToolWidget content={toolUseMessageContent} />;
+            return (
+              <ExecutableToolWidget
+                key={`tool-${index}-${toolUseMessageContent.name}-${toolUseMessageContent.id}`}
+                content={toolUseMessageContent}
+              />
+            );
           } catch (e) {
-            return <Markdown>{"Error rendering tool use message"}</Markdown>;
+            return (
+              <Markdown key={`error-${index}`}>
+                {"Error rendering tool use message"}
+              </Markdown>
+            );
           }
         }
         return null;

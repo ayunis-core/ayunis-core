@@ -334,7 +334,6 @@ export class ThreadsController {
     }),
   )
   async addFileSource(
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Body() addFileSourceDto: AddFileSourceToThreadDto,
     @UploadedFile()
@@ -355,7 +354,6 @@ export class ThreadsController {
 
       // Create the file source
       const createFileSourceCommand = new CreateFileSourceCommand({
-        orgId,
         fileType: file.mimetype,
         fileSize: file.size,
         fileData: fileData,

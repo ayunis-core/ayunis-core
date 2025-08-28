@@ -16,6 +16,8 @@ export enum AgentErrorCode {
   AGENT_INVALID_INPUT = 'AGENT_INVALID_INPUT',
   AGENT_EXECUTION_FAILED = 'AGENT_EXECUTION_FAILED',
   AGENT_TOOL_ASSIGNMENT_NOT_FOUND = 'AGENT_TOOL_ASSIGNMENT_NOT_FOUND',
+  UNEXPECTED_AGENT_ERROR = 'UNEXPECTED_AGENT_ERROR',
+  SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
 }
 
 /**
@@ -111,5 +113,28 @@ export class AgentToolAssignmentNotFoundError extends AgentError {
       404,
       metadata,
     );
+  }
+}
+
+/**
+ * Error thrown when a source is already assigned to an agent
+ */
+export class SourceAlreadyAssignedError extends AgentError {
+  constructor(sourceId: string, metadata?: ErrorMetadata) {
+    super(
+      `Source with ID ${sourceId} is already assigned to an agent`,
+      AgentErrorCode.SOURCE_ALREADY_ASSIGNED,
+      409,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an unexpected error occurs
+ */
+export class UnexpectedAgentError extends AgentError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(message, AgentErrorCode.UNEXPECTED_AGENT_ERROR, 500, metadata);
   }
 }

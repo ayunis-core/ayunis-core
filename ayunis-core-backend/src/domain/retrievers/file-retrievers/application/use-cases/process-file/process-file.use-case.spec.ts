@@ -8,21 +8,26 @@ import {
   FileRetrieverResult,
   FileRetrieverPage,
 } from '../../../domain/file-retriever-result.entity';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('ProcessFileUseCase', () => {
   let useCase: ProcessFileUseCase;
   let mockHandler: Partial<FileRetrieverHandler>;
   let mockRegistry: Partial<FileRetrieverRegistry>;
   let mockGetProviders: Partial<GetAllPermittedProvidersUseCase>;
+  let mockContextService: Partial<ContextService>;
 
   beforeEach(async () => {
     mockHandler = { processFile: jest.fn() };
     mockRegistry = {
       getHandler: jest.fn().mockReturnValue(mockHandler),
-    } as any;
+    };
     mockGetProviders = {
       execute: jest.fn().mockResolvedValue([{ provider: 'mistral' }]),
-    } as any;
+    };
+    mockContextService = {
+      get: jest.fn().mockReturnValue('123e4567-e89b-12d3-a456-426614174000'),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -32,6 +37,7 @@ describe('ProcessFileUseCase', () => {
           provide: GetAllPermittedProvidersUseCase,
           useValue: mockGetProviders,
         },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -44,7 +50,6 @@ describe('ProcessFileUseCase', () => {
 
   it('should process file successfully', async () => {
     const command = new ProcessFileCommand({
-      orgId: '123e4567-e89b-12d3-a456-426614174000' as any,
       fileData: Buffer.from('test file content'),
       fileName: 'test.txt',
       fileType: 'text/plain',

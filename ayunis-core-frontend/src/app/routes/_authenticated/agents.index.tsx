@@ -6,7 +6,7 @@ import {
   getAgentsControllerFindAllQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
 
-const agentQueryOptions = () =>
+const agentsQueryOptions = () =>
   queryOptions({
     queryKey: getAgentsControllerFindAllQueryKey(),
     queryFn: () => agentsControllerFindAll(),
@@ -15,12 +15,12 @@ const agentQueryOptions = () =>
 export const Route = createFileRoute("/_authenticated/agents/")({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const agents = await queryClient.fetchQuery(agentQueryOptions());
+    const agents = await queryClient.fetchQuery(agentsQueryOptions());
     return agents;
   },
 });
 
 function RouteComponent() {
-  const { data: agents } = useQuery(agentQueryOptions());
+  const { data: agents } = useQuery(agentsQueryOptions());
   return <AgentsPage agents={agents || []} />;
 }

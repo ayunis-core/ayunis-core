@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentResponseDto } from '../dto/agent-response.dto';
+import { AgentSourceDtoMapper } from './agent-source.mapper';
 
 @Injectable()
 export class AgentDtoMapper {
+  constructor(private readonly agentSourceDtoMapper: AgentSourceDtoMapper) {}
+
   toDto(agent: Agent): AgentResponseDto {
     return {
       id: agent.id,
@@ -22,6 +25,9 @@ export class AgentDtoMapper {
         type: tool.type,
         configId: undefined, // Simplified for now
       })),
+      sources: this.agentSourceDtoMapper.toDtoArray(
+        agent.sourceAssignments || [],
+      ),
     };
   }
 

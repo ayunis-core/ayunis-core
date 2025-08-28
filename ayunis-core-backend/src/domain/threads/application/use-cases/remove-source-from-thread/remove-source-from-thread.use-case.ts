@@ -23,7 +23,7 @@ export class RemoveSourceFromThreadUseCase {
 
     try {
       if (!command.thread.sourceAssignments) {
-        throw new SourceNotFoundError(command.sourceId, command.thread.id);
+        throw new SourceNotFoundError(command.sourceId);
       }
 
       const assignmentToRemove = command.thread.sourceAssignments.find(
@@ -31,7 +31,7 @@ export class RemoveSourceFromThreadUseCase {
       );
 
       if (!assignmentToRemove) {
-        throw new SourceNotFoundError(command.sourceId, command.thread.id);
+        throw new SourceNotFoundError(command.sourceId);
       }
 
       // const updatedAssignments = command.thread.sourceAssignments.filter(

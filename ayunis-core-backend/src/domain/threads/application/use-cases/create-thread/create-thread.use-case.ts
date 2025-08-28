@@ -12,9 +12,9 @@ import { ModelError } from 'src/domain/models/application/models.errors';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
-import { GetAgentUseCase } from 'src/domain/agents/application/use-cases/get-agent/get-agent.use-case';
-import { GetAgentQuery } from 'src/domain/agents/application/use-cases/get-agent/get-agent.query';
 import { ContextService } from 'src/common/context/services/context.service';
+import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
+import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -23,7 +23,7 @@ export class CreateThreadUseCase {
   constructor(
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
-    private readonly getAgentUseCase: GetAgentUseCase,
+    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -46,10 +46,8 @@ export class CreateThreadUseCase {
       }
 
       if (command.agentId) {
-        agent = await this.getAgentUseCase.execute(
-          new GetAgentQuery({
-            id: command.agentId,
-          }),
+        agent = await this.findOneAgentUseCase.execute(
+          new FindOneAgentQuery(command.agentId),
         );
       }
       if (!model && !agent) {

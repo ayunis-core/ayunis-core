@@ -106,14 +106,13 @@ export class SourceRemovalError extends ThreadError {
 }
 
 export class SourceNotFoundError extends ThreadError {
-  constructor(sourceId: string, threadId: string, metadata?: ErrorMetadata) {
+  constructor(sourceId: string, metadata?: ErrorMetadata) {
     super(
-      `Source with ID '${sourceId}' not found in thread '${threadId}'`,
+      `Source with ID '${sourceId}' not found`,
       ThreadErrorCode.SOURCE_NOT_FOUND,
       404,
       {
         sourceId,
-        threadId,
         ...metadata,
       },
     );

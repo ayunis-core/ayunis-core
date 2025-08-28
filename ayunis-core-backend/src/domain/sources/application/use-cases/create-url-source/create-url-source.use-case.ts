@@ -1,4 +1,9 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UUID } from 'crypto';
 import { UrlSource } from '../../../domain/sources/url-source.entity';
 import { SourceContent } from '../../../domain/source-content.entity';
@@ -15,6 +20,10 @@ import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-ca
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
+import { ContextService } from 'src/common/context/services/context.service';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { UnexpectedSourceError } from '../../sources.errors';
 
 @Injectable()
 export class CreateUrlSourceUseCase {
@@ -26,40 +35,58 @@ export class CreateUrlSourceUseCase {
     private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly ingestContentUseCase: IngestContentUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: CreateUrlSourceCommand): Promise<UrlSource> {
     this.logger.debug(`Creating URL source for URL: ${command.url}`);
+    try {
+      const orgId = this.contextService.get('orgId');
+      if (!orgId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
 
-    const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
-      new RetrieveUrlCommand(command.url),
-    );
+      const urlRetrieverResult = await this.retrieveUrlUseCase.execute(
+        new RetrieveUrlCommand(command.url),
+      );
 
-    const urlSource = new UrlSource({
-      url: command.url,
-      content: [],
-      text: urlRetrieverResult.content,
-      websiteTitle: urlRetrieverResult.websiteTitle,
-    });
-    // TODO: This is a hack to get the id of the source
-    // Because cascading is not working as expected
-    await this.sourceRepository.create(urlSource);
-
-    urlSource.content = this.getSourceContentsFromText(
-      urlSource.id,
-      urlRetrieverResult.content,
-      {
+      const urlSource = new UrlSource({
         url: command.url,
-      },
-    );
+        content: [],
+        text: urlRetrieverResult.content,
+        websiteTitle: urlRetrieverResult.websiteTitle,
+      });
+      // TODO: This is a hack to get the id of the source
+      // Because cascading is not working as expected
+      await this.sourceRepository.create(urlSource);
 
-    const savedUrlSource =
-      await this.sourceRepository.createUrlSource(urlSource);
+      urlSource.content = this.getSourceContentsFromText(
+        urlSource.id,
+        urlRetrieverResult.content,
+        {
+          url: command.url,
+        },
+      );
 
-    // Index the content using the indexers module
-    await this.indexSourceContent(savedUrlSource, command.orgId);
+      const savedUrlSource =
+        await this.sourceRepository.createUrlSource(urlSource);
 
-    return savedUrlSource;
+      // Index the content using the indexers module
+      await this.indexSourceContent(savedUrlSource, orgId);
+
+      return savedUrlSource;
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      this.logger.error('Error creating URL source', {
+        error: error as Error,
+      });
+      throw new UnexpectedSourceError('Error creating URL source', {
+        error: error as Error,
+      });
+    }
   }
 
   /**

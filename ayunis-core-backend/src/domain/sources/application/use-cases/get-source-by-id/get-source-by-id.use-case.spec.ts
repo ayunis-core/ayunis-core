@@ -7,6 +7,7 @@ import {
 } from '../../ports/source.repository';
 import { Source } from '../../../domain/source.entity';
 import { randomUUID } from 'crypto';
+import { SourceNotFoundError } from '../../sources.errors';
 
 describe('GetSourceByIdUseCase', () => {
   let useCase: GetSourceByIdUseCase;
@@ -46,14 +47,15 @@ describe('GetSourceByIdUseCase', () => {
     expect(mockSourceRepository.findById).toHaveBeenCalledWith(sourceId);
   });
 
-  it('should return null when source not found', async () => {
+  it('should throw SourceNotFoundError when source not found', async () => {
     const sourceId = randomUUID();
 
-    (mockSourceRepository.findById as jest.Mock).mockResolvedValue(null);
+    (mockSourceRepository.findById as jest.Mock).mockResolvedValue(undefined);
 
-    const result = await useCase.execute(new GetSourceByIdQuery(sourceId));
+    await expect(
+      useCase.execute(new GetSourceByIdQuery(sourceId)),
+    ).rejects.toThrow(SourceNotFoundError);
 
-    expect(result).toBeNull();
     expect(mockSourceRepository.findById).toHaveBeenCalledWith(sourceId);
   });
 });

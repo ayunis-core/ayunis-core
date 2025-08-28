@@ -59,7 +59,7 @@ describe('DeleteSourceUseCase', () => {
 
     await expect(
       useCase.execute(new DeleteSourceCommand({ id: sourceId } as any)),
-    ).rejects.toThrow('Repository error');
+    ).rejects.toThrow('Error deleting source');
     expect(mockSourceRepository.delete).toHaveBeenCalledWith({
       id: sourceId,
     } as any);

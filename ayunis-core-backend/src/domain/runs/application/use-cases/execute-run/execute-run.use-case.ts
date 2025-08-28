@@ -170,13 +170,29 @@ export class ExecuteRunUseCase {
       );
     }
 
-    // Source query tool is available if there are sources in the thread
+    // Source query tool is available if there are sources in the thread or agent
     if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
             context: thread.sourceAssignments.map(
+              (assignment) => assignment.source,
+            ),
+          }),
+        ),
+      );
+    }
+    if (
+      thread.agent &&
+      thread.agent.sourceAssignments &&
+      thread.agent.sourceAssignments.length > 0
+    ) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({
+            type: ToolType.SOURCE_QUERY,
+            context: thread.agent.sourceAssignments.map(
               (assignment) => assignment.source,
             ),
           }),

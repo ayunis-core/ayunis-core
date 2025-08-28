@@ -8,7 +8,7 @@ import {
 } from "@/shared/ui/shadcn/card";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Edit, MessageCircle, Trash2 } from "lucide-react";
-import EditAgentDialog from "./EditAgentDialog";
+// import EditAgentDialog from "./EditAgentDialog";
 import { useDeleteAgent } from "../api/useDeleteAgent";
 import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useTranslation } from "react-i18next";
@@ -50,14 +50,19 @@ export default function AgentCard({ agent }: AgentCardProps) {
                 {t("card.startChatButton")}
               </Button>
             </Link>
-            <EditAgentDialog
+            <Link to="/agents/$id" params={{ id: agent.id }}>
+              <Button variant="ghost" size="icon">
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Link>
+            {/* <EditAgentDialog
               selectedAgent={agent}
               trigger={
                 <Button variant="ghost" size="icon">
                   <Edit className="h-4 w-4" />
                 </Button>
               }
-            />
+            /> */}
             <Button
               variant="ghost"
               size="icon"

@@ -731,6 +731,29 @@ export interface ToolResponseDto {
   type: ToolResponseDtoType;
 }
 
+/**
+ * The type of source
+ */
+export type AgentSourceResponseDtoType = typeof AgentSourceResponseDtoType[keyof typeof AgentSourceResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AgentSourceResponseDtoType = {
+  file: 'file',
+  url: 'url',
+} as const;
+
+export interface AgentSourceResponseDto {
+  /** The unique identifier of the source assignment */
+  id: string;
+  /** The unique identifier of the source */
+  sourceId: string;
+  /** The name of the source */
+  name: string;
+  /** The type of source */
+  type: AgentSourceResponseDtoType;
+}
+
 export interface AgentResponseDto {
   /** The unique identifier of the agent */
   id: string;
@@ -748,6 +771,8 @@ export interface AgentResponseDto {
   model: ModelResponseDto;
   /** The tools assigned to this agent */
   tools: ToolResponseDto[];
+  /** The sources assigned to this agent */
+  sources: AgentSourceResponseDto[];
 }
 
 export interface UpdateAgentDto {
@@ -1281,6 +1306,11 @@ export type ThreadsControllerAddFileSourceBody = {
   name?: string;
   /** A description of the file source */
   description?: string;
+};
+
+export type AgentsControllerAddFileSourceBody = {
+  /** The file to upload */
+  file: Blob;
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;

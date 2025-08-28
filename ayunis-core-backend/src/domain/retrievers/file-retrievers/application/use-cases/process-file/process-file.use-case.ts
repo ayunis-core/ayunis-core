@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { FileRetrieverResult } from '../../../domain/file-retriever-result.entity';
 import { ProcessFileCommand } from './process-file.command';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
@@ -8,6 +8,7 @@ import { GetAllPermittedProvidersUseCase } from 'src/domain/models/application/u
 import { GetAllPermittedProvidersQuery } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { FileRetrieverProviderNotAvailableError } from '../../file-retriever.errors';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class ProcessFileUseCase {
@@ -16,14 +17,18 @@ export class ProcessFileUseCase {
   constructor(
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: ProcessFileCommand): Promise<FileRetrieverResult> {
     this.logger.debug(`Processing file: ${command.fileName}`);
-
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     const permittedProviders =
       await this.getAllPermittedProvidersUseCase.execute(
-        new GetAllPermittedProvidersQuery(command.orgId),
+        new GetAllPermittedProvidersQuery(orgId),
       );
 
     if (

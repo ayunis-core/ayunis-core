@@ -26,9 +26,7 @@ export class FindThreadUseCase {
       if (!thread) {
         throw new ThreadNotFoundError(query.id, userId);
       }
-      return new Thread({
-        ...thread,
-      });
+      return thread;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
