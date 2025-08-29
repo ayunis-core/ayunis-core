@@ -5,5 +5,10 @@
     "adding": "Adding...",
     "addSource": "Add Source",
     "disabledTooltip": "To upload documents, an embedding model must be enabled."
+  },
+  "tools": {
+    "title": "Tools",
+    "description": "Configure which tools the agent can use",
+    "comingSoon": "Coming soon"
   }
 }

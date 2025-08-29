@@ -5,5 +5,10 @@
     "adding": "Hinzufügen...",
     "addSource": "Quelle hinzufügen",
     "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
+  },
+  "tools": {
+    "title": "Tools",
+    "description": "Konfigurieren Sie, welche Tools der Agent verwenden kann",
+    "comingSoon": "Demnächst verfügbar"
   }
 }
