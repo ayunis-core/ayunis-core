@@ -27,5 +27,10 @@
     "title": "Tools",
     "description": "Konfigurieren Sie, welche Tools der Agent verwenden kann",
     "comingSoon": "Demnächst verfügbar"
+  },
+  "sources": {
+    "addedSuccessfully": "Quelle erfolgreich hinzugefügt",
+    "removedSuccessfully": "Quelle erfolgreich entfernt",
+    "failedToRemove": "Fehler beim Entfernen der Quelle"
   }
 }

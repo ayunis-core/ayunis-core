@@ -27,5 +27,10 @@
     "title": "Tools",
     "description": "Configure which tools the agent can use",
     "comingSoon": "Coming soon"
+  },
+  "sources": {
+    "addedSuccessfully": "Source added successfully",
+    "removedSuccessfully": "Source removed successfully",
+    "failedToRemove": "Failed to remove source"
   }
 }
