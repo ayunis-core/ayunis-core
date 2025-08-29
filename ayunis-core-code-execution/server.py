@@ -32,7 +32,10 @@ app = FastAPI(
     title="Ayunis Code Execution Service",
     description="A secure Python code execution service with Docker sandboxing",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Add CORS middleware

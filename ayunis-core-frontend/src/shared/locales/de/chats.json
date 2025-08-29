@@ -22,6 +22,7 @@
       "internet_search": "Im Internet suchen",
       "website_content": "Website abfragen",
       "source_query": "Quelle durchsuchen",
+      "code_execution": "Berechnung ausführen",
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",

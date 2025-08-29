@@ -53,6 +53,7 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { ConfigService } from '@nestjs/config';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
+import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -136,6 +137,29 @@ export class ExecuteRunUseCase {
         ),
       );
     }
+
+    // Code execution tool is always available
+    const threadSources = thread.sourceAssignments?.map(
+      (assignment) => assignment.source,
+    );
+    const agentSources = thread.agent?.sourceAssignments?.map(
+      (assignment) => assignment.source,
+    );
+    const codeExecutionSources = [
+      ...(threadSources ?? []),
+      ...(agentSources ?? []),
+    ];
+    const codeExecutionFileSources = codeExecutionSources.filter(
+      (source) => source.type === SourceType.FILE,
+    );
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.CODE_EXECUTION,
+          context: codeExecutionFileSources,
+        }),
+      ),
+    );
 
     // Website content tool is always available
     tools.push(

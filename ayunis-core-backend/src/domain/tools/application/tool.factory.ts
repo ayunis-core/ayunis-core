@@ -16,6 +16,8 @@ import {
 } from './tools.errors';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
+import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
+import { FileSource } from 'src/domain/sources/domain/sources/file-source.entity';
 
 @Injectable()
 export class ToolFactory {
@@ -55,6 +57,22 @@ export class ToolFactory {
         });
       case ToolType.SEND_EMAIL:
         return new SendEmailTool();
+      case ToolType.CODE_EXECUTION:
+        if (
+          params.context &&
+          params.context instanceof Array &&
+          params.context.every(
+            (source: unknown) => source instanceof FileSource,
+          )
+        ) {
+          return new CodeExecutionTool(params.context);
+        }
+        throw new ToolInvalidContextError({
+          toolType: params.type,
+          metadata: {
+            contextType: params.context?.constructor.name || 'null',
+          },
+        });
       default:
         throw new ToolInvalidTypeError({
           toolType: params.type,

@@ -10,6 +10,8 @@ import { InternetSearchToolHandler } from './handlers/internet-search-tool.handl
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { WebsiteContentToolHandler } from './handlers/website-content-tool.handler';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
+import { CodeExecutionToolHandler } from './handlers/code-execution-tool.handler';
+import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
 
 @Injectable()
 export class ToolHandlerRegistry {
@@ -20,6 +22,7 @@ export class ToolHandlerRegistry {
     private readonly sourceQueryToolHandler: SourceQueryToolHandler,
     private readonly internetSearchToolHandler: InternetSearchToolHandler,
     private readonly websiteContentToolHandler: WebsiteContentToolHandler,
+    private readonly codeExecutionToolHandler: CodeExecutionToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -35,6 +38,9 @@ export class ToolHandlerRegistry {
     }
     if (tool instanceof WebsiteContentTool) {
       return this.websiteContentToolHandler;
+    }
+    if (tool instanceof CodeExecutionTool) {
+      return this.codeExecutionToolHandler;
     }
     throw new ToolHandlerNotFoundError({
       toolType: tool.name,
