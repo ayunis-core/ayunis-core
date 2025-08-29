@@ -33,6 +33,9 @@
     "addPrompt": "Add Prompt",
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
     "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",
+    "agents": {
+      "title": "Agents"
+    },
     "tools": {
       "title": "Tools",
       "internet_search": "Internet Search",

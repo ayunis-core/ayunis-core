@@ -44,7 +44,7 @@ export default function AgentButton({
       <DropdownMenuContent align="start">
         {agents.length > 0 && (
           <>
-            <DropdownMenuLabel>Agents</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("chatInput.agents.title")}</DropdownMenuLabel>
             <DropdownMenuGroup>
               {agents
                 .sort((a, b) => a.name.localeCompare(b.name))
