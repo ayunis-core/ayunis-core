@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"module": "esnext",
 		"target": "esnext",
-		"types": ["cypress"],
+		"types": ["cypress", "node"],
 		"baseUrl": "cypress",
 		"paths": {
 			"@pages/*": ["pages/*"],
@@ -33,6 +33,6 @@
 		"moduleDetection": "force",
 		"skipLibCheck": true
 	},
-	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts"],
+	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts", "*.ts"],
 	"exclude": ["node_modules"]
 }
