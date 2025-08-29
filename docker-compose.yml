@@ -57,6 +57,8 @@ services:
     env_file:
       - ./ayunis-core-backend/.env
       - ./ayunis-core-frontend/.env
+    environment:
+      CODE_EXECUTION_SERVICE_URL: ${CODE_EXECUTION_SERVICE_URL:-http://host.docker.internal:8080}
     volumes:
       - app-uploads:/app/uploads
     networks:

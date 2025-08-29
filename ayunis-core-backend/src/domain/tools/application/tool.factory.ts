@@ -17,6 +17,8 @@ import {
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
 import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
+import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
+import { FileSource } from 'src/domain/sources/domain/sources/file-source.entity';
 
 @Injectable()
 export class ToolFactory {
@@ -58,6 +60,22 @@ export class ToolFactory {
         return new SendEmailTool();
       case ToolType.CREATE_CALENDAR_EVENT:
         return new CreateCalendarEventTool();
+      case ToolType.CODE_EXECUTION:
+        if (
+          params.context &&
+          params.context instanceof Array &&
+          params.context.every(
+            (source: unknown) => source instanceof FileSource,
+          )
+        ) {
+          return new CodeExecutionTool(params.context);
+        }
+        throw new ToolInvalidContextError({
+          toolType: params.type,
+          metadata: {
+            contextType: params.context?.constructor.name || 'null',
+          },
+        });
       default:
         throw new ToolInvalidTypeError({
           toolType: params.type,

@@ -91,6 +91,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minio}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio123}
       MINIO_BUCKET: ${MINIO_BUCKET:-ayunis}
+      CODE_EXECUTION_SERVICE_URL: ${CODE_EXECUTION_SERVICE_URL:-http://host.docker.internal:8080}
     restart: unless-stopped
 
 volumes:

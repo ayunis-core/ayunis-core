@@ -6,4 +6,5 @@ export enum ToolType {
   WEBSITE_CONTENT = 'website_content',
   SEND_EMAIL = 'send_email',
   CREATE_CALENDAR_EVENT = 'create_calendar_event',
+  CODE_EXECUTION = 'code_execution',
 }

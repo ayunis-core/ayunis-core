@@ -14,6 +14,7 @@ import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/too
 import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assemble-tool.use-case';
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
+import { CodeExecutionToolHandler } from './application/handlers/code-execution-tool.handler';
 
 @Module({
   imports: [SourcesModule, LocalToolConfigRepositoryModule, RetrieverModule],
@@ -28,6 +29,7 @@ import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool
     SourceQueryToolHandler,
     InternetSearchToolHandler,
     WebsiteContentToolHandler,
+    CodeExecutionToolHandler,
 
     // Repositories and factories
     {

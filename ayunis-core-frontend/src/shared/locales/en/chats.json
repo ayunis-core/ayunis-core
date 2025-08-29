@@ -23,6 +23,7 @@
       "internet_search": "Search the internet",
       "website_content": "Query website",
       "source_query": "Query source",
+      "code_execution": "Calculate",
       "send_email": {
         "subject": "Subject",
         "body": "Body",
