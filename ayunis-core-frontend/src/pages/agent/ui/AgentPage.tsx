@@ -6,7 +6,13 @@ import AgentKnowledgeBaseCard from "./AgentKnowledgeBaseCard";
 import AgentToolsCard from "./AgentToolsCard";
 import AgentPropertiesCard from "./AgentPropertiesCard";
 
-export function AgentPage({ agent }: { agent: AgentResponseDto }) {
+export function AgentPage({
+  agent,
+  isEmbeddingModelEnabled,
+}: {
+  agent: AgentResponseDto;
+  isEmbeddingModelEnabled: boolean;
+}) {
   return (
     <AppLayout>
       <ContentAreaLayout
@@ -14,7 +20,10 @@ export function AgentPage({ agent }: { agent: AgentResponseDto }) {
         contentArea={
           <div className="grid gap-4">
             <AgentPropertiesCard agent={agent} />
-            <AgentKnowledgeBaseCard agent={agent} />
+            <AgentKnowledgeBaseCard
+              agent={agent}
+              isEnabled={isEmbeddingModelEnabled}
+            />
             <AgentToolsCard />
           </div>
         }

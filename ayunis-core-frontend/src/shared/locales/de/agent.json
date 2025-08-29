@@ -3,6 +3,7 @@
     "title": "Wissensbasis",
     "description": "Konfigurieren Sie, welches Wissen der Agent zur Verfügung hat",
     "adding": "Hinzufügen...",
-    "addSource": "Quelle hinzufügen"
+    "addSource": "Quelle hinzufügen",
+    "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
   }
 }

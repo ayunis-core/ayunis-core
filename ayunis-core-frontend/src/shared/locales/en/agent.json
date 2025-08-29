@@ -3,6 +3,7 @@
     "title": "Knowledge Base",
     "description": "Configure which knowledge the agent has access to",
     "adding": "Adding...",
-    "addSource": "Add Source"
+    "addSource": "Add Source",
+    "disabledTooltip": "To upload documents, an embedding model must be enabled."
   }
 }

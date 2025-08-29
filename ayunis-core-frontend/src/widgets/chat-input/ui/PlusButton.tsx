@@ -14,6 +14,7 @@ import { Input } from "@/shared/ui/shadcn/input";
 import { useRef } from "react";
 import { usePrompts } from "../api/usePrompts";
 import { useTranslation } from "react-i18next";
+import { showError } from "@/shared/lib/toast";
 
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
@@ -38,6 +39,10 @@ export default function PlusButton({
   } = usePrompts();
 
   const handleFileChange = (file?: File) => {
+    if (isFileSourceDisabled) {
+      showError(t("chatInput.noEmbeddingModelEnabled"));
+      return;
+    }
     if (file) {
       onFileUpload(file);
     }
@@ -59,9 +64,7 @@ export default function PlusButton({
           <DropdownMenuGroup>
             <DropdownMenuItem
               onClick={() => fileInputRef.current?.click()}
-              disabled={
-                isFileSourceDisabled || isUploadingFile || isCreatingFileSource
-              }
+              disabled={isUploadingFile || isCreatingFileSource}
             >
               {t("chatInput.uploadFile")}
             </DropdownMenuItem>

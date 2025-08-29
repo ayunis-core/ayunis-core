@@ -38,7 +38,8 @@
       "internet_search": "Internet Search",
       "send_email": "Prepare Emails",
       "cannot_disable": "This function cannot be disabled."
-    }
+    },
+    "fileSourceDisabled": "To upload documents, an embedding model must be enabled."
   },
   "common": {
     "loading": "Loading..."

@@ -38,7 +38,8 @@
       "internet_search": "Internet Recherche",
       "send_email": "E-Mails vorbereiten",
       "cannot_disable": "Diese Funktion kann nicht deaktiviert werden."
-    }
+    },
+    "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
   },
   "common": {
     "loading": "Laden..."

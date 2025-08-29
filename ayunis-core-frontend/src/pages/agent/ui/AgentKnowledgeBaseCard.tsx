@@ -13,13 +13,17 @@ import { useRef } from "react";
 import type { AgentResponseDto } from "@/shared/api";
 import useAgentSources from "../api/useAgentSources";
 import { useTranslation } from "react-i18next";
+import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+import { showError } from "@/shared/lib/toast";
 
 interface AgentKnowledgeBaseCardProps {
   agent: AgentResponseDto;
+  isEnabled: boolean;
 }
 
 export default function AgentKnowledgeBaseCard({
   agent,
+  isEnabled,
 }: AgentKnowledgeBaseCardProps) {
   const { t } = useTranslation("agent");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,6 +44,10 @@ export default function AgentKnowledgeBaseCard({
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    if (!isEnabled) {
+      showError(t("knowledgeBase.disabledTooltip"));
+      return;
+    }
     if (file) {
       addFileSource({
         id: agent.id,
@@ -86,15 +94,20 @@ export default function AgentKnowledgeBaseCard({
             onChange={handleFileChange}
             accept=".pdf,.txt,.doc,.docx,.md"
           />
-          <Button
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={addFileSourcePending || removeSourcePending}
+          <TooltipIf
+            condition={!isEnabled}
+            tooltip={t("knowledgeBase.disabledTooltip")}
           >
-            {addFileSourcePending
-              ? t("knowledgeBase.adding")
-              : t("knowledgeBase.addSource")}
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={addFileSourcePending || removeSourcePending}
+            >
+              {addFileSourcePending
+                ? t("knowledgeBase.adding")
+                : t("knowledgeBase.addSource")}
+            </Button>
+          </TooltipIf>
         </div>
       </CardContent>
     </Card>
