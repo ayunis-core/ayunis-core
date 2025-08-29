@@ -13,7 +13,7 @@ import { useDeleteAgent } from "../api/useDeleteAgent";
 import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useTranslation } from "react-i18next";
 import type { Agent } from "../model/openapi";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { Badge } from "@/shared/ui/shadcn/badge";
 
 interface AgentCardProps {
@@ -24,7 +24,7 @@ export default function AgentCard({ agent }: AgentCardProps) {
   const { t } = useTranslation("agents");
   const deleteAgent = useDeleteAgent();
   const { confirm } = useConfirmation();
-
+  const router = useRouter();
   function handleDelete() {
     confirm({
       title: t("card.confirmDelete.title"),
@@ -39,34 +39,41 @@ export default function AgentCard({ agent }: AgentCardProps) {
   }
 
   return (
-    <Card>
+    <Card
+      onClick={() =>
+        router.navigate({ to: "/agents/$id", params: { id: agent.id } })
+      }
+    >
       <CardHeader>
         <CardTitle className="text-lg">{agent.name}</CardTitle>
         <CardAction>
           <div className="flex items-center gap-2">
-            <Link to="/chat" search={{ agentId: agent.id }}>
+            <Link
+              to="/chat"
+              search={{ agentId: agent.id }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <Button variant="ghost">
                 <MessageCircle className="h-4 w-4" />{" "}
                 {t("card.startChatButton")}
               </Button>
             </Link>
-            <Link to="/agents/$id" params={{ id: agent.id }}>
+            <Link
+              to="/agents/$id"
+              params={{ id: agent.id }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <Button variant="ghost" size="icon">
                 <Edit className="h-4 w-4" />
               </Button>
             </Link>
-            {/* <EditAgentDialog
-              selectedAgent={agent}
-              trigger={
-                <Button variant="ghost" size="icon">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              }
-            /> */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
               disabled={deleteAgent.isPending}
             >
               <Trash2 className="h-4 w-4" />
