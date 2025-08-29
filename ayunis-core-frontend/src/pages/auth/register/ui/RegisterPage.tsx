@@ -27,6 +27,7 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
     import.meta.env.PROD &&
     config.analytics.gtmContainerId &&
     config.analytics.usercentricsSettingsId;
+  console.log({ enabled: gtmEnabled });
 
   useGtm({
     containerId: config.analytics.gtmContainerId || "",
