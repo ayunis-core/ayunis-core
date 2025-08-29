@@ -46,23 +46,6 @@
       "creating": "Wird erstellt..."
     }
   },
-  "editDialog": {
-    "title": "Agent bearbeiten",
-    "description": "Nehmen Sie hier Änderungen an Ihrem Agent vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",
-    "form": {
-      "nameLabel": "Name",
-      "namePlaceholder": "Agent-Name eingeben...",
-      "instructionsLabel": "Anweisungen",
-      "instructionsPlaceholder": "Geben Sie die Anweisungen und das Verhalten des Agenten ein...",
-      "modelLabel": "Modell",
-      "modelPlaceholder": "Wählen Sie ein KI-Modell..."
-    },
-    "buttons": {
-      "cancel": "Abbrechen",
-      "save": "Änderungen speichern",
-      "saving": "Wird gespeichert..."
-    }
-  },
   "create": {
     "success": "Agent erfolgreich erstellt!",
     "error": "Agent konnte nicht erstellt werden. Bitte versuchen Sie es erneut."

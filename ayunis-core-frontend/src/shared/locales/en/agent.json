@@ -1,4 +1,21 @@
 {
+  "editDialog": {
+    "title": "Edit agent",
+    "description": "Make changes to your agent here. Click save when you're done.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter agent name...",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
+      "modelLabel": "Model",
+      "modelPlaceholder": "Select an AI model..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving..."
+    }
+  },
   "knowledgeBase": {
     "title": "Knowledge Base",
     "description": "Configure which knowledge the agent has access to",

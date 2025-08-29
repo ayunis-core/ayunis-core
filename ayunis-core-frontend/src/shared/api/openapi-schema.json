@@ -4156,20 +4156,12 @@
             "description": "The ID of the permitted model to use for this agent",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
-          },
-          "toolAssignments": {
-            "description": "The tool assignments for the agent",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ToolAssignmentDto"
-            }
           }
         },
         "required": [
           "name",
           "instructions",
-          "modelId",
-          "toolAssignments"
+          "modelId"
         ]
       },
       "RetrieveUrlDto": {

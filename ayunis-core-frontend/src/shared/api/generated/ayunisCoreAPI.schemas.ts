@@ -786,8 +786,6 @@ export interface UpdateAgentDto {
   instructions: string;
   /** The ID of the permitted model to use for this agent */
   modelId: string;
-  /** The tool assignments for the agent */
-  toolAssignments: ToolAssignmentDto[];
 }
 
 export interface RetrieveUrlDto {

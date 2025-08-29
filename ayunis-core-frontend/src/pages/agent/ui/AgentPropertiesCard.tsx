@@ -33,7 +33,7 @@ export default function AgentPropertiesCard({
 }: {
   agent: AgentResponseDto;
 }) {
-  const { t } = useTranslation("agents");
+  const { t } = useTranslation("agent");
   const { models } = usePermittedModels();
   const { form, onSubmit, isLoading } = useUpdateAgent({
     agent: agent,
@@ -42,10 +42,8 @@ export default function AgentPropertiesCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Agent Properties</CardTitle>
-        <CardDescription>
-          Configure the basic properties of the agent.
-        </CardDescription>
+        <CardTitle>{t("editDialog.title")}</CardTitle>
+        <CardDescription>{t("editDialog.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -113,14 +111,11 @@ export default function AgentPropertiesCard({
                 </FormItem>
               )}
             />
-
-            <div className="flex gap-3">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading
-                  ? t("editDialog.buttons.saving")
-                  : t("editDialog.buttons.save")}
-              </Button>
-            </div>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading
+                ? t("editDialog.buttons.saving")
+                : t("editDialog.buttons.save")}
+            </Button>
           </form>
         </Form>
       </CardContent>

@@ -208,14 +208,6 @@ export class AgentsController {
         name: updateAgentDto.name,
         instructions: updateAgentDto.instructions,
         modelId: updateAgentDto.modelId,
-        toolAssignments: updateAgentDto.toolAssignments.map(
-          (toolAssignment) => ({
-            id: toolAssignment.id,
-            toolType: toolAssignment.type,
-            toolConfigId: toolAssignment.toolConfigId ?? null,
-            isEnabled: toolAssignment.isEnabled,
-          }),
-        ),
       }),
     );
 

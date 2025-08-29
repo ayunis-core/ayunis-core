@@ -46,23 +46,6 @@
       "creating": "Creating..."
     }
   },
-  "editDialog": {
-    "title": "Edit Agent",
-    "description": "Make changes to your agent here. Click save when you're done.",
-    "form": {
-      "nameLabel": "Name",
-      "namePlaceholder": "Enter agent name...",
-      "instructionsLabel": "Instructions",
-      "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
-      "modelLabel": "Model",
-      "modelPlaceholder": "Select an AI model..."
-    },
-    "buttons": {
-      "cancel": "Cancel",
-      "save": "Save changes",
-      "saving": "Saving..."
-    }
-  },
   "create": {
     "success": "Agent created successfully!",
     "error": "Failed to create agent. Please try again."
