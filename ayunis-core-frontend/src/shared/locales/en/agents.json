@@ -55,17 +55,7 @@
       "instructionsLabel": "Instructions",
       "instructionsPlaceholder": "Enter the agent's instructions and behavior...",
       "modelLabel": "Model",
-      "modelPlaceholder": "Select an AI model...",
-      "capabilitiesLabel": "Capabilities",
-      "capabilitiesTooltip": "Coming soon",
-      "capabilities": {
-        "generateCharts": "Generate Charts",
-        "generateChartsDescription": "Create visual charts and graphs from data",
-        "statisticalCalculations": "Statistical Calculations",
-        "statisticalCalculationsDescription": "Perform complex statistical analysis and computations",
-        "createDocuments": "Create Documents",
-        "createDocumentsDescription": "Generate and format various types of documents"
-      }
+      "modelPlaceholder": "Select an AI model..."
     },
     "buttons": {
       "cancel": "Cancel",

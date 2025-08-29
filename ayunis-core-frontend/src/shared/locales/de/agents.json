@@ -55,17 +55,7 @@
       "instructionsLabel": "Anweisungen",
       "instructionsPlaceholder": "Geben Sie die Anweisungen und das Verhalten des Agenten ein...",
       "modelLabel": "Modell",
-      "modelPlaceholder": "Wählen Sie ein KI-Modell...",
-      "capabilitiesLabel": "Fähigkeiten",
-      "capabilitiesTooltip": "Demnächst verfügbar",
-      "capabilities": {
-        "generateCharts": "Diagramme erstellen",
-        "generateChartsDescription": "Visuelle Diagramme und Graphen aus Daten erstellen",
-        "statisticalCalculations": "Statistische Berechnungen",
-        "statisticalCalculationsDescription": "Komplexe statistische Analysen und Berechnungen durchführen",
-        "createDocuments": "Dokumente erzeugen",
-        "createDocumentsDescription": "Verschiedene Arten von Dokumenten erstellen und formatieren"
-      }
+      "modelPlaceholder": "Wählen Sie ein KI-Modell..."
     },
     "buttons": {
       "cancel": "Abbrechen",

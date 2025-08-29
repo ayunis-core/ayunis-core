@@ -25,14 +25,8 @@ import {
 import { Input } from "@/shared/ui/shadcn/input";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
 import { Button } from "@/shared/ui/shadcn/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shared/ui/shadcn/tooltip";
 import { useState } from "react";
-import { Plus, Info } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type CreateAgentData, useCreateAgent } from "../api/useCreateAgent";
 import { useTranslation } from "react-i18next";
 import { usePermittedModels } from "@/features/usePermittedModels";
@@ -60,12 +54,7 @@ export default function CreateAgentDialog({
     onSubmit: originalOnSubmit,
     resetForm,
     isLoading,
-  } = useCreateAgent({
-    onSuccessCallback: () => {
-      setIsOpen(false);
-      resetForm();
-    },
-  });
+  } = useCreateAgent();
 
   const handleSubmit = (data: CreateAgentData) => {
     const toolAssignments = internetSearchEnabled
@@ -105,22 +94,55 @@ export default function CreateAgentDialog({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("createDialog.form.nameLabel")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("createDialog.form.namePlaceholder")}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("createDialog.form.nameLabel")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t("createDialog.form.namePlaceholder")}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="modelId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("createDialog.form.modelLabel")}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={t(
+                              "createDialog.form.modelPlaceholder",
+                            )}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {models.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            {model.displayName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="instructions"
@@ -142,52 +164,7 @@ export default function CreateAgentDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="modelId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("createDialog.form.modelLabel")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t("createDialog.form.modelPlaceholder")}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {models.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {model.displayName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <FormLabel className="text-sm font-medium">
-                  {t("createDialog.form.capabilitiesLabel")}
-                </FormLabel>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t("createDialog.form.capabilitiesTooltip")}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
+
             <DialogFooter>
               <Button
                 type="button"

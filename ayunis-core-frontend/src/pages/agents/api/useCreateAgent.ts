@@ -30,13 +30,7 @@ const createAgentSchema = z.object({
 
 export type CreateAgentData = z.infer<typeof createAgentSchema>;
 
-interface UseCreateAgentProps {
-  onSuccessCallback?: () => void;
-}
-
-export function useCreateAgent({
-  onSuccessCallback,
-}: UseCreateAgentProps = {}) {
+export function useCreateAgent() {
   const { t } = useTranslation("agents");
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -55,13 +49,16 @@ export function useCreateAgent({
     mutationFn: async (data: CreateAgentData) => {
       return await agentsControllerCreate(data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: getAgentsControllerFindAllQueryKey(),
       });
-      toast.success(t("create.success"));
-      form.reset();
-      onSuccessCallback?.();
+      if (data && data.id) {
+        router.navigate({
+          to: "/agents/$id",
+          params: { id: data.id },
+        });
+      }
     },
     onError: () => {
       toast.error(t("create.error"));

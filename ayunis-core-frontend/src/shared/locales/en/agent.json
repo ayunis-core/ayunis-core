@@ -1,0 +1,8 @@
+{
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "description": "Configure which knowledge the agent has access to",
+    "adding": "Adding...",
+    "addSource": "Add Source"
+  }
+}

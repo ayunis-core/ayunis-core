@@ -12,6 +12,7 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { useRef } from "react";
 import type { AgentResponseDto } from "@/shared/api";
 import useAgentSources from "../api/useAgentSources";
+import { useTranslation } from "react-i18next";
 
 interface AgentKnowledgeBaseCardProps {
   agent: AgentResponseDto;
@@ -20,6 +21,7 @@ interface AgentKnowledgeBaseCardProps {
 export default function AgentKnowledgeBaseCard({
   agent,
 }: AgentKnowledgeBaseCardProps) {
+  const { t } = useTranslation("agent");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -49,10 +51,8 @@ export default function AgentKnowledgeBaseCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Knowledge Base</CardTitle>
-        <CardDescription>
-          Configure which knowledge the agent has access to
-        </CardDescription>
+        <CardTitle>{t("knowledgeBase.title")}</CardTitle>
+        <CardDescription>{t("knowledgeBase.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -91,7 +91,9 @@ export default function AgentKnowledgeBaseCard({
             onClick={() => fileInputRef.current?.click()}
             disabled={addFileSourcePending || removeSourcePending}
           >
-            {addFileSourcePending ? "Adding..." : "Add Source"}
+            {addFileSourcePending
+              ? t("knowledgeBase.adding")
+              : t("knowledgeBase.addSource")}
           </Button>
         </div>
       </CardContent>
