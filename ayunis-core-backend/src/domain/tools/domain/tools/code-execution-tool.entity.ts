@@ -33,9 +33,9 @@ export class CodeExecutionTool extends Tool {
   constructor(availableSources: FileSource[]) {
     super({
       name: ToolType.CODE_EXECUTION,
-      description: `Execute code. The code will be executed in the context of the files provided. The code will be executed in a sandboxed environment. If you pass a file name, you can use it in the code through "import <file_name>". The files are: ${availableSources
+      description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in the context of the files provided. The code will be executed in a sandboxed environment. If you pass a file name, you can use it in the code through "import <file_name>". The files are: ${availableSources
         .map((source) => source.name)
-        .join(', ')}`,
+        .join(', ')}.`,
       parameters: codeExecutionToolParameters,
       type: ToolType.CODE_EXECUTION,
     });
