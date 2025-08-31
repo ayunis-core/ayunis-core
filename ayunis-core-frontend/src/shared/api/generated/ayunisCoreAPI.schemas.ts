@@ -700,6 +700,22 @@ export interface FileSourceResponseDto {
   filePath: string;
 }
 
+export interface GenerateIcsDto {
+  /**
+   * Event title
+   * @minLength 1
+   */
+  title: string;
+  /** Event description */
+  description?: string;
+  /** Location */
+  location?: string;
+  /** Start time (ISO 8601) */
+  start: string;
+  /** End time (ISO 8601) */
+  end: string;
+}
+
 /**
  * The type of tool to assign
  */
@@ -713,6 +729,7 @@ export const ToolAssignmentDtoType = {
   internet_search: 'internet_search',
   website_content: 'website_content',
   send_email: 'send_email',
+  create_calendar_event: 'create_calendar_event',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -750,6 +767,7 @@ export const ToolResponseDtoType = {
   internet_search: 'internet_search',
   website_content: 'website_content',
   send_email: 'send_email',
+  create_calendar_event: 'create_calendar_event',
 } as const;
 
 export interface ToolResponseDto {

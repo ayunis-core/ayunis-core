@@ -158,6 +158,15 @@ export class ExecuteRunUseCase {
       ),
     );
 
+    // Calendar event tool is always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.CREATE_CALENDAR_EVENT,
+        }),
+      ),
+    );
+
     // Internet search tool is always available
     // TODO: remove the self hosting constraint
     if (
