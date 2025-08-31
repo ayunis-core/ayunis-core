@@ -33,7 +33,22 @@
         "open": "In E-Mail App öffnen",
         "copyBody": "Text kopieren",
         "copied": "Kopiert"
-      }
+      },
+      "create_calendar_event": {
+        "title": "Titel",
+        "titlePlaceholder": "Ereignistitel",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "Ereignisbeschreibung",
+        "location": "Ort",
+        "locationPlaceholder": "Wo findet es statt?",
+        "start": "Beginn",
+        "end": "Ende",
+        "open": "In Google Kalender öffnen",
+        "downloadIcs": "Kalendereintrag herunterladen (.ics)",
+        "invalidRange": "Ende muss nach dem Beginn liegen",
+        "selectDate": "Datum wählen"
+      },
+      "tool_use": "Generiere Antwort"
     }
   },
   "newChat": {

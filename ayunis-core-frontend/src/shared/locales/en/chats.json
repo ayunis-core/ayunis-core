@@ -33,7 +33,22 @@
         "open": "Open in email app",
         "copyBody": "Copy body",
         "copied": "Copied"
-      }
+      },
+      "create_calendar_event": {
+        "title": "Title",
+        "titlePlaceholder": "Event title",
+        "description": "Description",
+        "descriptionPlaceholder": "Event description",
+        "location": "Location",
+        "locationPlaceholder": "Where is it?",
+        "start": "Start",
+        "end": "End",
+        "open": "Open in Google Calendar",
+        "downloadIcs": "Download .ics",
+        "invalidRange": "End must be after start",
+        "selectDate": "Select date"
+      },
+      "tool_use": "Generate answer"
     }
   },
   "newChat": {

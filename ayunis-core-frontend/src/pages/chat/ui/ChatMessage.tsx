@@ -17,6 +17,8 @@ import { cn } from "@/shared/lib/shadcn/utils";
 import SendEmailWidget from "./chat-widgets/SendEmailWidget";
 import ExecutableToolWidget from "./chat-widgets/ExecutableToolWidget";
 import ThinkingBlockWidget from "./chat-widgets/ThinkingBlockWidget";
+import CreateCalendarEventWidget from "./chat-widgets/CreateCalendarEventWidget";
+import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 interface ChatMessageProps {
   message?: Message;
@@ -142,26 +144,23 @@ function renderMessageContent(message: Message) {
         } else if (content.type === "tool_use") {
           try {
             const toolUseMessageContent = content as ToolUseMessageContent;
-            if (toolUseMessageContent.name === "send_email") {
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.send_email
+            ) {
+              return <SendEmailWidget content={toolUseMessageContent} />;
+            }
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.create_calendar_event
+            ) {
               return (
-                <SendEmailWidget
-                  key={`tool-${index}-${toolUseMessageContent.name}-${toolUseMessageContent.id}`}
-                  content={toolUseMessageContent}
-                />
+                <CreateCalendarEventWidget content={toolUseMessageContent} />
               );
             }
-            return (
-              <ExecutableToolWidget
-                key={`tool-${index}-${toolUseMessageContent.name}-${toolUseMessageContent.id}`}
-                content={toolUseMessageContent}
-              />
-            );
-          } catch (e) {
-            return (
-              <Markdown key={`error-${index}`}>
-                {"Error rendering tool use message"}
-              </Markdown>
-            );
+
+            return <ExecutableToolWidget content={toolUseMessageContent} />;
+          } catch {
+            return <Markdown>{"Error rendering tool use message"}</Markdown>;
           }
         }
         return null;

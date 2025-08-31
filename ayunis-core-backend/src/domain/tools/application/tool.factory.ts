@@ -16,6 +16,7 @@ import {
 } from './tools.errors';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
+import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
 
 @Injectable()
 export class ToolFactory {
@@ -55,6 +56,8 @@ export class ToolFactory {
         });
       case ToolType.SEND_EMAIL:
         return new SendEmailTool();
+      case ToolType.CREATE_CALENDAR_EVENT:
+        return new CreateCalendarEventTool();
       default:
         throw new ToolInvalidTypeError({
           toolType: params.type,
