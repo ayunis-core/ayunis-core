@@ -18,7 +18,6 @@ export default function ModelSelector({
   selectedModelId,
   onModelChange,
 }: ModelSelectorProps) {
-  console.log({ isDisabled, selectedModelId });
   const {
     models,
     placeholder,
