@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';

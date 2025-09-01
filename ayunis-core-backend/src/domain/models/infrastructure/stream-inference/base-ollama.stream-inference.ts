@@ -17,16 +17,19 @@ import {
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class BaseOllamaStreamInferenceHandler
   implements StreamInferenceHandler
 {
   private readonly logger = new Logger(BaseOllamaStreamInferenceHandler.name);
+  private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;
 
   // constructor(private readonly configService: ConfigService) {
@@ -48,6 +51,9 @@ export class BaseOllamaStreamInferenceHandler
     subscriber: Subscriber<StreamInferenceResponseChunk>,
   ): Promise<void> => {
     try {
+      // Reset thinking parser for new stream
+      this.thinkingParser.reset();
+
       const { messages, tools } = input;
       const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
         ...tool,
@@ -75,6 +81,7 @@ export class BaseOllamaStreamInferenceHandler
       });
 
       for await (const chunk of response) {
+        this.logger.debug('chunk', chunk);
         const delta = this.convertChunk(chunk);
         subscriber.next(delta);
       }
@@ -193,14 +200,22 @@ export class BaseOllamaStreamInferenceHandler
     chunk: ChatResponse,
   ): StreamInferenceResponseChunk => {
     const delta = chunk.message;
+    const textContent = delta.content ?? null;
+
+    // Parse thinking content from text
+    const { thinkingDelta, textContentDelta } = textContent
+      ? this.thinkingParser.parse(textContent)
+      : { thinkingDelta: null, textContentDelta: null };
+
     return new StreamInferenceResponseChunk({
-      textContentDelta: delta.content ?? null,
+      thinkingDelta,
+      textContentDelta,
       toolCallsDelta:
         delta.tool_calls?.map(
           (toolCall) =>
             new StreamInferenceResponseChunkToolCall({
               index: 0,
-              id: null,
+              id: randomUUID(),
               name: toolCall.function?.name,
               argumentsDelta: JSON.stringify(toolCall.function?.arguments),
             }),

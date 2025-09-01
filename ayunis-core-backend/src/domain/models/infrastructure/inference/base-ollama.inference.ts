@@ -15,15 +15,18 @@ import {
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
+import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { InferenceFailedError } from '../../application/models.errors';
 
 @Injectable()
 export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(BaseOllamaInferenceHandler.name);
+  private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;
 
   //   constructor(private readonly configService: ConfigService) {
@@ -191,11 +194,27 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
     }
 
     const modelResponseContent: Array<
-      TextMessageContent | ToolUseMessageContent
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
     > = [];
 
     if (completion.content) {
-      modelResponseContent.push(new TextMessageContent(completion.content));
+      // Reset thinking parser and parse the complete content
+      this.thinkingParser.reset();
+      const parseResult = this.thinkingParser.parse(completion.content);
+
+      // Add thinking content if present
+      if (parseResult.thinkingDelta) {
+        modelResponseContent.push(
+          new ThinkingMessageContent(parseResult.thinkingDelta),
+        );
+      }
+
+      // Add text content if present
+      if (parseResult.textContentDelta) {
+        modelResponseContent.push(
+          new TextMessageContent(parseResult.textContentDelta),
+        );
+      }
     }
 
     for (const tool of completion.tool_calls || []) {

@@ -1,8 +1,9 @@
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { Model } from '../../domain/model.entity';
 
 export class InferenceInput {
@@ -29,7 +30,9 @@ export class InferenceInput {
 
 export class InferenceResponse {
   constructor(
-    public content: Array<TextMessageContent | ToolUseMessageContent>,
+    public content: Array<
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+    >,
     public meta: {
       inputTokens?: number;
       outputTokens?: number;

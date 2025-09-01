@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ToolResultMessageContent } from '../../../../messages/domain/message-contents/tool-result.message-content.entity';
 import { Message } from '../../../../messages/domain/message.entity';
 import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
-import { TextMessageContent } from '../../../../messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from '../../../../messages/domain/message-contents/text-message-content.entity';
 import { Thread } from '../../../../threads/domain/thread.entity';
 import { Tool } from '../../../../tools/domain/tool.entity';
 import { CreateUserMessageUseCase } from '../../../../messages/application/use-cases/create-user-message/create-user-message.use-case';

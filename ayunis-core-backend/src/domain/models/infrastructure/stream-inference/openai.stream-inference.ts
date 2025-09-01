@@ -14,7 +14,7 @@ import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.en
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { Message } from 'src/domain/messages/domain/message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
@@ -227,11 +227,13 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     switch (chunk.type) {
       case 'response.output_text.delta':
         return new StreamInferenceResponseChunk({
+          thinkingDelta: null,
           textContentDelta: chunk.delta ?? null,
           toolCallsDelta: [],
         });
       case 'response.function_call_arguments.delta':
         return new StreamInferenceResponseChunk({
+          thinkingDelta: null,
           textContentDelta: null,
           toolCallsDelta: [
             new StreamInferenceResponseChunkToolCall({
@@ -245,6 +247,7 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       case 'response.output_item.added':
         if (chunk.item.type === 'function_call') {
           return new StreamInferenceResponseChunk({
+            thinkingDelta: null,
             textContentDelta: null,
             toolCallsDelta: [
               new StreamInferenceResponseChunkToolCall({

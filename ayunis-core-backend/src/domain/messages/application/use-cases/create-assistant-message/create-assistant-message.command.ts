@@ -1,10 +1,13 @@
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { UUID } from 'crypto';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 export class CreateAssistantMessageCommand {
   constructor(
     public readonly threadId: UUID,
-    public readonly content: Array<TextMessageContent | ToolUseMessageContent>,
+    public readonly content: Array<
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+    >,
   ) {}
 }

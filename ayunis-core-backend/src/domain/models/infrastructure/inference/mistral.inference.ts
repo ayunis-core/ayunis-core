@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { TextMessageContent } from '../../../messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from '../../../messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from '../../../messages/domain/message-contents/tool-use.message-content.entity';
 import { Tool as ToolEntity } from '../../../tools/domain/tool.entity';
 import { Message } from '../../../messages/domain/message.entity';

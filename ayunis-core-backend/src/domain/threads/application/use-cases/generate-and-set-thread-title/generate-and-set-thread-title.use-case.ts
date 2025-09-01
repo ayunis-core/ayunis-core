@@ -5,7 +5,7 @@ import { UpdateThreadTitleCommand } from '../update-thread-title/update-thread-t
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import {
   EmptyTitleResponseError,
   InvalidTitleResponseTypeError,
@@ -61,7 +61,10 @@ export class GenerateAndSetThreadTitleUseCase {
         );
       }
 
-      const title = firstContent.text.trim();
+      // Remove extra spaces and <think>...</think> blocks
+      const title = firstContent.text
+        .replace(/<think(ing)?>([\s\S]*?)<\/think(ing)?>/g, '')
+        .trim();
       if (!title) {
         throw new EmptyTitleResponseError(command.thread.id);
       }

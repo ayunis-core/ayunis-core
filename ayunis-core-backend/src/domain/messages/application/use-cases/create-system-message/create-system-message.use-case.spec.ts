@@ -6,7 +6,7 @@ import {
 } from '../../ports/messages.repository';
 import { CreateSystemMessageCommand } from './create-system-message.command';
 import { SystemMessage } from '../../../domain/messages/system-message.entity';
-import { TextMessageContent } from '../../../domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 

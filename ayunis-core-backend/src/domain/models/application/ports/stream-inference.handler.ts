@@ -48,6 +48,7 @@ export class StreamInferenceResponseChunkToolCall {
 }
 
 export class StreamInferenceResponseChunk {
+  public readonly thinkingDelta: string | null;
   public readonly textContentDelta: string | null;
   public readonly toolCallsDelta: StreamInferenceResponseChunkToolCall[];
   public readonly finishReason?: string | null;
@@ -57,6 +58,7 @@ export class StreamInferenceResponseChunk {
   };
 
   constructor(params: {
+    thinkingDelta: string | null;
     textContentDelta: string | null;
     toolCallsDelta: StreamInferenceResponseChunkToolCall[];
     finishReason?: string | null;
@@ -65,6 +67,7 @@ export class StreamInferenceResponseChunk {
       outputTokens?: number;
     };
   }) {
+    this.thinkingDelta = params.thinkingDelta;
     this.textContentDelta = params.textContentDelta;
     this.toolCallsDelta = params.toolCallsDelta;
     this.finishReason = params.finishReason;
