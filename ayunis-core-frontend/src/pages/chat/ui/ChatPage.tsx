@@ -331,7 +331,7 @@ export default function ChatPage({
   const chatHeader = (
     <ContentAreaHeader
       title={
-        <span className="inline-flex items-center gap-1">
+        <span className="inline-flex items-center gap-1" data-testid="header">
           {threadTitle || t("chat.untitled")}
         </span>
       }

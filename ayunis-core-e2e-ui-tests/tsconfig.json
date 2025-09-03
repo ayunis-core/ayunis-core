@@ -6,7 +6,8 @@
 		"baseUrl": "cypress",
 		"paths": {
 			"@pages/*": ["pages/*"],
-			"@data/*": ["data/*"]
+			"@data/*": ["data/*"],
+			"@helpers/*": ["helpers/*"]
 		},
 
 		"sourceMap": true,
@@ -33,6 +34,6 @@
 		"moduleDetection": "force",
 		"skipLibCheck": true
 	},
-	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts", "*.ts"],
+	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts", "cypress/helpers/*.ts","*.ts"],
 	"exclude": ["node_modules"]
 }

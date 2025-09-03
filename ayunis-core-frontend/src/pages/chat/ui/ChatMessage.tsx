@@ -68,7 +68,7 @@ export default function ChatMessage({
   if (isUserMessage) {
     return (
       <div className="flex justify-end my-4">
-        <div className="max-w-2xl min-w-0 space-y-1">
+        <div className="max-w-2xl min-w-0 space-y-1" data-testid="user-message">
           <Card className={`p-2 py-0 bg-muted `}>
             <CardContent className="p-2 space-y-2 min-w-0 overflow-hidden">
               {renderMessageContent(message)}
@@ -97,7 +97,10 @@ export default function ChatMessage({
           </Avatar>
         )}
         <div className="max-w-2xl min-w-0 space-y-1 w-full">
-          <div className="space-y-2 overflow-hidden w-full">
+          <div
+            className="space-y-2 overflow-hidden w-full"
+            data-testid="assistant-message"
+          >
             {renderMessageContent(message, isStreaming)}
           </div>
         </div>
