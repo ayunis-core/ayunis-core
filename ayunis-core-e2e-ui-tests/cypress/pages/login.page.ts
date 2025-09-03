@@ -1,26 +1,23 @@
-class LoginPage {
+import { BasePage } from '@pages/base.page';
+
+class LoginPage extends BasePage {
 	// Properties
-	path = `/login`;
+	override path = `/login`;
 
 	// Components
 
 	// Elements
 	get inputMailAddress() {
-		return cy.get(`input[name="email"]`);
+		return cy.get(`input[data-testid="email"]`);
 	}
 	get inputPassword() {
-		return cy.get(`input[name="password"]`);
+		return cy.get(`input[data-testid="password"]`);
 	}
 
 	get buttonSubmit() {
-		return cy.get(`button[type="submit"]`);
+		return cy.get(`button[data-testid="submit"]`);
 	}
 
-	// Helpers
-	open = () => {
-		cy.visit(this.path);
-		cy.urlpath().should('eql', this.path);
-	};
 }
 
 export default new LoginPage();

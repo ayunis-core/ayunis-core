@@ -1,8 +1,9 @@
-import Navigation from './components/navigation.component';
+import Navigation from './components/sidebar.component';
+import { BasePage } from '@pages/base.page';
 
-class ChatsPage {
+class ChatsPage extends BasePage {
 	// Properties
-	path = `/chats`;
+	override path = `/chats`;
 
 	// Components
 	get navigation() {
@@ -11,10 +12,6 @@ class ChatsPage {
 
 	// Elements
 
-	// Helpers
-	validateOn = () => {
-		cy.urlpath().should('eq', this.path);
-	};
 }
 
 export default new ChatsPage();
