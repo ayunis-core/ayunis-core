@@ -81,7 +81,7 @@ docker compose up -d --build
 Add available models via HTTP requests to the admin endpoint:
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/models \
+curl -X POST http://localhost:3000/api/admin/language-models \
   -H "Content-Type: application/json" \
   -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
   -d '{
