@@ -23,6 +23,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { randomUUID } from 'crypto';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 @Injectable()
 export class BaseOllamaStreamInferenceHandler
@@ -138,11 +139,15 @@ export class BaseOllamaStreamInferenceHandler
       let assistantTextMessageContent: string | undefined = undefined;
       let assistantToolUseMessageContent: OllamaToolCall[] | undefined =
         undefined;
-
+      let assistantThinkingMessageContent: string | undefined = undefined;
       for (const content of message.content) {
         // Text Message Content
         if (content instanceof TextMessageContent) {
           assistantTextMessageContent = content.text;
+        }
+        // Thinking Message Content
+        if (content instanceof ThinkingMessageContent) {
+          assistantThinkingMessageContent = content.thinking;
         }
         // Tool Use Message Content
         if (content instanceof ToolUseMessageContent) {
@@ -168,6 +173,7 @@ export class BaseOllamaStreamInferenceHandler
       convertedMessages.push({
         role: 'assistant' as const,
         content: assistantTextMessageContent ?? '',
+        thinking: assistantThinkingMessageContent,
         tool_calls: assistantToolUseMessageContent,
       });
     }
@@ -202,14 +208,14 @@ export class BaseOllamaStreamInferenceHandler
   ): StreamInferenceResponseChunk => {
     const delta = chunk.message;
     const textContent = delta.content ?? null;
-
+    const thinkingContent = delta.thinking ?? null;
     // Parse thinking content from text
     const { thinkingDelta, textContentDelta } = textContent
       ? this.thinkingParser.parse(textContent)
       : { thinkingDelta: null, textContentDelta: null };
 
     return new StreamInferenceResponseChunk({
-      thinkingDelta,
+      thinkingDelta: thinkingContent ?? thinkingDelta,
       textContentDelta,
       toolCallsDelta:
         delta.tool_calls?.map(

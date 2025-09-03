@@ -203,7 +203,11 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
       const parseResult = this.thinkingParser.parse(completion.content);
 
       // Add thinking content if present
-      if (parseResult.thinkingDelta) {
+      if (completion.thinking) {
+        modelResponseContent.push(
+          new ThinkingMessageContent(completion.thinking),
+        );
+      } else if (parseResult.thinkingDelta) {
         modelResponseContent.push(
           new ThinkingMessageContent(parseResult.thinkingDelta),
         );
