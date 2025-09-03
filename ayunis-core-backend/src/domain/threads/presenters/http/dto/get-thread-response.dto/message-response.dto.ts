@@ -60,6 +60,14 @@ export class ToolResultMessageContentResponseDto extends MessageContentResponseD
   result: string;
 }
 
+export class ThinkingMessageContentResponseDto extends MessageContentResponseDto {
+  @ApiProperty({
+    description: 'The thinking content of the message',
+    example: 'I am thinking about the best way to help you.',
+  })
+  thinking: string;
+}
+
 // Base message response class
 abstract class BaseMessageResponseDto {
   @ApiProperty({
@@ -134,11 +142,14 @@ export class AssistantMessageResponseDto extends BaseMessageResponseDto {
       oneOf: [
         { $ref: getSchemaPath(TextMessageContentResponseDto) },
         { $ref: getSchemaPath(ToolUseMessageContentResponseDto) },
+        { $ref: getSchemaPath(ThinkingMessageContentResponseDto) },
       ],
     },
   })
   content: Array<
-    TextMessageContentResponseDto | ToolUseMessageContentResponseDto
+    | TextMessageContentResponseDto
+    | ToolUseMessageContentResponseDto
+    | ThinkingMessageContentResponseDto
   >;
 }
 

@@ -43,6 +43,8 @@ export interface ModelWithConfigResponseDto {
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
+  /** Whether the model can use tools */
+  canUseTools: boolean;
   /** Whether the model is permitted to be used */
   isPermitted: boolean;
   /** Whether the model is the default model */
@@ -447,7 +449,7 @@ export const AssistantMessageResponseDtoRole = {
   assistant: 'assistant',
 } as const;
 
-export type AssistantMessageResponseDtoContentItem = TextMessageContentResponseDto | ToolUseMessageContentResponseDto;
+export type AssistantMessageResponseDtoContentItem = TextMessageContentResponseDto | ToolUseMessageContentResponseDto | ThinkingMessageContentResponseDto;
 
 export interface AssistantMessageResponseDto {
   /** Unique identifier for the message */
@@ -497,6 +499,7 @@ export const TextMessageContentResponseDtoType = {
   text: 'text',
   tool_use: 'tool_use',
   tool_result: 'tool_result',
+  thinking: 'thinking',
 } as const;
 
 export interface TextMessageContentResponseDto {
@@ -517,6 +520,7 @@ export const ToolUseMessageContentResponseDtoType = {
   text: 'text',
   tool_use: 'tool_use',
   tool_result: 'tool_result',
+  thinking: 'thinking',
 } as const;
 
 /**
@@ -546,6 +550,7 @@ export const ToolResultMessageContentResponseDtoType = {
   text: 'text',
   tool_use: 'tool_use',
   tool_result: 'tool_result',
+  thinking: 'thinking',
 } as const;
 
 export interface ToolResultMessageContentResponseDto {
@@ -791,6 +796,46 @@ export interface UpdateAgentDto {
 export interface RetrieveUrlDto {
   /** URL to retrieve content from */
   url: string;
+}
+
+/**
+ * Type of the message content
+ */
+export type MessageContentResponseDtoType = typeof MessageContentResponseDtoType[keyof typeof MessageContentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageContentResponseDtoType = {
+  text: 'text',
+  tool_use: 'tool_use',
+  tool_result: 'tool_result',
+  thinking: 'thinking',
+} as const;
+
+export interface MessageContentResponseDto {
+  /** Type of the message content */
+  type: MessageContentResponseDtoType;
+}
+
+/**
+ * Type of the message content
+ */
+export type ThinkingMessageContentResponseDtoType = typeof ThinkingMessageContentResponseDtoType[keyof typeof ThinkingMessageContentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ThinkingMessageContentResponseDtoType = {
+  text: 'text',
+  tool_use: 'tool_use',
+  tool_result: 'tool_result',
+  thinking: 'thinking',
+} as const;
+
+export interface ThinkingMessageContentResponseDto {
+  /** Type of the message content */
+  type: ThinkingMessageContentResponseDtoType;
+  /** The thinking content of the message */
+  thinking: string;
 }
 
 /**

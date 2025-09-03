@@ -18,6 +18,9 @@ export class CreateLanguageModelDto {
   canStream: boolean;
 
   @IsBoolean()
+  canUseTools: boolean;
+
+  @IsBoolean()
   isReasoning: boolean;
 
   @IsBoolean()

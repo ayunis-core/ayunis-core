@@ -5,6 +5,7 @@ export class CreateLanguageModelCommand {
   provider: ModelProvider;
   displayName: string;
   canStream: boolean;
+  canUseTools: boolean;
   isReasoning: boolean;
   isArchived: boolean;
 
@@ -13,6 +14,7 @@ export class CreateLanguageModelCommand {
     provider: ModelProvider;
     displayName: string;
     canStream: boolean;
+    canUseTools: boolean;
     isReasoning: boolean;
     isArchived: boolean;
   }) {
@@ -20,6 +22,7 @@ export class CreateLanguageModelCommand {
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.canStream = params.canStream;
+    this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.isArchived = params.isArchived;
   }

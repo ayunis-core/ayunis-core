@@ -59,6 +59,7 @@ export class BaseOllamaStreamInferenceHandler
         ...tool,
         function: { ...tool.function, strict: true },
       }));
+      console.log('ollamaTools', ollamaTools);
       const ollamaMessages = this.convertMessages(messages);
       const systemPrompt = input.systemPrompt
         ? this.convertSystemPrompt(input.systemPrompt)
@@ -68,7 +69,7 @@ export class BaseOllamaStreamInferenceHandler
         messages: systemPrompt
           ? [systemPrompt, ...ollamaMessages]
           : ollamaMessages,
-        tools: ollamaTools,
+        // tools: ollamaTools.length > 0 ? ollamaTools : undefined,
         stream: true,
       };
       this.logger.debug('completionOptions', completionOptions);

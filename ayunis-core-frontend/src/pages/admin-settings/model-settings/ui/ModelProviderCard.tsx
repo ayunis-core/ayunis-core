@@ -119,6 +119,11 @@ export default function ModelProviderCard({
                             {t("models.streaming")}
                           </Badge>
                         )}
+                        {model.canUseTools && (
+                          <Badge variant="outline" className="text-xs">
+                            {t("models.tools")}
+                          </Badge>
+                        )}
                         {model.isReasoning && (
                           <Badge variant="outline" className="text-xs">
                             {t("models.reasoning")}

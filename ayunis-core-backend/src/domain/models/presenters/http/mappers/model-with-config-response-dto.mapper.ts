@@ -26,6 +26,7 @@ export class ModelWithConfigResponseDtoMapper {
         displayName: model.displayName,
         canStream: model instanceof LanguageModel ? model.canStream : false,
         isReasoning: model instanceof LanguageModel ? model.isReasoning : false,
+        canUseTools: model instanceof LanguageModel ? model.canUseTools : false,
         isPermitted,
         isDefault,
         isEmbedding: model instanceof EmbeddingModel ? true : false,

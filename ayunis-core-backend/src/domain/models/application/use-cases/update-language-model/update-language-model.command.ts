@@ -8,6 +8,7 @@ export class UpdateLanguageModelCommand {
   displayName: string;
   isArchived: boolean;
   canStream: boolean;
+  canUseTools: boolean;
   isReasoning: boolean;
 
   constructor(params: {
@@ -17,6 +18,7 @@ export class UpdateLanguageModelCommand {
     displayName: string;
     isArchived: boolean;
     canStream: boolean;
+    canUseTools: boolean;
     isReasoning: boolean;
   }) {
     this.id = params.id;
@@ -25,6 +27,7 @@ export class UpdateLanguageModelCommand {
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;
     this.canStream = params.canStream;
+    this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
   }
 }

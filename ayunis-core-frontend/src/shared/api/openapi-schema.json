@@ -2897,6 +2897,10 @@
             "type": "boolean",
             "description": "Whether the model can reason"
           },
+          "canUseTools": {
+            "type": "boolean",
+            "description": "Whether the model can use tools"
+          },
           "isPermitted": {
             "type": "boolean",
             "description": "Whether the model is permitted to be used"
@@ -2918,6 +2922,7 @@
           "displayName",
           "canStream",
           "isReasoning",
+          "canUseTools",
           "isPermitted",
           "isDefault",
           "isEmbedding"
@@ -3524,6 +3529,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/ToolUseMessageContentResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ThinkingMessageContentResponseDto"
                 }
               ]
             }
@@ -3589,7 +3597,8 @@
             "enum": [
               "text",
               "tool_use",
-              "tool_result"
+              "tool_result",
+              "thinking"
             ]
           },
           "text": {
@@ -3613,7 +3622,8 @@
             "enum": [
               "text",
               "tool_use",
-              "tool_result"
+              "tool_result",
+              "thinking"
             ]
           },
           "id": {
@@ -3652,7 +3662,8 @@
             "enum": [
               "text",
               "tool_use",
-              "tool_result"
+              "tool_result",
+              "thinking"
             ]
           },
           "toolId": {
@@ -4175,6 +4186,50 @@
         },
         "required": [
           "url"
+        ]
+      },
+      "MessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "ThinkingMessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking"
+            ]
+          },
+          "thinking": {
+            "type": "string",
+            "description": "The thinking content of the message",
+            "example": "I am thinking about the best way to help you."
+          }
+        },
+        "required": [
+          "type",
+          "thinking"
         ]
       },
       "RunSessionResponseDto": {

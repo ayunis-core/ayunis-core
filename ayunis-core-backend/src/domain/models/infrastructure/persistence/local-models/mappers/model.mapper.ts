@@ -19,6 +19,7 @@ export class ModelMapper {
         provider: record.provider,
         displayName: record.displayName,
         canStream: record.canStream,
+        canUseTools: record.canUseTools,
         isReasoning: record.isReasoning,
         isArchived: record.isArchived,
         createdAt: record.createdAt,
@@ -50,6 +51,7 @@ export class ModelMapper {
       record.provider = domain.provider;
       record.displayName = domain.displayName;
       record.canStream = domain.canStream;
+      record.canUseTools = domain.canUseTools;
       record.isReasoning = domain.isReasoning;
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;

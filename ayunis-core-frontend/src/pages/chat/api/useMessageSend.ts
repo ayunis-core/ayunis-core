@@ -115,12 +115,14 @@ export function useMessageSend(params: UseMessageSendParams) {
                       break;
                     case "message":
                       params.onMessageEvent?.(data as RunMessageResponseDto);
+                      console.log("Message", data);
                       break;
                     case "thread":
                       params.onThreadEvent?.(data as RunThreadResponseDto);
                       break;
                     case "error":
                       params.onErrorEvent?.(data as RunErrorResponseDto);
+                      console.log("Error", data);
                       break;
                     default:
                       console.warn("Unknown SSE event type:", data.type);

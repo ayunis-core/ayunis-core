@@ -33,6 +33,8 @@
     "addPrompt": "Prompt hinzufügen",
     "noEmbeddingModelEnabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
     "modelChangeDisabledTooltip": "Das Modell kann nicht geändert werden, wenn ein Agent ausgewählt ist.",
+    "cancelTooltip": "Abbrechen",
+    "sendTooltip": "Senden",
     "agents": {
       "title": "Agenten"
     },

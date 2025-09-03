@@ -31,9 +31,15 @@ export abstract class ModelRecord extends BaseRecord {
 export class LanguageModelRecord extends ModelRecord {
   @Column({
     type: 'boolean',
-    default: false,
+    default: true,
   })
   canStream: boolean;
+
+  @Column({
+    type: 'boolean',
+    default: true,
+  })
+  canUseTools: boolean;
 
   @Column({
     type: 'boolean',

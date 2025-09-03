@@ -91,6 +91,7 @@ export default function NewChatPage({
           onAgentChange={handleAgentChange}
           onAgentRemove={handleAgentRemove}
           onSend={handleSend}
+          onSendCancelled={() => null}
           prefilledPrompt={prefilledPrompt}
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}

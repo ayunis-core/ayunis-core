@@ -13,7 +13,9 @@ import {
   TextMessageContentResponseDto,
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
+  ThinkingMessageContentResponseDto,
 } from '../dto/get-thread-response.dto/message-response.dto';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 @Injectable()
 export class MessageDtoMapper {
@@ -55,7 +57,9 @@ export class MessageDtoMapper {
           role: MessageRole.ASSISTANT,
           content: this.mapAssistantContentArray(
             message.content as Array<
-              TextMessageContent | ToolUseMessageContent
+              | TextMessageContent
+              | ToolUseMessageContent
+              | ThinkingMessageContent
             >,
           ),
         };
@@ -92,13 +96,21 @@ export class MessageDtoMapper {
   }
 
   private mapAssistantContentArray(
-    content: Array<TextMessageContent | ToolUseMessageContent>,
-  ): Array<TextMessageContentResponseDto | ToolUseMessageContentResponseDto> {
+    content: Array<
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+    >,
+  ): Array<
+    | TextMessageContentResponseDto
+    | ToolUseMessageContentResponseDto
+    | ThinkingMessageContentResponseDto
+  > {
     return content.map((contentItem) => {
       if (contentItem.type === MessageContentType.TEXT) {
         return this.mapTextContent(contentItem as TextMessageContent);
       } else if (contentItem.type === MessageContentType.TOOL_USE) {
         return this.mapToolUseContent(contentItem as ToolUseMessageContent);
+      } else if (contentItem.type === MessageContentType.THINKING) {
+        return this.mapThinkingContent(contentItem as ThinkingMessageContent);
       } else {
         throw new Error(
           `Invalid content type for assistant message: ${contentItem.type}`,
@@ -111,6 +123,15 @@ export class MessageDtoMapper {
     content: ToolResultMessageContent[],
   ): ToolResultMessageContentResponseDto[] {
     return content.map((contentItem) => this.mapToolResultContent(contentItem));
+  }
+
+  private mapThinkingContent(
+    content: ThinkingMessageContent,
+  ): ThinkingMessageContentResponseDto {
+    return {
+      type: content.type,
+      thinking: content.thinking,
+    };
   }
 
   private mapTextContent(

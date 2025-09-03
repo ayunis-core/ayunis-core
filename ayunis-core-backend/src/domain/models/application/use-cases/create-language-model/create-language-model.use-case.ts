@@ -29,6 +29,7 @@ export class CreateLanguageModelUseCase {
         provider: command.provider,
         displayName: command.displayName,
         canStream: command.canStream,
+        canUseTools: command.canUseTools,
         isReasoning: command.isReasoning,
         isArchived: command.isArchived,
       });

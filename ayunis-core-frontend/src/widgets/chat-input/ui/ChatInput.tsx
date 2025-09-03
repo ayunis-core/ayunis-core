@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/shared/ui/shadcn/button";
-import { ArrowUp, Bot, Loader2, XIcon } from "lucide-react";
+import { ArrowUp, Bot, Square, XIcon } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import AgentButton from "./AgentButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
@@ -12,6 +12,11 @@ import PlusButton from "./PlusButton";
 import ModelSelector from "./ModelSelector";
 import { useAgents } from "../../../features/useAgents";
 import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/ui/shadcn/tooltip";
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -26,6 +31,7 @@ interface ChatInputProps {
   onFileUpload: (file: File) => void;
   onRemoveSource: (sourceId: string) => void;
   onSend: (message: string) => Promise<void>;
+  onSendCancelled: () => void;
   prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
 }
@@ -49,6 +55,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onFileUpload,
       onRemoveSource,
       onSend,
+      onSendCancelled,
       prefilledPrompt,
       isEmbeddingModelEnabled,
     },
@@ -156,18 +163,40 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     />
                   </TooltipIf>
                   {isStreaming ? (
-                    <Button size="icon" className="rounded-full" disabled>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <Button
+                            size="icon"
+                            className="rounded-full"
+                            onClick={onSendCancelled}
+                          >
+                            <Square className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t("chatInput.cancelTooltip")}
+                      </TooltipContent>
+                    </Tooltip>
                   ) : (
-                    <Button
-                      disabled={!message.trim() || !(modelId || agentId)}
-                      className="rounded-full"
-                      size="icon"
-                      onClick={handleSend}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <Button
+                            disabled={!message.trim() || !(modelId || agentId)}
+                            className="rounded-full"
+                            size="icon"
+                            onClick={handleSend}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t("chatInput.sendTooltip")}
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </div>

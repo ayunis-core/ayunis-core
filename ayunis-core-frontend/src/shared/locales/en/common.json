@@ -33,6 +33,8 @@
     "addPrompt": "Add Prompt",
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
     "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",
+    "cancelTooltip": "Cancel",
+    "sendTooltip": "Send",
     "agents": {
       "title": "Agents"
     },

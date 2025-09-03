@@ -7,6 +7,7 @@ import type {
   AssistantMessageContent,
   TextMessageContent,
   ToolUseMessageContent,
+  ThinkingMessageContent,
 } from "../model/openapi";
 import brandIconLight from "@/shared/assets/brand/brand-icon-round-light.svg";
 import brandIconDark from "@/shared/assets/brand/brand-icon-round-dark.svg";
@@ -15,7 +16,7 @@ import { Markdown } from "@/widgets/markdown";
 import { cn } from "@/shared/lib/shadcn/utils";
 import SendEmailWidget from "./chat-widgets/SendEmailWidget";
 import ExecutableToolWidget from "./chat-widgets/ExecutableToolWidget";
-import ToolUseSkeleton from "./chat-widgets/ToolUseSkeleton";
+import ThinkingBlockWidget from "./chat-widgets/ThinkingBlockWidget";
 
 interface ChatMessageProps {
   message?: Message;
@@ -114,10 +115,21 @@ function renderMessageContent(message: Message) {
     case "assistant":
       // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
       if (!message.content || message.content.length === 0) {
-        return <ToolUseSkeleton />;
+        return null;
       }
 
       return message.content.map((content: AssistantMessageContent, index) => {
+        if (content.type === "thinking") {
+          const thinkingMessageContent = content as ThinkingMessageContent;
+          const hasTextContent = message.content.some((c) => c.type === "text");
+          return (
+            <ThinkingBlockWidget
+              open={!hasTextContent}
+              key={`thinking-${index}-${thinkingMessageContent.thinking.slice(0, 50)}`}
+              content={thinkingMessageContent}
+            />
+          );
+        }
         if (content.type === "text") {
           const textMessageContent = content as TextMessageContent;
           return (

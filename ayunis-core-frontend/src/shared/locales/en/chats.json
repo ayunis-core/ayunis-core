@@ -18,6 +18,7 @@
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",
     "errorRemoveAgent": "Agent could not be removed",
+    "thinking": "Thinking",
     "tools": {
       "internet_search": "Search the internet",
       "website_content": "Query website",
@@ -32,8 +33,7 @@
         "open": "Open in email app",
         "copyBody": "Copy body",
         "copied": "Copied"
-      },
-      "tool_use": "Generate answer"
+      }
     }
   },
   "newChat": {

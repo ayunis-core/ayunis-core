@@ -49,6 +49,12 @@ export class ModelWithConfigResponseDto {
 
   @ApiProperty({
     type: 'boolean',
+    description: 'Whether the model can use tools',
+  })
+  canUseTools: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
     description: 'Whether the model is permitted to be used',
   })
   isPermitted: boolean;

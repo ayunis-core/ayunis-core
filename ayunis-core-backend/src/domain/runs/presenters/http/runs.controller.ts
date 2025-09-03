@@ -18,6 +18,11 @@ import {
   AssistantMessageResponseDto,
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
+  MessageContentResponseDto,
+  TextMessageContentResponseDto,
+  ToolUseMessageContentResponseDto,
+  ToolResultMessageContentResponseDto as ToolResultContentDto,
+  ThinkingMessageContentResponseDto,
 } from '../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 import { RunInputMapper } from './mappers/run-input.mapper';
 import {
@@ -42,6 +47,11 @@ import { Response } from 'express';
   AssistantMessageResponseDto,
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
+  MessageContentResponseDto,
+  TextMessageContentResponseDto,
+  ToolUseMessageContentResponseDto,
+  ToolResultContentDto,
+  ThinkingMessageContentResponseDto,
   RunSessionResponseDto,
   RunMessageResponseDto,
   RunErrorResponseDto,
@@ -284,7 +294,7 @@ export class RunsController {
         let eventId: string;
         switch (event.type) {
           case 'message':
-            eventId = event.message.id;
+            eventId = `message-${event.timestamp}`;
             break;
           case 'thread':
             eventId = `thread-${event.threadId}`;

@@ -4,6 +4,7 @@ import type {
   GetThreadResponseDto,
   ToolResultMessageContentResponseDto,
   ToolUseMessageContentResponseDto,
+  ThinkingMessageContentResponseDto,
 } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 export type Thread = GetThreadResponseDto;
@@ -14,3 +15,4 @@ export type AssistantMessageContent =
 export type TextMessageContent = TextMessageContentResponseDto;
 export type ToolUseMessageContent = ToolUseMessageContentResponseDto;
 export type ToolResultMessageContent = ToolResultMessageContentResponseDto;
+export type ThinkingMessageContent = ThinkingMessageContentResponseDto;

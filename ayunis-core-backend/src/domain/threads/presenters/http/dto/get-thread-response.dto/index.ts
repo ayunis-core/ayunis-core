@@ -13,6 +13,7 @@ import {
   TextMessageContentResponseDto,
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
+  ThinkingMessageContentResponseDto,
 } from './message-response.dto';
 import { ModelResponseDto } from './model-response-dto';
 import { UUID } from 'crypto';
@@ -26,6 +27,7 @@ import { SourceResponseDto } from './source-response.dto';
   TextMessageContentResponseDto,
   ToolUseMessageContentResponseDto,
   ToolResultMessageContentResponseDto,
+  ThinkingMessageContentResponseDto,
   ModelResponseDto,
   SourceResponseDto,
 )

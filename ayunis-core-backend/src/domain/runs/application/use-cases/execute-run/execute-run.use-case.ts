@@ -10,6 +10,7 @@ import { CreateUserMessageCommand } from '../../../../messages/application/use-c
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import { ToolUseMessageContent } from '../../../../messages/domain/message-contents/tool-use.message-content.entity';
+import { ThinkingMessageContent } from '../../../../messages/domain/message-contents/thinking-message-content.entity';
 import { ExecuteToolUseCase } from '../../../../tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from '../../../../tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { ExecuteToolCommand } from '../../../../tools/application/use-cases/execute-tool/execute-tool.command';
@@ -88,8 +89,10 @@ export class ExecuteRunUseCase {
       const thread = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
       );
-      const tools = await this.assembleTools(thread);
       const model = this.pickModel(thread);
+      const tools = model.model.canUseTools
+        ? await this.assembleTools(thread)
+        : [];
       const instructions = this.assemblySystemPrompt(thread);
 
       const trace = langfuse.trace({
@@ -603,6 +606,7 @@ export class ExecuteRunUseCase {
 
     // Accumulate content for the message
     let accumulatedText = '';
+    let accumulatedThinking = '';
     const accumulatedToolCalls = new Map<
       number,
       {
@@ -664,6 +668,12 @@ export class ExecuteRunUseCase {
 
       let shouldUpdate = false;
 
+      // Accumulate thinking content
+      if (chunk.thinkingDelta) {
+        accumulatedThinking += chunk.thinkingDelta;
+        shouldUpdate = true;
+      }
+
       // Accumulate text content
       if (chunk.textContentDelta) {
         accumulatedText += chunk.textContentDelta;
@@ -689,8 +699,13 @@ export class ExecuteRunUseCase {
       // Yield updated message if there were changes
       if (shouldUpdate) {
         const messageContent: Array<
-          TextMessageContent | ToolUseMessageContent
+          TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
         > = [];
+
+        // Add thinking content if present
+        if (accumulatedThinking.trim()) {
+          messageContent.push(new ThinkingMessageContent(accumulatedThinking));
+        }
 
         // Add text content if present
         if (accumulatedText.trim()) {
@@ -740,8 +755,13 @@ export class ExecuteRunUseCase {
 
     // Build final message content
     const finalMessageContent: Array<
-      TextMessageContent | ToolUseMessageContent
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
     > = [];
+
+    // Add thinking content if present
+    if (accumulatedThinking.trim()) {
+      finalMessageContent.push(new ThinkingMessageContent(accumulatedThinking));
+    }
 
     // Add text content if present
     if (accumulatedText.trim()) {

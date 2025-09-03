@@ -9,6 +9,7 @@ import { MessageContentType } from 'src/domain/messages/domain/value-objects/mes
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 
 @Injectable()
@@ -40,6 +41,12 @@ export class MessageMapper {
           toolId: content.toolId,
           toolName: content.toolName,
           result: content.result,
+        };
+      }
+      if (content instanceof ThinkingMessageContent) {
+        return {
+          type: MessageContentType.THINKING,
+          thinking: content.thinking,
         };
       }
       throw new Error('Invalid message content');
@@ -74,6 +81,9 @@ export class MessageMapper {
                 content.name,
                 content.params,
               );
+            }
+            if (content.type === MessageContentType.THINKING) {
+              return new ThinkingMessageContent(content.thinking);
             }
             throw new Error('Invalid message content');
           }),

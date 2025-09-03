@@ -153,7 +153,7 @@ export default function ChatPage({
     setThreadTitle(thread.title);
   }, []);
 
-  const { sendTextMessage } = useMessageSend({
+  const { sendTextMessage, abort } = useMessageSend({
     threadId: thread.id,
     onMessageEvent: (data) => handleMessage(data.message),
     onErrorEvent: handleError,
@@ -187,6 +187,11 @@ export default function ChatPage({
       }
       throw error; // rethrow the error to preserve the message
     }
+  }
+
+  function handleSendCancelled() {
+    abort();
+    setIsStreaming(false);
   }
 
   useEffect(() => {
@@ -377,6 +382,7 @@ export default function ChatPage({
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onSend={handleSend}
+      onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />
   );

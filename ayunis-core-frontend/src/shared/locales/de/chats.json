@@ -18,6 +18,7 @@
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",
+    "thinking": "Nachdenken",
     "tools": {
       "internet_search": "Im Internet suchen",
       "website_content": "Website abfragen",
@@ -32,8 +33,7 @@
         "open": "In E-Mail App öffnen",
         "copyBody": "Text kopieren",
         "copied": "Kopiert"
-      },
-      "tool_use": "Generiere Antwort"
+      }
     }
   },
   "newChat": {

@@ -11,13 +11,13 @@ enum ParseState {
 
 /**
  * Utility class to parse thinking content from streaming text that can be split across chunks.
- * Handles <thinking>...</thinking> tags that may be incomplete in individual chunks.
+ * Handles <think>...</think> tags that may be incomplete in individual chunks.
  */
 export class ThinkingContentParser {
   private state: ParseState = ParseState.NORMAL;
   private buffer: string = '';
-  private readonly openingTag = '<thinking>';
-  private readonly closingTag = '</thinking>';
+  private readonly openingTag = '<think>';
+  private readonly closingTag = '</think>';
 
   /**
    * Parse a chunk of text and extract thinking and regular content

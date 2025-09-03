@@ -24,10 +24,16 @@ interface ToolResultMessageContentData {
   result: string;
 }
 
+interface ThinkingMessageContentData {
+  type: MessageContentType.THINKING;
+  thinking: string;
+}
+
 type MessageContentData =
   | TextMessageContentData
   | ToolUseMessageContentData
-  | ToolResultMessageContentData;
+  | ToolResultMessageContentData
+  | ThinkingMessageContentData;
 
 @Entity({ name: 'messages' })
 export class MessageRecord extends BaseRecord {
