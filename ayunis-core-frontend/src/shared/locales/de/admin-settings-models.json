@@ -2,9 +2,13 @@
   "models": {
     "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
     "streaming": "Streaming",
+    "streamingTooltip": "Das Modell sendet Antworten als Stream. Dadurch wird die Antwort Schritt für Schritt geliefert",
     "reasoning": "Reasoning",
+    "reasoningTooltip": "Das Modell verwendet Reasoning, um Antworten zu generieren",
     "embedding": "Embedding",
+    "embeddingTooltip": "Das Modell wird verwendet, um Dokumente zu embedden, was für die Dokumentenanalyse-Funktionen erforderlich ist",
     "tools": "Tools",
+    "toolsTooltip": "Das Modell kann Tools verwenden, wie z.B. die Internetrecherche, Dokumentenanalyse oder Datenaufbereitung",
     "enableProvider": "Provider freischalten",
     "disableProvider": "Provider deaktivieren",
     "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist.",

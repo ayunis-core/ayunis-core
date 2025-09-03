@@ -23,6 +23,11 @@ import { Button } from "@/shared/ui/shadcn/button";
 import type { Provider } from "../model/openapi";
 import ProviderConfirmationDialog from "./ProviderConfirmationDialog";
 import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/ui/shadcn/tooltip";
 
 interface ModelProviderCardProps {
   provider: Provider;
@@ -115,24 +120,52 @@ export default function ModelProviderCard({
                       </Label>
                       <div className="flex gap-1">
                         {model.canStream && (
-                          <Badge variant="outline" className="text-xs">
-                            {t("models.streaming")}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t("models.streaming")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t("models.streamingTooltip")}
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         {model.canUseTools && (
-                          <Badge variant="outline" className="text-xs">
-                            {t("models.tools")}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t("models.tools")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t("models.toolsTooltip")}
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         {model.isReasoning && (
-                          <Badge variant="outline" className="text-xs">
-                            {t("models.reasoning")}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t("models.reasoning")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t("models.reasoningTooltip")}
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         {model.isEmbedding && (
-                          <Badge variant="outline" className="text-xs">
-                            {t("models.embedding")}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t("models.embedding")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t("models.embeddingTooltip")}
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </div>

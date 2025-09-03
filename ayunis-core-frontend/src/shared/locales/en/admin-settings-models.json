@@ -2,9 +2,13 @@
   "models": {
     "noModelsAvailable": "No models available. Please check your configuration.",
     "streaming": "Streaming",
+    "streamingTooltip": "The model sends answers as a stream. This way, the answer is delivered step by step",
     "reasoning": "Reasoning",
+    "reasoningTooltip": "The model uses reasoning to answer questions",
     "embedding": "Embedding",
+    "embeddingTooltip": "The model is used to embed documents which is required for document analysis features",
     "tools": "Tools",
+    "toolsTooltip": "The model can use tools, like the internet search, document analysis or data preparation",
     "enableProvider": "Enable Provider",
     "disableProvider": "Disable Provider",
     "providerDisabled": "Cannot be enabled because the provider is not enabled.",
