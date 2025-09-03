@@ -53,11 +53,15 @@ export class GenerateAndSetThreadTitleUseCase {
         throw new EmptyTitleResponseError(command.thread.id);
       }
 
-      const firstContent = response.content[0];
-      if (!(firstContent instanceof TextMessageContent)) {
+      const firstContent = response.content.find(
+        (content) => content instanceof TextMessageContent,
+      );
+      if (!firstContent) {
         throw new InvalidTitleResponseTypeError(
           command.thread.id,
-          firstContent.constructor.name,
+          response.content
+            .map((content) => content.constructor.name)
+            .join(', '),
         );
       }
 
