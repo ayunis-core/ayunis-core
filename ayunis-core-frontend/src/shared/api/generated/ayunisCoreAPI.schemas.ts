@@ -700,22 +700,6 @@ export interface FileSourceResponseDto {
   filePath: string;
 }
 
-export interface GenerateIcsDto {
-  /**
-   * Event title
-   * @minLength 1
-   */
-  title: string;
-  /** Event description */
-  description?: string;
-  /** Location */
-  location?: string;
-  /** Start time (ISO 8601) */
-  start: string;
-  /** End time (ISO 8601) */
-  end: string;
-}
-
 /**
  * The type of tool to assign
  */

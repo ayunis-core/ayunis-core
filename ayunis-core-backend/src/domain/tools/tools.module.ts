@@ -14,8 +14,6 @@ import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/too
 import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assemble-tool.use-case';
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
-import { GenerateIcsUseCase } from './application/use-cases/generate-ics/generate-ics.use-case';
-import { CalendarController } from './presenters/http/calendar.controller';
 
 @Module({
   imports: [SourcesModule, LocalToolConfigRepositoryModule, RetrieverModule],
@@ -24,7 +22,6 @@ import { CalendarController } from './presenters/http/calendar.controller';
     AssembleToolUseCase,
     ExecuteToolUseCase,
     CheckToolCapabilitiesUseCase,
-    GenerateIcsUseCase,
     // Core services and registries
     ToolHandlerRegistry,
     HttpToolHandler,
@@ -57,6 +54,6 @@ import { CalendarController } from './presenters/http/calendar.controller';
     // Export mappers
     ToolConfigMapper,
   ],
-  controllers: [CalendarController],
+  controllers: [],
 })
 export class ToolsModule {}

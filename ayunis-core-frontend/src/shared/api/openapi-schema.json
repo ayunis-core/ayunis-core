@@ -1241,37 +1241,6 @@
         ]
       }
     },
-    "/tools/calendar/ics": {
-      "post": {
-        "operationId": "CalendarController_generateIcs",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GenerateIcsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Returns ICS content"
-          },
-          "400": {
-            "description": "Invalid input or date range"
-          },
-          "500": {
-            "description": "Failed to generate ICS content"
-          }
-        },
-        "summary": "Generate an .ics calendar file for an event",
-        "tags": [
-          "tools"
-        ]
-      }
-    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -4005,44 +3974,6 @@
           "fileType",
           "fileSize",
           "filePath"
-        ]
-      },
-      "GenerateIcsDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Event title",
-            "example": "Team meeting",
-            "minLength": 1
-          },
-          "description": {
-            "type": "string",
-            "description": "Event description",
-            "example": "Discuss Q3 roadmap"
-          },
-          "location": {
-            "type": "string",
-            "description": "Location",
-            "example": "Berlin HQ, Room 3"
-          },
-          "start": {
-            "type": "string",
-            "description": "Start time (ISO 8601)",
-            "example": "2025-09-01T10:30:00Z",
-            "format": "date-time"
-          },
-          "end": {
-            "type": "string",
-            "description": "End time (ISO 8601)",
-            "example": "2025-09-01T11:30:00Z",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "title",
-          "start",
-          "end"
         ]
       },
       "ToolAssignmentDto": {
