@@ -69,7 +69,7 @@ export default function OnboardingLayout({
               Impressum
             </a>
             <a
-              href="https://www.ayunis.com/avv"
+              href="https://www.ayunis.com/datenschutz-core"
               target="_blank"
               rel="noopener noreferrer"
             >
