@@ -10,6 +10,7 @@ class LoginPage extends BasePage {
 	get inputMailAddress() {
 		return cy.get(`input[data-testid="email"]`);
 	}
+
 	get inputPassword() {
 		return cy.get(`input[data-testid="password"]`);
 	}
