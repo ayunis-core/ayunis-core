@@ -51,8 +51,6 @@ export default function ChatPage({
   const { agents } = useAgents();
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
 
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<Element | null>(null);
   const processedPendingMessageRef = useRef<String | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
@@ -199,56 +197,6 @@ export default function ChatPage({
     setThreadTitle(thread.title);
   }, [thread]);
 
-  // Find scroll container once and cache it
-  useEffect(() => {
-    if (scrollAreaRef.current && !scrollContainerRef.current) {
-      // Find the scrollable parent container (likely in ChatInterfaceLayout)
-      let scrollContainer = scrollAreaRef.current.closest(
-        "[data-radix-scroll-area-viewport]",
-      );
-
-      // If no Radix scroll area found, try to find any scrollable parent
-      if (!scrollContainer) {
-        scrollContainer = scrollAreaRef.current.closest(
-          ".overflow-auto, .overflow-y-auto, .overflow-scroll, .overflow-y-scroll",
-        );
-      }
-
-      // If still no scrollable container found, look for the scrollable parent in the layout
-      if (!scrollContainer) {
-        // Look up the DOM tree for a potentially scrollable element
-        let parent = scrollAreaRef.current.parentElement;
-        while (parent) {
-          const style = window.getComputedStyle(parent);
-          if (
-            style.overflowY === "auto" ||
-            style.overflowY === "scroll" ||
-            style.overflow === "auto" ||
-            style.overflow === "scroll"
-          ) {
-            scrollContainer = parent;
-            break;
-          }
-          parent = parent.parentElement;
-        }
-      }
-
-      scrollContainerRef.current = scrollContainer;
-    }
-  }, []);
-
-  // Auto-scroll to bottom when new messages are added - use cached scroll container
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      requestAnimationFrame(() => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop =
-            scrollContainerRef.current.scrollHeight;
-        }
-      });
-    }
-  }, [sortedMessages]);
-
   // Send pending message from NewChatPage if it exists
   useEffect(() => {
     async function sendPendingMessage() {
@@ -345,19 +293,14 @@ export default function ChatPage({
 
   // Chat Content (Messages only)
   const chatContent = (
-    <div className="p-4 pb-8" ref={scrollAreaRef}>
-      <div>
-        {sortedMessages.map((message, i) => (
-          <ChatMessage
-            key={message.id}
-            message={message}
-            hideAvatar={i > 0 && sortedMessages[i - 1].role !== "user"}
-          />
-        ))}
-
-        {/* Loading indicator */}
-        {false && <ChatMessage isLoading={true} />}
-      </div>
+    <div className="p-4 pb-8">
+      {sortedMessages.map((message, i) => (
+        <ChatMessage
+          key={message.id}
+          message={message}
+          hideAvatar={i > 0 && sortedMessages[i - 1].role !== "user"}
+        />
+      ))}
     </div>
   );
 
