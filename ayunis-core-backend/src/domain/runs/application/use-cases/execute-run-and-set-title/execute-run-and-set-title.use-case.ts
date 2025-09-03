@@ -19,6 +19,7 @@ import {
   RunTextInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { RunNoModelFoundError } from '../../runs.errors';
+import { Thread } from '../../../../threads/domain/thread.entity';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -42,10 +43,14 @@ export class ExecuteRunAndSetTitleUseCase {
         timestamp: new Date().toISOString(),
       };
       yield streamingStartResponse;
-      const titleResponse = await this.generateTitleIfNeeded(command);
-      if (titleResponse) {
-        yield titleResponse;
-      }
+
+      const thread = await this.findThreadUseCase.execute(
+        new FindThreadQuery(command.threadId),
+      );
+
+      // If thread has no messages, we should generate a title after the first message
+      const shouldGenerateTitle = thread.messages.length === 0;
+
       // Execute the run and stream messages
       const messageGenerator = await this.executeRunUseCase.execute(
         new ExecuteRunCommand({
@@ -66,6 +71,12 @@ export class ExecuteRunAndSetTitleUseCase {
           timestamp: new Date().toISOString(),
         };
         yield messageResponse;
+      }
+      if (shouldGenerateTitle) {
+        const titleResponse = await this.generateTitle(command, thread);
+        if (titleResponse) {
+          yield titleResponse;
+        }
       }
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
@@ -98,25 +109,13 @@ export class ExecuteRunAndSetTitleUseCase {
     }
   }
 
-  private async generateTitleIfNeeded(
+  private async generateTitle(
     command: ExecuteRunAndSetTitleCommand,
+    thread: Thread,
   ): Promise<RunThreadResponseDto | null> {
     try {
-      const thread = await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId),
-      );
-      this.logger.debug('retrieved thread', { thread });
-
-      // If thread has no messages, we should generate a title after the first message
-      const shouldGenerateTitle = thread.messages.length === 0;
-      if (!shouldGenerateTitle) {
-        return null;
-      }
-
       // Extract the first user message for title generation
       const firstUserMessage = this.extractUserMessage(command.input);
-      this.logger.debug('shouldGenerateTitle', { shouldGenerateTitle });
-      this.logger.debug('firstUserMessage', { firstUserMessage });
 
       if (!firstUserMessage) {
         return null;
@@ -154,7 +153,7 @@ export class ExecuteRunAndSetTitleUseCase {
 
       return null;
     } catch (error) {
-      this.logger.warn('Error in generateTitleIfNeeded', {
+      this.logger.warn('Error in generateTitle', {
         threadId: command.threadId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
