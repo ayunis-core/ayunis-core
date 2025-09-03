@@ -1,6 +1,6 @@
 // Types
 import type { ToolUseMessageContent } from "../../model/openapi";
-import type { GenerateIcsDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import type { CalendarEventInput } from "../../api/useGenerateIcs";
 
 // Utils
 import { useMemo, useState } from "react";
@@ -25,7 +25,7 @@ export default function CreateCalendarEventWidget({ content }: { content: ToolUs
   const { t } = useTranslation("chats");
   const { generate } = useGenerateIcs();
 
-  const params = (content.params || {}) as Partial<GenerateIcsDto>;
+  const params = (content.params || {}) as Partial<CalendarEventInput>;
 
   const [title, setTitle] = useState<string>(params.title || "");
   const [description, setDescription] = useState<string>(params.description || "");
@@ -54,17 +54,18 @@ export default function CreateCalendarEventWidget({ content }: { content: ToolUs
     if (!startIso || !endIso) {
       return false;
     }
+
     return new Date(endIso) <= new Date(startIso);
   }, [startDate, startTime, endDate, endTime]);
 
-  async function downloadIcs() {
+   function downloadIcs() {
     const startIso = combineDateTime(startDate, startTime);
     const endIso = combineDateTime(endDate, endTime);
     if (!title || !startIso || !endIso) {
       return;
     }
 
-    const dto: GenerateIcsDto = {
+    const dto: CalendarEventInput = {
       title,
       description: description || undefined,
       location: location || undefined,
@@ -77,7 +78,7 @@ export default function CreateCalendarEventWidget({ content }: { content: ToolUs
       return;
     }
 
-    const icsContent = await generate(dto);
+    const icsContent = generate(dto);
     if (!icsContent || typeof icsContent !== 'string') {
       showError(t("chat.errorUnexpected"));
       return;

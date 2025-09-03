@@ -47,7 +47,6 @@ import type {
   ErrorResponseDto,
   FileSourceResponseDto,
   ForgotPasswordDto,
-  GenerateIcsDto,
   GetThreadResponseDto,
   GetThreadsResponseDtoItem,
   InviteDetailResponseDto,
@@ -2756,71 +2755,6 @@ export const useThreadsControllerRemoveSource = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerRemoveSourceMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Generate an .ics calendar file for an event
- */
-export const calendarControllerGenerateIcs = (
-    generateIcsDto: GenerateIcsDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/tools/calendar/ics`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: generateIcsDto, signal
-    },
-      );
-    }
-  
-
-
-export const getCalendarControllerGenerateIcsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof calendarControllerGenerateIcs>>, TError,{data: GenerateIcsDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof calendarControllerGenerateIcs>>, TError,{data: GenerateIcsDto}, TContext> => {
-
-const mutationKey = ['calendarControllerGenerateIcs'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof calendarControllerGenerateIcs>>, {data: GenerateIcsDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  calendarControllerGenerateIcs(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CalendarControllerGenerateIcsMutationResult = NonNullable<Awaited<ReturnType<typeof calendarControllerGenerateIcs>>>
-    export type CalendarControllerGenerateIcsMutationBody = GenerateIcsDto
-    export type CalendarControllerGenerateIcsMutationError = void
-
-    /**
- * @summary Generate an .ics calendar file for an event
- */
-export const useCalendarControllerGenerateIcs = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof calendarControllerGenerateIcs>>, TError,{data: GenerateIcsDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof calendarControllerGenerateIcs>>,
-        TError,
-        {data: GenerateIcsDto},
-        TContext
-      > => {
-
-      const mutationOptions = getCalendarControllerGenerateIcsMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
