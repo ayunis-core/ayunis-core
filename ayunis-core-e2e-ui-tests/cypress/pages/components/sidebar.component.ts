@@ -15,9 +15,6 @@ class Sidebar {
 			cy.get(`button[data-testid="dropdown-menu-trigger"]`).invoke('show')
 		});
 	}
-	forceClickDropdownMenuTriggerForChat(title: string) {
-		this.chats.contains(title).closest(`li[data-testid="chat"]`).find(`button[data-testid="dropdown-menu-trigger"]`).click({ force: true });
-	}
 
 }
 
