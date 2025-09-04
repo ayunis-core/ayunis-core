@@ -12,37 +12,32 @@ export function useRegister() {
   const { t } = useTranslation("auth");
   const registerMutation = useAuthenticationControllerRegister();
 
-  const registerFormSchema = z
-    .object({
-      email: z.string().email({
-        message: t("register.emailInvalid"),
-      }),
-      password: z.string().min(8, {
-        message: t("register.passwordTooShort"),
-      }),
-      confirmPassword: z.string(),
-      orgName: z.string().min(1, {
-        message: t("register.orgNameRequired"),
-      }),
-      userName: z.string().min(1, {
-        message: t("register.userNameRequired"),
-      }),
-      legalAcceptance: z.boolean(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: t("register.passwordsDontMatch"),
-      path: ["confirmPassword"],
-    });
+  const registerFormSchema = z.object({
+    email: z.string().email({
+      message: t("register.emailInvalid"),
+    }),
+    password: z.string().min(8, {
+      message: t("register.passwordTooShort"),
+    }),
+    orgName: z.string().min(1, {
+      message: t("register.orgNameRequired"),
+    }),
+    userName: z.string().min(1, {
+      message: t("register.userNameRequired"),
+    }),
+    legalAcceptance: z.boolean(),
+    marketingAcceptance: z.boolean(),
+  });
 
   const form = useForm<z.infer<typeof registerFormSchema>>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
       email: "",
       password: "",
-      confirmPassword: "",
       orgName: "",
       userName: "",
       legalAcceptance: false,
+      marketingAcceptance: false,
     },
   });
 
@@ -54,6 +49,7 @@ export function useRegister() {
           password: values.password,
           orgName: values.orgName,
           userName: values.userName,
+          marketingAcceptance: values.marketingAcceptance,
         },
       },
       {
@@ -75,6 +71,9 @@ export function useRegister() {
               break;
             case "REGISTRATION_DISABLED":
               showError(t("register.registrationDisabled"));
+              break;
+            case "MARKETING_ACCEPTANCE_REQUIRED":
+              showError(t("register.marketingAcceptanceRequired"));
               break;
             default:
               showError(t("register.registrationFailed"));

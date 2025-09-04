@@ -5,12 +5,13 @@ import { GetAvailableModelsQuery } from './get-available-models.query';
 import { ModelRegistry } from '../../registry/model.registry';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { UUID } from 'crypto';
 
 describe('GetAvailableModelsUseCase', () => {
   let useCase: GetAvailableModelsUseCase;
   let modelRegistry: jest.Mocked<ModelRegistry>;
 
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
     const mockModelRegistry = {
@@ -45,22 +46,24 @@ describe('GetAvailableModelsUseCase', () => {
 
       const mockModels = [
         new LanguageModel({
-          id: '123e4567-e89b-12d3-a456-426614174001' as any,
+          id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
           name: 'gpt-4',
           displayName: 'gpt-4',
           provider: ModelProvider.OPENAI,
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
         new LanguageModel({
-          id: '123e4567-e89b-12d3-a456-426614174002' as any,
+          id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
           name: 'claude-3-sonnet',
           displayName: 'claude-3-sonnet',
           provider: ModelProvider.ANTHROPIC,
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       ];
 
@@ -95,13 +98,14 @@ describe('GetAvailableModelsUseCase', () => {
 
       const mockModels = [
         new LanguageModel({
-          id: '123e4567-e89b-12d3-a456-426614174001' as any,
+          id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
           name: 'gpt-4',
           displayName: 'gpt-4',
           provider: ModelProvider.OPENAI,
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       ];
 
@@ -122,13 +126,14 @@ describe('GetAvailableModelsUseCase', () => {
 
       const mockModels = [
         new LanguageModel({
-          id: '123e4567-e89b-12d3-a456-426614174001' as any,
+          id: '123e4567-e89b-12d3-a456-426614174001' as UUID,
           name: 'gpt-4',
           displayName: 'gpt-4',
           provider: ModelProvider.OPENAI,
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       ];
 

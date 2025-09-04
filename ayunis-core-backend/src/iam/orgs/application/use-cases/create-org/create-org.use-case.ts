@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
 import { Org } from '../../../domain/org.entity';
-import { OrgError, OrgCreationFailedError } from '../../orgs.errors';
+import { OrgCreationFailedError } from '../../orgs.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateOrgUseCase {
@@ -27,9 +28,12 @@ export class CreateOrgUseCase {
         name: createdOrg.name,
       });
 
+      // The webhook for org creationwill be sent in the register user use case
+      // So that we can send the registered user's email and name with it
+
       return createdOrg;
     } catch (error) {
-      if (error instanceof OrgError) {
+      if (error instanceof ApplicationError) {
         // Error already logged and properly formatted, just rethrow
         throw error;
       }

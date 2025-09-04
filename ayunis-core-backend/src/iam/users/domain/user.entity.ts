@@ -11,6 +11,7 @@ export class User {
   public role: UserRole;
   public orgId: UUID;
   public name: string;
+  public hasAcceptedMarketing: boolean;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -23,6 +24,7 @@ export class User {
     orgId: UUID;
     org?: Org;
     name: string;
+    hasAcceptedMarketing: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -33,6 +35,7 @@ export class User {
     this.role = params.role;
     this.orgId = params.orgId;
     this.name = params.name;
+    this.hasAcceptedMarketing = params.hasAcceptedMarketing;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

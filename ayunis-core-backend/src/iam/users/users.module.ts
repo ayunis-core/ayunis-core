@@ -38,6 +38,7 @@ import { ResetPasswordUseCase } from './application/use-cases/reset-password/res
 import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-ema
     HashingModule,
     EmailsModule,
     EmailTemplatesModule,
+    WebhooksModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

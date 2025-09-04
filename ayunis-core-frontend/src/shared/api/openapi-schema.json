@@ -3689,6 +3689,31 @@
           "result"
         ]
       },
+      "ThinkingMessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking"
+            ]
+          },
+          "thinking": {
+            "type": "string",
+            "description": "The thinking content of the message",
+            "example": "I am thinking about the best way to help you."
+          }
+        },
+        "required": [
+          "type",
+          "thinking"
+        ]
+      },
       "ModelResponseDto": {
         "type": "object",
         "properties": {
@@ -4205,31 +4230,6 @@
         },
         "required": [
           "type"
-        ]
-      },
-      "ThinkingMessageContentResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Type of the message content",
-            "example": "text",
-            "enum": [
-              "text",
-              "tool_use",
-              "tool_result",
-              "thinking"
-            ]
-          },
-          "thinking": {
-            "type": "string",
-            "description": "The thinking content of the message",
-            "example": "I am thinking about the best way to help you."
-          }
-        },
-        "required": [
-          "type",
-          "thinking"
         ]
       },
       "RunSessionResponseDto": {
@@ -4941,17 +4941,17 @@
             "description": "Password of the user accepting the invite",
             "example": "password"
           },
-          "passwordConfirm": {
-            "type": "string",
-            "description": "Confirmation of the password of the user accepting the invite",
-            "example": "password"
+          "hasAcceptedMarketing": {
+            "type": "boolean",
+            "description": "Marketing acceptance",
+            "example": true
           }
         },
         "required": [
           "inviteToken",
           "userName",
           "password",
-          "passwordConfirm"
+          "hasAcceptedMarketing"
         ]
       },
       "AcceptInviteResponseDto": {
@@ -5137,13 +5137,19 @@
             "type": "string",
             "description": "User name",
             "example": "John Doe"
+          },
+          "marketingAcceptance": {
+            "type": "boolean",
+            "description": "Marketing acceptance",
+            "example": true
           }
         },
         "required": [
           "email",
           "password",
           "orgName",
-          "userName"
+          "userName",
+          "marketingAcceptance"
         ]
       },
       "MeResponseDto": {

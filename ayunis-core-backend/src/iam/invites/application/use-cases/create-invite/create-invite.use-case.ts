@@ -18,6 +18,7 @@ import { SendInvitationEmailCommand } from '../send-invitation-email/send-invita
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
+import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
 
 @Injectable()
 export class CreateInviteUseCase {
@@ -25,12 +26,12 @@ export class CreateInviteUseCase {
 
   constructor(
     private readonly invitesRepository: InvitesRepository,
-    private readonly configService: ConfigService,
     private readonly inviteJwtService: InviteJwtService,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(command: CreateInviteCommand): Promise<void> {
@@ -40,6 +41,13 @@ export class CreateInviteUseCase {
       userId: command.userId,
     });
     try {
+      const emailProvider = command.email.split('@')[1];
+      const emailProviderBlacklist = this.configService.get<string[]>(
+        'auth.emailProviderBlacklist',
+      )!;
+      if (emailProviderBlacklist.includes(emailProvider)) {
+        throw new UserEmailProviderBlacklistedError(emailProvider);
+      }
       const existingUser = await this.findUserByEmailUseCase.execute(
         new FindUserByEmailQuery(command.email),
       );

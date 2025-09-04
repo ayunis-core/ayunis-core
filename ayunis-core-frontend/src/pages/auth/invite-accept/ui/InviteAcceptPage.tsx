@@ -12,15 +12,19 @@ import OnboardingLayout from "@/layouts/onboarding-layout";
 import type { Invite } from "../model/openapi";
 import { useInviteAccept } from "../api";
 import { useTranslation } from "react-i18next";
+import { Label } from "@/shared/ui/shadcn/label";
+import { Checkbox } from "@/shared/ui/shadcn/checkbox";
 
 interface InviteAcceptPageProps {
   invite: Invite;
   inviteToken: string;
+  isCloud: boolean;
 }
 
 export default function InviteAcceptPage({
   invite,
   inviteToken,
+  isCloud,
 }: InviteAcceptPageProps) {
   const { form, onSubmit, isLoading } = useInviteAccept(invite, inviteToken);
   const { t } = useTranslation("auth");
@@ -83,23 +87,31 @@ export default function InviteAcceptPage({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("inviteAccept.confirmPassword")}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={t("inviteAccept.confirmPasswordPlaceholder")}
-                    type="password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {isCloud && (
+            <FormField
+              control={form.control}
+              name="hasAcceptedMarketing"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="hasAcceptedMarketing"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <Label
+                        htmlFor="hasAcceptedMarketing"
+                        className="block font-normal leading-5"
+                      >
+                        {t("inviteAccept.marketingAcceptanceDescription")}
+                      </Label>
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading
               ? t("inviteAccept.acceptingInvitation")

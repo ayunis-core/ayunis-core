@@ -49,6 +49,7 @@ describe('ValidateUserUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Test User',
+      hasAcceptedMarketing: false,
     });
 
     jest
@@ -83,6 +84,7 @@ describe('ValidateUserUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Test User',
+      hasAcceptedMarketing: false,
     });
 
     jest

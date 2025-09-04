@@ -4,6 +4,7 @@ import { queryOptions } from "@tanstack/react-query";
 import {
   getInvitesControllerGetInviteByTokenQueryKey,
   invitesControllerGetInviteByToken,
+  appControllerIsCloud,
 } from "@/shared/api";
 import { z } from "zod";
 
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/(onboarding)/accept-invite")({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { token }, context: { queryClient } }) => {
     const invite = await queryClient.ensureQueryData(inviteQueryOptions(token));
-    return { invite, token };
+    const { isCloud } = await appControllerIsCloud();
+    return { invite, token, isCloud };
   },
   component: RouteComponent,
   errorComponent: ({ error }) => {
@@ -31,6 +33,8 @@ export const Route = createFileRoute("/(onboarding)/accept-invite")({
 });
 
 function RouteComponent() {
-  const { invite, token } = Route.useLoaderData();
-  return <InviteAcceptPage invite={invite} inviteToken={token} />;
+  const { invite, token, isCloud } = Route.useLoaderData();
+  return (
+    <InviteAcceptPage invite={invite} inviteToken={token} isCloud={isCloud} />
+  );
 }

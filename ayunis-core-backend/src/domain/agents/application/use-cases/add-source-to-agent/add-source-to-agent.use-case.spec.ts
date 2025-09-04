@@ -16,10 +16,11 @@ import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { UUID } from 'crypto';
 
 // Mock Source implementation since it's abstract
 class MockSource extends Source {
-  constructor(params: any) {
+  constructor(params: Source) {
     super(params);
   }
 }
@@ -29,11 +30,11 @@ describe('AddSourceToAgentUseCase', () => {
   let agentRepository: jest.Mocked<AgentRepository>;
   let contextService: jest.Mocked<ContextService>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockAgentId = '123e4567-e89b-12d3-a456-426614174001' as any;
-  const mockSourceId = '123e4567-e89b-12d3-a456-426614174002' as any;
-  const mockModelId = '123e4567-e89b-12d3-a456-426614174003' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174004' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockAgentId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
+  const mockSourceId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
+  const mockModelId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174004' as UUID;
 
   let mockSource: MockSource;
   let mockModel: PermittedLanguageModel;
@@ -75,6 +76,8 @@ describe('AddSourceToAgentUseCase', () => {
       name: 'Test Source',
       text: 'Test source content',
       content: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     mockModel = new PermittedLanguageModel({
@@ -87,6 +90,7 @@ describe('AddSourceToAgentUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: false,
       }),
     });
   });
@@ -126,10 +130,12 @@ describe('AddSourceToAgentUseCase', () => {
 
       // Assert
       expect(contextService.get).toHaveBeenCalledWith('userId');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockAgentId,
@@ -150,13 +156,15 @@ describe('AddSourceToAgentUseCase', () => {
 
     it('should add source to agent successfully when agent has existing sources', async () => {
       // Arrange
-      const existingSourceId = '123e4567-e89b-12d3-a456-426614174005' as any;
+      const existingSourceId = '123e4567-e89b-12d3-a456-426614174005' as UUID;
       const existingSource = new MockSource({
         id: existingSourceId,
         type: SourceType.URL,
         name: 'Existing Source',
         text: 'Existing source content',
         content: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const existingAssignment = new AgentSourceAssignment({
         source: existingSource,
@@ -192,6 +200,9 @@ describe('AddSourceToAgentUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(contextService.get).toHaveBeenCalledWith('userId');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           sourceAssignments: expect.arrayContaining([
@@ -219,7 +230,9 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnauthorizedException,
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.findOne).not.toHaveBeenCalled();
     });
 
@@ -237,10 +250,12 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         AgentNotFoundError,
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -271,6 +286,7 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SourceAlreadyAssignedError,
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -287,7 +303,7 @@ describe('AddSourceToAgentUseCase', () => {
         instructions: 'Test instructions',
         model: mockModel,
         userId: mockUserId,
-        sourceAssignments: undefined as any, // Explicitly undefined
+        sourceAssignments: undefined,
       });
 
       const updatedMockAgent = new Agent({
@@ -297,6 +313,7 @@ describe('AddSourceToAgentUseCase', () => {
 
       contextService.get.mockReturnValue(mockUserId);
       agentRepository.findOne.mockResolvedValue(mockAgent);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       agentRepository.update.mockResolvedValue(updatedMockAgent);
 
       // Act

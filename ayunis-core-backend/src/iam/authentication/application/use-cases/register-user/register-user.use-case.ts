@@ -103,6 +103,7 @@ export class RegisterUserUseCase {
           orgId: org.id,
           name: command.userName,
           emailVerified: shouldConfirmEmail ? false : true,
+          hasAcceptedMarketing: command.hasAcceptedMarketing,
         }),
       );
 
@@ -123,7 +124,7 @@ export class RegisterUserUseCase {
         );
       }
 
-      // Send webhook asynchronously (don't block the main operation)
+      // Send webhooks asynchronously (don't block the main operation)
       void this.sendWebhookUseCase.execute(
         new SendWebhookCommand(new OrgCreatedWebhookEvent(org, user)),
       );

@@ -58,7 +58,8 @@
   "inviteCreate": {
     "success": "Invite created successfully!",
     "error": "Failed to create invite. Please try again.",
-    "emailNotAvailable": "Invite not possible."
+    "emailNotAvailable": "Invite not possible.",
+    "emailProviderBlacklisted": "Email address from this provider is not allowed. Please use your company email address."
   },
   "inviteDelete": {
     "error": {

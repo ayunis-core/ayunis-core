@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 export class AcceptInviteDto {
   @ApiProperty({
@@ -24,10 +24,9 @@ export class AcceptInviteDto {
   password: string;
 
   @ApiProperty({
-    description:
-      'Confirmation of the password of the user accepting the invite',
-    example: 'password',
+    description: 'Marketing acceptance',
+    example: true,
   })
-  @IsString()
-  passwordConfirm: string;
+  @IsBoolean()
+  hasAcceptedMarketing: boolean;
 }

@@ -3,21 +3,26 @@ import { DeleteUserUseCase } from './delete-user.use-case';
 import { DeleteUserCommand } from './delete-user.command';
 import { UsersRepository } from '../../ports/users.repository';
 import { UUID } from 'crypto';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 
 describe('DeleteUserUseCase', () => {
   let useCase: DeleteUserUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
+  let mockSendWebhookUseCase: Partial<SendWebhookUseCase>;
 
   beforeEach(async () => {
     mockUsersRepository = {
       delete: jest.fn(),
       findOneById: jest.fn(),
     };
-
+    mockSendWebhookUseCase = {
+      execute: jest.fn(),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteUserUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
+        { provide: SendWebhookUseCase, useValue: mockSendWebhookUseCase },
       ],
     }).compile();
 
@@ -35,13 +40,11 @@ describe('DeleteUserUseCase', () => {
       requestUserId: '123e4567-e89b-12d3-a456-426614174000',
     });
 
-    jest
-      .spyOn(mockUsersRepository, 'findOneById')
-      .mockResolvedValue({
-        id: command.requestUserId,
-        role: 'admin',
-        orgId: command.orgId,
-      } as any);
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue({
+      id: command.requestUserId,
+      role: 'admin',
+      orgId: command.orgId,
+    } as any);
     jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
 
     await useCase.execute(command);
@@ -57,13 +60,11 @@ describe('DeleteUserUseCase', () => {
     });
     const error = new Error('Repository error');
 
-    jest
-      .spyOn(mockUsersRepository, 'findOneById')
-      .mockResolvedValue({
-        id: command.requestUserId,
-        role: 'admin',
-        orgId: command.orgId,
-      } as any);
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue({
+      id: command.requestUserId,
+      role: 'admin',
+      orgId: command.orgId,
+    } as any);
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);
 
     await expect(useCase.execute(command)).rejects.toThrow('Repository error');

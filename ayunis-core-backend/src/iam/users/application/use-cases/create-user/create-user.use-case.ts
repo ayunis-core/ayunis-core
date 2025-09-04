@@ -11,6 +11,10 @@ import {
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';
+import { UserCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/user-created.webhook-event';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -19,6 +23,8 @@ export class CreateUserUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
@@ -27,30 +33,13 @@ export class CreateUserUseCase {
       orgId: command.orgId,
       role: command.role,
       name: command.name,
+      hasAcceptedMarketing: command.hasAcceptedMarketing,
     });
 
-    const emailProviderBlacklist = [
-      'gmail.com',
-      'googlemail.com',
-      'yahoo.com',
-      'hotmail.com',
-      'outlook.com',
-      'icloud.com',
-      'aol.com',
-      'protonmail.com',
-      'tutanota.com',
-      'yandex.com',
-      'zoho.com',
-      'fastmail.com',
-      'gmx.com',
-      'mail.com',
-      'inbox.com',
-      't-online.de',
-      'web.de',
-      'gmx.net',
-    ];
-
     const emailProvider = command.email.split('@')[1];
+    const emailProviderBlacklist = this.configService.get<string[]>(
+      'auth.emailProviderBlacklist',
+    )!;
     if (emailProviderBlacklist.includes(emailProvider)) {
       throw new UserEmailProviderBlacklistedError(emailProvider);
     }
@@ -92,6 +81,7 @@ export class CreateUserUseCase {
         orgId: command.orgId,
         role: command.role,
         name: command.name,
+        hasAcceptedMarketing: command.hasAcceptedMarketing,
       });
 
       const createdUser = await this.usersRepository.create(user);
@@ -99,6 +89,16 @@ export class CreateUserUseCase {
         userId: createdUser.id,
         role: command.role,
       });
+
+      // Send webhook asynchronously (don't block the main operation)
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(
+          new UserCreatedWebhookEvent({
+            user: createdUser,
+            orgId: command.orgId,
+          }),
+        ),
+      );
 
       return createdUser;
     } catch (error) {

@@ -14,7 +14,6 @@ export enum InvitesErrorCode {
   INVITE_ROLE_ERROR = 'INVITE_ROLE_ERROR',
   INVALID_SEATS = 'INVALID_SEATS',
   INVALID_PASSWORD = 'INVALID_PASSWORD',
-  PASSWORD_MISMATCH = 'PASSWORD_MISMATCH',
   INVITE_EMAIL_SENDING_FAILED = 'INVITE_EMAIL_SENDING_FAILED',
   EMAIL_NOT_AVAILABLE = 'EMAIL_NOT_AVAILABLE',
   USER_ALREADY_EXISTS = 'USER_ALREADY_EXISTS',
@@ -131,17 +130,6 @@ export class InvalidPasswordError extends InviteError {
     super(
       `Invalid password${reason ? `: ${reason}` : ''}`,
       InvitesErrorCode.INVALID_PASSWORD,
-      400,
-      metadata,
-    );
-  }
-}
-
-export class PasswordMismatchError extends InviteError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'Passwords do not match',
-      InvitesErrorCode.PASSWORD_MISMATCH,
       400,
       metadata,
     );

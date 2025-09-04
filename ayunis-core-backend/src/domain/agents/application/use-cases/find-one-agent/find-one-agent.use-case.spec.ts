@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { FindOneAgentUseCase } from './find-one-agent.use-case';
 import { FindOneAgentQuery } from './find-one-agent.query';
 import { AgentRepository } from '../../ports/agent.repository';
@@ -9,16 +9,17 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { AgentNotFoundError, UnexpectedAgentError } from '../../agents.errors';
+import { UUID } from 'crypto';
 
 describe('FindOneAgentUseCase', () => {
   let useCase: FindOneAgentUseCase;
   let agentRepository: jest.Mocked<AgentRepository>;
   let contextService: jest.Mocked<ContextService>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockAgentId = '123e4567-e89b-12d3-a456-426614174001' as any;
-  const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174003' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockAgentId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
+  const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
 
   beforeEach(async () => {
     const mockAgentRepository = {
@@ -74,6 +75,7 @@ describe('FindOneAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: false,
         }),
       });
       const mockAgent = new Agent({
@@ -94,7 +96,9 @@ describe('FindOneAgentUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
@@ -117,6 +121,7 @@ describe('FindOneAgentUseCase', () => {
         'User not authenticated',
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(agentRepository.findOne).not.toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith('Failed to find agent', {
@@ -136,6 +141,7 @@ describe('FindOneAgentUseCase', () => {
         `Agent with ID ${mockAgentId} not found`,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
@@ -152,7 +158,9 @@ describe('FindOneAgentUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(applicationError);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
@@ -175,7 +183,9 @@ describe('FindOneAgentUseCase', () => {
         'Database connection failed',
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
@@ -221,6 +231,7 @@ describe('FindOneAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: false,
         }),
       });
       const mockAgent = new Agent({
@@ -256,6 +267,7 @@ describe('FindOneAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: false,
         }),
       });
       const mockAgent = new Agent({

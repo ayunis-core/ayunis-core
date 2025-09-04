@@ -97,6 +97,7 @@ describe('CreateThreadUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: false,
         createdAt: now,
         updatedAt: now,
       });
@@ -177,6 +178,7 @@ describe('CreateThreadUseCase', () => {
         isArchived: false,
         createdAt: now,
         updatedAt: now,
+        canUseTools: false,
       });
       const mockModel = new PermittedLanguageModel({
         id: mockModelId,
@@ -227,6 +229,7 @@ describe('CreateThreadUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: false,
         createdAt: now,
         updatedAt: now,
       });

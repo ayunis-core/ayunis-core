@@ -50,6 +50,7 @@ describe('CreateRegularUserUseCase', () => {
       orgId: 'org-id' as UUID,
       name: 'Regular User',
       emailVerified: false,
+      hasAcceptedMarketing: false,
     });
     const mockUser = new User({
       id: 'user-id' as UUID,
@@ -59,6 +60,7 @@ describe('CreateRegularUserUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Regular User',
+      hasAcceptedMarketing: false,
     });
 
     jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(null);
@@ -81,15 +83,7 @@ describe('CreateRegularUserUseCase', () => {
       orgId: 'org-id' as UUID,
       name: 'Regular User',
       emailVerified: false,
-    });
-    const existingUser = new User({
-      id: 'existing-id' as UUID,
-      email: 'test@example.com',
-      emailVerified: false,
-      passwordHash: 'hash',
-      role: UserRole.USER,
-      orgId: 'org-id' as UUID,
-      name: 'Regular User',
+      hasAcceptedMarketing: false,
     });
 
     jest

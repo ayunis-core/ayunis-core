@@ -40,6 +40,7 @@ describe('FindUsersByOrgIdUseCase', () => {
         role: UserRole.USER,
         orgId: 'org-id' as UUID,
         name: 'User One',
+        hasAcceptedMarketing: false,
       }),
       new User({
         id: 'user-2' as UUID,
@@ -49,6 +50,7 @@ describe('FindUsersByOrgIdUseCase', () => {
         role: UserRole.USER,
         orgId: 'org-id' as UUID,
         name: 'User Two',
+        hasAcceptedMarketing: false,
       }),
     ];
 

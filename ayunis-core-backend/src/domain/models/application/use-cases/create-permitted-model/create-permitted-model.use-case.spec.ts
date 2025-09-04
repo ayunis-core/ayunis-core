@@ -12,6 +12,7 @@ import {
   ModelNotFoundError,
   ModelProviderNotPermittedError,
 } from '../../models.errors';
+import { UUID } from 'crypto';
 
 describe('CreatePermittedModelUseCase', () => {
   let useCase: CreatePermittedModelUseCase;
@@ -19,8 +20,8 @@ describe('CreatePermittedModelUseCase', () => {
   let modelRegistry: jest.Mocked<ModelRegistry>;
   let isProviderPermittedUseCase: jest.Mocked<IsProviderPermittedUseCase>;
 
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as any;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
   beforeEach(async () => {
     const mockPermittedModelsRepository = {
@@ -85,6 +86,7 @@ describe('CreatePermittedModelUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: true,
       });
 
       const mockPermittedModel = new PermittedModel({
@@ -154,6 +156,7 @@ describe('CreatePermittedModelUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: true,
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);
@@ -186,6 +189,7 @@ describe('CreatePermittedModelUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: true,
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);
@@ -240,6 +244,7 @@ describe('CreatePermittedModelUseCase', () => {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: true,
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);

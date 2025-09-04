@@ -12,6 +12,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { UUID } from 'crypto';
 
 describe('CreateAgentUseCase', () => {
   let useCase: CreateAgentUseCase;
@@ -20,9 +21,9 @@ describe('CreateAgentUseCase', () => {
   let assembleToolUseCase: jest.Mocked<AssembleToolUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
-  const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as any;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
+  const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
     const mockAgentRepository = {
@@ -102,6 +103,7 @@ describe('CreateAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       });
       const mockTool = {
@@ -168,6 +170,7 @@ describe('CreateAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       });
       const mockTool = {
@@ -231,6 +234,7 @@ describe('CreateAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       });
       const mockTool1 = {
@@ -293,6 +297,7 @@ describe('CreateAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       });
       const mockCreatedAgent = new Agent({

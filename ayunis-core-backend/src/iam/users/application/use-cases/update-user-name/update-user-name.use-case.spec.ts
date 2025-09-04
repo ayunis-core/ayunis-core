@@ -5,21 +5,27 @@ import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 
 describe('UpdateUserNameUseCase', () => {
   let useCase: UpdateUserNameUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
+  let mockSendWebhookUseCase: Partial<SendWebhookUseCase>;
 
   beforeEach(async () => {
     mockUsersRepository = {
       findOneById: jest.fn(),
       update: jest.fn(),
     };
+    mockSendWebhookUseCase = {
+      execute: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateUserNameUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
+        { provide: SendWebhookUseCase, useValue: mockSendWebhookUseCase },
       ],
     }).compile();
 
@@ -40,6 +46,7 @@ describe('UpdateUserNameUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Old Name',
+      hasAcceptedMarketing: false,
     });
     const updatedUser = { ...mockUser, name: 'New Name' };
 
@@ -77,6 +84,7 @@ describe('UpdateUserNameUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Old Name',
+      hasAcceptedMarketing: false,
     });
     const updateError = new Error('Update failed');
 

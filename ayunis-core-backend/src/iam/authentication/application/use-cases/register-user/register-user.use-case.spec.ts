@@ -9,10 +9,7 @@ import { User } from '../../../../users/domain/user.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { Org } from '../../../../orgs/domain/org.entity';
 import { ActiveUser } from '../../../domain/active-user.entity';
-import {
-  InvalidPasswordError,
-  AuthenticationFailedError,
-} from '../../authentication.errors';
+import { InvalidPasswordError } from '../../authentication.errors';
 import { UUID } from 'crypto';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
@@ -27,11 +24,6 @@ describe('RegisterUserUseCase', () => {
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockCreateOrgUseCase: Partial<CreateOrgUseCase>;
   let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
-  let mockCreateLegalAcceptanceUseCase: any;
-  let mockSendConfirmationEmailUseCase: any;
-  let mockCreateTrialUseCase: any;
-  let mockConfigService: any;
-  let mockSendWebhookUseCase: any;
 
   beforeEach(async () => {
     mockCreateAdminUserUseCase = {
@@ -93,6 +85,7 @@ describe('RegisterUserUseCase', () => {
       email: 'test@example.com',
       password: 'validPassword123',
       orgName: 'Test Org',
+      hasAcceptedMarketing: false,
     });
     const mockOrg = new Org({ id: 'org-id' as UUID, name: 'Test Org' });
     const mockUser = new User({
@@ -103,6 +96,7 @@ describe('RegisterUserUseCase', () => {
       role: UserRole.ADMIN,
       orgId: 'org-id' as UUID,
       name: 'test',
+      hasAcceptedMarketing: false,
     });
 
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
@@ -139,6 +133,7 @@ describe('RegisterUserUseCase', () => {
       email: 'test@example.com',
       password: 'weak',
       orgName: 'Test Org',
+      hasAcceptedMarketing: false,
     });
 
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(false);
@@ -154,6 +149,7 @@ describe('RegisterUserUseCase', () => {
       email: 'test@example.com',
       password: 'validPassword123',
       orgName: 'Test Org',
+      hasAcceptedMarketing: false,
     });
 
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);

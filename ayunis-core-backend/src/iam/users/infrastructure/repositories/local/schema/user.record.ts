@@ -31,4 +31,7 @@ export class UserRecord extends BaseRecord {
 
   @ManyToOne(() => OrgRecord, (org) => org.id, { nullable: false })
   org: OrgRecord;
+
+  @Column({ default: false })
+  hasAcceptedMarketing: boolean;
 }

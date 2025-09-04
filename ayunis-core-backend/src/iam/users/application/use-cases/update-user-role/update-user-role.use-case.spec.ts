@@ -5,21 +5,27 @@ import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { UserUnexpectedError } from '../../users.errors';
 
 describe('UpdateUserRoleUseCase', () => {
   let useCase: UpdateUserRoleUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
+  let mockSendWebhookUseCase: Partial<SendWebhookUseCase>;
 
   beforeEach(async () => {
     mockUsersRepository = {
       findOneById: jest.fn(),
       update: jest.fn(),
     };
-
+    mockSendWebhookUseCase = {
+      execute: jest.fn(),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateUserRoleUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
+        { provide: SendWebhookUseCase, useValue: mockSendWebhookUseCase },
       ],
     }).compile();
 
@@ -43,6 +49,7 @@ describe('UpdateUserRoleUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Test User',
+      hasAcceptedMarketing: false,
     });
     const updatedUser = { ...mockUser, role: UserRole.ADMIN };
 
@@ -87,13 +94,17 @@ describe('UpdateUserRoleUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'Test User',
+      hasAcceptedMarketing: false,
     });
     const updateError = new Error('Update failed');
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest.spyOn(mockUsersRepository, 'update').mockRejectedValue(updateError);
 
-    await expect(useCase.execute(command)).rejects.toThrow('Update failed');
+    await expect(useCase.execute(command)).rejects.toThrow(UserUnexpectedError);
+    await expect(useCase.execute(command)).rejects.toThrow(
+      'An unexpected error occurred while updating user role',
+    );
     expect(mockUsersRepository.findOneById).toHaveBeenCalledWith('user-id');
     expect(mockUsersRepository.update).toHaveBeenCalledWith(mockUser);
   });

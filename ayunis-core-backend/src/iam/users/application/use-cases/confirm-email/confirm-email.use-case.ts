@@ -5,11 +5,16 @@ import {
   UserEmailMismatchError,
   UserNotFoundError,
   InvalidEmailConfirmationTokenError,
+  UserUnexpectedError,
 } from '../../users.errors';
 import {
   EmailConfirmationJwtService,
   EmailConfirmationJwtPayload,
 } from '../../services/email-confirmation-jwt.service';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { UserUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/user-updated.webhook-event';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class ConfirmEmailUseCase {
@@ -18,6 +23,7 @@ export class ConfirmEmailUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly emailConfirmationJwtService: EmailConfirmationJwtService,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
   async execute(command: ConfirmEmailCommand): Promise<void> {
@@ -36,30 +42,45 @@ export class ConfirmEmailUseCase {
       throw new InvalidEmailConfirmationTokenError('Token verification failed');
     }
 
-    // Find the user in the database
-    const user = await this.usersRepository.findOneById(payload.userId);
-    if (!user) {
-      this.logger.error('User not found', { userId: payload.userId });
-      throw new UserNotFoundError(payload.userId);
-    }
+    try {
+      // Find the user in the database
+      const user = await this.usersRepository.findOneById(payload.userId);
+      if (!user) {
+        this.logger.error('User not found', { userId: payload.userId });
+        throw new UserNotFoundError(payload.userId);
+      }
 
-    // Verify the email matches
-    if (user.email !== payload.email) {
-      this.logger.error('Email mismatch', {
-        userId: payload.userId,
-        payloadEmail: payload.email,
-        userEmail: user.email,
+      // Verify the email matches
+      if (user.email !== payload.email) {
+        this.logger.error('Email mismatch', {
+          userId: payload.userId,
+          payloadEmail: payload.email,
+          userEmail: user.email,
+        });
+        throw new UserEmailMismatchError(payload.userId);
+      }
+
+      // Confirm the email
+      user.emailVerified = true;
+      await this.usersRepository.update(user);
+
+      this.logger.debug('Email confirmed successfully', {
+        userId: user.id,
+        email: user.email,
       });
-      throw new UserEmailMismatchError(payload.userId);
+
+      // Send webhook asynchronously (don't block the main operation)
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(new UserUpdatedWebhookEvent(user)),
+      );
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      this.logger.error('Failed to confirm email', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new UserUnexpectedError(error as Error);
     }
-
-    // Confirm the email
-    user.emailVerified = true;
-    await this.usersRepository.update(user);
-
-    this.logger.debug('Email confirmed successfully', {
-      userId: user.id,
-      email: user.email,
-    });
   }
 }

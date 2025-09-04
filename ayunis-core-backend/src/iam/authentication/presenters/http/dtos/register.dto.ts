@@ -30,4 +30,11 @@ export class RegisterDto {
   })
   @IsNotEmpty()
   userName: string;
+
+  @ApiProperty({
+    description: 'Marketing acceptance',
+    example: true,
+  })
+  @IsNotEmpty()
+  marketingAcceptance: boolean;
 }

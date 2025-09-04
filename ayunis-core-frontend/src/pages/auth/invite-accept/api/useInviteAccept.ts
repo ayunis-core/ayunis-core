@@ -13,24 +13,17 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
   const acceptInviteMutation = useInvitesControllerAcceptInvite();
   const { t } = useTranslation("auth");
 
-  const inviteAcceptFormSchema = z
-    .object({
-      email: z.string().email(),
-      name: z.string().min(1, {
-        message: t("inviteAccept.nameRequired"),
-      }),
-      password: z.string().min(8, {
-        message: t("inviteAccept.passwordTooShort"),
-      }),
-      confirmPassword: z.string().min(8, {
-        message: t("inviteAccept.passwordTooShort"),
-      }),
-      inviteToken: z.string(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: t("inviteAccept.passwordsDontMatch"),
-      path: ["confirmPassword"],
-    });
+  const inviteAcceptFormSchema = z.object({
+    email: z.string().email(),
+    name: z.string().min(1, {
+      message: t("inviteAccept.nameRequired"),
+    }),
+    password: z.string().min(8, {
+      message: t("inviteAccept.passwordTooShort"),
+    }),
+    inviteToken: z.string(),
+    hasAcceptedMarketing: z.boolean(),
+  });
 
   const form = useForm<z.infer<typeof inviteAcceptFormSchema>>({
     resolver: zodResolver(inviteAcceptFormSchema),
@@ -38,8 +31,8 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
       email: invite.email,
       name: "",
       password: "",
-      confirmPassword: "",
       inviteToken: inviteToken,
+      hasAcceptedMarketing: false,
     },
   });
 
@@ -50,7 +43,7 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
           inviteToken: values.inviteToken,
           userName: values.name,
           password: values.password,
-          passwordConfirm: values.confirmPassword,
+          hasAcceptedMarketing: values.hasAcceptedMarketing,
         },
       },
       {
@@ -71,11 +64,11 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
             case "INVITE_ALREADY_ACCEPTED":
               showError(t("inviteAccept.inviteAlreadyAccepted"));
               break;
+            case "USER_EMAIL_PROVIDER_BLACKLISTED":
+              showError(t("inviteAccept.userEmailProviderBlacklisted"));
+              break;
             case "INVALID_PASSWORD":
               showError(t("inviteAccept.invalidPassword"));
-              break;
-            case "PASSWORD_MISMATCH":
-              showError(t("inviteAccept.passwordMismatch"));
               break;
             case "USER_ALREADY_EXISTS":
               showError(t("inviteAccept.userAlreadyExists"));

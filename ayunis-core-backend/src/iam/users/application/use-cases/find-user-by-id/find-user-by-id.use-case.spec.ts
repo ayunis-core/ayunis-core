@@ -39,6 +39,7 @@ describe('FindUserByIdUseCase', () => {
       passwordHash: 'hash',
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
+      hasAcceptedMarketing: false,
     });
 
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);

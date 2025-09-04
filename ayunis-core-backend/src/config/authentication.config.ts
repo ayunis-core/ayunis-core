@@ -7,7 +7,6 @@ export enum AuthProvider {
 
 export const authenticationConfig = registerAs('auth', () => ({
   provider: (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
-
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '1h',
@@ -17,7 +16,6 @@ export const authenticationConfig = registerAs('auth', () => ({
       process.env.JWT_EMAIL_CONFIRMATION_EXPIRES_IN || '24h',
     passwordResetExpiresIn: process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '2h',
   },
-
   cookie: {
     secret: process.env.COOKIE_SECRET || 'dev-secret-change-in-production',
     domain: process.env.COOKIE_DOMAIN || 'localhost',
@@ -27,13 +25,34 @@ export const authenticationConfig = registerAs('auth', () => ({
     accessTokenName: 'access_token',
     refreshTokenName: 'refresh_token',
   },
-
   cloud: {
     apiUrl: process.env.CLOUD_AUTH_API_URL,
     apiKey: process.env.CLOUD_AUTH_API_KEY,
   },
-
   local: {
     passwordHashRounds: parseInt(process.env.PASSWORD_HASH_ROUNDS || '10', 10),
   },
+  emailProviderBlacklist: [
+    'gmail.com',
+    'googlemail.com',
+    'yahoo.com',
+    'hotmail.com',
+    'outlook.com',
+    'icloud.com',
+    'aol.com',
+    'protonmail.com',
+    'tutanota.com',
+    'yandex.com',
+    'zoho.com',
+    'fastmail.com',
+    'gmx.com',
+    'mail.com',
+    'inbox.com',
+    't-online.de',
+    'web.de',
+    'gmx.de',
+    'gmx.net',
+    'mail.ru',
+    'me.com',
+  ],
 }));

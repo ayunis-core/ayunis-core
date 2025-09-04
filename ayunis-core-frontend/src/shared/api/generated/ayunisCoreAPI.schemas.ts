@@ -564,6 +564,27 @@ export interface ToolResultMessageContentResponseDto {
   result: string;
 }
 
+/**
+ * Type of the message content
+ */
+export type ThinkingMessageContentResponseDtoType = typeof ThinkingMessageContentResponseDtoType[keyof typeof ThinkingMessageContentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ThinkingMessageContentResponseDtoType = {
+  text: 'text',
+  tool_use: 'tool_use',
+  tool_result: 'tool_result',
+  thinking: 'thinking',
+} as const;
+
+export interface ThinkingMessageContentResponseDto {
+  /** Type of the message content */
+  type: ThinkingMessageContentResponseDtoType;
+  /** The thinking content of the message */
+  thinking: string;
+}
+
 export interface ModelResponseDto {
   /** The unique identifier of the model */
   id: string;
@@ -815,27 +836,6 @@ export const MessageContentResponseDtoType = {
 export interface MessageContentResponseDto {
   /** Type of the message content */
   type: MessageContentResponseDtoType;
-}
-
-/**
- * Type of the message content
- */
-export type ThinkingMessageContentResponseDtoType = typeof ThinkingMessageContentResponseDtoType[keyof typeof ThinkingMessageContentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ThinkingMessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
-} as const;
-
-export interface ThinkingMessageContentResponseDto {
-  /** Type of the message content */
-  type: ThinkingMessageContentResponseDtoType;
-  /** The thinking content of the message */
-  thinking: string;
 }
 
 /**
@@ -1235,8 +1235,8 @@ export interface AcceptInviteDto {
   userName: string;
   /** Password of the user accepting the invite */
   password: string;
-  /** Confirmation of the password of the user accepting the invite */
-  passwordConfirm: string;
+  /** Marketing acceptance */
+  hasAcceptedMarketing: boolean;
 }
 
 export interface AcceptInviteResponseDto {
@@ -1311,6 +1311,8 @@ export interface RegisterDto {
   orgName: string;
   /** User name */
   userName: string;
+  /** Marketing acceptance */
+  marketingAcceptance: boolean;
 }
 
 /**

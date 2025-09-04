@@ -60,7 +60,8 @@
   "inviteCreate": {
     "success": "Einladung erfolgreich erstellt",
     "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut.",
-    "emailNotAvailable": "Einladung nicht möglich."
+    "emailNotAvailable": "Einladung nicht möglich.",
+    "emailProviderBlacklisted": "E-Mail-Adresse von diesem Provider ist nicht erlaubt. Bitte verwenden Sie Ihr Firmen E-Mail-Adresse."
   },
   "inviteDelete": {
     "error": {

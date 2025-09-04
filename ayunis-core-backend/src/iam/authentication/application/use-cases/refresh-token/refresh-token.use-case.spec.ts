@@ -57,6 +57,7 @@ describe('RefreshTokenUseCase', () => {
       role: UserRole.USER,
       orgId: 'org-id' as UUID,
       name: 'name',
+      hasAcceptedMarketing: false,
     });
     const mockTokens = new AuthTokens('new-access-token', 'new-refresh-token');
 

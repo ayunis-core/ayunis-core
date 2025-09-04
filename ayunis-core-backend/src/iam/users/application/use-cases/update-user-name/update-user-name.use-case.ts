@@ -2,17 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserNameCommand } from './update-user-name.command';
 import { User } from '../../../domain/user.entity';
-import {
-  UserError,
-  UserNotFoundError,
-  UserUnexpectedError,
-} from '../../users.errors';
+import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
+import { UserUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/user-updated.webhook-event';
+import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
+import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpdateUserNameUseCase {
   private readonly logger = new Logger(UpdateUserNameUseCase.name);
 
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly sendWebhookUseCase: SendWebhookUseCase,
+  ) {}
 
   async execute(command: UpdateUserNameCommand): Promise<User> {
     this.logger.log('updateUserName', {
@@ -36,9 +39,13 @@ export class UpdateUserNameUseCase {
         newName: updatedUser.name,
       });
 
+      void this.sendWebhookUseCase.execute(
+        new SendWebhookCommand(new UserUpdatedWebhookEvent(updatedUser)),
+      );
+
       return updatedUser;
     } catch (error) {
-      if (error instanceof UserError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Failed to update user name', {

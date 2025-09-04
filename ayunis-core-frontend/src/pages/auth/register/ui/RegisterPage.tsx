@@ -21,7 +21,7 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation("auth");
   const agbHref = "https://www.ayunis.com/agb-software-%c3%bcberlassung";
-  const privacyPolicyRef = "https://www.ayunis.com/datenschutz-core";
+  const privacyPolicyRef = "www.ayunis.com/datenschutz-core";
   const gtmEnabled =
     isCloud &&
     import.meta.env.PROD &&
@@ -41,10 +41,7 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
       footer={
         <>
           {t("register.or")} {""}
-          <Link
-            to="/login"
-            className="font-medium text-primary hover:underline"
-          >
+          <Link to="/login" className="font-medium text-primary underline">
             {t("register.signInExisting")}
           </Link>
         </>
@@ -122,24 +119,31 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("register.confirmPassword")}</FormLabel>
-                <FormControl>
-                  <Input
-                    required
-                    placeholder={t("register.confirmPasswordPlaceholder")}
-                    type="password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {isCloud && (
+            <FormField
+              control={form.control}
+              name="marketingAcceptance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="marketingAcceptance"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <Label
+                        htmlFor="marketingAcceptance"
+                        className="block font-normal leading-5"
+                      >
+                        {t("register.marketingAcceptanceDescription")}
+                      </Label>
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={form.control}
             name="legalAcceptance"
@@ -153,7 +157,10 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
-                    <Label htmlFor="legalAcceptance" className="block">
+                    <Label
+                      htmlFor="legalAcceptance"
+                      className="block font-normal leading-5"
+                    >
                       <Trans
                         i18nKey="register.legalAcceptanceDescription"
                         ns="auth"
@@ -163,7 +170,7 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
                               href={privacyPolicyRef}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline"
+                              className="underline"
                             />
                           ),
                           tosLink: (
@@ -171,7 +178,7 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
                               href={agbHref}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline"
+                              className="underline"
                             />
                           ),
                         }}

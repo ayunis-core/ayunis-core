@@ -11,7 +11,6 @@ import {
   InviteAlreadyAcceptedError,
   InvalidInviteTokenError,
   InviteRoleError,
-  PasswordMismatchError,
   InvalidPasswordError,
   UserAlreadyExistsError,
 } from '../../invites.errors';
@@ -85,9 +84,6 @@ export class AcceptInviteUseCase {
         expiresAt: invite.expiresAt,
       });
     }
-    if (command.password !== command.passwordConfirm) {
-      throw new PasswordMismatchError();
-    }
 
     if (
       !(await this.isValidPasswordUseCase.execute(
@@ -105,6 +101,7 @@ export class AcceptInviteUseCase {
           orgId: invite.orgId,
           name: command.userName,
           emailVerified: true,
+          hasAcceptedMarketing: command.hasAcceptedMarketing,
         }),
       );
     } else if (invite.role === UserRole.USER) {
@@ -115,6 +112,7 @@ export class AcceptInviteUseCase {
           name: command.userName,
           password: command.password,
           emailVerified: true,
+          hasAcceptedMarketing: command.hasAcceptedMarketing,
         }),
       );
     } else {

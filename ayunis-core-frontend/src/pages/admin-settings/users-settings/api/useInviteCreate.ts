@@ -25,6 +25,9 @@ export function useInviteCreate() {
           case "EMAIL_NOT_AVAILABLE":
             showError(t("inviteCreate.emailNotAvailable"));
             break;
+          case "USER_EMAIL_PROVIDER_BLACKLISTED":
+            showError(t("inviteCreate.emailProviderBlacklisted"));
+            break;
           default:
             showError(t("inviteCreate.error"));
         }

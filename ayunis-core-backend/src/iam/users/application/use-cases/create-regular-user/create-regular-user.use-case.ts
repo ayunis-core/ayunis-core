@@ -25,6 +25,7 @@ export class CreateRegularUserUseCase {
       name: command.name,
       role: UserRole.USER,
       emailVerified: command.emailVerified,
+      hasAcceptedMarketing: command.hasAcceptedMarketing,
     });
 
     return this.createUserUseCase.execute(createUserCommand);

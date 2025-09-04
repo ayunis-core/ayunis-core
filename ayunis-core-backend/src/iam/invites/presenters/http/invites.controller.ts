@@ -188,7 +188,7 @@ export class InvitesController {
         inviteToken: acceptInviteDto.inviteToken,
         userName: acceptInviteDto.userName,
         password: acceptInviteDto.password,
-        passwordConfirm: acceptInviteDto.passwordConfirm,
+        hasAcceptedMarketing: acceptInviteDto.hasAcceptedMarketing,
       }),
     );
 

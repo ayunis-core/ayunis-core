@@ -6,7 +6,7 @@ import { Agent } from '../../../domain/agent.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { AgentNotFoundError } from '../../agents.errors';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 describe('DeleteAgentUseCase', () => {
@@ -63,6 +63,7 @@ describe('DeleteAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       });
       const existingAgent = new Agent({
@@ -147,6 +148,7 @@ describe('DeleteAgentUseCase', () => {
           canStream: true,
           isReasoning: false,
           isArchived: false,
+          canUseTools: true,
         }),
       });
       const existingAgent = new Agent({
