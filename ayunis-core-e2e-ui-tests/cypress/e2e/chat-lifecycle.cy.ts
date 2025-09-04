@@ -3,7 +3,7 @@ import { E2eTest01 } from '@data/accounts/E2eTest01.account';
 import { getTimestring } from '@helpers/time.helper';
 
 describe('Chat Lifecycle', () => {
-	it.skip('allows a user to create, rename and delete a chat', () => {
+	it('allows a user to create, rename and delete a chat', () => {
 		const timestring = getTimestring();
 		cy.login(E2eTest01.email, E2eTest01.password, E2eTest01.username);
 
