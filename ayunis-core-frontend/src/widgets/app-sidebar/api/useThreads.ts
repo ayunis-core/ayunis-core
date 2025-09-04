@@ -1,4 +1,7 @@
-import { useThreadsControllerFindAll } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  useThreadsControllerFindAll,
+  getThreadsControllerFindAllQueryKey,
+} from "@/shared/api/generated/ayunisCoreAPI";
 
 export interface SidebarThread {
   id: string;
@@ -15,7 +18,7 @@ export function useThreads() {
     refetch,
   } = useThreadsControllerFindAll({
     query: {
-      queryKey: ["threads"],
+      queryKey: getThreadsControllerFindAllQueryKey(),
     },
   });
 

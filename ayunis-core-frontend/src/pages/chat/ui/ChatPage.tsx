@@ -35,6 +35,8 @@ import { useCreateFileSource } from "@/pages/chat/api/useCreateFileSource";
 import { useDeleteFileSource } from "../api/useDeleteFileSource";
 import { useRemoveThreadAgent } from "../api/useRemoveThreadAgent";
 import { useAgents } from "@/features/useAgents";
+import { useQueryClient } from "@tanstack/react-query";
+import { getThreadsControllerFindAllQueryKey } from "@/shared/api/generated/ayunisCoreAPI";
 
 interface ChatPageProps {
   thread: Thread;
@@ -50,7 +52,7 @@ export default function ChatPage({
   const navigate = useNavigate();
   const { agents } = useAgents();
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
-
+  const queryClient = useQueryClient();
   const processedPendingMessageRef = useRef<String | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
@@ -149,6 +151,9 @@ export default function ChatPage({
   const handleThread = useCallback((thread: RunThreadResponseDto) => {
     config.env === "development" && console.log("Thread", thread);
     setThreadTitle(thread.title);
+    queryClient.invalidateQueries({
+      queryKey: getThreadsControllerFindAllQueryKey(),
+    });
   }, []);
 
   const { sendTextMessage, abort } = useMessageSend({

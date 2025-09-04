@@ -1,16 +1,21 @@
+import { getThreadsControllerFindAllQueryKey } from "@/shared/api";
 import { useChatContext } from "@/shared/contexts/chat/useChatContext";
 import { useNavigate } from "@tanstack/react-router";
 import { useThreadsControllerCreate } from "@/shared/api/generated/ayunisCoreAPI";
 import type { CreateThreadData } from "../model/openapi";
 import type { SourceResponseDtoType } from "@/shared/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useInitiateChat = () => {
   const { setPendingMessage, setSources } = useChatContext();
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const createThreadMutation = useThreadsControllerCreate({
     mutation: {
       onSuccess: (threadResponse) => {
+        queryClient.invalidateQueries({
+          queryKey: getThreadsControllerFindAllQueryKey(),
+        });
         // Navigate to the new thread
         navigate({
           to: "/chats/$threadId",
