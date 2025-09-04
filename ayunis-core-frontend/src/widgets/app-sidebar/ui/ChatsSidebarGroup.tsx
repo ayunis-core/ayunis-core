@@ -175,7 +175,7 @@ export function ChatsSidebarGroup() {
               {threads
                 .sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
                 .map((thread) => (
-                  <SidebarMenuItem key={thread.id}>
+                  <SidebarMenuItem key={thread.id} data-testid="chat">
                     <SidebarMenuButton asChild>
                       <Link
                         to={"/chats/$threadId"}
@@ -190,7 +190,7 @@ export function ChatsSidebarGroup() {
                       </Link>
                     </SidebarMenuButton>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger data-testid="dropdown-menu-trigger" asChild>
                         <SidebarMenuAction showOnHover>
                           <MoreHorizontal />
                           <span className="sr-only">{t("sidebar.more")}</span>
@@ -200,9 +200,11 @@ export function ChatsSidebarGroup() {
                         className="w-48 rounded-lg"
                         side="bottom"
                         align="end"
+                        data-testid="chat-dropdown"
                       >
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(thread.id)}
+                          data-testid="delete"
                         >
                           <Trash className="text-destructive" />
                           <span>{t("sidebar.deleteChat")}</span>
