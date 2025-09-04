@@ -37,6 +37,7 @@ jobs:
       - name: Start Frontend
         working-directory: ayunis-core-frontend
         run: npm run dev
+      # TODO: Add Model to the Backend
       # Tests
       - name: Install Dependencies for Tests
         working-directory: ayunis-core-e2e-ui-tests
