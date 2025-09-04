@@ -12,10 +12,6 @@ class ChatInput {
 	get submitButton() {
 		return cy.get(`${this.rootLocator} button[data-testid="send"]`);
 	}
-
-	submitButtonWith(options: Partial<Cypress.Timeoutable>) {
-		return cy.get(`${this.rootLocator} button[data-testid="send"]`, options);
-	}
 }
 
 export default new ChatInput();

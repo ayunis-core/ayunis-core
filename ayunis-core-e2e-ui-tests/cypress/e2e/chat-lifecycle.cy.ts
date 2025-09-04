@@ -14,7 +14,9 @@ describe('Chat Lifecycle', () => {
 
 		cy.reload(); // Has to be removed once the Sidebar updates itself
 		// Make sure not to fail the test just because the external communication is slow
-		ChatsPage.assistantMessagesWith({ timeout: Cypress.config('defaultCommandTimeout') * 5 }).should("contain.text", "Claude Sonnet 4");
+		cy.withTimeout("XLONG", () => {
+			ChatsPage.assistantMessages.should("contain.text", "Claude Sonnet 4");
+		})
 		ChatsPage.spanTitle.should("contain.text", timestring);
 		ChatsPage.sidebar.chats.should("contain.text", timestring);
 
@@ -40,7 +42,9 @@ describe('Chat Lifecycle', () => {
 			ChatsPage.chatInput.textareaChatInput.type(`Name this chat ${timestring} and print the name of the model I am talking to`);
 			ChatsPage.chatInput.submitButton.click();
 			// Make sure not to fail the test just because the external communication is slow
-			ChatsPage.chatInput.submitButtonWith({ timeout: Cypress.config('defaultCommandTimeout') * 5 }).should("not.be.disabled");
+			cy.withTimeout("XLONG", () => {
+				ChatsPage.chatInput.submitButton.should("not.be.disabled");
+			});
 
 			ChatsPage.assistantMessages.last().should("contain.text", modelName);
 

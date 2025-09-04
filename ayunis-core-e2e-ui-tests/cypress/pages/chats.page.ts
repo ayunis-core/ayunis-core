@@ -38,9 +38,6 @@ class ChatsPage extends BasePage {
 	get assistantMessages() {
 		return cy.get(`div[data-testid="assistant-message"]`);
 	}
-	assistantMessagesWith(options: Partial<Cypress.Timeoutable>) {
-		return cy.get(`div[data-testid="assistant-message"]`, options);
-	}
 
 	get userMessages() {
 		return cy.get(`div[data-testid="user-message"]`);
