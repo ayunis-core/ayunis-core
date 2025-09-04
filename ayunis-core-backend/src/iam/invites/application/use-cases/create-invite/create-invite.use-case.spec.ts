@@ -28,7 +28,7 @@ describe('CreateInviteUseCase', () => {
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
-  const mockEmail = 'test@example.com';
+  const mockEmail = 'test@test.com';
 
   beforeEach(async () => {
     const mockInvitesRepository = {
@@ -116,6 +116,7 @@ describe('CreateInviteUseCase', () => {
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
       configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
         .mockReturnValueOnce(false) // app.isCloudHosted
         .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
         .mockReturnValueOnce(true); // emails.hasConfig
@@ -173,6 +174,7 @@ describe('CreateInviteUseCase', () => {
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
       configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
         .mockReturnValueOnce(true) // app.isCloudHosted
         .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
         .mockReturnValueOnce(true); // emails.hasConfig
@@ -223,6 +225,7 @@ describe('CreateInviteUseCase', () => {
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
       configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
         .mockReturnValueOnce(true) // app.isCloudHosted
         .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
         .mockReturnValueOnce(true); // emails.hasConfig
@@ -255,6 +258,12 @@ describe('CreateInviteUseCase', () => {
 
       const mockExistingUser = { id: 'existing-user-id' };
       findUserByEmailUseCase.execute.mockResolvedValue(mockExistingUser as any);
+
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(false) // app.isCloudHosted
+        .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
+        .mockReturnValueOnce(true); // emails.hasConfig
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -296,7 +305,11 @@ describe('CreateInviteUseCase', () => {
       };
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
-      configService.get.mockReturnValueOnce(true); // app.isCloudHosted
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(true) // app.isCloudHosted
+        .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
+        .mockReturnValueOnce(true); // emails.hasConfig
 
       getActiveSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
 
@@ -316,6 +329,7 @@ describe('CreateInviteUseCase', () => {
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
       configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
         .mockReturnValueOnce(false) // app.isCloudHosted
         .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
         .mockReturnValueOnce(false); // emails.hasConfig
@@ -341,6 +355,7 @@ describe('CreateInviteUseCase', () => {
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
       configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
         .mockReturnValueOnce(false) // app.isCloudHosted
         .mockReturnValueOnce('7d'); // auth.jwt.inviteExpiresIn
 
@@ -369,6 +384,7 @@ describe('CreateInviteUseCase', () => {
 
       findUserByEmailUseCase.execute.mockResolvedValue(null);
       configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
         .mockReturnValueOnce(false) // app.isCloudHosted
         .mockReturnValueOnce('24h') // auth.jwt.inviteExpiresIn
         .mockReturnValueOnce(false); // emails.hasConfig
