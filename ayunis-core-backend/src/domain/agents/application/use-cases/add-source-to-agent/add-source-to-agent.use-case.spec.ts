@@ -313,7 +313,7 @@ describe('AddSourceToAgentUseCase', () => {
 
       contextService.get.mockReturnValue(mockUserId);
       agentRepository.findOne.mockResolvedValue(mockAgent);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       agentRepository.update.mockResolvedValue(updatedMockAgent);
 
       // Act

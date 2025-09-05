@@ -6,6 +6,7 @@ import {
   InferenceResponse,
 } from '../../ports/inference.handler';
 import { InferenceFailedError, ModelError } from '../../models.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetInferenceUseCase {
@@ -52,7 +53,7 @@ export class GetInferenceUseCase {
           );
         });
     } catch (error) {
-      if (error instanceof ModelError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Inference failed', {

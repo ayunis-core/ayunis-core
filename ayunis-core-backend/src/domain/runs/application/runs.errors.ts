@@ -16,6 +16,7 @@ export enum RunErrorCode {
   RUN_INVALID_INPUT = 'RUN_INVALID_INPUT',
   RUN_MAX_ITERATIONS_REACHED = 'RUN_MAX_ITERATIONS_REACHED',
   RUN_TOOL_NOT_FOUND = 'RUN_TOOL_NOT_FOUND',
+  RUN_TOOL_EXECUTION_FAILED = 'RUN_TOOL_EXECUTION_FAILED',
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
 }
 
@@ -121,5 +122,19 @@ export class RunToolNotFoundError extends RunError {
 export class RunNoModelFoundError extends RunError {
   constructor(metadata?: ErrorMetadata) {
     super('No model found', RunErrorCode.RUN_NO_MODEL_FOUND, 404, metadata);
+  }
+}
+
+/**
+ * Error thrown when a tool execution fails
+ */
+export class RunToolExecutionFailedError extends RunError {
+  constructor(toolName: string, metadata?: ErrorMetadata) {
+    super(
+      `Tool '${toolName}' execution failed`,
+      RunErrorCode.RUN_TOOL_EXECUTION_FAILED,
+      400,
+      metadata,
+    );
   }
 }

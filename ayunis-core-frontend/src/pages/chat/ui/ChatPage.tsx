@@ -47,6 +47,7 @@ export default function ChatPage({
   thread,
   isEmbeddingModelEnabled,
 }: ChatPageProps) {
+  console.log("ChatPage", thread);
   const { t } = useTranslation("chats");
   const { confirm } = useConfirmation();
   const navigate = useNavigate();

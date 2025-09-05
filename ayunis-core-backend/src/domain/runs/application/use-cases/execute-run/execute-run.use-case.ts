@@ -20,11 +20,14 @@ import { GetInferenceUseCase } from '../../../../models/application/use-cases/ge
 import { GetInferenceCommand } from '../../../../models/application/use-cases/get-inference/get-inference.command';
 import { CreateAssistantMessageUseCase } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import { CreateAssistantMessageCommand } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.command';
+import { SaveAssistantMessageUseCase } from '../../../../messages/application/use-cases/save-assistant-message/save-assistant-message.use-case';
+import { SaveAssistantMessageCommand } from '../../../../messages/application/use-cases/save-assistant-message/save-assistant-message.command';
 import {
   RunExecutionFailedError,
   RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
+  RunToolExecutionFailedError,
   RunToolNotFoundError,
 } from '../../runs.errors';
 import {
@@ -54,6 +57,7 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { ConfigService } from '@nestjs/config';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
+import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -64,6 +68,7 @@ export class ExecuteRunUseCase {
   constructor(
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
+    private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
@@ -107,7 +112,7 @@ export class ExecuteRunUseCase {
       });
 
       // Execute the run
-      return this.executeRunInternal({
+      return this.orchestrateRun({
         thread,
         tools,
         model: model.model,
@@ -237,7 +242,7 @@ export class ExecuteRunUseCase {
     return `Current time: ${currentTime}\n\n${agentInstructions}`;
   }
 
-  private async *executeRunInternal(params: {
+  private async *orchestrateRun(params: {
     thread: Thread;
     tools: Tool[];
     model: LanguageModel;
@@ -247,9 +252,7 @@ export class ExecuteRunUseCase {
     trace: LangfuseTraceClient;
     orgId: UUID;
   }): AsyncGenerator<Message, void, void> {
-    this.logger.log('executeRunInternal', { threadId: params.thread.id });
-
-    // there is no 'create' method because a run makes sense only in the context of executing it
+    this.logger.log('orchestrateRun', { threadId: params.thread.id });
 
     /* The order of operation is
      * - collect and yield tool responses - both frontend and backend tools!
@@ -277,7 +280,6 @@ export class ExecuteRunUseCase {
         const toolResultMessageContent = await this.collectToolResults({
           thread: params.thread,
           tools: params.tools,
-          isFirstIteration,
           input: toolResultInput,
           trace: params.trace,
           orgId: params.orgId,
@@ -364,7 +366,7 @@ export class ExecuteRunUseCase {
               output: assistantMessage,
             });
 
-            // Note: Final message is already saved to DB by executeStreamingInference
+            // Final message is already saved to DB by executeStreamingInference
             // So we just need to add it to the thread without saving again
             this.addMessageToThreadUseCase.execute(
               new AddMessageCommand(params.thread, assistantMessage),
@@ -408,6 +410,9 @@ export class ExecuteRunUseCase {
             yield assistantMessage;
           }
         } catch (error) {
+          if (error instanceof ApplicationError) {
+            throw error;
+          }
           this.logger.error('Inference failed', error);
           throw new RunExecutionFailedError(
             error instanceof Error ? error.message : 'Inference error',
@@ -441,12 +446,11 @@ export class ExecuteRunUseCase {
     thread: Thread;
     tools: Tool[];
     input: RunToolResultInput | null;
-    isFirstIteration: boolean;
     trace: LangfuseTraceClient;
     orgId: UUID;
   }): Promise<ToolResultMessageContent[]> {
     this.logger.debug('collectToolResults');
-    const { thread, tools, input, isFirstIteration, orgId } = params;
+    const { thread, tools, input, orgId } = params;
 
     const lastMessage = thread.getLastMessage();
     const toolUseMessageContent = lastMessage
@@ -470,10 +474,6 @@ export class ExecuteRunUseCase {
 
         if (capabilities.isDisplayable) {
           // frontend tool
-          if (!isFirstIteration) {
-            // only process frontend tools on first iteration
-            break;
-          }
           if (input && input.toolId === content.id) {
             // newContent is the tool result of this tool (e.g. user clicked on selection) -> append it
             toolResultMessageContent.push(
@@ -538,11 +538,13 @@ export class ExecuteRunUseCase {
           );
         }
       } catch (error) {
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
         this.logger.error(`Error processing tool ${content.name}`, error);
-        throw new RunExecutionFailedError(
-          `Failed to process tool ${content.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          { toolName: content.name, originalError: error as Error },
-        );
+        throw new RunToolExecutionFailedError(content.name, {
+          error: error as Error,
+        });
       }
     }
 
@@ -613,6 +615,12 @@ export class ExecuteRunUseCase {
     // Start streaming
     const stream$ = this.streamInferenceUseCase.execute(streamInput);
 
+    // Create the assistant message upfront with empty content - this gives us a consistent ID
+    const assistantMessage = new AssistantMessage({
+      threadId,
+      content: [],
+    });
+
     // Accumulate content for the message
     let accumulatedText = '';
     let accumulatedThinking = '';
@@ -624,11 +632,6 @@ export class ExecuteRunUseCase {
         arguments: string;
       }
     >();
-
-    // We'll create messages with consistent ID but not save to DB until the end
-    let messageId: UUID | undefined;
-    //let messageThreadId: UUID;
-    //let messageCreatedAt: Date;
 
     // Convert observable to async iterable
     const asyncIterable = {
@@ -725,14 +728,19 @@ export class ExecuteRunUseCase {
         accumulatedToolCalls.forEach((toolCall) => {
           if (toolCall.id && toolCall.name && toolCall.arguments) {
             try {
-              const parsedArgs = JSON.parse(toolCall.arguments) as object;
-              messageContent.push(
-                new ToolUseMessageContent(
-                  toolCall.id,
-                  toolCall.name,
-                  parsedArgs,
-                ),
-              );
+              const parsedArgs = safeJsonParse(
+                toolCall.arguments,
+                {},
+              ) as object;
+              if (parsedArgs) {
+                messageContent.push(
+                  new ToolUseMessageContent(
+                    toolCall.id,
+                    toolCall.name,
+                    parsedArgs,
+                  ),
+                );
+              }
             } catch {
               this.logger.debug(`Incomplete tool call for ${toolCall.name}`, {
                 arguments: toolCall.arguments,
@@ -742,23 +750,10 @@ export class ExecuteRunUseCase {
           }
         });
 
-        // Create message (but don't save to DB yet)
-        const partialMessage = new AssistantMessage({
-          threadId,
-          content: messageContent,
-        });
+        // Update the same assistant message with new content
+        assistantMessage.content = messageContent;
 
-        // Store the message details for consistency
-        if (!messageId) {
-          messageId = partialMessage.id;
-          //messageThreadId = partialMessage.threadId;
-          //messageCreatedAt = partialMessage.createdAt;
-        } else {
-          // Use consistent ID for all partial updates
-          partialMessage.id = messageId;
-        }
-
-        yield partialMessage;
+        yield assistantMessage;
       }
     }
 
@@ -781,10 +776,12 @@ export class ExecuteRunUseCase {
     accumulatedToolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
         try {
-          const parsedArgs = JSON.parse(toolCall.arguments) as object;
-          finalMessageContent.push(
-            new ToolUseMessageContent(toolCall.id, toolCall.name, parsedArgs),
-          );
+          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as object;
+          if (parsedArgs) {
+            finalMessageContent.push(
+              new ToolUseMessageContent(toolCall.id, toolCall.name, parsedArgs),
+            );
+          }
         } catch (error) {
           this.logger.warn(
             `Failed to parse tool arguments for ${toolCall.name}`,
@@ -797,17 +794,13 @@ export class ExecuteRunUseCase {
       }
     });
 
-    // Create and save final complete message to database
-    const finalMessage = await this.createAssistantMessageUseCase.execute(
-      new CreateAssistantMessageCommand(threadId, finalMessageContent),
+    // Update the assistant message with final complete content
+    assistantMessage.content = finalMessageContent;
+
+    // Save the assistant message to database (preserving the consistent ID)
+    // No need to yield again - we already yielded the complete message during streaming
+    await this.saveAssistantMessageUseCase.execute(
+      new SaveAssistantMessageCommand(assistantMessage),
     );
-
-    // Use the consistent ID from streaming if we had partial messages
-    if (messageId) {
-      finalMessage.id = messageId;
-    }
-
-    // Yield the final persisted message
-    yield finalMessage;
   }
 }

@@ -41,6 +41,11 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'sourceAssignments',
         'sourceAssignments.source',
       ],
+      order: {
+        messages: {
+          createdAt: 'ASC', // Ensure messages are ordered chronologically
+        },
+      },
     });
     if (!reloadedThreadEntity) {
       throw new ThreadNotFoundError(
@@ -77,6 +82,11 @@ export class LocalThreadsRepository extends ThreadsRepository {
           },
         },
       },
+      order: {
+        messages: {
+          createdAt: 'ASC', // Ensure messages are ordered chronologically
+        },
+      },
     });
     if (!threadEntity) {
       return null;
@@ -92,6 +102,13 @@ export class LocalThreadsRepository extends ThreadsRepository {
     const threadEntities = await this.threadRepository.find({
       where: { userId },
       relations: this.getRelations(options),
+      order: options?.withMessages
+        ? {
+            messages: {
+              createdAt: 'ASC', // Ensure messages are ordered chronologically
+            },
+          }
+        : undefined,
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
@@ -104,6 +121,13 @@ export class LocalThreadsRepository extends ThreadsRepository {
     const threadEntities = await this.threadRepository.find({
       where: { modelId },
       relations: this.getRelations(options),
+      order: options?.withMessages
+        ? {
+            messages: {
+              createdAt: 'ASC', // Ensure messages are ordered chronologically
+            },
+          }
+        : undefined,
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
@@ -116,6 +140,13 @@ export class LocalThreadsRepository extends ThreadsRepository {
     const threadEntities = await this.threadRepository.find({
       where: { agentId },
       relations: this.getRelations(options),
+      order: options?.withMessages
+        ? {
+            messages: {
+              createdAt: 'ASC', // Ensure messages are ordered chronologically
+            },
+          }
+        : undefined,
     });
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }

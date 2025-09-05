@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { ToolUseMessageContent } from "../../model/openapi";
 import { useTranslation } from "react-i18next";
 import { Label } from "@/shared/ui/shadcn/label";
@@ -18,10 +18,17 @@ export default function SendEmailWidget({
     body?: string;
     to?: string;
   };
+
   const [subject, setSubject] = useState<string>(params.subject || "");
   const [body, setBody] = useState<string>(params.body || "");
   const [to, setTo] = useState<string>(params.to || "");
   const [copied, setCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSubject(params.subject || "");
+    setBody(params.body || "");
+    setTo(params.to || "");
+  }, [params.subject, params.body, params.to]);
 
   const mailtoHref = useMemo(() => {
     const mailtoPath = to ? encodeURIComponent(to) : "";

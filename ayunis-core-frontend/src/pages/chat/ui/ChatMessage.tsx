@@ -147,20 +147,39 @@ function renderMessageContent(message: Message) {
             if (
               toolUseMessageContent.name === ToolAssignmentDtoType.send_email
             ) {
-              return <SendEmailWidget content={toolUseMessageContent} />;
+              return (
+                <SendEmailWidget
+                  key={`send-email-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                />
+              );
             }
             if (
               toolUseMessageContent.name ===
               ToolAssignmentDtoType.create_calendar_event
             ) {
               return (
-                <CreateCalendarEventWidget content={toolUseMessageContent} />
+                <CreateCalendarEventWidget
+                  key={`create-calendar-event-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                />
               );
             }
 
-            return <ExecutableToolWidget content={toolUseMessageContent} />;
+            return (
+              <ExecutableToolWidget
+                key={`executable-tool-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                content={toolUseMessageContent}
+              />
+            );
           } catch {
-            return <Markdown>{"Error rendering tool use message"}</Markdown>;
+            return (
+              <Markdown
+                key={`error-rendering-tool-use-message-${index}-${content.type.slice(0, 50)}`}
+              >
+                {"Error rendering tool use message"}
+              </Markdown>
+            );
           }
         }
         return null;

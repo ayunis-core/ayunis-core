@@ -124,7 +124,7 @@ describe('CreateAgentUseCase', () => {
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(
         mockModel as any,
       );
-      assembleToolUseCase.execute.mockResolvedValue(mockTool as any);
+      assembleToolUseCase.execute.mockResolvedValue(mockTool);
       agentRepository.create.mockResolvedValue(mockCreatedAgent);
 
       // Act
@@ -191,7 +191,7 @@ describe('CreateAgentUseCase', () => {
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(
         mockModel as any,
       );
-      assembleToolUseCase.execute.mockResolvedValue(mockTool as any);
+      assembleToolUseCase.execute.mockResolvedValue(mockTool);
       agentRepository.create.mockResolvedValue(mockCreatedAgent);
 
       // Act
@@ -266,8 +266,8 @@ describe('CreateAgentUseCase', () => {
         mockModel as any,
       );
       assembleToolUseCase.execute
-        .mockResolvedValueOnce(mockTool1 as any)
-        .mockResolvedValueOnce(mockTool2 as any);
+        .mockResolvedValueOnce(mockTool1)
+        .mockResolvedValueOnce(mockTool2);
       agentRepository.create.mockResolvedValue(mockCreatedAgent);
 
       // Act

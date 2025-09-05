@@ -7,6 +7,7 @@ import { LocalMessagesRepositoryModule } from './infrastructure/persistence/loca
 import { CreateUserMessageUseCase } from './application/use-cases/create-user-message/create-user-message.use-case';
 import { CreateSystemMessageUseCase } from './application/use-cases/create-system-message/create-system-message.use-case';
 import { CreateAssistantMessageUseCase } from './application/use-cases/create-assistant-message/create-assistant-message.use-case';
+import { SaveAssistantMessageUseCase } from './application/use-cases/save-assistant-message/save-assistant-message.use-case';
 import { CreateToolResultMessageUseCase } from './application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 
 @Module({
@@ -20,6 +21,7 @@ import { CreateToolResultMessageUseCase } from './application/use-cases/create-t
     CreateUserMessageUseCase,
     CreateSystemMessageUseCase,
     CreateAssistantMessageUseCase,
+    SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
   ],
   exports: [
@@ -28,6 +30,7 @@ import { CreateToolResultMessageUseCase } from './application/use-cases/create-t
     CreateUserMessageUseCase,
     CreateSystemMessageUseCase,
     CreateAssistantMessageUseCase,
+    SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
   ],
 })
