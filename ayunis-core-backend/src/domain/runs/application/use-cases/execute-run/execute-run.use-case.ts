@@ -262,7 +262,7 @@ export class ExecuteRunUseCase {
      * - yield agent response
      * - check if we need to hand over to the user, if not repeat
      */
-    const iterations = 10;
+    const iterations = 20;
     try {
       for (let i = 0; i < iterations; i++) {
         this.logger.debug('iteration', i);
