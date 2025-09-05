@@ -305,6 +305,11 @@ export default function ChatPage({
           key={message.id}
           message={message}
           hideAvatar={i > 0 && sortedMessages[i - 1].role !== "user"}
+          isStreaming={
+            isStreaming &&
+            i === sortedMessages.length - 1 &&
+            message.role === "assistant"
+          }
         />
       ))}
     </div>

@@ -24,12 +24,14 @@ interface ChatMessageProps {
   message?: Message;
   isLoading?: boolean;
   hideAvatar?: boolean;
+  isStreaming?: boolean;
 }
 
 export default function ChatMessage({
   hideAvatar = false,
   message,
   isLoading = false,
+  isStreaming = false,
 }: ChatMessageProps) {
   const { t } = useTranslation("chats");
   const { theme } = useTheme();
@@ -94,7 +96,7 @@ export default function ChatMessage({
         )}
         <div className="max-w-2xl min-w-0 space-y-1 w-full">
           <div className="space-y-2 overflow-hidden w-full">
-            {renderMessageContent(message)}
+            {renderMessageContent(message, isStreaming)}
           </div>
         </div>
       </div>
@@ -104,7 +106,7 @@ export default function ChatMessage({
   return null;
 }
 
-function renderMessageContent(message: Message) {
+function renderMessageContent(message: Message, isStreaming?: boolean) {
   switch (message.role) {
     case "user":
     case "system":
@@ -151,6 +153,7 @@ function renderMessageContent(message: Message) {
                 <SendEmailWidget
                   key={`send-email-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
+                  isStreaming={isStreaming}
                 />
               );
             }
@@ -162,6 +165,7 @@ function renderMessageContent(message: Message) {
                 <CreateCalendarEventWidget
                   key={`create-calendar-event-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
+                  isStreaming={isStreaming}
                 />
               );
             }
@@ -170,6 +174,7 @@ function renderMessageContent(message: Message) {
               <ExecutableToolWidget
                 key={`executable-tool-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                 content={toolUseMessageContent}
+                isStreaming={isStreaming}
               />
             );
           } catch {

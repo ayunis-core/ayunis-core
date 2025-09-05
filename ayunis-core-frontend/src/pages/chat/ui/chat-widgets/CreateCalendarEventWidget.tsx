@@ -1,6 +1,7 @@
 // Types
 import type { ToolUseMessageContent } from "../../model/openapi";
 import type { CalendarEventInput } from "../../api/useGenerateIcs";
+import { cn } from "@/shared/lib/shadcn/utils";
 
 // Utils
 import { useMemo, useState, useEffect } from "react";
@@ -27,8 +28,10 @@ import { ChevronDownIcon } from "lucide-react";
 
 export default function CreateCalendarEventWidget({
   content,
+  isStreaming = false,
 }: {
   content: ToolUseMessageContent;
+  isStreaming?: boolean;
 }) {
   const { t } = useTranslation("chats");
   const { generate } = useGenerateIcs();
@@ -154,12 +157,15 @@ export default function CreateCalendarEventWidget({
       key={`${content.name}-${content.id}`}
     >
       <div className="space-y-2 w-full">
-        <Label htmlFor={`calendar-title-${content.id}`}>
+        <Label
+          htmlFor={`calendar-title-${content.id}`}
+          className={cn(isStreaming && "animate-pulse")}
+        >
           {t("chat.tools.create_calendar_event.title")}
         </Label>
         <Input
           id={`calendar-title-${content.id}`}
-          className="w-full"
+          className={cn("w-full", isStreaming && "animate-pulse")}
           placeholder={t("chat.tools.create_calendar_event.titlePlaceholder")}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -167,12 +173,15 @@ export default function CreateCalendarEventWidget({
       </div>
 
       <div className="space-y-2 w-full">
-        <Label htmlFor={`calendar-description-${content.id}`}>
+        <Label
+          htmlFor={`calendar-description-${content.id}`}
+          className={cn(isStreaming && "animate-pulse")}
+        >
           {t("chat.tools.create_calendar_event.description")}
         </Label>
         <Textarea
           id={`calendar-description-${content.id}`}
-          className="h-32"
+          className={cn("h-32", isStreaming && "animate-pulse")}
           placeholder={t(
             "chat.tools.create_calendar_event.descriptionPlaceholder",
           )}
@@ -182,12 +191,15 @@ export default function CreateCalendarEventWidget({
       </div>
 
       <div className="space-y-2 w-full">
-        <Label htmlFor={`calendar-location-${content.id}`}>
+        <Label
+          htmlFor={`calendar-location-${content.id}`}
+          className={cn(isStreaming && "animate-pulse")}
+        >
           {t("chat.tools.create_calendar_event.location")}
         </Label>
         <Input
           id={`calendar-location-${content.id}`}
-          className="w-full"
+          className={cn("w-full", isStreaming && "animate-pulse")}
           placeholder={t(
             "chat.tools.create_calendar_event.locationPlaceholder",
           )}
@@ -198,7 +210,7 @@ export default function CreateCalendarEventWidget({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         <div className="space-y-2">
-          <Label className="px-1">
+          <Label className={cn("px-1", isStreaming && "animate-pulse")}>
             {t("chat.tools.create_calendar_event.start")}
           </Label>
 
@@ -210,7 +222,10 @@ export default function CreateCalendarEventWidget({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-40 justify-between font-normal"
+                  className={cn(
+                    "w-40 justify-between font-normal",
+                    isStreaming && "animate-pulse",
+                  )}
                 >
                   {startDate
                     ? startDate.toLocaleDateString()
@@ -242,12 +257,15 @@ export default function CreateCalendarEventWidget({
               step="1"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              className={cn(
+                "bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
+                isStreaming && "animate-pulse",
+              )}
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label className="px-1">
+          <Label className={cn("px-1", isStreaming && "animate-pulse")}>
             {t("chat.tools.create_calendar_event.end")}
           </Label>
 
@@ -259,7 +277,10 @@ export default function CreateCalendarEventWidget({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-40 justify-between font-normal"
+                  className={cn(
+                    "w-40 justify-between font-normal",
+                    isStreaming && "animate-pulse",
+                  )}
                 >
                   {endDate
                     ? endDate.toLocaleDateString()
@@ -291,7 +312,10 @@ export default function CreateCalendarEventWidget({
               step="1"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              className={cn(
+                "bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
+                isStreaming && "animate-pulse",
+              )}
             />
           </div>
         </div>
@@ -301,6 +325,7 @@ export default function CreateCalendarEventWidget({
         <Button
           onClick={downloadIcs}
           disabled={!title || !startDate || !endDate || isInvalidRange}
+          className={cn(isStreaming && "animate-pulse")}
         >
           {t("chat.tools.create_calendar_event.downloadIcs")}
         </Button>

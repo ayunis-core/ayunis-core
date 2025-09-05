@@ -42,7 +42,7 @@ export default function AgentActivityHint({
       </div>
       <CollapsibleContent className="flex flex-col gap-2">
         <div
-          className="max-h-32 text-muted-foreground overflow-y-auto"
+          className="max-h-32 text-muted-foreground overflow-y-auto whitespace-pre-wrap"
           ref={scrollRef}
           onScroll={handleScroll}
         >

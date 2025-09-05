@@ -6,11 +6,14 @@ import { Input } from "@/shared/ui/shadcn/input";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Mail } from "lucide-react";
+import { cn } from "@/shared/lib/shadcn/utils";
 
 export default function SendEmailWidget({
   content,
+  isStreaming = false,
 }: {
   content: ToolUseMessageContent;
+  isStreaming?: boolean;
 }) {
   const { t } = useTranslation("chats");
   const params = (content.params || {}) as {
@@ -56,11 +59,14 @@ export default function SendEmailWidget({
       key={`${content.name}-${content.id}`}
     >
       <div className="space-y-2 w-full">
-        <Label htmlFor={`send-email-to-${content.id}`}>
+        <Label
+          htmlFor={`send-email-to-${content.id}`}
+          className={cn(isStreaming && "animate-pulse")}
+        >
           {t("chat.tools.send_email.to")}
         </Label>
         <Input
-          className="w-full"
+          className={cn("w-full", isStreaming && "animate-pulse")}
           id={`send-email-to-${content.id}`}
           placeholder={t("chat.tools.send_email.toPlaceholder")}
           value={to}
@@ -68,11 +74,14 @@ export default function SendEmailWidget({
         />
       </div>
       <div className="space-y-2 w-full">
-        <Label htmlFor={`send-email-subject-${content.id}`}>
+        <Label
+          htmlFor={`send-email-subject-${content.id}`}
+          className={cn(isStreaming && "animate-pulse")}
+        >
           {t("chat.tools.send_email.subject")}
         </Label>
         <Input
-          className="w-full"
+          className={cn("w-full", isStreaming && "animate-pulse")}
           id={`send-email-subject-${content.id}`}
           placeholder={t("chat.tools.send_email.subjectPlaceholder")}
           value={subject}
@@ -80,7 +89,10 @@ export default function SendEmailWidget({
         />
       </div>
       <div className="space-y-2 w-full">
-        <Label htmlFor={`send-email-body-${content.id}`}>
+        <Label
+          htmlFor={`send-email-body-${content.id}`}
+          className={cn(isStreaming && "animate-pulse")}
+        >
           {t("chat.tools.send_email.body")}
         </Label>
         <Textarea
@@ -88,16 +100,17 @@ export default function SendEmailWidget({
           placeholder={t("chat.tools.send_email.bodyPlaceholder")}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          className="h-40"
+          className={cn("h-40", isStreaming && "animate-pulse")}
         />
       </div>
       <div className="w-full flex gap-2">
-        <Button asChild>
+        <Button asChild className={cn(isStreaming && "animate-pulse")}>
           <a href={mailtoHref} target="_blank" rel="noopener noreferrer">
             <Mail className="h-4 w-4" /> {t("chat.tools.send_email.open")}
           </a>
         </Button>
         <Button
+          className={cn(isStreaming && "animate-pulse")}
           type="button"
           variant="secondary"
           onClick={async () => {
