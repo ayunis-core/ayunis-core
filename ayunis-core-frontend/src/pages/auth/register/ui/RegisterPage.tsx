@@ -144,52 +144,54 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
               )}
             />
           )}
-          <FormField
-            control={form.control}
-            name="legalAcceptance"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="legalAcceptance"
-                      required
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                    <Label
-                      htmlFor="legalAcceptance"
-                      className="block font-normal leading-5"
-                    >
-                      <Trans
-                        i18nKey="register.legalAcceptanceDescription"
-                        ns="auth"
-                        components={{
-                          privacyLink: (
-                            <a
-                              href={privacyPolicyRef}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline"
-                            />
-                          ),
-                          tosLink: (
-                            <a
-                              href={agbHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline"
-                            />
-                          ),
-                        }}
+          {isCloud && (
+            <FormField
+              control={form.control}
+              name="legalAcceptance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="legalAcceptance"
+                        required
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
                       />
-                    </Label>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                      <Label
+                        htmlFor="legalAcceptance"
+                        className="block font-normal leading-5"
+                      >
+                        <Trans
+                          i18nKey="register.legalAcceptanceDescription"
+                          ns="auth"
+                          components={{
+                            privacyLink: (
+                              <a
+                                href={privacyPolicyRef}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline"
+                              />
+                            ),
+                            tosLink: (
+                              <a
+                                href={agbHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline"
+                              />
+                            ),
+                          }}
+                        />
+                      </Label>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading
               ? t("register.creatingAccount")

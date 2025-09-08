@@ -10,8 +10,8 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 
 - **Multiple LLM providers** - Seamlessly connect to Ollama, Mistral, Anthropic or OpenAI without configuration overhead
 - **Prompt Library** - Organize prompts for easy reuse
-- **Agent Builder (coming soon)** - Create your personalized AI assistants to help with your tasks. Share the best with your entire team.
-- **RAG Pipeline (coming soon)** - Enhance model context with your own data & documents. Use our pipeline in your own services.
+- **Agent Builder** - Create your personalized AI assistants to help with your tasks. Share the best with your entire team.
+- **RAG Pipeline** - Enhance model context with your own data & documents. Use our pipeline in your own services.
 
 ### 🛠️ Advanced Capabilities
 

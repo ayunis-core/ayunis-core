@@ -60,97 +60,93 @@ export default function InviteUserDialog() {
   }
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm">{t("inviteDialog.inviteUser")}</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("inviteDialog.dialogTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("inviteDialog.dialogDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                rules={{
-                  required: t("inviteDialog.emailRequired"),
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: t("inviteDialog.emailInvalid"),
-                  },
-                }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("inviteDialog.emailAddress")}</FormLabel>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">{t("inviteDialog.inviteUser")}</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{t("inviteDialog.dialogTitle")}</DialogTitle>
+          <DialogDescription>
+            {t("inviteDialog.dialogDescription")}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              rules={{
+                required: t("inviteDialog.emailRequired"),
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: t("inviteDialog.emailInvalid"),
+                },
+              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("inviteDialog.emailAddress")}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t("inviteDialog.emailPlaceholder")}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              rules={{
+                required: t("inviteDialog.roleRequired"),
+              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("inviteDialog.roleLabel")}</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <Input
-                        placeholder={t("inviteDialog.emailPlaceholder")}
-                        {...field}
-                      />
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={t("inviteDialog.roleSelectPlaceholder")}
+                        />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="role"
-                rules={{
-                  required: t("inviteDialog.roleRequired"),
-                }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("inviteDialog.roleLabel")}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue
-                            placeholder={t(
-                              "inviteDialog.roleSelectPlaceholder",
-                            )}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="user">
-                          {t("inviteDialog.roleUser")}
-                        </SelectItem>
-                        <SelectItem value="admin">
-                          {t("inviteDialog.roleAdmin")}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={isCreatingInvite}
-                >
-                  {t("inviteDialog.cancel")}
-                </Button>
-                <Button type="submit" disabled={isCreatingInvite}>
-                  {isCreatingInvite
-                    ? t("inviteDialog.sending")
-                    : t("inviteDialog.sendInvitation")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </>
+                    <SelectContent>
+                      <SelectItem value="user">
+                        {t("inviteDialog.roleUser")}
+                      </SelectItem>
+                      <SelectItem value="admin">
+                        {t("inviteDialog.roleAdmin")}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isCreatingInvite}
+              >
+                {t("inviteDialog.cancel")}
+              </Button>
+              <Button type="submit" disabled={isCreatingInvite}>
+                {isCreatingInvite
+                  ? t("inviteDialog.sending")
+                  : t("inviteDialog.sendInvitation")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }
