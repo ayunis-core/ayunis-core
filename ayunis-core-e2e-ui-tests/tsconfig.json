@@ -34,6 +34,6 @@
 		"moduleDetection": "force",
 		"skipLibCheck": true
 	},
-	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts", "cypress/helpers/*.ts","*.ts"],
+	"include": ["cypress/**/*.ts", "cypress/data/*.ts", "cypress/pages/*.ts", "cypress/helpers/*.ts", "*.ts"],
 	"exclude": ["node_modules"]
 }
