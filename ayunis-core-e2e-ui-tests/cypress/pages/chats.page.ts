@@ -7,7 +7,7 @@ import Sidebar from './components/sidebar.component';
 
 class ChatsPage extends BasePage {
 	// Properties
-	override path = `/chats`;
+	path = `/chats`;
 
 	// Components
 	get sidebar() {
@@ -42,8 +42,6 @@ class ChatsPage extends BasePage {
 	get userMessages() {
 		return cy.get(`div[data-testid="user-message"]`);
 	}
-
-
 }
 
 export default new ChatsPage();
