@@ -14,10 +14,9 @@ class Sidebar extends BaseComponent {
 	// Helpers
 	dropdownMenuTriggerForChat(title: string) {
 		return this.chats.contains(title).within(() => {
-			cy.get(`button[data-testid="dropdown-menu-trigger"]`).invoke('show')
+			cy.get(`button[data-testid="dropdown-menu-trigger"]`).invoke('show');
 		});
 	}
-
 }
 
 export default new Sidebar();

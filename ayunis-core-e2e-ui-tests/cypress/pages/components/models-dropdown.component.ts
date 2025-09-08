@@ -1,4 +1,4 @@
-import {BaseComponent} from "@pages/components/base.component";
+import { BaseComponent } from '@pages/components/base.component';
 
 class ModelsDropdown extends BaseComponent {
 	rootLocator = `div[data-slot="select-group"]`;
@@ -6,7 +6,6 @@ class ModelsDropdown extends BaseComponent {
 	get options() {
 		return cy.get(`${this.rootLocator} div[role="option"]`);
 	}
-
 }
 
 export default new ModelsDropdown();
