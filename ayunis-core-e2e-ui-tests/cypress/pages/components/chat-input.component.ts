@@ -1,4 +1,6 @@
-class ChatInput {
+import { BaseComponent } from '@pages/components/base.component';
+
+class ChatInput extends BaseComponent {
 	rootLocator = `div[data-testid="chat-input"]`;
 
 	get textareaChatInput() {

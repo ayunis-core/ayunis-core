@@ -1,4 +1,6 @@
-class ConfirmationDialogue {
+import { BaseComponent } from '@pages/components/base.component';
+
+class ConfirmationDialogue extends BaseComponent {
 	rootLocator = `div[role="dialog"]`;
 
 	get desctructiveOption() {

@@ -1,6 +1,6 @@
-export class BasePage {
+export abstract class BasePage {
 	// Properties
-	path = `/`;
+	abstract path: string;
 
 	// Helpers
 	open = () => {

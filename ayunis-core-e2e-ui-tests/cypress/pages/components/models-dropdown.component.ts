@@ -1,4 +1,6 @@
-class ModelsDropdown {
+import {BaseComponent} from "@pages/components/base.component";
+
+class ModelsDropdown extends BaseComponent {
 	rootLocator = `div[data-slot="select-group"]`;
 
 	get options() {

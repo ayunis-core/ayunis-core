@@ -1,4 +1,6 @@
-class Sidebar {
+import { BaseComponent } from '@pages/components/base.component';
+
+class Sidebar extends BaseComponent {
 	rootLocator = `div[data-testid="sidebar"]`;
 
 	get buttonMenu() {
