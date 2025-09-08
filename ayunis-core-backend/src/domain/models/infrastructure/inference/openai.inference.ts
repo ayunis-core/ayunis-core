@@ -43,7 +43,7 @@ export class OpenAIInferenceHandler extends InferenceHandler {
          * https://platform.openai.com/docs/guides/migrate-to-responses#4-decide-when-to-use-statefulness
          */
         {
-          include: ['reasoning.encrypted_content'],
+          // include: ['reasoning.encrypted_content'],
           instructions: input.systemPrompt,
           input: openAiMessages,
           model: input.model.name,
