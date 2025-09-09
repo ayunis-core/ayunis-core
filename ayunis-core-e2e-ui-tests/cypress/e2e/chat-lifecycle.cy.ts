@@ -1,58 +1,62 @@
-import ChatsPage from '@pages/chats.page';
+import ChatPage from '@pages/chat.page';
 import { E2eTestGeneral } from '@data/accounts/E2eTest01.account';
 import { getTimestring } from '@helpers/time.helper';
+import NewChatPage from '@pages/new-chat.page';
 
 describe('Chat Lifecycle', () => {
 	it('allows a user to create, rename and delete a chat', () => {
 		const timestring = getTimestring();
 		cy.login(E2eTestGeneral.email, E2eTestGeneral.username);
 
-		ChatsPage.chatInput.modelSelectTrigger.should('contain.text', 'Claude Sonnet 4');
+		NewChatPage.validateOn();
+		NewChatPage.chatInput.modelSelectTrigger.should('contain.text', 'Claude Sonnet 4');
 
-		ChatsPage.chatInput.textareaChatInput.type(
+		NewChatPage.chatInput.textareaChatInput.type(
 			`Name this chat ${timestring} and print the name of the model I am talking to`,
 		);
-		ChatsPage.chatInput.submitButton.click();
+		NewChatPage.chatInput.submitButton.click();
 
 		cy.reload(); // Has to be removed once the Sidebar updates itself
 		// Make sure not to fail the test just because the external communication is slow
+		ChatPage.validateOn();
 		cy.withTimeout('XLONG', () => {
-			ChatsPage.assistantMessages.should('contain.text', 'Claude Sonnet 4');
+			ChatPage.assistantMessages.should('contain.text', 'Claude Sonnet 4');
 		});
-		ChatsPage.spanTitle.should('contain.text', timestring);
-		ChatsPage.sidebar.chats.should('contain.text', timestring);
+		ChatPage.spanTitle.should('contain.text', timestring);
+		ChatPage.sidebar.chats.should('contain.text', timestring);
 
-		ChatsPage.sidebar.dropdownMenuTriggerForChat(timestring).click();
-		ChatsPage.chatDropdown.buttonDelete.click();
+		ChatPage.sidebar.dropdownMenuTriggerForChat(timestring).click();
+		ChatPage.chatDropdown.buttonDelete.click();
 
-		ChatsPage.confirmationDialogue.desctructiveOption.should('exist');
-		ChatsPage.confirmationDialogue.desctructiveOption.click();
+		ChatPage.confirmationDialogue.desctructiveOption.should('exist');
+		ChatPage.confirmationDialogue.desctructiveOption.click();
 
-		ChatsPage.sidebar.chats.should('not.contain.text', timestring);
+		ChatPage.sidebar.chats.should('not.contain.text', timestring);
 	});
 
 	it('allows user to choose the provided models', () => {
 		const timestring = getTimestring();
 		cy.login(E2eTestGeneral.email, E2eTestGeneral.username);
+		NewChatPage.validateOn();
 
-		ChatsPage.chatInput.modelSelectTrigger.click();
-		ChatsPage.modelsDropdown.options.each(($element) => {
+		NewChatPage.chatInput.modelSelectTrigger.click();
+		NewChatPage.modelsDropdown.options.each(($element) => {
 			const modelName = $element.text();
 
-			ChatsPage.modelsDropdown.options.contains(modelName).click();
+			ChatPage.modelsDropdown.options.contains(modelName).click();
 
-			ChatsPage.chatInput.textareaChatInput.type(
+			ChatPage.chatInput.textareaChatInput.type(
 				`Name this chat ${timestring} and print the name of the model I am talking to`,
 			);
-			ChatsPage.chatInput.submitButton.click();
+			ChatPage.chatInput.submitButton.click();
 			// Make sure not to fail the test just because the external communication is slow
 			cy.withTimeout('XLONG', () => {
-				ChatsPage.chatInput.submitButton.should('not.be.disabled');
+				ChatPage.chatInput.submitButton.should('not.be.disabled');
 			});
 
-			ChatsPage.assistantMessages.last().should('contain.text', modelName);
+			ChatPage.assistantMessages.last().should('contain.text', modelName);
 
-			ChatsPage.chatInput.modelSelectTrigger.click();
+			ChatPage.chatInput.modelSelectTrigger.click();
 		});
 	});
 });
