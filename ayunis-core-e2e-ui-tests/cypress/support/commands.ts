@@ -1,5 +1,5 @@
 import LoginPage from '@pages/login.page';
-import ChatsPage from '@pages/chats.page';
+import ChatsPage from '@pages/chat.page';
 
 Cypress.Commands.add('login', (email: string, username: string) => {
 	LoginPage.open();
