@@ -55,6 +55,11 @@ export default function ProviderConfirmationDialog({
             ? t("models.providerConfirmation.disableProviderDescription")
             : t("models.providerConfirmation.enableProviderDescription")}
         </p>
+        {provider.provider === "mistral" && (
+          <p className="text-sm text-destructive-foreground mb-4">
+            {t("models.providerConfirmation.mistralProviderHint")}
+          </p>
+        )}
         {!provider.isPermitted && (
           <p>
             <span className="flex items-center gap-2">

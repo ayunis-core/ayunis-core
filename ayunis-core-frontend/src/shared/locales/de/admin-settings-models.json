@@ -24,7 +24,8 @@
       "disableProvider": "{{provider}} deaktivieren",
       "enableProviderDescription": "Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen freigeschalteten Modelle zugreifen.",
       "disableProviderDescription": "Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen freigeschalteten Modelle zugreifen.",
-      "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>."
+      "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>.",
+      "mistralProviderHint": "Zusätzlich wird das OCR-Modell von Mistral verwendet, um hochgeladene PDF-Dateien zu analysieren und ein verbessertes Ergebnis gegenüber regulären OCR-Tools zu erzielen."
     },
     "deletePermittedModel": {
       "title": "Model löschen",

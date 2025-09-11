@@ -24,7 +24,8 @@
       "disableProvider": "Disable {{provider}}",
       "enableProviderDescription": "If you enable this provider, all users can use this provider and access its enabled models.",
       "disableProviderDescription": "If you disable this provider, users cannot access its enabled models.",
-      "acceptTermsAndPrivacy": "I accept the <termsLink>additional Terms of Service</termsLink>."
+      "acceptTermsAndPrivacy": "I accept the <termsLink>additional Terms of Service</termsLink>.",
+      "mistralProviderHint": "Additionally, Mistral's OCR model is used to analyze uploaded PDF files and provide a better result compared to regular OCR tools."
     },
     "deletePermittedModel": {
       "title": "Delete Permitted Model",

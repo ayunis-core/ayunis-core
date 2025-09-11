@@ -108,89 +108,91 @@ export default function ModelProviderCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {models.map((model, index) => {
-            const modelKey = `model-${provider}:${model.name}`;
-            return (
-              <div key={modelKey} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={modelKey} className="font-medium">
-                        {model.displayName || model.name}
-                      </Label>
-                      <div className="flex gap-1">
-                        {model.canStream && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs">
-                                {t("models.streaming")}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {t("models.streamingTooltip")}
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {model.canUseTools && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs">
-                                {t("models.tools")}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {t("models.toolsTooltip")}
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {model.isReasoning && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs">
-                                {t("models.reasoning")}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {t("models.reasoningTooltip")}
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {model.isEmbedding && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs">
-                                {t("models.embedding")}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {t("models.embeddingTooltip")}
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+          {models
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((model, index) => {
+              const modelKey = `model-${provider}:${model.name}`;
+              return (
+                <div key={modelKey} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor={modelKey} className="font-medium">
+                          {model.displayName || model.name}
+                        </Label>
+                        <div className="flex gap-1">
+                          {model.canStream && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs">
+                                  {t("models.streaming")}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t("models.streamingTooltip")}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {model.canUseTools && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs">
+                                  {t("models.tools")}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t("models.toolsTooltip")}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {model.isReasoning && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs">
+                                  {t("models.reasoning")}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t("models.reasoningTooltip")}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {model.isEmbedding && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs">
+                                  {t("models.embedding")}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t("models.embeddingTooltip")}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </div>
+                      <p className="text-sm text-muted-foreground">
+                        {model.name}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {model.name}
-                    </p>
+                    <TooltipIf
+                      condition={!provider.isPermitted}
+                      tooltip={t("models.providerDisabled")}
+                    >
+                      <Switch
+                        id={modelKey}
+                        disabled={!provider.isPermitted}
+                        checked={model.isPermitted}
+                        onCheckedChange={(isPermitted) =>
+                          handleModelToggle(model, isPermitted)
+                        }
+                      />
+                    </TooltipIf>
                   </div>
-                  <TooltipIf
-                    condition={!provider.isPermitted}
-                    tooltip={t("models.providerDisabled")}
-                  >
-                    <Switch
-                      id={modelKey}
-                      disabled={!provider.isPermitted}
-                      checked={model.isPermitted}
-                      onCheckedChange={(isPermitted) =>
-                        handleModelToggle(model, isPermitted)
-                      }
-                    />
-                  </TooltipIf>
+                  {index < models.length - 1 && <Separator />}
                 </div>
-                {index < models.length - 1 && <Separator />}
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </CardContent>
     </Card>
