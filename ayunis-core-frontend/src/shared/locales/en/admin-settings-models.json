@@ -31,6 +31,12 @@
       "description": "Are you sure you want to delete this permitted model? If you delete an embedding model, all sources associated with it will be deleted. If you delete a language model, all threads associated with it will fall back to another model.",
       "confirmText": "Delete",
       "cancelText": "Cancel"
+    },
+    "createPermittedModel": {
+      "multipleEmbeddingModelsNotAllowed": "Only one embedding model can be created per organization.",
+      "modelProviderNotPermitted": "The model provider is not permitted.",
+      "modelNotFound": "The model not found.",
+      "error": "An error occurred while creating the permitted model."
     }
   }
 }

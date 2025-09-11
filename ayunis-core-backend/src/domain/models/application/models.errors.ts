@@ -28,6 +28,7 @@ export enum ModelErrorCode {
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
   MODEL_PROVIDER_INFO_NOT_FOUND = 'MODEL_PROVIDER_INFO_NOT_FOUND',
   MODEL_PROVIDER_NOT_PERMITTED = 'MODEL_PROVIDER_NOT_PERMITTED',
+  MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED = 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
 }
 
@@ -323,6 +324,20 @@ export class ModelDeletionFailedError extends ModelError {
       `Model deletion failed: ${reason}`,
       ModelErrorCode.MODEL_DELETION_FAILED,
       500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when multiple embedding models are not allowed
+ */
+export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Multiple embedding models are not allowed',
+      ModelErrorCode.MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED,
+      400,
       metadata,
     );
   }

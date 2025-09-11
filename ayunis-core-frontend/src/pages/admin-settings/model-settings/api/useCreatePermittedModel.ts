@@ -7,9 +7,13 @@ import {
 } from "@/shared/api";
 import { type Model } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
+import extractErrorData from "@/shared/api/extract-error-data";
+import { showError } from "@/shared/lib/toast";
+import { useTranslation } from "react-i18next";
 
 export function useCreatePermittedModel() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("admin-settings-models");
   const createPermittedModelMutation = useModelsControllerCreatePermittedModel({
     mutation: {
       onMutate: async ({ data }) => {
@@ -43,7 +47,28 @@ export function useCreatePermittedModel() {
         return { previousData, queryKey };
       },
       onError: (err, _, context) => {
-        console.error("Error creating permitted model", err);
+        const { code } = extractErrorData(err);
+        switch (code) {
+          case "MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED":
+            showError(
+              t(
+                "models.createPermittedModel.multipleEmbeddingModelsNotAllowed",
+              ),
+            );
+            break;
+          case "MODEL_PROVIDER_NOT_PERMITTED":
+            showError(
+              t("models.createPermittedModel.modelProviderNotPermitted"),
+            );
+            break;
+          case "MODEL_NOT_FOUND":
+            showError(t("models.createPermittedModel.modelNotFound"));
+            break;
+          default:
+            showError(t("models.createPermittedModel.error"));
+            break;
+        }
+
         if (context?.previousData && context?.queryKey) {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }

@@ -179,6 +179,7 @@ export default function ModelProviderCard({
                   >
                     <Switch
                       id={modelKey}
+                      disabled={!provider.isPermitted}
                       checked={model.isPermitted}
                       onCheckedChange={(isPermitted) =>
                         handleModelToggle(model, isPermitted)

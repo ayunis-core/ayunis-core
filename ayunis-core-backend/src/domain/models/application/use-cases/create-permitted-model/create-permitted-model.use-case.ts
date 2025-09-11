@@ -2,13 +2,11 @@ import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity'
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelRegistry } from '../../registry/model.registry';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
-import {
-  ModelNotFoundError,
-  ModelProviderNotPermittedError,
-} from '../../models.errors';
+import { ModelProviderNotPermittedError } from '../../models.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { IsProviderPermittedUseCase } from '../is-provider-permitted/is-provider-permitted.use-case';
 import { IsProviderPermittedQuery } from '../is-provider-permitted/is-provider-permitted.query';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreatePermittedModelUseCase {
@@ -40,7 +38,7 @@ export class CreatePermittedModelUseCase {
         await this.permittedModelsRepository.create(permittedModel);
       return created;
     } catch (error) {
-      if (error instanceof ModelNotFoundError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Error creating permitted model', error);

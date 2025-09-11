@@ -20,6 +20,7 @@ import {
   LanguageModelRecord,
 } from '../local-models/schema/model.record';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { MultipleEmbeddingModelsNotAllowedError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -172,9 +173,11 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
             newModelId: permittedModel.model.id,
           },
         );
-        throw new Error(
-          `Only one permitted embedding model is allowed per organization (${permittedModel.orgId}). Delete the existing one before creating a new one.`,
-        );
+        throw new MultipleEmbeddingModelsNotAllowedError({
+          orgId: permittedModel.orgId,
+          existingPermittedEmbeddingModelId: existingEmbedding.id,
+          newModelId: permittedModel.model.id,
+        });
       }
     }
 

@@ -31,6 +31,12 @@
       "description": "Sind Sie sicher, dass Sie dieses Modell löschen möchten? Wenn Sie ein Embedding-Modell löschen, werden alle Quellen, die mit diesem Modell verknüpft sind, ebenfalls gelöscht. Wenn Sie ein Sprachmodell löschen, fallen alle Threads, die mit diesem Modell verknüpft sind, auf ein anderes Modell zurück.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
+    },
+    "createPermittedModel": {
+      "multipleEmbeddingModelsNotAllowed": "Es kann nur ein Embedding-Modell pro Organisation erstellt werden.",
+      "modelProviderNotPermitted": "Der Modell-Provider ist nicht freigeschaltet.",
+      "modelNotFound": "Das Modell wurde nicht gefunden.",
+      "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
     }
   }
 }
