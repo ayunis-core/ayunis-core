@@ -50,6 +50,10 @@ import { GetInviteByTokenQuery } from '../../application/use-cases/get-invite-by
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { SendInvitationEmailCommand } from '../../application/use-cases/send-invitation-email/send-invitation-email.command';
+import { ConfigService } from '@nestjs/config';
+import { SendInvitationEmailUseCase } from '../../application/use-cases/send-invitation-email/send-invitation-email.use-case';
+import { CreateInviteResponseDto } from './dtos/create-invite-response.dto';
 
 @ApiTags('invites')
 @Controller('invites')
@@ -63,6 +67,8 @@ export class InvitesController {
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly getInviteByTokenUseCase: GetInviteByTokenUseCase,
     private readonly inviteResponseMapper: InviteResponseMapper,
+    private readonly configService: ConfigService,
+    private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
   ) {}
 
   @Post()
@@ -73,10 +79,11 @@ export class InvitesController {
       'Send an invitation to a user to join an organization with a specific role',
   })
   @ApiBody({ type: CreateInviteDto })
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.CREATED)
   @ApiResponse({
-    status: 204,
-    description: 'The invite has been successfully created and email sent',
+    status: 201,
+    description: 'The invite has been successfully created',
+    type: CreateInviteResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid invite data' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
@@ -84,7 +91,7 @@ export class InvitesController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() createInviteDto: CreateInviteDto,
-  ): Promise<void> {
+  ): Promise<CreateInviteResponseDto> {
     this.logger.log('create', {
       userId,
       email: createInviteDto.email,
@@ -92,7 +99,7 @@ export class InvitesController {
       role: createInviteDto.role,
     });
 
-    await this.createInviteUseCase.execute(
+    const { invite, token } = await this.createInviteUseCase.execute(
       new CreateInviteCommand({
         email: createInviteDto.email,
         orgId,
@@ -100,6 +107,43 @@ export class InvitesController {
         userId,
       }),
     );
+    // Build invitation link
+    const frontendBaseUrl = this.configService.get<string>(
+      'app.frontend.baseUrl',
+    );
+    const inviteAcceptEndpoint = this.configService.get<string>(
+      'app.frontend.inviteAcceptEndpoint',
+    );
+    const inviteAcceptUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${token}`;
+
+    // Send invitation email if email configuration is available
+    const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
+    if (hasEmailConfig) {
+      this.logger.debug('Sending invitation email', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+
+      await this.sendInvitationEmailUseCase.execute(
+        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
+      );
+
+      this.logger.debug('Invitation email sent successfully', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+      return { url: null };
+    } else {
+      // Return the invitation URL to the frontend
+      this.logger.debug(
+        'Email configuration not available, skipping email send',
+        {
+          inviteId: invite.id,
+          email: invite.email,
+        },
+      );
+      return { url: inviteAcceptUrl };
+    }
   }
 
   @Get()

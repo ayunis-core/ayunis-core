@@ -3,6 +3,7 @@ import {
   useInvitesControllerCreate,
   getSubscriptionsControllerGetSubscriptionQueryKey,
 } from "@/shared/api/generated/ayunisCoreAPI";
+import type { CreateInviteResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import type { InviteCreateData } from "../model/openapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
@@ -10,14 +11,17 @@ import { useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import extractErrorData from "@/shared/api/extract-error-data";
 
-export function useInviteCreate() {
+export function useInviteCreate(
+  onInviteCreated?: (response: CreateInviteResponseDto) => void,
+) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { t } = useTranslation("admin-settings-users");
   const createInviteMutation = useInvitesControllerCreate({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (response: CreateInviteResponseDto) => {
         showSuccess(t("inviteCreate.success"));
+        onInviteCreated?.(response);
       },
       onError: (error) => {
         const { code } = extractErrorData(error);

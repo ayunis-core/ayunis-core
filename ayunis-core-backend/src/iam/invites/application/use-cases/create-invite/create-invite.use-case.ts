@@ -14,11 +14,15 @@ import {
   UnexpectedInviteError,
 } from '../../invites.errors';
 import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
-import { SendInvitationEmailCommand } from '../send-invitation-email/send-invitation-email.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
+
+interface CreateInviteResult {
+  token: string;
+  invite: Invite;
+}
 
 @Injectable()
 export class CreateInviteUseCase {
@@ -34,7 +38,7 @@ export class CreateInviteUseCase {
     private readonly configService: ConfigService,
   ) {}
 
-  async execute(command: CreateInviteCommand): Promise<void> {
+  async execute(command: CreateInviteCommand): Promise<CreateInviteResult> {
     this.logger.log('execute', {
       email: command.email,
       orgId: command.orgId,
@@ -109,33 +113,10 @@ export class CreateInviteUseCase {
         email: invite.email,
       });
 
-      // Send invitation email if email configuration is available
-      const hasEmailConfig =
-        this.configService.get<boolean>('emails.hasConfig');
-
-      if (hasEmailConfig) {
-        this.logger.debug('Sending invitation email', {
-          inviteId: invite.id,
-          email: invite.email,
-        });
-
-        await this.sendInvitationEmailUseCase.execute(
-          new SendInvitationEmailCommand(invite, inviteToken),
-        );
-
-        this.logger.debug('Invitation email sent successfully', {
-          inviteId: invite.id,
-          email: invite.email,
-        });
-      } else {
-        this.logger.debug(
-          'Email configuration not available, skipping email send',
-          {
-            inviteId: invite.id,
-            email: invite.email,
-          },
-        );
-      }
+      return {
+        token: inviteToken,
+        invite,
+      };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

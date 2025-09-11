@@ -1144,6 +1144,14 @@ export interface CreateInviteDto {
   role: CreateInviteDtoRole;
 }
 
+export interface CreateInviteResponseDto {
+  /**
+   * URL of the invite, returned when not using email configuration
+   * @nullable
+   */
+  url: string | null;
+}
+
 /**
  * Role assigned to the invited user
  */

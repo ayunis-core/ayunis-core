@@ -1989,8 +1989,15 @@
           }
         },
         "responses": {
-          "204": {
-            "description": "The invite has been successfully created and email sent"
+          "201": {
+            "description": "The invite has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInviteResponseDto"
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid invite data"
@@ -4795,6 +4802,20 @@
         "required": [
           "email",
           "role"
+        ]
+      },
+      "CreateInviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL of the invite, returned when not using email configuration",
+            "example": "https://example.com/invite/123e4567-e89b-12d3-a456-426614174000",
+            "nullable": true
+          }
+        },
+        "required": [
+          "url"
         ]
       },
       "InviteResponseDto": {

@@ -36,6 +36,7 @@ import type {
   CreateAgentDto,
   CreateEmbeddingModelDto,
   CreateInviteDto,
+  CreateInviteResponseDto,
   CreateLanguageModelDto,
   CreatePermittedModelDto,
   CreatePermittedProviderDto,
@@ -4069,7 +4070,7 @@ export const invitesControllerCreate = (
 ) => {
       
       
-      return customAxiosInstance<void>(
+      return customAxiosInstance<CreateInviteResponseDto>(
       {url: `/invites`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createInviteDto, signal

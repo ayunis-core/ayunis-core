@@ -49,22 +49,13 @@ export class SendInvitationEmailUseCase {
         new FindUserByIdQuery(command.invite.inviterId),
       );
 
-      // Build invitation link
-      const frontendBaseUrl = this.configService.get<string>(
-        'app.frontend.baseUrl',
-      );
-      const inviteAcceptEndpoint = this.configService.get<string>(
-        'app.frontend.inviteAcceptEndpoint',
-      );
-      const invitationUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${command.invitationToken}`;
-
       // Create invitation email template
       this.logger.debug('Creating invitation email template', {
         inviteId: command.invite.id,
         orgName: org.name,
       });
       const template = new InvitationTemplate({
-        invitationUrl,
+        invitationUrl: command.url,
         userEmail: command.invite.email,
         invitingCompanyName: org.name,
         productName: 'Ayunis Core',
