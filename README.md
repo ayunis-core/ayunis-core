@@ -72,10 +72,6 @@ docker compose up -d --build
 
 ## ⚙️ Configuration
 
-- Copy `.env.example` and fill in environment variables
-- Provide at least one API key for a model provider (Mistral, Anthropic, OpenAPI, ...)
-- Provide a secure admin token for the admin endpoint
-
 ### E-Mail Provider Configuration
 
 E-mails for email confirmation and user invite flows will only be sent if at least `SMPT_HOST` and `SMTP_PORT` are configured. See `/ayunis-core-backend/src/config/emails.config.ts`.
@@ -84,33 +80,61 @@ If no email configuration is provided,
 
 - email confirmation will be skipped and registering users can log in and access the product right away
 - invite accept links will be displayed to the inviting user instead of being sent to the invited user
+- password reset will not work (coming soon)
 
 ### Model Configuration
 
-Add available models via HTTP requests to the admin endpoint:
+Before you can access models as a user inside the product, you must create them from outside the product via HTTP requests (the experience of this will get better as soon as we have an admin UI).
+
+#### Request to add language models
+
+This will allow users to chat with these models.
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/models \
+curl -X POST http://localhost:3000/api/admin/language-models \
   -H "Content-Type: application/json" \
   -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
   -d '{
-    "name": "mistral-large-latest",
-    "provider": "mistral",
-    "displayName": "Mistral Large",
-    "canStream": true,
-    "isReasoning": false,
-    "isArchived": false
+    "name": "mistral-large-latest", # the exact string identifying the model at the provider side
+    "provider": "mistral", # mistral, openai, anthropic or ollama
+    "displayName": "Mistral Large", # the name displayed to the user
+    "canStream": true, # true if the model can stream its response
+    "isReasoning": false, # true if the model has reasoning capabilities
+    "canUseTools": true, # true if the model can use tools / function calling
+    "isArchived": false # model will be hidden everywhere if true
   }'
 ```
 
-Other methods
+See also `/src/domain/models/domain/models/language.model.ts`
+
+#### Request to add embedding models:
+
+This will enable RAG use cases.
+
+```bash
+curl -X POST http://localhost:3000/api/admin/embedding-models \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
+  -d '{
+    "name": "mistral-large-latest", # the exact string identifying the model at the provider side
+    "provider": "mistral", # mistral, openai, anthropic or ollama
+    "displayName": "Mistral Large", # the name displayed to the user
+    "dimensions": 1024 # 1024 or 1536, see /src/domain/models/domain/value-objects/embedding-dimensions.enum.ts
+  }'
+```
+
+See `/src/domain/models/domain/models/embedding.model.ts`
+
+#### Other methods
 
 ```bash
 # Get models
 curl -X GET http://localhost:3000/api/admin/models/ \
   -H "Content-Type: application/json" \
   -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE"
+```
 
+```bash
 # Update model
 curl -X PUT http://localhost:3000/api/admin/models/:id \
   -H "Content-Type: application/json" \
@@ -123,7 +147,9 @@ curl -X PUT http://localhost:3000/api/admin/models/:id \
     "isReasoning": false,
     "isArchived": false
   }'
+```
 
+```bash
 # Delete model
 curl -X DELETE http://localhost:3000/api/admin/models/:id
 ```
@@ -132,6 +158,7 @@ Examples
 
 ```json
 {
+  "id": "123",
   "name": "mistral-large-latest",
   "provider": "mistral",
   "displayName": "Mistral Large",
@@ -140,6 +167,7 @@ Examples
   "isArchived": false
 },
 {
+  "id": "123",
   "name": "claude-sonnet-4-20250514",
   "provider": "anthropic",
   "displayName": "Claude 4 Sonnet",
@@ -148,21 +176,35 @@ Examples
   "isArchived": false
 },
 {
+  "id": "123",
   "name": "gpt-4.1",
   "provider": "openai",
   "displayName": "GPT 4.1",
   "canStream": true,
   "isReasoning": false,
   "isArchived": false
-}
+},
+{
+  "id": "123",
+  "name": "text-embedding-3-large",
+  "provider": "openai",
+  "createdAt": "2025-08-08T09:55:52.980Z",
+  "updatedAt": "2025-08-08T09:55:52.980Z",
+  "displayName": "Text Embedding 3 Large",
+  "type": "embedding",
+  "isArchived": false,
+  "dimensions": 1536
+  },
 ```
 
 ## 🎯 First steps
 
 - Create an account
 - Go to Admin Settings -> Models and enable some models (only those created through the admin interface will be visible here)
+  - Enable at least one language model and one embedding model
 - Invite users
 - Go to the Prompt Library and add some prompts for easy access
+- Create some agents for your most important use cases
 - Chat with your enabled models, add prompts via the book icon button below the chat input
 
 ## 📚 Resources

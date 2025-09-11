@@ -11,7 +11,7 @@ const config = {
   },
   app: {
     name: "Ayunis Core",
-    version: import.meta.env.VITE_APP_VERSION,
+    version: "1.0.0",
   },
   features: {
     devtools: import.meta.env.MODE !== "production",
