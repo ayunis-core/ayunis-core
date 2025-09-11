@@ -76,6 +76,15 @@ docker compose up -d --build
 - Provide at least one API key for a model provider (Mistral, Anthropic, OpenAPI, ...)
 - Provide a secure admin token for the admin endpoint
 
+### E-Mail Provider Configuration
+
+E-mails for email confirmation and user invite flows will only be sent if at least `SMPT_HOST` and `SMTP_PORT` are configured. See `/ayunis-core-backend/src/config/emails.config.ts`.
+
+If no email configuration is provided,
+
+- email confirmation will be skipped and registering users can log in and access the product right away
+- invite accept links will be displayed to the inviting user instead of being sent to the invited user
+
 ### Model Configuration
 
 Add available models via HTTP requests to the admin endpoint:

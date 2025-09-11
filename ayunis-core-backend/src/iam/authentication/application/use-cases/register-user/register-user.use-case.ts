@@ -29,6 +29,7 @@ import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { OrgCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/org-created.webhook-event';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -46,21 +47,24 @@ export class RegisterUserUseCase {
     private readonly sendWebhookUseCase: SendWebhookUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
     this.logger.log('register', {
       email: command.email,
       orgName: command.orgName,
     });
 
-    if (this.configService.get<boolean>('app.disableRegistration')) {
-      throw new RegistrationDisabledError();
-    }
-
     try {
+      const disableRegistration = this.configService.get<boolean>(
+        'app.disableRegistration',
+      );
+      if (disableRegistration) {
+        throw new RegistrationDisabledError();
+      }
+
       const existingUser = await this.findUserByEmailUseCase.execute(
         new FindUserByEmailQuery(command.email),
       );
-
       if (existingUser) {
         throw new UserAlreadyExistsError(existingUser.id);
       }
@@ -68,7 +72,6 @@ export class RegisterUserUseCase {
       const isValidPassword = await this.isValidPasswordUseCase.execute(
         new IsValidPasswordQuery(command.password),
       );
-
       if (!isValidPassword) {
         this.logger.warn('Invalid password during registration', {
           email: command.email,
@@ -91,12 +94,9 @@ export class RegisterUserUseCase {
         new CreateTrialCommand(org.id, trialMaxMessages),
       );
 
-      const hasEmailConfig =
+      // Only send confirmation email if email config is available
+      const shouldConfirmEmail =
         this.configService.get<boolean>('emails.hasConfig');
-      const disableEmailConfirmation = this.configService.get<boolean>(
-        'app.disableEmailConfirmation',
-      );
-      const shouldConfirmEmail = hasEmailConfig && !disableEmailConfirmation;
 
       this.logger.debug('Creating admin user', { orgId: org.id });
       const user = await this.createAdminUserUseCase.execute(
@@ -128,7 +128,7 @@ export class RegisterUserUseCase {
       );
 
       if (shouldConfirmEmail) {
-        void this.sendConfirmationEmailUseCase.execute(
+        await this.sendConfirmationEmailUseCase.execute(
           new SendConfirmationEmailCommand(user),
         );
       }
