@@ -47,6 +47,7 @@ cd /path/to/ayunis-core
 **Create your production environment file (only backend required in production)**
 
 ```bash
+cp ./.env.example ./.env
 cp ./ayunis-core-backend/.env.example ./ayunis-core-backend/.env
 cp ./ayunis-core-frontend/.env.example ./ayunis-core-frontend/.env
 ```
@@ -62,6 +63,10 @@ nano ./ayunis-core-backend/.env
 ```bash
 docker compose up -d --build
 ```
+
+**Change application port**
+
+Change `HOST_PORT` in the `.env` file in the project root
 
 **Access the application**
 
