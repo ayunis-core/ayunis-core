@@ -11,8 +11,8 @@ import {
  * Error codes specific to the file retriever domain
  */
 export enum FileRetrieverErrorCode {
-  PROCESSING_FAILED = 'PROCESSING_FAILED',
   PROVIDER_NOT_AVAILABLE = 'PROVIDER_NOT_AVAILABLE',
+  UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
 }
 
 /**
@@ -39,6 +39,12 @@ export abstract class FileRetrieverError extends ApplicationError {
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
         });
+      case 500:
+        return new InternalServerErrorException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
       default:
         return new InternalServerErrorException({
           code: this.code,
@@ -46,13 +52,6 @@ export abstract class FileRetrieverError extends ApplicationError {
           ...(this.metadata && { metadata: this.metadata }),
         });
     }
-  }
-}
-
-export class FileRetrieverProcessingError extends FileRetrieverError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, FileRetrieverErrorCode.PROCESSING_FAILED, 500, metadata);
-    this.name = 'FileRetrieverProcessingError';
   }
 }
 
@@ -64,6 +63,14 @@ export class FileRetrieverProviderNotAvailableError extends FileRetrieverError {
       500,
       metadata,
     );
-    this.name = 'FileRetrieverProviderNotAvailableError';
+  }
+}
+
+export class FileRetrieverUnexpectedError extends FileRetrieverError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, FileRetrieverErrorCode.UNEXPECTED_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

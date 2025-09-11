@@ -23,6 +23,7 @@ import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases
 import { UnexpectedSourceError } from '../../sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateFileSourceUseCase {
@@ -78,6 +79,9 @@ export class CreateFileSourceUseCase {
 
       return savedFileSource;
     } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
       this.logger.error('Error creating file source', {
         error: error as Error,
       });
