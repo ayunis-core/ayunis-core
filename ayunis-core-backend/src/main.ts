@@ -66,22 +66,41 @@ class Bootstrap {
     configService: ConfigService,
     isProduction: boolean,
   ): string[] | boolean {
-    if (!isProduction) {
-      return true;
-    }
-
+    const isCloudHosted = configService.get<boolean>('app.isCloudHosted');
+    const isSelfHosted = configService.get<boolean>('app.isSelfHosted');
     const corsOrigins = configService.get<string>(
       'web.cors.allowedOrigins',
       '',
     );
-    if (!corsOrigins) {
-      Logger.error(
-        'CORS_ALLOWED_ORIGINS must be set in production environment.',
-      );
-      throw new Error('Missing CORS_ALLOWED_ORIGINS in production.');
+
+    if (!isProduction) {
+      return true; // Allow all origins in development
     }
 
-    return corsOrigins.split(',').map((origin) => origin.trim());
+    // If explicitly set, use the configured origins
+    if (corsOrigins) {
+      return corsOrigins.split(',').map((origin) => origin.trim());
+    }
+
+    if (isCloudHosted) {
+      // Cloud/SaaS deployments require explicit CORS configuration for security
+      Logger.error('CORS_ALLOWED_ORIGINS must be set for cloud deployments.');
+      throw new Error('Missing CORS_ALLOWED_ORIGINS in cloud environment.');
+    }
+
+    if (isSelfHosted) {
+      // Self-hosted deployments default to permissive for ease of use
+      Logger.log(
+        'Self-hosted deployment: allowing all origins by default. Set CORS_ALLOWED_ORIGINS to restrict.',
+      );
+      return true;
+    }
+
+    // Fallback for undefined APP_ENVIRONMENT: be permissive but warn
+    Logger.warn(
+      'APP_ENVIRONMENT not set. Allowing all origins. Set CORS_ALLOWED_ORIGINS or APP_ENVIRONMENT for better security.',
+    );
+    return true;
   }
 
   private static setupSwagger(
