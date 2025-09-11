@@ -12,8 +12,8 @@ import {
   SOURCE_REPOSITORY,
 } from '../../ports/source.repository';
 import { CreateFileSourceCommand } from './create-file-source.command';
-import { ProcessFileUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/process-file/process-file.use-case';
-import { ProcessFileCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/process-file/process-file.command';
+import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
+import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
 import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
@@ -32,7 +32,7 @@ export class CreateFileSourceUseCase {
   constructor(
     @Inject(SOURCE_REPOSITORY)
     private readonly sourceRepository: SourceRepository,
-    private readonly processFileUseCase: ProcessFileUseCase,
+    private readonly processFileUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly ingestContentUseCase: IngestContentUseCase,
     private readonly contextService: ContextService,
@@ -47,7 +47,7 @@ export class CreateFileSourceUseCase {
         throw new UnauthorizedException('User not authenticated');
       }
       const fileRetrieverResult = await this.processFileUseCase.execute(
-        new ProcessFileCommand({
+        new RetrieveFileContentCommand({
           fileData: command.fileData,
           fileName: command.fileName,
           fileType: command.fileType,

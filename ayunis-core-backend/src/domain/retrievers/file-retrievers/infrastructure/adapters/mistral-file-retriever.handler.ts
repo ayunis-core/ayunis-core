@@ -4,7 +4,10 @@ import {
   FileRetrieverResult,
   FileRetrieverPage,
 } from '../../domain/file-retriever-result.entity';
-import { FileRetrieverProcessingError } from '../../application/file-retriever.errors';
+import {
+  FileRetrievalFailedError,
+  FileRetrieverUnexpectedError,
+} from '../../application/file-retriever.errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
@@ -107,13 +110,9 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error instanceof Error ? error.stack : 'Unknown error',
       );
-      throw new FileRetrieverProcessingError(
-        `Failed to process file with Mistral OCR`,
-        {
-          model: this.MODEL_NAME,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
-      );
+      throw new FileRetrieverUnexpectedError(error as Error, {
+        model: this.MODEL_NAME,
+      });
     }
   }
 
@@ -124,13 +123,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     });
 
     if (pages.length === 0) {
-      throw new FileRetrieverProcessingError(
-        'Empty response from Mistral API',
-        {
-          model: this.MODEL_NAME,
-          response,
-        },
-      );
+      throw new FileRetrievalFailedError('Empty response from Mistral API', {
+        model: this.MODEL_NAME,
+        response,
+      });
     }
 
     // Return the extracted text

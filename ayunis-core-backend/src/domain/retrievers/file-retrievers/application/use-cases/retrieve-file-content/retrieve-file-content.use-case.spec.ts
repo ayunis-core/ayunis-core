@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProcessFileUseCase } from './process-file.use-case';
-import { ProcessFileCommand } from './process-file.command';
+import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
+import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
 import { GetAllPermittedProvidersUseCase } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
@@ -11,7 +11,7 @@ import {
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('ProcessFileUseCase', () => {
-  let useCase: ProcessFileUseCase;
+  let useCase: RetrieveFileContentUseCase;
   let mockHandler: Partial<FileRetrieverHandler>;
   let mockRegistry: Partial<FileRetrieverRegistry>;
   let mockGetProviders: Partial<GetAllPermittedProvidersUseCase>;
@@ -31,7 +31,7 @@ describe('ProcessFileUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ProcessFileUseCase,
+        RetrieveFileContentUseCase,
         { provide: FileRetrieverRegistry, useValue: mockRegistry },
         {
           provide: GetAllPermittedProvidersUseCase,
@@ -41,7 +41,9 @@ describe('ProcessFileUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<ProcessFileUseCase>(ProcessFileUseCase);
+    useCase = module.get<RetrieveFileContentUseCase>(
+      RetrieveFileContentUseCase,
+    );
   });
 
   it('should be defined', () => {
@@ -49,7 +51,7 @@ describe('ProcessFileUseCase', () => {
   });
 
   it('should process file successfully', async () => {
-    const command = new ProcessFileCommand({
+    const command = new RetrieveFileContentCommand({
       fileData: Buffer.from('test file content'),
       fileName: 'test.txt',
       fileType: 'text/plain',

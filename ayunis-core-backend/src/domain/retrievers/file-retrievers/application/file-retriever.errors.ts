@@ -13,6 +13,7 @@ import {
 export enum FileRetrieverErrorCode {
   PROVIDER_NOT_AVAILABLE = 'PROVIDER_NOT_AVAILABLE',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
+  RETRIEVAL_FAILED = 'RETRIEVAL_FAILED',
 }
 
 /**
@@ -63,6 +64,12 @@ export class FileRetrieverProviderNotAvailableError extends FileRetrieverError {
       500,
       metadata,
     );
+  }
+}
+
+export class FileRetrievalFailedError extends FileRetrieverError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(message, FileRetrieverErrorCode.RETRIEVAL_FAILED, 500, metadata);
   }
 }
 

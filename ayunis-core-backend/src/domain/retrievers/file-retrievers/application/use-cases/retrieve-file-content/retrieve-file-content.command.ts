@@ -1,4 +1,4 @@
-export class ProcessFileCommand {
+export class RetrieveFileContentCommand {
   public readonly fileData: Buffer;
   public readonly fileName: string;
   public readonly fileType: string;
