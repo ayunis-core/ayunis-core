@@ -48,7 +48,7 @@ services:
     container_name: ayunis-app-prod
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-3000}:${PORT:-3000}"
     depends_on:
       postgres:
         condition: service_healthy

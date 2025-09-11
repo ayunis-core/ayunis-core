@@ -47,10 +47,11 @@ cd /path/to/ayunis-core
 **Create your production environment file (only backend required in production)**
 
 ```bash
-cp ./ayunis-core-backend/env.example ./ayunis-core-backend/.env
+cp ./ayunis-core-backend/.env.example ./ayunis-core-backend/.env
+cp ./ayunis-core-frontend/.env.example ./ayunis-core-frontend/.env
 ```
 
-**Edit the environment file with your production values**
+**Edit the backend environment file with your production values**
 
 ```bash
 nano ./ayunis-core-backend/.env
@@ -89,6 +90,8 @@ Before you can access models as a user inside the product, you must create them 
 #### Request to add language models
 
 This will allow users to chat with these models.
+
+> [!ATTENTION] You must restart the docker containers for each change to take effect
 
 ```bash
 curl -X POST http://localhost:3000/api/admin/language-models \
