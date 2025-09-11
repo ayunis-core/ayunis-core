@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { showError } from "@/shared/lib/toast";
+import { generateUUID } from "@/shared/lib/uuid";
 import type { AgentResponseDto, SourceResponseDtoType } from "@/shared/api";
 
 interface NewChatPageProps {
@@ -39,7 +40,7 @@ export default function NewChatPage({
   function handleFileUpload(file: File) {
     setSources([
       ...sources,
-      { id: crypto.randomUUID(), name: file.name, type: "file", file },
+      { id: generateUUID(), name: file.name, type: "file", file },
     ]);
   }
 
