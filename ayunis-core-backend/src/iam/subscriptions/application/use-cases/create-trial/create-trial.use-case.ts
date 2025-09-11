@@ -5,9 +5,9 @@ import { CreateTrialCommand } from './create-trial.command';
 import {
   TrialCreationFailedError,
   TrialAlreadyExistsError,
-  SubscriptionError,
   UnexpectedTrialError,
 } from '../../subscription.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateTrialUseCase {
@@ -68,7 +68,7 @@ export class CreateTrialUseCase {
 
       return createdTrial;
     } catch (error) {
-      if (error instanceof SubscriptionError) {
+      if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }

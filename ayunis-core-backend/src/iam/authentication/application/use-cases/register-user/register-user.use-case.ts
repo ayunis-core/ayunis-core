@@ -14,7 +14,10 @@ import {
 } from '../../authentication.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
-import { CreateTosAcceptanceCommand } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
+import {
+  CreatePrivacyPolicyAcceptanceCommand,
+  CreateTosAcceptanceCommand,
+} from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
 import { ConfigService } from '@nestjs/config';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
@@ -117,6 +120,12 @@ export class RegisterUserUseCase {
           orgId: org.id,
         }),
       );
+      await this.createLegalAcceptanceUseCase.execute(
+        new CreatePrivacyPolicyAcceptanceCommand({
+          userId: user.id,
+          orgId: org.id,
+        }),
+      );
 
       if (shouldConfirmEmail) {
         void this.sendConfirmationEmailUseCase.execute(
@@ -145,7 +154,7 @@ export class RegisterUserUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-
+      this.logger.error('Unexpected authentication error', { error });
       throw new UnexpectedAuthenticationError(error);
     }
   }

@@ -26,6 +26,10 @@ export class CreateLegalAcceptanceUseCase {
     this.logger.log(
       `Creating legal acceptance for user ${userId} in org ${orgId} with type ${type}`,
     );
+    const isSelfHosted = this.configService.get<boolean>('app.isSelfHosted');
+    if (isSelfHosted) {
+      return;
+    }
 
     let legalAcceptance: LegalAcceptance;
     if (command instanceof CreateTosAcceptanceCommand) {
