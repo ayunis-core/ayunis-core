@@ -6,6 +6,8 @@ import { ModelRegistry } from './application/registry/model.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
 import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
 import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.inference';
+import { MockInferenceHandler } from './infrastructure/inference/mock.inference';
+import { MockStreamInferenceHandler } from './infrastructure/stream-inference/mock.stream-inference';
 import { GetInferenceUseCase } from './application/use-cases/get-inference/get-inference.use-case';
 import { GetAvailableModelsUseCase } from './application/use-cases/get-available-models/get-available-models.use-case';
 import { GetDefaultModelUseCase } from './application/use-cases/get-default-model/get-default-model.use-case';
@@ -66,6 +68,7 @@ import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -112,14 +115,17 @@ import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-
         ollamaHandler: LocalOllamaStreamInferenceHandler,
         synaforceHandler: SynaforceStreamInferenceHandler,
         ayunisHandler: AyunisOllamaStreamInferenceHandler,
+        mockHandler: MockStreamInferenceHandler,
+        configService: ConfigService,
       ) => {
-        const registry = new StreamInferenceHandlerRegistry();
+        const registry = new StreamInferenceHandlerRegistry(configService);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
+        registry.registerMockHandler(mockHandler);
         return registry;
       },
       inject: [
@@ -129,6 +135,8 @@ import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-
         LocalOllamaStreamInferenceHandler,
         SynaforceStreamInferenceHandler,
         AyunisOllamaStreamInferenceHandler,
+        MockStreamInferenceHandler,
+        ConfigService,
       ],
     },
     {
@@ -140,14 +148,17 @@ import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-
         ollamaHandler: LocalOllamaInferenceHandler,
         synaforceHandler: SynaforceInferenceHandler,
         ayunisHandler: AyunisOllamaInferenceHandler,
+        mockHandler: MockInferenceHandler,
+        configService: ConfigService,
       ) => {
-        const registry = new InferenceHandlerRegistry();
+        const registry = new InferenceHandlerRegistry(configService);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
+        registry.registerMockHandler(mockHandler);
         return registry;
       },
       inject: [
@@ -157,6 +168,8 @@ import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-
         LocalOllamaInferenceHandler,
         SynaforceInferenceHandler,
         AyunisOllamaInferenceHandler,
+        MockInferenceHandler,
+        ConfigService,
       ],
     },
     // Use Cases
