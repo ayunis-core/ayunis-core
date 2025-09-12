@@ -84,9 +84,15 @@ export class BaseOllamaStreamInferenceHandler
 
       for await (const chunk of response) {
         this.logger.debug('chunk', chunk);
-        if (chunk.done) break;
         const delta = this.convertChunk(chunk);
-        subscriber.next(delta);
+        if (
+          delta.textContentDelta ||
+          delta.thinkingDelta ||
+          delta.toolCallsDelta.length > 0
+        ) {
+          subscriber.next(delta);
+        }
+        if (delta.finishReason) break;
       }
 
       subscriber.complete();
@@ -214,6 +220,7 @@ export class BaseOllamaStreamInferenceHandler
     const { thinkingDelta, textContentDelta } = textContent
       ? this.thinkingParser.parse(textContent)
       : { thinkingDelta: null, textContentDelta: null };
+    const finishReason = chunk.done ? chunk.done_reason : null;
 
     return new StreamInferenceResponseChunk({
       thinkingDelta: thinkingContent ?? thinkingDelta,
@@ -228,6 +235,7 @@ export class BaseOllamaStreamInferenceHandler
               argumentsDelta: JSON.stringify(toolCall.function?.arguments),
             }),
         ) ?? [],
+      finishReason,
     });
   };
 }
