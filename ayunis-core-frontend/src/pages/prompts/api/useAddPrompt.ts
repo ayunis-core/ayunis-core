@@ -10,6 +10,7 @@ import {
 } from "../model/createPromptSchema";
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
+import { useRouter } from "@tanstack/react-router";
 
 interface UseAddPromptOptions {
   onSuccessCallback?: () => void;
@@ -18,7 +19,7 @@ interface UseAddPromptOptions {
 export function useAddPrompt(options?: UseAddPromptOptions) {
   const queryClient = useQueryClient();
   const createPromptMutation = usePromptsControllerCreate();
-
+  const router = useRouter();
   const form = useForm<CreatePromptFormValues>({
     resolver: zodResolver(createPromptFormSchema),
     defaultValues: {
@@ -40,6 +41,7 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
           queryClient.invalidateQueries({
             queryKey: getPromptsControllerFindAllQueryKey(),
           });
+          router.invalidate();
           showSuccess("Prompt created");
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();

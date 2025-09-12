@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { PromptsPage } from "@/pages/prompts";
-import { promptsControllerFindAll } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  getPromptsControllerFindAllQueryKey,
+  promptsControllerFindAll,
+} from "@/shared/api/generated/ayunisCoreAPI";
 
 const promptQueryOptions = () =>
   queryOptions({
-    queryKey: ["prompts"],
+    queryKey: getPromptsControllerFindAllQueryKey(),
     queryFn: () => promptsControllerFindAll(),
   });
 
