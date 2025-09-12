@@ -63,6 +63,7 @@ export function LoginPage({
                   <Input
                     placeholder={t("login.emailPlaceholder")}
                     type="email"
+                    data-testid="email"
                     {...field}
                   />
                 </FormControl>
@@ -80,6 +81,7 @@ export function LoginPage({
                   <Input
                     placeholder={t("login.passwordPlaceholder")}
                     type="password"
+                    data-testid="password"
                     {...field}
                   />
                 </FormControl>
@@ -95,7 +97,11 @@ export function LoginPage({
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="submit">
             {isLoading ? t("login.signingIn") : t("login.signInButton")}
           </Button>
         </form>
