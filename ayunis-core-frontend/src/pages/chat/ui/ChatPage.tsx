@@ -198,6 +198,17 @@ export default function ChatPage({
     setIsStreaming(false);
   }
 
+  function handleDeleteThread() {
+    confirm({
+      title: t("chat.deleteThreadTitle"),
+      description: t("chat.deleteThreadDescription"),
+      confirmText: t("chat.deleteText"),
+      cancelText: t("chat.cancelText"),
+      variant: "destructive",
+      onConfirm: () => deleteChat(thread.id),
+    });
+  }
+
   useEffect(() => {
     setMessages(thread.messages);
     setThreadTitle(thread.title);
@@ -256,17 +267,6 @@ export default function ChatPage({
     t,
     resetCreateFileSourceMutation,
   ]);
-
-  function handleDeleteThread() {
-    confirm({
-      title: t("chat.deleteThreadTitle"),
-      description: t("chat.deleteThreadDescription"),
-      confirmText: t("chat.deleteText"),
-      cancelText: t("chat.cancelText"),
-      variant: "destructive",
-      onConfirm: () => deleteChat(thread.id),
-    });
-  }
 
   // Chat Header
   const chatHeader = (

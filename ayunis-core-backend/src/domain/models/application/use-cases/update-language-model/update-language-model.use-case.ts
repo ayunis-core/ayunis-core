@@ -6,7 +6,9 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class UpdateLanguageModelUseCase {
   constructor(private readonly modelsRepository: ModelsRepository) {}
 
