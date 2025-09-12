@@ -98,7 +98,7 @@ In other words:
 
 - The models your create are the pool of models available inside the product in general
 - Each admin can pick and choose models from that pool for their particular organisation
-- Users can choose models from the ones the admin selected
+- Users of an organisation can choose models from the ones the admin selected
 
 #### Request to add language models
 
