@@ -80,8 +80,10 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.SOURCE_QUERY);
       expect(types).toContain(ToolType.INTERNET_SEARCH);
       expect(types).toContain(ToolType.WEBSITE_CONTENT);
+      expect(types).toContain(ToolType.SEND_EMAIL);
+      expect(types).toContain(ToolType.CREATE_CALENDAR_EVENT);
 
-      expect(types.length).toBe(5);
+      expect(types.length).toBe(6);
     });
   });
 });

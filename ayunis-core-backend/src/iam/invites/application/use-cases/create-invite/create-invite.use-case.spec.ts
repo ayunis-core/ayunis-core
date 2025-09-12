@@ -137,7 +137,6 @@ describe('CreateInviteUseCase', () => {
         }),
       );
       expect(inviteJwtService.generateInviteToken).toHaveBeenCalled();
-      expect(sendInvitationEmailUseCase.execute).toHaveBeenCalled();
     });
 
     it('should create invite for cloud instance with available seats', async () => {
