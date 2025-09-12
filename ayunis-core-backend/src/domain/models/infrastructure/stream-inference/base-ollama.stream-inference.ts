@@ -84,6 +84,7 @@ export class BaseOllamaStreamInferenceHandler
 
       for await (const chunk of response) {
         this.logger.debug('chunk', chunk);
+        if (chunk.done) break;
         const delta = this.convertChunk(chunk);
         subscriber.next(delta);
       }
