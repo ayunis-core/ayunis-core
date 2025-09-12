@@ -44,7 +44,9 @@ Ayunis Core is a comprehensive AI platform that enables intelligent conversation
 cd /path/to/ayunis-core
 ```
 
-**Create your production environment file (only backend required in production)**
+**Create your production environment file**
+
+> [!] You must create each env file, even if you don't change variables
 
 ```bash
 cp ./.env.example ./.env
@@ -96,7 +98,7 @@ Before you can access models as a user inside the product, you must create them 
 
 This will allow users to chat with these models.
 
-> [!ATTENTION] You must restart the docker containers for each change to take effect
+> [!ATTENTION] You must restart the docker containers for changes to take effect
 
 ```bash
 curl -X POST http://localhost:3000/api/admin/language-models \
@@ -131,7 +133,7 @@ curl -X POST http://localhost:3000/api/admin/embedding-models \
   }'
 ```
 
-See `/src/domain/models/domain/models/embedding.model.ts`
+See also `/src/domain/models/domain/models/embedding.model.ts`
 
 #### Other methods
 
