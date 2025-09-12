@@ -70,7 +70,7 @@ export class BaseOllamaStreamInferenceHandler
         messages: systemPrompt
           ? [systemPrompt, ...ollamaMessages]
           : ollamaMessages,
-        // tools: ollamaTools.length > 0 ? ollamaTools : undefined,
+        tools: ollamaTools.length > 0 ? ollamaTools : undefined,
         stream: true,
       };
       this.logger.debug('completionOptions', completionOptions);
