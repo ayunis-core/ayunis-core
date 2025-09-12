@@ -54,8 +54,8 @@
   "newChat": {
     "newChat": "New Chat",
     "title": "How can I help you?",
-    "noModelTitle": "No Model Available",
-    "noModelDescription": "No AI model could be found. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
+    "noModelTitle": "Welcome",
+    "noModelDescription": "Before we can start, we need at least one enabled model. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
     "configureModel": "Configure Model",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature."
   }

@@ -54,8 +54,8 @@
   "newChat": {
     "newChat": "Neuer Chat",
     "title": "Wie kann ich Ihnen helfen?",
-    "noModelTitle": "Kein Modell verfügbar",
-    "noModelDescription": "Es konnte kein KI-Modell gefunden werden. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
+    "noModelTitle": "Herzlich Willkommen",
+    "noModelDescription": "Bevor es losgehen kann, benötigen wir mindestens ein freigeschaltetes Modell. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
     "configureModel": "Modell konfigurieren",
     "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden."
   }
