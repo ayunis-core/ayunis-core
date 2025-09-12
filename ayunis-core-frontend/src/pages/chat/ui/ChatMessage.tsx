@@ -126,9 +126,12 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
         if (content.type === "thinking") {
           const thinkingMessageContent = content as ThinkingMessageContent;
           const hasTextContent = message.content.some((c) => c.type === "text");
+          const hasToolUseContent = message.content.some(
+            (c) => c.type === "tool_use",
+          );
           return (
             <ThinkingBlockWidget
-              open={!hasTextContent}
+              open={!hasTextContent && !hasToolUseContent}
               key={`thinking-${index}-${thinkingMessageContent.thinking.slice(0, 50)}`}
               content={thinkingMessageContent}
             />
