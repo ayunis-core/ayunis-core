@@ -92,7 +92,13 @@ If no email configuration is provided,
 
 ### Model Configuration
 
-Before you can access models as a user inside the product, you must create them from outside the product via HTTP requests (the experience of this will get better as soon as we have an admin UI).
+Before you can access models as a user inside the product, you must create them from outside the product via HTTP requests (the experience of this will get better as soon as we have an admin UI). Models you create will be available for admin users to enable for their particular organisation.
+
+In other words:
+
+- The models your create are the pool of models available inside the product in general
+- Each admin can pick and choose models from that pool for their particular organisation
+- Users can choose models from the ones the admin selected
 
 #### Request to add language models
 
