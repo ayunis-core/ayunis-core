@@ -133,6 +133,8 @@ curl -X POST http://localhost:3000/api/admin/embedding-models \
   }'
 ```
 
+> [!ATTENTION] The dimension must match the model's required dimensions. If you need other dimensions, create a Github Issue and we will take care of it.
+
 See also `/src/domain/models/domain/models/embedding.model.ts`
 
 #### Other methods
