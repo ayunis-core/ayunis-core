@@ -134,6 +134,7 @@ export class ExecuteRunUseCase {
 
   private async assembleTools(thread: Thread): Promise<Tool[]> {
     const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
+    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
     const tools: Tool[] = [];
 
     // Add tools from the agent if there is one
@@ -173,10 +174,10 @@ export class ExecuteRunUseCase {
     );
 
     // Internet search tool is always available
-    // TODO: remove the self hosting constraint
     if (
-      isSelfhosted &&
-      this.configService.get<boolean>('internetSearch.isAvailable')
+      isCloudHosted ||
+      (isSelfhosted &&
+        this.configService.get<boolean>('internetSearch.isAvailable'))
     ) {
       tools.push(
         await this.assembleToolsUseCase.execute(
