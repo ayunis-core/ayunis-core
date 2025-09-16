@@ -1,6 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { HashingHandler } from '../../ports/hashing.handler';
-import { HASHING_HANDLER } from '../../tokens/hashing-handler.token';
 import { CompareHashCommand } from './compare-hash.command';
 import { ComparisonFailedError, HashingError } from '../../hashing.errors';
 
@@ -8,10 +7,7 @@ import { ComparisonFailedError, HashingError } from '../../hashing.errors';
 export class CompareHashUseCase {
   private readonly logger = new Logger(CompareHashUseCase.name);
 
-  constructor(
-    @Inject(HASHING_HANDLER)
-    private readonly hashingHandler: HashingHandler,
-  ) {}
+  constructor(private readonly hashingHandler: HashingHandler) {}
 
   async execute(command: CompareHashCommand): Promise<boolean> {
     this.logger.log('compare');

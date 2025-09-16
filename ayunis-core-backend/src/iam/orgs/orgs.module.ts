@@ -39,6 +39,7 @@ import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/f
     UpdateOrgUseCase,
     DeleteOrgUseCase,
     FindAllOrgIdsUseCase,
+    OrgsRepository, // Export repository for seeding
   ],
 })
 export class OrgsModule {}

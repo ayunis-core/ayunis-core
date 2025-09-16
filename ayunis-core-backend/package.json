@@ -35,6 +35,10 @@
     "migration:drop:dev": "npm run db:dev -- schema:drop -d src/db/datasource.ts",
     "bundle-frontend": "bash scripts/bundle-frontend.sh",
     "generate:client": "orval --config ./orval.config.ts"
+    "cli:ts": "ts-node -r tsconfig-paths/register -r dotenv/config src/cli/main.ts",
+    "cli": "node dist/cli/main.js",
+    "seed:ts": "npm run cli:ts -- seed:minimal",
+    "seed": "npm run cli -- seed:minimal"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
@@ -63,6 +67,7 @@
     "langfuse": "^3.37.4",
     "minio": "^8.0.5",
     "mjml": "^4.7.1",
+    "nest-commander": "^3.19.1",
     "nest-winston": "^1.10.2",
     "nestjs-cls": "^6.0.1",
     "nodemailer": "^7.0.5",

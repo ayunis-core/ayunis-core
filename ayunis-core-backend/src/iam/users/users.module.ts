@@ -115,6 +115,7 @@ import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
     IsFromOrgUseCase,
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
+    UsersRepository, // Export repository for seeding
   ],
 })
 export class UsersModule {}
