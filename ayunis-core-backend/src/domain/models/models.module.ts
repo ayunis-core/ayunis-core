@@ -102,6 +102,8 @@ import { ConfigService } from '@nestjs/config';
     LocalOllamaStreamInferenceHandler,
     SynaforceStreamInferenceHandler,
     LocalOllamaInferenceHandler,
+    MockStreamInferenceHandler,
+    MockInferenceHandler,
     {
       provide: StreamInferenceHandlerRegistry,
       useFactory: (
@@ -233,6 +235,10 @@ import { ConfigService } from '@nestjs/config';
     GetModelUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
+    // TODO: These modules should be part of this module and not separate
+    LocalModelsRepositoryModule, // Export repository for seeding
+    LocalPermittedModelsRepositoryModule, // Export repository for seeding
+    LocalPermittedProvidersRepositoryModule, // Export repository for seeding
   ],
 })
 export class ModelsModule {}
