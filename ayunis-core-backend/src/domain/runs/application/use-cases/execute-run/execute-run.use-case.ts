@@ -236,11 +236,15 @@ export class ExecuteRunUseCase {
 
   private assemblySystemPrompt(thread: Thread): string {
     const currentTime = new Date().toISOString();
+    const systemPrompt = `
+    !! IMPORTANT !! ALWAYS ANSWER IN THE SAME LANGUAGE AS THE USER'S MESSAGE !!
+      Current time: ${currentTime}
+    `.trim();
     const agentInstructions = thread.agent?.instructions;
     if (!agentInstructions) {
-      return `Current time: ${currentTime}`;
+      return systemPrompt;
     }
-    return `Current time: ${currentTime}\n\n${agentInstructions}`;
+    return `${systemPrompt}\n\n${agentInstructions}`;
   }
 
   private async *orchestrateRun(params: {
@@ -563,12 +567,12 @@ export class ExecuteRunUseCase {
       return true; // Exit loop if there's no message
     }
 
-    // Hand over to the user if the agent only sends text (no tool calls)
+    // Hand over to the user if the agent does not want to call any tools
     // Or the agent wants to call a tool in the frontend
-    const responseContainsOnlyText = agentResponseMessage.content.every(
-      (content) => content.type === MessageContentType.TEXT,
+    const responseDoesNotContainToolCalls = agentResponseMessage.content.every(
+      (content) => content.type !== MessageContentType.TOOL_USE,
     );
-    if (responseContainsOnlyText) return true;
+    if (responseDoesNotContainToolCalls) return true;
 
     try {
       const responseContainsDisplayTool = agentResponseMessage.content
