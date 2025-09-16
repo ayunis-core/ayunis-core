@@ -22,7 +22,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin4_container
+    container_name: ayunis-pgadmin-dev
     restart: always
     ports:
       - '8888:80'

@@ -2888,7 +2888,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "description": "The provider of the model"
           },
@@ -2966,7 +2967,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "description": "The provider of the model"
           },
@@ -3041,7 +3043,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -3081,7 +3084,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "example": "openai"
           }
@@ -3100,7 +3104,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "description": "The permitted model provider",
             "example": "openai"
@@ -3140,7 +3145,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "example": "openai"
           }
@@ -3159,7 +3165,8 @@
               "anthropic",
               "mistral",
               "ollama",
-              "synaforce"
+              "synaforce",
+              "ayunis"
             ],
             "description": "The model provider identifier",
             "example": "openai"

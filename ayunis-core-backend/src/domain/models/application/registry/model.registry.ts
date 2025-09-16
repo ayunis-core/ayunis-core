@@ -30,6 +30,7 @@ export class ModelRegistry {
       [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
       [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
       [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
+      [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
     };
 
     const configKey = providerConfigMap[provider];

@@ -35,6 +35,5 @@ export class RegisterDto {
     description: 'Marketing acceptance',
     example: true,
   })
-  @IsNotEmpty()
   marketingAcceptance: boolean;
 }

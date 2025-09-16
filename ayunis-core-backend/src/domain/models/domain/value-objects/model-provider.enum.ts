@@ -4,4 +4,5 @@ export enum ModelProvider {
   MISTRAL = 'mistral',
   OLLAMA = 'ollama',
   SYNAFORCE = 'synaforce',
+  AYUNIS = 'ayunis',
 }

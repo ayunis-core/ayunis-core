@@ -23,6 +23,7 @@ export const ModelWithConfigResponseDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -71,6 +72,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 /**
@@ -126,6 +128,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 /**
@@ -165,6 +168,7 @@ export const CreatePermittedProviderDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -185,6 +189,7 @@ export const PermittedProviderResponseDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 /**
@@ -224,6 +229,7 @@ export const DeletePermittedProviderDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -244,6 +250,7 @@ export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
+  ayunis: 'ayunis',
 } as const;
 
 /**

@@ -19,4 +19,8 @@ export const modelsConfig = registerAs('models', () => ({
         ? process.env.SYNAFORCE_BASE_URL
         : process.env.OLLAMA_BASE_URL,
   },
+  ayunis: {
+    baseURL: process.env.AYUNIS_BASE_URL,
+    authToken: process.env.AYUNIS_AUTH_TOKEN,
+  },
 }));

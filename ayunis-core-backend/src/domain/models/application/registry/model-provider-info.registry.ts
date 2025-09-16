@@ -30,6 +30,11 @@ const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
     displayName: 'Ayunis Sovereign Cloud',
     hostedIn: ModelProviderLocation.AYUNIS,
   },
+  {
+    provider: ModelProvider.AYUNIS,
+    displayName: 'Ayunis',
+    hostedIn: ModelProviderLocation.AYUNIS,
+  },
 ];
 
 @Injectable()

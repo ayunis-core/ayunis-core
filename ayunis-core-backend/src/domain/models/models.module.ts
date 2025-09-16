@@ -64,6 +64,8 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
 import { UsersModule } from 'src/iam/users/users.module';
 import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
+import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
+import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
 
 @Module({
   imports: [
@@ -99,6 +101,8 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
     LocalOllamaStreamInferenceHandler,
     SynaforceStreamInferenceHandler,
     LocalOllamaInferenceHandler,
+    AyunisOllamaStreamInferenceHandler,
+    AyunisOllamaInferenceHandler,
     {
       provide: StreamInferenceHandlerRegistry,
       useFactory: (
@@ -107,6 +111,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         mistralHandler: MistralStreamInferenceHandler,
         ollamaHandler: LocalOllamaStreamInferenceHandler,
         synaforceHandler: SynaforceStreamInferenceHandler,
+        ayunisHandler: AyunisOllamaStreamInferenceHandler,
       ) => {
         const registry = new StreamInferenceHandlerRegistry();
         registry.register(ModelProvider.OPENAI, openaiHandler);
@@ -114,6 +119,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
+        registry.register(ModelProvider.AYUNIS, ayunisHandler);
         return registry;
       },
       inject: [
@@ -122,6 +128,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         MistralStreamInferenceHandler,
         LocalOllamaStreamInferenceHandler,
         SynaforceStreamInferenceHandler,
+        AyunisOllamaStreamInferenceHandler,
       ],
     },
     {
@@ -132,6 +139,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         anthropicHandler: AnthropicInferenceHandler,
         ollamaHandler: LocalOllamaInferenceHandler,
         synaforceHandler: SynaforceInferenceHandler,
+        ayunisHandler: AyunisOllamaInferenceHandler,
       ) => {
         const registry = new InferenceHandlerRegistry();
         registry.register(ModelProvider.MISTRAL, mistralHandler);
@@ -139,6 +147,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
+        registry.register(ModelProvider.AYUNIS, ayunisHandler);
         return registry;
       },
       inject: [
@@ -147,6 +156,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         AnthropicInferenceHandler,
         LocalOllamaInferenceHandler,
         SynaforceInferenceHandler,
+        AyunisOllamaInferenceHandler,
       ],
     },
     // Use Cases
