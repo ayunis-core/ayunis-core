@@ -20,7 +20,10 @@ export class CreatePermittedProviderUseCase {
     command: CreatePermittedProviderCommand,
   ): Promise<PermittedProvider> {
     try {
-      const noAcceptNeeded: Array<ModelProvider> = [ModelProvider.OLLAMA];
+      const noAcceptNeeded: Array<ModelProvider> = [
+        ModelProvider.OLLAMA,
+        ModelProvider.AYUNIS,
+      ];
       if (!noAcceptNeeded.includes(command.permittedProvider.provider)) {
         await this.createLegalAcceptanceUseCase.execute(
           new CreateModelProviderAcceptanceCommand({
