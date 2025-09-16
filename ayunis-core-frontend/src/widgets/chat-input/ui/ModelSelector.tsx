@@ -6,6 +6,7 @@ import {
   SelectValue,
 } from "@/shared/ui/shadcn/select";
 import { usePermittedModels } from "@/features/usePermittedModels";
+import { getFlagByProvider } from "@/shared/lib/getFlagByProvider";
 
 interface ModelSelectorProps {
   isDisabled: boolean;
@@ -40,7 +41,7 @@ export default function ModelSelector({
           .sort((a, b) => a.displayName.localeCompare(b.displayName))
           .map((model) => (
             <SelectItem key={model.id} value={model.id}>
-              {model.displayName}
+              {getFlagByProvider(model.provider)} {model.displayName}
             </SelectItem>
           ))}
       </SelectContent>
