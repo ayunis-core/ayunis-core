@@ -1,4 +1,5 @@
 export class E2eTestGeneral {
-	static username: string = `E2E Test 01`;
-	static email: string = `test.accounts@maximilian-schluer.de`;
+	static username: string = `Admin`;
+	static email: string = `admin@demo.local`;
+	static password: string = `admin`;
 }
