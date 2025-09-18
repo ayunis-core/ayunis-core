@@ -57,12 +57,13 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
 
     // Determine which column to use based on query dimension
     const queryDims = queryVector.length;
+    const embeddingColumns = {
+      1024: 'children.embedding_1024',
+      1536: 'children.embedding_1536',
+      2560: 'children.embedding_2560',
+    };
     const embeddingColumn =
-      queryDims === 1536
-        ? 'children.embedding_1536'
-        : queryDims === 1024
-          ? 'children.embedding_1024'
-          : null;
+      embeddingColumns[queryDims as keyof typeof embeddingColumns];
 
     if (!embeddingColumn) {
       this.logger.warn(

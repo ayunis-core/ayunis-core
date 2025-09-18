@@ -29,13 +29,6 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;
 
-  //   constructor(private readonly configService: ConfigService) {
-  //     super();
-  //     this.client = new Ollama({
-  //       host: this.configService.get('models.ollama.baseURL'),
-  //     });
-  //   }
-
   async answer(input: InferenceInput): Promise<InferenceResponse> {
     this.logger.log('answer', input);
     try {

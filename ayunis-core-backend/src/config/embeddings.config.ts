@@ -7,4 +7,8 @@ export const embeddingsConfig = registerAs('embeddings', () => ({
   mistral: {
     apiKey: process.env.MISTRAL_API_KEY,
   },
+  ayunis: {
+    baseURL: process.env.AYUNIS_BASE_URL,
+    authToken: process.env.AYUNIS_AUTH_TOKEN,
+  },
 }));

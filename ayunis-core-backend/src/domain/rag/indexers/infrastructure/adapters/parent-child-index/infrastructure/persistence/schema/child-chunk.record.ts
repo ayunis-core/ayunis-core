@@ -36,6 +36,10 @@ export class ChildChunkRecord extends BaseRecord {
   @Column({ name: 'embedding_1536', type: 'vector' as any, nullable: true })
   embedding1536: number[] | null;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  @Column({ name: 'embedding_2560', type: 'vector' as any, nullable: true })
+  embedding2560: number[] | null;
+
   @BeforeUpdate()
   @BeforeInsert()
   stringifyVectorColumns() {
@@ -49,6 +53,11 @@ export class ChildChunkRecord extends BaseRecord {
     if (this.embedding1536 && Array.isArray(this.embedding1536)) {
       this.embedding1536 = JSON.stringify(
         this.embedding1536,
+      ) as unknown as number[];
+    }
+    if (this.embedding2560 && Array.isArray(this.embedding2560)) {
+      this.embedding2560 = JSON.stringify(
+        this.embedding2560,
       ) as unknown as number[];
     }
   }

@@ -29,13 +29,20 @@ export class ParentChildIndexerMapper {
       if (len === 1024) {
         childChunkRecord.embedding1024 = childChunk.embedding;
         childChunkRecord.embedding1536 = null;
+        childChunkRecord.embedding2560 = null;
       } else if (len === 1536) {
         childChunkRecord.embedding1024 = null;
         childChunkRecord.embedding1536 = childChunk.embedding;
+        childChunkRecord.embedding2560 = null;
+      } else if (len === 2560) {
+        childChunkRecord.embedding1024 = null;
+        childChunkRecord.embedding1536 = null;
+        childChunkRecord.embedding2560 = childChunk.embedding;
       } else {
         // Unknown dimension: do not write into any column
         childChunkRecord.embedding1024 = null;
         childChunkRecord.embedding1536 = null;
+        childChunkRecord.embedding2560 = null;
       }
     }
     childChunkRecord.parentId = childChunk.parentId;
