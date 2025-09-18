@@ -1,6 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { HashingHandler } from '../../ports/hashing.handler';
-import { HASHING_HANDLER } from '../../tokens/hashing-handler.token';
 import { HashTextCommand } from './hash-text.command';
 import { HashingFailedError, HashingError } from '../../hashing.errors';
 
@@ -8,10 +7,7 @@ import { HashingFailedError, HashingError } from '../../hashing.errors';
 export class HashTextUseCase {
   private readonly logger = new Logger(HashTextUseCase.name);
 
-  constructor(
-    @Inject(HASHING_HANDLER)
-    private readonly hashingHandler: HashingHandler,
-  ) {}
+  constructor(private readonly hashingHandler: HashingHandler) {}
 
   async execute(command: HashTextCommand): Promise<string> {
     this.logger.log('hash');

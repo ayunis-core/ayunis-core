@@ -6,6 +6,8 @@ import { ModelRegistry } from './application/registry/model.registry';
 import { ModelProvider } from './domain/value-objects/model-provider.enum';
 import { OpenAIInferenceHandler } from './infrastructure/inference/openai.inference';
 import { AnthropicInferenceHandler } from './infrastructure/inference/anthropic.inference';
+import { MockInferenceHandler } from './infrastructure/inference/mock.inference';
+import { MockStreamInferenceHandler } from './infrastructure/stream-inference/mock.stream-inference';
 import { GetInferenceUseCase } from './application/use-cases/get-inference/get-inference.use-case';
 import { GetAvailableModelsUseCase } from './application/use-cases/get-available-models/get-available-models.use-case';
 import { GetDefaultModelUseCase } from './application/use-cases/get-default-model/get-default-model.use-case';
@@ -64,6 +66,7 @@ import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-p
 import { UsersModule } from 'src/iam/users/users.module';
 import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -99,6 +102,8 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
     LocalOllamaStreamInferenceHandler,
     SynaforceStreamInferenceHandler,
     LocalOllamaInferenceHandler,
+    MockStreamInferenceHandler,
+    MockInferenceHandler,
     {
       provide: StreamInferenceHandlerRegistry,
       useFactory: (
@@ -107,13 +112,16 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         mistralHandler: MistralStreamInferenceHandler,
         ollamaHandler: LocalOllamaStreamInferenceHandler,
         synaforceHandler: SynaforceStreamInferenceHandler,
+        mockHandler: MockStreamInferenceHandler,
+        configService: ConfigService,
       ) => {
-        const registry = new StreamInferenceHandlerRegistry();
+        const registry = new StreamInferenceHandlerRegistry(configService);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
+        registry.registerMockHandler(mockHandler);
         return registry;
       },
       inject: [
@@ -122,6 +130,8 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         MistralStreamInferenceHandler,
         LocalOllamaStreamInferenceHandler,
         SynaforceStreamInferenceHandler,
+        MockStreamInferenceHandler,
+        ConfigService,
       ],
     },
     {
@@ -132,13 +142,16 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         anthropicHandler: AnthropicInferenceHandler,
         ollamaHandler: LocalOllamaInferenceHandler,
         synaforceHandler: SynaforceInferenceHandler,
+        mockHandler: MockInferenceHandler,
+        configService: ConfigService,
       ) => {
-        const registry = new InferenceHandlerRegistry();
+        const registry = new InferenceHandlerRegistry(configService);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
+        registry.registerMockHandler(mockHandler);
         return registry;
       },
       inject: [
@@ -147,6 +160,8 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
         AnthropicInferenceHandler,
         LocalOllamaInferenceHandler,
         SynaforceInferenceHandler,
+        MockInferenceHandler,
+        ConfigService,
       ],
     },
     // Use Cases
@@ -220,6 +235,10 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
     GetModelUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
+    // TODO: These modules should be part of this module and not separate
+    LocalModelsRepositoryModule, // Export repository for seeding
+    LocalPermittedModelsRepositoryModule, // Export repository for seeding
+    LocalPermittedProvidersRepositoryModule, // Export repository for seeding
   ],
 })
 export class ModelsModule {}

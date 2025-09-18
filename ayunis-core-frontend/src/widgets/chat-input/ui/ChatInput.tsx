@@ -72,7 +72,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     }
 
     return (
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-2" data-testid="chat-input">
         {/* Main input section */}
         <Card className="py-4">
           <CardContent className="px-4">
@@ -108,6 +108,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 onBlur={() => setIsFocused(false)}
                 placeholder={t("chatInput.placeholder")}
                 className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
+                data-testid="input"
               />
 
               {/* Bottom row */}
@@ -133,6 +134,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       disabled={!message.trim() || !modelOrAgentId}
                       size="icon"
                       onClick={handleSend}
+                      data-testid="send"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

@@ -113,6 +113,7 @@ import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-ema
     IsFromOrgUseCase,
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
+    UsersRepository, // Export repository for seeding
   ],
 })
 export class UsersModule {}
