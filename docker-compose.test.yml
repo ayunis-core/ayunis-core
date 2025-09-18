@@ -45,8 +45,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: production
+      dockerfile: Dockerfile.test
     container_name: ayunis-app-test
     restart: unless-stopped
     ports:

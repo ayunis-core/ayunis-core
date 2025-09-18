@@ -9,7 +9,7 @@ describe('Chat Lifecycle', () => {
 		cy.login(E2eTestGeneral.email, E2eTestGeneral.username, E2eTestGeneral.password);
 
 		NewChatPage.validateOn();
-		NewChatPage.chatInput.modelSelectTrigger.should('contain.text', 'GPT 4.1');
+		NewChatPage.chatInput.modelSelectTrigger.should('contain.text', 'GPT-4o mini');
 
 		NewChatPage.chatInput.textareaChatInput.type(
 			`Name this chat ${timestring} and print the name of the model I am talking to`,
@@ -20,7 +20,7 @@ describe('Chat Lifecycle', () => {
 		// Make sure not to fail the test just because the external communication is slow
 		ChatPage.validateOn();
 		cy.withTimeout('XLONG', () => {
-			ChatPage.assistantMessages.should('contain.text', 'GPT 4.1');
+			ChatPage.assistantMessages.should('contain.text', 'GPT-4o mini');
 		});
 		ChatPage.spanTitle.should('contain.text', timestring);
 		ChatPage.sidebar.chats.should('contain.text', timestring);
