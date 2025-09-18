@@ -4,7 +4,7 @@ import ModelsDropdown from '@pages/components/models-dropdown.component';
 
 class NewChatPage extends BasePage {
 	// Properties
-	path = `/chats`;
+	path = `/chat`;
 
 	// Components
 	get chatInput() {

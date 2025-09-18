@@ -1,12 +1,12 @@
 import LoginPage from '@pages/login.page';
 import ChatsPage from '@pages/chat.page';
 
-Cypress.Commands.add('login', (email: string, username: string) => {
+Cypress.Commands.add('login', (email: string, username: string, password: string) => {
 	LoginPage.open();
 
 	// Fill in Form
 	LoginPage.inputMailAddress.type(email);
-	LoginPage.inputPassword.type(process.env[`TEST_USER_PASSWORD`] ?? '');
+	LoginPage.inputPassword.type(password);
 	LoginPage.buttonSubmit.click();
 
 	// Validate Page & Session
@@ -41,7 +41,7 @@ Cypress.Commands.add('withTimeout', (timeoutLength: 'LONG' | 'XLONG', callback: 
 declare global {
 	namespace Cypress {
 		interface Chainable {
-			login(email: string, username: string): Chainable<void>;
+			login(email: string, username: string, password: string): Chainable<void>;
 			urlpath(): Chainable<void>;
 			withTimeout(timeoutLength: 'LONG' | 'XLONG', callback: () => void): void;
 		}
