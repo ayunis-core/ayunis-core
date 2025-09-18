@@ -6,10 +6,10 @@ import NewChatPage from '@pages/new-chat.page';
 describe('Chat Lifecycle', () => {
 	it('allows a user to create, rename and delete a chat', () => {
 		const timestring = getTimestring();
-		cy.login(E2eTestGeneral.email, E2eTestGeneral.username);
+		cy.login(E2eTestGeneral.email, E2eTestGeneral.username, E2eTestGeneral.password);
 
 		NewChatPage.validateOn();
-		NewChatPage.chatInput.modelSelectTrigger.should('contain.text', 'Claude Sonnet 4');
+		NewChatPage.chatInput.modelSelectTrigger.should('contain.text', 'GPT 4.1');
 
 		NewChatPage.chatInput.textareaChatInput.type(
 			`Name this chat ${timestring} and print the name of the model I am talking to`,
@@ -20,7 +20,7 @@ describe('Chat Lifecycle', () => {
 		// Make sure not to fail the test just because the external communication is slow
 		ChatPage.validateOn();
 		cy.withTimeout('XLONG', () => {
-			ChatPage.assistantMessages.should('contain.text', 'Claude Sonnet 4');
+			ChatPage.assistantMessages.should('contain.text', 'GPT 4.1');
 		});
 		ChatPage.spanTitle.should('contain.text', timestring);
 		ChatPage.sidebar.chats.should('contain.text', timestring);
@@ -36,7 +36,7 @@ describe('Chat Lifecycle', () => {
 
 	it('allows user to choose the provided models', () => {
 		const timestring = getTimestring();
-		cy.login(E2eTestGeneral.email, E2eTestGeneral.username);
+		cy.login(E2eTestGeneral.email, E2eTestGeneral.username, E2eTestGeneral.password);
 		NewChatPage.validateOn();
 
 		NewChatPage.chatInput.modelSelectTrigger.click();
