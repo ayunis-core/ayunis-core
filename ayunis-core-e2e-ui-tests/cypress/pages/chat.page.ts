@@ -45,7 +45,7 @@ class ChatPage extends BasePage {
 
 	// Helpers
 	override open = (guid: string) => {
-		cy.visit(`this.path`.replace(`{guid}`, guid));
+		cy.visit(this.path.replace(`{guid}`, guid));
 		cy.urlpath().should('eql', this.path);
 	};
 
