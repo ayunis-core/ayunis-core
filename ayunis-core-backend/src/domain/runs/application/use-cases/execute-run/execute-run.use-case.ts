@@ -469,7 +469,14 @@ export class ExecuteRunUseCase {
     for (const content of toolUseMessageContent) {
       const tool = tools.find((tool) => tool.name === content.name);
       if (!tool) {
-        throw new RunToolNotFoundError(content.name);
+        toolResultMessageContent.push(
+          new ToolResultMessageContent(
+            content.id,
+            content.name,
+            `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
+          ),
+        );
+        continue;
       }
 
       try {
