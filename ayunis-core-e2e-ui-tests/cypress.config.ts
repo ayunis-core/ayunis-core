@@ -6,7 +6,7 @@ export default defineConfig({
 		setupNodeEvents(on) {
 			on('before:run', async () => {
 				// ENV Sanity Check
-				const requiredEnv = [`TEST_USER_PASSWORD`];
+				const requiredEnv: string[] = [];
 				for (const key of requiredEnv) {
 					if (!process.env[key]) {
 						throw new Error(
