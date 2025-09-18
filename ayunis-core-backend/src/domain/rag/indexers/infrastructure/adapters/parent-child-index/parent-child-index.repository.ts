@@ -67,7 +67,7 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
 
     if (!embeddingColumn) {
       this.logger.warn(
-        `Unsupported query vector dimension ${queryDims}. Only 1024 and 1536 are supported.`,
+        `Unsupported query vector dimension ${queryDims}. Only ${Object.keys(embeddingColumns).join(', ')} are supported.`,
       );
       return [];
     }

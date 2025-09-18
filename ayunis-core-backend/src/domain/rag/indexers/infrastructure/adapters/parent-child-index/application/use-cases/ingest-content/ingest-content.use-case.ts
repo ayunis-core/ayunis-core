@@ -10,6 +10,7 @@ import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-case
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { IngestContentCommand } from './ingest-content.command';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class IngestContentUseCase {
@@ -43,16 +44,18 @@ export class IngestContentUseCase {
         orgId: command.orgId,
       }),
     );
+    const parentId = randomUUID();
     const childChunks = embeddings.map((embedding) => {
       this.logger.debug('child chunk', {
         vectorLength: embedding.vector.length,
       });
       return new ChildChunk({
         embedding: embedding.vector,
-        parentId: command.indexEntry.relatedDocumentId,
+        parentId: parentId,
       });
     });
     const parentChunk = new ParentChunk({
+      id: parentId,
       relatedDocumentId: command.indexEntry.relatedDocumentId,
       relatedChunkId: command.indexEntry.relatedChunkId,
       children: childChunks,
