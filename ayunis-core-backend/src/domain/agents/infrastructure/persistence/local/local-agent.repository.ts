@@ -84,9 +84,7 @@ export class LocalAgentRepository implements AgentRepository {
             model: true,
           },
           sourceAssignments: {
-            source: {
-              content: true,
-            },
+            source: true,
           },
         },
       });
@@ -192,9 +190,7 @@ export class LocalAgentRepository implements AgentRepository {
           agentTools: true,
           model: true,
           sourceAssignments: {
-            source: {
-              content: true,
-            },
+            source: true,
           },
         },
       });

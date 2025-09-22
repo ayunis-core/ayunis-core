@@ -5,11 +5,10 @@ import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
 
 // Import all use cases
-import { GetSourceByIdUseCase } from './application/use-cases/get-source-by-id/get-source-by-id.use-case';
+import { GetTextSourceByIdUseCase } from './application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { DeleteSourceUseCase } from './application/use-cases/delete-source/delete-source.use-case';
-import { CreateFileSourceUseCase } from './application/use-cases/create-file-source/create-file-source.use-case';
-import { CreateUrlSourceUseCase } from './application/use-cases/create-url-source/create-url-source.use-case';
-import { QuerySourceUseCase } from './application/use-cases/query-source/query-source.use-case';
+import { CreateTextSourceUseCase } from './application/use-cases/create-text-source/create-text-source.use-case';
+import { QueryTextSourceUseCase } from './application/use-cases/query-text-source/query-text-source.use-case';
 
 @Module({
   imports: [
@@ -19,18 +18,16 @@ import { QuerySourceUseCase } from './application/use-cases/query-source/query-s
     IndexersModule,
   ],
   providers: [
-    GetSourceByIdUseCase,
+    GetTextSourceByIdUseCase,
     DeleteSourceUseCase,
-    CreateFileSourceUseCase,
-    CreateUrlSourceUseCase,
-    QuerySourceUseCase,
+    CreateTextSourceUseCase,
+    QueryTextSourceUseCase,
   ],
   exports: [
-    GetSourceByIdUseCase,
+    GetTextSourceByIdUseCase,
     DeleteSourceUseCase,
-    CreateFileSourceUseCase,
-    CreateUrlSourceUseCase,
-    QuerySourceUseCase,
+    CreateTextSourceUseCase,
+    QueryTextSourceUseCase,
   ],
 })
 export class SourcesModule {}

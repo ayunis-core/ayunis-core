@@ -7,8 +7,8 @@ import { AgentNotFoundError, UnexpectedAgentError } from '../../agents.errors';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
+import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
+import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
 import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class RemoveSourceFromAgentUseCase {
   constructor(
     private readonly agentRepository: AgentRepository,
     private readonly contextService: ContextService,
-    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
+    private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
 
@@ -54,7 +54,7 @@ export class RemoveSourceFromAgentUseCase {
       });
 
       const source = await this.getSourceByIdUseCase.execute(
-        new GetSourceByIdQuery(sourceAssignment.source.id),
+        new GetTextSourceByIdQuery(sourceAssignment.source.id),
       );
 
       await this.deleteSourceUseCase.execute(new DeleteSourceCommand(source));

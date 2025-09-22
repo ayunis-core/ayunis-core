@@ -157,15 +157,12 @@ export class ExecuteRunUseCase {
     const codeExecutionSources = [
       ...(threadSources ?? []),
       ...(agentSources ?? []),
-    ];
-    const codeExecutionFileSources = codeExecutionSources.filter(
-      (source) => source.type === SourceType.FILE,
-    );
+    ].filter((source) => source.type === SourceType.DATA);
     tools.push(
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
           type: ToolType.CODE_EXECUTION,
-          context: codeExecutionFileSources,
+          context: codeExecutionSources,
         }),
       ),
     );

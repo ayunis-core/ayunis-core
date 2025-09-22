@@ -1,113 +1,151 @@
-import { Source } from '../../../../domain/source.entity';
-import { FileSource } from '../../../../domain/sources/file-source.entity';
-import { UrlSource } from '../../../../domain/sources/url-source.entity';
-import { SourceRecord } from '../schema/source.record';
-import { FileSourceRecord } from '../schema/file-source.record';
-import { UrlSourceRecord } from '../schema/url-source.record';
-import { SourceType } from '../../../../domain/source-type.enum';
+import {
+  FileSource,
+  UrlSource,
+} from 'src/domain/sources/domain/sources/text-source.entity';
+import { FileSourceDetailsRecord } from '../schema/text-source-details.record';
+import { UrlSourceDetailsRecord } from '../schema/text-source-details.record';
 import { Injectable } from '@nestjs/common';
-import { SourceContent } from 'src/domain/sources/domain/source-content.entity';
 import { SourceContentMapper } from './source-content.mapper';
+import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { CSVDataSourceDetailsRecord } from '../schema/data-source-details.record';
+import {
+  CSVDataSource,
+  DataSource,
+} from 'src/domain/sources/domain/sources/data-source.entity';
+import { Source } from 'src/domain/sources/domain/source.entity';
+import {
+  DataSourceRecord,
+  SourceRecord,
+  TextSourceRecord,
+} from '../schema/source.record';
 
 @Injectable()
 export class SourceMapper {
   constructor(private readonly sourceContentMapper: SourceContentMapper) {}
 
-  toDomain(entity: SourceRecord): Source {
-    if (entity.type === SourceType.FILE) {
-      return this.fileSourceToDomain(entity as FileSourceRecord);
-    } else if (entity.type === SourceType.URL) {
-      return this.urlSourceToDomain(entity as UrlSourceRecord);
+  toDomain(record: TextSourceRecord): TextSource;
+  toDomain(record: DataSourceRecord): DataSource;
+  toDomain(record: SourceRecord): Source;
+  toDomain(record: SourceRecord): Source {
+    if (record instanceof TextSourceRecord) {
+      return this.textSourceToDomain(record);
+    }
+    if (record instanceof DataSourceRecord) {
+      return this.dataSourceToDomain(record);
     }
 
     throw new Error(`Invalid source type`);
   }
 
-  private fileSourceToDomain(entity: FileSourceRecord): FileSource {
-    return new FileSource({
-      id: entity.id,
-      fileType: entity.fileType,
-      fileSize: entity.fileSize,
-      fileName: entity.name,
-      text: entity.text,
-      content: entity.content.map(
-        (c) =>
-          new SourceContent({
-            id: c.id,
-            sourceId: entity.id,
-            content: c.content,
-            meta: {},
-            createdAt: c.createdAt,
-            updatedAt: c.updatedAt,
-          }),
-      ),
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    });
+  private textSourceToDomain(record: TextSourceRecord): TextSource {
+    if (record.textSourceDetails instanceof FileSourceDetailsRecord) {
+      return new FileSource({
+        id: record.id,
+        fileType: record.textSourceDetails.fileType,
+        name: record.name,
+        type: record.textSourceDetails.textType,
+        text: record.textSourceDetails.text,
+        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
+          this.sourceContentMapper.toEntity(c),
+        ),
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      });
+    }
+    if (record.textSourceDetails instanceof UrlSourceDetailsRecord) {
+      return new UrlSource({
+        id: record.id,
+        url: record.textSourceDetails.url,
+        name: record.name,
+        type: record.textSourceDetails.textType,
+        text: record.textSourceDetails.text,
+        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
+          this.sourceContentMapper.toEntity(c),
+        ),
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      });
+    }
+
+    throw new Error(`Invalid source type`);
   }
 
-  private urlSourceToDomain(entity: UrlSourceRecord): UrlSource {
-    return new UrlSource({
-      id: entity.id,
-      url: entity.url,
-      websiteTitle: entity.name,
-      text: entity.text,
-      content: entity.content.map(
-        (c) =>
-          new SourceContent({
-            id: c.id,
-            sourceId: entity.id,
-            content: c.content,
-            meta: {},
-            createdAt: c.createdAt,
-            updatedAt: c.updatedAt,
-          }),
-      ),
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    });
+  private dataSourceToDomain(record: DataSourceRecord): DataSource {
+    if (record.dataSourceDetails instanceof CSVDataSourceDetailsRecord) {
+      return new CSVDataSource({
+        id: record.id,
+        data: {
+          headers: record.dataSourceDetails.data.split('\n')[0].split(','),
+          rows: record.dataSourceDetails.data
+            .split('\n')
+            .slice(1)
+            .map((row) => row.split(',')),
+        },
+        name: record.name,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      });
+    }
+    throw new Error('not implemented');
   }
 
+  toRecord(source: TextSource): TextSourceRecord;
+  toRecord(source: DataSource): DataSourceRecord;
+  toRecord(source: Source): SourceRecord;
   toRecord(source: Source): SourceRecord {
     if (source instanceof FileSource) {
       return this.fileSourceToRecord(source);
-    } else if (source instanceof UrlSource) {
+    }
+    if (source instanceof UrlSource) {
       return this.urlSourceToRecord(source);
     }
 
     throw new Error('Invalid source type: ' + source.type);
   }
 
-  fileSourceToRecord(source: FileSource): FileSourceRecord {
-    const entity = new FileSourceRecord();
-    entity.id = source.id;
-    entity.type = SourceType.FILE;
-    entity.fileType = source.fileType;
-    entity.fileSize = source.fileSize;
-    entity.name = source.name;
-    entity.text = source.text;
-    entity.content = source.content.map((c) =>
+  private fileSourceToRecord(source: FileSource): TextSourceRecord {
+    const sourceRecord = new TextSourceRecord();
+    sourceRecord.id = source.id;
+    sourceRecord.name = source.name;
+    sourceRecord.type = source.type;
+    sourceRecord.createdAt = source.createdAt;
+    sourceRecord.updatedAt = source.updatedAt;
+
+    const details = new FileSourceDetailsRecord();
+    details.id = source.id;
+    details.textType = source.textType;
+    details.fileType = source.fileType;
+    details.text = source.text;
+    details.contentChunks = source.contentChunks.map((c) =>
       this.sourceContentMapper.toEntity(c),
     );
-    entity.createdAt = source.createdAt;
-    entity.updatedAt = source.updatedAt;
+    details.createdAt = source.createdAt;
+    details.updatedAt = source.updatedAt;
+    sourceRecord.textSourceDetails = details;
 
-    return entity;
+    return sourceRecord;
   }
 
-  urlSourceToRecord(source: UrlSource): UrlSourceRecord {
-    const entity = new UrlSourceRecord();
-    entity.id = source.id;
-    entity.type = SourceType.URL;
-    entity.url = source.url;
-    entity.name = source.name;
-    entity.text = source.text;
-    entity.content = source.content.map((c) =>
+  private urlSourceToRecord(source: UrlSource): TextSourceRecord {
+    const sourceRecord = new TextSourceRecord();
+    sourceRecord.id = source.id;
+    sourceRecord.name = source.name;
+    sourceRecord.type = source.type;
+    sourceRecord.createdAt = source.createdAt;
+    sourceRecord.updatedAt = source.updatedAt;
+
+    const details = new UrlSourceDetailsRecord();
+    details.id = source.id;
+    details.textType = source.textType;
+    details.url = source.url;
+    details.text = source.text;
+    details.contentChunks = source.contentChunks.map((c) =>
       this.sourceContentMapper.toEntity(c),
     );
-    entity.createdAt = source.createdAt;
-    entity.updatedAt = source.updatedAt;
+    details.createdAt = source.createdAt;
+    details.updatedAt = source.updatedAt;
+    sourceRecord.textSourceDetails = details;
 
-    return entity;
+    return sourceRecord;
   }
 }

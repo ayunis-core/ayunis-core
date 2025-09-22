@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 import { Tool } from '../tool.entity';
 import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FileSource } from 'src/domain/sources/domain/sources/file-source.entity';
+import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 
 const codeExecutionToolParameters = {
   type: 'object' as const,
@@ -30,7 +30,7 @@ type CodeExecutionToolParameters = FromSchema<
 >;
 
 export class CodeExecutionTool extends Tool {
-  constructor(availableSources: FileSource[]) {
+  constructor(availableSources: DataSource[]) {
     super({
       name: ToolType.CODE_EXECUTION,
       description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in the context of the files provided. The code will be executed in a sandboxed environment. If you pass a file name, you can use it in the code through "import <file_name>". The files are: ${availableSources

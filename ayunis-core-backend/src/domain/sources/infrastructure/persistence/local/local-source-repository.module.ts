@@ -1,21 +1,33 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SourceRecord } from './schema/source.record';
-import { SourceContentRecord } from './schema/source-content.record';
-import { FileSourceRecord } from './schema/file-source.record';
-import { UrlSourceRecord } from './schema/url-source.record';
+import {
+  SourceRecord,
+  TextSourceRecord,
+  DataSourceRecord,
+} from './schema/source.record';
+import { SourceContentChunkRecord } from './schema/source-content.record';
 import { LocalSourceRepository } from './local-source.repository';
 import { SourceMapper } from './mappers/source.mapper';
 import { SourceContentMapper } from './mappers/source-content.mapper';
-import { SOURCE_REPOSITORY } from '../../../application/ports/source.repository';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import {
+  FileSourceDetailsRecord,
+  TextSourceDetailsRecord,
+  UrlSourceDetailsRecord,
+} from './schema/text-source-details.record';
+import { DataSourceDetailsRecord } from './schema/data-source-details.record';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       SourceRecord,
-      SourceContentRecord,
-      FileSourceRecord,
-      UrlSourceRecord,
+      TextSourceRecord,
+      TextSourceDetailsRecord,
+      DataSourceRecord,
+      DataSourceDetailsRecord,
+      FileSourceDetailsRecord,
+      UrlSourceDetailsRecord,
+      SourceContentChunkRecord,
     ]),
   ],
   providers: [
@@ -23,10 +35,10 @@ import { SOURCE_REPOSITORY } from '../../../application/ports/source.repository'
     SourceContentMapper,
     LocalSourceRepository,
     {
-      provide: SOURCE_REPOSITORY,
+      provide: SourceRepository,
       useExisting: LocalSourceRepository,
     },
   ],
-  exports: [SOURCE_REPOSITORY, SourceMapper],
+  exports: [SourceRepository, SourceMapper],
 })
 export class LocalSourceRepositoryModule {}

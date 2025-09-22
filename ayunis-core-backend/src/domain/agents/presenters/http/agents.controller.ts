@@ -58,14 +58,14 @@ import { AgentDtoMapper } from './mappers/agent.mapper';
 import { AddFileSourceToAgentDto } from './dto/add-file-source-to-agent.dto';
 import { AgentSourceResponseDto } from './dto/agent-source-assignment-response.dto';
 import { AgentSourceDtoMapper } from './mappers/agent-source.mapper';
-import { CreateFileSourceUseCase } from '../../../sources/application/use-cases/create-file-source/create-file-source.use-case';
-import { CreateFileSourceCommand } from '../../../sources/application/use-cases/create-file-source/create-file-source.command';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
+import { CreateFileSourceCommand } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.command';
+import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
 
 @ApiTags('agents')
 @Controller('agents')
@@ -80,9 +80,9 @@ export class AgentsController {
     private readonly findAllAgentsByOwnerUseCase: FindAllAgentsByOwnerUseCase,
     private readonly addSourceToAgentUseCase: AddSourceToAgentUseCase,
     private readonly removeSourceFromAgentUseCase: RemoveSourceFromAgentUseCase,
-    private readonly createFileSourceUseCase: CreateFileSourceUseCase,
     private readonly agentDtoMapper: AgentDtoMapper,
     private readonly agentSourceDtoMapper: AgentSourceDtoMapper,
+    private readonly createTextSourceUseCase: CreateTextSourceUseCase,
   ) {}
 
   @Post()
@@ -340,12 +340,11 @@ export class AgentsController {
       // Create the file source
       const createFileSourceCommand = new CreateFileSourceCommand({
         fileType: file.mimetype,
-        fileSize: file.size,
         fileData: fileData,
         fileName: file.originalname,
       });
 
-      const fileSource = await this.createFileSourceUseCase.execute(
+      const fileSource = await this.createTextSourceUseCase.execute(
         createFileSourceCommand,
       );
 

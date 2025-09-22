@@ -1,25 +1,46 @@
-import { Column, Entity, TableInheritance, OneToMany } from 'typeorm';
+import {
+  ChildEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  TableInheritance,
+} from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { SourceType } from '../../../../domain/source-type.enum';
-import { SourceContentRecord } from './source-content.record';
+import { TextSourceDetailsRecord } from './text-source-details.record';
+import { DataSourceDetailsRecord } from './data-source-details.record';
 
-@Entity({ name: 'sources' })
+@Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export abstract class SourceRecord extends BaseRecord {
-  @Column({
-    type: 'enum',
-    enum: SourceType,
-  })
-  type: SourceType;
-
   @Column()
   name: string;
 
   @Column()
-  text: string;
+  type: SourceType;
+}
 
-  @OneToMany(() => SourceContentRecord, (content) => content.source, {
+@Entity()
+@ChildEntity(SourceType.TEXT)
+export class TextSourceRecord extends SourceRecord {
+  @OneToOne(() => TextSourceDetailsRecord, {
+    onDelete: 'CASCADE',
     cascade: true,
+    eager: true,
   })
-  content: SourceContentRecord[];
+  @JoinColumn({ name: 'sourceId' })
+  textSourceDetails: TextSourceDetailsRecord;
+}
+
+@Entity()
+@ChildEntity(SourceType.DATA)
+export class DataSourceRecord extends SourceRecord {
+  @OneToOne(() => DataSourceDetailsRecord, {
+    onDelete: 'CASCADE',
+    cascade: true,
+    eager: true,
+  })
+  @JoinColumn({ name: 'sourceId' })
+  dataSourceDetails: DataSourceDetailsRecord;
 }

@@ -70,16 +70,10 @@ export class LocalThreadsRepository extends ThreadsRepository {
           agentTools: {
             toolConfig: true,
           },
-          sourceAssignments: {
-            source: {
-              content: true,
-            },
-          },
+          sourceAssignments: true,
         },
         sourceAssignments: {
-          source: {
-            content: true,
-          },
+          source: true,
         },
       },
       order: {
@@ -158,9 +152,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       messages: options?.withMessages ? true : false,
       sourceAssignments: options?.withSources
         ? {
-            source: {
-              content: true,
-            },
+            source: true,
           }
         : false,
       agent: options?.withAgent

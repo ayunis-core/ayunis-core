@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import { FileSource } from 'src/domain/sources/domain/sources/file-source.entity';
-import { UrlSource } from 'src/domain/sources/domain/sources/url-source.entity';
+import {
+  FileSource,
+  UrlSource,
+} from 'src/domain/sources/domain/sources/text-source.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { UUID } from 'crypto';
 import {
-  SourceResponseDto,
   FileSourceResponseDto,
   UrlSourceResponseDto,
 } from '../dto/get-thread-response.dto/source-response.dto';
@@ -15,22 +16,14 @@ export class SourceDtoMapper {
   toDto(
     source: Source,
     threadId?: UUID,
-  ): SourceResponseDto | FileSourceResponseDto | UrlSourceResponseDto {
+  ): FileSourceResponseDto | UrlSourceResponseDto {
     if (source instanceof FileSource) {
       return this.fileSourceToDto(source, threadId);
     } else if (source instanceof UrlSource) {
       return this.urlSourceToDto(source, threadId);
     }
 
-    const baseDto = new SourceResponseDto();
-    baseDto.id = source.id;
-    baseDto.threadId = threadId;
-    baseDto.type = source.type;
-    baseDto.name = source.name;
-    baseDto.createdAt = source.createdAt.toISOString();
-    baseDto.updatedAt = source.updatedAt.toISOString();
-
-    return baseDto;
+    throw new Error('Invalid source type: ' + source.type);
   }
 
   private fileSourceToDto(
@@ -40,9 +33,9 @@ export class SourceDtoMapper {
     const fileDto = new FileSourceResponseDto();
     fileDto.id = source.id;
     fileDto.threadId = threadId;
-    fileDto.type = SourceType.FILE;
+    fileDto.type = SourceType.TEXT;
+    fileDto.textType = source.textType;
     fileDto.fileType = source.fileType;
-    fileDto.fileSize = source.fileSize;
     fileDto.name = source.name;
     fileDto.createdAt = source.createdAt.toISOString();
     fileDto.updatedAt = source.updatedAt.toISOString();
@@ -57,7 +50,8 @@ export class SourceDtoMapper {
     const urlDto = new UrlSourceResponseDto();
     urlDto.id = source.id;
     urlDto.threadId = threadId;
-    urlDto.type = SourceType.URL;
+    urlDto.type = SourceType.TEXT;
+    urlDto.textType = source.textType;
     urlDto.url = source.url;
     urlDto.name = source.name;
     urlDto.createdAt = source.createdAt.toISOString();

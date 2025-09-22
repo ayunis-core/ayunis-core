@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SourceContent } from 'src/domain/sources/domain/source-content.entity';
-import { SourceContentRecord } from '../schema/source-content.record';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content.entity';
+import { SourceContentChunkRecord } from '../schema/source-content.record';
 
 @Injectable()
 export class SourceContentMapper {
-  toEntity(sourceContent: SourceContent): SourceContentRecord {
-    const entity = new SourceContentRecord();
+  toEntity(sourceContent: TextSourceContentChunk): SourceContentChunkRecord {
+    const entity = new SourceContentChunkRecord();
     entity.id = sourceContent.id;
     entity.content = sourceContent.content;
     entity.sourceId = sourceContent.sourceId;
@@ -15,8 +15,8 @@ export class SourceContentMapper {
     return entity;
   }
 
-  toDomain(entity: SourceContentRecord): SourceContent {
-    return new SourceContent({
+  toDomain(entity: SourceContentChunkRecord): TextSourceContentChunk {
+    return new TextSourceContentChunk({
       id: entity.id,
       sourceId: entity.sourceId,
       content: entity.content,

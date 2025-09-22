@@ -12,12 +12,13 @@ import { RemoveSourceFromAgentUseCase } from './remove-source-from-agent.use-cas
 import { RemoveSourceFromAgentCommand } from './remove-source-from-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
+import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentSourceAssignment } from '../../../domain/agent-source-assignment.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -34,7 +35,7 @@ describe('RemoveSourceFromAgentUseCase', () => {
   let useCase: RemoveSourceFromAgentUseCase;
   let agentRepository: jest.Mocked<AgentRepository>;
   let contextService: jest.Mocked<ContextService>;
-  let getSourceByIdUseCase: jest.Mocked<GetSourceByIdUseCase>;
+  let getSourceByIdUseCase: jest.Mocked<GetTextSourceByIdUseCase>;
   let deleteSourceUseCase: jest.Mocked<DeleteSourceUseCase>;
 
   const mockUserId = randomUUID();
@@ -69,7 +70,10 @@ describe('RemoveSourceFromAgentUseCase', () => {
         RemoveSourceFromAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: GetSourceByIdUseCase, useValue: mockGetSourceByIdUseCase },
+        {
+          provide: GetTextSourceByIdUseCase,
+          useValue: mockGetSourceByIdUseCase,
+        },
         { provide: DeleteSourceUseCase, useValue: mockDeleteSourceUseCase },
       ],
     }).compile();
@@ -79,7 +83,7 @@ describe('RemoveSourceFromAgentUseCase', () => {
     );
     agentRepository = module.get(AgentRepository);
     contextService = module.get(ContextService);
-    getSourceByIdUseCase = module.get(GetSourceByIdUseCase);
+    getSourceByIdUseCase = module.get(GetTextSourceByIdUseCase);
     deleteSourceUseCase = module.get(DeleteSourceUseCase);
 
     // Mock logger

@@ -3,6 +3,7 @@ import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
 export enum SourceErrorCode {
   SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
   UNEXPECTED_SOURCE_ERROR = 'UNEXPECTED_SOURCE_ERROR',
+  INVALID_SOURCE_TYPE = 'INVALID_SOURCE_TYPE',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -13,6 +14,17 @@ export abstract class SourceError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
+  }
+}
+
+export class InvalidSourceTypeError extends SourceError {
+  constructor(sourceType: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid source type: ${sourceType}`,
+      SourceErrorCode.INVALID_SOURCE_TYPE,
+      400,
+      metadata,
+    );
   }
 }
 

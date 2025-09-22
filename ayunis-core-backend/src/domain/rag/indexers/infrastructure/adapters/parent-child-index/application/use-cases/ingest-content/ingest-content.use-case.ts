@@ -29,7 +29,7 @@ export class IngestContentUseCase {
     await this.parentChildIndexerRepository.delete(
       command.indexEntry.relatedDocumentId,
     );
-    const textChunks = this.splitTextUseCase.execute(
+    const childChunkTexts = this.splitTextUseCase.execute(
       new SplitTextCommand(command.content, SplitterType.RECURSIVE),
     );
     const model = await this.getPermittedEmbeddingModelUseCase.execute(
@@ -37,21 +37,21 @@ export class IngestContentUseCase {
         orgId: command.orgId,
       }),
     );
-    const embeddings = await this.embedTextUseCase.execute(
+    const childChunkEmbeddings = await this.embedTextUseCase.execute(
       new EmbedTextCommand({
-        texts: textChunks.chunks.map((chunk) => chunk.text),
+        texts: childChunkTexts.chunks.map((chunk) => chunk.text),
         model: model.model,
         orgId: command.orgId,
       }),
     );
     const parentId = randomUUID();
-    const childChunks = embeddings.map((embedding) => {
+    const childChunks = childChunkEmbeddings.map((embedding) => {
       this.logger.debug('child chunk', {
         vectorLength: embedding.vector.length,
       });
       return new ChildChunk({
         embedding: embedding.vector,
-        parentId: parentId,
+        parentId,
       });
     });
     const parentChunk = new ParentChunk({

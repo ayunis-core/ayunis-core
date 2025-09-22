@@ -2,12 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { Source } from '../../../domain/source.entity';
-import { FileSource } from '../../../domain/sources/file-source.entity';
-import { UrlSource } from '../../../domain/sources/url-source.entity';
+import { TextSource } from '../../../domain/sources/text-source.entity';
+import { DataSource } from '../../../domain/sources/data-source.entity';
 import { SourceRepository } from '../../../application/ports/source.repository';
-import { SourceRecord } from './schema/source.record';
 import { SourceMapper } from './mappers/source.mapper';
+import { TextSourceDetailsRecord } from './schema/text-source-details.record';
+import {
+  DataSourceRecord,
+  SourceRecord,
+  TextSourceRecord,
+} from './schema/source.record';
+import { DataSourceDetailsRecord } from './schema/data-source-details.record';
+import { Source } from 'src/domain/sources/domain/source.entity';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -16,62 +22,96 @@ export class LocalSourceRepository extends SourceRepository {
   constructor(
     @InjectRepository(SourceRecord)
     private readonly sourceRepository: Repository<SourceRecord>,
-    private readonly sourceMapper: SourceMapper,
+    @InjectRepository(TextSourceDetailsRecord)
+    private readonly textSourceDetailsRepository: Repository<TextSourceDetailsRecord>,
+    @InjectRepository(DataSourceDetailsRecord)
+    private readonly dataSourceDetailsRepository: Repository<DataSourceDetailsRecord>,
+    private readonly mapper: SourceMapper,
   ) {
     super();
   }
 
-  async findById(id: UUID): Promise<Source | null> {
-    const entity = await this.sourceRepository.findOne({
+  async findById(id: UUID): Promise<TextSource | DataSource | null> {
+    this.logger.log('findById', { id });
+    const record = await this.sourceRepository.findOne({
       where: { id },
-      relations: {
-        content: true,
-      },
     });
-
-    if (!entity) {
+    if (!record) {
       return null;
     }
+    if (record instanceof TextSourceRecord) {
+      const textSourceDetails = await this.textSourceDetailsRepository.findOne({
+        where: { source: { id } },
+        relations: {
+          contentChunks: true,
+        },
+      });
+      if (!textSourceDetails) {
+        return null;
+      }
+      record.textSourceDetails = textSourceDetails;
+      const source = this.mapper.toDomain(record);
+      return source;
+    }
+    if (record instanceof DataSourceRecord) {
+      const dataSourceDetails = await this.dataSourceDetailsRepository.findOne({
+        where: { source: { id } },
+      });
+      if (!dataSourceDetails) {
+        return null;
+      }
+      record.dataSourceDetails = dataSourceDetails;
+      const source = this.mapper.toDomain(record);
+      return source;
+    }
 
-    return this.sourceMapper.toDomain(entity);
+    return null;
   }
 
+  async create(source: TextSource): Promise<TextSource>;
+  async create(source: DataSource): Promise<DataSource>;
   async create(source: Source): Promise<Source> {
-    const entity = this.sourceMapper.toRecord(source);
-    const savedEntity = await this.sourceRepository.save(entity);
+    this.logger.log('create', { source });
+    if (source instanceof TextSource) {
+      const record = this.mapper.toRecord(source);
+      const savedRecord = await this.sourceRepository.save(record);
+      return this.mapper.toDomain(savedRecord);
+    }
+    if (source instanceof DataSource) {
+      const record = this.mapper.toRecord(source);
+      const savedRecord = await this.sourceRepository.save(record);
+      return this.mapper.toDomain(savedRecord);
+    }
 
-    return this.sourceMapper.toDomain(savedEntity);
+    throw new Error('Invalid source type');
   }
 
-  async createFileSource(source: FileSource): Promise<FileSource> {
-    const entity = this.sourceMapper.fileSourceToRecord(source);
-    this.logger.debug(`Saving file source`, {
-      entity,
-    });
-    const savedEntity = await this.sourceRepository.save(entity);
-
-    return this.sourceMapper.toDomain(savedEntity) as FileSource;
-  }
-
-  async createUrlSource(source: UrlSource): Promise<UrlSource> {
-    const entity = this.sourceMapper.urlSourceToRecord(source);
-    this.logger.debug(`Saving URL source: ${JSON.stringify(entity)}`, {
-      entity,
-    });
-    const savedEntity = await this.sourceRepository.save(entity);
-
-    return this.sourceMapper.toDomain(savedEntity) as UrlSource;
-  }
-
+  async update(source: TextSource): Promise<TextSource>;
+  async update(source: DataSource): Promise<DataSource>;
   async update(source: Source): Promise<Source> {
-    const entity = this.sourceMapper.toRecord(source);
-    const savedEntity = await this.sourceRepository.save(entity);
+    this.logger.log('update', { source });
+    if (source instanceof TextSource) {
+      const record = this.mapper.toRecord(source);
+      const savedRecord = await this.sourceRepository.save(record);
+      return this.mapper.toDomain(savedRecord);
+    }
+    if (source instanceof DataSource) {
+      const record = this.mapper.toRecord(source);
+      const savedRecord = await this.sourceRepository.save(record);
+      return this.mapper.toDomain(savedRecord);
+    }
 
-    return this.sourceMapper.toDomain(savedEntity);
+    throw new Error('Invalid source type');
   }
 
   async delete(source: Source): Promise<void> {
-    const record = this.sourceMapper.toRecord(source);
-    await this.sourceRepository.remove(record);
+    this.logger.log('delete', { source });
+    if (source instanceof TextSource) {
+      await this.sourceRepository.remove(this.mapper.toRecord(source));
+    }
+    if (source instanceof DataSource) {
+      await this.sourceRepository.remove(this.mapper.toRecord(source));
+    }
+    throw new Error('Invalid source type');
   }
 }

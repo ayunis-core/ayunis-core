@@ -1,7 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import {
+  SourceType,
+  TextType,
+} from 'src/domain/sources/domain/source-type.enum';
 
-export class SourceResponseDto {
+export abstract class SourceResponseDto {
   @ApiProperty({ description: 'Unique identifier for the source' })
   id: string;
 
@@ -22,6 +25,9 @@ export class SourceResponseDto {
 }
 
 export class FileSourceResponseDto extends SourceResponseDto {
+  @ApiProperty({ description: 'Type of text', enum: TextType })
+  textType: TextType;
+
   @ApiProperty({ description: 'MIME type of the file' })
   fileType: string;
 
@@ -33,6 +39,9 @@ export class FileSourceResponseDto extends SourceResponseDto {
 }
 
 export class UrlSourceResponseDto extends SourceResponseDto {
+  @ApiProperty({ description: 'Type of text', enum: TextType })
+  textType: TextType;
+
   @ApiProperty({ description: 'URL of the source' })
   url: string;
 }

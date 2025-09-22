@@ -1,10 +1,10 @@
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
-import { SourceRecord } from './source.record';
+import { TextSourceDetailsRecord } from './text-source-details.record';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UUID } from 'crypto';
 
-@Entity({ name: 'source_contents' })
-export class SourceContentRecord extends BaseRecord {
+@Entity({ name: 'source_content_chunks' })
+export class SourceContentChunkRecord extends BaseRecord {
   @Column()
   content: string;
 
@@ -12,10 +12,10 @@ export class SourceContentRecord extends BaseRecord {
   @Index()
   sourceId: UUID;
 
-  @ManyToOne(() => SourceRecord, (source) => source.content, {
+  @ManyToOne(() => TextSourceDetailsRecord, (source) => source.contentChunks, {
     onDelete: 'CASCADE',
   })
-  source: SourceRecord;
+  source: TextSourceDetailsRecord;
 
   @Column({ type: 'jsonb' })
   meta: Record<string, any>;

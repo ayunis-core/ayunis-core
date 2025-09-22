@@ -42,8 +42,6 @@ import { AddSourceToThreadUseCase } from '../../application/use-cases/add-source
 import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { UpdateThreadModelUseCase } from '../../application/use-cases/update-thread-model/update-thread-model.use-case';
-
-// Import commands and queries
 import { CreateThreadCommand } from '../../application/use-cases/create-thread/create-thread.command';
 import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
 import { FindAllThreadsQuery } from '../../application/use-cases/find-all-threads/find-all-threads.query';
@@ -52,9 +50,8 @@ import { AddSourceCommand } from '../../application/use-cases/add-source-to-thre
 import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
 import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
 import { UpdateThreadModelCommand } from '../../application/use-cases/update-thread-model/update-thread-model.command';
-
-// Import other dependencies
-import { CreateFileSourceCommand } from '../../../sources/application/use-cases/create-file-source/create-file-source.command';
+import { CreateFileSourceCommand } from '../../../sources/application/use-cases/create-text-source/create-text-source.command';
+import { CreateTextSourceUseCase } from '../../../sources/application/use-cases/create-text-source/create-text-source.use-case';
 import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
 import {
   SourceResponseDto,
@@ -66,7 +63,6 @@ import { CreateThreadDto } from './dto/create-thread.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
-import { CreateFileSourceUseCase } from '../../../sources/application/use-cases/create-file-source/create-file-source.use-case';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import { UpdateThreadAgentCommand } from '../../application/use-cases/update-thread-agent/update-thread-agent.command';
 import { UpdateThreadAgentUseCase } from '../../application/use-cases/update-thread-agent/update-thread-agent.use-case';
@@ -89,7 +85,7 @@ export class ThreadsController {
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
     private readonly updateThreadModelUseCase: UpdateThreadModelUseCase,
-    private readonly createFileSourceUseCase: CreateFileSourceUseCase,
+    private readonly createTextSourceUseCase: CreateTextSourceUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
@@ -380,12 +376,10 @@ export class ThreadsController {
       // Create the file source
       const createFileSourceCommand = new CreateFileSourceCommand({
         fileType: file.mimetype,
-        fileSize: file.size,
         fileData: fileData,
         fileName: file.originalname,
       });
-
-      const fileSource = await this.createFileSourceUseCase.execute(
+      const fileSource = await this.createTextSourceUseCase.execute(
         createFileSourceCommand,
       );
 
@@ -408,49 +402,6 @@ export class ThreadsController {
       throw error;
     }
   }
-
-  // @Post(':id/sources/url')
-  // @ApiOperation({ summary: 'Add a URL source to a thread' })
-  // @ApiParam({
-  //   name: 'id',
-  //   description: 'The UUID of the thread',
-  //   type: 'string',
-  //   format: 'uuid',
-  // })
-  // @ApiBody({ type: AddUrlSourceToThreadDto })
-  // @ApiResponse({
-  //   status: 201,
-  //   description: 'The URL source has been successfully added to the thread',
-  //   type: UrlSourceResponseDto,
-  // })
-  // async addUrlSource(
-  //   @Param('id', ParseUUIDPipe) threadId: UUID,
-  //   @Body() addUrlSourceDto: AddUrlSourceToThreadDto,
-  // ): Promise<UrlSourceResponseDto> {
-  //   this.logger.log('addUrlSource', { threadId, url: addUrlSourceDto.url });
-
-  //   // Create the URL source
-  //   const createUrlSourceCommand = new CreateUrlSourceCommand({
-  //     threadId,
-  //     userId: addUrlSourceDto.userId,
-  //     url: addUrlSourceDto.url,
-  //   });
-
-  //   const urlSource = await this.sourcesService.createUrlSource(
-  //     createUrlSourceCommand,
-  //   );
-
-  //   // Add the source to the thread
-  //   const thread = await this.threadsService.findOne(
-  //     new FindThreadQuery(threadId, addUrlSourceDto.userId),
-  //   );
-
-  //   await this.threadsService.addSource(
-  //     new AddSourceCommand(thread, urlSource),
-  //   );
-
-  //   return urlSource as unknown as UrlSourceResponseDto;
-  // }
 
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a thread' })

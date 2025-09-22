@@ -1,26 +1,25 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import {
-  SourceRepository,
-  SOURCE_REPOSITORY,
-} from '../../ports/source.repository';
-import { QuerySourceCommand } from './query-source.command';
+import { Injectable, Logger } from '@nestjs/common';
+import { SourceRepository } from '../../ports/source.repository';
+import { QueryTextSourceCommand } from './query-text-source.command';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import { SourceContent } from 'src/domain/sources/domain/source-content.entity';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content.entity';
+import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
 @Injectable()
-export class QuerySourceUseCase {
-  private readonly logger = new Logger(QuerySourceUseCase.name);
+export class QueryTextSourceUseCase {
+  private readonly logger = new Logger(QueryTextSourceUseCase.name);
 
   constructor(
-    @Inject(SOURCE_REPOSITORY)
     private readonly sourceRepository: SourceRepository,
     private readonly searchContentUseCase: SearchContentUseCase,
   ) {}
 
-  async execute(command: QuerySourceCommand): Promise<SourceContent[]> {
-    this.logger.debug('execute', command);
+  async execute(
+    command: QueryTextSourceCommand,
+  ): Promise<TextSourceContentChunk[]> {
+    this.logger.log('execute', command);
     // Validate input
     if (!command.query || command.query.trim().length === 0) {
       this.logger.warn('Empty query provided for vector search');
@@ -48,7 +47,7 @@ export class QuerySourceUseCase {
       );
 
       // Fetch the actual source content for each index entry
-      const sourceContentMatches: SourceContent[] = [];
+      const sourceContentMatches: TextSourceContentChunk[] = [];
 
       for (const indexEntry of indexEntries) {
         // Get the source first to access its content
@@ -56,9 +55,9 @@ export class QuerySourceUseCase {
           indexEntry.relatedDocumentId,
         );
 
-        if (source && source.content) {
+        if (source && source instanceof TextSource && source.contentChunks) {
           // Find the specific content chunk by ID
-          const sourceContent = source.content.find(
+          const sourceContent = source.contentChunks.find(
             (content) => content.id === indexEntry.relatedChunkId,
           );
 

@@ -1,6 +1,6 @@
 import { UUID, randomUUID } from 'crypto';
 
-export class SourceContent {
+export class TextSourceContentChunk {
   id: UUID;
   sourceId: UUID;
   content: string;

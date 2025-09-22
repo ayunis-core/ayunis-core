@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
-import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
-import { QuerySourceUseCase } from 'src/domain/sources/application/use-cases/query-source/query-source.use-case';
-import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
-import { QuerySourceCommand } from 'src/domain/sources/application/use-cases/query-source/query-source.command';
+import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
+import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
+import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
+import { QueryTextSourceCommand } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.command';
 import { ToolExecutionHandler } from '../ports/execution.handler';
 import {
   ModelNotFoundByIdError,
@@ -22,8 +22,8 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(SourceQueryToolHandler.name);
 
   constructor(
-    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
-    private readonly matchSourceContentChunksUseCase: QuerySourceUseCase,
+    private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
+    private readonly matchSourceContentChunksUseCase: QueryTextSourceUseCase,
   ) {
     super();
   }
@@ -47,7 +47,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
         });
       }
       const source = await this.getSourceByIdUseCase.execute(
-        new GetSourceByIdQuery(input.sourceId as UUID),
+        new GetTextSourceByIdQuery(input.sourceId as UUID),
       );
       if (!source) {
         this.logger.error('Source not found', input);
@@ -59,7 +59,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
       }
 
       const matchedChunks = await this.matchSourceContentChunksUseCase.execute(
-        new QuerySourceCommand({
+        new QueryTextSourceCommand({
           orgId,
           filter: {
             sourceId: source.id,

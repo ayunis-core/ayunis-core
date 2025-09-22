@@ -18,7 +18,7 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
 import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
 import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
-import { FileSource } from 'src/domain/sources/domain/sources/file-source.entity';
+import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 
 @Injectable()
 export class ToolFactory {
@@ -65,7 +65,7 @@ export class ToolFactory {
           params.context &&
           params.context instanceof Array &&
           params.context.every(
-            (source: unknown) => source instanceof FileSource,
+            (source: unknown) => source instanceof DataSource,
           )
         ) {
           return new CodeExecutionTool(params.context);

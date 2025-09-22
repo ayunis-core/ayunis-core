@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GetSourceByIdUseCase } from './get-source-by-id.use-case';
-import { GetSourceByIdQuery } from './get-source-by-id.query';
+import { GetTextSourceByIdUseCase } from './get-text-source-by-id.use-case';
+import { GetTextSourceByIdQuery } from './get-text-source-by-id.query';
 import {
   SourceRepository,
   SOURCE_REPOSITORY,
@@ -10,7 +10,7 @@ import { randomUUID } from 'crypto';
 import { SourceNotFoundError } from '../../sources.errors';
 
 describe('GetSourceByIdUseCase', () => {
-  let useCase: GetSourceByIdUseCase;
+  let useCase: GetTextSourceByIdUseCase;
   let mockSourceRepository: Partial<SourceRepository>;
 
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe('GetSourceByIdUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        GetSourceByIdUseCase,
+        GetTextSourceByIdUseCase,
         {
           provide: SOURCE_REPOSITORY,
           useValue: mockSourceRepository,
@@ -28,7 +28,7 @@ describe('GetSourceByIdUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<GetSourceByIdUseCase>(GetSourceByIdUseCase);
+    useCase = module.get<GetTextSourceByIdUseCase>(GetTextSourceByIdUseCase);
   });
 
   it('should be defined', () => {
@@ -41,7 +41,7 @@ describe('GetSourceByIdUseCase', () => {
 
     (mockSourceRepository.findById as jest.Mock).mockResolvedValue(mockSource);
 
-    const result = await useCase.execute(new GetSourceByIdQuery(sourceId));
+    const result = await useCase.execute(new GetTextSourceByIdQuery(sourceId));
 
     expect(result).toBe(mockSource);
     expect(mockSourceRepository.findById).toHaveBeenCalledWith(sourceId);
@@ -53,7 +53,7 @@ describe('GetSourceByIdUseCase', () => {
     (mockSourceRepository.findById as jest.Mock).mockResolvedValue(undefined);
 
     await expect(
-      useCase.execute(new GetSourceByIdQuery(sourceId)),
+      useCase.execute(new GetTextSourceByIdQuery(sourceId)),
     ).rejects.toThrow(SourceNotFoundError);
 
     expect(mockSourceRepository.findById).toHaveBeenCalledWith(sourceId);

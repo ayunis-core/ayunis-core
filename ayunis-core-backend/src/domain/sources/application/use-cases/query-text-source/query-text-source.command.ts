@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 
-export class QuerySourceCommand {
+export class QueryTextSourceCommand {
   orgId: UUID;
   filter: {
     sourceId: UUID;
