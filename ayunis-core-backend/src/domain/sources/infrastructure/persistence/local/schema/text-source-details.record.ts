@@ -5,20 +5,19 @@ import {
   OneToMany,
   TableInheritance,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { FileType, TextType } from '../../../../domain/source-type.enum';
-import { SourceContentChunkRecord } from './source-content.record';
+import { SourceContentChunkRecord } from './source-content-chunk.record';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { TextSourceRecord } from './source.record';
 
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'textType' } })
 export abstract class TextSourceDetailsRecord extends BaseRecord {
-  @OneToOne(() => TextSourceRecord, { onDelete: 'CASCADE', cascade: true })
+  @OneToOne(() => TextSourceRecord, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'sourceId' })
   source: TextSourceRecord;
-
-  @Column()
-  textType: TextType;
 
   @Column()
   text: string;
@@ -30,14 +29,12 @@ export abstract class TextSourceDetailsRecord extends BaseRecord {
   contentChunks: SourceContentChunkRecord[];
 }
 
-@Entity()
 @ChildEntity(TextType.FILE)
 export class FileSourceDetailsRecord extends TextSourceDetailsRecord {
   @Column()
   fileType: FileType;
 }
 
-@Entity()
 @ChildEntity(TextType.WEB)
 export class UrlSourceDetailsRecord extends TextSourceDetailsRecord {
   @Column()

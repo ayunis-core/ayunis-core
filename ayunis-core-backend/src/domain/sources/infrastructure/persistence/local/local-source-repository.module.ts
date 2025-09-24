@@ -5,10 +5,10 @@ import {
   TextSourceRecord,
   DataSourceRecord,
 } from './schema/source.record';
-import { SourceContentChunkRecord } from './schema/source-content.record';
+import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import { LocalSourceRepository } from './local-source.repository';
 import { SourceMapper } from './mappers/source.mapper';
-import { SourceContentMapper } from './mappers/source-content.mapper';
+import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import {
   FileSourceDetailsRecord,
@@ -32,7 +32,7 @@ import { DataSourceDetailsRecord } from './schema/data-source-details.record';
   ],
   providers: [
     SourceMapper,
-    SourceContentMapper,
+    SourceContentChunkMapper,
     LocalSourceRepository,
     {
       provide: SourceRepository,

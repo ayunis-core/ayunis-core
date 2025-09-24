@@ -18,7 +18,7 @@ import { Agent } from '../../../domain/agent.entity';
 import { AgentSourceAssignment } from '../../../domain/agent-source-assignment.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
-import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content.entity';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -113,7 +113,7 @@ describe('RemoveSourceFromAgentUseCase', () => {
 
       const mockSource = new TestSource({
         id: mockSourceId,
-        type: SourceType.FILE,
+        type: SourceType.TEXT,
         name: 'test-file.txt',
         text: 'Test content',
         content: [],
@@ -261,7 +261,7 @@ describe('RemoveSourceFromAgentUseCase', () => {
       const mockAgent = createMockAgent();
       const secondSource = new TestSource({
         id: secondSourceId,
-        type: SourceType.URL,
+        type: SourceType.TEXT,
         name: 'test-url',
         text: 'URL content',
         content: [],

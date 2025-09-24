@@ -14,6 +14,7 @@ import {
 } from './schema/source.record';
 import { DataSourceDetailsRecord } from './schema/data-source-details.record';
 import { Source } from 'src/domain/sources/domain/source.entity';
+import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -26,6 +27,8 @@ export class LocalSourceRepository extends SourceRepository {
     private readonly textSourceDetailsRepository: Repository<TextSourceDetailsRecord>,
     @InjectRepository(DataSourceDetailsRecord)
     private readonly dataSourceDetailsRepository: Repository<DataSourceDetailsRecord>,
+    @InjectRepository(SourceContentChunkRecord)
+    private readonly sourceContentChunkRepository: Repository<SourceContentChunkRecord>,
     private readonly mapper: SourceMapper,
   ) {
     super();
@@ -68,50 +71,44 @@ export class LocalSourceRepository extends SourceRepository {
     return null;
   }
 
-  async create(source: TextSource): Promise<TextSource>;
-  async create(source: DataSource): Promise<DataSource>;
-  async create(source: Source): Promise<Source> {
+  async save(source: TextSource): Promise<TextSource>;
+  async save(source: DataSource): Promise<DataSource>;
+  async save(source: Source): Promise<Source>;
+  async save(source: Source): Promise<Source> {
     this.logger.log('create', { source });
     if (source instanceof TextSource) {
-      const record = this.mapper.toRecord(source);
-      const savedRecord = await this.sourceRepository.save(record);
-      return this.mapper.toDomain(savedRecord);
+      const {
+        source: sourceRecord,
+        details,
+        contentChunks,
+      } = this.mapper.toRecord(source);
+      this.logger.debug('Saving source record', {
+        sourceRecord,
+        details,
+        contentChunks,
+      });
+      const savedSource = await this.sourceRepository.save(sourceRecord);
+      this.logger.debug('Saved source record with id', { id: savedSource.id });
+      const savedDetails = await this.textSourceDetailsRepository.save(details);
+      const savedContentChunks =
+        await this.sourceContentChunkRepository.save(contentChunks);
+      savedSource.textSourceDetails = savedDetails;
+      savedDetails.contentChunks = savedContentChunks;
+      return this.mapper.toDomain(savedSource);
     }
     if (source instanceof DataSource) {
-      const record = this.mapper.toRecord(source);
-      const savedRecord = await this.sourceRepository.save(record);
-      return this.mapper.toDomain(savedRecord);
+      const { source: sourceRecord, details } = this.mapper.toRecord(source);
+      const savedSource = await this.sourceRepository.save(sourceRecord);
+      const savedDetails = await this.dataSourceDetailsRepository.save(details);
+      savedSource.dataSourceDetails = savedDetails;
+      return this.mapper.toDomain(savedSource);
     }
-
-    throw new Error('Invalid source type');
-  }
-
-  async update(source: TextSource): Promise<TextSource>;
-  async update(source: DataSource): Promise<DataSource>;
-  async update(source: Source): Promise<Source> {
-    this.logger.log('update', { source });
-    if (source instanceof TextSource) {
-      const record = this.mapper.toRecord(source);
-      const savedRecord = await this.sourceRepository.save(record);
-      return this.mapper.toDomain(savedRecord);
-    }
-    if (source instanceof DataSource) {
-      const record = this.mapper.toRecord(source);
-      const savedRecord = await this.sourceRepository.save(record);
-      return this.mapper.toDomain(savedRecord);
-    }
-
     throw new Error('Invalid source type');
   }
 
   async delete(source: Source): Promise<void> {
     this.logger.log('delete', { source });
-    if (source instanceof TextSource) {
-      await this.sourceRepository.remove(this.mapper.toRecord(source));
-    }
-    if (source instanceof DataSource) {
-      await this.sourceRepository.remove(this.mapper.toRecord(source));
-    }
-    throw new Error('Invalid source type');
+    const { source: record } = this.mapper.toRecord(source);
+    await this.sourceRepository.remove(record);
   }
 }

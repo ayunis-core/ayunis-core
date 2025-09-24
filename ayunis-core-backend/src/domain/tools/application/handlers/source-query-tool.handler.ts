@@ -72,7 +72,6 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
       const result = matchedChunks.map((chunk) => {
         return {
           content: chunk.content,
-          sourceId: chunk.sourceId,
         };
       });
 

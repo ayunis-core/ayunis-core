@@ -2,7 +2,6 @@ import { UUID, randomUUID } from 'crypto';
 
 export class TextSourceContentChunk {
   id: UUID;
-  sourceId: UUID;
   content: string;
   meta: Record<string, any>;
   createdAt: Date;
@@ -10,14 +9,12 @@ export class TextSourceContentChunk {
 
   constructor(params: {
     id?: UUID;
-    sourceId: UUID;
     content: string;
     meta: Record<string, any>;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
     this.id = params.id ?? randomUUID();
-    this.sourceId = params.sourceId;
     this.content = params.content;
     this.meta = params.meta;
     this.createdAt = params.createdAt ?? new Date();

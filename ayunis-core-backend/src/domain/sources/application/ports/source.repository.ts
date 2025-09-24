@@ -5,7 +5,6 @@ import { Source } from '../../domain/source.entity';
 
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
-  abstract create(source: Source): Promise<Source>;
-  abstract update(source: Source): Promise<Source>;
+  abstract save(source: Source): Promise<Source>;
   abstract delete(source: Source): Promise<void>;
 }

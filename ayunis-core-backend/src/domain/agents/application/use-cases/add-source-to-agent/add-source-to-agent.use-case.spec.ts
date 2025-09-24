@@ -20,7 +20,9 @@ import { UUID } from 'crypto';
 
 // Mock Source implementation since it's abstract
 class MockSource extends Source {
-  constructor(params: Source) {
+  // Accept any additional fields for testing flexibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(params: any) {
     super(params);
   }
 }
@@ -72,10 +74,9 @@ describe('AddSourceToAgentUseCase', () => {
     // Create mock entities
     mockSource = new MockSource({
       id: mockSourceId,
-      type: SourceType.FILE,
+      type: SourceType.TEXT,
       name: 'Test Source',
-      text: 'Test source content',
-      content: [],
+      // extra testing fields
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -159,9 +160,9 @@ describe('AddSourceToAgentUseCase', () => {
       const existingSourceId = '123e4567-e89b-12d3-a456-426614174005' as UUID;
       const existingSource = new MockSource({
         id: existingSourceId,
-        type: SourceType.URL,
+        type: SourceType.TEXT,
         name: 'Existing Source',
-        text: 'Existing source content',
+        // extra
         content: [],
         createdAt: new Date(),
         updatedAt: new Date(),

@@ -25,7 +25,7 @@ export class ThreadSourceAssignmentMapper {
     record.id = domain.id;
     record.threadId = threadId;
     record.sourceId = domain.source.id;
-    record.source = this.sourceMapper.toRecord(domain.source);
+    record.source = this.sourceMapper.toRecord(domain.source).source;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

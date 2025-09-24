@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GetTextSourceByIdUseCase } from './get-text-source-by-id.use-case';
 import { GetTextSourceByIdQuery } from './get-text-source-by-id.query';
-import {
-  SourceRepository,
-  SOURCE_REPOSITORY,
-} from '../../ports/source.repository';
+import { SourceRepository } from '../../ports/source.repository';
 import { Source } from '../../../domain/source.entity';
 import { randomUUID } from 'crypto';
 import { SourceNotFoundError } from '../../sources.errors';
@@ -22,7 +19,7 @@ describe('GetSourceByIdUseCase', () => {
       providers: [
         GetTextSourceByIdUseCase,
         {
-          provide: SOURCE_REPOSITORY,
+          provide: SourceRepository,
           useValue: mockSourceRepository,
         },
       ],

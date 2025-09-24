@@ -4,7 +4,7 @@ import { QueryTextSourceCommand } from './query-text-source.command';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content.entity';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
 @Injectable()

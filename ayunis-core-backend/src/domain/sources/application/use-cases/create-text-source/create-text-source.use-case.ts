@@ -16,19 +16,19 @@ import {
   UnexpectedSourceError,
 } from '../../sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { ProcessFileCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/process-file/process-file.command';
-import { ProcessFileUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/process-file/process-file.use-case';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
-import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content.entity';
-import { randomUUID, UUID } from 'crypto';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import { UUID } from 'crypto';
 import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { SourceRepository } from '../../ports/source.repository';
+import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
+import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 
 @Injectable()
 export class CreateTextSourceUseCase {
@@ -37,15 +37,16 @@ export class CreateTextSourceUseCase {
   constructor(
     private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
     private readonly contextService: ContextService,
-    private readonly processFileUseCase: ProcessFileUseCase,
+    private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly ingestContentUseCase: IngestContentUseCase,
-    private readonly textSourceRepository: SourceRepository,
+    private readonly sourceRepository: SourceRepository,
   ) {}
 
   async execute(command: CreateFileSourceCommand): Promise<FileSource>;
   async execute(command: CreateUrlSourceCommand): Promise<UrlSource>;
   async execute(command: CreateTextSourceCommand): Promise<TextSource> {
+    this.logger.debug('Creating text source', { command });
     const orgId = this.contextService.get('orgId');
     try {
       if (!orgId) {
@@ -59,7 +60,8 @@ export class CreateTextSourceUseCase {
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      await this.textSourceRepository.create(source);
+      this.logger.debug('Saving source', { source });
+      await this.sourceRepository.save(source);
       await this.indexSourceContentChunks({ source, orgId });
       return source;
     } catch (error) {
@@ -76,16 +78,15 @@ export class CreateTextSourceUseCase {
   private async createFileSource(
     command: CreateFileSourceCommand,
   ): Promise<FileSource> {
-    const fileRetrieverResult = await this.processFileUseCase.execute(
-      new ProcessFileCommand({
+    const fileRetrieverResult = await this.retrieveFileContentUseCase.execute(
+      new RetrieveFileContentCommand({
         fileData: command.fileData,
         fileName: command.fileName,
         fileType: command.fileType,
       }),
     );
     const text = fileRetrieverResult.pages.map((page) => page.text).join('\n');
-    const sourceId = randomUUID();
-    const contentChunks = this.getChunksFromText(sourceId, text, {
+    const contentChunks = this.getChunksFromText(text, {
       fileName: command.fileName,
     });
 
@@ -105,14 +106,9 @@ export class CreateTextSourceUseCase {
       new RetrieveUrlCommand(command.url),
     );
 
-    const sourceId = randomUUID();
-    const sourceContents = this.getChunksFromText(
-      sourceId,
-      urlRetrieverResult.content,
-      {
-        url: command.url,
-      },
-    );
+    const sourceContents = this.getChunksFromText(urlRetrieverResult.content, {
+      url: command.url,
+    });
     return new UrlSource({
       contentChunks: sourceContents,
       text: urlRetrieverResult.content,
@@ -123,7 +119,7 @@ export class CreateTextSourceUseCase {
   }
 
   private getFileType(fileType: string): FileType {
-    if (fileType === 'pdf') {
+    if (fileType === 'application/pdf') {
       return FileType.PDF;
     }
     throw new Error('Invalid file type');
@@ -133,11 +129,10 @@ export class CreateTextSourceUseCase {
    * Process text content into source contents
    */
   private getChunksFromText(
-    sourceId: UUID,
     text: string,
     meta: Record<string, any> = {},
   ): TextSourceContentChunk[] {
-    const sourceContents: TextSourceContentChunk[] = [];
+    const sourceContentChunks: TextSourceContentChunk[] = [];
 
     // Split text into content blocks
     const contentBlocks = this.splitTextUseCase.execute(
@@ -149,16 +144,15 @@ export class CreateTextSourceUseCase {
 
     for (const contentBlock of contentBlocks.chunks) {
       // Create source content for each content block
-      const sourceContent = new TextSourceContentChunk({
-        sourceId,
+      const chunk = new TextSourceContentChunk({
         content: contentBlock.text,
         meta,
       });
 
-      sourceContents.push(sourceContent);
+      sourceContentChunks.push(chunk);
     }
 
-    return sourceContents;
+    return sourceContentChunks;
   }
 
   /**

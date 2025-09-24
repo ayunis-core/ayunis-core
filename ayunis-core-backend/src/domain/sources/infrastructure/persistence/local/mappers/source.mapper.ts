@@ -2,12 +2,18 @@ import {
   FileSource,
   UrlSource,
 } from 'src/domain/sources/domain/sources/text-source.entity';
-import { FileSourceDetailsRecord } from '../schema/text-source-details.record';
+import {
+  FileSourceDetailsRecord,
+  TextSourceDetailsRecord,
+} from '../schema/text-source-details.record';
 import { UrlSourceDetailsRecord } from '../schema/text-source-details.record';
-import { Injectable } from '@nestjs/common';
-import { SourceContentMapper } from './source-content.mapper';
+import { Injectable, Logger } from '@nestjs/common';
+import { SourceContentChunkMapper } from './source-content-chunk.mapper';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { CSVDataSourceDetailsRecord } from '../schema/data-source-details.record';
+import {
+  CSVDataSourceDetailsRecord,
+  DataSourceDetailsRecord,
+} from '../schema/data-source-details.record';
 import {
   CSVDataSource,
   DataSource,
@@ -18,10 +24,15 @@ import {
   SourceRecord,
   TextSourceRecord,
 } from '../schema/source.record';
+import { TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceContentChunkRecord } from '../schema/source-content-chunk.record';
 
 @Injectable()
 export class SourceMapper {
-  constructor(private readonly sourceContentMapper: SourceContentMapper) {}
+  private readonly logger = new Logger(SourceMapper.name);
+  constructor(
+    private readonly sourceContentChunkMapper: SourceContentChunkMapper,
+  ) {}
 
   toDomain(record: TextSourceRecord): TextSource;
   toDomain(record: DataSourceRecord): DataSource;
@@ -43,10 +54,10 @@ export class SourceMapper {
         id: record.id,
         fileType: record.textSourceDetails.fileType,
         name: record.name,
-        type: record.textSourceDetails.textType,
+        type: TextType.FILE,
         text: record.textSourceDetails.text,
-        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
-          this.sourceContentMapper.toEntity(c),
+        contentChunks: record.textSourceDetails.contentChunks?.map((c) =>
+          this.sourceContentChunkMapper.toDomain(c),
         ),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -57,10 +68,10 @@ export class SourceMapper {
         id: record.id,
         url: record.textSourceDetails.url,
         name: record.name,
-        type: record.textSourceDetails.textType,
+        type: TextType.WEB,
         text: record.textSourceDetails.text,
-        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
-          this.sourceContentMapper.toEntity(c),
+        contentChunks: record.textSourceDetails.contentChunks?.map((c) =>
+          this.sourceContentChunkMapper.toDomain(c),
         ),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -89,10 +100,27 @@ export class SourceMapper {
     throw new Error('not implemented');
   }
 
-  toRecord(source: TextSource): TextSourceRecord;
-  toRecord(source: DataSource): DataSourceRecord;
-  toRecord(source: Source): SourceRecord;
-  toRecord(source: Source): SourceRecord {
+  /**
+   * These granular overloads are necessary to avoid
+   * errors during cascade operations while saving.
+   * It seems that because we initialize the IDs in the domain layer,
+   * TypeORM is unable to properly set the IDs in the records during cascading.
+   */
+  toRecord(source: TextSource): {
+    source: TextSourceRecord;
+    details: TextSourceDetailsRecord;
+    contentChunks: SourceContentChunkRecord[];
+  };
+  toRecord(source: DataSource): {
+    source: DataSourceRecord;
+    details: DataSourceDetailsRecord;
+  };
+  toRecord(source: Source): {
+    source: SourceRecord;
+  };
+  toRecord(source: Source): {
+    source: SourceRecord;
+  } {
     if (source instanceof FileSource) {
       return this.fileSourceToRecord(source);
     }
@@ -103,49 +131,54 @@ export class SourceMapper {
     throw new Error('Invalid source type: ' + source.type);
   }
 
-  private fileSourceToRecord(source: FileSource): TextSourceRecord {
-    const sourceRecord = new TextSourceRecord();
-    sourceRecord.id = source.id;
-    sourceRecord.name = source.name;
-    sourceRecord.type = source.type;
-    sourceRecord.createdAt = source.createdAt;
-    sourceRecord.updatedAt = source.updatedAt;
+  private fileSourceToRecord(source: FileSource): {
+    source: TextSourceRecord;
+    details: FileSourceDetailsRecord;
+    contentChunks: SourceContentChunkRecord[];
+  } {
+    const record = new TextSourceRecord();
+    record.id = source.id;
+    record.name = source.name;
+    record.createdAt = source.createdAt;
+    record.updatedAt = source.updatedAt;
 
     const details = new FileSourceDetailsRecord();
     details.id = source.id;
-    details.textType = source.textType;
     details.fileType = source.fileType;
+    details.source = record;
     details.text = source.text;
-    details.contentChunks = source.contentChunks.map((c) =>
-      this.sourceContentMapper.toEntity(c),
-    );
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
-    sourceRecord.textSourceDetails = details;
 
-    return sourceRecord;
+    const contentChunks = source.contentChunks.map((c) =>
+      this.sourceContentChunkMapper.toRecord(details, c),
+    );
+
+    return { source: record, details, contentChunks };
   }
 
-  private urlSourceToRecord(source: UrlSource): TextSourceRecord {
-    const sourceRecord = new TextSourceRecord();
-    sourceRecord.id = source.id;
-    sourceRecord.name = source.name;
-    sourceRecord.type = source.type;
-    sourceRecord.createdAt = source.createdAt;
-    sourceRecord.updatedAt = source.updatedAt;
+  private urlSourceToRecord(source: UrlSource): {
+    source: TextSourceRecord;
+    details: UrlSourceDetailsRecord;
+    contentChunks: SourceContentChunkRecord[];
+  } {
+    const record = new TextSourceRecord();
+    record.id = source.id;
+    record.name = source.name;
+    record.createdAt = source.createdAt;
+    record.updatedAt = source.updatedAt;
 
     const details = new UrlSourceDetailsRecord();
     details.id = source.id;
-    details.textType = source.textType;
     details.url = source.url;
     details.text = source.text;
-    details.contentChunks = source.contentChunks.map((c) =>
-      this.sourceContentMapper.toEntity(c),
-    );
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
-    sourceRecord.textSourceDetails = details;
 
-    return sourceRecord;
+    const contentChunks = source.contentChunks.map((c) =>
+      this.sourceContentChunkMapper.toRecord(details, c),
+    );
+
+    return { source: record, details, contentChunks };
   }
 }
