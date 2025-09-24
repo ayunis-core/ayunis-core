@@ -1,6 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useUserControllerUpdateUserName } from "@/shared/api/generated/ayunisCoreAPI";
+import {
+  getAuthenticationControllerMeQueryKey,
+  useUserControllerUpdateUserName,
+} from "@/shared/api/generated/ayunisCoreAPI";
 import {
   updateUserNameFormSchema,
   type UpdateUserNameFormValues,
@@ -33,7 +36,7 @@ export function useUserNameUpdate(currentName: string) {
         onSuccess: () => {
           showSuccess(t("account.nameUpdatedSuccessfully"));
           queryClient.invalidateQueries({
-            queryKey: ["me"],
+            queryKey: getAuthenticationControllerMeQueryKey(),
           });
         },
         onError: (error) => {
