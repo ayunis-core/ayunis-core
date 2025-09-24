@@ -45,7 +45,7 @@ export class CreateInviteUseCase {
       userId: command.userId,
     });
     try {
-      const emailProvider = command.email.split('@')[1];
+      const emailProvider = command.email.split('@')[1].split('.')[0];
       const emailProviderBlacklist = this.configService.get<string[]>(
         'auth.emailProviderBlacklist',
       )!;
