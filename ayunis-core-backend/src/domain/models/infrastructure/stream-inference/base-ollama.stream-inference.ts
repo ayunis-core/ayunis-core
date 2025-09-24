@@ -72,6 +72,9 @@ export class BaseOllamaStreamInferenceHandler
           : ollamaMessages,
         tools: ollamaTools.length > 0 ? ollamaTools : undefined,
         stream: true,
+        options: {
+          num_ctx: 30000,
+        },
       };
       this.logger.debug('completionOptions', completionOptions);
       const completionFn = () => this.client.chat(completionOptions);
