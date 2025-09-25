@@ -48,6 +48,9 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
           : ollamaMessages,
         tools: ollamaTools,
         stream: false,
+        options: {
+          num_ctx: 30000,
+        },
       };
       this.logger.debug('completionOptions', completionOptions);
       const completionFn = () => this.client.chat(completionOptions);
