@@ -24,6 +24,24 @@ export default function ModelSelector({
     placeholder,
     isDisabled: isDisabledModels,
   } = usePermittedModels();
+  const sortedModels = [...models].sort((a, b) => {
+    const flagPriority: Record<string, number> = {
+      "🇩🇪": 0,
+      "🇪🇺": 1,
+      "🇺🇸": 2,
+    };
+
+    const flagA = getFlagByProvider(a.provider);
+    const flagB = getFlagByProvider(b.provider);
+    const priorityA = flagPriority[flagA] ?? 3;
+    const priorityB = flagPriority[flagB] ?? 3;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    return a.displayName.localeCompare(b.displayName);
+  });
   return (
     <Select
       value={selectedModelId}
@@ -37,13 +55,11 @@ export default function ModelSelector({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {models
-          .sort((a, b) => a.displayName.localeCompare(b.displayName))
-          .map((model) => (
-            <SelectItem key={model.id} value={model.id}>
-              {getFlagByProvider(model.provider)} {model.displayName}
-            </SelectItem>
-          ))}
+        {sortedModels.map((model) => (
+          <SelectItem key={model.id} value={model.id}>
+            {getFlagByProvider(model.provider)} {model.displayName}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
