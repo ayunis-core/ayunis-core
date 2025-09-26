@@ -85,13 +85,7 @@ export class SourceMapper {
     if (record.dataSourceDetails instanceof CSVDataSourceDetailsRecord) {
       return new CSVDataSource({
         id: record.id,
-        data: {
-          headers: record.dataSourceDetails.data.split('\n')[0].split(','),
-          rows: record.dataSourceDetails.data
-            .split('\n')
-            .slice(1)
-            .map((row) => row.split(',')),
-        },
+        data: record.dataSourceDetails.data,
         name: record.name,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -126,6 +120,9 @@ export class SourceMapper {
     }
     if (source instanceof UrlSource) {
       return this.urlSourceToRecord(source);
+    }
+    if (source instanceof CSVDataSource) {
+      return this.dataSourceToRecord(source);
     }
 
     throw new Error('Invalid source type: ' + source.type);
@@ -172,6 +169,7 @@ export class SourceMapper {
     details.id = source.id;
     details.url = source.url;
     details.text = source.text;
+    details.source = record;
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
@@ -180,5 +178,25 @@ export class SourceMapper {
     );
 
     return { source: record, details, contentChunks };
+  }
+
+  private dataSourceToRecord(source: CSVDataSource): {
+    source: DataSourceRecord;
+    details: CSVDataSourceDetailsRecord;
+  } {
+    const record = new DataSourceRecord();
+    record.id = source.id;
+    record.name = source.name;
+    record.createdAt = source.createdAt;
+    record.updatedAt = source.updatedAt;
+
+    const details = new CSVDataSourceDetailsRecord();
+    details.id = source.id;
+    details.data = source.data;
+    details.source = record;
+    details.createdAt = source.createdAt;
+    details.updatedAt = source.updatedAt;
+
+    return { source: record, details };
   }
 }

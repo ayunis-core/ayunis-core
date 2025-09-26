@@ -54,8 +54,9 @@ import { CreateFileSourceCommand } from '../../../sources/application/use-cases/
 import { CreateTextSourceUseCase } from '../../../sources/application/use-cases/create-text-source/create-text-source.use-case';
 import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
 import {
-  SourceResponseDto,
   FileSourceResponseDto,
+  UrlSourceResponseDto,
+  CSVDataSourceResponseDto,
 } from './dto/get-thread-response.dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
 import { UpdateThreadModelDto } from './dto/update-thread-model.dto';
@@ -70,6 +71,10 @@ import { UpdateThreadAgentDto } from './dto/update-thread-agent.dto';
 import * as fs from 'fs';
 import { RemoveAgentFromThreadCommand } from '../../application/use-cases/remove-agent-from-thread/remove-agent-from-thread.command';
 import { RemoveAgentFromThreadUseCase } from '../../application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
+import { Source } from 'src/domain/sources/domain/source.entity';
+import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
+import { parseCSV } from 'src/common/util/csv';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -86,6 +91,7 @@ export class ThreadsController {
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
     private readonly updateThreadModelUseCase: UpdateThreadModelUseCase,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
+    private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
@@ -291,13 +297,29 @@ export class ThreadsController {
   @ApiResponse({
     status: 200,
     description: 'Returns all sources for the thread',
-    type: [SourceResponseDto],
+    schema: {
+      type: 'array',
+      items: {
+        oneOf: [
+          { $ref: getSchemaPath(FileSourceResponseDto) },
+          { $ref: getSchemaPath(UrlSourceResponseDto) },
+          { $ref: getSchemaPath(CSVDataSourceResponseDto) },
+        ],
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'Thread not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiExtraModels(
+    FileSourceResponseDto,
+    UrlSourceResponseDto,
+    CSVDataSourceResponseDto,
+  )
   async getThreadSources(
     @Param('id', ParseUUIDPipe) threadId: UUID,
-  ): Promise<SourceResponseDto[]> {
+  ): Promise<
+    (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
+  > {
     this.logger.log('getThreadSources', { threadId });
     const sources = await this.getThreadSourcesUseCase.execute(
       new FindThreadSourcesQuery(threadId),
@@ -340,7 +362,6 @@ export class ThreadsController {
   @ApiResponse({
     status: 201,
     description: 'The file source has been successfully added to the thread',
-    type: FileSourceResponseDto,
   })
   @UseInterceptors(
     FileInterceptor('file', {
@@ -370,18 +391,36 @@ export class ThreadsController {
   ): Promise<void> {
     this.logger.log('addFileSource', { threadId, fileName: file.originalname });
     try {
-      // Read file data from disk since we're using diskStorage
-      const fileData = fs.readFileSync(file.path);
-
-      // Create the file source
-      const createFileSourceCommand = new CreateFileSourceCommand({
-        fileType: file.mimetype,
-        fileData: fileData,
-        fileName: file.originalname,
-      });
-      const fileSource = await this.createTextSourceUseCase.execute(
-        createFileSourceCommand,
-      );
+      let source: Source;
+      switch (file.mimetype) {
+        case 'application/pdf': {
+          // Read file data from disk since we're using diskStorage
+          const fileData = fs.readFileSync(file.path);
+          // Create the file source
+          const command = new CreateFileSourceCommand({
+            fileType: file.mimetype,
+            fileData: fileData,
+            fileName: file.originalname,
+          });
+          source = await this.createTextSourceUseCase.execute(command);
+          break;
+        }
+        case 'text/csv': {
+          const fileData = fs.readFileSync(file.path, 'utf8');
+          const { headers, data } = parseCSV(fileData);
+          const command = new CreateCSVDataSourceCommand({
+            name: file.originalname,
+            data: {
+              headers,
+              rows: data,
+            },
+          });
+          source = await this.createDataSourceUseCase.execute(command);
+          break;
+        }
+        default:
+          throw new Error('Invalid file type');
+      }
 
       // Add the source to the thread
       const thread = await this.findThreadUseCase.execute(
@@ -389,7 +428,7 @@ export class ThreadsController {
       );
 
       await this.addSourceToThreadUseCase.execute(
-        new AddSourceCommand(thread, fileSource),
+        new AddSourceCommand(thread, source),
       );
 
       // Clean up the uploaded file

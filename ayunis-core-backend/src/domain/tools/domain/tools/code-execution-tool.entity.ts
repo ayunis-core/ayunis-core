@@ -3,6 +3,7 @@ import { Tool } from '../tool.entity';
 import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { DataType } from 'src/domain/sources/domain/source-type.enum';
 
 const codeExecutionToolParameters = {
   type: 'object' as const,
@@ -11,17 +12,17 @@ const codeExecutionToolParameters = {
       type: 'string' as const,
       description: 'The code to execute',
     },
-    files: {
+    dataSourceIds: {
       description:
-        'Optional array of file source names. These files can be referenced in the code through "import <file_name>".',
+        'Optional array of CSV data source UUIDs. Each will be available as /execution/files/{uuid}.csv',
       type: 'array' as const,
       items: {
         type: 'string' as const,
-        description: 'The name of the file source',
+        description: 'UUID of a CSV data source',
       },
     },
   },
-  required: ['code', 'files'],
+  required: ['code'],
   additionalProperties: false,
 } as const satisfies JSONSchema;
 
@@ -31,11 +32,17 @@ type CodeExecutionToolParameters = FromSchema<
 
 export class CodeExecutionTool extends Tool {
   constructor(availableSources: DataSource[]) {
+    const csvSources = availableSources.filter(
+      (s) => s.dataType === DataType.CSV,
+    );
+    const csvDescription =
+      csvSources.length > 0
+        ? ` Available CSV data sources: ${csvSources.map((s) => `${s.name} (ID: ${s.id})`).join(', ')}. When you specify a dataSourceId, the CSV file will be available at /execution/files/{uuid}.csv - you can load it with pandas.read_csv('/execution/files/{uuid}.csv').`
+        : '';
+
     super({
       name: ToolType.CODE_EXECUTION,
-      description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in the context of the files provided. The code will be executed in a sandboxed environment. If you pass a file name, you can use it in the code through "import <file_name>". The files are: ${availableSources
-        .map((source) => source.name)
-        .join(', ')}.`,
+      description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in a sandboxed environment.${csvDescription}`,
       parameters: codeExecutionToolParameters,
       type: ToolType.CODE_EXECUTION,
     });

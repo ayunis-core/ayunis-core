@@ -4,14 +4,8 @@ import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  InvalidSourceTypeError,
-  UnexpectedSourceError,
-} from '../../sources.errors';
-import {
-  FileSource,
-  UrlSource,
-} from 'src/domain/sources/domain/sources/text-source.entity';
+import { UnexpectedSourceError } from '../../sources.errors';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeleteSourceUseCase {
@@ -19,9 +13,10 @@ export class DeleteSourceUseCase {
 
   constructor(
     private readonly deleteContentUseCase: DeleteContentUseCase,
-    private readonly textSourceRepository: SourceRepository,
+    private readonly sourceRepository: SourceRepository,
   ) {}
 
+  @Transactional()
   async execute(command: DeleteSourceCommand): Promise<void> {
     this.logger.debug(`Deleting source: ${command.source.id}`);
     try {
@@ -31,14 +26,7 @@ export class DeleteSourceUseCase {
       });
 
       await this.deleteContentUseCase.execute(deleteContentCommand);
-
-      if (command.source instanceof FileSource) {
-        await this.textSourceRepository.delete(command.source);
-      } else if (command.source instanceof UrlSource) {
-        await this.textSourceRepository.delete(command.source);
-      } else {
-        throw new InvalidSourceTypeError(command.source.type);
-      }
+      await this.sourceRepository.delete(command.source);
 
       this.logger.debug(
         `Successfully deleted source and indexed content: ${command.source.id}`,

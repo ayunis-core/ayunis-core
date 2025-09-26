@@ -28,7 +28,6 @@ import {
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
   RunToolExecutionFailedError,
-  RunToolNotFoundError,
 } from '../../runs.errors';
 import {
   RunTextInput,
@@ -59,6 +58,7 @@ import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model
 import { ContextService } from 'src/common/context/services/context.service';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -215,9 +215,9 @@ export class ExecuteRunUseCase {
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
-            context: thread.sourceAssignments.map(
-              (assignment) => assignment.source,
-            ),
+            context: thread.sourceAssignments
+              .map((assignment) => assignment.source)
+              .filter((source) => source instanceof TextSource),
           }),
         ),
       );
@@ -231,9 +231,9 @@ export class ExecuteRunUseCase {
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
-            context: thread.agent.sourceAssignments.map(
-              (assignment) => assignment.source,
-            ),
+            context: thread.agent.sourceAssignments
+              .map((assignment) => assignment.source)
+              .filter((source) => source instanceof TextSource),
           }),
         ),
       );

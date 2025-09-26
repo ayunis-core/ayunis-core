@@ -1122,7 +1122,17 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SourceResponseDto"
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CSVDataSourceResponseDto"
+                      }
+                    ]
                   }
                 }
               }
@@ -1186,14 +1196,7 @@
         },
         "responses": {
           "201": {
-            "description": "The file source has been successfully added to the thread",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FileSourceResponseDto"
-                }
-              }
-            }
+            "description": "The file source has been successfully added to the thread"
           }
         },
         "summary": "Add a file source to a thread",
@@ -3779,8 +3782,8 @@
             "type": "string",
             "description": "Type of source",
             "enum": [
-              "file",
-              "url"
+              "text",
+              "data"
             ]
           },
           "createdAt": {
@@ -3953,8 +3956,8 @@
             "type": "string",
             "description": "Type of source",
             "enum": [
-              "file",
-              "url"
+              "text",
+              "data"
             ]
           },
           "createdAt": {
@@ -3965,17 +3968,20 @@
             "type": "string",
             "description": "Last update timestamp"
           },
+          "textType": {
+            "type": "string",
+            "description": "Type of text",
+            "enum": [
+              "file",
+              "web"
+            ]
+          },
           "fileType": {
             "type": "string",
-            "description": "MIME type of the file"
-          },
-          "fileSize": {
-            "type": "number",
-            "description": "Size of the file in bytes"
-          },
-          "filePath": {
-            "type": "string",
-            "description": "Path to the stored file"
+            "description": "Type of file",
+            "enum": [
+              "pdf"
+            ]
           }
         },
         "required": [
@@ -3985,9 +3991,137 @@
           "type",
           "createdAt",
           "updatedAt",
-          "fileType",
-          "fileSize",
-          "filePath"
+          "textType",
+          "fileType"
+        ]
+      },
+      "UrlSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "text",
+              "data"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "textType": {
+            "type": "string",
+            "description": "Type of text",
+            "enum": [
+              "file",
+              "web"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the source"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "name",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "textType",
+          "url"
+        ]
+      },
+      "CSVDataSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "text",
+              "data"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "dataType": {
+            "type": "string",
+            "description": "Type of data",
+            "enum": [
+              "csv"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "description": "CSV data with headers and rows",
+            "additionalProperties": false,
+            "properties": {
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Column headers"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": "Data rows"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "name",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "dataType",
+          "data"
         ]
       },
       "ToolAssignmentDto": {
@@ -4003,7 +4137,8 @@
               "internet_search",
               "website_content",
               "send_email",
-              "create_calendar_event"
+              "create_calendar_event",
+              "code_execution"
             ]
           },
           "toolConfigId": {
@@ -4066,7 +4201,8 @@
               "internet_search",
               "website_content",
               "send_email",
-              "create_calendar_event"
+              "create_calendar_event",
+              "code_execution"
             ]
           }
         },

@@ -611,8 +611,8 @@ export type SourceResponseDtoType = typeof SourceResponseDtoType[keyof typeof So
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SourceResponseDtoType = {
-  file: 'file',
-  url: 'url',
+  text: 'text',
+  data: 'data',
 } as const;
 
 export interface SourceResponseDto {
@@ -682,8 +682,31 @@ export type FileSourceResponseDtoType = typeof FileSourceResponseDtoType[keyof t
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Type of text
+ */
+export type FileSourceResponseDtoTextType = typeof FileSourceResponseDtoTextType[keyof typeof FileSourceResponseDtoTextType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FileSourceResponseDtoTextType = {
   file: 'file',
-  url: 'url',
+  web: 'web',
+} as const;
+
+/**
+ * Type of file
+ */
+export type FileSourceResponseDtoFileType = typeof FileSourceResponseDtoFileType[keyof typeof FileSourceResponseDtoFileType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FileSourceResponseDtoFileType = {
+  pdf: 'pdf',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -699,12 +722,105 @@ export interface FileSourceResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-  /** MIME type of the file */
-  fileType: string;
-  /** Size of the file in bytes */
-  fileSize: number;
-  /** Path to the stored file */
-  filePath: string;
+  /** Type of text */
+  textType: FileSourceResponseDtoTextType;
+  /** Type of file */
+  fileType: FileSourceResponseDtoFileType;
+}
+
+/**
+ * Type of source
+ */
+export type UrlSourceResponseDtoType = typeof UrlSourceResponseDtoType[keyof typeof UrlSourceResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UrlSourceResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Type of text
+ */
+export type UrlSourceResponseDtoTextType = typeof UrlSourceResponseDtoTextType[keyof typeof UrlSourceResponseDtoTextType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UrlSourceResponseDtoTextType = {
+  file: 'file',
+  web: 'web',
+} as const;
+
+export interface UrlSourceResponseDto {
+  /** Unique identifier for the source */
+  id: string;
+  /** Thread ID this source belongs to */
+  threadId: string;
+  /** Name of the source */
+  name: string;
+  /** Type of source */
+  type: UrlSourceResponseDtoType;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+  /** Type of text */
+  textType: UrlSourceResponseDtoTextType;
+  /** URL of the source */
+  url: string;
+}
+
+/**
+ * Type of source
+ */
+export type CSVDataSourceResponseDtoType = typeof CSVDataSourceResponseDtoType[keyof typeof CSVDataSourceResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CSVDataSourceResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+/**
+ * Type of data
+ */
+export type CSVDataSourceResponseDtoDataType = typeof CSVDataSourceResponseDtoDataType[keyof typeof CSVDataSourceResponseDtoDataType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CSVDataSourceResponseDtoDataType = {
+  csv: 'csv',
+} as const;
+
+/**
+ * CSV data with headers and rows
+ */
+export type CSVDataSourceResponseDtoData = {
+  /** Column headers */
+  headers?: string[];
+  /** Data rows */
+  rows?: string[][];
+};
+
+export interface CSVDataSourceResponseDto {
+  /** Unique identifier for the source */
+  id: string;
+  /** Thread ID this source belongs to */
+  threadId: string;
+  /** Name of the source */
+  name: string;
+  /** Type of source */
+  type: CSVDataSourceResponseDtoType;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+  /** Type of data */
+  dataType: CSVDataSourceResponseDtoDataType;
+  /** CSV data with headers and rows */
+  data: CSVDataSourceResponseDtoData;
 }
 
 /**
@@ -721,6 +837,7 @@ export const ToolAssignmentDtoType = {
   website_content: 'website_content',
   send_email: 'send_email',
   create_calendar_event: 'create_calendar_event',
+  code_execution: 'code_execution',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -759,6 +876,7 @@ export const ToolResponseDtoType = {
   website_content: 'website_content',
   send_email: 'send_email',
   create_calendar_event: 'create_calendar_event',
+  code_execution: 'code_execution',
 } as const;
 
 export interface ToolResponseDto {
@@ -1360,6 +1478,8 @@ export interface CreateEmbeddingModelDto { [key: string]: unknown }
 export interface UpdateLanguageModelDto { [key: string]: unknown }
 
 export interface UpdateEmbeddingModelDto { [key: string]: unknown }
+
+export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type ThreadsControllerAddFileSourceBody = {
   /** The file to upload */

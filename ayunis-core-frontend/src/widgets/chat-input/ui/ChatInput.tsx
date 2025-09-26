@@ -1,7 +1,14 @@
 import { useState, forwardRef, useImperativeHandle } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/shared/ui/shadcn/button";
-import { ArrowUp, Bot, Square, XIcon } from "lucide-react";
+import {
+  ArrowUp,
+  Bot,
+  DatabaseIcon,
+  FileIcon,
+  Square,
+  XIcon,
+} from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import AgentButton from "./AgentButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
@@ -87,6 +94,17 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
     }
 
+    function getSourceIcon(source: SourceResponseDtoType) {
+      switch (source) {
+        case "text":
+          return <FileIcon className="h-3 w-3" />;
+        case "data":
+          return <DatabaseIcon className="h-3 w-3" />;
+        default:
+          return null;
+      }
+    }
+
     return (
       <div className="w-full space-y-2">
         {/* Main input section */}
@@ -103,8 +121,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       className="flex items-center gap-1 cursor-pointer"
                       onClick={() => onRemoveSource(source.id)}
                     >
-                      <XIcon className="h-3 w-3" />
+                      {getSourceIcon(source.type)}
                       {source.name}
+                      <XIcon className="h-3 w-3" />
                     </Badge>
                   ))}
                 </div>

@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   SourceType,
   TextType,
+  DataType,
+  FileType,
 } from 'src/domain/sources/domain/source-type.enum';
 
 export abstract class SourceResponseDto {
@@ -28,14 +30,8 @@ export class FileSourceResponseDto extends SourceResponseDto {
   @ApiProperty({ description: 'Type of text', enum: TextType })
   textType: TextType;
 
-  @ApiProperty({ description: 'MIME type of the file' })
-  fileType: string;
-
-  @ApiProperty({ description: 'Size of the file in bytes' })
-  fileSize: number;
-
-  @ApiProperty({ description: 'Path to the stored file' })
-  filePath: string;
+  @ApiProperty({ description: 'Type of file', enum: FileType })
+  fileType: FileType;
 }
 
 export class UrlSourceResponseDto extends SourceResponseDto {
@@ -44,4 +40,43 @@ export class UrlSourceResponseDto extends SourceResponseDto {
 
   @ApiProperty({ description: 'URL of the source' })
   url: string;
+}
+
+export abstract class DataSourceResponseDto extends SourceResponseDto {
+  @ApiProperty({ description: 'Type of data', enum: DataType })
+  dataType: DataType;
+
+  @ApiProperty({
+    description: 'Data content',
+    type: 'object',
+    additionalProperties: true,
+  })
+  data: object;
+}
+
+export class CSVDataSourceResponseDto extends DataSourceResponseDto {
+  @ApiProperty({
+    description: 'CSV data with headers and rows',
+    type: 'object',
+    properties: {
+      headers: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Column headers',
+      },
+      rows: {
+        type: 'array',
+        items: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        description: 'Data rows',
+      },
+    },
+    additionalProperties: false,
+  })
+  declare data: {
+    headers: string[];
+    rows: string[][];
+  };
 }

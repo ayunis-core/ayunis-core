@@ -4,11 +4,13 @@ import {
   FileSource,
   UrlSource,
 } from 'src/domain/sources/domain/sources/text-source.entity';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { UUID } from 'crypto';
 import {
   FileSourceResponseDto,
   UrlSourceResponseDto,
+  CSVDataSourceResponseDto,
 } from '../dto/get-thread-response.dto/source-response.dto';
 
 @Injectable()
@@ -16,11 +18,13 @@ export class SourceDtoMapper {
   toDto(
     source: Source,
     threadId?: UUID,
-  ): FileSourceResponseDto | UrlSourceResponseDto {
+  ): FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto {
     if (source instanceof FileSource) {
       return this.fileSourceToDto(source, threadId);
     } else if (source instanceof UrlSource) {
       return this.urlSourceToDto(source, threadId);
+    } else if (source instanceof CSVDataSource) {
+      return this.csvDataSourceToDto(source, threadId);
     }
 
     throw new Error('Invalid source type: ' + source.type);
@@ -58,5 +62,22 @@ export class SourceDtoMapper {
     urlDto.updatedAt = source.updatedAt.toISOString();
 
     return urlDto;
+  }
+
+  private csvDataSourceToDto(
+    source: CSVDataSource,
+    threadId?: UUID,
+  ): CSVDataSourceResponseDto {
+    const csvDto = new CSVDataSourceResponseDto();
+    csvDto.id = source.id;
+    csvDto.threadId = threadId;
+    csvDto.type = SourceType.DATA;
+    csvDto.dataType = source.dataType;
+    csvDto.data = source.data;
+    csvDto.name = source.name;
+    csvDto.createdAt = source.createdAt.toISOString();
+    csvDto.updatedAt = source.updatedAt.toISOString();
+
+    return csvDto;
   }
 }

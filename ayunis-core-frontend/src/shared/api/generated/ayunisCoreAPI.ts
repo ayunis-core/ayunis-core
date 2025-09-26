@@ -46,7 +46,6 @@ import type {
   DeletePermittedProviderDto,
   EmbeddingModelEnabledResponseDto,
   ErrorResponseDto,
-  FileSourceResponseDto,
   ForgotPasswordDto,
   GetThreadResponseDto,
   GetThreadsResponseDtoItem,
@@ -70,11 +69,11 @@ import type {
   SendMessageDto,
   SetOrgDefaultModelDto,
   SetUserDefaultModelDto,
-  SourceResponseDto,
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
   SuccessResponseDto,
   ThreadsControllerAddFileSourceBody,
+  ThreadsControllerGetThreadSources200Item,
   UpdateAgentDto,
   UpdateBillingInfoDto,
   UpdateEmbeddingModelDto,
@@ -2544,7 +2543,7 @@ export const threadsControllerGetThreadSources = (
 ) => {
       
       
-      return customAxiosInstance<SourceResponseDto[]>(
+      return customAxiosInstance<ThreadsControllerGetThreadSources200Item[]>(
       {url: `/threads/${id}/sources`, method: 'GET', signal
     },
       );
@@ -2641,7 +2640,7 @@ if(threadsControllerAddFileSourceBody.description !== undefined) {
  formData.append(`description`, threadsControllerAddFileSourceBody.description)
  }
 
-      return customAxiosInstance<FileSourceResponseDto>(
+      return customAxiosInstance<void>(
       {url: `/threads/${id}/sources/file`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal

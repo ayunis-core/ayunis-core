@@ -20,6 +20,6 @@ export abstract class DataSourceDetailsRecord extends BaseRecord {
 
 @ChildEntity(DataType.CSV)
 export class CSVDataSourceDetailsRecord extends DataSourceDetailsRecord {
-  @Column()
-  data: string;
+  @Column({ type: 'jsonb' })
+  data: { headers: string[]; rows: string[][] };
 }
