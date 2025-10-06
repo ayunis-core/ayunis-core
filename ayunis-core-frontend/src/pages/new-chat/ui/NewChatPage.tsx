@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { showError } from "@/shared/lib/toast";
 import { generateUUID } from "@/shared/lib/uuid";
-import type { AgentResponseDto, SourceResponseDtoType } from "@/shared/api";
+import type { AgentResponseDto } from "@/shared/api";
+import { SourceResponseDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -38,9 +39,17 @@ export default function NewChatPage({
   const selectedAgent = agents.find((agent) => agent.id === agentId);
 
   function handleFileUpload(file: File) {
+    const isCsvFile = file.name.endsWith(".csv");
     setSources([
       ...sources,
-      { id: generateUUID(), name: file.name, type: "file", file },
+      {
+        id: generateUUID(),
+        name: file.name,
+        type: isCsvFile
+          ? SourceResponseDtoType.data
+          : SourceResponseDtoType.text,
+        file,
+      },
     ]);
   }
 
@@ -96,6 +105,7 @@ export default function NewChatPage({
           prefilledPrompt={prefilledPrompt}
           onFileUpload={handleFileUpload}
           onRemoveSource={handleRemoveSource}
+          onDownloadSource={() => null}
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         />
       </div>

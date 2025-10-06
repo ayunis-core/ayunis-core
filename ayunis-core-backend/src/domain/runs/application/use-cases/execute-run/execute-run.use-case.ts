@@ -535,8 +535,12 @@ export class ExecuteRunUseCase {
               toolName: tool.name,
             },
           });
+          const context = {
+            orgId,
+            threadId: thread.id,
+          };
           let result = await this.executeToolUseCase
-            .execute(new ExecuteToolCommand(tool, content.params, orgId))
+            .execute(new ExecuteToolCommand(tool, content.params, context))
             .catch((error) => {
               span.update({
                 metadata: {

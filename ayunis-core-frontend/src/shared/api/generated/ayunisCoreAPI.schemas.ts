@@ -624,54 +624,12 @@ export interface SourceResponseDto {
   name: string;
   /** Type of source */
   type: SourceResponseDtoType;
+  /** Whether the source was created by LLM */
+  createdByLLM: boolean;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-}
-
-export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
-
-export interface GetThreadResponseDto {
-  /** Unique identifier for the thread */
-  id: string;
-  /** User ID who owns this thread */
-  userId: string;
-  /** Permitted model ID */
-  permittedModelId: string;
-  /** Agent ID */
-  agentId: string;
-  /** Title of the thread */
-  title?: string;
-  /** Array of messages in the thread (role-specific types) */
-  messages: GetThreadResponseDtoMessagesItem[];
-  /** Array of sources in the thread */
-  sources: SourceResponseDto[];
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
-}
-
-export interface GetThreadsResponseDtoItem {
-  /** Unique identifier for the thread */
-  id: string;
-  /** Title of the thread */
-  title?: string;
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
-}
-
-export interface UpdateThreadModelDto {
-  /** The id of the model */
-  modelId: string;
-}
-
-export interface UpdateThreadAgentDto {
-  /** The UUID of the agent to update */
-  agentId: string;
 }
 
 /**
@@ -718,6 +676,8 @@ export interface FileSourceResponseDto {
   name: string;
   /** Type of source */
   type: FileSourceResponseDtoType;
+  /** Whether the source was created by LLM */
+  createdByLLM: boolean;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -761,6 +721,8 @@ export interface UrlSourceResponseDto {
   name: string;
   /** Type of source */
   type: UrlSourceResponseDtoType;
+  /** Whether the source was created by LLM */
+  createdByLLM: boolean;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -813,6 +775,8 @@ export interface CSVDataSourceResponseDto {
   name: string;
   /** Type of source */
   type: CSVDataSourceResponseDtoType;
+  /** Whether the source was created by LLM */
+  createdByLLM: boolean;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -821,6 +785,50 @@ export interface CSVDataSourceResponseDto {
   dataType: CSVDataSourceResponseDtoDataType;
   /** CSV data with headers and rows */
   data: CSVDataSourceResponseDtoData;
+}
+
+export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
+
+export interface GetThreadResponseDto {
+  /** Unique identifier for the thread */
+  id: string;
+  /** User ID who owns this thread */
+  userId: string;
+  /** Permitted model ID */
+  permittedModelId: string;
+  /** Agent ID */
+  agentId: string;
+  /** Title of the thread */
+  title?: string;
+  /** Array of messages in the thread (role-specific types) */
+  messages: GetThreadResponseDtoMessagesItem[];
+  /** Array of sources in the thread */
+  sources: SourceResponseDto[];
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
+export interface GetThreadsResponseDtoItem {
+  /** Unique identifier for the thread */
+  id: string;
+  /** Title of the thread */
+  title?: string;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
+export interface UpdateThreadModelDto {
+  /** The id of the model */
+  modelId: string;
+}
+
+export interface UpdateThreadAgentDto {
+  /** The UUID of the agent to update */
+  agentId: string;
 }
 
 /**

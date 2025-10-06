@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { SearchWebUseCase } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.use-case';
 import { SearchWebCommand } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.command';
-import { ToolExecutionHandler } from '../ports/execution.handler';
-import { UUID } from 'crypto';
+import {
+  ToolExecutionContext,
+  ToolExecutionHandler,
+} from '../ports/execution.handler';
 import { InternetSearchTool } from '../../domain/tools/internet-search-tool.entity';
 
 @Injectable()
@@ -14,7 +16,7 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
   async execute(params: {
     tool: InternetSearchTool;
     input: Record<string, unknown>;
-    orgId: UUID;
+    context: ToolExecutionContext;
   }): Promise<string> {
     const { input } = params;
     const query = input.query as string;

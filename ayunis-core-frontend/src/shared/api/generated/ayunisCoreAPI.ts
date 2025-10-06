@@ -2760,6 +2760,102 @@ export const useThreadsControllerRemoveSource = <TError = void,
     }
     
 /**
+ * @summary Download a data source as CSV
+ */
+export const threadsControllerDownloadSource = (
+    id: string,
+    sourceId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<Blob>(
+      {url: `/threads/${id}/sources/${sourceId}/download`, method: 'GET',
+        responseType: 'blob', signal
+    },
+      );
+    }
+  
+
+export const getThreadsControllerDownloadSourceQueryKey = (id: string,
+    sourceId: string,) => {
+    return [`/threads/${id}/sources/${sourceId}/download`] as const;
+    }
+
+    
+export const getThreadsControllerDownloadSourceQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(id: string,
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerDownloadSourceQueryKey(id,sourceId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerDownloadSource>>> = ({ signal }) => threadsControllerDownloadSource(id,sourceId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id && sourceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadsControllerDownloadSourceQueryResult = NonNullable<Awaited<ReturnType<typeof threadsControllerDownloadSource>>>
+export type ThreadsControllerDownloadSourceQueryError = void
+
+
+export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+ id: string,
+    sourceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerDownloadSource>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerDownloadSource>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+ id: string,
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadsControllerDownloadSource>>,
+          TError,
+          Awaited<ReturnType<typeof threadsControllerDownloadSource>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+ id: string,
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download a data source as CSV
+ */
+
+export function useThreadsControllerDownloadSource<TData = Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError = void>(
+ id: string,
+    sourceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerDownloadSource>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadsControllerDownloadSourceQueryOptions(id,sourceId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * @summary Create a new agent
  */
 export const agentsControllerCreate = (

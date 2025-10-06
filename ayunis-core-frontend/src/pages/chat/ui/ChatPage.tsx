@@ -35,8 +35,13 @@ import { useCreateFileSource } from "@/pages/chat/api/useCreateFileSource";
 import { useDeleteFileSource } from "../api/useDeleteFileSource";
 import { useRemoveThreadAgent } from "../api/useRemoveThreadAgent";
 import { useAgents } from "@/features/useAgents";
-import { useQueryClient } from "@tanstack/react-query";
-import { getThreadsControllerFindAllQueryKey } from "@/shared/api/generated/ayunisCoreAPI";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import {
+  getThreadsControllerFindAllQueryKey,
+  getThreadsControllerFindOneQueryKey,
+  threadsControllerFindOne,
+  threadsControllerDownloadSource,
+} from "@/shared/api/generated/ayunisCoreAPI";
 
 interface ChatPageProps {
   thread: Thread;
@@ -44,13 +49,19 @@ interface ChatPageProps {
 }
 
 export default function ChatPage({
-  thread,
+  thread: initialThread,
   isEmbeddingModelEnabled,
 }: ChatPageProps) {
   const { t } = useTranslation("chats");
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const { agents } = useAgents();
+  const { data: thread = initialThread } = useQuery({
+    queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
+    queryFn: () => threadsControllerFindOne(initialThread.id),
+    initialData: initialThread,
+  });
+
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
   const queryClient = useQueryClient();
   const processedPendingMessageRef = useRef<String | null>(null);
@@ -208,6 +219,33 @@ export default function ChatPage({
     });
   }
 
+  async function handleDownloadSource(sourceId: string) {
+    try {
+      // Call the download endpoint
+      const blob = await threadsControllerDownloadSource(thread.id, sourceId);
+
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Find the source to get its name
+      const source = thread.sources.find((s) => s.id === sourceId);
+      link.download = source?.name || "download.csv";
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download source", error);
+      showError(t("chat.errorDownloadSource"));
+    }
+  }
+
   useEffect(() => {
     setMessages(thread.messages);
     setThreadTitle(thread.title);
@@ -334,6 +372,7 @@ export default function ChatPage({
       onAgentRemove={removeAgent}
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
+      onDownloadSource={handleDownloadSource}
       onSend={handleSend}
       onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}

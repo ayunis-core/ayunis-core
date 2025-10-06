@@ -19,6 +19,9 @@ export abstract class SourceResponseDto {
   @ApiProperty({ description: 'Type of source', enum: SourceType })
   type: string;
 
+  @ApiProperty({ description: 'Whether the source was created by LLM' })
+  createdByLLM: boolean;
+
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;
 

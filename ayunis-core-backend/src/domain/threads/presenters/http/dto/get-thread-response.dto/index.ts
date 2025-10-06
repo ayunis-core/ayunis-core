@@ -17,7 +17,12 @@ import {
 } from './message-response.dto';
 import { ModelResponseDto } from './model-response-dto';
 import { UUID } from 'crypto';
-import { SourceResponseDto } from './source-response.dto';
+import {
+  CSVDataSourceResponseDto,
+  FileSourceResponseDto,
+  SourceResponseDto,
+  UrlSourceResponseDto,
+} from './source-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -30,6 +35,9 @@ import { SourceResponseDto } from './source-response.dto';
   ThinkingMessageContentResponseDto,
   ModelResponseDto,
   SourceResponseDto,
+  FileSourceResponseDto,
+  UrlSourceResponseDto,
+  CSVDataSourceResponseDto,
 )
 export class GetThreadResponseDto {
   @ApiProperty({

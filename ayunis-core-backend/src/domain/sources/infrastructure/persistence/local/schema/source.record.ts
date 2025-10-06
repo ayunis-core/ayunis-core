@@ -15,6 +15,9 @@ import { DataSourceDetailsRecord } from './data-source-details.record';
 export abstract class SourceRecord extends BaseRecord {
   @Column()
   name: string;
+
+  @Column({ default: false })
+  createdByLLM: boolean;
 }
 
 @ChildEntity(SourceType.TEXT)

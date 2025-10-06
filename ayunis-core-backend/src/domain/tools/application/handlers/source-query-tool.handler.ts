@@ -6,7 +6,10 @@ import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cas
 import { QueryTextSourceUseCase } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.use-case';
 import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
 import { QueryTextSourceCommand } from 'src/domain/sources/application/use-cases/query-text-source/query-text-source.command';
-import { ToolExecutionHandler } from '../ports/execution.handler';
+import {
+  ToolExecutionContext,
+  ToolExecutionHandler,
+} from '../ports/execution.handler';
 import {
   ModelNotFoundByIdError,
   ModelError,
@@ -31,9 +34,10 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
   async execute(params: {
     tool: SourceQueryTool;
     input: Record<string, unknown>;
-    orgId: UUID;
+    context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input, orgId } = params;
+    const { tool, input, context } = params;
+    const { orgId } = context;
     this.logger.log('execute', tool, input);
     try {
       const isValid = tool.validateParams(input);

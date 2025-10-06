@@ -1,5 +1,8 @@
 import { CodeExecutionTool } from '../../domain/tools/code-execution-tool.entity';
-import { ToolExecutionHandler } from '../ports/execution.handler';
+import {
+  ToolExecutionContext,
+  ToolExecutionHandler,
+} from '../ports/execution.handler';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
 import { getAyunisCodeExecutionService } from '../../../../common/clients/code-execution/generated/ayunisCodeExecutionService';
@@ -8,21 +11,32 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { convertCSVToString } from 'src/common/util/csv';
+import { convertCSVToString, parseCSV } from 'src/common/util/csv';
+import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
+import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
+import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 
 @Injectable()
 export class CodeExecutionToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(CodeExecutionToolHandler.name);
-  constructor(private readonly getSourceByIdUseCase: GetSourceByIdUseCase) {
+  constructor(
+    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
+    private readonly createDataSourceUseCase: CreateDataSourceUseCase,
+    private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
+    private readonly findThreadUseCase: FindThreadUseCase,
+  ) {
     super();
   }
 
   async execute(params: {
     tool: CodeExecutionTool;
     input: Record<string, unknown>;
-    orgId: UUID;
+    context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     const { code, files, dataSourceIds } = input;
     console.log('files', files);
     console.log('dataSourceIds', dataSourceIds);
@@ -87,11 +101,75 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
       const response =
         await codeExecutionService.executeCodeExecutePost(executionRequest);
 
+      // Handle output CSV files if present
+      const createdSources: string[] = [];
+      if (
+        response.output_files &&
+        Object.keys(response.output_files).length > 0
+      ) {
+        try {
+          const thread = await this.findThreadUseCase.execute(
+            new FindThreadQuery(context.threadId),
+          );
+
+          for (const [filename, content_b64] of Object.entries(
+            response.output_files,
+          )) {
+            try {
+              // Decode the base64 content
+              const csvContent = Buffer.from(content_b64, 'base64').toString(
+                'utf-8',
+              );
+
+              // Parse CSV
+              const { headers, data } = parseCSV(csvContent);
+
+              // Create data source
+              const sourceName = filename.replace('.csv', '');
+              const source = await this.createDataSourceUseCase.execute(
+                new CreateCSVDataSourceCommand({
+                  name: sourceName,
+                  data: { headers, rows: data },
+                  createdByLLM: true,
+                }),
+              );
+
+              // Add source to thread
+              await this.addSourceToThreadUseCase.execute(
+                new AddSourceCommand(thread, source),
+              );
+
+              createdSources.push(`${sourceName} (ID: ${source.id})`);
+              this.logger.log(
+                `Created and attached CSV source: ${sourceName}`,
+                {
+                  sourceId: source.id,
+                  threadId: context.threadId,
+                },
+              );
+            } catch (error) {
+              this.logger.error(
+                `Failed to process output file ${filename}`,
+                error,
+              );
+              // Continue processing other files
+            }
+          }
+        } catch (error) {
+          this.logger.error('Failed to handle output files', error);
+          // Don't fail the entire execution if source creation fails
+        }
+      }
+
       // Format the response for the LLM
       if (response.success) {
         let result = `Code executed successfully (ID: ${response.execution_id})\n`;
         if (response.output) {
           result += `Output:\n${response.output}\n`;
+        }
+        if (createdSources.length > 0) {
+          result += `\nCreated ${createdSources.length} CSV data source(s):\n${createdSources.map((s) => `- ${s}`).join('\n')}\n`;
+          result += `These sources are now available for analysis in this conversation.\n`;
         }
         if (response.error) {
           result += `Warnings/Errors:\n${response.error}\n`;

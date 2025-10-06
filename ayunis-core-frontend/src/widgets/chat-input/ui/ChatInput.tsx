@@ -6,6 +6,7 @@ import {
   Bot,
   DatabaseIcon,
   FileIcon,
+  Sparkles,
   Square,
   XIcon,
 } from "lucide-react";
@@ -24,11 +25,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/shadcn/tooltip";
+import { cn } from "@/shared/lib/shadcn/utils";
 
 interface ChatInputProps {
   modelId: string | undefined;
   agentId: string | undefined;
-  sources: { id: string; name: string; type: SourceResponseDtoType }[];
+  sources: {
+    id: string;
+    name: string;
+    type: SourceResponseDtoType;
+    createdByLLM: boolean;
+  }[];
   isStreaming?: boolean;
   isCreatingFileSource?: boolean;
   isModelChangeDisabled: boolean;
@@ -37,6 +44,7 @@ interface ChatInputProps {
   onAgentRemove: (agentId: string) => void;
   onFileUpload: (file: File) => void;
   onRemoveSource: (sourceId: string) => void;
+  onDownloadSource: (sourceId: string) => void;
   onSend: (message: string) => Promise<void>;
   onSendCancelled: () => void;
   prefilledPrompt?: string;
@@ -61,6 +69,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onAgentRemove,
       onFileUpload,
       onRemoveSource,
+      onDownloadSource,
       onSend,
       onSendCancelled,
       prefilledPrompt,
@@ -94,8 +103,14 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
     }
 
-    function getSourceIcon(source: SourceResponseDtoType) {
-      switch (source) {
+    function getSourceIcon(source: {
+      type: SourceResponseDtoType;
+      createdByLLM: boolean;
+    }) {
+      if (source.createdByLLM) {
+        return <Sparkles className="h-3 w-3" />;
+      }
+      switch (source.type) {
         case "text":
           return <FileIcon className="h-3 w-3" />;
         case "data":
@@ -118,12 +133,25 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     <Badge
                       key={source.id}
                       variant="secondary"
-                      className="flex items-center gap-1 cursor-pointer"
-                      onClick={() => onRemoveSource(source.id)}
+                      className={cn(
+                        "flex items-center gap-1 cursor-pointer",
+                        source.createdByLLM && "bg-[#8178C3]/10 text-[#8178C3]",
+                      )}
+                      onClick={() =>
+                        source.type === "data" && onDownloadSource(source.id)
+                      }
                     >
-                      {getSourceIcon(source.type)}
+                      {getSourceIcon(source)}
                       {source.name}
-                      <XIcon className="h-3 w-3" />
+                      <div
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveSource(source.id);
+                        }}
+                      >
+                        <XIcon className="h-3 w-3" />
+                      </div>
                     </Badge>
                   ))}
                 </div>

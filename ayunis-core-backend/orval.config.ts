@@ -1,6 +1,5 @@
 import { defineConfig } from 'orval';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 export default defineConfig({
   codeExecution: {
     input: {

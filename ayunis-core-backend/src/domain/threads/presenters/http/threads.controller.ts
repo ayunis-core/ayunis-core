@@ -12,7 +12,10 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { UUID } from 'crypto';
 import {
   CurrentUser,
@@ -74,7 +77,10 @@ import { RemoveAgentFromThreadUseCase } from '../../application/use-cases/remove
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
-import { parseCSV } from 'src/common/util/csv';
+import { parseCSV, convertCSVToString } from 'src/common/util/csv';
+import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
+import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -92,6 +98,7 @@ export class ThreadsController {
     private readonly updateThreadModelUseCase: UpdateThreadModelUseCase,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
+    private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
@@ -163,7 +170,6 @@ export class ThreadsController {
   })
   @ApiResponse({ status: 404, description: 'Thread not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  @ApiExtraModels(GetThreadsResponseDtoItem)
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<GetThreadResponseDto> {
@@ -477,5 +483,69 @@ export class ThreadsController {
     await this.removeSourceFromThreadUseCase.execute(
       new RemoveSourceCommand(thread, sourceId),
     );
+  }
+
+  @Get(':id/sources/:sourceId/download')
+  @ApiOperation({ summary: 'Download a data source as CSV' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the thread',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'sourceId',
+    description: 'The UUID of the source to download',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the source as a CSV file',
+    content: {
+      'text/csv': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Thread or source not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Source is not a CSV data source',
+  })
+  async downloadSource(
+    @Param('id', ParseUUIDPipe) threadId: UUID,
+    @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    this.logger.log('downloadSource', { threadId, sourceId });
+
+    // First verify the thread exists
+    await this.findThreadUseCase.execute(new FindThreadQuery(threadId));
+
+    // Get the source
+    const source = await this.getSourceByIdUseCase.execute(
+      new GetSourceByIdQuery(sourceId),
+    );
+
+    // Check if it's a CSV data source
+    if (!(source instanceof CSVDataSource)) {
+      throw new Error('Source is not a CSV data source');
+    }
+
+    // Convert to CSV string
+    const csvString = convertCSVToString(source.data);
+
+    // Set response headers
+    res.set({
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="${source.name}.csv"`,
+    });
+
+    // Return as StreamableFile
+    return new StreamableFile(Buffer.from(csvString, 'utf-8'));
   }
 }

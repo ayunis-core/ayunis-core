@@ -6,7 +6,12 @@ export abstract class DataSource extends Source {
   dataType: DataType;
   abstract data: object;
 
-  constructor(params: { id?: UUID; name: string; type: DataType }) {
+  constructor(params: {
+    id?: UUID;
+    name: string;
+    type: DataType;
+    createdByLLM?: boolean;
+  }) {
     super({ ...params, type: SourceType.DATA });
     this.dataType = params.type;
   }
@@ -22,6 +27,7 @@ export class CSVDataSource extends DataSource {
     id?: UUID;
     name: string;
     data: { headers: string[]; rows: string[][] };
+    createdByLLM?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

@@ -41,6 +41,7 @@ export class SourceDtoMapper {
     fileDto.textType = source.textType;
     fileDto.fileType = source.fileType;
     fileDto.name = source.name;
+    fileDto.createdByLLM = source.createdByLLM;
     fileDto.createdAt = source.createdAt.toISOString();
     fileDto.updatedAt = source.updatedAt.toISOString();
 
@@ -58,6 +59,7 @@ export class SourceDtoMapper {
     urlDto.textType = source.textType;
     urlDto.url = source.url;
     urlDto.name = source.name;
+    urlDto.createdByLLM = source.createdByLLM;
     urlDto.createdAt = source.createdAt.toISOString();
     urlDto.updatedAt = source.updatedAt.toISOString();
 
@@ -75,6 +77,7 @@ export class SourceDtoMapper {
     csvDto.dataType = source.dataType;
     csvDto.data = source.data;
     csvDto.name = source.name;
+    csvDto.createdByLLM = source.createdByLLM;
     csvDto.createdAt = source.createdAt.toISOString();
     csvDto.updatedAt = source.updatedAt.toISOString();
 

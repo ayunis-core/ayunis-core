@@ -5,7 +5,7 @@
  * A secure Python code execution service with Docker sandboxing
  * OpenAPI spec version: 0.1.0
  */
-export type ExecutionRequestFilesAnyOf = {[key: string]: string};
+export type ExecutionRequestFilesAnyOf = { [key: string]: string };
 
 /**
  * Optional dictionary of filename -> base64-encoded content
@@ -22,6 +22,14 @@ export interface ExecutionRequest {
   files?: ExecutionRequestFiles;
 }
 
+export type ExecutionResponseOutputFilesAnyOf = { [key: string]: string };
+
+/**
+ * Dictionary of output CSV files: filename -> base64-encoded content
+ */
+export type ExecutionResponseOutputFiles =
+  ExecutionResponseOutputFilesAnyOf | null;
+
 /**
  * Response model for code execution results.
  */
@@ -36,6 +44,8 @@ export interface ExecutionResponse {
   exit_code: number;
   /** Unique identifier for this execution */
   execution_id: string;
+  /** Dictionary of output CSV files: filename -> base64-encoded content */
+  output_files?: ExecutionResponseOutputFiles;
 }
 
 export interface HTTPValidationError {
@@ -59,4 +69,3 @@ export interface ValidationError {
   msg: string;
   type: string;
 }
-

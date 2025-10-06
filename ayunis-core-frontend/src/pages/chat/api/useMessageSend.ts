@@ -13,6 +13,11 @@ import { showError } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
 import { useCallback, useRef } from "react";
 import config from "@/shared/config";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getThreadsControllerFindAllQueryKey,
+  getThreadsControllerFindOneQueryKey,
+} from "@/shared/api/generated/ayunisCoreAPI";
 
 interface SendMesageInput {
   text: string;
@@ -36,6 +41,7 @@ interface UseMessageSendParams {
 
 export function useMessageSend(params: UseMessageSendParams) {
   const { t } = useTranslation("chats");
+  const queryClient = useQueryClient();
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
 
@@ -156,6 +162,14 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
       } finally {
         isLoadingRef.current = false;
+        [
+          getThreadsControllerFindOneQueryKey(params.threadId),
+          getThreadsControllerFindAllQueryKey(),
+        ].forEach((queryKey) => {
+          queryClient.invalidateQueries({
+            queryKey,
+          });
+        });
       }
     },
     [params, t],

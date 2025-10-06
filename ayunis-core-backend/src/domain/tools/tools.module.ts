@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ToolHandlerRegistry } from './application/tool-handler.registry';
 import { HttpToolHandler } from './application/handlers/http-tool.handler';
 import { SourceQueryToolHandler } from './application/handlers/source-query-tool.handler';
@@ -15,9 +15,15 @@ import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assem
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
 import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CodeExecutionToolHandler } from './application/handlers/code-execution-tool.handler';
+import { ThreadsModule } from '../threads/threads.module';
 
 @Module({
-  imports: [SourcesModule, LocalToolConfigRepositoryModule, RetrieverModule],
+  imports: [
+    SourcesModule,
+    forwardRef(() => ThreadsModule),
+    LocalToolConfigRepositoryModule,
+    RetrieverModule,
+  ],
   providers: [
     // Use cases
     AssembleToolUseCase,

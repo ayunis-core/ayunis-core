@@ -1244,6 +1244,56 @@
         ]
       }
     },
+    "/threads/{id}/sources/{sourceId}/download": {
+      "get": {
+        "operationId": "ThreadsController_downloadSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the source to download",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the source as a CSV file",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Source is not a CSV data source"
+          },
+          "404": {
+            "description": "Thread or source not found"
+          }
+        },
+        "summary": "Download a data source as CSV",
+        "tags": [
+          "threads"
+        ]
+      }
+    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -3786,6 +3836,10 @@
               "data"
             ]
           },
+          "createdByLLM": {
+            "type": "boolean",
+            "description": "Whether the source was created by LLM"
+          },
           "createdAt": {
             "type": "string",
             "description": "Creation timestamp"
@@ -3800,8 +3854,211 @@
           "threadId",
           "name",
           "type",
+          "createdByLLM",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "FileSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "text",
+              "data"
+            ]
+          },
+          "createdByLLM": {
+            "type": "boolean",
+            "description": "Whether the source was created by LLM"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "textType": {
+            "type": "string",
+            "description": "Type of text",
+            "enum": [
+              "file",
+              "web"
+            ]
+          },
+          "fileType": {
+            "type": "string",
+            "description": "Type of file",
+            "enum": [
+              "pdf"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "name",
+          "type",
+          "createdByLLM",
+          "createdAt",
+          "updatedAt",
+          "textType",
+          "fileType"
+        ]
+      },
+      "UrlSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "text",
+              "data"
+            ]
+          },
+          "createdByLLM": {
+            "type": "boolean",
+            "description": "Whether the source was created by LLM"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "textType": {
+            "type": "string",
+            "description": "Type of text",
+            "enum": [
+              "file",
+              "web"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the source"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "name",
+          "type",
+          "createdByLLM",
+          "createdAt",
+          "updatedAt",
+          "textType",
+          "url"
+        ]
+      },
+      "CSVDataSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the source"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID this source belongs to"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the source"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of source",
+            "enum": [
+              "text",
+              "data"
+            ]
+          },
+          "createdByLLM": {
+            "type": "boolean",
+            "description": "Whether the source was created by LLM"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "dataType": {
+            "type": "string",
+            "description": "Type of data",
+            "enum": [
+              "csv"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "description": "CSV data with headers and rows",
+            "additionalProperties": false,
+            "properties": {
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Column headers"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": "Data rows"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "name",
+          "type",
+          "createdByLLM",
+          "createdAt",
+          "updatedAt",
+          "dataType",
+          "data"
         ]
       },
       "GetThreadResponseDto": {
@@ -3935,193 +4192,6 @@
         },
         "required": [
           "agentId"
-        ]
-      },
-      "FileSourceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the source"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID this source belongs to"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the source"
-          },
-          "type": {
-            "type": "string",
-            "description": "Type of source",
-            "enum": [
-              "text",
-              "data"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp"
-          },
-          "textType": {
-            "type": "string",
-            "description": "Type of text",
-            "enum": [
-              "file",
-              "web"
-            ]
-          },
-          "fileType": {
-            "type": "string",
-            "description": "Type of file",
-            "enum": [
-              "pdf"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "threadId",
-          "name",
-          "type",
-          "createdAt",
-          "updatedAt",
-          "textType",
-          "fileType"
-        ]
-      },
-      "UrlSourceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the source"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID this source belongs to"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the source"
-          },
-          "type": {
-            "type": "string",
-            "description": "Type of source",
-            "enum": [
-              "text",
-              "data"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp"
-          },
-          "textType": {
-            "type": "string",
-            "description": "Type of text",
-            "enum": [
-              "file",
-              "web"
-            ]
-          },
-          "url": {
-            "type": "string",
-            "description": "URL of the source"
-          }
-        },
-        "required": [
-          "id",
-          "threadId",
-          "name",
-          "type",
-          "createdAt",
-          "updatedAt",
-          "textType",
-          "url"
-        ]
-      },
-      "CSVDataSourceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the source"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread ID this source belongs to"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the source"
-          },
-          "type": {
-            "type": "string",
-            "description": "Type of source",
-            "enum": [
-              "text",
-              "data"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp"
-          },
-          "dataType": {
-            "type": "string",
-            "description": "Type of data",
-            "enum": [
-              "csv"
-            ]
-          },
-          "data": {
-            "type": "object",
-            "description": "CSV data with headers and rows",
-            "additionalProperties": false,
-            "properties": {
-              "headers": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Column headers"
-              },
-              "rows": {
-                "type": "array",
-                "items": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "description": "Data rows"
-              }
-            }
-          }
-        },
-        "required": [
-          "id",
-          "threadId",
-          "name",
-          "type",
-          "createdAt",
-          "updatedAt",
-          "dataType",
-          "data"
         ]
       },
       "ToolAssignmentDto": {

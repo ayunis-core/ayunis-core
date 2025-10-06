@@ -14,6 +14,7 @@ export abstract class TextSource extends Source {
     type: TextType;
     text: string;
     contentChunks: TextSourceContentChunk[];
+    createdByLLM?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -34,6 +35,7 @@ export class FileSource extends TextSource {
     type: TextType;
     text: string;
     contentChunks: TextSourceContentChunk[];
+    createdByLLM?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -52,6 +54,7 @@ export class UrlSource extends TextSource {
     text: string;
     name: string;
     type: TextType;
+    createdByLLM?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

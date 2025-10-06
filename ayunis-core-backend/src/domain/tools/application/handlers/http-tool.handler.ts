@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ToolExecutionFailedError } from '../tools.errors';
 import { HttpTool, HttpToolMethod } from '../../domain/tools/http-tool.entity';
-import { ToolExecutionHandler } from '../ports/execution.handler';
-import { UUID } from 'crypto';
+import {
+  ToolExecutionContext,
+  ToolExecutionHandler,
+} from '../ports/execution.handler';
 
 @Injectable()
 export class HttpToolHandler extends ToolExecutionHandler {
@@ -11,7 +13,7 @@ export class HttpToolHandler extends ToolExecutionHandler {
   async execute(params: {
     tool: HttpTool;
     input: Record<string, unknown>;
-    orgId: UUID;
+    context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
     this.logger.log('execute', tool, input);

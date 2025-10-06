@@ -39,7 +39,7 @@ export class ExecuteToolUseCase {
       return await handler.execute({
         tool: command.tool,
         input: command.input,
-        orgId: command.orgId,
+        context: command.context,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
