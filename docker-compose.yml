@@ -48,16 +48,19 @@ services:
     environment:
       # Restrict to only the operations needed for code execution
       - CONTAINERS=1 # Allow container operations
+      - EXEC=1 # Allow exec operations inside containers
+      - PUT=1 # Allow PUT requests (copy archive into containers)
       - POST=1 # Allow POST requests (create containers)
       - DELETE=1 # Allow DELETE requests (remove containers)
       - BUILD=1 # Allow image building
       - IMAGES=1 # Allow image operations
+      # Allow volume operations (needed for per-execution ephemeral volumes)
+      - VOLUMES=1
       # Deny everything else for security
       - AUTH=0
       - SECRETS=0
       - SERVICES=0
       - SWARM=0
-      - VOLUMES=0
       - NETWORKS=0
       - INFO=1 # Allow info queries
       - PING=1 # Allow health checks
