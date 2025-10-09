@@ -1,9 +1,10 @@
 FROM python:3.12-slim
 
-# Install Docker CLI (for building sandbox images)
+# Install Docker CLI and curl (for building sandbox images and health checks)
 RUN apt-get update && \
     apt-get install -y \
     docker.io \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -21,10 +22,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Change ownership to non-root user
+# Ensure correct ownership
 RUN chown -R ayunis:ayunis /app
 
-# Switch to non-root user
+# Switch to non-root user (safe when using docker-socket-proxy)
 USER ayunis
 
 # Expose port

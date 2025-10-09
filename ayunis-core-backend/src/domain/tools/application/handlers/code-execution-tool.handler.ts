@@ -37,9 +37,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    const { code, files, dataSourceIds } = input;
-    console.log('files', files);
-    console.log('dataSourceIds', dataSourceIds);
+    const { code, dataSourceIds } = input;
 
     const isValid = tool.validateParams(input);
     if (!isValid) {

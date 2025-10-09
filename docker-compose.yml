@@ -40,6 +40,61 @@ services:
     ports:
       - "9001:9001"
 
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: ayunis-docker-proxy-prod
+    restart: unless-stopped
+    privileged: true
+    environment:
+      # Restrict to only the operations needed for code execution
+      - CONTAINERS=1 # Allow container operations
+      - POST=1 # Allow POST requests (create containers)
+      - DELETE=1 # Allow DELETE requests (remove containers)
+      - BUILD=1 # Allow image building
+      - IMAGES=1 # Allow image operations
+      # Deny everything else for security
+      - AUTH=0
+      - SECRETS=0
+      - SERVICES=0
+      - SWARM=0
+      - VOLUMES=0
+      - NETWORKS=0
+      - INFO=1 # Allow info queries
+      - PING=1 # Allow health checks
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only mount
+    networks:
+      - docker-proxy-network
+    # No need to expose ports - only accessed internally
+
+  code-execution:
+    build:
+      context: ./ayunis-core-code-execution
+      dockerfile: Dockerfile
+    container_name: ayunis-code-execution-prod
+    restart: unless-stopped
+    depends_on:
+      - docker-socket-proxy
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - EXECUTION_TIMEOUT=30
+      - MAX_MEMORY=512m
+      - MAX_CPU=1.0
+      - DOCKER_IMAGE=python-sandbox:latest
+      # Point Docker client to the proxy instead of direct socket
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+    networks:
+      - ayunis-network
+      - docker-proxy-network # Also connect to proxy network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Now running with restricted Docker access through proxy
+
   app:
     build:
       context: .
@@ -54,11 +109,13 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      code-execution:
+        condition: service_healthy
     env_file:
       - ./ayunis-core-backend/.env
       - ./ayunis-core-frontend/.env
     environment:
-      CODE_EXECUTION_SERVICE_URL: ${CODE_EXECUTION_SERVICE_URL:-http://host.docker.internal:8080}
+      CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
     volumes:
       - app-uploads:/app/uploads
     networks:
@@ -87,3 +144,6 @@ volumes:
 networks:
   ayunis-network:
     driver: bridge
+  docker-proxy-network:
+    driver: bridge
+    internal: true # Internal network for Docker proxy communication
