@@ -12,7 +12,7 @@ interface AgentActivityHintProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   icon: React.ReactNode;
-  hint: string;
+  hint: string | React.ReactNode;
   input: string;
   output?: string;
 }

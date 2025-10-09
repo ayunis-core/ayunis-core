@@ -289,27 +289,50 @@ export class RunsController {
 
       const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);
 
-      for await (const event of eventGenerator) {
-        // Generate appropriate event ID based on response type
-        let eventId: string;
-        switch (event.type) {
-          case 'message':
-            eventId = `message-${event.timestamp}`;
-            break;
-          case 'thread':
-            eventId = `thread-${event.threadId}`;
-            break;
-          case 'error':
-            eventId = 'error';
-            break;
-          case 'session':
-            eventId = 'session';
-            break;
-          default:
-            eventId = 'event';
-        }
+      // Track if client disconnected
+      let clientDisconnected = false;
+      const disconnectHandler = () => {
+        this.logger.log('Client disconnected from SSE stream', {
+          threadId: params.threadId,
+        });
+        clientDisconnected = true;
+      };
 
-        this.writeSSEEvent(params.response, eventId, event);
+      // Listen for client disconnect
+      params.response.on('close', disconnectHandler);
+
+      try {
+        for await (const event of eventGenerator) {
+          // Check if client disconnected before writing
+          if (clientDisconnected) {
+            this.logger.log('Stopping event stream due to client disconnect');
+            break;
+          }
+
+          // Generate appropriate event ID based on response type
+          let eventId: string;
+          switch (event.type) {
+            case 'message':
+              eventId = `message-${event.timestamp}`;
+              break;
+            case 'thread':
+              eventId = `thread-${event.threadId}`;
+              break;
+            case 'error':
+              eventId = 'error';
+              break;
+            case 'session':
+              eventId = 'session';
+              break;
+            default:
+              eventId = 'event';
+          }
+
+          this.writeSSEEvent(params.response, eventId, event);
+        }
+      } finally {
+        // Clean up disconnect listener
+        params.response.off('close', disconnectHandler);
       }
     } catch (error) {
       this.logger.error('Error in executeRunAndStream', error);

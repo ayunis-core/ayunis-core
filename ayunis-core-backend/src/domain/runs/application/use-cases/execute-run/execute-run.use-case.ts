@@ -711,133 +711,175 @@ export class ExecuteRunUseCase {
       },
     };
 
-    // Process streaming chunks
-    for await (const chunk of asyncIterable) {
-      if (!chunk) continue; // Skip undefined chunks
+    try {
+      // Process streaming chunks
+      for await (const chunk of asyncIterable) {
+        if (!chunk) continue; // Skip undefined chunks
 
-      let shouldUpdate = false;
+        let shouldUpdate = false;
 
-      // Accumulate thinking content
-      if (chunk.thinkingDelta) {
-        accumulatedThinking += chunk.thinkingDelta;
-        shouldUpdate = true;
-      }
-
-      // Accumulate text content
-      if (chunk.textContentDelta) {
-        accumulatedText += chunk.textContentDelta;
-        shouldUpdate = true;
-      }
-
-      // Accumulate tool calls
-      chunk.toolCallsDelta.forEach((toolCall) => {
-        const existing = accumulatedToolCalls.get(toolCall.index) || {
-          id: null,
-          name: null,
-          arguments: '',
-        };
-
-        accumulatedToolCalls.set(toolCall.index, {
-          id: toolCall.id || existing.id,
-          name: toolCall.name || existing.name,
-          arguments: existing.arguments + (toolCall.argumentsDelta || ''),
-        });
-        shouldUpdate = true;
-      });
-
-      // Yield updated message if there were changes
-      if (shouldUpdate) {
-        const messageContent: Array<
-          TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-        > = [];
-
-        // Add thinking content if present
-        if (accumulatedThinking.trim()) {
-          messageContent.push(new ThinkingMessageContent(accumulatedThinking));
+        // Accumulate thinking content
+        if (chunk.thinkingDelta) {
+          accumulatedThinking += chunk.thinkingDelta;
+          shouldUpdate = true;
         }
 
-        // Add text content if present
-        if (accumulatedText.trim()) {
-          messageContent.push(new TextMessageContent(accumulatedText));
+        // Accumulate text content
+        if (chunk.textContentDelta) {
+          accumulatedText += chunk.textContentDelta;
+          shouldUpdate = true;
         }
 
-        // Add complete tool calls only
-        accumulatedToolCalls.forEach((toolCall) => {
-          if (toolCall.id && toolCall.name && toolCall.arguments) {
-            try {
-              const parsedArgs = safeJsonParse(
-                toolCall.arguments,
-                {},
-              ) as object;
-              if (parsedArgs) {
-                messageContent.push(
-                  new ToolUseMessageContent(
-                    toolCall.id,
-                    toolCall.name,
-                    parsedArgs,
-                  ),
-                );
-              }
-            } catch {
-              this.logger.debug(`Incomplete tool call for ${toolCall.name}`, {
-                arguments: toolCall.arguments,
-              });
-              // Don't add incomplete tool calls yet
-            }
-          }
+        // Accumulate tool calls
+        chunk.toolCallsDelta.forEach((toolCall) => {
+          const existing = accumulatedToolCalls.get(toolCall.index) || {
+            id: null,
+            name: null,
+            arguments: '',
+          };
+
+          accumulatedToolCalls.set(toolCall.index, {
+            id: toolCall.id || existing.id,
+            name: toolCall.name || existing.name,
+            arguments: existing.arguments + (toolCall.argumentsDelta || ''),
+          });
+          shouldUpdate = true;
         });
 
-        // Update the same assistant message with new content
-        assistantMessage.content = messageContent;
+        // Yield updated message if there were changes
+        if (shouldUpdate) {
+          const messageContent: Array<
+            TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+          > = [];
 
-        yield assistantMessage;
-      }
-    }
-
-    // Build final message content
-    const finalMessageContent: Array<
-      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-    > = [];
-
-    // Add thinking content if present
-    if (accumulatedThinking.trim()) {
-      finalMessageContent.push(new ThinkingMessageContent(accumulatedThinking));
-    }
-
-    // Add text content if present
-    if (accumulatedText.trim()) {
-      finalMessageContent.push(new TextMessageContent(accumulatedText));
-    }
-
-    // Add tool calls if present
-    accumulatedToolCalls.forEach((toolCall) => {
-      if (toolCall.id && toolCall.name) {
-        try {
-          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as object;
-          if (parsedArgs) {
-            finalMessageContent.push(
-              new ToolUseMessageContent(toolCall.id, toolCall.name, parsedArgs),
+          // Add thinking content if present
+          if (accumulatedThinking.trim()) {
+            messageContent.push(
+              new ThinkingMessageContent(accumulatedThinking),
             );
           }
-        } catch (error) {
-          this.logger.warn(
-            `Failed to parse tool arguments for ${toolCall.name}`,
-            {
-              arguments: toolCall.arguments,
-              error: error as Error,
-            },
-          );
+
+          // Add text content if present
+          if (accumulatedText.trim()) {
+            messageContent.push(new TextMessageContent(accumulatedText));
+          }
+
+          // Add tool calls (complete or in-progress)
+          accumulatedToolCalls.forEach((toolCall) => {
+            if (toolCall.id && toolCall.name) {
+              // Try to parse arguments if they exist
+              let parsedArgs: object = {};
+              if (toolCall.arguments) {
+                try {
+                  const parsed = safeJsonParse(toolCall.arguments, null) as
+                    | object
+                    | null;
+                  if (parsed) {
+                    parsedArgs = parsed;
+                  }
+                } catch {
+                  this.logger.debug(
+                    `Incomplete tool call arguments for ${toolCall.name}`,
+                    {
+                      arguments: toolCall.arguments,
+                    },
+                  );
+                  // Use empty params for incomplete tool calls - this allows the frontend
+                  // to show a placeholder/loading indicator
+                }
+              }
+
+              // Add the tool call even if arguments are incomplete
+              messageContent.push(
+                new ToolUseMessageContent(
+                  toolCall.id,
+                  toolCall.name,
+                  parsedArgs,
+                ),
+              );
+            }
+          });
+
+          // Update the same assistant message with new content
+          assistantMessage.content = messageContent;
+
+          yield assistantMessage;
         }
       }
-    });
+    } finally {
+      // This finally block ensures we save the message even if the stream is interrupted
+      // (e.g., due to client disconnection or error)
+      this.logger.log(
+        'Finalizing streaming inference, saving accumulated message',
+        {
+          threadId,
+          hasText: accumulatedText.length > 0,
+          hasThinking: accumulatedThinking.length > 0,
+          toolCallsCount: accumulatedToolCalls.size,
+        },
+      );
 
-    // Update the assistant message with final complete content
-    assistantMessage.content = finalMessageContent;
+      // Build final message content from accumulated data
+      const finalMessageContent: Array<
+        TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+      > = [];
 
-    // Save the assistant message to database (preserving the consistent ID)
-    // No need to yield again - we already yielded the complete message during streaming
-    await this.saveAssistantMessageUseCase.execute(
-      new SaveAssistantMessageCommand(assistantMessage),
-    );
+      // Add thinking content if present
+      if (accumulatedThinking.trim()) {
+        finalMessageContent.push(
+          new ThinkingMessageContent(accumulatedThinking),
+        );
+      }
+
+      // Add text content if present
+      if (accumulatedText.trim()) {
+        finalMessageContent.push(new TextMessageContent(accumulatedText));
+      }
+
+      // Add tool calls if present
+      accumulatedToolCalls.forEach((toolCall) => {
+        if (toolCall.id && toolCall.name) {
+          try {
+            const parsedArgs = safeJsonParse(toolCall.arguments, {}) as object;
+            if (parsedArgs) {
+              finalMessageContent.push(
+                new ToolUseMessageContent(
+                  toolCall.id,
+                  toolCall.name,
+                  parsedArgs,
+                ),
+              );
+            }
+          } catch (error) {
+            this.logger.warn(
+              `Failed to parse tool arguments for ${toolCall.name}`,
+              {
+                arguments: toolCall.arguments,
+                error: error as Error,
+              },
+            );
+          }
+        }
+      });
+
+      // Update the assistant message with final complete content
+      assistantMessage.content = finalMessageContent;
+
+      // Save the assistant message to database (preserving the consistent ID)
+      // This will save even partial messages if the stream was interrupted
+      if (finalMessageContent.length > 0) {
+        await this.saveAssistantMessageUseCase.execute(
+          new SaveAssistantMessageCommand(assistantMessage),
+        );
+        this.logger.log('Successfully saved message to database', {
+          threadId,
+          messageId: assistantMessage.id,
+        });
+      } else {
+        this.logger.warn('No content to save for assistant message', {
+          threadId,
+        });
+      }
+    }
   }
 }

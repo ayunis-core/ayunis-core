@@ -44,6 +44,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   const queryClient = useQueryClient();
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
+  const wasAbortedRef = useRef(false);
 
   const sendMessage = useCallback(
     async (sendMessageDto: SendMessageDto) => {
@@ -54,6 +55,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
 
         isLoadingRef.current = true;
+        wasAbortedRef.current = false;
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
 
@@ -150,6 +152,7 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         if (error instanceof Error) {
           if (error.name === "AbortError") {
+            wasAbortedRef.current = true;
             return; // Request was cancelled, don't show error
           }
 
@@ -162,17 +165,23 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
       } finally {
         isLoadingRef.current = false;
-        [
-          getThreadsControllerFindOneQueryKey(params.threadId),
-          getThreadsControllerFindAllQueryKey(),
-        ].forEach((queryKey) => {
-          queryClient.invalidateQueries({
-            queryKey,
+
+        // Skip immediate invalidation if request was aborted
+        // The abort() function will handle invalidation with a delay to allow
+        // the backend to save the partial message first
+        if (!wasAbortedRef.current) {
+          [
+            getThreadsControllerFindOneQueryKey(params.threadId),
+            getThreadsControllerFindAllQueryKey(),
+          ].forEach((queryKey) => {
+            queryClient.invalidateQueries({
+              queryKey,
+            });
           });
-        });
+        }
       }
     },
-    [params, t],
+    [params, t, queryClient],
   );
 
   const sendTextMessage = useCallback(
@@ -218,7 +227,23 @@ export function useMessageSend(params: UseMessageSendParams) {
       abortControllerRef.current = null;
     }
     isLoadingRef.current = false;
-  }, []);
+    wasAbortedRef.current = true;
+
+    // Give the backend a moment to save the partial message to the database
+    // before invalidating queries to refresh the UI. This delay is necessary
+    // because the backend saves the message in a finally block after the
+    // streaming connection is closed.
+    setTimeout(() => {
+      [
+        getThreadsControllerFindOneQueryKey(params.threadId),
+        getThreadsControllerFindAllQueryKey(),
+      ].forEach((queryKey) => {
+        queryClient.invalidateQueries({
+          queryKey,
+        });
+      });
+    }, 500); // 500ms delay to allow backend to persist the message
+  }, [params.threadId, queryClient]);
 
   return {
     sendTextMessage,

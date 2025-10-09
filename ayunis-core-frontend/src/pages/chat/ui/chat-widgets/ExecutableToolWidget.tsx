@@ -13,19 +13,24 @@ export default function ExecutableToolWidget({
 }) {
   const { t } = useTranslation("chats");
   const [open, setOpen] = useState(false);
+
+  // Check if params are empty or incomplete (streaming in progress)
+  const hasParams = content.params && Object.keys(content.params).length > 0;
+  const isLoadingParams = isStreaming && !hasParams;
+
   return (
     <AgentActivityHint
       open={open}
       onOpenChange={setOpen}
       icon={
-        isStreaming ? (
+        isStreaming || isLoadingParams ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           <Wrench className="h-4 w-4" />
         )
       }
       hint={t(`chat.tools.${content.name}`)}
-      input={JSON.stringify(content.params, null, 2)}
+      input={isLoadingParams ? "" : JSON.stringify(content.params, null, 2)}
     />
   );
 }

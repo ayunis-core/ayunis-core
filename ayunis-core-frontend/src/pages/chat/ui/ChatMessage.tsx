@@ -19,6 +19,8 @@ import ExecutableToolWidget from "./chat-widgets/ExecutableToolWidget";
 import ThinkingBlockWidget from "./chat-widgets/ThinkingBlockWidget";
 import CreateCalendarEventWidget from "./chat-widgets/CreateCalendarEventWidget";
 import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import AgentActivityHint from "@/widgets/agent-activity-hint/ui/AgentActivityHint";
+import { Skeleton } from "@/shared/ui/shadcn/skeleton";
 
 interface ChatMessageProps {
   message?: Message;
@@ -119,7 +121,15 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
     case "assistant":
       // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
       if (!message.content || message.content.length === 0) {
-        return null;
+        return (
+          <AgentActivityHint
+            open={false}
+            onOpenChange={() => {}}
+            icon={<Loader2 className="h-4 w-4 animate-spin" />}
+            hint={<Skeleton className="h-4 w-16" />}
+            input={""}
+          />
+        );
       }
 
       return message.content.map((content: AssistantMessageContent, index) => {
