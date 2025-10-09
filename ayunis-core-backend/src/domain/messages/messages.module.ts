@@ -9,6 +9,7 @@ import { CreateSystemMessageUseCase } from './application/use-cases/create-syste
 import { CreateAssistantMessageUseCase } from './application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import { SaveAssistantMessageUseCase } from './application/use-cases/save-assistant-message/save-assistant-message.use-case';
 import { CreateToolResultMessageUseCase } from './application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import { DeleteMessageUseCase } from './application/use-cases/delete-message/delete-message.use-case';
 
 @Module({
   imports: [LocalMessagesRepositoryModule],
@@ -23,6 +24,7 @@ import { CreateToolResultMessageUseCase } from './application/use-cases/create-t
     CreateAssistantMessageUseCase,
     SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
+    DeleteMessageUseCase,
   ],
   exports: [
     MESSAGES_REPOSITORY,
@@ -32,6 +34,7 @@ import { CreateToolResultMessageUseCase } from './application/use-cases/create-t
     CreateAssistantMessageUseCase,
     SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
+    DeleteMessageUseCase,
   ],
 })
 export class MessagesModule {}

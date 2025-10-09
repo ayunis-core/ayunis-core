@@ -166,9 +166,9 @@ export function useMessageSend(params: UseMessageSendParams) {
       } finally {
         isLoadingRef.current = false;
 
-        // Skip immediate invalidation if request was aborted
-        // The abort() function will handle invalidation with a delay to allow
-        // the backend to save the partial message first
+        // Only invalidate queries if the request completed normally (not aborted)
+        // When aborted, we keep the optimistic local state to avoid race conditions
+        // with the backend's async save operation
         if (!wasAbortedRef.current) {
           [
             getThreadsControllerFindOneQueryKey(params.threadId),
@@ -179,6 +179,9 @@ export function useMessageSend(params: UseMessageSendParams) {
             });
           });
         }
+
+        // Reset the abort flag for next request
+        wasAbortedRef.current = false;
       }
     },
     [params, t, queryClient],
@@ -229,21 +232,11 @@ export function useMessageSend(params: UseMessageSendParams) {
     isLoadingRef.current = false;
     wasAbortedRef.current = true;
 
-    // Give the backend a moment to save the partial message to the database
-    // before invalidating queries to refresh the UI. This delay is necessary
-    // because the backend saves the message in a finally block after the
-    // streaming connection is closed.
-    setTimeout(() => {
-      [
-        getThreadsControllerFindOneQueryKey(params.threadId),
-        getThreadsControllerFindAllQueryKey(),
-      ].forEach((queryKey) => {
-        queryClient.invalidateQueries({
-          queryKey,
-        });
-      });
-    }, 500); // 500ms delay to allow backend to persist the message
-  }, [params.threadId, queryClient]);
+    // Don't invalidate queries immediately on abort
+    // The backend will save the message asynchronously, and we'll get the update
+    // through normal query invalidation in the finally block
+    // This prevents race conditions where we refetch before backend finishes saving
+  }, []);
 
   return {
     sendTextMessage,

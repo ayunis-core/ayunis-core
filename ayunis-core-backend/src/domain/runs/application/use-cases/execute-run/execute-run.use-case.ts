@@ -9,6 +9,8 @@ import { CreateUserMessageUseCase } from '../../../../messages/application/use-c
 import { CreateUserMessageCommand } from '../../../../messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
+import { DeleteMessageUseCase } from '../../../../messages/application/use-cases/delete-message/delete-message.use-case';
+import { DeleteMessageCommand } from '../../../../messages/application/use-cases/delete-message/delete-message.command';
 import { ToolUseMessageContent } from '../../../../messages/domain/message-contents/tool-use.message-content.entity';
 import { ThinkingMessageContent } from '../../../../messages/domain/message-contents/thinking-message-content.entity';
 import { ExecuteToolUseCase } from '../../../../tools/application/use-cases/execute-tool/execute-tool.use-case';
@@ -49,6 +51,7 @@ import { UUID } from 'crypto';
 import langfuse from 'src/common/evals/langfuse';
 import { LangfuseTraceClient } from 'langfuse';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
@@ -71,6 +74,7 @@ export class ExecuteRunUseCase {
     private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
+    private readonly deleteMessageUseCase: DeleteMessageUseCase,
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly triggerInferenceUseCase: GetInferenceUseCase,
@@ -658,9 +662,9 @@ export class ExecuteRunUseCase {
       content: [],
     });
 
-    // Accumulate content for the message
-    let accumulatedText = '';
-    let accumulatedThinking = '';
+    // Accumulate content for the message - use objects to allow mutation by reference
+    const accumulatedText = { value: '' };
+    const accumulatedThinking = { value: '' };
     const accumulatedToolCalls = new Map<
       number,
       {
@@ -669,6 +673,9 @@ export class ExecuteRunUseCase {
         arguments: string;
       }
     >();
+
+    // Track whether streaming completed successfully or was interrupted
+    let streamCompletedSuccessfully = false;
 
     // Convert observable to async iterable
     const asyncIterable = {
@@ -701,142 +708,211 @@ export class ExecuteRunUseCase {
 
             if (chunks.length > 0) {
               const chunk = chunks.shift()!;
-              return { value: chunk, done: false };
+              return { value: chunk, done: false } as IteratorResult<
+                StreamInferenceResponseChunk,
+                void
+              >;
             } else {
               subscription.unsubscribe();
-              return { done: true, value: undefined };
+              streamCompletedSuccessfully = true; // Mark as completed
+              return {
+                done: true,
+                value: undefined,
+              } as IteratorReturnResult<void>;
             }
           },
         };
       },
-    };
+    } as AsyncIterable<StreamInferenceResponseChunk>;
 
     try {
-      // Process streaming chunks
-      for await (const chunk of asyncIterable) {
-        if (!chunk) continue; // Skip undefined chunks
-
-        let shouldUpdate = false;
-
-        // Accumulate thinking content
-        if (chunk.thinkingDelta) {
-          accumulatedThinking += chunk.thinkingDelta;
-          shouldUpdate = true;
-        }
-
-        // Accumulate text content
-        if (chunk.textContentDelta) {
-          accumulatedText += chunk.textContentDelta;
-          shouldUpdate = true;
-        }
-
-        // Accumulate tool calls
-        chunk.toolCallsDelta.forEach((toolCall) => {
-          const existing = accumulatedToolCalls.get(toolCall.index) || {
-            id: null,
-            name: null,
-            arguments: '',
-          };
-
-          accumulatedToolCalls.set(toolCall.index, {
-            id: toolCall.id || existing.id,
-            name: toolCall.name || existing.name,
-            arguments: existing.arguments + (toolCall.argumentsDelta || ''),
-          });
-          shouldUpdate = true;
-        });
-
-        // Yield updated message if there were changes
-        if (shouldUpdate) {
-          const messageContent: Array<
-            TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-          > = [];
-
-          // Add thinking content if present
-          if (accumulatedThinking.trim()) {
-            messageContent.push(
-              new ThinkingMessageContent(accumulatedThinking),
-            );
-          }
-
-          // Add text content if present
-          if (accumulatedText.trim()) {
-            messageContent.push(new TextMessageContent(accumulatedText));
-          }
-
-          // Add tool calls (complete or in-progress)
-          accumulatedToolCalls.forEach((toolCall) => {
-            if (toolCall.id && toolCall.name) {
-              // Try to parse arguments if they exist
-              let parsedArgs: object = {};
-              if (toolCall.arguments) {
-                try {
-                  const parsed = safeJsonParse(toolCall.arguments, null) as
-                    | object
-                    | null;
-                  if (parsed) {
-                    parsedArgs = parsed;
-                  }
-                } catch {
-                  this.logger.debug(
-                    `Incomplete tool call arguments for ${toolCall.name}`,
-                    {
-                      arguments: toolCall.arguments,
-                    },
-                  );
-                  // Use empty params for incomplete tool calls - this allows the frontend
-                  // to show a placeholder/loading indicator
-                }
-              }
-
-              // Add the tool call even if arguments are incomplete
-              messageContent.push(
-                new ToolUseMessageContent(
-                  toolCall.id,
-                  toolCall.name,
-                  parsedArgs,
-                ),
-              );
-            }
-          });
-
-          // Update the same assistant message with new content
-          assistantMessage.content = messageContent;
-
-          yield assistantMessage;
-        }
+      // Process streaming chunks using extracted method
+      for await (const message of this.processStreamingChunks({
+        asyncIterable,
+        assistantMessage,
+        accumulatedText,
+        accumulatedThinking,
+        accumulatedToolCalls,
+      })) {
+        yield message;
       }
     } finally {
-      // This finally block ensures we save the message even if the stream is interrupted
-      // (e.g., due to client disconnection or error)
-      this.logger.log(
-        'Finalizing streaming inference, saving accumulated message',
-        {
+      // Save the assistant message with accumulated content
+      const savedMessageId =
+        await this.saveAssistantMessageWithAccumulatedContent(
           threadId,
-          hasText: accumulatedText.length > 0,
-          hasThinking: accumulatedThinking.length > 0,
-          toolCallsCount: accumulatedToolCalls.size,
-        },
-      );
-
-      // Build final message content from accumulated data
-      const finalMessageContent: Array<
-        TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-      > = [];
-
-      // Add thinking content if present
-      if (accumulatedThinking.trim()) {
-        finalMessageContent.push(
-          new ThinkingMessageContent(accumulatedThinking),
+          accumulatedText.value,
+          accumulatedThinking.value,
+          accumulatedToolCalls,
+          assistantMessage,
+          streamCompletedSuccessfully,
         );
+
+      // Ensure thread ends with assistant message by cleaning up any trailing messages
+      await this.cleanupTrailingNonAssistantMessages(threadId, savedMessageId);
+    }
+  }
+
+  private async *processStreamingChunks(params: {
+    asyncIterable: AsyncIterable<StreamInferenceResponseChunk>;
+    assistantMessage: AssistantMessage;
+    accumulatedText: { value: string };
+    accumulatedThinking: { value: string };
+    accumulatedToolCalls: Map<
+      number,
+      {
+        id: string | null;
+        name: string | null;
+        arguments: string;
+      }
+    >;
+  }): AsyncGenerator<AssistantMessage, void, void> {
+    const {
+      asyncIterable,
+      assistantMessage,
+      accumulatedText,
+      accumulatedThinking,
+      accumulatedToolCalls,
+    } = params;
+
+    for await (const chunk of asyncIterable) {
+      if (!chunk) continue; // Skip undefined chunks
+
+      let shouldUpdate = false;
+
+      // Accumulate thinking content
+      if (chunk.thinkingDelta) {
+        accumulatedThinking.value += chunk.thinkingDelta;
+        shouldUpdate = true;
       }
 
-      // Add text content if present
-      if (accumulatedText.trim()) {
-        finalMessageContent.push(new TextMessageContent(accumulatedText));
+      // Accumulate text content
+      if (chunk.textContentDelta) {
+        accumulatedText.value += chunk.textContentDelta;
+        shouldUpdate = true;
       }
 
-      // Add tool calls if present
+      // Accumulate tool calls
+      chunk.toolCallsDelta.forEach((toolCall) => {
+        const existing = accumulatedToolCalls.get(toolCall.index) || {
+          id: null,
+          name: null,
+          arguments: '',
+        };
+
+        accumulatedToolCalls.set(toolCall.index, {
+          id: toolCall.id || existing.id,
+          name: toolCall.name || existing.name,
+          arguments: existing.arguments + (toolCall.argumentsDelta || ''),
+        });
+        shouldUpdate = true;
+      });
+
+      // Yield updated message if there were changes
+      if (shouldUpdate) {
+        const messageContent: Array<
+          TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+        > = [];
+
+        // Add thinking content if present
+        if (accumulatedThinking.value.trim()) {
+          messageContent.push(
+            new ThinkingMessageContent(accumulatedThinking.value),
+          );
+        }
+
+        // Add text content if present
+        if (accumulatedText.value.trim()) {
+          messageContent.push(new TextMessageContent(accumulatedText.value));
+        }
+
+        // Add tool calls (complete or in-progress)
+        accumulatedToolCalls.forEach((toolCall) => {
+          if (toolCall.id && toolCall.name) {
+            // Try to parse arguments if they exist
+            let parsedArgs: object = {};
+            if (toolCall.arguments) {
+              try {
+                const parsed = safeJsonParse(toolCall.arguments, null) as
+                  | object
+                  | null;
+                if (parsed) {
+                  parsedArgs = parsed;
+                }
+              } catch {
+                this.logger.debug(
+                  `Incomplete tool call arguments for ${toolCall.name}`,
+                  {
+                    arguments: toolCall.arguments,
+                  },
+                );
+                // Use empty params for incomplete tool calls - this allows the frontend
+                // to show a placeholder/loading indicator
+              }
+            }
+
+            // Add the tool call even if arguments are incomplete
+            messageContent.push(
+              new ToolUseMessageContent(toolCall.id, toolCall.name, parsedArgs),
+            );
+          }
+        });
+
+        // Update the same assistant message with new content
+        assistantMessage.content = messageContent;
+
+        yield assistantMessage;
+      }
+    }
+  }
+
+  /**
+   * Builds final message content from accumulated streaming data and saves it to the database.
+   * Returns the saved message ID, or null if no content was saved.
+   */
+  private async saveAssistantMessageWithAccumulatedContent(
+    threadId: UUID,
+    accumulatedText: string,
+    accumulatedThinking: string,
+    accumulatedToolCalls: Map<
+      number,
+      {
+        id: string | null;
+        name: string | null;
+        arguments: string;
+      }
+    >,
+    assistantMessage: AssistantMessage,
+    streamCompletedSuccessfully: boolean,
+  ): Promise<UUID | null> {
+    this.logger.log(
+      'Finalizing streaming inference, saving accumulated message',
+      {
+        threadId,
+        hasText: accumulatedText.length > 0,
+        hasThinking: accumulatedThinking.length > 0,
+        toolCallsCount: accumulatedToolCalls.size,
+      },
+    );
+
+    // Build final message content from accumulated data
+    const finalMessageContent: Array<
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+    > = [];
+
+    // Add thinking content if present
+    if (accumulatedThinking.trim()) {
+      finalMessageContent.push(new ThinkingMessageContent(accumulatedThinking));
+    }
+
+    // Add text content if present
+    if (accumulatedText.trim()) {
+      finalMessageContent.push(new TextMessageContent(accumulatedText));
+    }
+
+    // Add tool calls only if streaming completed successfully
+    // If interrupted, we exclude tool calls as they represent incomplete actions
+    if (streamCompletedSuccessfully) {
       accumulatedToolCalls.forEach((toolCall) => {
         if (toolCall.id && toolCall.name) {
           try {
@@ -861,25 +937,167 @@ export class ExecuteRunUseCase {
           }
         }
       });
+    } else {
+      this.logger.log(
+        'Streaming was interrupted, excluding tool calls from saved message',
+        {
+          threadId,
+          toolCallCount: accumulatedToolCalls.size,
+        },
+      );
+    }
 
-      // Update the assistant message with final complete content
-      assistantMessage.content = finalMessageContent;
+    // Update the assistant message with final complete content
+    assistantMessage.content = finalMessageContent;
 
-      // Save the assistant message to database (preserving the consistent ID)
-      // This will save even partial messages if the stream was interrupted
-      if (finalMessageContent.length > 0) {
-        await this.saveAssistantMessageUseCase.execute(
-          new SaveAssistantMessageCommand(assistantMessage),
+    // Save the assistant message to database (preserving the consistent ID)
+    // This will save even partial messages if the stream was interrupted
+    if (finalMessageContent.length > 0) {
+      const savedMessage = await this.saveAssistantMessageUseCase.execute(
+        new SaveAssistantMessageCommand(assistantMessage),
+      );
+      this.logger.log('Successfully saved message to database', {
+        threadId,
+        messageId: savedMessage.id,
+      });
+      return savedMessage.id;
+    } else {
+      this.logger.warn('No content to save for assistant message', {
+        threadId,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Ensures the thread ends with an assistant message by deleting any trailing messages
+   * that come after the specified saved assistant message. This is critical when the stream
+   * is interrupted - we need to delete any trailing non-assistant messages (like tool results)
+   * to maintain conversation integrity.
+   */
+  private async cleanupTrailingNonAssistantMessages(
+    threadId: UUID,
+    savedMessageId: UUID | null,
+  ): Promise<void> {
+    try {
+      // Re-fetch the thread to get the latest message state after save
+      const updatedThread = await this.findThreadUseCase.execute(
+        new FindThreadQuery(threadId),
+      );
+
+      const threadMessages = updatedThread.messages;
+      if (threadMessages.length === 0) {
+        this.logger.warn('Thread has no messages after save', { threadId });
+        return;
+      }
+
+      // If we saved a message, find it and delete everything after it
+      if (savedMessageId) {
+        const savedMessageIndex = threadMessages.findIndex(
+          (m) => m.id === savedMessageId,
         );
-        this.logger.log('Successfully saved message to database', {
-          threadId,
-          messageId: assistantMessage.id,
-        });
+
+        if (savedMessageIndex === -1) {
+          this.logger.warn('Saved assistant message not found in thread', {
+            threadId,
+            assistantMessageId: savedMessageId,
+          });
+          // Fallback: cleanup trailing non-assistant messages
+          await this.deleteMessagesUntilAssistant(threadId, threadMessages);
+          return;
+        }
+
+        // Check if there are any messages after the assistant message we just saved
+        const messagesAfterAssistant = threadMessages.slice(
+          savedMessageIndex + 1,
+        );
+
+        if (messagesAfterAssistant.length === 0) {
+          this.logger.debug('Thread correctly ends with assistant message', {
+            threadId,
+            lastMessageId: savedMessageId,
+          });
+        } else {
+          // Delete all messages that come after the assistant message we just saved
+          this.logger.log(
+            'Found messages after saved assistant message, cleaning up',
+            {
+              threadId,
+              assistantMessageId: savedMessageId,
+              messagesAfterCount: messagesAfterAssistant.length,
+            },
+          );
+
+          await this.deleteTrailingMessages(threadId, messagesAfterAssistant);
+        }
       } else {
-        this.logger.warn('No content to save for assistant message', {
-          threadId,
+        // No message was saved (empty content), cleanup trailing non-assistant messages
+        await this.deleteMessagesUntilAssistant(threadId, threadMessages);
+      }
+    } catch (error) {
+      this.logger.error('Error during message cleanup', {
+        threadId,
+        error: error as Error,
+      });
+      // Don't throw - we want to gracefully handle cleanup failures
+    }
+  }
+
+  /**
+   * Helper method to delete messages from the end of the thread until an assistant message is found.
+   */
+  private async deleteMessagesUntilAssistant(
+    threadId: UUID,
+    threadMessages: Message[],
+  ): Promise<void> {
+    const lastMessage = threadMessages[threadMessages.length - 1];
+    if (lastMessage.role !== MessageRole.ASSISTANT) {
+      const messagesToDelete: Message[] = [];
+      for (let i = threadMessages.length - 1; i >= 0; i--) {
+        const message = threadMessages[i];
+        if (message.role === MessageRole.ASSISTANT) {
+          break;
+        }
+        messagesToDelete.push(message);
+      }
+      await this.deleteTrailingMessages(threadId, messagesToDelete);
+    }
+  }
+
+  private async deleteTrailingMessages(
+    threadId: UUID,
+    messages: Message[],
+  ): Promise<void> {
+    if (messages.length === 0) return;
+
+    this.logger.log('Deleting trailing messages', {
+      threadId,
+      count: messages.length,
+      messageIds: messages.map((m) => m.id),
+    });
+
+    for (const message of messages) {
+      try {
+        await this.deleteMessageUseCase.execute(
+          new DeleteMessageCommand(message.id),
+        );
+        this.logger.debug('Deleted trailing message', {
+          messageId: message.id,
+          role: message.role,
         });
+      } catch (error) {
+        this.logger.error('Failed to delete trailing message', {
+          messageId: message.id,
+          role: message.role,
+          error: error as Error,
+        });
+        // Continue with cleanup even if one deletion fails
       }
     }
+
+    this.logger.log('Successfully cleaned up trailing messages', {
+      threadId,
+      deletedCount: messages.length,
+    });
   }
 }

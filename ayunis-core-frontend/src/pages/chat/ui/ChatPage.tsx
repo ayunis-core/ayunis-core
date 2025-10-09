@@ -206,6 +206,28 @@ export default function ChatPage({
   function handleSendCancelled() {
     abort();
     setIsStreaming(false);
+
+    // Immediately remove tool calls from the last assistant message in local state
+    // This provides instant feedback matching what the backend will save
+    setMessages((prev) => {
+      const lastMessage = prev[prev.length - 1];
+      if (lastMessage && lastMessage.role === "assistant") {
+        // Filter out tool_use content, keeping only text and thinking
+        const cleanedContent = lastMessage.content.filter(
+          (c) => c.type === "text" || c.type === "thinking",
+        );
+
+        // If there's content left after filtering, update the message
+        if (cleanedContent.length > 0) {
+          return prev.map((msg, index) =>
+            index === prev.length - 1
+              ? { ...lastMessage, content: cleanedContent }
+              : msg,
+          );
+        }
+      }
+      return prev;
+    });
   }
 
   function handleDeleteThread() {
