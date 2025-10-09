@@ -61,6 +61,10 @@ services:
       - NETWORKS=0
       - INFO=1 # Allow info queries
       - PING=1 # Allow health checks
+      # HAProxy timeout configurations (in milliseconds)
+      - TIMEOUT_CLIENT=0 # 0 = no timeout for long-lived connections
+      - TIMEOUT_SERVER=0 # 0 = no timeout for streaming responses
+      - TIMEOUT_CONNECT=10000 # 10 seconds for initial connection
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only mount
     networks:
