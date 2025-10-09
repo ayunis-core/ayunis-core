@@ -34,7 +34,7 @@ interface ChatInputProps {
     id: string;
     name: string;
     type: SourceResponseDtoType;
-    createdByLLM: boolean;
+    createdByLLM?: boolean;
   }[];
   isStreaming?: boolean;
   isCreatingFileSource?: boolean;
@@ -105,7 +105,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     function getSourceIcon(source: {
       type: SourceResponseDtoType;
-      createdByLLM: boolean;
+      createdByLLM?: boolean;
     }) {
       if (source.createdByLLM) {
         return <Sparkles className="h-3 w-3" />;
