@@ -49,15 +49,12 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       const openAiMessages = this.convertMessages(messages);
 
       const completionOptions: OpenAI.Responses.ResponseCreateParamsStreaming =
-        /**
-         * When we add thinking capability, remember to
-         * add reasoning.encrypted_content in include (see comment)
-         * https://platform.openai.com/docs/guides/migrate-to-responses#4-decide-when-to-use-statefulness
-         */
         {
-          // include: ['reasoning.encrypted_content'],
           instructions: input.systemPrompt,
           input: openAiMessages,
+          reasoning: {
+            effort: 'low',
+          },
           model: input.model.name,
           stream: true,
           store: false,
@@ -223,7 +220,8 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
   private convertChunk = (
     chunk: OpenAI.Responses.ResponseStreamEvent,
   ): StreamInferenceResponseChunk | null => {
-    this.logger.debug('convertChunk', chunk);
+    if (chunk.type !== 'response.output_text.delta')
+      this.logger.debug('convertChunk', chunk);
     switch (chunk.type) {
       case 'response.output_text.delta':
         return new StreamInferenceResponseChunk({
