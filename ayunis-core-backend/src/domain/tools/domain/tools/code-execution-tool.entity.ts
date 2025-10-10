@@ -14,7 +14,7 @@ const codeExecutionToolParameters = {
     },
     dataSourceIds: {
       description:
-        'Optional array of CSV data source UUIDs. Each will be available as /execution/files/{uuid}.csv',
+        'Optional array of CSV data source UUIDs. Each will be available as /execution/files/{uuid}.csv. If none, provide an empty array.',
       type: 'array' as const,
       items: {
         type: 'string' as const,
@@ -22,7 +22,7 @@ const codeExecutionToolParameters = {
       },
     },
   },
-  required: ['code'],
+  required: ['code', 'dataSourceIds'],
   additionalProperties: false,
 } as const satisfies JSONSchema;
 
