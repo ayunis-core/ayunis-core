@@ -151,9 +151,11 @@ export class SourceMapper {
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    const contentChunks = source.contentChunks.map((c) =>
+    const contentChunks = source.contentChunks?.map((c) =>
       this.sourceContentChunkMapper.toRecord(details, c),
     );
+
+    record.textSourceDetails = details;
 
     return { source: record, details, contentChunks };
   }
@@ -178,9 +180,12 @@ export class SourceMapper {
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    const contentChunks = source.contentChunks.map((c) =>
+    const contentChunks = source.contentChunks?.map((c) =>
       this.sourceContentChunkMapper.toRecord(details, c),
     );
+
+    // Set bidirectional relationship
+    record.textSourceDetails = details;
 
     return { source: record, details, contentChunks };
   }
@@ -202,6 +207,9 @@ export class SourceMapper {
     details.source = record;
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
+
+    // Set bidirectional relationship
+    record.dataSourceDetails = details;
 
     return { source: record, details };
   }

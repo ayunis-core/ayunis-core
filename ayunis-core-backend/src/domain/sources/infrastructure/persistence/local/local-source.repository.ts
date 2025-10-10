@@ -98,7 +98,9 @@ export class LocalSourceRepository extends SourceRepository {
     }
     if (source instanceof DataSource) {
       const { source: sourceRecord, details } = this.mapper.toRecord(source);
+      sourceRecord.dataSourceDetails = details;
       const savedSource = await this.sourceRepository.save(sourceRecord);
+      this.logger.debug('Saved source record with id', { id: savedSource.id });
       const savedDetails = await this.dataSourceDetailsRepository.save(details);
       savedSource.dataSourceDetails = savedDetails;
       return this.mapper.toDomain(savedSource);
