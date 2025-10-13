@@ -23,6 +23,16 @@ export class StreamInferenceHandlerRegistry {
     this.mockHandler = handler;
   }
 
+  /**
+   * Returns the appropriate streaming inference handler for the given provider.
+   * In test environments (NODE_ENV=test), always returns the mock handler
+   * to prevent external API calls and eliminate the need for real API keys.
+   * This ensures tests are fast, deterministic, and cost-free.
+   *
+   * @param provider - The model provider (OpenAI, Anthropic, etc.)
+   * @returns The streaming inference handler (real or mock based on environment)
+   * @throws ModelProviderNotSupportedError if provider not registered (non-test only)
+   */
   getHandler(provider: ModelProvider): StreamInferenceHandler {
     const isTest = this.configService.get('NODE_ENV') === 'test';
     if (isTest) {

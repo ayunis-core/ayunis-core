@@ -33,8 +33,23 @@ const productionConfig: DataSourceOptions = {
   migrationsRun: true,
 };
 
+// Test-specific configuration (same as production for migrations)
+const testConfig: DataSourceOptions = {
+  ...baseConfig,
+  entities: [__dirname + '/../**/*.record.js'],
+  migrations: [__dirname + '/../db/migrations/*.js'],
+  // More verbose logging for test environment
+  logging: ['error', 'warn', 'migration'],
+  synchronize: false,
+  migrationsRun: true, // Auto-run migrations in test environment
+};
+
 // Determine which configuration to use based on NODE_ENV
 export const typeormConfigRaw: DataSourceOptions =
-  process.env.NODE_ENV === 'production' ? productionConfig : developmentConfig;
+  process.env.NODE_ENV === 'production'
+    ? productionConfig
+    : process.env.NODE_ENV === 'test'
+      ? testConfig
+      : developmentConfig;
 
 export const typeormConfig = registerAs('typeorm', () => typeormConfigRaw);
