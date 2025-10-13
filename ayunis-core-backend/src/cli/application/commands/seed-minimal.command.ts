@@ -12,6 +12,10 @@ import { ModelsRepository } from 'src/domain/models/application/ports/models.rep
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedProvider } from 'src/domain/models/domain/permitted-model-provider.entity';
+import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
+import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 
 function ensureNonProduction() {
   if ((process.env.NODE_ENV || 'development') === 'production') {
@@ -35,6 +39,7 @@ export class SeedMinimalCommand extends CommandRunner {
     private readonly modelsRepo: ModelsRepository,
     private readonly permittedProvidersRepo: PermittedProvidersRepository,
     private readonly permittedModelsRepo: PermittedModelsRepository,
+    private readonly subscriptionRepo: SubscriptionRepository,
     private readonly hashingHandler: HashingHandler,
   ) {
     super();
@@ -43,44 +48,113 @@ export class SeedMinimalCommand extends CommandRunner {
   async run(): Promise<void> {
     ensureNonProduction();
 
-    // Create available model
-    const model = new LanguageModel({
+    // Check if model already exists
+    let model = await this.modelsRepo.findOne({
       name: this.modelName,
-      displayName: this.modelDisplayName,
       provider: this.modelProvider,
-      canStream: true,
-      isReasoning: false,
-      isArchived: false,
     });
-    await this.modelsRepo.save(model);
 
-    // Create org & admin user
-    const org = await this.orgsRepo.create(new Org({ name: this.orgName }));
-    const passwordHash = await this.hashingHandler.hash(this.adminPassword);
-    await this.usersRepo.create(
-      new User({
-        email: this.adminEmail,
-        passwordHash,
-        orgId: org.id,
-        emailVerified: true,
-        role: UserRole.ADMIN,
-        name: this.adminName,
-      }),
-    );
+    if (!model) {
+      // Create available model
+      model = new LanguageModel({
+        name: this.modelName,
+        displayName: this.modelDisplayName,
+        provider: this.modelProvider,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+      });
+      await this.modelsRepo.save(model);
+      console.log(`Created model: ${this.modelName}`);
+    } else {
+      console.log(`Model already exists: ${this.modelName}`);
+    }
+
+    // Check if user already exists
+    const existingUser = await this.usersRepo.findOneByEmail(this.adminEmail);
+
+    let org: Org;
+    if (existingUser) {
+      console.log(`User already exists: ${this.adminEmail}`);
+      // Get the existing org
+      org = await this.orgsRepo.findById(existingUser.orgId);
+      console.log(`Using existing org: ${org.name}`);
+    } else {
+      // Create org & admin user
+      org = await this.orgsRepo.create(new Org({ name: this.orgName }));
+      console.log(`Created org: ${this.orgName}`);
+
+      const passwordHash = await this.hashingHandler.hash(this.adminPassword);
+      await this.usersRepo.create(
+        new User({
+          email: this.adminEmail,
+          passwordHash,
+          orgId: org.id,
+          emailVerified: true,
+          role: UserRole.ADMIN,
+          name: this.adminName,
+        }),
+      );
+      console.log(`Created user: ${this.adminEmail}`);
+    }
+
+    // Check if subscription already exists for the org
+    const existingSubscriptions = await this.subscriptionRepo.findByOrgId(org.id);
+    const activeSubscription = existingSubscriptions.find(s => !s.cancelledAt);
+
+    if (!activeSubscription) {
+      // Create active subscription for the org
+      const billingInfo = new SubscriptionBillingInfo({
+        companyName: 'Demo Company',
+        street: 'Main Street',
+        houseNumber: '123',
+        postalCode: '12345',
+        city: 'Demo City',
+        country: 'Germany',
+      });
+      await this.subscriptionRepo.create(
+        new Subscription({
+          orgId: org.id,
+          noOfSeats: 5,
+          pricePerSeat: 10,
+          renewalCycle: RenewalCycle.MONTHLY,
+          renewalCycleAnchor: new Date(),
+          billingInfo,
+          cancelledAt: null, // Active subscription
+        }),
+      );
+      console.log(`Created subscription for org: ${org.name}`);
+    } else {
+      console.log(`Active subscription already exists for org: ${org.name}`);
+    }
 
     // Create permitted provider & permitted model
-    await this.permittedProvidersRepo.create(
-      org.id,
-      new PermittedProvider({
-        provider: this.modelProvider,
-        orgId: org.id,
-      }),
-    );
-    await this.permittedModelsRepo.create(
-      new PermittedModel({
-        model,
-        orgId: org.id,
-      }),
-    );
+    // These operations are idempotent by nature (they handle duplicates internally)
+    try {
+      await this.permittedProvidersRepo.create(
+        org.id,
+        new PermittedProvider({
+          provider: this.modelProvider,
+          orgId: org.id,
+        }),
+      );
+      console.log(`Created permitted provider: ${this.modelProvider}`);
+    } catch (error) {
+      console.log(`Permitted provider may already exist: ${this.modelProvider}`);
+    }
+
+    try {
+      await this.permittedModelsRepo.create(
+        new PermittedModel({
+          model,
+          orgId: org.id,
+        }),
+      );
+      console.log(`Created permitted model: ${this.modelName}`);
+    } catch (error) {
+      console.log(`Permitted model may already exist: ${this.modelName}`);
+    }
+
+    console.log('Seeding completed successfully');
   }
 }

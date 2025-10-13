@@ -7,9 +7,17 @@ import { UsersModule } from 'src/iam/users/users.module';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { SeedMinimalCommand } from 'src/cli/application/commands/seed-minimal.command';
 import { HashingModule } from 'src/iam/hashing/hashing.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 
 @Module({
-  imports: [AppModule, UsersModule, OrgsModule, ModelsModule, HashingModule],
+  imports: [
+    AppModule,
+    UsersModule,
+    OrgsModule,
+    ModelsModule,
+    HashingModule,
+    SubscriptionsModule,
+  ],
   providers: [SeedUsersCommand, SeedModelsCommand, SeedMinimalCommand],
 })
 export class CliModule {}

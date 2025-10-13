@@ -63,6 +63,7 @@ import { LocalTrialsRepository } from './infrastructure/persistence/local/local-
     IncrementTrialMessagesUseCase,
   ],
   exports: [
+    SubscriptionRepository,
     HasActiveSubscriptionUseCase,
     GetActiveSubscriptionUseCase,
     CreateSubscriptionUseCase,
