@@ -55,7 +55,8 @@ describe('Chat Lifecycle', () => {
 		ChatPage.confirmationDialogue.desctructiveOption.click();
 
 		// Verify the chat with our naming pattern is deleted
-		ChatPage.sidebar.chats.should('not.contain.text', `I'll name this chat ${timestring}`);
+		// Check that the specific chat text is not in the sidebar
+		cy.get('div[data-testid="sidebar"]').should('not.contain.text', `I'll name this chat ${timestring}`);
 	});
 
 	it('allows user to choose the provided models', () => {
