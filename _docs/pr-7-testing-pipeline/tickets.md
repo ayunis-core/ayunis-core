@@ -6,15 +6,17 @@
 
 ## Summary
 
-**Total Tickets:** 8
+**Total Tickets:** 10
 **Status Overview:**
-- To Do: 5
+- To Do: 7
 - In Progress: 0
 - Done: 3
 
 **Current Status:** ✅ INFRASTRUCTURE COMPLETE - Tests run but fail due to application issues
 
-**Critical Path:** PR7-001 → PR7-002 → PR7-003 → PR7-004 → PR7-005 → PR7-006 → PR7-007 → PR7-008
+**Critical Path:**
+- Infrastructure: PR7-001 → PR7-002 → PR7-003 → PR7-004 → PR7-005 → PR7-006 → PR7-007 → PR7-008
+- Application Fixes: PR7-009 (Navigation) and PR7-010 (Submit Button) can be done in parallel after PR7-003
 
 **Progress Update (2025-10-13):**
 - ✅ PR7-001: Seeding exit code 137 resolved
@@ -23,7 +25,8 @@
   - Subscription added to seeding script successfully
   - Test infrastructure working correctly (no external API calls, mock handlers working)
   - Both E2E tests still fail but for application-level issues (not infrastructure)
-  - Remaining failures: navigation issue and submit button validation issue
+- 🆕 PR7-009: Fix navigation after chat creation (blocks test 1)
+- 🆕 PR7-010: Fix submit button validation issue (blocks test 2)
 
 ---
 
@@ -34,7 +37,9 @@ PR7-001 (Fix Exit Code 137) ✅ RESOLVED
     ↓
 PR7-002 (Verify Mock Handlers) ✅ RESOLVED
     ↓
-PR7-003 (Local Test Execution) 🔵 NEXT
+PR7-003 (Local Test Execution) ✅ RESOLVED
+    ├─→ PR7-009 (Fix Navigation) 🔵 NEXT
+    ├─→ PR7-010 (Fix Submit Button) 🔵 NEXT
     ↓
 PR7-004 (CI/CD Validation)
     ↓
@@ -46,6 +51,8 @@ PR7-007 (Add Rollback Strategy to Requirements)
     ↓
 PR7-008 (Final Review and Merge)
 ```
+
+**Note:** PR7-009 and PR7-010 can be worked on in parallel as they address independent issues. Both must be completed before PR7-004 can succeed.
 
 ---
 
@@ -584,7 +591,7 @@ docker compose -f docker-compose.test.yml down -v
 **Priority:** High
 **Complexity:** Small
 **Status:** todo
-**Dependencies:** [PR7-003]
+**Dependencies:** [PR7-003, PR7-009, PR7-010]
 
 **Description:**
 
@@ -1033,7 +1040,250 @@ cd ayunis-core-e2e-ui-tests && npx cypress run
 
 ---
 
-## Notes
+### PR7-009: Fix Navigation After Chat Creation
+
+**Title:** Investigate and fix navigation issue after initial message submission
+
+**Priority:** High
+**Complexity:** Medium
+**Status:** todo
+**Dependencies:** [PR7-003]
+
+**Description:**
+
+The first E2E test reveals that after submitting an initial message on the `/chat` page, the application does not navigate to `/chats/{id}` as expected. Instead, the URL remains at `/chat`. This breaks the expected flow where a new chat session should be created and the user should be redirected to the specific chat URL.
+
+**Current Behavior:**
+1. User is on `/chat` (new chat page)
+2. User types message and clicks submit
+3. Message is sent and response is received
+4. URL remains at `/chat` ❌
+5. Test expects URL to be `/chats/{chatId}`
+
+**Expected Behavior:**
+1. User is on `/chat` (new chat page)
+2. User types message and clicks submit
+3. New chat/thread is created in backend
+4. User is navigated to `/chats/{newChatId}`
+5. Message and response appear in the new chat
+
+**Investigation Steps:**
+
+1. **Check Frontend Routing Logic:**
+   ```bash
+   # Look for navigation code after message submission
+   cd ayunis-core-frontend
+   grep -r "navigate\|router.push\|window.location" --include="*.tsx" --include="*.ts"
+   ```
+
+2. **Review New Chat Page Component:**
+   - Check `ayunis-core-frontend/src/pages/chat/` or similar
+   - Look for message submission handler
+   - Verify navigation is triggered after successful response
+
+3. **Check API Response:**
+   - Verify backend returns new chat/thread ID after first message
+   - Check if frontend receives and uses this ID for navigation
+   - Review network tab in browser DevTools during manual test
+
+4. **Review Thread Creation Logic:**
+   - Check if new thread is actually created on first message
+   - Verify thread ID is returned to frontend
+   - Check for race conditions or async issues
+
+5. **Test Manually:**
+   ```bash
+   # Start test environment
+   docker compose -f docker-compose.test.yml up -d
+   docker exec ayunis-app-test npm run seed
+
+   # Open browser
+   open http://localhost:3000
+
+   # Login as admin@demo.local / admin
+   # Send a message and observe URL behavior
+   ```
+
+**Potential Causes:**
+- Missing navigation call after successful message submission
+- Thread ID not being returned from backend
+- Frontend not handling thread creation response
+- Race condition between message submission and navigation
+- Router configuration issue
+- State management not triggering navigation
+
+**Files Likely Involved:**
+- `ayunis-core-frontend/src/pages/chat/` - New chat page components
+- `ayunis-core-frontend/src/api/` - API client for chat/thread operations
+- `ayunis-core-backend/src/domain/threads/` - Thread creation logic
+- `ayunis-core-backend/src/domain/runs/` - Run execution that creates threads
+
+**Acceptance Criteria:**
+
+- [ ] Root cause of navigation issue identified
+- [ ] After submitting first message, user is navigated to `/chats/{chatId}`
+- [ ] Navigation happens after response is received (not before)
+- [ ] Chat ID in URL corresponds to created thread in database
+- [ ] Test "allows a user to create, rename and delete a chat" passes
+- [ ] No regression in existing chat functionality
+- [ ] Fix works in both development and test environments
+
+**Testing Commands:**
+
+```bash
+# Manual verification
+docker compose -f docker-compose.test.yml up -d
+docker exec ayunis-app-test npm run seed
+
+# Check thread creation
+docker exec ayunis-postgres-test psql -U postgres -d ayunis -c "SELECT id, title FROM threads;"
+
+# Run specific test
+cd ayunis-core-e2e-ui-tests
+npx cypress run --spec "cypress/e2e/chat-lifecycle.cy.ts"
+```
+
+---
+
+### PR7-010: Fix Submit Button Validation Issue
+
+**Title:** Investigate why submit button remains disabled despite active subscription
+
+**Priority:** High
+**Complexity:** Medium
+**Status:** todo
+**Dependencies:** [PR7-003]
+
+**Description:**
+
+The second E2E test shows that the submit button remains disabled even though an active subscription exists in the database. The subscription was successfully added to the seeding script and verified in the database, but the button still appears disabled with no visible error message in the test screenshots.
+
+**Current Behavior:**
+1. User logs in successfully
+2. Active subscription exists for user's organization
+3. User navigates to chat page
+4. User types message in input field
+5. Submit button remains disabled ❌
+6. Test timeout waiting for button to be enabled
+
+**Expected Behavior:**
+1. User logs in successfully
+2. Active subscription loaded for user session
+3. User navigates to chat page
+4. User types message in input field
+5. Submit button becomes enabled ✓
+6. User can submit message
+
+**Investigation Steps:**
+
+1. **Verify Subscription is Loaded in Session:**
+   ```bash
+   # Check what data is in user session/context
+   docker logs ayunis-app-test | grep -i "subscription\|session"
+   ```
+
+2. **Check Frontend Subscription Validation:**
+   - Review submit button component
+   - Check what conditions disable/enable the button
+   - Look for subscription checks in frontend code
+   ```bash
+   cd ayunis-core-frontend
+   grep -r "subscription\|disabled\|isDisabled" --include="*.tsx" --include="*.ts"
+   ```
+
+3. **Verify API Endpoints:**
+   - Check if subscription data is fetched on login
+   - Verify subscription check endpoint works
+   - Test with curl/Postman:
+   ```bash
+   # Get auth token first, then check subscription endpoint
+   docker exec ayunis-app-test curl -X GET http://localhost:3000/api/subscriptions/active \
+     -H "Authorization: Bearer <token>"
+   ```
+
+4. **Check Authentication Flow:**
+   - Verify test user login completes fully
+   - Check if subscription is included in JWT token or fetched separately
+   - Review auth guard/middleware for subscription checks
+
+5. **Inspect Submit Button Validation:**
+   - Check all validation rules on submit button
+   - Not just subscription - also message length, model selection, etc.
+   - Review browser console for any errors
+
+6. **Test Different Scenarios:**
+   ```bash
+   # Try with fresh database
+   docker compose -f docker-compose.test.yml down -v
+   docker compose -f docker-compose.test.yml up -d
+   docker exec ayunis-app-test npm run seed
+
+   # Login and check manually
+   # Inspect button element for disabled attribute and reasons
+   ```
+
+**Potential Causes:**
+- Subscription not loaded into user session/context after login
+- Frontend checking wrong field for subscription status
+- Submit button has additional validation beyond subscription
+- Race condition in loading subscription data
+- JWT token not including subscription info
+- Subscription check using wrong organization ID
+- Cache issue with subscription data
+- Test environment specific issue with auth flow
+
+**Files Likely Involved:**
+- `ayunis-core-frontend/src/pages/chat/` - Chat input component
+- `ayunis-core-frontend/src/shared/` - Auth context/hooks
+- `ayunis-core-frontend/src/api/` - Subscription API client
+- `ayunis-core-backend/src/iam/authentication/` - Auth flow
+- `ayunis-core-backend/src/iam/subscriptions/` - Subscription checks
+- `ayunis-core-backend/src/domain/runs/` - Message submission validation
+
+**Acceptance Criteria:**
+
+- [ ] Root cause of disabled submit button identified
+- [ ] Submit button enables when user has typed a message
+- [ ] Subscription validation works correctly
+- [ ] No false positives (button not enabled when it shouldn't be)
+- [ ] Test "allows user to choose the provided models" passes
+- [ ] Fix works for all authenticated users with active subscriptions
+- [ ] Clear error messages if subscription is actually missing
+
+**Debugging Helpers:**
+
+```sql
+-- Check subscription is really there
+SELECT s.*, o.name as org_name
+FROM subscriptions s
+JOIN orgs o ON s."orgId" = o.id
+WHERE s."cancelledAt" IS NULL;
+
+-- Check user's organization
+SELECT u.email, u."orgId", o.name
+FROM users u
+JOIN orgs o ON u."orgId" = o.id
+WHERE u.email = 'admin@demo.local';
+```
+
+**Testing Commands:**
+
+```bash
+# Full environment restart
+docker compose -f docker-compose.test.yml down -v
+docker compose -f docker-compose.test.yml up -d
+docker exec ayunis-app-test npm run seed
+
+# Check logs for subscription loading
+docker logs ayunis-app-test --tail 100 | grep -i subscription
+
+# Run specific test
+cd ayunis-core-e2e-ui-tests
+npx cypress run --spec "cypress/e2e/chat-lifecycle.cy.ts" --headed
+# Use --headed to see what's happening visually
+```
+
+---
 
 ### Priority Levels
 - **Critical:** Blocking PR merge, must be resolved immediately
@@ -1091,14 +1341,15 @@ gh pr checks 7
 
 This PR will be considered **complete and ready to merge** when:
 
-1. Both critical blockers resolved (PR7-001, PR7-002)
-2. All 8 tickets marked as "done"
-3. Tests pass consistently (local + CI/CD)
-4. Documentation complete and accurate
-5. Code review approved
-6. No open conversation threads on PR
-7. Performance meets requirements (< 10min CI/CD run)
-8. Zero external API dependencies verified
+1. Both critical infrastructure blockers resolved (PR7-001, PR7-002) ✅
+2. Application-level blockers resolved (PR7-009, PR7-010)
+3. All 10 tickets marked as "done"
+4. Tests pass consistently (local + CI/CD)
+5. Documentation complete and accurate
+6. Code review approved
+7. No open conversation threads on PR
+8. Performance meets requirements (< 10min CI/CD run)
+9. Zero external API dependencies verified ✅
 
 ---
 
