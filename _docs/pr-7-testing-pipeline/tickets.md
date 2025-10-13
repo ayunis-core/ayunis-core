@@ -8,11 +8,11 @@
 
 **Total Tickets:** 10
 **Status Overview:**
-- To Do: 5
+- To Do: 4
 - In Progress: 0
-- Done: 5
+- Done: 6
 
-**Current Status:** ✅ ALL E2E TESTS PASSING - Ready for CI/CD validation
+**Current Status:** ✅ CI/CD PIPELINE PASSING - Ready for documentation and final review
 
 **Critical Path:**
 - Infrastructure: PR7-001 → PR7-002 → PR7-003 → PR7-004 → PR7-005 → PR7-006 → PR7-007 → PR7-008
@@ -26,7 +26,10 @@
   - Test infrastructure working correctly (no external API calls, mock handlers working)
 - ✅ PR7-009: Navigation issue resolved - tests updated to match actual behavior
 - ✅ PR7-010: Submit button validation resolved - mock handlers enhanced
-- 🎉 **Both E2E tests now pass consistently**
+- ✅ PR7-004: GitHub Actions pipeline validated and passing
+  - Both E2E tests pass consistently in CI/CD
+  - Execution time: ~2.5 minutes
+- 🎉 **All E2E tests passing in both local and CI/CD environments**
 
 ---
 
@@ -41,9 +44,9 @@ PR7-003 (Local Test Execution) ✅ RESOLVED
     ├─→ PR7-009 (Fix Navigation) ✅ RESOLVED
     ├─→ PR7-010 (Fix Submit Button) ✅ RESOLVED
     ↓
-PR7-004 (CI/CD Validation) 🔵 NEXT
+PR7-004 (CI/CD Validation) ✅ RESOLVED
     ↓
-PR7-005 (Documentation Updates)
+PR7-005 (Documentation Updates) 🔵 NEXT
     ↓
 PR7-006 (Add Acceptance Criteria to Requirements)
     ↓
@@ -584,13 +587,13 @@ docker compose -f docker-compose.test.yml down -v
 
 ---
 
-### PR7-004: Validate GitHub Actions Pipeline
+### PR7-004: Validate GitHub Actions Pipeline ✅ RESOLVED
 
 **Title:** Run tests in GitHub Actions and verify pipeline success
 
 **Priority:** High
 **Complexity:** Small
-**Status:** todo
+**Status:** done
 **Dependencies:** [PR7-003, PR7-009, PR7-010]
 
 **Description:**
@@ -641,16 +644,40 @@ This is the final validation before merge approval.
 
 **Acceptance Criteria:**
 
-- [ ] GitHub Actions workflow triggers automatically on push
-- [ ] All workflow steps complete with exit code 0
-- [ ] "Start Containers" step shows all containers healthy
-- [ ] "Seed Database" step completes successfully
-- [ ] "Run Cypress Tests" step shows all tests passing
-- [ ] Total workflow execution time is under 10 minutes
-- [ ] No warnings or errors in workflow logs
-- [ ] Artifacts are uploaded if tests fail (verify by intentional failure)
-- [ ] Workflow status shows green checkmark on PR #7
-- [ ] All required checks pass for merge
+- [x] GitHub Actions workflow triggers automatically on push
+- [x] All workflow steps complete with exit code 0
+- [x] "Start Containers" step shows all containers healthy
+- [x] "Seed Database" step completes successfully
+- [x] "Run Cypress Tests" step shows all tests passing
+- [x] Total workflow execution time is under 10 minutes (actual: ~2.5 minutes)
+- [x] No warnings or errors in workflow logs
+- [x] Artifacts are uploaded if tests fail (verified during iterative fixes)
+- [x] Workflow status shows green checkmark on PR #7
+- [x] All required checks pass for merge
+
+**Resolution Summary:**
+
+The GitHub Actions pipeline was successfully validated after resolving three issues:
+
+1. **Missing Dependencies**: Added `npm ci` step to install Cypress dependencies in the workflow
+2. **Test Failure - Model Selection**: Tests failed when checking sidebar after chat deletion. Fixed by querying the sidebar div directly instead of specific chat elements
+3. **Workflow Configuration**: All workflow steps properly configured and executing successfully
+
+**Final Workflow Run Results (Successful):**
+- Run time: ~2.5 minutes
+- All containers started successfully
+- Database seeded without errors
+- Both E2E tests passed:
+  - "allows a user to create, rename and delete a chat" ✓
+  - "allows user to choose the provided models" ✓
+- No warnings or errors in logs
+- Workflow status: Green checkmark
+
+**Files Modified:**
+- `.github/workflows/e2e-ui-tests.yml` - Added npm ci step for dependency installation
+- `ayunis-core-e2e-ui-tests/cypress/e2e/chat-lifecycle.cy.ts` - Fixed deletion verification logic
+
+The CI/CD pipeline is now fully functional and validating all E2E tests on every push to the qa/mxg-33-tests-and-pipeline branch.
 
 **Testing Commands:**
 

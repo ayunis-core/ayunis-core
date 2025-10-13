@@ -99,8 +99,12 @@ export class SeedMinimalCommand extends CommandRunner {
     }
 
     // Check if subscription already exists for the org
-    const existingSubscriptions = await this.subscriptionRepo.findByOrgId(org.id);
-    const activeSubscription = existingSubscriptions.find(s => !s.cancelledAt);
+    const existingSubscriptions = await this.subscriptionRepo.findByOrgId(
+      org.id,
+    );
+    const activeSubscription = existingSubscriptions.find(
+      (s) => !s.cancelledAt,
+    );
 
     if (!activeSubscription) {
       // Create active subscription for the org
@@ -139,8 +143,10 @@ export class SeedMinimalCommand extends CommandRunner {
         }),
       );
       console.log(`Created permitted provider: ${this.modelProvider}`);
-    } catch (error) {
-      console.log(`Permitted provider may already exist: ${this.modelProvider}`);
+    } catch {
+      console.log(
+        `Permitted provider may already exist: ${this.modelProvider}`,
+      );
     }
 
     try {
@@ -151,7 +157,7 @@ export class SeedMinimalCommand extends CommandRunner {
         }),
       );
       console.log(`Created permitted model: ${this.modelName}`);
-    } catch (error) {
+    } catch {
       console.log(`Permitted model may already exist: ${this.modelName}`);
     }
 
