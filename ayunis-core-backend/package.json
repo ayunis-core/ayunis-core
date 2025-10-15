@@ -34,7 +34,7 @@
     "migration:sync:dev": "npm run db:dev -- schema:sync -d src/db/datasource.ts",
     "migration:drop:dev": "npm run db:dev -- schema:drop -d src/db/datasource.ts",
     "bundle-frontend": "bash scripts/bundle-frontend.sh",
-    "generate:client": "orval --config ./orval.config.ts"
+    "generate:client": "orval --config ./orval.config.ts",
     "cli:ts": "ts-node -r tsconfig-paths/register -r dotenv/config src/cli/main.ts",
     "cli": "node dist/cli/main.js",
     "seed:ts": "npm run cli:ts -- seed:minimal",

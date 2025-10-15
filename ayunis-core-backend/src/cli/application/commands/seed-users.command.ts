@@ -66,6 +66,7 @@ export class SeedUsersCommand extends CommandRunner {
       role: UserRole.ADMIN,
       orgId: org.id,
       name: 'Admin',
+      hasAcceptedMarketing: true,
     });
     return this.usersRepo.create(user);
   }

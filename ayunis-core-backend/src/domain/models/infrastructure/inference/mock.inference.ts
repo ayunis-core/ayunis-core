@@ -4,8 +4,9 @@ import {
   InferenceInput,
   InferenceResponse,
 } from '../../application/ports/inference.handler';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 
 /**
  * Mock inference handler for testing environments.
@@ -32,7 +33,7 @@ export class MockInferenceHandler extends InferenceHandler {
   answer(input: InferenceInput): Promise<InferenceResponse> {
     // Extract the last user message to check for naming requests
     const lastUserMessage = input.messages
-      .filter(m => m.role === 'user')
+      .filter((m) => m.role === MessageRole.USER)
       .pop();
 
     let responseText = `${input.model.provider}::${input.model.name}`;
@@ -57,16 +58,11 @@ export class MockInferenceHandler extends InferenceHandler {
     }
 
     return Promise.resolve(
-      new InferenceResponse(
-        [
-          new TextMessageContent(responseText),
-        ],
-        {
-          inputTokens: 0,
-          outputTokens: 0,
-          totalTokens: 0,
-        },
-      ),
+      new InferenceResponse([new TextMessageContent(responseText)], {
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+      }),
     );
   }
 }

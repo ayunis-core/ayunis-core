@@ -33,6 +33,7 @@ export class SeedModelsCommand extends CommandRunner {
         canStream,
         isReasoning: false,
         isArchived: false,
+        canUseTools: true,
       });
       await this.modelsRepo.save(lm);
     };

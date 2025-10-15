@@ -6,8 +6,9 @@ import { StreamInferenceResponseChunk } from '../../application/ports/stream-inf
 import { Observable } from 'rxjs';
 import { of } from 'rxjs';
 import { Injectable } from '@nestjs/common';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 
 /**
  * Mock streaming inference handler for testing environments.
@@ -38,7 +39,7 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
   ): Observable<StreamInferenceResponseChunk> {
     // Extract the last user message to check for naming requests
     const lastUserMessage = input.messages
-      .filter(m => m.role === 'user')
+      .filter((m) => m.role === MessageRole.USER)
       .pop();
 
     let responseText = `${input.model.provider}::${input.model.name}`;
@@ -65,6 +66,7 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
     const chunk = new StreamInferenceResponseChunk({
       textContentDelta: responseText,
       toolCallsDelta: [],
+      thinkingDelta: null,
     });
     return of(chunk);
   }

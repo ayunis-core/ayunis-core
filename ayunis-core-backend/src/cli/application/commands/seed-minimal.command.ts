@@ -63,6 +63,7 @@ export class SeedMinimalCommand extends CommandRunner {
         canStream: true,
         isReasoning: false,
         isArchived: false,
+        canUseTools: true,
       });
       await this.modelsRepo.save(model);
       console.log(`Created model: ${this.modelName}`);
@@ -93,6 +94,7 @@ export class SeedMinimalCommand extends CommandRunner {
           emailVerified: true,
           role: UserRole.ADMIN,
           name: this.adminName,
+          hasAcceptedMarketing: true,
         }),
       );
       console.log(`Created user: ${this.adminEmail}`);
