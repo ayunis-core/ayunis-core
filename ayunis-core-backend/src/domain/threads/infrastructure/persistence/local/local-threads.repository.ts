@@ -70,7 +70,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
           agentTools: {
             toolConfig: true,
           },
-          sourceAssignments: true,
+          sourceAssignments: {
+            source: true,
+          },
         },
         sourceAssignments: {
           source: true,
