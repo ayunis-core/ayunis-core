@@ -1,4 +1,7 @@
-import { useThreadsControllerDelete } from "@/shared/api";
+import {
+  useThreadsControllerDelete,
+  getThreadsControllerFindAllQueryKey,
+} from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface UseDeleteChatParams {
@@ -10,7 +13,6 @@ export function useDeleteThread(params: UseDeleteChatParams) {
   const queryClient = useQueryClient();
   const { mutate } = useThreadsControllerDelete({
     mutation: {
-      onSuccess: params.onSuccess,
       onError: params.onError,
     },
   });
@@ -20,7 +22,12 @@ export function useDeleteThread(params: UseDeleteChatParams) {
       { id: threadId },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["threads"] });
+          // Invalidate queries first to update the cache
+          queryClient.invalidateQueries({
+            queryKey: getThreadsControllerFindAllQueryKey(),
+          });
+          // Then call the user's onSuccess callback
+          params.onSuccess?.();
         },
       },
     );
