@@ -47,14 +47,17 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       const { messages, tools, toolChoice } = input;
       const openAiTools = tools?.map(this.convertTool);
       const openAiMessages = this.convertMessages(messages);
+      const isGpt5 = input.model.name.startsWith('gpt-5');
 
       const completionOptions: OpenAI.Responses.ResponseCreateParamsStreaming =
         {
           instructions: input.systemPrompt,
           input: openAiMessages,
-          reasoning: {
-            effort: 'low',
-          },
+          reasoning: isGpt5
+            ? {
+                effort: 'low',
+              }
+            : undefined,
           model: input.model.name,
           stream: true,
           store: false,
