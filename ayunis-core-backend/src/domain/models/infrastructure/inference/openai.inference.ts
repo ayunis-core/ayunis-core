@@ -36,16 +36,13 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       const { messages, tools, toolChoice } = input;
       const openAiTools = tools?.map(this.convertTool);
       const openAiMessages = this.convertMessages(messages);
+      const isGpt5 = input.model.name.startsWith('gpt-5');
+
       const completionOptions: OpenAI.Responses.ResponseCreateParamsNonStreaming =
-        /**
-         * When we add thinking capability, remember to
-         * add reasoning.encrypted_content in include (see comment)
-         * https://platform.openai.com/docs/guides/migrate-to-responses#4-decide-when-to-use-statefulness
-         */
         {
-          // include: ['reasoning.encrypted_content'],
           instructions: input.systemPrompt,
           input: openAiMessages,
+          reasoning: isGpt5 ? { effort: 'low' } : undefined,
           model: input.model.name,
           stream: false,
           store: false,
