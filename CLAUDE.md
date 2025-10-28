@@ -412,6 +412,8 @@ IDs are UUIDs generated in domain entities, not by the database:
 - Each business operation is a separate use case class
 - Use cases are `@Injectable()` and can be injected into HTTP controllers
 - Use cases depend on repository ports, not concrete implementations
+- Use cases inject `ContextService` to access current user data
+- Use cases throw domain errors (not NestJS HTTP exceptions)
 - Example:
 
   ```typescript
@@ -420,13 +422,323 @@ IDs are UUIDs generated in domain entities, not by the database:
     constructor(
       @Inject(ThreadsRepositoryPort)
       private readonly threadsRepository: ThreadsRepositoryPort,
+      private readonly contextService: ContextService,
     ) {}
 
-    async execute(dto: CreateThreadDto): Promise<Thread> {
+    async execute(command: CreateThreadCommand): Promise<Thread> {
+      // Get current user from context (set by authentication middleware)
+      const userId = this.contextService.get('userId');
+      if (!userId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
+
       // Business logic here
+      const thread = new Thread(null, command.title, userId);
+      return await this.threadsRepository.save(thread);
     }
   }
   ```
+
+**ContextService Pattern (Current User Access):**
+
+The application uses `ContextService` (from `nestjs-cls`) to provide request-scoped context for current user data:
+
+- **DO NOT** pass `userId` or `orgId` through commands/queries
+- **DO NOT** extract user data in controllers and pass to use cases
+- **DO** inject `ContextService` in use cases and get user data at runtime
+- **DO** check if user is authenticated at the start of each use case
+
+```typescript
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedException } from '@nestjs/common';
+
+@Injectable()
+export class SomeUseCase {
+  constructor(
+    private readonly contextService: ContextService,
+    // ... other dependencies
+  ) {}
+
+  async execute(command: SomeCommand): Promise<SomeResult> {
+    // Get current user from context
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
+
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    // Use userId/orgId for authorization and business logic
+    // ...
+  }
+}
+```
+
+**Commands and Queries:**
+
+- Commands and queries contain ONLY operation-specific data
+- NO `userId`, `orgId`, or other context data in commands
+- Use cases retrieve context data from `ContextService`
+
+```typescript
+// CORRECT ✓
+export class AssignToolToAgentCommand {
+  constructor(
+    public readonly agentId: string,
+    public readonly toolId: string,
+  ) {}
+}
+
+// INCORRECT ✗
+export class AssignToolToAgentCommand {
+  constructor(
+    public readonly agentId: string,
+    public readonly toolId: string,
+    public readonly userId: string,  // ✗ Don't include user context
+    public readonly orgId: string,   // ✗ Don't include user context
+  ) {}
+}
+```
+
+**Domain Error Pattern:**
+
+Each module defines domain-specific errors that extend `ApplicationError`:
+
+- **DO** throw domain errors in use cases (e.g., `AgentNotFoundError`)
+- **DO NOT** throw NestJS HTTP exceptions in use cases (e.g., `NotFoundException`)
+- Domain errors are converted to HTTP responses by global exception filter
+- All domain errors have a `toHttpException()` method
+
+**Error File Structure:**
+
+```typescript
+// application/[module].errors.ts
+import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
+import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+
+export enum AgentErrorCode {
+  AGENT_NOT_FOUND = 'AGENT_NOT_FOUND',
+  AGENT_INVALID_INPUT = 'AGENT_INVALID_INPUT',
+  // ... other codes
+}
+
+export abstract class AgentError extends ApplicationError {
+  constructor(
+    message: string,
+    code: AgentErrorCode,
+    statusCode: number = 400,
+    metadata?: ErrorMetadata,
+  ) {
+    super(message, code, statusCode, metadata);
+  }
+
+  toHttpException() {
+    switch (this.statusCode) {
+      case 404:
+        return new NotFoundException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 409:
+        return new ConflictException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      default:
+        return new BadRequestException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+    }
+  }
+}
+
+export class AgentNotFoundError extends AgentError {
+  constructor(agentId: string, metadata?: ErrorMetadata) {
+    super(
+      `Agent with ID ${agentId} not found`,
+      AgentErrorCode.AGENT_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+```
+
+**Use Case Error Handling Pattern:**
+
+```typescript
+@Injectable()
+export class SomeUseCase {
+  private readonly logger = new Logger(SomeUseCase.name);
+
+  constructor(
+    private readonly someRepository: SomeRepositoryPort,
+    private readonly contextService: ContextService,
+  ) {}
+
+  async execute(command: SomeCommand): Promise<SomeResult> {
+    this.logger.log('executingSomeOperation', { id: command.id });
+
+    try {
+      const userId = this.contextService.get('userId');
+      if (!userId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
+
+      // Business logic that may throw domain errors
+      const entity = await this.someRepository.findById(command.id);
+      if (!entity) {
+        throw new SomeNotFoundError(command.id); // Domain error
+      }
+
+      // ... more business logic
+
+      return result;
+    } catch (error) {
+      // Re-throw application errors and auth errors
+      if (
+        error instanceof ApplicationError ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
+
+      // Log and wrap unexpected errors
+      this.logger.error('Unexpected error in use case', { error: error as Error });
+      throw new UnexpectedSomeError('Unexpected error occurred', {
+        error: error as Error,
+      });
+    }
+  }
+}
+```
+
+**Controller Pattern:**
+
+Controllers are thin and delegate all business logic to use cases:
+
+- **DO NOT** extract user data with `@CurrentUser()` and pass to use cases
+- **DO NOT** include authorization logic in controllers
+- **DO** create commands/queries from DTOs
+- **DO** call use cases and map results to response DTOs
+- Let errors bubble up to global exception filter
+
+```typescript
+@Controller('agents')
+export class AgentsController {
+  constructor(
+    private readonly createAgentUseCase: CreateAgentUseCase,
+    private readonly agentDtoMapper: AgentDtoMapper,
+  ) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new agent' })
+  @ApiResponse({ status: 201, type: AgentResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  async create(
+    @Body() createAgentDto: CreateAgentDto,
+  ): Promise<AgentResponseDto> {
+    // Note: No @CurrentUser() extraction needed
+    // Use case gets user from ContextService
+
+    const agent = await this.createAgentUseCase.execute(
+      new CreateAgentCommand({
+        name: createAgentDto.name,
+        instructions: createAgentDto.instructions,
+        modelId: createAgentDto.modelId,
+      }),
+    );
+
+    return this.agentDtoMapper.toDto(agent);
+  }
+}
+```
+
+**Authorization Pattern:**
+
+Ayunis has three levels of authorization, each with different implementation patterns:
+
+**1. Super Admin Routes** (Platform Administration):
+- Used for platform-wide management (e.g., managing all models across all organizations)
+- Routes typically under `/api/admin/*`
+- Apply at **class level** with three decorators:
+  ```typescript
+  @Controller('admin')
+  @UseGuards(AdminGuard)
+  @Public() // Bypass JWT guard
+  @Admin()  // Require admin token
+  export class AdminController {
+    // All methods in this controller require super admin access
+  }
+  ```
+- Authentication via `X-Admin-Token` header (not JWT)
+- Example: `src/admin/presenters/http/admin.controller.ts`
+
+**2. Organization Admin Routes** (Organization-Level Management):
+- Used for org-level configuration (e.g., managing MCP integrations, permitted models)
+- Routes can be anywhere (e.g., `/api/mcp-integrations/*`, `/api/models/*`)
+- Apply at **method level** with `@Roles()` decorator:
+  ```typescript
+  @Controller('mcp-integrations')
+  export class McpIntegrationsController {
+    @Post('predefined')
+    @Roles(UserRole.ADMIN) // Organization admin only
+    async createPredefined(@Body() dto: CreateDto): Promise<ResponseDto> {
+      // Use case gets orgId from ContextService
+      // Only org admins can create integrations for their org
+    }
+  }
+  ```
+- Requires JWT authentication + user must have `ADMIN` role in their organization
+- Use cases retrieve `orgId` from `ContextService` to enforce org boundaries
+- Example: `src/domain/models/presenters/http/models.controller.ts` (lines 109, 147, 175, etc.)
+
+**3. User-Level Routes** (User-Scoped Resources):
+- Used for user's own resources (e.g., their agents, threads, prompts)
+- No authorization decorator needed
+- Authorization enforced at **repository level** via `userId` scoping:
+  ```typescript
+  @Controller('agents')
+  export class AgentsController {
+    @Get(':id')
+    async getAgent(@Param('id') agentId: UUID): Promise<AgentResponseDto> {
+      // No @Roles() decorator
+      // Use case gets userId from ContextService
+      // Repository enforces: agentRepository.findOne(agentId, userId)
+      // Users can only access agents they own
+    }
+  }
+  ```
+- Requires JWT authentication (enforced globally)
+- Use cases retrieve `userId` from `ContextService`
+- Repositories filter by `userId` to prevent unauthorized access
+- Example: Most endpoints in `src/domain/agents/presenters/http/agents.controller.ts`
+
+**Authorization Implementation Checklist:**
+
+When implementing a new controller endpoint:
+
+1. **Determine Authorization Level**:
+   - Super admin? → Class-level `@UseGuards(AdminGuard)`, `@Public()`, `@Admin()`
+   - Organization admin? → Method-level `@Roles(UserRole.ADMIN)`
+   - User-scoped? → No decorator, repository-level filtering
+
+2. **Import Required Decorators** (if needed):
+   ```typescript
+   import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+   import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+   ```
+
+3. **Use Case Retrieves Context**:
+   - DO NOT pass `userId` or `orgId` through commands
+   - Use cases inject `ContextService` and call `contextService.get('userId')` / `contextService.get('orgId')`
+
+4. **Document in OpenAPI**:
+   - Add appropriate `@ApiResponse` for `401 Unauthorized` and `403 Forbidden`
 
 **DTO Pattern:**
 
