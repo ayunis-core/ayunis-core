@@ -1,3 +1,12 @@
+// Types
+import type { Provider } from "../model/openapi";
+import type { ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+
+// Utils
+import { useTranslation } from "react-i18next";
+import { useState } from "react";
+
+// Ui
 import {
   Card,
   CardAction,
@@ -10,24 +19,30 @@ import { Switch } from "@/shared/ui/shadcn/switch";
 import { Label } from "@/shared/ui/shadcn/label";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { Badge } from "@/shared/ui/shadcn/badge";
-import {
-  ModelProviderWithPermittedStatusResponseDtoHostedIn,
-  type ModelWithConfigResponseDto,
-} from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { useCreatePermittedModel } from "../api/useCreatePermittedModel";
-import { useDeletePermittedModel } from "../api/useDeletePermittedModel";
-import { useCreatePermittedProvider } from "../api/useCreatePermittedProvider";
-import { useDeletePermittedProvider } from "../api/useDeletePermittedProvider";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ui/shadcn/button";
-import type { Provider } from "../model/openapi";
-import ProviderConfirmationDialog from "./ProviderConfirmationDialog";
-import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+import { Avatar } from "@/shared/ui/shadcn/avatar";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/shadcn/tooltip";
+import ProviderConfirmationDialog from "@/entities/model/ui/ProviderConfirmationDialog";
+
+// API
+import { ModelProviderWithPermittedStatusResponseDtoHostedIn } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import { useCreatePermittedModel } from "../api/useCreatePermittedModel";
+import { useDeletePermittedModel } from "../api/useDeletePermittedModel";
+import { useCreatePermittedProvider } from "../api/useCreatePermittedProvider";
+import { useDeletePermittedProvider } from "../api/useDeletePermittedProvider";
+
+// Widgets
+import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+
+// Static
+import mistralLogo from "@/shared/assets/models/mistral-logo.png";
+import anthropicLogo from "@/shared/assets/models/anthropic-logo.png";
+import openaiLogo from "@/shared/assets/models/openai-logo.svg";
 
 interface ModelProviderCardProps {
   provider: Provider;
@@ -54,6 +69,19 @@ export default function ModelProviderCard({
     SELF_HOSTED: t("models.hostedIn.selfHosted"),
     AYUNIS: t("models.hostedIn.ayunis"),
   };
+
+  function getProviderLogo(): string | undefined {
+    switch (provider.provider) {
+      case "mistral":
+        return mistralLogo;
+      case "anthropic":
+        return anthropicLogo;
+      case "openai":
+        return openaiLogo;
+      default:
+        return undefined;
+    }
+  }
 
   function handleProviderToggle() {
     if (provider.isPermitted) {
@@ -84,14 +112,34 @@ export default function ModelProviderCard({
       return;
     }
   }
+  const logoSrc = getProviderLogo();
+  const [expanded, setExpanded] = useState<boolean>(provider.isPermitted);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <span>{provider.displayName}</span>
+    <Card className="rounded-3xl border-0 shadow-sm">
+      <CardHeader className="gap-0">
+        <CardTitle className="flex items-center gap-3">
+          <Avatar className="flex items-center h-10 w-10 justify-center rounded-sm shadow-sm">
+            {logoSrc ? (
+              <img src={logoSrc} alt={provider.displayName} className="h-6 w-6 rounded-sm" />
+            ) : (
+              <div className="h-6 w-6 rounded-sm bg-accent text-foreground flex items-center justify-center text-xs font-semibold">
+                {provider.displayName.slice(0, 2)}
+              </div>
+            )}
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-base font-semibold">{provider.displayName}</span>
+            <CardDescription className="text-sm font-normal">{hostedInLabel[provider.hostedIn]}</CardDescription>
+          </div>
         </CardTitle>
-        <CardDescription>{hostedInLabel[provider.hostedIn]}</CardDescription>
-        <CardAction>
+
+        <CardAction className="flex items-center gap-2 my-auto ml-5">
+          {!provider.isPermitted && (
+            <Button variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)}>
+              {t("models.providerConfirmation.learnMore")}
+            </Button>
+          )}
           <ProviderConfirmationDialog
             provider={provider}
             onConfirm={handleProviderToggle}
@@ -106,6 +154,7 @@ export default function ModelProviderCard({
           </ProviderConfirmationDialog>
         </CardAction>
       </CardHeader>
+      {expanded && (
       <CardContent>
         <div className="space-y-3">
           {models
@@ -171,9 +220,7 @@ export default function ModelProviderCard({
                           )}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {model.name}
-                      </p>
+
                     </div>
                     <TooltipIf
                       condition={!provider.isPermitted}
@@ -195,6 +242,7 @@ export default function ModelProviderCard({
             })}
         </div>
       </CardContent>
+      )}
     </Card>
   );
 }

@@ -9,15 +9,15 @@
     "embeddingTooltip": "Das Modell wird verwendet, um Dokumente zu embedden, was für die Dokumentenanalyse-Funktionen erforderlich ist",
     "tools": "Tools",
     "toolsTooltip": "Das Modell kann Tools verwenden, wie z.B. die Internetrecherche, Dokumentenanalyse oder Datenaufbereitung",
-    "enableProvider": "Provider freischalten",
+    "enableProvider": "Aktivieren",
     "disableProvider": "Provider deaktivieren",
     "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist.",
     "hostedIn": {
-      "de": "Betrieben in 🇩🇪",
-      "us": "Betrieben in 🇺🇸",
-      "eu": "Betrieben in 🇪🇺",
+      "de": "Betrieben in 🇩🇪 Deutschland",
+      "us": "Betrieben in 🇺🇸 USA",
+      "eu": "Betrieben in 🇪🇺 Europa",
       "selfHosted": "Betrieben auf Ihrer eigenen Infrastruktur",
-      "ayunis": "Betrieben in 🇩🇪 in souveräner Cloud"
+      "ayunis": "Betrieben in 🇩🇪 in Sovereign Cloud"
     },
     "providerConfirmation": {
       "enableProvider": "{{provider}} freischalten",
@@ -25,7 +25,8 @@
       "enableProviderDescription": "Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen freigeschalteten Modelle zugreifen.",
       "disableProviderDescription": "Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen freigeschalteten Modelle zugreifen.",
       "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>.",
-      "mistralProviderHint": "Zusätzlich wird das OCR-Modell von Mistral verwendet, um hochgeladene PDF-Dateien zu analysieren und ein verbessertes Ergebnis gegenüber regulären OCR-Tools zu erzielen."
+      "mistralProviderHint": "Zusätzlich wird das OCR-Modell von Mistral verwendet, um hochgeladene PDF-Dateien zu analysieren und ein verbessertes Ergebnis gegenüber regulären OCR-Tools zu erzielen.",
+      "learnMore": "Mehr erfahren"
     },
     "deletePermittedModel": {
       "title": "Model löschen",
@@ -38,6 +39,17 @@
       "modelProviderNotPermitted": "Der Modell-Provider ist nicht freigeschaltet.",
       "modelNotFound": "Das Modell wurde nicht gefunden.",
       "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
+    },
+    "configureBanner": {
+      "title": "Modelle jetzt konfigurieren",
+      "subtitle": "Sehen Sie sich jetzt unsere Videoanleitung an, um Ihre Modelle zu konfigurieren.",
+      "cta": "Video ansehen"
+    },
+    "tabs": {
+      "enabled": "Aktivierte Provider",
+      "eu": "Europäische Modelle",
+      "intl": "Internationale Modelle",
+      "self": "Selbst-Gehostete Modelle"
     }
   }
 }

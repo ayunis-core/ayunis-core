@@ -25,11 +25,14 @@ import enAgents from "./shared/locales/en/agents.json";
 import deAgents from "./shared/locales/de/agents.json";
 import enAgent from "./shared/locales/en/agent.json";
 import deAgent from "./shared/locales/de/agent.json";
+import enOnboarding from "./shared/locales/en/onboarding.json";
+import deOnboarding from "./shared/locales/de/onboarding.json";
 
 const resources = {
   en: {
     auth: enAuth,
     common: enCommon,
+    onboarding: enOnboarding,
     "admin-settings-layout": enAdminSettingsLayout,
     "admin-settings-billing": enAdminSettingsBilling,
     "admin-settings-models": enAdminSettingsModels,
@@ -43,6 +46,7 @@ const resources = {
   de: {
     auth: deAuth,
     common: deCommon,
+    onboarding: deOnboarding,
     "admin-settings-layout": deAdminSettingsLayout,
     "admin-settings-billing": deAdminSettingsBilling,
     "admin-settings-models": deAdminSettingsModels,

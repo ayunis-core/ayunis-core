@@ -1,3 +1,12 @@
+// Types
+import type { ModelProviderWithPermittedStatusResponseDto } from "@/shared/api";
+import type { ReactNode } from "react";
+
+// Utils
+import { useState } from "react";
+import { useTranslation, Trans } from "react-i18next";
+
+// Ui
 import {
   Dialog,
   DialogContent,
@@ -10,20 +19,21 @@ import {
 import { Button } from "@/shared/ui/shadcn/button";
 import { Checkbox } from "@/shared/ui/shadcn/checkbox";
 import { Label } from "@/shared/ui/shadcn/label";
-import { useState, type ReactNode } from "react";
-import { useTranslation, Trans } from "react-i18next";
-import type { Provider } from "../model/openapi";
 
 interface ProviderConfirmationDialogProps {
-  provider: Provider;
+  provider: ModelProviderWithPermittedStatusResponseDto;
   onConfirm: () => void;
-  children: ReactNode;
+  children?: ReactNode;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function ProviderConfirmationDialog({
   provider,
   onConfirm,
   children,
+  isOpen,
+  onOpenChange,
 }: ProviderConfirmationDialogProps) {
   const { t } = useTranslation("admin-settings-models");
   const [isConfirmationChecked, setIsConfirmationChecked] = useState(false);
@@ -33,11 +43,12 @@ export default function ProviderConfirmationDialog({
     if (!provider.isPermitted) {
       setIsConfirmationChecked(false); // Reset checkbox after use
     }
+    onOpenChange?.(false);
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>

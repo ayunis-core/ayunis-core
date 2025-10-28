@@ -13,11 +13,11 @@
     "disableProvider": "Disable Provider",
     "providerDisabled": "Cannot be enabled because the provider is not enabled.",
     "hostedIn": {
-      "de": "Hosted in 🇩🇪",
-      "us": "Hosted in 🇺🇸",
-      "eu": "Hosted in 🇪🇺",
+      "de": "Hosted in 🇩🇪 Germany",
+      "us": "Hosted in 🇺🇸 USA",
+      "eu": "Hosted in 🇪🇺 Europe",
       "selfHosted": "Self-Hosted",
-      "ayunis": "Hosted in 🇩🇪 on sovereign cloud"
+      "ayunis": "Hosted in 🇩🇪 on Sovereign Cloud"
     },
     "providerConfirmation": {
       "enableProvider": "Enable {{provider}}",
@@ -25,7 +25,8 @@
       "enableProviderDescription": "If you enable this provider, all users can use this provider and access its enabled models.",
       "disableProviderDescription": "If you disable this provider, users cannot access its enabled models.",
       "acceptTermsAndPrivacy": "I accept the <termsLink>additional Terms of Service</termsLink>.",
-      "mistralProviderHint": "Additionally, Mistral's OCR model is used to analyze uploaded PDF files and provide a better result compared to regular OCR tools."
+      "mistralProviderHint": "Additionally, Mistral's OCR model is used to analyze uploaded PDF files and provide a better result compared to regular OCR tools.",
+      "learnMore": "Learn more"
     },
     "deletePermittedModel": {
       "title": "Delete Permitted Model",
@@ -38,6 +39,17 @@
       "modelProviderNotPermitted": "The model provider is not permitted.",
       "modelNotFound": "The model not found.",
       "error": "An error occurred while creating the permitted model."
+    },
+    "configureBanner": {
+      "title": "Configure models now",
+      "subtitle": "Watch our video guide to configure your models.",
+      "cta": "Watch video"
+    },
+    "tabs": {
+      "enabled": "Enabled Providers",
+      "eu": "European Models",
+      "intl": "International Models",
+      "self": "Self-hosted Models"
     }
   }
 }

@@ -47,6 +47,22 @@
     "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
   },
   "common": {
-    "loading": "Laden..."
+    "loading": "Laden...",
+    "next": "Weiter",
+    "back": "Zurück",
+    "skip": "Überspringen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "view": "Ansehen",
+    "close": "Schließen",
+    "start": "Jetzt starten"
+  }
+  ,
+  "welcome": {
+    "title": "Willkommen bei",
+    "subtitle": "Erhalten Sie einen kurzen Überblick über die wichtigsten Funktionen und nächsten Schritte in Ayunis Core.",
+    "cta": "Jetzt loslegen"
   }
 }

@@ -47,6 +47,22 @@
     "fileSourceDisabled": "To upload documents, an embedding model must be enabled."
   },
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "start": "Start"
+  }
+  ,
+  "welcome": {
+    "title": "Welcome to",
+    "subtitle": "Get a quick overview of the most important features and next steps in Ayunis Core.",
+    "cta": "Get started"
   }
 }
