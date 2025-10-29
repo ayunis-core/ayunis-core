@@ -46,6 +46,29 @@ export class LanguageModelRecord extends ModelRecord {
     default: false,
   })
   isReasoning: boolean;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 6,
+    nullable: true,
+  })
+  inputTokenCost?: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 6,
+    nullable: true,
+  })
+  outputTokenCost?: number;
+
+  @Column({
+    type: 'varchar',
+    length: 3,
+    nullable: true,
+  })
+  currency?: string;
 }
 
 @ChildEntity(ModelType.EMBEDDING)
@@ -54,4 +77,27 @@ export class EmbeddingModelRecord extends ModelRecord {
     type: 'integer',
   })
   dimensions: EmbeddingDimensions;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 6,
+    nullable: true,
+  })
+  inputTokenCost?: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 6,
+    nullable: true,
+  })
+  outputTokenCost?: number;
+
+  @Column({
+    type: 'varchar',
+    length: 3,
+    nullable: true,
+  })
+  currency?: string;
 }

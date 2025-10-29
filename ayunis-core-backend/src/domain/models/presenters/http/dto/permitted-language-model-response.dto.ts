@@ -53,4 +53,25 @@ export class PermittedLanguageModelResponseDto {
     description: 'Whether the model can reason',
   })
   isReasoning: boolean;
+
+  @ApiProperty({
+    type: 'number',
+    description: 'Cost per 1K input tokens',
+    nullable: true,
+  })
+  inputTokenCost?: number;
+
+  @ApiProperty({
+    type: 'number',
+    description: 'Cost per 1K output tokens',
+    nullable: true,
+  })
+  outputTokenCost?: number;
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Currency for cost calculation (ISO 4217 code)',
+    nullable: true,
+  })
+  currency?: string;
 }

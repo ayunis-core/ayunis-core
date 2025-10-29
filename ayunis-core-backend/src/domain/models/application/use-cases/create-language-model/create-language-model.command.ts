@@ -8,6 +8,9 @@ export class CreateLanguageModelCommand {
   canUseTools: boolean;
   isReasoning: boolean;
   isArchived: boolean;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: string;
 
   constructor(params: {
     name: string;
@@ -17,6 +20,9 @@ export class CreateLanguageModelCommand {
     canUseTools: boolean;
     isReasoning: boolean;
     isArchived: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: string;
   }) {
     this.name = params.name;
     this.provider = params.provider;
@@ -25,5 +31,8 @@ export class CreateLanguageModelCommand {
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.isArchived = params.isArchived;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }
