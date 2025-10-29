@@ -7,6 +7,9 @@ export class CreateEmbeddingModelCommand {
   displayName: string;
   isArchived: boolean;
   dimensions: EmbeddingDimensions;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: string;
 
   constructor(params: {
     name: string;
@@ -14,11 +17,17 @@ export class CreateEmbeddingModelCommand {
     displayName: string;
     isArchived: boolean;
     dimensions: EmbeddingDimensions;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: string;
   }) {
     this.name = params.name;
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;
     this.dimensions = params.dimensions;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }

@@ -21,6 +21,9 @@ export class ModelResponseDtoMapper {
       isReasoning: permittedModel.model.isReasoning,
       canVision: permittedModel.model.canVision,
       anonymousOnly: permittedModel.anonymousOnly,
+      inputTokenCost: permittedModel.model.inputTokenCost,
+      outputTokenCost: permittedModel.model.outputTokenCost,
+      currency: permittedModel.model.currency,
     };
   }
 
@@ -35,6 +38,9 @@ export class ModelResponseDtoMapper {
       type: ModelType.EMBEDDING,
       isArchived: permittedModel.model.isArchived,
       dimensions: permittedModel.model.dimensions,
+      inputTokenCost: permittedModel.model.inputTokenCost,
+      outputTokenCost: permittedModel.model.outputTokenCost,
+      currency: permittedModel.model.currency,
     };
   }
 }

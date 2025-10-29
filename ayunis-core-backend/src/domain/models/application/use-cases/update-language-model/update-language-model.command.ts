@@ -11,6 +11,9 @@ export class UpdateLanguageModelCommand {
   canUseTools: boolean;
   isReasoning: boolean;
   canVision: boolean;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: string;
 
   constructor(params: {
     id: UUID;
@@ -22,6 +25,9 @@ export class UpdateLanguageModelCommand {
     canUseTools: boolean;
     isReasoning: boolean;
     canVision: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: string;
   }) {
     this.id = params.id;
     this.name = params.name;
@@ -32,5 +38,8 @@ export class UpdateLanguageModelCommand {
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }

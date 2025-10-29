@@ -50,6 +50,9 @@ export class CreateEmbeddingModelUseCase {
         displayName: command.displayName,
         isArchived: command.isArchived,
         dimensions: command.dimensions,
+        inputTokenCost: command.inputTokenCost,
+        outputTokenCost: command.outputTokenCost,
+        currency: command.currency,
       });
       await this.modelsRepository.save(model);
       return model;

@@ -8,6 +8,9 @@ export class LanguageModel extends Model {
   public readonly canUseTools: boolean;
   public readonly isReasoning: boolean;
   public readonly canVision: boolean;
+  public readonly inputTokenCost?: number;
+  public readonly outputTokenCost?: number;
+  public readonly currency?: string;
 
   constructor(params: {
     id?: UUID;
@@ -21,11 +24,17 @@ export class LanguageModel extends Model {
     isReasoning: boolean;
     canVision: boolean;
     isArchived: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: string;
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }

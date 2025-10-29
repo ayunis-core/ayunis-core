@@ -8,6 +8,9 @@ export class UpdateEmbeddingModelCommand {
   displayName: string;
   isArchived: boolean;
   dimensions: number;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: string;
 
   constructor(params: {
     id: UUID;
@@ -16,6 +19,9 @@ export class UpdateEmbeddingModelCommand {
     displayName: string;
     isArchived: boolean;
     dimensions: number;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: string;
   }) {
     this.id = params.id;
     this.name = params.name;
@@ -23,5 +29,8 @@ export class UpdateEmbeddingModelCommand {
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;
     this.dimensions = params.dimensions;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }
