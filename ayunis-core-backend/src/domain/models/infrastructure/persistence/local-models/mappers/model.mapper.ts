@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Model } from '../../../../domain/model.entity';
 import { LanguageModel } from '../../../../domain/models/language.model';
 import { EmbeddingModel } from '../../../../domain/models/embedding.model';
+import { Currency } from '../../../../domain/value-objects/currency.enum';
 import {
   ModelRecord,
   LanguageModelRecord,
