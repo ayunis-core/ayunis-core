@@ -15,18 +15,18 @@ Create an injectable service that maintains the registry of predefined MCP integ
 
 ## Acceptance Criteria
 
-- [ ] `PredefinedMcpIntegrationConfig` interface created in `src/domain/mcp/application/services/predefined-mcp-integration-registry.service.ts`
-- [ ] Interface has fields: `slug`, `displayName`, `description`, `url`, `defaultAuthMethod?`, `defaultAuthHeaderName?`
-- [ ] `PredefinedMcpIntegrationRegistryService` class created with `@Injectable()` decorator
-- [ ] Service has private `configs` record mapping `PredefinedMcpIntegrationSlug` to `PredefinedMcpIntegrationConfig`
-- [ ] TEST integration config added: `slug: 'test'`, `displayName: 'Test MCP Server'`, `url: 'http://localhost:3100/mcp'`, no auth required
-- [ ] Service method `getConfig(slug): PredefinedMcpIntegrationConfig` implemented
-- [ ] `getConfig()` throws error for unknown slugs
-- [ ] Service method `getAllConfigs(): PredefinedMcpIntegrationConfig[]` implemented
-- [ ] Service method `isValidSlug(slug: string): slug is PredefinedMcpIntegrationSlug` implemented
-- [ ] Service is registered in `McpModule` providers array
-- [ ] Service is exported from `McpModule` for use in other modules if needed
-- [ ] Unit tests added for:
+- [x] `PredefinedMcpIntegrationConfig` interface created in `src/domain/mcp/application/services/predefined-mcp-integration-registry.service.ts`
+- [x] Interface has fields: `slug`, `displayName`, `description`, `url`, `defaultAuthMethod?`, `defaultAuthHeaderName?`
+- [x] `PredefinedMcpIntegrationRegistryService` class created with `@Injectable()` decorator
+- [x] Service has private `configs` record mapping `PredefinedMcpIntegrationSlug` to `PredefinedMcpIntegrationConfig`
+- [x] TEST integration config added: `slug: 'test'`, `displayName: 'Test MCP Server'`, `url: 'http://localhost:3100/mcp'`, no auth required
+- [x] Service method `getConfig(slug): PredefinedMcpIntegrationConfig` implemented
+- [x] `getConfig()` throws error for unknown slugs
+- [x] Service method `getAllConfigs(): PredefinedMcpIntegrationConfig[]` implemented
+- [x] Service method `isValidSlug(slug: string): slug is PredefinedMcpIntegrationSlug` implemented
+- [x] Service is registered in `McpModule` providers array
+- [x] Service is exported from `McpModule` for use in other modules if needed
+- [x] Unit tests added for:
   - `getConfig()` returns correct config for TEST slug
   - `getConfig()` throws error for unknown slug
   - `getAllConfigs()` returns array with TEST config
@@ -41,8 +41,8 @@ None - this is a foundation ticket
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

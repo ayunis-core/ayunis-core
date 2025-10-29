@@ -1,6 +1,7 @@
 import { UUID } from 'crypto';
 import { Source } from '../source.entity';
 import { DataType, SourceType } from '../source-type.enum';
+import { SourceCreator } from '../source-creator.enum';
 
 export abstract class DataSource extends Source {
   dataType: DataType;
@@ -10,7 +11,7 @@ export abstract class DataSource extends Source {
     id?: UUID;
     name: string;
     type: DataType;
-    createdByLLM?: boolean;
+    createdBy?: SourceCreator;
   }) {
     super({ ...params, type: SourceType.DATA });
     this.dataType = params.type;
@@ -27,11 +28,11 @@ export class CSVDataSource extends DataSource {
     id?: UUID;
     name: string;
     data: { headers: string[]; rows: string[][] };
-    createdByLLM?: boolean;
+    createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
-    super({ ...params, type: DataType.CSV });
+    super({ ...params, type: DataType.CSV, createdBy: params.createdBy });
     this.data = params.data;
   }
 }

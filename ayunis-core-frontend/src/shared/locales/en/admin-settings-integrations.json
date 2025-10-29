@@ -1,0 +1,139 @@
+{
+  "integrations": {
+    "createCustomIntegration": {
+      "success": "Integration created successfully",
+      "error": "Failed to create integration: {{message}}"
+    },
+    "createPredefinedIntegration": {
+      "success": "Integration created successfully",
+      "error": "Failed to create integration: {{message}}"
+    },
+    "updateIntegration": {
+      "success": "Integration updated successfully",
+      "error": "Failed to update integration: {{message}}"
+    },
+    "deleteIntegration": {
+      "success": "Integration deleted successfully",
+      "error": "Failed to delete integration: {{message}}"
+    },
+    "toggleIntegration": {
+      "enableSuccess": "Integration enabled",
+      "disableSuccess": "Integration disabled",
+      "enableError": "Failed to enable integration: {{message}}",
+      "disableError": "Failed to disable integration: {{message}}"
+    },
+    "validateIntegration": {
+      "success": "Connected successfully. Found {{prompts}} prompts, {{resources}} resources, {{tools}} tools.",
+      "error": "Connection failed: {{message}}"
+    },
+    "page": {
+      "accessDenied": "Access Denied",
+      "accessDeniedMessage": "You need administrator privileges to access this page.",
+      "errorLoadingTitle": "Error Loading Integrations",
+      "errorLoadingMessage": "An error occurred while loading integrations",
+      "retry": "Retry",
+      "addPredefined": "Add Predefined",
+      "addCustom": "Add Custom"
+    },
+    "card": {
+      "openMenu": "Open menu",
+      "edit": "Edit",
+      "delete": "Delete",
+      "authentication": "Authentication",
+      "credentials": "Credentials",
+      "enableIntegration": "Enable integration",
+      "testing": "Testing...",
+      "testConnection": "Test Connection"
+    },
+    "list": {
+      "noIntegrationsTitle": "No integrations yet",
+      "noIntegrationsMessage": "Create your first integration to get started."
+    },
+    "createCustomDialog": {
+      "title": "Add Custom Integration",
+      "description": "Connect to a custom MCP server by providing its URL and authentication details.",
+      "name": "Name",
+      "namePlaceholder": "My Custom Integration",
+      "nameDescription": "A friendly name for this integration",
+      "serverUrl": "Server URL",
+      "serverUrlPlaceholder": "https://example.com/mcp",
+      "serverUrlDescription": "The URL of your MCP server endpoint",
+      "authMethod": "Authentication Method (Optional)",
+      "authMethodNone": "None",
+      "authMethodApiKey": "API Key",
+      "authMethodBearerToken": "Bearer Token",
+      "authMethodDescription": "Select an authentication method if required",
+      "headerName": "Header Name",
+      "headerNamePlaceholder": "X-API-Key",
+      "headerNameDescription": "The HTTP header name for authentication",
+      "credentials": "Credentials",
+      "credentialsPlaceholder": "Enter your credentials",
+      "credentialsDescriptionApiKey": "Your API key",
+      "credentialsDescriptionBearerToken": "Your bearer token",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "create": "Create"
+    },
+    "createPredefinedDialog": {
+      "title": "Add Predefined Integration",
+      "description": "Select a predefined integration and configure authentication.",
+      "integrationType": "Integration Type",
+      "integrationTypePlaceholder": "Select an integration",
+      "name": "Name",
+      "namePlaceholder": "My Integration",
+      "nameDescription": "A friendly name for this integration instance",
+      "authMethod": "Authentication Method",
+      "authMethodPlaceholder": "Select method",
+      "authMethodApiKey": "API Key",
+      "authMethodBearerToken": "Bearer Token",
+      "headerName": "Header Name",
+      "headerNamePlaceholder": "X-API-Key",
+      "headerNameDescription": "The HTTP header name for authentication",
+      "credentials": "Credentials",
+      "credentialsPlaceholder": "Enter your credentials",
+      "credentialsDescriptionApiKey": "Your API key",
+      "credentialsDescriptionBearerToken": "Your bearer token",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "create": "Create"
+    },
+    "editDialog": {
+      "title": "Edit Integration",
+      "description": "Update the name and authentication details for this integration.",
+      "name": "Name",
+      "namePlaceholder": "My Integration",
+      "nameDescription": "A friendly name for this integration",
+      "authMethod": "Authentication Method (Optional)",
+      "authMethodNone": "None",
+      "authMethodApiKey": "API Key",
+      "authMethodBearerToken": "Bearer Token",
+      "headerName": "Header Name",
+      "headerNamePlaceholder": "X-API-Key",
+      "headerNameDescription": "The HTTP header name for authentication",
+      "credentials": "Credentials (Optional)",
+      "credentialsPlaceholder": "Leave empty to keep existing",
+      "credentialsDescription": "Enter new credentials or leave empty to keep existing ones",
+      "cancel": "Cancel",
+      "updating": "Updating...",
+      "update": "Update"
+    },
+    "deleteDialog": {
+      "title": "Delete Integration",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "delete": "Delete"
+    },
+    "helpers": {
+      "type": {
+        "predefined": "Predefined",
+        "custom": "Custom"
+      },
+      "authMethod": {
+        "none": "None",
+        "apiKey": "API Key",
+        "bearerToken": "Bearer Token"
+      }
+    }
+  }
+}

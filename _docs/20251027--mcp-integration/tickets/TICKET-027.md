@@ -123,8 +123,8 @@ Extend the existing Agents controller with new endpoints for managing MCP integr
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

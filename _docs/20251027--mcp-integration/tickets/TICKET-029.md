@@ -18,29 +18,29 @@ Add MCP tool execution to the runs module orchestration flow. When the LLM calls
 
 ## Acceptance Criteria
 
-- [ ] `ToolType.MCP_TOOL` enum value added to `src/domain/tools/domain/value-objects/tool-type.enum.ts`
-- [ ] `ExecuteMcpToolUseCase` injected into `ExecuteRunUseCase`
-- [ ] `collectToolResults()` method modified to detect MCP tools by type
-- [ ] MCP tool detection: `tool.type === ToolType.MCP_TOOL`
-- [ ] Integration ID extracted from tool metadata: `tool.metadata.integrationId`
-- [ ] `ExecuteMcpToolUseCase` called with integration ID, tool name, and parameters
-- [ ] `ToolExecutionResult` handled: success path returns content, error path returns error message
-- [ ] MCP tool errors returned to LLM as tool result content (not thrown)
-- [ ] Error message format: `"MCP tool execution failed: {errorMessage}"`
-- [ ] Success result converted to string for tool result message content
-- [ ] Tool result message content includes tool ID, name, and result/error
-- [ ] MCP tool execution logged with integration ID, tool name, and result status
-- [ ] Timeout errors handled gracefully (return timeout message to LLM)
-- [ ] MCP tools coexist with native tools (no changes to native tool execution)
-- [ ] Tool not found error still handled for tools not in tools array
-- [ ] Unit tests added for:
+- [x] `ToolType.MCP_TOOL` enum value added to `src/domain/tools/domain/value-objects/tool-type.enum.ts`
+- [x] `ExecuteMcpToolUseCase` injected into `ExecuteRunUseCase`
+- [x] `collectToolResults()` method modified to detect MCP tools by type
+- [x] MCP tool detection: `tool.type === ToolType.MCP_TOOL`
+- [x] Integration ID extracted from tool (McpTool has integrationId as direct property)
+- [x] `ExecuteMcpToolUseCase` called with integration ID, tool name, and parameters
+- [x] `ToolExecutionResult` handled: success path returns content, error path returns error message
+- [x] MCP tool errors returned to LLM as tool result content (not thrown)
+- [x] Error message format: `"MCP tool execution failed: {errorMessage}"`
+- [x] Success result converted to string for tool result message content
+- [x] Tool result message content includes tool ID, name, and result/error
+- [x] MCP tool execution logged with integration ID, tool name, and result status
+- [x] Timeout errors handled gracefully (return timeout message to LLM)
+- [x] MCP tools coexist with native tools (no changes to native tool execution)
+- [x] Tool not found error still handled for tools not in tools array
+- [x] Unit tests added for:
   - Successfully executes MCP tool and returns result
   - Returns error to LLM when MCP tool execution fails
   - Returns error to LLM when MCP tool times out
   - Handles MCP tool alongside native tools in same iteration
   - Continues loop after MCP tool execution (doesn't exit)
   - Logs MCP tool executions with correct metadata
-  - Extracts integration ID from tool metadata correctly
+  - Extracts integration ID from tool correctly
   - Converts tool execution result to string for message content
 
 ## Dependencies
@@ -51,8 +51,8 @@ Add MCP tool execution to the runs module orchestration flow. When the LLM calls
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

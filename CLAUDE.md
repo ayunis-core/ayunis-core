@@ -929,6 +929,145 @@ src/
 - Business logic: `src/features/[feature-name]/`
 - Primitive: `npx shadcn@latest add [component-name]`
 
+### Page Structure and Hooks Pattern
+
+Pages follow a consistent structure with hooks pattern for data management and business logic:
+
+```
+pages/[page-name]/
+├── ui/              # UI components
+│   ├── [Page].tsx   # Main page component
+│   └── [SubComponents].tsx
+├── api/             # Data hooks (queries and mutations)
+│   ├── use[Operation].ts  # One hook per operation
+│   └── index.ts
+└── model/           # Type definitions
+    └── types.ts
+```
+
+**Hooks Pattern:**
+
+Each page operation gets its own focused hook file in the `api/` directory:
+
+```typescript
+// api/useCreateItem.ts
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useItemsControllerCreate } from '@/shared/api/generated/ayunisCoreAPI';
+import type { CreateItemFormData } from '../model/types';
+
+export function useCreateItem(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+
+  const mutation = useItemsControllerCreate({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['useItemsControllerList'],
+        });
+        toast.success('Item created successfully');
+        onSuccess?.();
+      },
+      onError: (error: any) => {
+        toast.error(`Failed to create item: ${error.message}`);
+      },
+    },
+  });
+
+  function createItem(data: CreateItemFormData) {
+    mutation.mutate({ data });
+  }
+
+  return {
+    createItem,
+    isCreating: mutation.isPending,
+  };
+}
+```
+
+**Using Hooks in Components:**
+
+Hooks are used directly in the components that need them, not passed through props:
+
+```typescript
+// ui/CreateItemDialog.tsx
+export function CreateItemDialog({ open, onOpenChange }: Props) {
+  const { createItem, isCreating } = useCreateItem(() => {
+    onOpenChange(false);
+  });
+
+  const handleSubmit = (data: FormData) => {
+    createItem(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Dialog content */}
+      <Button onClick={handleSubmit} disabled={isCreating}>
+        {isCreating ? 'Creating...' : 'Create'}
+      </Button>
+    </Dialog>
+  );
+}
+
+// ui/ItemsList.tsx
+export function ItemsList({ items }: Props) {
+  const { toggleItem, togglingIds } = useToggleItem();
+
+  return (
+    <div>
+      {items.map((item) => (
+        <ItemCard
+          key={item.id}
+          item={item}
+          onToggle={toggleItem}
+          isToggling={togglingIds.has(item.id)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+**Page Component Responsibilities:**
+
+The main page component should only:
+- Manage dialog visibility state (open/close)
+- Fetch data via query hooks
+- Pass minimal props (data, callbacks for dialogs)
+- Compose UI components
+
+```typescript
+// ui/ItemsPage.tsx
+export function ItemsPage() {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<Item | null>(null);
+
+  // Only fetch data
+  const { items, isLoading } = useItemsQueries();
+
+  return (
+    <SettingsLayout action={<Button onClick={() => setCreateDialogOpen(true)}>Add</Button>}>
+      <ItemsList items={items} onEdit={setEditItem} />
+      <CreateItemDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <EditItemDialog item={editItem} open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)} />
+    </SettingsLayout>
+  );
+}
+```
+
+**Key Principles:**
+
+- One hook per operation (create, update, delete, toggle, validate, etc.)
+- Hooks encapsulate mutation logic, error handling, and loading states
+- Components use hooks directly, no prop drilling of handlers
+- Page components only manage dialog state and queries
+- Hooks accept optional callbacks for success/error scenarios
+
+**Example Page Structure:**
+
+See `pages/admin-settings/integrations-settings/` or `pages/admin-settings/model-settings/` for reference implementations.
+
 ### Internationalization (i18n)
 
 Application supports German and English via i18next:

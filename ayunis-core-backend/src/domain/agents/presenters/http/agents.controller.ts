@@ -36,6 +36,7 @@ import { FindOneAgentUseCase } from '../../application/use-cases/find-one-agent/
 import { FindAllAgentsByOwnerUseCase } from '../../application/use-cases/find-all-agents-by-owner/find-all-agents-by-owner.use-case';
 import { AddSourceToAgentUseCase } from '../../application/use-cases/add-source-to-agent/add-source-to-agent.use-case';
 import { RemoveSourceFromAgentUseCase } from '../../application/use-cases/remove-source-from-agent/remove-source-from-agent.use-case';
+import { AssignMcpIntegrationToAgentUseCase } from '../../application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.use-case';
 
 // Import commands and queries
 import { CreateAgentCommand } from '../../application/use-cases/create-agent/create-agent.command';
@@ -45,6 +46,13 @@ import { FindOneAgentQuery } from '../../application/use-cases/find-one-agent/fi
 import { FindAllAgentsByOwnerQuery } from '../../application/use-cases/find-all-agents-by-owner/find-all-agents-by-owner.query';
 import { AddSourceToAgentCommand } from '../../application/use-cases/add-source-to-agent/add-source-to-agent.command';
 import { RemoveSourceFromAgentCommand } from '../../application/use-cases/remove-source-from-agent/remove-source-from-agent.command';
+import { AssignMcpIntegrationToAgentCommand } from '../../application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.command';
+import { UnassignMcpIntegrationFromAgentUseCase } from '../../application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.use-case';
+import { UnassignMcpIntegrationFromAgentCommand } from '../../application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.command';
+import { ListAgentMcpIntegrationsUseCase } from '../../application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.use-case';
+import { ListAgentMcpIntegrationsQuery } from '../../application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.query';
+import { ListAvailableMcpIntegrationsUseCase } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
+import { ListAvailableMcpIntegrationsQuery } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.query';
 
 // Import DTOs and mappers
 import { CreateAgentDto } from './dto/create-agent.dto';
@@ -66,6 +74,8 @@ import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { CreateFileSourceCommand } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.command';
 import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
+import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
+import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
 
 @ApiTags('agents')
 @Controller('agents')
@@ -80,9 +90,14 @@ export class AgentsController {
     private readonly findAllAgentsByOwnerUseCase: FindAllAgentsByOwnerUseCase,
     private readonly addSourceToAgentUseCase: AddSourceToAgentUseCase,
     private readonly removeSourceFromAgentUseCase: RemoveSourceFromAgentUseCase,
+    private readonly assignMcpIntegrationToAgentUseCase: AssignMcpIntegrationToAgentUseCase,
+    private readonly unassignMcpIntegrationFromAgentUseCase: UnassignMcpIntegrationFromAgentUseCase,
+    private readonly listAgentMcpIntegrationsUseCase: ListAgentMcpIntegrationsUseCase,
+    private readonly listAvailableMcpIntegrationsUseCase: ListAvailableMcpIntegrationsUseCase,
     private readonly agentDtoMapper: AgentDtoMapper,
     private readonly agentSourceDtoMapper: AgentSourceDtoMapper,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
+    private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
   ) {}
 
   @Post()
@@ -403,5 +418,143 @@ export class AgentsController {
         sourceAssignmentId,
       }),
     );
+  }
+
+  // MCP Integration Management Endpoints
+
+  @Post(':agentId/mcp-integrations/:integrationId')
+  @ApiOperation({ summary: 'Assign MCP integration to agent' })
+  @ApiParam({
+    name: 'agentId',
+    description: 'The UUID of the agent',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'integrationId',
+    description: 'The UUID of the MCP integration to assign',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'The MCP integration has been successfully assigned',
+    type: AgentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Integration disabled',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Integration belongs to different organization',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Agent or integration not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Integration already assigned',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async assignMcpIntegration(
+    @Param('agentId', ParseUUIDPipe) agentId: UUID,
+    @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
+  ): Promise<AgentResponseDto> {
+    this.logger.log('assignMcpIntegration', { agentId, integrationId });
+
+    const agent = await this.assignMcpIntegrationToAgentUseCase.execute(
+      new AssignMcpIntegrationToAgentCommand(agentId, integrationId),
+    );
+
+    return this.agentDtoMapper.toDto(agent);
+  }
+
+  @Delete(':agentId/mcp-integrations/:integrationId')
+  @ApiOperation({ summary: 'Unassign MCP integration from agent' })
+  @ApiParam({
+    name: 'agentId',
+    description: 'The UUID of the agent',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'integrationId',
+    description: 'The UUID of the MCP integration to unassign',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The MCP integration has been successfully unassigned',
+    type: AgentResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Agent not found or integration not assigned',
+  })
+  async unassignMcpIntegration(
+    @Param('agentId', ParseUUIDPipe) agentId: UUID,
+    @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
+  ): Promise<AgentResponseDto> {
+    this.logger.log('unassignMcpIntegration', { agentId, integrationId });
+
+    const agent = await this.unassignMcpIntegrationFromAgentUseCase.execute(
+      new UnassignMcpIntegrationFromAgentCommand(agentId, integrationId),
+    );
+
+    return this.agentDtoMapper.toDto(agent);
+  }
+
+  @Get(':agentId/mcp-integrations')
+  @ApiOperation({ summary: 'List MCP integrations assigned to agent' })
+  @ApiParam({
+    name: 'agentId',
+    description: 'The UUID of the agent',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all MCP integrations assigned to the agent',
+    type: [McpIntegrationResponseDto],
+  })
+  @ApiResponse({ status: 404, description: 'Agent not found' })
+  async listAgentMcpIntegrations(
+    @Param('agentId', ParseUUIDPipe) agentId: UUID,
+  ): Promise<McpIntegrationResponseDto[]> {
+    this.logger.log('listAgentMcpIntegrations', { agentId });
+
+    const integrations = await this.listAgentMcpIntegrationsUseCase.execute(
+      new ListAgentMcpIntegrationsQuery(agentId),
+    );
+
+    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
+  }
+
+  @Get(':agentId/mcp-integrations/available')
+  @ApiOperation({ summary: 'List available MCP integrations for organization' })
+  @ApiParam({
+    name: 'agentId',
+    description: 'The UUID of the agent (for API consistency)',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all enabled MCP integrations for the organization',
+    type: [McpIntegrationResponseDto],
+  })
+  async listAvailableMcpIntegrations(
+    @Param('agentId', ParseUUIDPipe) agentId: UUID,
+  ): Promise<McpIntegrationResponseDto[]> {
+    this.logger.log('listAvailableMcpIntegrations', { agentId });
+
+    const integrations = await this.listAvailableMcpIntegrationsUseCase.execute(
+      new ListAvailableMcpIntegrationsQuery(agentId),
+    );
+
+    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
   }
 }

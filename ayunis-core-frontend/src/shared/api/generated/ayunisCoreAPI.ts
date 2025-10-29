@@ -34,12 +34,14 @@ import type {
   AgentsControllerAddFileSourceBody,
   ConfirmEmailDto,
   CreateAgentDto,
+  CreateCustomIntegrationDto,
   CreateEmbeddingModelDto,
   CreateInviteDto,
   CreateInviteResponseDto,
   CreateLanguageModelDto,
   CreatePermittedModelDto,
   CreatePermittedProviderDto,
+  CreatePredefinedIntegrationDto,
   CreatePromptDto,
   CreateSubscriptionRequestDto,
   CreateThreadDto,
@@ -53,12 +55,14 @@ import type {
   InviteResponseDto,
   IsCloudResponseDto,
   LoginDto,
+  McpIntegrationResponseDto,
   MeResponseDto,
   ModelProviderInfoResponseDto,
   ModelProviderWithPermittedStatusResponseDto,
   ModelWithConfigResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedProviderResponseDto,
+  PredefinedConfigResponseDto,
   PriceResponseDto,
   PromptResponseDto,
   RegisterDto,
@@ -78,6 +82,7 @@ import type {
   UpdateBillingInfoDto,
   UpdateEmbeddingModelDto,
   UpdateLanguageModelDto,
+  UpdateMcpIntegrationDto,
   UpdatePasswordDto,
   UpdatePromptDto,
   UpdateSeatsDto,
@@ -86,7 +91,8 @@ import type {
   UpdateUserNameDto,
   UpdateUserRoleDto,
   UserResponseDto,
-  UsersListResponseDto
+  UsersListResponseDto,
+  ValidationResponseDto
 } from './ayunisCoreAPI.schemas';
 
 import { customAxiosInstance } from '../client';
@@ -3438,6 +3444,1019 @@ export const useAgentsControllerRemoveSource = <TError = void,
       > => {
 
       const mutationOptions = getAgentsControllerRemoveSourceMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Assign MCP integration to agent
+ */
+export const agentsControllerAssignMcpIntegration = (
+    agentId: string,
+    integrationId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AgentResponseDto>(
+      {url: `/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getAgentsControllerAssignMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext> => {
+
+const mutationKey = ['agentsControllerAssignMcpIntegration'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, {agentId: string;integrationId: string}> = (props) => {
+          const {agentId,integrationId} = props ?? {};
+
+          return  agentsControllerAssignMcpIntegration(agentId,integrationId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AgentsControllerAssignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>>
+    
+    export type AgentsControllerAssignMcpIntegrationMutationError = void
+
+    /**
+ * @summary Assign MCP integration to agent
+ */
+export const useAgentsControllerAssignMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof agentsControllerAssignMcpIntegration>>,
+        TError,
+        {agentId: string;integrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAgentsControllerAssignMcpIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Unassign MCP integration from agent
+ */
+export const agentsControllerUnassignMcpIntegration = (
+    agentId: string,
+    integrationId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<AgentResponseDto>(
+      {url: `/agents/${agentId}/mcp-integrations/${integrationId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getAgentsControllerUnassignMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext> => {
+
+const mutationKey = ['agentsControllerUnassignMcpIntegration'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, {agentId: string;integrationId: string}> = (props) => {
+          const {agentId,integrationId} = props ?? {};
+
+          return  agentsControllerUnassignMcpIntegration(agentId,integrationId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AgentsControllerUnassignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>>
+    
+    export type AgentsControllerUnassignMcpIntegrationMutationError = void
+
+    /**
+ * @summary Unassign MCP integration from agent
+ */
+export const useAgentsControllerUnassignMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>, TError,{agentId: string;integrationId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof agentsControllerUnassignMcpIntegration>>,
+        TError,
+        {agentId: string;integrationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAgentsControllerUnassignMcpIntegrationMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary List MCP integrations assigned to agent
+ */
+export const agentsControllerListAgentMcpIntegrations = (
+    agentId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto[]>(
+      {url: `/agents/${agentId}/mcp-integrations`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAgentsControllerListAgentMcpIntegrationsQueryKey = (agentId: string,) => {
+    return [`/agents/${agentId}/mcp-integrations`] as const;
+    }
+
+    
+export const getAgentsControllerListAgentMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerListAgentMcpIntegrationsQueryKey(agentId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>> = ({ signal }) => agentsControllerListAgentMcpIntegrations(agentId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(agentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AgentsControllerListAgentMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>>
+export type AgentsControllerListAgentMcpIntegrationsQueryError = void
+
+
+export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List MCP integrations assigned to agent
+ */
+
+export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError = void>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAgentMcpIntegrations>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAgentsControllerListAgentMcpIntegrationsQueryOptions(agentId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List available MCP integrations for organization
+ */
+export const agentsControllerListAvailableMcpIntegrations = (
+    agentId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto[]>(
+      {url: `/agents/${agentId}/mcp-integrations/available`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAgentsControllerListAvailableMcpIntegrationsQueryKey = (agentId: string,) => {
+    return [`/agents/${agentId}/mcp-integrations/available`] as const;
+    }
+
+    
+export const getAgentsControllerListAvailableMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerListAvailableMcpIntegrationsQueryKey(agentId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>> = ({ signal }) => agentsControllerListAvailableMcpIntegrations(agentId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(agentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AgentsControllerListAvailableMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>>
+export type AgentsControllerListAvailableMcpIntegrationsQueryError = unknown
+
+
+export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
+ agentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>,
+          TError,
+          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List available MCP integrations for organization
+ */
+
+export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
+ agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAgentsControllerListAvailableMcpIntegrationsQueryOptions(agentId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a new predefined MCP integration
+ */
+export const mcpIntegrationsControllerCreatePredefined = (
+    createPredefinedIntegrationDto: CreatePredefinedIntegrationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/predefined`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createPredefinedIntegrationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerCreatePredefinedMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerCreatePredefined'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, {data: CreatePredefinedIntegrationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mcpIntegrationsControllerCreatePredefined(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerCreatePredefinedMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>>
+    export type McpIntegrationsControllerCreatePredefinedMutationBody = CreatePredefinedIntegrationDto
+    export type McpIntegrationsControllerCreatePredefinedMutationError = void
+
+    /**
+ * @summary Create a new predefined MCP integration
+ */
+export const useMcpIntegrationsControllerCreatePredefined = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>, TError,{data: CreatePredefinedIntegrationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerCreatePredefined>>,
+        TError,
+        {data: CreatePredefinedIntegrationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerCreatePredefinedMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Create a new custom MCP integration
+ */
+export const mcpIntegrationsControllerCreateCustom = (
+    createCustomIntegrationDto: CreateCustomIntegrationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/custom`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCustomIntegrationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerCreateCustomMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerCreateCustom'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, {data: CreateCustomIntegrationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mcpIntegrationsControllerCreateCustom(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerCreateCustomMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>>
+    export type McpIntegrationsControllerCreateCustomMutationBody = CreateCustomIntegrationDto
+    export type McpIntegrationsControllerCreateCustomMutationError = void
+
+    /**
+ * @summary Create a new custom MCP integration
+ */
+export const useMcpIntegrationsControllerCreateCustom = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>, TError,{data: CreateCustomIntegrationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerCreateCustom>>,
+        TError,
+        {data: CreateCustomIntegrationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerCreateCustomMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary List all MCP integrations for organization
+ */
+export const mcpIntegrationsControllerList = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto[]>(
+      {url: `/mcp-integrations`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getMcpIntegrationsControllerListQueryKey = () => {
+    return [`/mcp-integrations`] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>> = ({ signal }) => mcpIntegrationsControllerList(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>>
+export type McpIntegrationsControllerListQueryError = unknown
+
+
+export function useMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all MCP integrations for organization
+ */
+
+export function useMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List available predefined MCP integration configurations
+ */
+export const mcpIntegrationsControllerListPredefinedConfigs = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PredefinedConfigResponseDto[]>(
+      {url: `/mcp-integrations/predefined/available`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getMcpIntegrationsControllerListPredefinedConfigsQueryKey = () => {
+    return [`/mcp-integrations/predefined/available`] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerListPredefinedConfigsQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerListPredefinedConfigsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>> = ({ signal }) => mcpIntegrationsControllerListPredefinedConfigs(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerListPredefinedConfigsQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>>
+export type McpIntegrationsControllerListPredefinedConfigsQueryError = unknown
+
+
+export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List available predefined MCP integration configurations
+ */
+
+export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListPredefinedConfigs>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerListPredefinedConfigsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get MCP integration by ID
+ */
+export const mcpIntegrationsControllerGetById = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getMcpIntegrationsControllerGetByIdQueryKey = (id: string,) => {
+    return [`/mcp-integrations/${id}`] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerGetByIdQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerGetByIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>> = ({ signal }) => mcpIntegrationsControllerGetById(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerGetByIdQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>>
+export type McpIntegrationsControllerGetByIdQueryError = void
+
+
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get MCP integration by ID
+ */
+
+export function useMcpIntegrationsControllerGetById<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetById>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerGetByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update MCP integration
+ */
+export const mcpIntegrationsControllerUpdate = (
+    id: string,
+    updateMcpIntegrationDto: UpdateMcpIntegrationDto,
+ ) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateMcpIntegrationDto
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, {id: string;data: UpdateMcpIntegrationDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  mcpIntegrationsControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>>
+    export type McpIntegrationsControllerUpdateMutationBody = UpdateMcpIntegrationDto
+    export type McpIntegrationsControllerUpdateMutationError = void
+
+    /**
+ * @summary Update MCP integration
+ */
+export const useMcpIntegrationsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>, TError,{id: string;data: UpdateMcpIntegrationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerUpdate>>,
+        TError,
+        {id: string;data: UpdateMcpIntegrationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Delete MCP integration
+ */
+export const mcpIntegrationsControllerDelete = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/mcp-integrations/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerDelete'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerDelete(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>>
+    
+    export type McpIntegrationsControllerDeleteMutationError = void
+
+    /**
+ * @summary Delete MCP integration
+ */
+export const useMcpIntegrationsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerDelete>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Enable MCP integration
+ */
+export const mcpIntegrationsControllerEnable = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/${id}/enable`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerEnableMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerEnable'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerEnable(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerEnableMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>>
+    
+    export type McpIntegrationsControllerEnableMutationError = void
+
+    /**
+ * @summary Enable MCP integration
+ */
+export const useMcpIntegrationsControllerEnable = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerEnable>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerEnableMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Disable MCP integration
+ */
+export const mcpIntegrationsControllerDisable = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/${id}/disable`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerDisableMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerDisable'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerDisable(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerDisableMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>>
+    
+    export type McpIntegrationsControllerDisableMutationError = void
+
+    /**
+ * @summary Disable MCP integration
+ */
+export const useMcpIntegrationsControllerDisable = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerDisable>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerDisableMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Validate MCP integration connection
+ */
+export const mcpIntegrationsControllerValidate = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ValidationResponseDto>(
+      {url: `/mcp-integrations/${id}/validate`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerValidateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerValidate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerValidate(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerValidateMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>>
+    
+    export type McpIntegrationsControllerValidateMutationError = void
+
+    /**
+ * @summary Validate MCP integration connection
+ */
+export const useMcpIntegrationsControllerValidate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerValidate>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerValidateMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

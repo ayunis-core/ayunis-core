@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { SourceType } from '../../../../domain/source-type.enum';
+import { SourceCreator } from '../../../../domain/source-creator.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 
@@ -16,8 +17,12 @@ export abstract class SourceRecord extends BaseRecord {
   @Column()
   name: string;
 
-  @Column({ default: false })
-  createdByLLM: boolean;
+  @Column({
+    type: 'enum',
+    enum: SourceCreator,
+    default: SourceCreator.USER,
+  })
+  createdBy: SourceCreator;
 }
 
 @ChildEntity(SourceType.TEXT)

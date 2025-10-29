@@ -16,19 +16,19 @@ Implement the use case for deleting an MCP integration. This command removes the
 
 ## Acceptance Criteria
 
-- [ ] `DeleteMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.command.ts`
-- [ ] Command fields: `integrationId`
-- [ ] `DeleteMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case.ts`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches existing integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case deletes integration via `repository.delete(id)`
-- [ ] Use case returns void
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log operation start and errors
-- [ ] Unit tests added for:
+- [x] `DeleteMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.command.ts`
+- [x] Command fields: `integrationId`
+- [x] `DeleteMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case.ts`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches existing integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case deletes integration via `repository.delete(id)`
+- [x] Use case returns void
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log operation start and errors
+- [x] Unit tests added for:
   - Successfully deletes integration when user has access
   - Throws `McpIntegrationNotFoundError` when integration doesn't exist
   - Throws `McpIntegrationAccessDeniedError` when integration belongs to different organization
@@ -45,8 +45,8 @@ Implement the use case for deleting an MCP integration. This command removes the
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

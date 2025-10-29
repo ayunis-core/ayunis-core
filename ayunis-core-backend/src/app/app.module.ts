@@ -14,6 +14,7 @@ import { RetrieverModule } from '../domain/retrievers/retriever.module';
 import { SourcesModule } from '../domain/sources/sources.module';
 import { StorageModule } from '../domain/storage/storage.module';
 import { PromptsModule } from '../domain/prompts/prompts.module';
+import { McpModule } from '../domain/mcp/mcp.module';
 import { IamModule } from '../iam/iam.module';
 import { AdminModule } from '../admin/admin.module';
 import { modelsConfig } from '../config/models.config';
@@ -105,6 +106,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
     SourcesModule,
     StorageModule,
     PromptsModule,
+    McpModule,
     IamModule.register({
       authProvider:
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,

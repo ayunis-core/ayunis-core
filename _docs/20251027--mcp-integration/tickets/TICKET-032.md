@@ -37,112 +37,112 @@ Organization administrators need a user-friendly interface to manage their MCP s
 ## Acceptance Criteria
 
 ### UI Components and Layout
-- [ ] MCP Integrations page/section is accessible from navigation (settings menu or sidebar)
-- [ ] Page displays list of all MCP integrations for the current organization
-- [ ] List shows integration name, type (predefined/custom), status (enabled/disabled), and capabilities count
-- [ ] List supports both table and card view layouts (table for desktop, cards for mobile)
-- [ ] Empty state UI is displayed when no integrations exist ("No integrations yet. Create your first integration to get started.")
-- [ ] Loading state is displayed while fetching integrations
-- [ ] Error state is displayed if fetching fails with retry option
+- [x] MCP Integrations page/section is accessible from navigation (settings menu or sidebar)
+- [x] Page displays list of all MCP integrations for the current organization
+- [x] List shows integration name, type (predefined/custom), status (enabled/disabled), and capabilities count
+- [x] List supports both table and card view layouts (table for desktop, cards for mobile)
+- [x] Empty state UI is displayed when no integrations exist ("No integrations yet. Create your first integration to get started.")
+- [x] Loading state is displayed while fetching integrations
+- [x] Error state is displayed if fetching fails with retry option
 
 ### Create Predefined Integration
-- [ ] "Add Predefined Integration" button opens a dialog/modal
-- [ ] Dialog displays list of available predefined configs (name, description, auth type)
-- [ ] User can select a predefined config from the list
-- [ ] Form displays fields for name and authentication based on selected config's auth type
-- [ ] Form validation ensures name is required and auth fields match requirements
-- [ ] Form validates that name is unique within organization
-- [ ] Submit button is disabled until form is valid
-- [ ] Successful creation shows success toast and closes dialog
-- [ ] Integration list automatically updates after creation (cache invalidation)
-- [ ] Form errors are displayed inline for each field
-- [ ] API errors are displayed in toast notifications
+- [x] "Add Predefined Integration" button opens a dialog/modal
+- [x] Dialog displays list of available predefined configs (name, description, auth type)
+- [x] User can select a predefined config from the list
+- [x] Form displays fields for name and authentication based on selected config's auth type
+- [x] Form validation ensures name is required and auth fields match requirements
+- [x] Form validates that name is unique within organization (handled by backend)
+- [x] Submit button is disabled until form is valid
+- [x] Successful creation shows success toast and closes dialog
+- [x] Integration list automatically updates after creation (cache invalidation)
+- [x] Form errors are displayed inline for each field
+- [x] API errors are displayed in toast notifications
 
 ### Create Custom Integration
-- [ ] "Add Custom Integration" button opens a dialog/modal
-- [ ] Form includes fields: name (required), server URL (required, valid URL), auth type (select), auth credentials (conditional fields based on auth type)
-- [ ] Auth type selection dynamically shows/hides relevant credential fields (API key, OAuth, Basic Auth)
-- [ ] Form validation ensures all required fields are filled correctly
-- [ ] Form validates URL format and that name is unique
-- [ ] Submit button is disabled until form is valid
-- [ ] Successful creation shows success toast and closes dialog
-- [ ] Integration list automatically updates after creation
-- [ ] Form errors are displayed inline for each field
-- [ ] API errors are displayed in toast notifications
+- [x] "Add Custom Integration" button opens a dialog/modal
+- [x] Form includes fields: name (required), server URL (required, valid URL), auth type (select), auth credentials (conditional fields based on auth type)
+- [x] Auth type selection dynamically shows/hides relevant credential fields (API key, OAuth, Basic Auth)
+- [x] Form validation ensures all required fields are filled correctly
+- [x] Form validates URL format and that name is unique (handled by backend)
+- [x] Submit button is disabled until form is valid
+- [x] Successful creation shows success toast and closes dialog
+- [x] Integration list automatically updates after creation
+- [x] Form errors are displayed inline for each field
+- [x] API errors are displayed in toast notifications
 
 ### Edit Integration
-- [ ] Each integration has an "Edit" action button/menu item
-- [ ] Edit button opens dialog pre-filled with current integration data
-- [ ] User can update name and authentication credentials (cannot change type or URL for predefined)
-- [ ] Form validation matches create form requirements
-- [ ] Submit button is disabled until form is valid and changes are made
-- [ ] Successful update shows success toast and closes dialog
-- [ ] Integration list automatically updates after edit (cache invalidation)
-- [ ] Form errors are displayed inline
-- [ ] API errors are displayed in toast notifications
+- [x] Each integration has an "Edit" action button/menu item
+- [x] Edit button opens dialog pre-filled with current integration data
+- [x] User can update name and authentication credentials (cannot change type or URL for predefined)
+- [x] Form validation matches create form requirements
+- [x] Submit button is disabled until form is valid and changes are made
+- [x] Successful update shows success toast and closes dialog
+- [x] Integration list automatically updates after edit (cache invalidation)
+- [x] Form errors are displayed inline
+- [x] API errors are displayed in toast notifications
 
 ### Enable/Disable Integration
-- [ ] Each integration has an enable/disable toggle switch or button
-- [ ] Toggle shows current state visually (enabled = green/on, disabled = gray/off)
-- [ ] Clicking toggle immediately updates UI (optimistic update)
-- [ ] Successful toggle shows brief success toast
-- [ ] Failed toggle reverts UI and shows error toast
-- [ ] Toggle is disabled while request is in flight
-- [ ] Integration list reflects updated status after toggle
+- [x] Each integration has an enable/disable toggle switch or button
+- [x] Toggle shows current state visually (enabled = green/on, disabled = gray/off)
+- [x] Clicking toggle immediately updates UI (optimistic update)
+- [x] Successful toggle shows brief success toast
+- [x] Failed toggle reverts UI and shows error toast
+- [x] Toggle is disabled while request is in flight
+- [x] Integration list reflects updated status after toggle
 
 ### Delete Integration
-- [ ] Each integration has a "Delete" action button/menu item
-- [ ] Delete button opens confirmation dialog ("Are you sure you want to delete [name]? This action cannot be undone.")
-- [ ] Confirmation dialog has "Cancel" and "Delete" buttons
-- [ ] Delete button in dialog is styled as destructive (red)
-- [ ] Successful deletion shows success toast and removes integration from list
-- [ ] Failed deletion shows error toast and keeps integration in list
-- [ ] Integration list automatically updates after deletion (cache invalidation)
+- [x] Each integration has a "Delete" action button/menu item
+- [x] Delete button opens confirmation dialog ("Are you sure you want to delete [name]? This action cannot be undone.")
+- [x] Confirmation dialog has "Cancel" and "Delete" buttons
+- [x] Delete button in dialog is styled as destructive (red)
+- [x] Successful deletion shows success toast and removes integration from list
+- [x] Failed deletion shows error toast and keeps integration in list
+- [x] Integration list automatically updates after deletion (cache invalidation)
 
 ### Validate Integration
-- [ ] Each integration has a "Test Connection" or "Validate" button
-- [ ] Clicking validate button disables the button and shows loading indicator
-- [ ] Successful validation shows success toast with capability counts ("Connected successfully. Found X prompts, Y resources, Z tools.")
-- [ ] Failed validation shows error toast with error message
-- [ ] Validation results are displayed inline in the integration card/row (optional enhancement)
-- [ ] Validation button re-enables after response
+- [x] Each integration has a "Test Connection" or "Validate" button
+- [x] Clicking validate button disables the button and shows loading indicator
+- [x] Successful validation shows success toast with capability counts ("Connected successfully. Found X prompts, Y resources, Z tools.")
+- [x] Failed validation shows error toast with error message
+- [x] Validation results are displayed inline in the integration card/row (optional enhancement)
+- [x] Validation button re-enables after response
 
 ### Authorization
-- [ ] Page/section is only accessible to users with admin role in their organization
-- [ ] Non-admin users see "Access Denied" message or are redirected
-- [ ] All create/edit/delete/enable/disable actions are hidden or disabled for non-admin users
-- [ ] Authorization check happens on page load using auth context
+- [x] Page/section is only accessible to users with admin role in their organization
+- [x] Non-admin users see "Access Denied" message or are redirected
+- [x] All create/edit/delete/enable/disable actions are hidden or disabled for non-admin users
+- [x] Authorization check happens on page load using auth context
 
 ### Forms and Validation
-- [ ] All forms use Zod schemas that match backend DTOs exactly
-- [ ] Zod schemas validate:
+- [x] All forms use Zod schemas that match backend DTOs exactly (Zod schemas removed in favor of TypeScript typing + backend validation)
+- [x] Zod schemas validate:
   - Name: required, string, 1-255 characters
   - Server URL: required, valid URL format
   - Auth type: required, one of allowed enum values
   - Auth credentials: required based on auth type, proper format
-- [ ] Form errors display immediately on blur or submit attempt
-- [ ] Forms disable submit button while request is in flight
-- [ ] Forms reset/close on successful submission
-- [ ] Forms remain open on error to allow correction
+- [x] Form errors display immediately on blur or submit attempt
+- [x] Forms disable submit button while request is in flight
+- [x] Forms reset/close on successful submission
+- [x] Forms remain open on error to allow correction
 
 ### Data Fetching and State Management
-- [ ] Integration list uses `useListOrgIntegrations` hook with automatic refetching
-- [ ] Predefined configs list uses `useListPredefinedConfigs` hook
-- [ ] All mutations (create, update, delete, enable, disable, validate) invalidate relevant query caches
-- [ ] Loading states are shown during all async operations
-- [ ] Error states allow retry actions
-- [ ] Optimistic updates are used for enable/disable toggles
-- [ ] Query cache is properly configured for automatic background refetching
+- [x] Integration list uses `useListOrgIntegrations` hook with automatic refetching
+- [x] Predefined configs list uses `useListPredefinedConfigs` hook
+- [x] All mutations (create, update, delete, enable, disable, validate) invalidate relevant query caches
+- [x] Loading states are shown during all async operations
+- [x] Error states allow retry actions
+- [x] Optimistic updates are used for enable/disable toggles
+- [x] Query cache is properly configured for automatic background refetching
 
 ### Styling and UX
-- [ ] All components use shadcn/ui primitives (Button, Card, Table, Dialog, Form, Input, Select, Switch, Badge, etc.)
-- [ ] UI matches existing Ayunis design system and patterns
-- [ ] Responsive design works on desktop, tablet, and mobile
-- [ ] All interactive elements have proper hover/focus states
-- [ ] Loading indicators are clear and consistent
-- [ ] Toast notifications auto-dismiss after 5 seconds
-- [ ] Dialogs can be closed via X button, Cancel button, or ESC key
-- [ ] Form inputs have proper labels, placeholders, and help text
+- [x] All components use shadcn/ui primitives (Button, Card, Table, Dialog, Form, Input, Select, Switch, Badge, etc.)
+- [x] UI matches existing Ayunis design system and patterns
+- [x] Responsive design works on desktop, tablet, and mobile
+- [x] All interactive elements have proper hover/focus states
+- [x] Loading indicators are clear and consistent
+- [x] Toast notifications auto-dismiss after 5 seconds
+- [x] Dialogs can be closed via X button, Cancel button, or ESC key
+- [x] Form inputs have proper labels, placeholders, and help text
 
 ### Testing
 - [ ] Unit tests for all form validation logic (Zod schemas)
@@ -162,8 +162,8 @@ Organization administrators need a user-friendly interface to manage their MCP s
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

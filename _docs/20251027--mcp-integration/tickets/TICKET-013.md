@@ -17,20 +17,20 @@ Implement the use case for enabling an MCP integration. This command sets the `e
 
 ## Acceptance Criteria
 
-- [ ] `EnableMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.command.ts`
-- [ ] Command fields: `integrationId`
-- [ ] `EnableMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case.ts`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches existing integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case calls domain entity method to enable (e.g., `integration.enable()`)
-- [ ] Use case saves updated entity via repository
-- [ ] Use case returns updated entity
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log operation start and errors
-- [ ] Unit tests added for:
+- [x] `EnableMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.command.ts`
+- [x] Command fields: `integrationId`
+- [x] `EnableMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case.ts`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches existing integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case calls domain entity method to enable (e.g., `integration.enable()`)
+- [x] Use case saves updated entity via repository
+- [x] Use case returns updated entity
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log operation start and errors
+- [x] Unit tests added for:
   - Successfully enables integration when user has access
   - Idempotent (enabling already-enabled integration succeeds)
   - Throws `McpIntegrationNotFoundError` when integration doesn't exist
@@ -48,8 +48,8 @@ Implement the use case for enabling an MCP integration. This command sets the `e
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

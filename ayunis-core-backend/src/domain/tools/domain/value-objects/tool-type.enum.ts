@@ -7,4 +7,7 @@ export enum ToolType {
   SEND_EMAIL = 'send_email',
   CREATE_CALENDAR_EVENT = 'create_calendar_event',
   CODE_EXECUTION = 'code_execution',
+  MCP_TOOL = 'mcp_tool',
+  MCP_RESOURCE = 'mcp_resource',
+  MCP_PROMPT = 'mcp_prompt',
 }

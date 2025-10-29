@@ -32,5 +32,25 @@
     "addedSuccessfully": "Source added successfully",
     "removedSuccessfully": "Source removed successfully",
     "failedToRemove": "Failed to remove source"
+  },
+  "mcpIntegrations": {
+    "title": "MCP Integrations",
+    "description": "Connect external MCP servers to extend agent capabilities",
+    "connectedCount": "{{count}} connected",
+    "toggleAriaLabel": "Toggle {{name}} integration",
+    "retryButton": "Retry",
+    "emptyState": {
+      "title": "No integrations available",
+      "description": "Ask your organization admin to set up MCP integrations in organization settings."
+    },
+    "success": {
+      "connected": "Integration connected",
+      "disconnected": "Integration disconnected"
+    },
+    "errors": {
+      "failedToConnect": "Failed to connect integration. Please try again.",
+      "failedToDisconnect": "Failed to disconnect integration. Please try again.",
+      "failedToLoad": "Failed to load integrations. Please try again."
+    }
   }
 }

@@ -73,6 +73,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
           sourceAssignments: {
             source: true,
           },
+          mcpIntegrations: true,
         },
         sourceAssignments: {
           source: true,

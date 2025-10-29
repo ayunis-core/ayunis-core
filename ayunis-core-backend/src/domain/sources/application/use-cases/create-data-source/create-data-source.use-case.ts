@@ -28,7 +28,7 @@ export class CreateDataSourceUseCase {
         const dataSource = new CSVDataSource({
           name: command.name,
           data: command.data,
-          createdByLLM: command.createdByLLM,
+          createdBy: command.createdBy,
         });
         await this.sourceRepository.save(dataSource);
         return dataSource;

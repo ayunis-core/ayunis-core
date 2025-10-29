@@ -19,23 +19,23 @@ Implement the use case for discovering capabilities (tools, resources, prompts) 
 
 ## Acceptance Criteria
 
-- [ ] `DiscoverMcpCapabilitiesQuery` created in `src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query.ts`
-- [ ] Query fields: `integrationId`
-- [ ] `DiscoverMcpCapabilitiesUseCase` created in `src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case.ts`
-- [ ] `CapabilitiesResult` interface defined in use case file with fields: `tools: McpTool[]`, `resources: McpResource[]`, `prompts: McpPrompt[]`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case verifies integration is enabled (throws error if disabled)
-- [ ] Use case builds connection config from integration
-- [ ] Use case calls MCP client to list tools, resources, and prompts
-- [ ] Use case maps MCP SDK responses to domain entities (McpTool, McpResource, McpPrompt)
-- [ ] Use case returns `CapabilitiesResult` with all capabilities
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log discovery operations and results
-- [ ] Unit tests added for:
+- [x] `DiscoverMcpCapabilitiesQuery` created in `src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query.ts`
+- [x] Query fields: `integrationId`
+- [x] `DiscoverMcpCapabilitiesUseCase` created in `src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case.ts`
+- [x] `CapabilitiesResult` interface defined in use case file with fields: `tools: McpTool[]`, `resources: McpResource[]`, `prompts: McpPrompt[]`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case verifies integration is enabled (throws error if disabled)
+- [x] Use case builds connection config from integration
+- [x] Use case calls MCP client to list tools, resources, and prompts
+- [x] Use case maps MCP SDK responses to domain entities (McpTool, McpResource, McpPrompt)
+- [x] Use case returns `CapabilitiesResult` with all capabilities
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log discovery operations and results
+- [x] Unit tests added for:
   - Successfully discovers capabilities from enabled integration
   - Returns empty arrays when MCP server has no capabilities
   - Throws `McpIntegrationNotFoundError` when integration doesn't exist
@@ -56,8 +56,8 @@ Implement the use case for discovering capabilities (tools, resources, prompts) 
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

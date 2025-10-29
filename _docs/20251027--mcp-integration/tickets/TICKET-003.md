@@ -16,22 +16,22 @@ Implement the domain entities for the MCP module following hexagonal architectur
 
 ## Acceptance Criteria
 
-- [ ] `McpAuthMethod` enum created with values: `API_KEY`, `BEARER_TOKEN`
-- [ ] `PredefinedMcpIntegrationSlug` enum created with initial value: `TEST`
-- [ ] Abstract `McpIntegration` base class created in `src/domain/mcp/domain/mcp-integration.entity.ts`
-- [ ] Base class includes: `id`, `name`, `type` (abstract), `authMethod?`, `authHeaderName?`, `encryptedCredentials?`, `enabled`, `organizationId`, `createdAt`, `updatedAt`
-- [ ] Base class constructor generates UUID if `id` is null
-- [ ] Base class has methods: `disable()`, `enable()`, `updateCredentials(newEncryptedCredentials: string)`, `hasAuthentication(): boolean`
-- [ ] `PredefinedMcpIntegration` subclass created extending base class
-- [ ] `PredefinedMcpIntegration` has `type = 'predefined' as const` and `slug: PredefinedMcpIntegrationSlug`
-- [ ] `CustomMcpIntegration` subclass created extending base class
-- [ ] `CustomMcpIntegration` has `type = 'custom' as const` and `serverUrl: string`
-- [ ] `McpTool` entity created with fields: `name`, `description`, `inputSchema`, `integrationId`
-- [ ] `McpResource` entity created with fields: `uri`, `name`, `description`, `mimeType`, `integrationId`, `arguments?`
-- [ ] `ResourceArgument` interface created with: `name`, `description`, `required`
-- [ ] `McpPrompt` entity created with fields: `name`, `description`, `arguments`, `integrationId`
-- [ ] `PromptArgument` interface created with: `name`, `required`
-- [ ] Unit tests added for:
+- [x] `McpAuthMethod` enum created with values: `API_KEY`, `BEARER_TOKEN`
+- [x] `PredefinedMcpIntegrationSlug` enum created with initial value: `TEST`
+- [x] Abstract `McpIntegration` base class created in `src/domain/mcp/domain/mcp-integration.entity.ts`
+- [x] Base class includes: `id`, `name`, `type` (abstract), `authMethod?`, `authHeaderName?`, `encryptedCredentials?`, `enabled`, `organizationId`, `createdAt`, `updatedAt`
+- [x] Base class constructor generates UUID if `id` is null
+- [x] Base class has methods: `disable()`, `enable()`, `updateCredentials(newEncryptedCredentials: string)`, `hasAuthentication(): boolean`
+- [x] `PredefinedMcpIntegration` subclass created extending base class
+- [x] `PredefinedMcpIntegration` has `type = 'predefined' as const` and `slug: PredefinedMcpIntegrationSlug`
+- [x] `CustomMcpIntegration` subclass created extending base class
+- [x] `CustomMcpIntegration` has `type = 'custom' as const` and `serverUrl: string`
+- [x] `McpTool` entity created with fields: `name`, `description`, `inputSchema`, `integrationId`
+- [x] `McpResource` entity created with fields: `uri`, `name`, `description`, `mimeType`, `integrationId`, `arguments?`
+- [x] `ResourceArgument` interface created with: `name`, `description`, `required`
+- [x] `McpPrompt` entity created with fields: `name`, `description`, `arguments`, `integrationId`
+- [x] `PromptArgument` interface created with: `name`, `required`
+- [x] Unit tests added for:
   - Base class generates UUID when id is null
   - Base class uses provided UUID when id is not null
   - `disable()` sets enabled to false and updates timestamp
@@ -49,8 +49,8 @@ None - this is a foundation ticket
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

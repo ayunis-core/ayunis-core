@@ -18,23 +18,23 @@ Implement the use case for executing a tool on an MCP server. This command conne
 
 ## Acceptance Criteria
 
-- [ ] `ExecuteMcpToolCommand` created in `src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.command.ts`
-- [ ] Command fields: `integrationId`, `toolName`, `parameters: Record<string, unknown>`
-- [ ] `ExecuteMcpToolUseCase` created in `src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case.ts`
-- [ ] `ToolExecutionResult` interface defined in use case file with fields: `isError: boolean`, `content: any`, `errorMessage?: string`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case verifies integration is enabled
-- [ ] Use case builds connection config from integration
-- [ ] Use case calls MCP client to execute tool with parameters
-- [ ] Use case returns `ToolExecutionResult` with success content
-- [ ] Use case returns `ToolExecutionResult` with error details if tool execution fails (does NOT throw)
-- [ ] Use case throws domain errors for access/auth issues (not found, wrong org, disabled)
-- [ ] Use case has try/catch block that handles tool execution errors gracefully (return error result)
-- [ ] Use case uses Logger to log tool executions and results
-- [ ] Unit tests added for:
+- [x] `ExecuteMcpToolCommand` created in `src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.command.ts`
+- [x] Command fields: `integrationId`, `toolName`, `parameters: Record<string, unknown>`
+- [x] `ExecuteMcpToolUseCase` created in `src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case.ts`
+- [x] `ToolExecutionResult` interface defined in use case file with fields: `isError: boolean`, `content: any`, `errorMessage?: string`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case verifies integration is enabled
+- [x] Use case builds connection config from integration
+- [x] Use case calls MCP client to execute tool with parameters
+- [x] Use case returns `ToolExecutionResult` with success content
+- [x] Use case returns `ToolExecutionResult` with error details if tool execution fails (does NOT throw)
+- [x] Use case throws domain errors for access/auth issues (not found, wrong org, disabled)
+- [x] Use case has try/catch block that handles tool execution errors gracefully (return error result)
+- [x] Use case uses Logger to log tool executions and results
+- [x] Unit tests added for:
   - Successfully executes tool and returns result
   - Returns error result when tool execution fails on MCP server
   - Returns error result when tool doesn't exist on MCP server
@@ -56,8 +56,8 @@ Implement the use case for executing a tool on an MCP server. This command conne
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

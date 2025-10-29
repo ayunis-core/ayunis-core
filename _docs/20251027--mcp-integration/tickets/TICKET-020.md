@@ -18,24 +18,24 @@ Implement the use case for retrieving a prompt template from an MCP server. This
 
 ## Acceptance Criteria
 
-- [ ] `GetMcpPromptQuery` created in `src/domain/mcp/application/use-cases/get-mcp-prompt/get-mcp-prompt.query.ts`
-- [ ] Query fields: `integrationId`, `promptName`, `arguments?: Record<string, string>`
-- [ ] `GetMcpPromptUseCase` created in `src/domain/mcp/application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case.ts`
-- [ ] `PromptResult` interface defined in use case file with fields: `messages: PromptMessage[]`, `description?: string`
-- [ ] `PromptMessage` interface defined with fields: `role: string`, `content: string`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case verifies integration is enabled
-- [ ] Use case builds connection config from integration
-- [ ] Use case calls MCP client to retrieve prompt with arguments
-- [ ] Use case maps MCP SDK response to `PromptResult`
-- [ ] Use case returns `PromptResult` with messages and description
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log prompt retrievals and results
-- [ ] Unit tests added for:
+- [x] `GetMcpPromptQuery` created in `src/domain/mcp/application/use-cases/get-mcp-prompt/get-mcp-prompt.query.ts`
+- [x] Query fields: `integrationId`, `promptName`, `args?: Record<string, string>` (renamed from `arguments` to avoid reserved word)
+- [x] `GetMcpPromptUseCase` created in `src/domain/mcp/application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case.ts`
+- [x] `PromptResult` interface defined in use case file with fields: `messages: PromptMessage[]`, `description?: string`
+- [x] `PromptMessage` interface defined with fields: `role: string`, `content: string`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case verifies integration is enabled
+- [x] Use case builds connection config from integration
+- [x] Use case calls MCP client to retrieve prompt with arguments
+- [x] Use case maps MCP SDK response to `PromptResult`
+- [x] Use case returns `PromptResult` with messages and description
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log prompt retrievals and results
+- [x] Unit tests added for:
   - Successfully retrieves prompt with arguments
   - Successfully retrieves prompt without arguments
   - Throws `McpIntegrationNotFoundError` when integration doesn't exist
@@ -56,8 +56,8 @@ Implement the use case for retrieving a prompt template from an MCP server. This
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

@@ -17,23 +17,23 @@ Implement the use case for validating an MCP integration by testing the connecti
 
 ## Acceptance Criteria
 
-- [ ] `ValidateMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.command.ts`
-- [ ] Command fields: `integrationId`
-- [ ] `ValidateMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case.ts`
-- [ ] `ValidationResult` interface defined in use case file with fields: `isValid`, `errorMessage?`, `toolCount?`, `resourceCount?`, `promptCount?`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case builds connection config (URL, auth headers, transport type)
-- [ ] Use case attempts to connect and list capabilities via MCP client
-- [ ] Use case returns `ValidationResult` with success=true and capability counts if connection succeeds
-- [ ] Use case returns `ValidationResult` with success=false and error message if connection fails
-- [ ] Use case does NOT throw domain errors for connection failures (returns result)
-- [ ] Use case throws domain errors for access/auth issues (not found, wrong org)
-- [ ] Use case has try/catch block that handles connection errors gracefully
-- [ ] Use case uses Logger to log validation attempts and results
-- [ ] Unit tests added for:
+- [x] `ValidateMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.command.ts`
+- [x] Command fields: `integrationId`
+- [x] `ValidateMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case.ts`
+- [x] `ValidationResult` interface defined in use case file with fields: `isValid`, `errorMessage?`, `toolCount?`, `resourceCount?`, `promptCount?`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case builds connection config (URL, auth headers, transport type)
+- [x] Use case attempts to connect and list capabilities via MCP client
+- [x] Use case returns `ValidationResult` with success=true and capability counts if connection succeeds
+- [x] Use case returns `ValidationResult` with success=false and error message if connection fails
+- [x] Use case does NOT throw domain errors for connection failures (returns result)
+- [x] Use case throws domain errors for access/auth issues (not found, wrong org)
+- [x] Use case has try/catch block that handles connection errors gracefully
+- [x] Use case uses Logger to log validation attempts and results
+- [x] Unit tests added for:
   - Successfully validates integration with working MCP server
   - Returns failure result when MCP server is unreachable
   - Returns failure result when authentication fails
@@ -53,8 +53,8 @@ Implement the use case for validating an MCP integration by testing the connecti
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

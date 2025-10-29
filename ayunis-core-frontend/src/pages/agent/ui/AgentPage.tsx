@@ -5,6 +5,7 @@ import ContentAreaLayout from "@/layouts/content-area-layout/ui/ContentAreaLayou
 import AgentKnowledgeBaseCard from "./AgentKnowledgeBaseCard";
 import AgentToolsCard from "./AgentToolsCard";
 import AgentPropertiesCard from "./AgentPropertiesCard";
+import AgentMcpIntegrationsCard from "./AgentMcpIntegrationsCard";
 
 export function AgentPage({
   agent,
@@ -24,6 +25,7 @@ export function AgentPage({
               agent={agent}
               isEnabled={isEmbeddingModelEnabled}
             />
+            <AgentMcpIntegrationsCard />
             <AgentToolsCard />
           </div>
         }

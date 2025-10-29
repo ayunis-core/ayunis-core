@@ -6,6 +6,7 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 
 /**
@@ -18,6 +19,11 @@ export enum AgentErrorCode {
   AGENT_TOOL_ASSIGNMENT_NOT_FOUND = 'AGENT_TOOL_ASSIGNMENT_NOT_FOUND',
   UNEXPECTED_AGENT_ERROR = 'UNEXPECTED_AGENT_ERROR',
   SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
+  MCP_INTEGRATION_NOT_FOUND = 'MCP_INTEGRATION_NOT_FOUND',
+  MCP_INTEGRATION_ALREADY_ASSIGNED = 'MCP_INTEGRATION_ALREADY_ASSIGNED',
+  MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
+  MCP_INTEGRATION_WRONG_ORGANIZATION = 'MCP_INTEGRATION_WRONG_ORGANIZATION',
+  MCP_INTEGRATION_NOT_ASSIGNED = 'MCP_INTEGRATION_NOT_ASSIGNED',
 }
 
 /**
@@ -40,6 +46,12 @@ export abstract class AgentError extends ApplicationError {
     switch (this.statusCode) {
       case 404:
         return new NotFoundException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 403:
+        return new ForbiddenException({
           code: this.code,
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
@@ -136,5 +148,75 @@ export class SourceAlreadyAssignedError extends AgentError {
 export class UnexpectedAgentError extends AgentError {
   constructor(message: string, metadata?: ErrorMetadata) {
     super(message, AgentErrorCode.UNEXPECTED_AGENT_ERROR, 500, metadata);
+  }
+}
+
+/**
+ * Error thrown when an MCP integration is not found
+ */
+export class McpIntegrationNotFoundError extends AgentError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration with ID ${integrationId} not found`,
+      AgentErrorCode.MCP_INTEGRATION_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an MCP integration is already assigned to an agent
+ */
+export class McpIntegrationAlreadyAssignedError extends AgentError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration with ID ${integrationId} is already assigned to this agent`,
+      AgentErrorCode.MCP_INTEGRATION_ALREADY_ASSIGNED,
+      409,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an MCP integration is disabled
+ */
+export class McpIntegrationDisabledError extends AgentError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration with ID ${integrationId} is disabled`,
+      AgentErrorCode.MCP_INTEGRATION_DISABLED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an MCP integration belongs to a different organization
+ */
+export class McpIntegrationWrongOrganizationError extends AgentError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration with ID ${integrationId} does not belong to your organization`,
+      AgentErrorCode.MCP_INTEGRATION_WRONG_ORGANIZATION,
+      403,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an MCP integration is not assigned to an agent
+ */
+export class McpIntegrationNotAssignedError extends AgentError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration with ID ${integrationId} is not assigned to this agent`,
+      AgentErrorCode.MCP_INTEGRATION_NOT_ASSIGNED,
+      404,
+      metadata,
+    );
   }
 }

@@ -6,6 +6,7 @@
     "settings": "Settings",
     "users": "Users",
     "models": "Models",
-    "billing": "Billing"
+    "billing": "Billing",
+    "integrations": "Integrations"
   }
 }

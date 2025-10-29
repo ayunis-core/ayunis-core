@@ -12,6 +12,10 @@ import { WebsiteContentToolHandler } from './handlers/website-content-tool.handl
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { CodeExecutionToolHandler } from './handlers/code-execution-tool.handler';
 import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
+import { McpIntegrationToolHandler } from './handlers/mcp-integration-tool.handler';
+import { McpIntegrationResourceHandler } from './handlers/mcp-integration-resource.handler';
+import { McpIntegrationTool } from '../domain/tools/mcp-integration-tool.entity';
+import { McpIntegrationResource } from '../domain/tools/mcp-integration-resource.entity';
 
 @Injectable()
 export class ToolHandlerRegistry {
@@ -23,6 +27,8 @@ export class ToolHandlerRegistry {
     private readonly internetSearchToolHandler: InternetSearchToolHandler,
     private readonly websiteContentToolHandler: WebsiteContentToolHandler,
     private readonly codeExecutionToolHandler: CodeExecutionToolHandler,
+    private readonly mcpIntegrationToolHandler: McpIntegrationToolHandler,
+    private readonly mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -41,6 +47,12 @@ export class ToolHandlerRegistry {
     }
     if (tool instanceof CodeExecutionTool) {
       return this.codeExecutionToolHandler;
+    }
+    if (tool instanceof McpIntegrationTool) {
+      return this.mcpIntegrationToolHandler;
+    }
+    if (tool instanceof McpIntegrationResource) {
+      return this.mcpIntegrationResourceHandler;
     }
     throw new ToolHandlerNotFoundError({
       toolType: tool.name,

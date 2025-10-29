@@ -846,6 +846,9 @@ export const ToolAssignmentDtoType = {
   send_email: 'send_email',
   create_calendar_event: 'create_calendar_event',
   code_execution: 'code_execution',
+  mcp_tool: 'mcp_tool',
+  mcp_resource: 'mcp_resource',
+  mcp_prompt: 'mcp_prompt',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -885,6 +888,9 @@ export const ToolResponseDtoType = {
   send_email: 'send_email',
   create_calendar_event: 'create_calendar_event',
   code_execution: 'code_execution',
+  mcp_tool: 'mcp_tool',
+  mcp_resource: 'mcp_resource',
+  mcp_prompt: 'mcp_prompt',
 } as const;
 
 export interface ToolResponseDto {
@@ -947,6 +953,156 @@ export interface UpdateAgentDto {
   instructions: string;
   /** The ID of the permitted model to use for this agent */
   modelId: string;
+}
+
+/**
+ * Type of integration
+ */
+export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType[keyof typeof McpIntegrationResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpIntegrationResponseDtoType = {
+  predefined: 'predefined',
+  custom: 'custom',
+} as const;
+
+export interface McpIntegrationResponseDto {
+  /** Unique identifier of the integration */
+  id: string;
+  /** Name of the integration */
+  name: string;
+  /** Type of integration */
+  type: McpIntegrationResponseDtoType;
+  /** Predefined integration slug (only for predefined integrations) */
+  slug?: string;
+  /** Custom server URL (only for custom integrations) */
+  serverUrl?: string;
+  /** Whether the integration is enabled */
+  enabled: boolean;
+  /** Organization that owns this integration */
+  organizationId: string;
+  /** Authentication method used */
+  authMethod?: string;
+  /** Custom auth header name */
+  authHeaderName?: string;
+  /** Whether credentials are configured (never exposes actual credentials) */
+  hasCredentials: boolean;
+  /** Timestamp when the integration was created */
+  createdAt: string;
+  /** Timestamp when the integration was last updated */
+  updatedAt: string;
+}
+
+/**
+ * The predefined integration slug
+ */
+export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrationDtoSlug[keyof typeof CreatePredefinedIntegrationDtoSlug];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreatePredefinedIntegrationDtoSlug = {
+  TEST: 'TEST',
+} as const;
+
+/**
+ * Authentication method
+ */
+export type CreatePredefinedIntegrationDtoAuthMethod = typeof CreatePredefinedIntegrationDtoAuthMethod[keyof typeof CreatePredefinedIntegrationDtoAuthMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreatePredefinedIntegrationDtoAuthMethod = {
+  API_KEY: 'API_KEY',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+} as const;
+
+export interface CreatePredefinedIntegrationDto {
+  /** The name for this integration instance */
+  name: string;
+  /** The predefined integration slug */
+  slug: CreatePredefinedIntegrationDtoSlug;
+  /** Authentication method */
+  authMethod?: CreatePredefinedIntegrationDtoAuthMethod;
+  /** Custom auth header name (e.g., X-API-Key) */
+  authHeaderName?: string;
+  /** Authentication credentials (will be encrypted) */
+  credentials?: string;
+}
+
+/**
+ * Authentication method
+ */
+export type CreateCustomIntegrationDtoAuthMethod = typeof CreateCustomIntegrationDtoAuthMethod[keyof typeof CreateCustomIntegrationDtoAuthMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateCustomIntegrationDtoAuthMethod = {
+  API_KEY: 'API_KEY',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+} as const;
+
+export interface CreateCustomIntegrationDto {
+  /** The name for this integration instance */
+  name: string;
+  /** The URL of the custom MCP server */
+  serverUrl: string;
+  /** Authentication method */
+  authMethod?: CreateCustomIntegrationDtoAuthMethod;
+  /** Custom auth header name (e.g., X-API-Key) */
+  authHeaderName?: string;
+  /** Authentication credentials (will be encrypted) */
+  credentials?: string;
+}
+
+export interface PredefinedConfigResponseDto {
+  /** Unique slug identifier for the predefined integration */
+  slug: string;
+  /** Display name for the integration */
+  displayName: string;
+  /** Description of what this integration provides */
+  description: string;
+  /** Default authentication method (if any) */
+  defaultAuthMethod?: string;
+  /** Default authentication header name (if any) */
+  defaultAuthHeaderName?: string;
+}
+
+/**
+ * Authentication method
+ */
+export type UpdateMcpIntegrationDtoAuthMethod = typeof UpdateMcpIntegrationDtoAuthMethod[keyof typeof UpdateMcpIntegrationDtoAuthMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateMcpIntegrationDtoAuthMethod = {
+  API_KEY: 'API_KEY',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+} as const;
+
+export interface UpdateMcpIntegrationDto {
+  /** The new name for the integration */
+  name?: string;
+  /** Authentication method */
+  authMethod?: UpdateMcpIntegrationDtoAuthMethod;
+  /** Custom auth header name (e.g., X-API-Key) */
+  authHeaderName?: string;
+  /** New authentication credentials (will be encrypted) */
+  credentials?: string;
+}
+
+/**
+ * Discovered capabilities from the MCP server
+ */
+export type ValidationResponseDtoCapabilities = { [key: string]: unknown };
+
+export interface ValidationResponseDto {
+  /** Whether the integration validation succeeded */
+  valid: boolean;
+  /** Discovered capabilities from the MCP server */
+  capabilities: ValidationResponseDtoCapabilities;
+  /** Error message if validation failed */
+  error?: string;
 }
 
 export interface RetrieveUrlDto {

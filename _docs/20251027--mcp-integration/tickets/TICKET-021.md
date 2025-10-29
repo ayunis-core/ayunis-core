@@ -16,37 +16,37 @@ Extend the Agent entity and database schema to support many-to-many relationship
 
 ## Acceptance Criteria
 
-- [ ] `Agent` domain entity (`domain/agent.entity.ts`) updated:
+- [x] `Agent` domain entity (`domain/agent.entity.ts`) updated:
   - Added `mcpIntegrationIds: string[]` property to class
   - Added to constructor parameters as optional (default empty array)
   - Property is readonly and public
-- [ ] `AgentRecord` (`infrastructure/persistence/local/schema/agent.record.ts`) updated:
+- [x] `AgentRecord` (`infrastructure/persistence/local/schema/agent.record.ts`) updated:
   - Added `@ManyToMany(() => McpIntegrationRecord)` relationship
   - Added `@JoinTable({ name: 'agent_mcp_integrations' })` decorator
   - Property name: `mcpIntegrations?: McpIntegrationRecord[]`
-- [ ] `AgentMapper` (`infrastructure/persistence/local/mappers/agent.mapper.ts`) updated:
+- [x] `AgentMapper` (`infrastructure/persistence/local/mappers/agent.mapper.ts`) updated:
   - `toDomain()`: Maps `record.mcpIntegrations` to array of integration IDs
   - `toRecord()`: Maps `entity.mcpIntegrationIds` to array of McpIntegrationRecord references
   - Handles null/undefined mcpIntegrations gracefully (empty array)
-- [ ] Database migration created (`src/db/migrations/YYYYMMDDHHMMSS-AddAgentMcpIntegrations.ts`):
+- [x] Database migration created (`src/db/migrations/YYYYMMDDHHMMSS-AddAgentMcpIntegrations.ts`):
   - Creates join table `agent_mcp_integrations` with columns: `agentId`, `mcpIntegrationId`
   - Both columns are UUIDs and form composite primary key
   - Foreign key to `agents.id` with CASCADE on delete
   - Foreign key to `mcp_integrations.id` with CASCADE on delete
   - Includes proper indexes for performance
-- [ ] `AgentsModule` (`agents.module.ts`) updated:
+- [x] `AgentsModule` (`agents.module.ts`) updated:
   - Imports `McpModule` to enable relationship type awareness
   - `TypeOrmModule.forFeature([AgentRecord])` includes McpIntegrationRecord if needed
-- [ ] Unit tests added for:
+- [x] Unit tests added for:
   - Agent entity constructor accepts mcpIntegrationIds parameter
   - Agent entity defaults to empty array if mcpIntegrationIds not provided
   - AgentMapper.toDomain() correctly maps integration IDs from record
   - AgentMapper.toRecord() correctly maps integration IDs to record
   - AgentMapper handles empty/null mcpIntegrations arrays
-- [ ] Migration runs successfully on clean database
-- [ ] Migration runs successfully on database with existing agents
-- [ ] Existing agents have empty mcpIntegrationIds after migration
-- [ ] Can manually assign integrations via direct database queries (validation for mapper)
+- [x] Migration runs successfully on clean database
+- [x] Migration runs successfully on database with existing agents
+- [x] Existing agents have empty mcpIntegrationIds after migration
+- [x] Can manually assign integrations via direct database queries (validation for mapper)
 
 ## Dependencies
 
@@ -54,9 +54,9 @@ Extend the Agent entity and database schema to support many-to-many relationship
 
 ## Status
 
-- [x] To Do
+- [ ] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done
 
 ## Complexity
 

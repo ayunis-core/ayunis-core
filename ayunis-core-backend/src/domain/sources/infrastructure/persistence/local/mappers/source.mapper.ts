@@ -61,7 +61,7 @@ export class SourceMapper {
         ),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
-        createdByLLM: record.createdByLLM,
+        createdBy: record.createdBy,
       });
     }
     if (record.textSourceDetails instanceof UrlSourceDetailsRecord) {
@@ -76,7 +76,7 @@ export class SourceMapper {
         ),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
-        createdByLLM: record.createdByLLM,
+        createdBy: record.createdBy,
       });
     }
 
@@ -89,7 +89,7 @@ export class SourceMapper {
         id: record.id,
         data: record.dataSourceDetails.data,
         name: record.name,
-        createdByLLM: record.createdByLLM,
+        createdBy: record.createdBy,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
@@ -139,7 +139,7 @@ export class SourceMapper {
     const record = new TextSourceRecord();
     record.id = source.id;
     record.name = source.name;
-    record.createdByLLM = source.createdByLLM;
+    record.createdBy = source.createdBy;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
 
@@ -168,7 +168,7 @@ export class SourceMapper {
     const record = new TextSourceRecord();
     record.id = source.id;
     record.name = source.name;
-    record.createdByLLM = source.createdByLLM;
+    record.createdBy = source.createdBy;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
 
@@ -197,7 +197,7 @@ export class SourceMapper {
     const record = new DataSourceRecord();
     record.id = source.id;
     record.name = source.name;
-    record.createdByLLM = source.createdByLLM;
+    record.createdBy = source.createdBy;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
 

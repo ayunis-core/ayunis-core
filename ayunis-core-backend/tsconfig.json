@@ -18,6 +18,9 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@modelcontextprotocol/sdk/client/*": ["node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"]
+    }
   }
 }

@@ -15,21 +15,21 @@ Create a secure credential encryption service for storing MCP integration authen
 
 ## Acceptance Criteria
 
-- [ ] `McpCredentialEncryptionPort` abstract class created in `src/domain/mcp/application/ports/mcp-credential-encryption.port.ts`
-- [ ] Port defines methods: `encrypt(plaintext: string): Promise<string>` and `decrypt(ciphertext: string): Promise<string>`
-- [ ] Concrete implementation `McpCredentialEncryptionService` created in `src/domain/mcp/infrastructure/encryption/mcp-credential-encryption.service.ts`
-- [ ] Service uses AES-256-GCM encryption algorithm
-- [ ] Service reads encryption key from environment variable `MCP_ENCRYPTION_KEY`
-- [ ] Service throws clear error if `MCP_ENCRYPTION_KEY` is not configured
-- [ ] Encrypted output includes initialization vector (IV) prepended to ciphertext
-- [ ] Service is registered as provider in `McpModule`
-- [ ] Unit tests added for:
+- [x] `McpCredentialEncryptionPort` abstract class created in `src/domain/mcp/application/ports/mcp-credential-encryption.port.ts`
+- [x] Port defines methods: `encrypt(plaintext: string): Promise<string>` and `decrypt(ciphertext: string): Promise<string>`
+- [x] Concrete implementation `McpCredentialEncryptionService` created in `src/domain/mcp/infrastructure/encryption/mcp-credential-encryption.service.ts`
+- [x] Service uses AES-256-GCM encryption algorithm
+- [x] Service reads encryption key from environment variable `MCP_ENCRYPTION_KEY`
+- [x] Service throws clear error if `MCP_ENCRYPTION_KEY` is not configured
+- [x] Encrypted output includes initialization vector (IV) prepended to ciphertext
+- [x] Service is registered as provider in `McpModule`
+- [x] Unit tests added for:
   - Successful encryption produces non-plaintext output
   - Decryption correctly reverses encryption (roundtrip test)
   - Encrypting same plaintext twice produces different ciphertext (IV randomness)
   - Decryption fails gracefully with invalid ciphertext
   - Service throws error when encryption key is missing
-- [ ] Example `.env` entry added to `.env.example` for `MCP_ENCRYPTION_KEY`
+- [x] Example `.env` entry added to `.env.example` for `MCP_ENCRYPTION_KEY`
 
 ## Dependencies
 
@@ -38,8 +38,8 @@ None - this is a foundation ticket
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

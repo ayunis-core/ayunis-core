@@ -17,20 +17,20 @@ Implement the use case for disabling an MCP integration. This command sets the `
 
 ## Acceptance Criteria
 
-- [ ] `DisableMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.command.ts`
-- [ ] Command fields: `integrationId`
-- [ ] `DisableMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case.ts`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches existing integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case calls domain entity method to disable (e.g., `integration.disable()`)
-- [ ] Use case saves updated entity via repository
-- [ ] Use case returns updated entity
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log operation start and errors
-- [ ] Unit tests added for:
+- [x] `DisableMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.command.ts`
+- [x] Command fields: `integrationId`
+- [x] `DisableMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case.ts`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches existing integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case calls domain entity method to disable (e.g., `integration.disable()`)
+- [x] Use case saves updated entity via repository
+- [x] Use case returns updated entity
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log operation start and errors
+- [x] Unit tests added for:
   - Successfully disables integration when user has access
   - Idempotent (disabling already-disabled integration succeeds)
   - Throws `McpIntegrationNotFoundError` when integration doesn't exist
@@ -48,8 +48,8 @@ Implement the use case for disabling an MCP integration. This command sets the `
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

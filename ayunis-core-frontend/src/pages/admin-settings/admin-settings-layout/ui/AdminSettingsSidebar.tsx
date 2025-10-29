@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, Brain, CreditCard } from "lucide-react";
+import { ArrowLeft, Users, Brain, CreditCard, Plug } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -55,6 +55,14 @@ export function AdminSettingsSidebar() {
                 <Link to={"/admin-settings/models"}>
                   <Brain />
                   <span>{t("layout.models")}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to={"/admin-settings/integrations"}>
+                  <Plug />
+                  <span>{t("layout.integrations")}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

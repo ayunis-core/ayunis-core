@@ -32,5 +32,25 @@
     "addedSuccessfully": "Quelle erfolgreich hinzugefügt",
     "removedSuccessfully": "Quelle erfolgreich entfernt",
     "failedToRemove": "Fehler beim Entfernen der Quelle"
+  },
+  "mcpIntegrations": {
+    "title": "MCP-Integrationen",
+    "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten des Agenten zu erweitern",
+    "connectedCount": "{{count}} verbunden",
+    "toggleAriaLabel": "{{name}}-Integration umschalten",
+    "retryButton": "Erneut versuchen",
+    "emptyState": {
+      "title": "Keine Integrationen verfügbar",
+      "description": "Bitten Sie Ihren Organisationsadministrator, MCP-Integrationen in den Organisationseinstellungen einzurichten."
+    },
+    "success": {
+      "connected": "Integration verbunden",
+      "disconnected": "Integration getrennt"
+    },
+    "errors": {
+      "failedToConnect": "Fehler beim Verbinden der Integration. Bitte versuchen Sie es erneut.",
+      "failedToDisconnect": "Fehler beim Trennen der Integration. Bitte versuchen Sie es erneut.",
+      "failedToLoad": "Fehler beim Laden der Integrationen. Bitte versuchen Sie es erneut."
+    }
   }
 }

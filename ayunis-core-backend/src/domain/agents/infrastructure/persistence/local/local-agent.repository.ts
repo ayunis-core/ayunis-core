@@ -33,6 +33,15 @@ export class LocalAgentRepository implements AgentRepository {
       const agentEntity = this.agentMapper.toRecord(agent);
       const savedAgent = await this.agentRepository.save(agentEntity);
 
+      // Set MCP integration relations using relation IDs
+      if (agent.mcpIntegrationIds.length > 0) {
+        await this.agentRepository
+          .createQueryBuilder()
+          .relation(AgentRecord, 'mcpIntegrations')
+          .of(savedAgent.id)
+          .add(agent.mcpIntegrationIds);
+      }
+
       this.logger.debug('Agent created successfully', {
         id: savedAgent.id,
         name: savedAgent.name,
@@ -41,7 +50,7 @@ export class LocalAgentRepository implements AgentRepository {
       // Load the agent with relations to return complete data
       const agentWithRelations = await this.agentRepository.findOne({
         where: { id: savedAgent.id },
-        relations: ['agentTools'],
+        relations: ['agentTools', 'mcpIntegrations'],
       });
 
       if (!agentWithRelations) {
@@ -86,6 +95,7 @@ export class LocalAgentRepository implements AgentRepository {
           sourceAssignments: {
             source: true,
           },
+          mcpIntegrations: true,
         },
       });
 
@@ -144,8 +154,54 @@ export class LocalAgentRepository implements AgentRepository {
         updatedRecord,
       });
 
+      // Handle MCP integrations many-to-many relationship using relation API
+      const existingMcpIntegrationIds =
+        existing.mcpIntegrations?.map((i) => i.id) ?? [];
+      const newMcpIntegrationIds = agent.mcpIntegrationIds;
+
+      // Find integrations to add and remove
+      const integrationsToAdd = newMcpIntegrationIds.filter(
+        (id) => !existingMcpIntegrationIds.includes(id),
+      );
+      const integrationsToRemove = existingMcpIntegrationIds.filter(
+        (id) => !newMcpIntegrationIds.includes(id),
+      );
+
+      // Use relation API to update join table without loading full entities
+      if (integrationsToAdd.length > 0) {
+        await queryRunner.manager
+          .createQueryBuilder()
+          .relation(AgentRecord, 'mcpIntegrations')
+          .of(agent.id)
+          .add(integrationsToAdd);
+      }
+
+      if (integrationsToRemove.length > 0) {
+        await queryRunner.manager
+          .createQueryBuilder()
+          .relation(AgentRecord, 'mcpIntegrations')
+          .of(agent.id)
+          .remove(integrationsToRemove);
+      }
+
       await queryRunner.commitTransaction();
-      return this.agentMapper.toDomain(updatedRecord);
+
+      // Reload with MCP integrations to return complete data
+      const reloadedAgent = await this.agentRepository.findOne({
+        where: { id: agent.id },
+        relations: [
+          'mcpIntegrations',
+          'agentTools',
+          'model',
+          'sourceAssignments',
+        ],
+      });
+
+      if (!reloadedAgent) {
+        throw new AgentNotFoundError(agent.id);
+      }
+
+      return this.agentMapper.toDomain(reloadedAgent);
     } catch (error) {
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
@@ -192,6 +248,7 @@ export class LocalAgentRepository implements AgentRepository {
           sourceAssignments: {
             source: true,
           },
+          mcpIntegrations: true,
         },
       });
 
@@ -222,7 +279,7 @@ export class LocalAgentRepository implements AgentRepository {
           id: In(ids),
           userId,
         },
-        relations: ['agentTools', 'model'],
+        relations: ['agentTools', 'model', 'mcpIntegrations'],
       });
 
       this.logger.debug('Agents found', { count: agentEntities.length });
@@ -243,7 +300,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntities = await this.agentRepository.find({
         where: { userId },
-        relations: ['agentTools'], // Include agentTools relation
+        relations: ['agentTools', 'mcpIntegrations'], // Include agentTools and mcpIntegrations relations
       });
 
       this.logger.debug('Agents found for user', {
@@ -266,7 +323,7 @@ export class LocalAgentRepository implements AgentRepository {
     try {
       const agentEntities = await this.agentRepository.find({
         where: { modelId },
-        relations: ['agentTools'],
+        relations: ['agentTools', 'mcpIntegrations'],
       });
 
       this.logger.debug('Agents found for model', {

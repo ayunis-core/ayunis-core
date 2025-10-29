@@ -28,6 +28,8 @@ export class AgentMapper {
       sourceAssignments: record.sourceAssignments?.map((sourceRecord) =>
         this.agentSourceAssignmentMapper.toDomain(sourceRecord),
       ),
+      mcpIntegrationIds:
+        record.mcpIntegrations?.map((integration) => integration.id) ?? [],
       userId: record.userId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,

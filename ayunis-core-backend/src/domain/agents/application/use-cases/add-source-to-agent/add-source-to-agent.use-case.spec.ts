@@ -21,7 +21,7 @@ import { UUID } from 'crypto';
 // Mock Source implementation since it's abstract
 class MockSource extends Source {
   // Accept any additional fields for testing flexibility
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   constructor(params: any) {
     super(params);
   }

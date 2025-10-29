@@ -17,20 +17,20 @@ Implement the use case for creating a predefined MCP integration. This use case 
 
 ## Acceptance Criteria
 
-- [ ] `CreatePredefinedMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command.ts`
-- [ ] Command fields: `name`, `slug`, `organizationId`, `authMethod?`, `authHeaderName?`, `encryptedCredentials?`
-- [ ] `CreateMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/create-mcp-integration/create-mcp-integration.use-case.ts`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
-- [ ] Use case validates slug exists in registry (throws error if invalid)
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case creates `PredefinedMcpIntegration` domain entity
-- [ ] Use case saves entity via repository
-- [ ] Use case returns created entity
-- [ ] Domain errors added to `src/domain/mcp/application/mcp.errors.ts`: `InvalidPredefinedSlugError`, `UnexpectedMcpError`
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log operation start and errors
-- [ ] Unit tests added for:
+- [x] `CreatePredefinedMcpIntegrationCommand` created in `src/domain/mcp/application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command.ts`
+- [x] Command fields: `name`, `slug`, `authMethod?`, `authHeaderName?`, `encryptedCredentials?` (organizationId comes from ContextService, not command)
+- [x] `CreateMcpIntegrationUseCase` created in `src/domain/mcp/application/use-cases/create-mcp-integration/create-mcp-integration.use-case.ts`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `PredefinedMcpIntegrationRegistryService`, `ContextService`
+- [x] Use case validates slug exists in registry (throws error if invalid)
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case creates `PredefinedMcpIntegration` domain entity
+- [x] Use case saves entity via repository
+- [x] Use case returns created entity
+- [x] Domain errors added to `src/domain/mcp/application/mcp.errors.ts`: `InvalidPredefinedSlugError`, `UnexpectedMcpError`
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log operation start and errors
+- [x] Unit tests added for:
   - Successfully creates predefined integration with auth
   - Successfully creates predefined integration without auth (optional auth)
   - Throws `InvalidPredefinedSlugError` for unknown slug
@@ -48,8 +48,8 @@ Implement the use case for creating a predefined MCP integration. This use case 
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

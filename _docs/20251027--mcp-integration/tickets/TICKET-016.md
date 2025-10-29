@@ -13,16 +13,16 @@ Implement the use case for listing all available predefined integration configur
 
 ## Acceptance Criteria
 
-- [ ] `ListPredefinedMcpIntegrationConfigsQuery` created in `src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.query.ts`
-- [ ] Query has no fields (public information, no auth needed)
-- [ ] `ListPredefinedMcpIntegrationConfigsUseCase` created in `src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case.ts`
-- [ ] Use case injects: `PredefinedMcpIntegrationRegistryService`
-- [ ] Use case does NOT inject `ContextService` (no auth required for registry info)
-- [ ] Use case calls registry service to get all predefined configs
-- [ ] Use case returns array of `PredefinedMcpIntegrationConfig` objects
-- [ ] Use case has try/catch block that wraps unexpected errors
-- [ ] Use case uses Logger to log operation start and errors
-- [ ] Unit tests added for:
+- [x] `ListPredefinedMcpIntegrationConfigsQuery` created in `src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.query.ts`
+- [x] Query has no fields (public information, no auth needed)
+- [x] `ListPredefinedMcpIntegrationConfigsUseCase` created in `src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case.ts`
+- [x] Use case injects: `PredefinedMcpIntegrationRegistryService`
+- [x] Use case does NOT inject `ContextService` (no auth required for registry info)
+- [x] Use case calls registry service to get all predefined configs
+- [x] Use case returns array of `PredefinedMcpIntegrationConfig` objects
+- [x] Use case has try/catch block that wraps unexpected errors
+- [x] Use case uses Logger to log operation start and errors
+- [x] Unit tests added for:
   - Successfully returns list of predefined configs
   - Returns empty array when registry has no configs
   - Wraps unexpected errors in `UnexpectedMcpError`
@@ -36,8 +36,8 @@ Implement the use case for listing all available predefined integration configur
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

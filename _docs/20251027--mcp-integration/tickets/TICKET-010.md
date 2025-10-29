@@ -14,16 +14,16 @@ Implement the use case for listing all MCP integrations belonging to the user's 
 
 ## Acceptance Criteria
 
-- [ ] `ListOrgMcpIntegrationsQuery` created in `src/domain/mcp/application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.query.ts`
-- [ ] Query has no fields (orgId comes from context)
-- [ ] `ListOrgMcpIntegrationsUseCase` created in `src/domain/mcp/application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case.ts`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches all integrations for organization via `repository.findByOrganizationId(orgId)`
-- [ ] Use case returns array of integration entities (empty array if none)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log operation start and errors
-- [ ] Unit tests added for:
+- [x] `ListOrgMcpIntegrationsQuery` created in `src/domain/mcp/application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.query.ts`
+- [x] Query has no fields (orgId comes from context)
+- [x] `ListOrgMcpIntegrationsUseCase` created in `src/domain/mcp/application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case.ts`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches all integrations for organization via `repository.findByOrganizationId(orgId)`
+- [x] Use case returns array of integration entities (empty array if none)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log operation start and errors
+- [x] Unit tests added for:
   - Successfully returns list of integrations for organization
   - Returns empty array when organization has no integrations
   - Throws `UnauthorizedException` when user not authenticated
@@ -38,8 +38,8 @@ Implement the use case for listing all MCP integrations belonging to the user's 
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

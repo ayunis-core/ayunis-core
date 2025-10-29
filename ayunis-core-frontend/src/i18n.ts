@@ -15,6 +15,8 @@ import enAdminSettingsModels from "./shared/locales/en/admin-settings-models.jso
 import deAdminSettingsModels from "./shared/locales/de/admin-settings-models.json";
 import enAdminSettingsUsers from "./shared/locales/en/admin-settings-users.json";
 import deAdminSettingsUsers from "./shared/locales/de/admin-settings-users.json";
+import enAdminSettingsIntegrations from "./shared/locales/en/admin-settings-integrations.json";
+import deAdminSettingsIntegrations from "./shared/locales/de/admin-settings-integrations.json";
 import enSettings from "./shared/locales/en/settings.json";
 import deSettings from "./shared/locales/de/settings.json";
 import enChats from "./shared/locales/en/chats.json";
@@ -34,6 +36,7 @@ const resources = {
     "admin-settings-billing": enAdminSettingsBilling,
     "admin-settings-models": enAdminSettingsModels,
     "admin-settings-users": enAdminSettingsUsers,
+    "admin-settings-integrations": enAdminSettingsIntegrations,
     settings: enSettings,
     chats: enChats,
     prompts: enPrompts,
@@ -47,6 +50,7 @@ const resources = {
     "admin-settings-billing": deAdminSettingsBilling,
     "admin-settings-models": deAdminSettingsModels,
     "admin-settings-users": deAdminSettingsUsers,
+    "admin-settings-integrations": deAdminSettingsIntegrations,
     settings: deSettings,
     chats: deChats,
     prompts: dePrompts,

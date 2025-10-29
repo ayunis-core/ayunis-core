@@ -24,35 +24,34 @@ The backend API has been extended with new MCP integration endpoints (TICKET-026
 
 ## Acceptance Criteria
 
-- [ ] Backend API is running with all MCP endpoints available (TICKET-026, TICKET-027 completed)
-- [ ] Command `npm run openapi:update` executes successfully in `ayunis-core-frontend/` directory
-- [ ] All expected MCP integration hooks are generated in `src/shared/api/generated/`:
-  - `useCreatePredefinedIntegration` (POST /api/mcp-integrations/predefined)
-  - `useCreateCustomIntegration` (POST /api/mcp-integrations/custom)
-  - `useListOrgIntegrations` (GET /api/mcp-integrations)
-  - `useGetIntegration` (GET /api/mcp-integrations/:id)
-  - `useUpdateIntegration` (PATCH /api/mcp-integrations/:id)
-  - `useDeleteIntegration` (DELETE /api/mcp-integrations/:id)
-  - `useEnableIntegration` (POST /api/mcp-integrations/:id/enable)
-  - `useDisableIntegration` (POST /api/mcp-integrations/:id/disable)
-  - `useValidateIntegration` (POST /api/mcp-integrations/:id/validate)
-  - `useListPredefinedConfigs` (GET /api/mcp-integrations/predefined-configs)
-- [ ] All expected Agent MCP assignment hooks are generated:
-  - `useGetAgentMcpIntegrations` (GET /api/agents/:agentId/mcp-integrations)
-  - `useGetAvailableMcpIntegrations` (GET /api/agents/:agentId/mcp-integrations/available)
-  - `useAssignMcpIntegrationToAgent` (POST /api/agents/:agentId/mcp-integrations/:integrationId)
-  - `useUnassignMcpIntegrationFromAgent` (DELETE /api/agents/:agentId/mcp-integrations/:integrationId)
-- [ ] All DTO types are generated correctly:
+- [x] Backend API is running with all MCP endpoints available (TICKET-026, TICKET-027 completed)
+- [x] Command `npm run openapi:update` executes successfully in `ayunis-core-frontend/` directory
+- [x] All expected MCP integration hooks are generated in `src/shared/api/generated/`:
+  - `useMcpIntegrationsControllerCreatePredefined` (POST /api/mcp-integrations/predefined)
+  - `useMcpIntegrationsControllerCreateCustom` (POST /api/mcp-integrations/custom)
+  - `mcpIntegrationsControllerList` (GET /api/mcp-integrations)
+  - `mcpIntegrationsControllerGetById` (GET /api/mcp-integrations/:id)
+  - `useMcpIntegrationsControllerUpdate` (PATCH /api/mcp-integrations/:id)
+  - `useMcpIntegrationsControllerDelete` (DELETE /api/mcp-integrations/:id)
+  - `useMcpIntegrationsControllerEnable` (POST /api/mcp-integrations/:id/enable)
+  - `useMcpIntegrationsControllerDisable` (POST /api/mcp-integrations/:id/disable)
+  - `useMcpIntegrationsControllerValidate` (POST /api/mcp-integrations/:id/validate)
+  - `mcpIntegrationsControllerListPredefinedConfigs` (GET /api/mcp-integrations/predefined-configs)
+- [x] All expected Agent MCP assignment hooks are generated:
+  - `agentsControllerListAgentMcpIntegrations` (GET /api/agents/:agentId/mcp-integrations)
+  - `agentsControllerListAvailableMcpIntegrations` (GET /api/agents/:agentId/mcp-integrations/available)
+  - `useAgentsControllerAssignMcpIntegration` (POST /api/agents/:agentId/mcp-integrations/:integrationId)
+  - `useAgentsControllerUnassignMcpIntegration` (DELETE /api/agents/:agentId/mcp-integrations/:integrationId)
+- [x] All DTO types are generated correctly:
   - `CreatePredefinedIntegrationDto`
   - `CreateCustomIntegrationDto`
   - `UpdateMcpIntegrationDto`
   - `McpIntegrationResponseDto`
-  - `PredefinedConfigDto`
-  - `ValidationResultDto`
-  - `McpAuthConfigDto` and variants
-- [ ] No breaking changes introduced to existing API hooks (verify by running build)
-- [ ] Frontend build succeeds: `npm run build` completes without errors
-- [ ] No TypeScript errors in generated files: `npx tsc --noEmit` passes
+  - `PredefinedConfigResponseDto`
+  - Auth method enums (embedded in DTOs)
+- [x] No breaking changes introduced to existing API hooks (verify by running build)
+- [x] Frontend build succeeds: `npm run build` completes without errors
+- [x] No TypeScript errors in generated files: `npx tsc --noEmit` passes
 
 ## Dependencies
 
@@ -61,9 +60,9 @@ The backend API has been extended with new MCP integration endpoints (TICKET-026
 
 ## Status
 
-- [x] To Do
+- [ ] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done
 
 ## Complexity
 

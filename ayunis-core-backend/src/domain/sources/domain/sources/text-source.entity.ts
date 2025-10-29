@@ -2,6 +2,7 @@ import { UUID } from 'crypto';
 import { Source } from '../source.entity';
 import { FileType, SourceType, TextType } from '../source-type.enum';
 import { TextSourceContentChunk } from '../source-content-chunk.entity';
+import { SourceCreator } from '../source-creator.enum';
 
 export abstract class TextSource extends Source {
   contentChunks: TextSourceContentChunk[];
@@ -14,7 +15,7 @@ export abstract class TextSource extends Source {
     type: TextType;
     text: string;
     contentChunks: TextSourceContentChunk[];
-    createdByLLM?: boolean;
+    createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -35,7 +36,7 @@ export class FileSource extends TextSource {
     type: TextType;
     text: string;
     contentChunks: TextSourceContentChunk[];
-    createdByLLM?: boolean;
+    createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -54,7 +55,7 @@ export class UrlSource extends TextSource {
     text: string;
     name: string;
     type: TextType;
-    createdByLLM?: boolean;
+    createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

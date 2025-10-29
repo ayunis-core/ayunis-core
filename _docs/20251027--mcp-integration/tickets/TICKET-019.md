@@ -19,22 +19,22 @@ Implement the use case for retrieving a resource from an MCP server. This comman
 
 ## Acceptance Criteria
 
-- [ ] `RetrieveMcpResourceCommand` created in `src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.command.ts`
-- [ ] Command fields: `integrationId`, `resourceUri`, `parameters?: Record<string, unknown>`
-- [ ] `RetrieveMcpResourceUseCase` created in `src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.use-case.ts`
-- [ ] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `CreateDataSourceUseCase`, `ContextService`
-- [ ] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
-- [ ] Use case fetches integration from repository
-- [ ] Use case verifies integration belongs to user's organization
-- [ ] Use case verifies integration is enabled
-- [ ] Use case builds connection config from integration
-- [ ] Use case calls MCP client to retrieve resource with parameters
-- [ ] Use case handles CSV resources by parsing and calling `CreateDataSourceUseCase` with `createdBy: SourceCreator.SYSTEM`
-- [ ] Use case returns void (operation is a side-effect)
-- [ ] Use case throws domain errors (not HTTP exceptions)
-- [ ] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
-- [ ] Use case uses Logger to log resource retrievals and operations
-- [ ] Unit tests added for:
+- [x] `RetrieveMcpResourceCommand` created in `src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.command.ts`
+- [x] Command fields: `integrationId`, `resourceUri`, `parameters?: Record<string, unknown>`
+- [x] `RetrieveMcpResourceUseCase` created in `src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.use-case.ts`
+- [x] Use case injects: `McpIntegrationsRepositoryPort`, `McpClientPort`, `PredefinedMcpIntegrationRegistryService`, `CreateDataSourceUseCase`, `ContextService`
+- [x] Use case retrieves `orgId` from `ContextService` and verifies user is authenticated
+- [x] Use case fetches integration from repository
+- [x] Use case verifies integration belongs to user's organization
+- [x] Use case verifies integration is enabled
+- [x] Use case builds connection config from integration
+- [x] Use case calls MCP client to retrieve resource with parameters
+- [x] Use case handles CSV resources by parsing and calling `CreateDataSourceUseCase` with `createdBy: SourceCreator.SYSTEM`
+- [x] Use case returns void (operation is a side-effect)
+- [x] Use case throws domain errors (not HTTP exceptions)
+- [x] Use case has try/catch block that re-throws `ApplicationError` and wraps unexpected errors
+- [x] Use case uses Logger to log resource retrievals and operations
+- [x] Unit tests added for:
   - Successfully retrieves CSV resource and creates data source
   - Successfully retrieves non-CSV resource (future: additional handling)
   - Handles parameterized resource URIs correctly (URI template substitution)
@@ -58,8 +58,8 @@ Implement the use case for retrieving a resource from an MCP server. This comman
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

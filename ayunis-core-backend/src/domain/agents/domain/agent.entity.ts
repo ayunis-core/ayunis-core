@@ -11,6 +11,7 @@ export class Agent {
   public readonly model: PermittedLanguageModel;
   public readonly toolAssignments: Array<AgentToolAssignment>;
   public readonly sourceAssignments: Array<AgentSourceAssignment>;
+  public readonly mcpIntegrationIds: UUID[];
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
   public readonly userId: UUID;
@@ -22,6 +23,7 @@ export class Agent {
     model: PermittedLanguageModel;
     toolAssignments?: Array<AgentToolAssignment>;
     sourceAssignments?: Array<AgentSourceAssignment>;
+    mcpIntegrationIds?: UUID[];
     userId: UUID;
     createdAt?: Date;
     updatedAt?: Date;
@@ -32,6 +34,7 @@ export class Agent {
     this.model = params.model;
     this.toolAssignments = params.toolAssignments ?? [];
     this.sourceAssignments = params.sourceAssignments ?? [];
+    this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.userId = params.userId;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

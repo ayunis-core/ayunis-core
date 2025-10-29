@@ -223,8 +223,8 @@ Implement the complete REST API controller for MCP integration management. This 
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

@@ -8,56 +8,62 @@
 import type {
   ExecutionRequest,
   ExecutionResponse,
-  HealthResponse
+  HealthResponse,
 } from './ayunisCodeExecutionService.schemas';
 
 import { codeExecutionAxiosInstance } from '../client';
 
+export const getAyunisCodeExecutionService = () => {
+  /**
+   * Execute Python code in a sandboxed container.
+   * @summary Execute Code
+   */
+  const executeCodeExecutePost = (executionRequest: ExecutionRequest) => {
+    return codeExecutionAxiosInstance<ExecutionResponse>({
+      url: `/execute`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: executionRequest,
+    });
+  };
 
+  /**
+   * Check service health status.
+   * @summary Health Check
+   */
+  const healthCheckHealthGet = () => {
+    return codeExecutionAxiosInstance<HealthResponse>({
+      url: `/health`,
+      method: 'GET',
+    });
+  };
 
-  export const getAyunisCodeExecutionService = () => {
-/**
- * Execute Python code in a sandboxed container.
- * @summary Execute Code
- */
-const executeCodeExecutePost = (
-    executionRequest: ExecutionRequest,
- ) => {
-      return codeExecutionAxiosInstance<ExecutionResponse>(
-      {url: `/execute`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: executionRequest
-    },
-      );
-    }
-  
-/**
- * Check service health status.
- * @summary Health Check
- */
-const healthCheckHealthGet = (
-    
- ) => {
-      return codeExecutionAxiosInstance<HealthResponse>(
-      {url: `/health`, method: 'GET'
-    },
-      );
-    }
-  
-/**
- * Root endpoint with service information.
- * @summary Root
- */
-const rootGet = (
-    
- ) => {
-      return codeExecutionAxiosInstance<unknown>(
-      {url: `/`, method: 'GET'
-    },
-      );
-    }
-  
-return {executeCodeExecutePost,healthCheckHealthGet,rootGet}};
-export type ExecuteCodeExecutePostResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCodeExecutionService>['executeCodeExecutePost']>>>
-export type HealthCheckHealthGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCodeExecutionService>['healthCheckHealthGet']>>>
-export type RootGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCodeExecutionService>['rootGet']>>>
+  /**
+   * Root endpoint with service information.
+   * @summary Root
+   */
+  const rootGet = () => {
+    return codeExecutionAxiosInstance<unknown>({ url: `/`, method: 'GET' });
+  };
+
+  return { executeCodeExecutePost, healthCheckHealthGet, rootGet };
+};
+export type ExecuteCodeExecutePostResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAyunisCodeExecutionService>['executeCodeExecutePost']
+    >
+  >
+>;
+export type HealthCheckHealthGetResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAyunisCodeExecutionService>['healthCheckHealthGet']
+    >
+  >
+>;
+export type RootGetResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getAyunisCodeExecutionService>['rootGet']>
+  >
+>;

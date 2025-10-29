@@ -15,20 +15,20 @@ Create an adapter that wraps the official `@modelcontextprotocol/sdk` to provide
 
 ## Acceptance Criteria
 
-- [ ] `@modelcontextprotocol/sdk` package added to dependencies in `package.json` (version `^1.20.2`)
-- [ ] `McpClientPort` abstract class created in `src/domain/mcp/application/ports/mcp-client.port.ts`
-- [ ] Port defines `McpConnectionConfig` interface with: `serverUrl`, `authHeaderName?`, `authToken?`
-- [ ] Port defines methods: `listTools()`, `listResources()`, `listPrompts()`, `callTool()`, `readResource()`, `getPrompt()`, `validateConnection()`
-- [ ] `McpSdkClientAdapter` created in `src/domain/mcp/infrastructure/clients/mcp-sdk-client.adapter.ts`
-- [ ] Adapter implements all port methods using official SDK
-- [ ] Adapter uses `SSEClientTransport` from SDK
-- [ ] Each method creates new client connection at start
-- [ ] Each method closes client connection in `finally` block
-- [ ] All operations enforce 30-second timeout using `Promise.race()`
-- [ ] `validateConnection()` attempts to connect and list capabilities, returns success/error
-- [ ] Adapter handles authentication headers (only adds headers if auth is provided)
-- [ ] Adapter is registered as provider in `McpModule`
-- [ ] Unit tests added for:
+- [x] `@modelcontextprotocol/sdk` package added to dependencies in `package.json` (version `^1.20.2`)
+- [x] `McpClientPort` abstract class created in `src/domain/mcp/application/ports/mcp-client.port.ts`
+- [x] Port defines `McpConnectionConfig` interface with: `serverUrl`, `authHeaderName?`, `authToken?`
+- [x] Port defines methods: `listTools()`, `listResources()`, `listPrompts()`, `callTool()`, `readResource()`, `getPrompt()`, `validateConnection()`
+- [x] `McpSdkClientAdapter` created in `src/domain/mcp/infrastructure/clients/mcp-sdk-client.adapter.ts`
+- [x] Adapter implements all port methods using official SDK
+- [x] Adapter uses `SSEClientTransport` from SDK
+- [x] Each method creates new client connection at start
+- [x] Each method closes client connection in `finally` block
+- [x] All operations enforce 30-second timeout using `Promise.race()`
+- [x] `validateConnection()` attempts to connect and list capabilities, returns success/error
+- [x] Adapter handles authentication headers (only adds headers if auth is provided)
+- [x] Adapter is registered as provider in `McpModule`
+- [x] Unit tests added for:
   - `listTools()` successfully connects and returns tools
   - `listResources()` successfully connects and returns resources
   - `listPrompts()` successfully connects and returns prompts
@@ -51,8 +51,8 @@ None - this is a foundation ticket
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

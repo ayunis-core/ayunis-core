@@ -1,0 +1,139 @@
+{
+  "integrations": {
+    "createCustomIntegration": {
+      "success": "Integration erfolgreich erstellt",
+      "error": "Fehler beim Erstellen der Integration: {{message}}"
+    },
+    "createPredefinedIntegration": {
+      "success": "Integration erfolgreich erstellt",
+      "error": "Fehler beim Erstellen der Integration: {{message}}"
+    },
+    "updateIntegration": {
+      "success": "Integration erfolgreich aktualisiert",
+      "error": "Fehler beim Aktualisieren der Integration: {{message}}"
+    },
+    "deleteIntegration": {
+      "success": "Integration erfolgreich gelöscht",
+      "error": "Fehler beim Löschen der Integration: {{message}}"
+    },
+    "toggleIntegration": {
+      "enableSuccess": "Integration aktiviert",
+      "disableSuccess": "Integration deaktiviert",
+      "enableError": "Fehler beim Aktivieren der Integration: {{message}}",
+      "disableError": "Fehler beim Deaktivieren der Integration: {{message}}"
+    },
+    "validateIntegration": {
+      "success": "Erfolgreich verbunden. {{prompts}} Prompts, {{resources}} Ressourcen, {{tools}} Tools gefunden.",
+      "error": "Verbindung fehlgeschlagen: {{message}}"
+    },
+    "page": {
+      "accessDenied": "Zugriff verweigert",
+      "accessDeniedMessage": "Sie benötigen Administratorrechte, um auf diese Seite zuzugreifen.",
+      "errorLoadingTitle": "Fehler beim Laden der Integrationen",
+      "errorLoadingMessage": "Beim Laden der Integrationen ist ein Fehler aufgetreten",
+      "retry": "Erneut versuchen",
+      "addPredefined": "Vordefinierte hinzufügen",
+      "addCustom": "Benutzerdefinierte hinzufügen"
+    },
+    "card": {
+      "openMenu": "Menü öffnen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "authentication": "Authentifizierung",
+      "credentials": "Anmeldedaten",
+      "enableIntegration": "Integration aktivieren",
+      "testing": "Teste...",
+      "testConnection": "Verbindung testen"
+    },
+    "list": {
+      "noIntegrationsTitle": "Noch keine Integrationen",
+      "noIntegrationsMessage": "Erstellen Sie Ihre erste Integration, um loszulegen."
+    },
+    "createCustomDialog": {
+      "title": "Benutzerdefinierte Integration hinzufügen",
+      "description": "Verbinden Sie sich mit einem benutzerdefinierten MCP-Server, indem Sie dessen URL und Authentifizierungsdetails angeben.",
+      "name": "Name",
+      "namePlaceholder": "Meine benutzerdefinierte Integration",
+      "nameDescription": "Ein freundlicher Name für diese Integration",
+      "serverUrl": "Server-URL",
+      "serverUrlPlaceholder": "https://example.com/mcp",
+      "serverUrlDescription": "Die URL Ihres MCP-Server-Endpunkts",
+      "authMethod": "Authentifizierungsmethode (Optional)",
+      "authMethodNone": "Keine",
+      "authMethodApiKey": "API-Schlüssel",
+      "authMethodBearerToken": "Bearer-Token",
+      "authMethodDescription": "Wählen Sie eine Authentifizierungsmethode, falls erforderlich",
+      "headerName": "Header-Name",
+      "headerNamePlaceholder": "X-API-Key",
+      "headerNameDescription": "Der HTTP-Header-Name für die Authentifizierung",
+      "credentials": "Anmeldedaten",
+      "credentialsPlaceholder": "Geben Sie Ihre Anmeldedaten ein",
+      "credentialsDescriptionApiKey": "Ihr API-Schlüssel",
+      "credentialsDescriptionBearerToken": "Ihr Bearer-Token",
+      "cancel": "Abbrechen",
+      "creating": "Wird erstellt...",
+      "create": "Erstellen"
+    },
+    "createPredefinedDialog": {
+      "title": "Vordefinierte Integration hinzufügen",
+      "description": "Wählen Sie eine vordefinierte Integration aus und konfigurieren Sie die Authentifizierung.",
+      "integrationType": "Integrationstyp",
+      "integrationTypePlaceholder": "Integration auswählen",
+      "name": "Name",
+      "namePlaceholder": "Meine Integration",
+      "nameDescription": "Ein freundlicher Name für diese Integrationsinstanz",
+      "authMethod": "Authentifizierungsmethode",
+      "authMethodPlaceholder": "Methode auswählen",
+      "authMethodApiKey": "API-Schlüssel",
+      "authMethodBearerToken": "Bearer-Token",
+      "headerName": "Header-Name",
+      "headerNamePlaceholder": "X-API-Key",
+      "headerNameDescription": "Der HTTP-Header-Name für die Authentifizierung",
+      "credentials": "Anmeldedaten",
+      "credentialsPlaceholder": "Geben Sie Ihre Anmeldedaten ein",
+      "credentialsDescriptionApiKey": "Ihr API-Schlüssel",
+      "credentialsDescriptionBearerToken": "Ihr Bearer-Token",
+      "cancel": "Abbrechen",
+      "creating": "Wird erstellt...",
+      "create": "Erstellen"
+    },
+    "editDialog": {
+      "title": "Integration bearbeiten",
+      "description": "Aktualisieren Sie den Namen und die Authentifizierungsdetails für diese Integration.",
+      "name": "Name",
+      "namePlaceholder": "Meine Integration",
+      "nameDescription": "Ein freundlicher Name für diese Integration",
+      "authMethod": "Authentifizierungsmethode (Optional)",
+      "authMethodNone": "Keine",
+      "authMethodApiKey": "API-Schlüssel",
+      "authMethodBearerToken": "Bearer-Token",
+      "headerName": "Header-Name",
+      "headerNamePlaceholder": "X-API-Key",
+      "headerNameDescription": "Der HTTP-Header-Name für die Authentifizierung",
+      "credentials": "Anmeldedaten (Optional)",
+      "credentialsPlaceholder": "Leer lassen, um bestehende beizubehalten",
+      "credentialsDescription": "Geben Sie neue Anmeldedaten ein oder lassen Sie das Feld leer, um die bestehenden beizubehalten",
+      "cancel": "Abbrechen",
+      "updating": "Wird aktualisiert...",
+      "update": "Aktualisieren"
+    },
+    "deleteDialog": {
+      "title": "Integration löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "deleting": "Wird gelöscht...",
+      "delete": "Löschen"
+    },
+    "helpers": {
+      "type": {
+        "predefined": "Vordefiniert",
+        "custom": "Benutzerdefiniert"
+      },
+      "authMethod": {
+        "none": "Keine",
+        "apiKey": "API-Schlüssel",
+        "bearerToken": "Bearer-Token"
+      }
+    }
+  }
+}

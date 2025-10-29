@@ -54,9 +54,9 @@ Implement TypeORM database records for MCP integrations using single-table inher
 
 ## Status
 
-- [x] To Do
+- [ ] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done
 
 ## Complexity
 

@@ -53,8 +53,8 @@ Integrate MCP capability discovery into the runs module orchestration flow. When
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 

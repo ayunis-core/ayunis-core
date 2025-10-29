@@ -1613,6 +1613,515 @@
         ]
       }
     },
+    "/agents/{agentId}/mcp-integrations/{integrationId}": {
+      "post": {
+        "operationId": "AgentsController_assignMcpIntegration",
+        "parameters": [
+          {
+            "name": "agentId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the MCP integration to assign",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The MCP integration has been successfully assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Integration disabled"
+          },
+          "403": {
+            "description": "Integration belongs to different organization"
+          },
+          "404": {
+            "description": "Agent or integration not found"
+          },
+          "409": {
+            "description": "Integration already assigned"
+          }
+        },
+        "summary": "Assign MCP integration to agent",
+        "tags": [
+          "agents"
+        ]
+      },
+      "delete": {
+        "operationId": "AgentsController_unassignMcpIntegration",
+        "parameters": [
+          {
+            "name": "agentId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the MCP integration to unassign",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The MCP integration has been successfully unassigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found or integration not assigned"
+          }
+        },
+        "summary": "Unassign MCP integration from agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{agentId}/mcp-integrations": {
+      "get": {
+        "operationId": "AgentsController_listAgentMcpIntegrations",
+        "parameters": [
+          {
+            "name": "agentId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all MCP integrations assigned to the agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        },
+        "summary": "List MCP integrations assigned to agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{agentId}/mcp-integrations/available": {
+      "get": {
+        "operationId": "AgentsController_listAvailableMcpIntegrations",
+        "parameters": [
+          {
+            "name": "agentId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the agent (for API consistency)",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all enabled MCP integrations for the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List available MCP integrations for organization",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/mcp-integrations/predefined": {
+      "post": {
+        "operationId": "McpIntegrationsController_createPredefined",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePredefinedIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Integration created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid slug or missing required fields"
+          },
+          "404": {
+            "description": "Predefined integration slug not found"
+          }
+        },
+        "summary": "Create a new predefined MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/custom": {
+      "post": {
+        "operationId": "McpIntegrationsController_createCustom",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Integration created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          }
+        },
+        "summary": "Create a new custom MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations": {
+      "get": {
+        "operationId": "McpIntegrationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all MCP integrations for organization",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/predefined/available": {
+      "get": {
+        "operationId": "McpIntegrationsController_listPredefinedConfigs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of available predefined integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredefinedConfigResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List available predefined MCP integration configurations",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}": {
+      "get": {
+        "operationId": "McpIntegrationsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Get MCP integration by ID",
+        "tags": [
+          "mcp-integrations"
+        ]
+      },
+      "patch": {
+        "operationId": "McpIntegrationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMcpIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Integration updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Update MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      },
+      "delete": {
+        "operationId": "McpIntegrationsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Integration deleted successfully"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Delete MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/enable": {
+      "post": {
+        "operationId": "McpIntegrationsController_enable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration enabled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Enable MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/disable": {
+      "post": {
+        "operationId": "McpIntegrationsController_disable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration disabled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Disable MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/validate": {
+      "post": {
+        "operationId": "McpIntegrationsController_validate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Validate MCP integration connection",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
     "/retrievers/url": {
       "post": {
         "operationId": "UrlRetrieverController_retrieveUrl",
@@ -4208,7 +4717,10 @@
               "website_content",
               "send_email",
               "create_calendar_event",
-              "code_execution"
+              "code_execution",
+              "mcp_tool",
+              "mcp_resource",
+              "mcp_prompt"
             ]
           },
           "toolConfigId": {
@@ -4272,7 +4784,10 @@
               "website_content",
               "send_email",
               "create_calendar_event",
-              "code_execution"
+              "code_execution",
+              "mcp_tool",
+              "mcp_resource",
+              "mcp_prompt"
             ]
           }
         },
@@ -4420,6 +4935,258 @@
           "name",
           "instructions",
           "modelId"
+        ]
+      },
+      "McpIntegrationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the integration",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the integration",
+            "example": "Production Test Integration"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of integration",
+            "enum": [
+              "predefined",
+              "custom"
+            ],
+            "example": "predefined"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Predefined integration slug (only for predefined integrations)",
+            "example": "TEST"
+          },
+          "serverUrl": {
+            "type": "string",
+            "description": "Custom server URL (only for custom integrations)",
+            "example": "https://my-server.com/mcp"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the integration is enabled",
+            "example": true
+          },
+          "organizationId": {
+            "type": "string",
+            "description": "Organization that owns this integration",
+            "example": "123e4567-e89b-12d3-a456-426614174001"
+          },
+          "authMethod": {
+            "type": "string",
+            "description": "Authentication method used",
+            "example": "BEARER_TOKEN"
+          },
+          "authHeaderName": {
+            "type": "string",
+            "description": "Custom auth header name",
+            "example": "Authorization"
+          },
+          "hasCredentials": {
+            "type": "boolean",
+            "description": "Whether credentials are configured (never exposes actual credentials)",
+            "example": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the integration was created",
+            "example": "2025-10-28T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp when the integration was last updated",
+            "example": "2025-10-28T12:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "enabled",
+          "organizationId",
+          "hasCredentials",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreatePredefinedIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name for this integration instance",
+            "example": "Production Test Integration"
+          },
+          "slug": {
+            "type": "string",
+            "description": "The predefined integration slug",
+            "example": "TEST",
+            "enum": [
+              "TEST"
+            ]
+          },
+          "authMethod": {
+            "type": "string",
+            "description": "Authentication method",
+            "example": "BEARER_TOKEN",
+            "enum": [
+              "API_KEY",
+              "BEARER_TOKEN"
+            ]
+          },
+          "authHeaderName": {
+            "type": "string",
+            "description": "Custom auth header name (e.g., X-API-Key)",
+            "example": "Authorization"
+          },
+          "credentials": {
+            "type": "string",
+            "description": "Authentication credentials (will be encrypted)",
+            "example": "sk_test_123abc"
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "CreateCustomIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name for this integration instance",
+            "example": "My Custom MCP Server"
+          },
+          "serverUrl": {
+            "type": "string",
+            "description": "The URL of the custom MCP server",
+            "example": "https://my-mcp-server.example.com/mcp"
+          },
+          "authMethod": {
+            "type": "string",
+            "description": "Authentication method",
+            "example": "API_KEY",
+            "enum": [
+              "API_KEY",
+              "BEARER_TOKEN"
+            ]
+          },
+          "authHeaderName": {
+            "type": "string",
+            "description": "Custom auth header name (e.g., X-API-Key)",
+            "example": "X-API-Key"
+          },
+          "credentials": {
+            "type": "string",
+            "description": "Authentication credentials (will be encrypted)",
+            "example": "my-api-key-12345"
+          }
+        },
+        "required": [
+          "name",
+          "serverUrl"
+        ]
+      },
+      "PredefinedConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Unique slug identifier for the predefined integration",
+            "example": "TEST"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name for the integration",
+            "example": "Test MCP Server"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of what this integration provides",
+            "example": "Test integration for development and testing"
+          },
+          "defaultAuthMethod": {
+            "type": "string",
+            "description": "Default authentication method (if any)",
+            "example": "BEARER_TOKEN"
+          },
+          "defaultAuthHeaderName": {
+            "type": "string",
+            "description": "Default authentication header name (if any)",
+            "example": "Authorization"
+          }
+        },
+        "required": [
+          "slug",
+          "displayName",
+          "description"
+        ]
+      },
+      "UpdateMcpIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name for the integration",
+            "example": "Updated Integration Name"
+          },
+          "authMethod": {
+            "type": "string",
+            "description": "Authentication method",
+            "example": "BEARER_TOKEN",
+            "enum": [
+              "API_KEY",
+              "BEARER_TOKEN"
+            ]
+          },
+          "authHeaderName": {
+            "type": "string",
+            "description": "Custom auth header name (e.g., X-API-Key)",
+            "example": "Authorization"
+          },
+          "credentials": {
+            "type": "string",
+            "description": "New authentication credentials (will be encrypted)",
+            "example": "new-credentials-456"
+          }
+        }
+      },
+      "ValidationResponseDto": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the integration validation succeeded",
+            "example": true
+          },
+          "capabilities": {
+            "type": "object",
+            "description": "Discovered capabilities from the MCP server",
+            "example": {
+              "tools": 5,
+              "resources": 3,
+              "prompts": 2
+            }
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if validation failed",
+            "example": "Connection timeout"
+          }
+        },
+        "required": [
+          "valid",
+          "capabilities"
         ]
       },
       "RetrieveUrlDto": {

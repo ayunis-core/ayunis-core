@@ -82,9 +82,9 @@ Implement the use case that allows assigning an MCP integration to an agent. Thi
 
 ## Status
 
-- [x] To Do
+- [ ] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done
 
 ## Complexity
 

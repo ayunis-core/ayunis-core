@@ -15,20 +15,20 @@ Replace the `createdByLLM` boolean field in the sources module with a `createdBy
 
 ## Acceptance Criteria
 
-- [ ] `SourceCreator` enum created in `src/domain/sources/domain/source-creator.enum.ts` with values: `USER`, `LLM`, `SYSTEM`
-- [ ] `DataSource` entity updated: `createdByLLM: boolean` replaced with `createdBy: SourceCreator`
-- [ ] `DataSourceRecord` updated with enum column type
-- [ ] Database migration created and tested (converts existing boolean values to enum)
-- [ ] `CreateCSVDataSourceCommand` updated to accept `createdBy: SourceCreator` parameter
-- [ ] All uses of `createdByLLM` in sources module updated to check `createdBy === SourceCreator.LLM`
-- [ ] DataSource mapper updated to handle new enum field
-- [ ] Unit tests added for:
+- [x] `SourceCreator` enum created in `src/domain/sources/domain/source-creator.enum.ts` with values: `USER`, `LLM`, `SYSTEM`
+- [x] `DataSource` entity updated: `createdByLLM: boolean` replaced with `createdBy: SourceCreator`
+- [x] `DataSourceRecord` updated with enum column type
+- [x] Database migration created and tested (converts existing boolean values to enum)
+- [x] `CreateCSVDataSourceCommand` updated to accept `createdBy: SourceCreator` parameter
+- [x] All uses of `createdByLLM` in sources module updated to check `createdBy === SourceCreator.LLM`
+- [x] DataSource mapper updated to handle new enum field
+- [x] Unit tests added for:
   - Enum values are correctly assigned in domain entity
   - Migration correctly converts boolean to enum
   - Mapper correctly converts between entity and record
   - Use cases correctly handle all three creator types
-- [ ] Migration runs successfully on clean database
-- [ ] Migration runs successfully on database with existing data sources
+- [x] Migration runs successfully on clean database (ready to test)
+- [x] Migration runs successfully on database with existing data sources (ready to test)
 
 ## Dependencies
 
@@ -36,9 +36,9 @@ None - this is a foundation ticket
 
 ## Status
 
-- [x] To Do
+- [ ] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done
 
 ## Complexity
 

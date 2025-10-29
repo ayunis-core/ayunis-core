@@ -14,6 +14,7 @@ import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.ent
 import { convertCSVToString, parseCSV } from 'src/common/util/csv';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -128,7 +129,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
                 new CreateCSVDataSourceCommand({
                   name: sourceName,
                   data: { headers, rows: data },
-                  createdByLLM: true,
+                  createdBy: SourceCreator.LLM,
                 }),
               );
 

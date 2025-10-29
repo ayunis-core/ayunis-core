@@ -34,94 +34,94 @@ Users need a simple, intuitive way to connect their agents to MCP server integra
 ## Acceptance Criteria
 
 ### UI Components and Layout
-- [ ] New "MCP Integrations" card is added to agent configuration page
-- [ ] Card follows same design pattern as existing agent config cards (consistent styling, spacing, structure)
-- [ ] Card header displays title "MCP Integrations" and description "Connect external MCP servers to extend agent capabilities"
-- [ ] Card body displays list of available enabled integrations
-- [ ] Each integration item shows: name, description (truncated if long), and toggle switch
-- [ ] Empty state UI is displayed when no enabled integrations exist ("No integrations available. Ask your organization admin to set up MCP integrations.")
-- [ ] Loading state is displayed while fetching integrations (skeleton loader or spinner)
-- [ ] Error state is displayed if fetching fails with retry option
+- [x] New "MCP Integrations" card is added to agent configuration page
+- [x] Card follows same design pattern as existing agent config cards (consistent styling, spacing, structure)
+- [x] Card header displays title "MCP Integrations" and description "Connect external MCP servers to extend agent capabilities"
+- [x] Card body displays list of available enabled integrations
+- [x] Each integration item shows: name, description (truncated if long), and toggle switch
+- [x] Empty state UI is displayed when no enabled integrations exist ("No integrations available. Ask your organization admin to set up MCP integrations.")
+- [x] Loading state is displayed while fetching integrations (skeleton loader or spinner)
+- [x] Error state is displayed if fetching fails with retry option
 
 ### Display Available Integrations
-- [ ] UI fetches and displays all enabled MCP integrations for the organization using `useGetAvailableMcpIntegrations`
-- [ ] Only enabled integrations are shown (disabled integrations are filtered out)
-- [ ] Integration list is sorted alphabetically by name
-- [ ] Each integration displays name prominently (bold or larger font)
-- [ ] Each integration displays description below name (muted color, smaller font)
-- [ ] Long descriptions are truncated with ellipsis (max 2 lines)
-- [ ] Integration items have clear visual separation (borders or spacing)
+- [x] UI fetches and displays all enabled MCP integrations for the organization using `useGetAvailableMcpIntegrations`
+- [x] Only enabled integrations are shown (disabled integrations are filtered out)
+- [x] Integration list is sorted alphabetically by name
+- [x] Each integration displays name prominently (bold or larger font)
+- [x] Each integration displays description below name (muted color, smaller font)
+- [x] Long descriptions are truncated with ellipsis (max 2 lines)
+- [x] Integration items have clear visual separation (borders or spacing)
 
 ### Display Current Assignments
-- [ ] UI fetches currently assigned integrations for the agent using `useGetAgentMcpIntegrations`
-- [ ] Toggle switches reflect current assignment state (on = assigned, off = not assigned)
-- [ ] Toggle state is determined by checking if integration ID exists in assigned list
-- [ ] UI correctly shows assignment state even after page reload
-- [ ] Count of assigned integrations is displayed in card header or badge ("3 connected")
+- [x] UI fetches currently assigned integrations for the agent using `useGetAgentMcpIntegrations`
+- [x] Toggle switches reflect current assignment state (on = assigned, off = not assigned)
+- [x] Toggle state is determined by checking if integration ID exists in assigned list
+- [x] UI correctly shows assignment state even after page reload
+- [x] Count of assigned integrations is displayed in card header or badge ("3 connected")
 
 ### Toggle Assignment (Assign/Unassign)
-- [ ] Each integration has a toggle switch that controls assignment
-- [ ] Toggle switch shows current assignment state visually (on/off, color change)
-- [ ] Clicking toggle immediately updates UI (optimistic update)
-- [ ] Assigning integration calls `useAssignMcpIntegrationToAgent` mutation
-- [ ] Unassigning integration calls `useUnassignMcpIntegrationFromAgent` mutation
-- [ ] Toggle is disabled while mutation is in flight (prevent double-clicks)
-- [ ] Successful assignment shows brief success toast ("Integration connected")
-- [ ] Successful unassignment shows brief success toast ("Integration disconnected")
-- [ ] Failed mutation reverts toggle state to original position
-- [ ] Failed mutation shows error toast with error message
-- [ ] Multiple toggles can be operated independently without conflicts
+- [x] Each integration has a toggle switch that controls assignment
+- [x] Toggle switch shows current assignment state visually (on/off, color change)
+- [x] Clicking toggle immediately updates UI (optimistic update)
+- [x] Assigning integration calls `useAssignMcpIntegrationToAgent` mutation
+- [x] Unassigning integration calls `useUnassignMcpIntegrationFromAgent` mutation
+- [x] Toggle is disabled while mutation is in flight (prevent double-clicks)
+- [x] Successful assignment shows brief success toast ("Integration connected")
+- [x] Successful unassignment shows brief success toast ("Integration disconnected")
+- [x] Failed mutation reverts toggle state to original position
+- [x] Failed mutation shows error toast with error message
+- [x] Multiple toggles can be operated independently without conflicts
 
 ### Optimistic Updates
-- [ ] Toggle switch updates immediately on click (before API response)
-- [ ] UI assumes mutation will succeed and updates state optimistically
-- [ ] Query cache is updated optimistically with new assignment state
-- [ ] If mutation fails, UI reverts to previous state automatically
-- [ ] If mutation fails, query cache is invalidated to fetch fresh data
-- [ ] Optimistic updates provide smooth, responsive user experience
+- [x] Toggle switch updates immediately on click (before API response)
+- [x] UI assumes mutation will succeed and updates state optimistically
+- [x] Query cache is updated optimistically with new assignment state
+- [x] If mutation fails, UI reverts to previous state automatically
+- [x] If mutation fails, query cache is invalidated to fetch fresh data
+- [x] Optimistic updates provide smooth, responsive user experience
 
 ### Error Handling
-- [ ] Network errors show toast: "Failed to connect integration. Please try again."
-- [ ] Permission errors show toast: "You don't have permission to modify this agent."
-- [ ] Integration not found errors show toast: "Integration no longer exists."
-- [ ] Generic errors show toast: "An error occurred. Please try again."
-- [ ] All error toasts have dismiss button
-- [ ] All error toasts auto-dismiss after 5 seconds
-- [ ] Errors don't break UI or leave it in inconsistent state
+- [x] Network errors show toast: "Failed to connect integration. Please try again."
+- [x] Permission errors show toast: "You don't have permission to modify this agent."
+- [x] Integration not found errors show toast: "Integration no longer exists."
+- [x] Generic errors show toast: "An error occurred. Please try again."
+- [x] All error toasts have dismiss button
+- [x] All error toasts auto-dismiss after 5 seconds
+- [x] Errors don't break UI or leave it in inconsistent state
 
 ### Data Fetching and State Management
-- [ ] Available integrations fetched using `useGetAvailableMcpIntegrations(agentId)` hook
-- [ ] Current assignments fetched using `useGetAgentMcpIntegrations(agentId)` hook
-- [ ] Both queries run in parallel on component mount
-- [ ] Assignment mutations invalidate relevant query caches after success
-- [ ] Query cache invalidation triggers automatic refetch of fresh data
-- [ ] Loading states are managed independently for initial load vs. mutations
-- [ ] Stale data is refetched on window focus (TanStack Query default behavior)
+- [x] Available integrations fetched using `useGetAvailableMcpIntegrations(agentId)` hook
+- [x] Current assignments fetched using `useGetAgentMcpIntegrations(agentId)` hook
+- [x] Both queries run in parallel on component mount
+- [x] Assignment mutations invalidate relevant query caches after success
+- [x] Query cache invalidation triggers automatic refetch of fresh data
+- [x] Loading states are managed independently for initial load vs. mutations
+- [x] Stale data is refetched on window focus (TanStack Query default behavior)
 
 ### Integration with Existing Agent Config Page
-- [ ] Card integrates seamlessly with existing agent configuration page layout
-- [ ] Card respects existing responsive design breakpoints
-- [ ] Card maintains consistent spacing with other cards
-- [ ] Card doesn't break existing functionality (tools, model settings, etc.)
-- [ ] Page layout accommodates new card without layout shifts
-- [ ] Navigation and save buttons (if any) remain accessible
+- [x] Card integrates seamlessly with existing agent configuration page layout
+- [x] Card respects existing responsive design breakpoints
+- [x] Card maintains consistent spacing with other cards
+- [x] Card doesn't break existing functionality (tools, model settings, etc.)
+- [x] Page layout accommodates new card without layout shifts
+- [x] Navigation and save buttons (if any) remain accessible
 
 ### Styling and UX
-- [ ] All components use shadcn/ui primitives (Card, Switch, Badge, Label, Separator)
-- [ ] UI matches existing Ayunis design system and agent config patterns
-- [ ] Toggle switches use consistent colors (green for on, gray for off)
-- [ ] Responsive design works on desktop, tablet, and mobile
-- [ ] All interactive elements have proper hover/focus states
-- [ ] Loading states use consistent skeleton loaders or spinners
-- [ ] Toast notifications match app-wide toast styling
-- [ ] Card can be collapsed/expanded if other cards have that feature
+- [x] All components use shadcn/ui primitives (Card, Switch, Badge, Label, Separator)
+- [x] UI matches existing Ayunis design system and agent config patterns
+- [x] Toggle switches use consistent colors (green for on, gray for off)
+- [x] Responsive design works on desktop, tablet, and mobile
+- [x] All interactive elements have proper hover/focus states
+- [x] Loading states use consistent skeleton loaders or spinners
+- [x] Toast notifications match app-wide toast styling
+- [x] Card can be collapsed/expanded if other cards have that feature
 
 ### Accessibility
-- [ ] Toggle switches have proper ARIA labels (integration name)
-- [ ] Toggle switches are keyboard accessible (tab navigation, space to toggle)
-- [ ] Screen readers announce toggle state changes
-- [ ] Focus indicators are visible for all interactive elements
-- [ ] Color is not the only indicator of state (use icons or labels too)
+- [x] Toggle switches have proper ARIA labels (integration name)
+- [x] Toggle switches are keyboard accessible (tab navigation, space to toggle)
+- [x] Screen readers announce toggle state changes
+- [x] Focus indicators are visible for all interactive elements
+- [x] Color is not the only indicator of state (use icons or labels too)
 
 ### Testing
 - [ ] Unit tests for component rendering with mock data
@@ -144,7 +144,7 @@ Users need a simple, intuitive way to connect their agents to MCP server integra
 
 - [x] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done (UI implementation complete, tests skipped as per request)
 
 ## Complexity
 

@@ -16,6 +16,9 @@ import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute
 import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CodeExecutionToolHandler } from './application/handlers/code-execution-tool.handler';
 import { ThreadsModule } from '../threads/threads.module';
+import { McpModule } from '../mcp/mcp.module';
+import { McpIntegrationToolHandler } from './application/handlers/mcp-integration-tool.handler';
+import { McpIntegrationResourceHandler } from './application/handlers/mcp-integration-resource.handler';
 
 @Module({
   imports: [
@@ -23,6 +26,7 @@ import { ThreadsModule } from '../threads/threads.module';
     forwardRef(() => ThreadsModule),
     LocalToolConfigRepositoryModule,
     RetrieverModule,
+    McpModule,
   ],
   providers: [
     // Use cases
@@ -36,7 +40,8 @@ import { ThreadsModule } from '../threads/threads.module';
     InternetSearchToolHandler,
     WebsiteContentToolHandler,
     CodeExecutionToolHandler,
-
+    McpIntegrationToolHandler,
+    McpIntegrationResourceHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

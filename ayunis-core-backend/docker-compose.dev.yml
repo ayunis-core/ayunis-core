@@ -152,6 +152,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio123}
       MINIO_BUCKET: ${MINIO_BUCKET:-ayunis}
       CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
+      MCP_ENCRYPTION_KEY: ${MCP_ENCRYPTION_KEY}
     restart: unless-stopped
 
 volumes:

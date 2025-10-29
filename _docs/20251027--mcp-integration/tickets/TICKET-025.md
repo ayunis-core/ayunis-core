@@ -56,9 +56,9 @@ Implement the use case that retrieves all enabled MCP integrations available to 
 
 ## Status
 
-- [x] To Do
+- [ ] To Do
 - [ ] In Progress
-- [ ] Done
+- [x] Done
 
 ## Complexity
 

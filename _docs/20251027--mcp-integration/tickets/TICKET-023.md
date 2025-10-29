@@ -71,8 +71,8 @@ Implement the use case that allows unassigning (removing) an MCP integration fro
 ## Status
 
 - [x] To Do
-- [ ] In Progress
-- [ ] Done
+- [x] In Progress
+- [x] Done
 
 ## Complexity
 
