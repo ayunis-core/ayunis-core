@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class PermittedEmbeddingModelResponseDto {
   @ApiProperty({
@@ -64,9 +65,9 @@ export class PermittedEmbeddingModelResponseDto {
   outputTokenCost?: number;
 
   @ApiProperty({
-    type: 'string',
+    enum: Object.values(Currency),
     description: 'Currency for cost calculation (ISO 4217 code)',
     nullable: true,
   })
-  currency?: string;
+  currency?: Currency;
 }
