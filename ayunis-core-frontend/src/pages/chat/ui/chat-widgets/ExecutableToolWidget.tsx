@@ -35,7 +35,7 @@ export default function ExecutableToolWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t, i18n } = useTranslation("chats");
+  const { t } = useTranslation("chats");
   const [open, setOpen] = useState(false);
 
   // Check if params are empty or incomplete (streaming in progress)
@@ -43,10 +43,13 @@ export default function ExecutableToolWidget({
   const isLoadingParams = isStreaming && !hasParams;
 
   // Try to get translation, fallback to formatted tool name if not found
+  // When a key doesn't exist, i18next returns the key itself (with namespace prefix)
   const translationKey = `chat.tools.${content.name}`;
-  const toolHint = i18n.exists(translationKey)
-    ? t(translationKey)
-    : formatToolName(content.name);
+  const translation = t(translationKey, { defaultValue: "" });
+  const toolHint =
+    translation && typeof translation === "string" && translation !== ""
+      ? translation
+      : formatToolName(content.name);
 
   return (
     <AgentActivityHint
