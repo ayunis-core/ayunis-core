@@ -10,11 +10,13 @@ import {
 } from '../schema/mcp-integration.record';
 import { McpAuthMethod } from '../../../../domain/mcp-auth-method.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../../domain/predefined-mcp-integration-slug.enum';
+import { Injectable } from '@nestjs/common';
 
 /**
  * Mapper for converting between MCP integration domain entities and database records.
  * Handles both predefined and custom integration types using single-table inheritance.
  */
+@Injectable()
 export class McpIntegrationMapper {
   /**
    * Converts a database record to a domain entity.
@@ -22,7 +24,7 @@ export class McpIntegrationMapper {
    * @returns The domain entity
    * @throws Error if the record type is unknown
    */
-  static toDomain(record: McpIntegrationRecord): McpIntegration {
+  toDomain(record: McpIntegrationRecord): McpIntegration {
     if (record instanceof PredefinedMcpIntegrationRecord) {
       return this.toPredefinedDomain(record);
     }
@@ -38,7 +40,7 @@ export class McpIntegrationMapper {
    * @returns The database record
    * @throws Error if the entity type is unknown
    */
-  static toRecord(entity: McpIntegration): McpIntegrationRecord {
+  toRecord(entity: McpIntegration): McpIntegrationRecord {
     if (entity.type === 'predefined') {
       return this.toPredefinedRecord(entity as PredefinedMcpIntegration);
     }
@@ -51,53 +53,53 @@ export class McpIntegrationMapper {
   /**
    * Converts a predefined integration record to a domain entity.
    */
-  private static toPredefinedDomain(
+  private toPredefinedDomain(
     record: PredefinedMcpIntegrationRecord,
   ): PredefinedMcpIntegration {
-    return new PredefinedMcpIntegration(
-      record.id,
-      record.name,
-      record.organizationId,
-      record.slug as PredefinedMcpIntegrationSlug,
-      record.enabled,
-      record.authMethod as McpAuthMethod | undefined,
-      record.authHeaderName,
-      record.encryptedCredentials,
-      record.createdAt,
-      record.updatedAt,
-    );
+    return new PredefinedMcpIntegration({
+      id: record.id,
+      name: record.name,
+      organizationId: record.organizationId,
+      slug: record.slug as PredefinedMcpIntegrationSlug,
+      enabled: record.enabled,
+      authMethod: record.authMethod as McpAuthMethod | undefined,
+      authHeaderName: record.authHeaderName,
+      encryptedCredentials: record.encryptedCredentials,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
   }
 
   /**
    * Converts a custom integration record to a domain entity.
    */
-  private static toCustomDomain(
+  private toCustomDomain(
     record: CustomMcpIntegrationRecord,
   ): CustomMcpIntegration {
-    return new CustomMcpIntegration(
-      record.id,
-      record.name,
-      record.organizationId,
-      record.serverUrl,
-      record.enabled,
-      record.authMethod as McpAuthMethod | undefined,
-      record.authHeaderName,
-      record.encryptedCredentials,
-      record.createdAt,
-      record.updatedAt,
-    );
+    return new CustomMcpIntegration({
+      id: record.id,
+      name: record.name,
+      organizationId: record.organizationId,
+      serverUrl: record.serverUrl,
+      enabled: record.enabled,
+      authMethod: record.authMethod as McpAuthMethod | undefined,
+      authHeaderName: record.authHeaderName,
+      encryptedCredentials: record.encryptedCredentials,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
   }
 
   /**
    * Converts a predefined integration entity to a database record.
    */
-  private static toPredefinedRecord(
+  private toPredefinedRecord(
     entity: PredefinedMcpIntegration,
   ): PredefinedMcpIntegrationRecord {
     const record = new PredefinedMcpIntegrationRecord();
-    record.id = entity.id as any;
+    record.id = entity.id;
     record.name = entity.name;
-    record.organizationId = entity.organizationId as any;
+    record.organizationId = entity.organizationId;
     record.slug = entity.slug;
     record.enabled = entity.enabled;
     record.authMethod = entity.authMethod;
@@ -111,13 +113,13 @@ export class McpIntegrationMapper {
   /**
    * Converts a custom integration entity to a database record.
    */
-  private static toCustomRecord(
+  private toCustomRecord(
     entity: CustomMcpIntegration,
   ): CustomMcpIntegrationRecord {
     const record = new CustomMcpIntegrationRecord();
-    record.id = entity.id as any;
+    record.id = entity.id;
     record.name = entity.name;
-    record.organizationId = entity.organizationId as any;
+    record.organizationId = entity.organizationId;
     record.serverUrl = entity.serverUrl;
     record.enabled = entity.enabled;
     record.authMethod = entity.authMethod;

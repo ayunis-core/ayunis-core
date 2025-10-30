@@ -1,7 +1,9 @@
+import { randomUUID } from 'crypto';
 import { McpPrompt, PromptArgument } from './mcp-prompt.entity';
 
 describe('McpPrompt', () => {
   it('should instantiate correctly with all required fields', () => {
+    const integrationId = randomUUID();
     const args: PromptArgument[] = [
       { name: 'topic', required: true },
       { name: 'style', required: false },
@@ -11,29 +13,30 @@ describe('McpPrompt', () => {
       'generate-blog-post',
       'Generate a blog post on a given topic',
       args,
-      'integration-123',
+      integrationId,
     );
 
     expect(prompt.name).toBe('generate-blog-post');
     expect(prompt.description).toBe('Generate a blog post on a given topic');
     expect(prompt.arguments).toEqual(args);
-    expect(prompt.integrationId).toBe('integration-123');
+    expect(prompt.integrationId).toBe(integrationId);
   });
 
   it('should handle optional description', () => {
+    const integrationId = randomUUID();
     const args: PromptArgument[] = [{ name: 'query', required: true }];
 
     const prompt = new McpPrompt(
       'search-prompt',
       undefined,
       args,
-      'integration-456',
+      integrationId,
     );
 
     expect(prompt.name).toBe('search-prompt');
     expect(prompt.description).toBeUndefined();
     expect(prompt.arguments).toEqual(args);
-    expect(prompt.integrationId).toBe('integration-456');
+    expect(prompt.integrationId).toBe(integrationId);
   });
 
   it('should handle empty arguments array', () => {
@@ -41,7 +44,7 @@ describe('McpPrompt', () => {
       'no-args-prompt',
       'A prompt without arguments',
       [],
-      'integration-789',
+      randomUUID(),
     );
 
     expect(prompt.name).toBe('no-args-prompt');
@@ -60,7 +63,7 @@ describe('McpPrompt', () => {
       'format-name',
       'Format a person name',
       args,
-      'integration-999',
+      randomUUID(),
     );
 
     expect(prompt.arguments).toHaveLength(3);
@@ -79,7 +82,7 @@ describe('McpPrompt', () => {
       'mixed-args',
       'Prompt with mixed argument types',
       args,
-      'integration-000',
+      randomUUID(),
     );
 
     expect(prompt.arguments).toHaveLength(4);
@@ -94,7 +97,7 @@ describe('McpPrompt', () => {
       { name: 'third', required: true },
     ];
 
-    const prompt = new McpPrompt('ordered-prompt', 'Test order', args, 'int');
+    const prompt = new McpPrompt('ordered-prompt', 'Test order', args, randomUUID());
 
     expect(prompt.arguments[0].name).toBe('first');
     expect(prompt.arguments[1].name).toBe('second');

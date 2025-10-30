@@ -75,16 +75,16 @@ describe('CreateMcpIntegrationUseCase', () => {
       mockContextService.get.mockReturnValue(testOrgId);
       mockRegistryService.isValidSlug.mockReturnValue(true);
 
-      const savedIntegration = new PredefinedMcpIntegration(
-        'integration-id',
-        command.name,
-        testOrgId,
-        command.slug,
-        true,
-        command.authMethod,
-        command.authHeaderName,
-        command.encryptedCredentials,
-      );
+      const savedIntegration = new PredefinedMcpIntegration({
+        id: 'integration-id' as any,
+        name: command.name,
+        organizationId: testOrgId,
+        slug: command.slug,
+        enabled: true,
+        authMethod: command.authMethod,
+        authHeaderName: command.authHeaderName,
+        encryptedCredentials: command.encryptedCredentials,
+      });
 
       mockRepository.save.mockResolvedValue(savedIntegration);
 
@@ -120,16 +120,16 @@ describe('CreateMcpIntegrationUseCase', () => {
       mockContextService.get.mockReturnValue(testOrgId);
       mockRegistryService.isValidSlug.mockReturnValue(true);
 
-      const savedIntegration = new PredefinedMcpIntegration(
-        'integration-id',
-        command.name,
-        testOrgId,
-        command.slug,
-        true,
-        undefined,
-        undefined,
-        undefined,
-      );
+      const savedIntegration = new PredefinedMcpIntegration({
+        id: randomUUID(),
+        name: command.name,
+        organizationId: testOrgId,
+        slug: command.slug,
+        enabled: true,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: undefined,
+      });
 
       mockRepository.save.mockResolvedValue(savedIntegration);
 

@@ -118,25 +118,11 @@ export default function AgentMcpIntegrationsCard() {
     a.name.localeCompare(b.name),
   );
 
-  // Count assigned integrations
-  const assignedCount = assignedIntegrations?.length ?? 0;
-
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>{t("mcpIntegrations.title")}</CardTitle>
-            <CardDescription>
-              {t("mcpIntegrations.description")}
-            </CardDescription>
-          </div>
-          {assignedCount > 0 && (
-            <Badge variant="secondary">
-              {t("mcpIntegrations.connectedCount", { count: assignedCount })}
-            </Badge>
-          )}
-        </div>
+        <CardTitle>{t("mcpIntegrations.title")}</CardTitle>
+        <CardDescription>{t("mcpIntegrations.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

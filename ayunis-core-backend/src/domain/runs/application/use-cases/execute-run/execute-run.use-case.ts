@@ -62,14 +62,15 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { ExecuteMcpToolUseCase } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { RetrieveMcpResourceUseCase } from 'src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.use-case';
 import { RetrieveMcpResourceCommand } from 'src/domain/mcp/application/use-cases/retrieve-mcp-resource/retrieve-mcp-resource.command';
-import { GetMcpPromptUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case';
 import { DiscoverMcpCapabilitiesUseCase } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
+import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
+import { parseCSV } from 'src/common/util/csv';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -92,10 +93,9 @@ export class ExecuteRunUseCase {
     private readonly assembleToolsUseCase: AssembleToolUseCase,
     private readonly configService: ConfigService,
     private readonly contextService: ContextService,
-    private readonly executeMcpToolUseCase: ExecuteMcpToolUseCase,
     private readonly retrieveMcpResourceUseCase: RetrieveMcpResourceUseCase,
-    private readonly getMcpPromptUseCase: GetMcpPromptUseCase,
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
+    private readonly createDataSourceUseCase: CreateDataSourceUseCase,
   ) {}
 
   async execute(
@@ -1160,15 +1160,6 @@ export class ExecuteRunUseCase {
       | Record<string, unknown>
       | undefined;
 
-    if (!integrationId) {
-      this.logger.error('MCP resource retrieval missing integrationId');
-      return new ToolResultMessageContent(
-        toolUseContent.id,
-        toolUseContent.name,
-        'Resource retrieval failed: integrationId parameter is required',
-      );
-    }
-
     if (!resourceUri) {
       this.logger.error('MCP resource retrieval missing resourceUri');
       return new ToolResultMessageContent(
@@ -1196,21 +1187,40 @@ export class ExecuteRunUseCase {
 
     try {
       // Call retrieve resource use case (returns void for CSV, content for text)
-      await this.retrieveMcpResourceUseCase.execute(
-        new RetrieveMcpResourceCommand(integrationId, resourceUri, parameters),
-      );
+      const { content, mimeType } =
+        await this.retrieveMcpResourceUseCase.execute(
+          new RetrieveMcpResourceCommand(
+            integrationId,
+            resourceUri,
+            parameters,
+          ),
+        );
 
-      // Resource retrieval succeeded
-      // Note: CSV resources are imported as data sources (side effect)
-      // Text resources would need different handling (future enhancement)
-      this.logger.log('MCP resource retrieval succeeded', {
-        integrationId,
-        resourceUri,
-      });
-
-      span.end({
-        output: 'Resource retrieved successfully',
-      });
+      switch (mimeType) {
+        case 'text/csv':
+          await this.createDataSourceUseCase.execute(
+            new CreateCSVDataSourceCommand({
+              name: `MCP Resource: ${resourceUri}`,
+              data: {
+                headers: parseCSV(content as string).headers,
+                rows: parseCSV(content as string).data,
+              },
+            }),
+          );
+          break;
+        case 'text/plain':
+          return new ToolResultMessageContent(
+            toolUseContent.id,
+            toolUseContent.name,
+            content as string,
+          );
+        default:
+          return new ToolResultMessageContent(
+            toolUseContent.id,
+            toolUseContent.name,
+            `Resource retrieval failed: unsupported mime type: ${mimeType}`,
+          );
+      }
 
       // For v1, assume CSV resources (imported as data sources)
       return new ToolResultMessageContent(

@@ -1,20 +1,22 @@
+import { randomUUID } from 'crypto';
 import { McpResource, ResourceArgument } from './mcp-resource.entity';
 
 describe('McpResource', () => {
   it('should instantiate correctly with all required fields', () => {
+    const integrationId = randomUUID();
     const resource = new McpResource(
       'file://docs/readme.md',
       'README',
       'Project documentation',
       'text/markdown',
-      'integration-123',
+      integrationId,
     );
 
     expect(resource.uri).toBe('file://docs/readme.md');
     expect(resource.name).toBe('README');
     expect(resource.description).toBe('Project documentation');
     expect(resource.mimeType).toBe('text/markdown');
-    expect(resource.integrationId).toBe('integration-123');
+    expect(resource.integrationId).toBe(integrationId);
     expect(resource.arguments).toBeUndefined();
   });
 
@@ -24,7 +26,7 @@ describe('McpResource', () => {
       'API Data',
       undefined,
       'application/json',
-      'integration-456',
+      randomUUID(),
     );
 
     expect(resource.uri).toBe('http://api.example.com/data');
@@ -39,7 +41,7 @@ describe('McpResource', () => {
       'Custom Resource',
       'A custom resource type',
       undefined,
-      'integration-789',
+      randomUUID(),
     );
 
     expect(resource.uri).toBe('custom://resource');
@@ -66,7 +68,7 @@ describe('McpResource', () => {
       'Dynamic File',
       'Access files dynamically',
       'application/octet-stream',
-      'integration-999',
+      randomUUID(),
       args,
     );
 
@@ -79,19 +81,20 @@ describe('McpResource', () => {
   });
 
   it('should handle resource with no description or mimeType', () => {
+    const integrationId = randomUUID();
     const resource = new McpResource(
       'resource://test',
       'Test Resource',
       undefined,
       undefined,
-      'integration-000',
+      integrationId,
     );
 
     expect(resource.uri).toBe('resource://test');
     expect(resource.name).toBe('Test Resource');
     expect(resource.description).toBeUndefined();
     expect(resource.mimeType).toBeUndefined();
-    expect(resource.integrationId).toBe('integration-000');
+    expect(resource.integrationId).toBe(integrationId);
   });
 
   it('should handle empty arguments array', () => {
@@ -100,7 +103,7 @@ describe('McpResource', () => {
       'Resource',
       'Has empty args',
       'text/plain',
-      'integration-111',
+      randomUUID(),
       [],
     );
 

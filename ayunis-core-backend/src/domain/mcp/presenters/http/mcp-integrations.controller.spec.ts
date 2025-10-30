@@ -32,12 +32,10 @@ describe('McpIntegrationsController', () => {
   let disableUseCase: jest.Mocked<DisableMcpIntegrationUseCase>;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let listConfigsUseCase: jest.Mocked<ListPredefinedMcpIntegrationConfigsUseCase>;
-  let mapper: McpIntegrationDtoMapper;
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
-
   beforeEach(async () => {
     const mockCreateUseCase = {
-      execute: jest.fn() as any, // Use 'as any' to avoid overload issues in tests
+      execute: jest.fn(),
     };
     const mockGetUseCase = {
       execute: jest.fn(),
@@ -127,7 +125,6 @@ describe('McpIntegrationsController', () => {
     disableUseCase = module.get(DisableMcpIntegrationUseCase);
     validateUseCase = module.get(ValidateMcpIntegrationUseCase);
     listConfigsUseCase = module.get(ListPredefinedMcpIntegrationConfigsUseCase);
-    mapper = module.get<McpIntegrationDtoMapper>(McpIntegrationDtoMapper);
     credentialEncryption = module.get(McpCredentialEncryptionPort);
   });
 
@@ -141,18 +138,18 @@ describe('McpIntegrationsController', () => {
         credentials: 'plain-text-token',
       };
 
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Test Integration',
-        '123e4567-e89b-12d3-a456-426614174001',
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        McpAuthMethod.BEARER_TOKEN,
-        'Authorization',
-        'encrypted-token',
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Test Integration',
+        organizationId: '123e4567-e89b-12d3-a456-426614174001',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+        authMethod: McpAuthMethod.BEARER_TOKEN,
+        authHeaderName: 'Authorization',
+        encryptedCredentials: 'encrypted-token',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       credentialEncryption.encrypt.mockResolvedValue('encrypted-token');
       createUseCase.execute.mockResolvedValue(mockIntegration as any);
@@ -160,11 +157,13 @@ describe('McpIntegrationsController', () => {
       const result = await controller.createPredefined(dto);
 
       // Verify credentials were encrypted
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(credentialEncryption.encrypt).toHaveBeenCalledWith(
         'plain-text-token',
       );
 
       // Verify use case was called with encrypted credentials
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(createUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Test Integration',
@@ -193,27 +192,29 @@ describe('McpIntegrationsController', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
       };
 
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Test Integration',
-        '123e4567-e89b-12d3-a456-426614174001',
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Test Integration',
+        organizationId: '123e4567-e89b-12d3-a456-426614174001',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       createUseCase.execute.mockResolvedValue(mockIntegration as any);
 
       const result = await controller.createPredefined(dto);
 
       // Verify credentials were not encrypted
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(credentialEncryption.encrypt).not.toHaveBeenCalled();
 
       // Verify use case was called with undefined credentials
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(createUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Test Integration',
@@ -236,27 +237,29 @@ describe('McpIntegrationsController', () => {
         credentials: 'plain-api-key',
       };
 
-      const mockIntegration = new CustomMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Custom Server',
-        '123e4567-e89b-12d3-a456-426614174001',
-        'https://custom.com/mcp',
-        true,
-        McpAuthMethod.API_KEY,
-        'X-API-Key',
-        'encrypted-api-key',
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new CustomMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Custom Server',
+        organizationId: '123e4567-e89b-12d3-a456-426614174001',
+        serverUrl: 'https://custom.com/mcp',
+        enabled: true,
+        authMethod: McpAuthMethod.API_KEY,
+        authHeaderName: 'X-API-Key',
+        encryptedCredentials: 'encrypted-api-key',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       credentialEncryption.encrypt.mockResolvedValue('encrypted-api-key');
       createUseCase.execute.mockResolvedValue(mockIntegration);
 
       const result = await controller.createCustom(dto);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(credentialEncryption.encrypt).toHaveBeenCalledWith(
         'plain-api-key',
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(createUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Custom Server',
@@ -272,36 +275,37 @@ describe('McpIntegrationsController', () => {
   describe('list', () => {
     it('should return all integrations for organization', async () => {
       const mockIntegrations = [
-        new PredefinedMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'Predefined',
-          'org-id',
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          undefined,
-          undefined,
-          undefined,
-          new Date(),
-          new Date(),
-        ),
-        new CustomMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174002',
-          'Custom',
-          'org-id',
-          'https://custom.com/mcp',
-          false,
-          undefined,
-          undefined,
-          undefined,
-          new Date(),
-          new Date(),
-        ),
+        new PredefinedMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          name: 'Predefined',
+          organizationId: 'org-id',
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          authMethod: undefined,
+          authHeaderName: undefined,
+          encryptedCredentials: undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+        new CustomMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174002',
+          name: 'Custom',
+          organizationId: 'org-id',
+          serverUrl: 'https://custom.com/mcp',
+          enabled: false,
+          authMethod: undefined,
+          authHeaderName: undefined,
+          encryptedCredentials: undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
       ];
 
       listOrgUseCase.execute.mockResolvedValue(mockIntegrations);
 
       const result = await controller.list();
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(listOrgUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({}),
       );
@@ -312,7 +316,7 @@ describe('McpIntegrationsController', () => {
   });
 
   describe('listPredefinedConfigs', () => {
-    it('should return available predefined configs without server URLs', async () => {
+    it('should return available predefined configs without server URLs', () => {
       const mockConfigs = [
         {
           slug: PredefinedMcpIntegrationSlug.TEST,
@@ -326,7 +330,7 @@ describe('McpIntegrationsController', () => {
 
       listConfigsUseCase.execute.mockReturnValue(mockConfigs);
 
-      const result = await controller.listPredefinedConfigs();
+      const result = controller.listPredefinedConfigs();
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
@@ -342,18 +346,18 @@ describe('McpIntegrationsController', () => {
 
   describe('getById', () => {
     it('should get integration by ID', async () => {
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Test',
-        'org-id',
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Test',
+        organizationId: 'org-id',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       getUseCase.execute.mockResolvedValue(mockIntegration);
 
@@ -361,6 +365,7 @@ describe('McpIntegrationsController', () => {
         '123e4567-e89b-12d3-a456-426614174000' as any,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(getUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -377,32 +382,34 @@ describe('McpIntegrationsController', () => {
         credentials: 'new-plain-credentials',
       };
 
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Updated Name',
-        'org-id',
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        'encrypted-new-credentials',
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Updated Name',
+        organizationId: 'org-id',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: 'encrypted-new-credentials',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       credentialEncryption.encrypt.mockResolvedValue(
         'encrypted-new-credentials',
       );
       updateUseCase.execute.mockResolvedValue(mockIntegration);
 
-      const result = await controller.update(
+      await controller.update(
         '123e4567-e89b-12d3-a456-426614174000' as any,
         dto,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(credentialEncryption.encrypt).toHaveBeenCalledWith(
         'new-plain-credentials',
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(updateUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -417,18 +424,18 @@ describe('McpIntegrationsController', () => {
         name: 'Updated Name',
       };
 
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Updated Name',
-        'org-id',
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Updated Name',
+        organizationId: 'org-id',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       updateUseCase.execute.mockResolvedValue(mockIntegration);
 
@@ -437,6 +444,7 @@ describe('McpIntegrationsController', () => {
         dto,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(credentialEncryption.encrypt).not.toHaveBeenCalled();
     });
   });
@@ -449,6 +457,7 @@ describe('McpIntegrationsController', () => {
         '123e4567-e89b-12d3-a456-426614174000' as any,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(deleteUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -460,25 +469,27 @@ describe('McpIntegrationsController', () => {
 
   describe('enable', () => {
     it('should enable integration', async () => {
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Test',
-        'org-id',
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Test',
+        organizationId: 'org-id',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       enableUseCase.execute.mockResolvedValue(mockIntegration);
 
       const result = await controller.enable(
         '123e4567-e89b-12d3-a456-426614174000' as any,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(enableUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -490,18 +501,18 @@ describe('McpIntegrationsController', () => {
 
   describe('disable', () => {
     it('should disable integration', async () => {
-      const mockIntegration = new PredefinedMcpIntegration(
-        '123e4567-e89b-12d3-a456-426614174000',
-        'Test',
-        'org-id',
-        PredefinedMcpIntegrationSlug.TEST,
-        false,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Test',
+        organizationId: 'org-id',
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: false,
+        authMethod: undefined,
+        authHeaderName: undefined,
+        encryptedCredentials: undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       disableUseCase.execute.mockResolvedValue(mockIntegration);
 
@@ -509,6 +520,7 @@ describe('McpIntegrationsController', () => {
         '123e4567-e89b-12d3-a456-426614174000' as any,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(disableUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -533,6 +545,7 @@ describe('McpIntegrationsController', () => {
         '123e4567-e89b-12d3-a456-426614174000' as any,
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(validateUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',

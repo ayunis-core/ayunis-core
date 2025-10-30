@@ -187,7 +187,7 @@ export class McpIntegrationsController {
     description: 'List of available predefined integrations',
     type: [PredefinedConfigResponseDto],
   })
-  async listPredefinedConfigs(): Promise<PredefinedConfigResponseDto[]> {
+  listPredefinedConfigs(): PredefinedConfigResponseDto[] {
     this.logger.log('listPredefinedConfigs');
 
     const configs = this.listPredefinedConfigsUseCase.execute();

@@ -34,7 +34,7 @@
     "failedToRemove": "Failed to remove source"
   },
   "mcpIntegrations": {
-    "title": "MCP Integrations",
+    "title": "Integrations",
     "description": "Connect external MCP servers to extend agent capabilities",
     "connectedCount": "{{count}} connected",
     "toggleAriaLabel": "Toggle {{name}} integration",

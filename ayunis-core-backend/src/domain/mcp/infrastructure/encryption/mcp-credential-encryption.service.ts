@@ -83,7 +83,7 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
 
       // Combine IV + ciphertext + authTag and encode as base64
       const combined = Buffer.concat([iv, encrypted, authTag]);
-      return combined.toString('base64');
+      return Promise.resolve(combined.toString('base64'));
     } catch (error) {
       this.logger.error('Failed to encrypt credential', {
         error: error as Error,
@@ -128,7 +128,7 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
         decipher.final(),
       ]);
 
-      return decrypted.toString('utf8');
+      return Promise.resolve(decrypted.toString('utf8'));
     } catch (error) {
       this.logger.error('Failed to decrypt credential', {
         error: error as Error,

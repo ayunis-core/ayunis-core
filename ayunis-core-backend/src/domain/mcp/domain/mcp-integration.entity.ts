@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { McpAuthMethod } from './mcp-auth-method.enum';
 import { PredefinedMcpIntegrationSlug } from './predefined-mcp-integration-slug.enum';
 
@@ -7,37 +7,37 @@ import { PredefinedMcpIntegrationSlug } from './predefined-mcp-integration-slug.
  * Defines common fields and business logic shared by all integration types.
  */
 export abstract class McpIntegration {
-  public readonly id: string;
-  public readonly name: string;
+  public readonly id: UUID;
+  public name: string;
   public abstract readonly type: 'predefined' | 'custom';
-  public readonly authMethod?: McpAuthMethod;
-  public readonly authHeaderName?: string;
+  public authMethod?: McpAuthMethod;
+  public authHeaderName?: string;
   public encryptedCredentials?: string;
   public enabled: boolean;
   public readonly organizationId: string;
   public readonly createdAt: Date;
   public updatedAt: Date;
 
-  constructor(
-    id: string | null,
-    name: string,
-    organizationId: string,
-    enabled: boolean = true,
-    authMethod?: McpAuthMethod,
-    authHeaderName?: string,
-    encryptedCredentials?: string,
-    createdAt?: Date,
-    updatedAt?: Date,
-  ) {
-    this.id = id ?? randomUUID();
-    this.name = name;
-    this.organizationId = organizationId;
-    this.enabled = enabled;
-    this.authMethod = authMethod;
-    this.authHeaderName = authHeaderName;
-    this.encryptedCredentials = encryptedCredentials;
-    this.createdAt = createdAt ?? new Date();
-    this.updatedAt = updatedAt ?? new Date();
+  constructor(params: {
+    id?: UUID;
+    name: string;
+    organizationId: string;
+    enabled?: boolean;
+    authMethod?: McpAuthMethod;
+    authHeaderName?: string;
+    encryptedCredentials?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    this.id = params.id ?? randomUUID();
+    this.name = params.name;
+    this.organizationId = params.organizationId;
+    this.enabled = params.enabled ?? true;
+    this.authMethod = params.authMethod;
+    this.authHeaderName = params.authHeaderName;
+    this.encryptedCredentials = params.encryptedCredentials;
+    this.createdAt = params.createdAt ?? new Date();
+    this.updatedAt = params.updatedAt ?? new Date();
   }
 
   /**
@@ -70,7 +70,7 @@ export abstract class McpIntegration {
    * @param newName The new name for the integration
    */
   updateName(newName: string): void {
-    (this as any).name = newName;
+    this.name = newName;
     this.updatedAt = new Date();
   }
 
@@ -85,8 +85,8 @@ export abstract class McpIntegration {
     authHeaderName?: string,
     encryptedCredentials?: string,
   ): void {
-    (this as any).authMethod = authMethod;
-    (this as any).authHeaderName = authHeaderName;
+    this.authMethod = authMethod;
+    this.authHeaderName = authHeaderName;
     this.encryptedCredentials = encryptedCredentials;
     this.updatedAt = new Date();
   }
@@ -108,30 +108,20 @@ export class PredefinedMcpIntegration extends McpIntegration {
   readonly type = 'predefined';
   public readonly slug: PredefinedMcpIntegrationSlug;
 
-  constructor(
-    id: string | null,
-    name: string,
-    organizationId: string,
-    slug: PredefinedMcpIntegrationSlug,
-    enabled: boolean = true,
-    authMethod?: McpAuthMethod,
-    authHeaderName?: string,
-    encryptedCredentials?: string,
-    createdAt?: Date,
-    updatedAt?: Date,
-  ) {
-    super(
-      id,
-      name,
-      organizationId,
-      enabled,
-      authMethod,
-      authHeaderName,
-      encryptedCredentials,
-      createdAt,
-      updatedAt,
-    );
-    this.slug = slug;
+  constructor(params: {
+    id?: UUID;
+    name: string;
+    organizationId: string;
+    slug: PredefinedMcpIntegrationSlug;
+    enabled?: boolean;
+    authMethod?: McpAuthMethod;
+    authHeaderName?: string;
+    encryptedCredentials?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super(params);
+    this.slug = params.slug;
   }
 }
 
@@ -143,29 +133,19 @@ export class CustomMcpIntegration extends McpIntegration {
   readonly type = 'custom';
   public readonly serverUrl: string;
 
-  constructor(
-    id: string | null,
-    name: string,
-    organizationId: string,
-    serverUrl: string,
-    enabled: boolean = true,
-    authMethod?: McpAuthMethod,
-    authHeaderName?: string,
-    encryptedCredentials?: string,
-    createdAt?: Date,
-    updatedAt?: Date,
-  ) {
-    super(
-      id,
-      name,
-      organizationId,
-      enabled,
-      authMethod,
-      authHeaderName,
-      encryptedCredentials,
-      createdAt,
-      updatedAt,
-    );
-    this.serverUrl = serverUrl;
+  constructor(params: {
+    id?: UUID;
+    name: string;
+    organizationId: string;
+    serverUrl: string;
+    enabled?: boolean;
+    authMethod?: McpAuthMethod;
+    authHeaderName?: string;
+    encryptedCredentials?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super(params);
+    this.serverUrl = params.serverUrl;
   }
 }

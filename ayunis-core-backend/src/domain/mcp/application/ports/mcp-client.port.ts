@@ -85,6 +85,12 @@ export abstract class McpClientPort {
   abstract listResources(config: McpConnectionConfig): Promise<McpResource[]>;
 
   /**
+   * List all resource templates available on the MCP server
+   */
+  abstract listResourceTemplates(
+    config: McpConnectionConfig,
+  ): Promise<McpResource[]>;
+  /**
    * List all prompt templates available on the MCP server
    */
   abstract listPrompts(config: McpConnectionConfig): Promise<McpPrompt[]>;
@@ -106,7 +112,7 @@ export abstract class McpClientPort {
     config: McpConnectionConfig,
     uri: string,
     parameters?: Record<string, unknown>,
-  ): Promise<{ content: string; mimeType: string }>;
+  ): Promise<{ content: unknown; mimeType: string }>;
 
   /**
    * Get a prompt template from the MCP server

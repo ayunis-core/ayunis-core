@@ -83,8 +83,11 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.SEND_EMAIL);
       expect(types).toContain(ToolType.CREATE_CALENDAR_EVENT);
       expect(types).toContain(ToolType.CODE_EXECUTION);
+      expect(types).toContain(ToolType.MCP_TOOL);
+      expect(types).toContain(ToolType.MCP_RESOURCE);
+      expect(types).toContain(ToolType.MCP_PROMPT);
 
-      expect(types.length).toBe(7);
+      expect(types.length).toBe(10);
     });
   });
 });

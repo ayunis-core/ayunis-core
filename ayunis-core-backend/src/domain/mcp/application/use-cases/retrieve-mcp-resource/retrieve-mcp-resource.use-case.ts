@@ -38,12 +38,14 @@ export class RetrieveMcpResourceUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(command: RetrieveMcpResourceCommand): Promise<void> {
-    const startTime = Date.now();
-    this.logger.log(
-      `[MCP] operation=retrieve_resource integration=${command.integrationId} uri="${command.resourceUri}" status=started`,
-    );
-
+  async execute(
+    command: RetrieveMcpResourceCommand,
+  ): Promise<{ content: unknown; mimeType: string }> {
+    this.logger.log('retrieveMcpResource', {
+      integrationId: command.integrationId,
+      resourceUri: command.resourceUri,
+      parameters: command.parameters,
+    });
     try {
       const orgId = this.contextService.get('orgId');
       if (!orgId) {
@@ -81,36 +83,22 @@ export class RetrieveMcpResourceUseCase {
         command.parameters,
       );
 
-      const duration = Date.now() - startTime;
-      this.logger.log(
-        `[MCP] operation=retrieve_resource integration=${command.integrationId} name="${integration.name}" uri="${command.resourceUri}" mimeType="${mimeType}" status=success duration=${duration}ms`,
-      );
-
-      // Handle CSV resources
-      if (mimeType === 'text/csv') {
-        await this.handleCsvResource(content, command.resourceUri);
-      }
-
-      // Future: Handle other resource types (text, json, files, etc.)
+      return { content, mimeType };
     } catch (error) {
-      const duration = Date.now() - startTime;
-
       if (
         error instanceof ApplicationError ||
         error instanceof UnauthorizedException
       ) {
-        this.logger.warn(
-          `[MCP] operation=retrieve_resource integration=${command.integrationId} uri="${command.resourceUri}" status=error error="${error.message}" duration=${duration}ms`,
-        );
         throw error;
       }
 
-      this.logger.error(
-        `[MCP] operation=retrieve_resource integration=${command.integrationId} uri="${command.resourceUri}" status=unexpected_error error="${(error as Error).message}" duration=${duration}ms`,
-        { error: error as Error },
-      );
+      this.logger.error('retrieveMcpResourceFailed', {
+        integrationId: command.integrationId,
+        resourceUri: command.resourceUri,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       throw new UnexpectedMcpError(
-        'Unexpected error occurred during resource retrieval',
+        error instanceof Error ? error.message : 'Unknown error',
       );
     }
   }

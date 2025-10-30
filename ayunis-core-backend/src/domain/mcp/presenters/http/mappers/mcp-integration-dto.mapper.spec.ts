@@ -16,18 +16,18 @@ describe('McpIntegrationDtoMapper', () => {
   describe('toDto', () => {
     describe('predefined integration', () => {
       it('should correctly map predefined integration to DTO', () => {
-        const entity = new PredefinedMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'Test Integration',
-          '123e4567-e89b-12d3-a456-426614174001', // organizationId
-          PredefinedMcpIntegrationSlug.TEST, // slug
-          true,
-          McpAuthMethod.BEARER_TOKEN,
-          'Authorization',
-          'encrypted-credentials',
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        );
+        const entity = new PredefinedMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'Test Integration',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          authMethod: McpAuthMethod.BEARER_TOKEN,
+          authHeaderName: 'Authorization',
+          encryptedCredentials: 'encrypted-credentials',
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        });
 
         const dto = mapper.toDto(entity);
 
@@ -48,18 +48,15 @@ describe('McpIntegrationDtoMapper', () => {
       });
 
       it('should set hasCredentials to false when credentials are null', () => {
-        const entity = new PredefinedMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'Test Integration',
-          '123e4567-e89b-12d3-a456-426614174001',
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          undefined,
-          undefined,
-          undefined, // No credentials
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        );
+        const entity = new PredefinedMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'Test Integration',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        });
 
         const dto = mapper.toDto(entity);
 
@@ -67,18 +64,15 @@ describe('McpIntegrationDtoMapper', () => {
       });
 
       it('should not expose server URL for predefined integration', () => {
-        const entity = new PredefinedMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'Test Integration',
-          '123e4567-e89b-12d3-a456-426614174001',
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          undefined,
-          undefined,
-          undefined,
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        );
+        const entity = new PredefinedMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'Test Integration',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        });
 
         const dto = mapper.toDto(entity);
 
@@ -87,18 +81,18 @@ describe('McpIntegrationDtoMapper', () => {
       });
 
       it('should never include actual credentials in DTO', () => {
-        const entity = new PredefinedMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'Test Integration',
-          '123e4567-e89b-12d3-a456-426614174001',
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          McpAuthMethod.API_KEY,
-          'X-API-Key',
-          'super-secret-encrypted-credentials',
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        );
+        const entity = new PredefinedMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'Test Integration',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          authMethod: McpAuthMethod.API_KEY,
+          authHeaderName: 'X-API-Key',
+          encryptedCredentials: 'super-secret-encrypted-credentials',
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        });
 
         const dto = mapper.toDto(entity);
 
@@ -110,18 +104,18 @@ describe('McpIntegrationDtoMapper', () => {
 
     describe('custom integration', () => {
       it('should correctly map custom integration to DTO', () => {
-        const entity = new CustomMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'My Custom Server',
-          '123e4567-e89b-12d3-a456-426614174001', // organizationId
-          'https://my-server.com/mcp', // serverUrl
-          false,
-          McpAuthMethod.API_KEY,
-          'X-API-Key',
-          'encrypted-api-key',
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        );
+        const entity = new CustomMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'My Custom Server',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          serverUrl: 'https://my-server.com/mcp',
+          enabled: false,
+          authMethod: McpAuthMethod.API_KEY,
+          authHeaderName: 'X-API-Key',
+          encryptedCredentials: 'encrypted-api-key',
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        });
 
         const dto = mapper.toDto(entity);
 
@@ -142,18 +136,15 @@ describe('McpIntegrationDtoMapper', () => {
       });
 
       it('should not expose slug for custom integration', () => {
-        const entity = new CustomMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'My Custom Server',
-          '123e4567-e89b-12d3-a456-426614174001',
-          'https://my-server.com/mcp',
-          true,
-          undefined,
-          undefined,
-          undefined,
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        );
+        const entity = new CustomMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'My Custom Server',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          serverUrl: 'https://my-server.com/mcp',
+          enabled: true,
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        });
 
         const dto = mapper.toDto(entity);
 
@@ -166,30 +157,27 @@ describe('McpIntegrationDtoMapper', () => {
   describe('toDtoArray', () => {
     it('should map array of integrations correctly', () => {
       const entities = [
-        new PredefinedMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174000',
-          'Predefined Integration',
-          '123e4567-e89b-12d3-a456-426614174001',
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          undefined,
-          undefined,
-          undefined,
-          new Date('2025-10-28T10:00:00Z'),
-          new Date('2025-10-28T12:00:00Z'),
-        ),
-        new CustomMcpIntegration(
-          '123e4567-e89b-12d3-a456-426614174002',
-          'Custom Integration',
-          '123e4567-e89b-12d3-a456-426614174001',
-          'https://custom.com/mcp',
-          false,
-          McpAuthMethod.BEARER_TOKEN,
-          'Authorization',
-          'encrypted-token',
-          new Date('2025-10-28T11:00:00Z'),
-          new Date('2025-10-28T13:00:00Z'),
-        ),
+        new PredefinedMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000' as any,
+          name: 'Predefined Integration',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          createdAt: new Date('2025-10-28T10:00:00Z'),
+          updatedAt: new Date('2025-10-28T12:00:00Z'),
+        }),
+        new CustomMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174002' as any,
+          name: 'Custom Integration',
+          organizationId: '123e4567-e89b-12d3-a456-426614174001',
+          serverUrl: 'https://custom.com/mcp',
+          enabled: false,
+          authMethod: McpAuthMethod.BEARER_TOKEN,
+          authHeaderName: 'Authorization',
+          encryptedCredentials: 'encrypted-token',
+          createdAt: new Date('2025-10-28T11:00:00Z'),
+          updatedAt: new Date('2025-10-28T13:00:00Z'),
+        }),
       ];
 
       const dtos = mapper.toDtoArray(entities);

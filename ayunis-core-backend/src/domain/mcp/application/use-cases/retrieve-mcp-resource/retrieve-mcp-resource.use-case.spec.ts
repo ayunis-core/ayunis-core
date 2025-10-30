@@ -113,13 +113,13 @@ describe('RetrieveMcpResourceUseCase', () => {
   describe('execute', () => {
     it('should successfully retrieve CSV resource and create data source', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -190,13 +190,13 @@ describe('RetrieveMcpResourceUseCase', () => {
 
     it('should successfully retrieve non-CSV resource without creating data source', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+      });
 
       const mockTextContent = 'Some text content';
 
@@ -302,13 +302,13 @@ describe('RetrieveMcpResourceUseCase', () => {
     it('should throw McpIntegrationAccessDeniedError when integration belongs to different organization', async () => {
       // Arrange
       const differentOrgId = 'different-org-789';
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        differentOrgId, // Different org
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: differentOrgId, // Different org
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -328,13 +328,13 @@ describe('RetrieveMcpResourceUseCase', () => {
 
     it('should throw McpIntegrationDisabledError when integration is disabled', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        false, // Disabled
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: false, // Disabled
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -372,13 +372,13 @@ describe('RetrieveMcpResourceUseCase', () => {
 
     it('should use organizationId from ContextService (not from command)', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -434,13 +434,13 @@ describe('RetrieveMcpResourceUseCase', () => {
 
     it('should log resource retrievals and operations', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -625,13 +625,13 @@ describe('RetrieveMcpResourceUseCase', () => {
 
     it('should pass createdBy as SYSTEM when creating CSV data source', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        organizationId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        enabled: true,
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);

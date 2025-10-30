@@ -10,7 +10,15 @@ export function useValidateIntegration() {
 
   const mutation = useMcpIntegrationsControllerValidate({
     mutation: {
-      onSuccess: (data: any) => {
+      onSuccess: (data) => {
+        if (!data.valid) {
+          toast.error(
+            t("integrations.validateIntegration.error", {
+              message: data.error,
+            }),
+          );
+          return;
+        }
         const capabilities = data.capabilities || {
           prompts: 0,
           resources: 0,

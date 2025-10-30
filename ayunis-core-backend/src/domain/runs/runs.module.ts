@@ -9,6 +9,7 @@ import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-r
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
     AgentsModule,
     SubscriptionsModule,
     McpModule,
+    SourcesModule,
   ],
   controllers: [RunsController],
   providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],

@@ -3,6 +3,7 @@ import { McpIntegrationMapper } from './mcp-integration.mapper';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
+  McpIntegration,
 } from '../../../../domain/mcp-integration.entity';
 import {
   PredefinedMcpIntegrationRecord,
@@ -13,6 +14,12 @@ import { McpAuthMethod } from '../../../../domain/mcp-auth-method.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../../domain/predefined-mcp-integration-slug.enum';
 
 describe('McpIntegrationMapper', () => {
+  let mapper: McpIntegrationMapper;
+
+  beforeEach(() => {
+    mapper = new McpIntegrationMapper();
+  });
+
   describe('toDomain', () => {
     describe('PredefinedMcpIntegration', () => {
       it('should map predefined record to domain entity', () => {
@@ -30,7 +37,7 @@ describe('McpIntegrationMapper', () => {
         record.updatedAt = new Date('2024-01-02');
 
         // Act
-        const domain = McpIntegrationMapper.toDomain(record);
+        const domain = mapper.toDomain(record);
 
         // Assert
         expect(domain).toBeInstanceOf(PredefinedMcpIntegration);
@@ -59,7 +66,7 @@ describe('McpIntegrationMapper', () => {
         record.updatedAt = new Date();
 
         // Act
-        const domain = McpIntegrationMapper.toDomain(record);
+        const domain = mapper.toDomain(record);
 
         // Assert
         expect(domain).toBeInstanceOf(PredefinedMcpIntegration);
@@ -85,7 +92,7 @@ describe('McpIntegrationMapper', () => {
         record.updatedAt = new Date('2024-01-02');
 
         // Act
-        const domain = McpIntegrationMapper.toDomain(record);
+        const domain = mapper.toDomain(record);
 
         // Assert
         expect(domain).toBeInstanceOf(CustomMcpIntegration);
@@ -116,7 +123,7 @@ describe('McpIntegrationMapper', () => {
         record.updatedAt = new Date();
 
         // Act
-        const domain = McpIntegrationMapper.toDomain(record);
+        const domain = mapper.toDomain(record);
 
         // Assert
         expect(domain).toBeInstanceOf(CustomMcpIntegration);
@@ -133,7 +140,7 @@ describe('McpIntegrationMapper', () => {
       } as unknown as McpIntegrationRecord;
 
       // Act & Assert
-      expect(() => McpIntegrationMapper.toDomain(record)).toThrow(
+      expect(() => mapper.toDomain(record)).toThrow(
         'Unknown MCP integration record type',
       );
     });
@@ -143,21 +150,21 @@ describe('McpIntegrationMapper', () => {
     describe('PredefinedMcpIntegration', () => {
       it('should map predefined domain entity to record', () => {
         // Arrange
-        const domain = new PredefinedMcpIntegration(
-          randomUUID(),
-          'Test Integration',
-          randomUUID(),
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          McpAuthMethod.API_KEY,
-          'X-API-Key',
-          'encrypted-value',
-          new Date('2024-01-01'),
-          new Date('2024-01-02'),
-        );
+        const domain = new PredefinedMcpIntegration({
+          id: randomUUID(),
+          name: 'Test Integration',
+          organizationId: randomUUID(),
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: true,
+          authMethod: McpAuthMethod.API_KEY,
+          authHeaderName: 'X-API-Key',
+          encryptedCredentials: 'encrypted-value',
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-02'),
+        });
 
         // Act
-        const record = McpIntegrationMapper.toRecord(domain);
+        const record = mapper.toRecord(domain);
 
         // Assert
         expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
@@ -177,16 +184,18 @@ describe('McpIntegrationMapper', () => {
 
       it('should map predefined domain entity with minimal fields', () => {
         // Arrange
-        const domain = new PredefinedMcpIntegration(
-          randomUUID(),
-          'Minimal Integration',
-          randomUUID(),
-          PredefinedMcpIntegrationSlug.TEST,
-          false,
-        );
+        const domain = new PredefinedMcpIntegration({
+          id: randomUUID(),
+          name: 'Minimal Integration',
+          organizationId: randomUUID(),
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          enabled: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
 
         // Act
-        const record = McpIntegrationMapper.toRecord(domain);
+        const record = mapper.toRecord(domain);
 
         // Assert
         expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
@@ -199,21 +208,21 @@ describe('McpIntegrationMapper', () => {
     describe('CustomMcpIntegration', () => {
       it('should map custom domain entity to record', () => {
         // Arrange
-        const domain = new CustomMcpIntegration(
-          randomUUID(),
-          'Custom Integration',
-          randomUUID(),
-          'http://custom-server.com',
-          true,
-          McpAuthMethod.BEARER_TOKEN,
-          'Authorization',
-          'encrypted-token',
-          new Date('2024-01-01'),
-          new Date('2024-01-02'),
-        );
+        const domain = new CustomMcpIntegration({
+          id: randomUUID(),
+          name: 'Custom Integration',
+          organizationId: randomUUID(),
+          serverUrl: 'http://custom-server.com',
+          enabled: true,
+          authMethod: McpAuthMethod.BEARER_TOKEN,
+          authHeaderName: 'Authorization',
+          encryptedCredentials: 'encrypted-token',
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-02'),
+        });
 
         // Act
-        const record = McpIntegrationMapper.toRecord(domain);
+        const record = mapper.toRecord(domain);
 
         // Assert
         expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
@@ -233,16 +242,18 @@ describe('McpIntegrationMapper', () => {
 
       it('should map custom domain entity with minimal fields', () => {
         // Arrange
-        const domain = new CustomMcpIntegration(
-          randomUUID(),
-          'Minimal Custom',
-          randomUUID(),
-          'http://example.com',
-          true,
-        );
+        const domain = new CustomMcpIntegration({
+          id: randomUUID(),
+          name: 'Minimal Custom',
+          organizationId: randomUUID(),
+          serverUrl: 'http://example.com',
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
 
         // Act
-        const record = McpIntegrationMapper.toRecord(domain);
+        const record = mapper.toRecord(domain);
 
         // Assert
         expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
@@ -256,10 +267,10 @@ describe('McpIntegrationMapper', () => {
       // Arrange
       const entity = {
         type: 'unknown',
-      } as any;
+      } as unknown as McpIntegration;
 
       // Act & Assert
-      expect(() => McpIntegrationMapper.toRecord(entity)).toThrow(
+      expect(() => mapper.toRecord(entity)).toThrow(
         'Unknown MCP integration entity type',
       );
     });

@@ -67,16 +67,15 @@ export class CreateMcpIntegrationUseCase {
       }
 
       // Create domain entity (credentials already encrypted by controller)
-      const integration = new PredefinedMcpIntegration(
-        null,
-        command.name,
-        orgId,
-        command.slug,
-        true,
-        command.authMethod,
-        command.authHeaderName,
-        command.encryptedCredentials,
-      );
+      const integration = new PredefinedMcpIntegration({
+        name: command.name,
+        organizationId: orgId,
+        slug: command.slug,
+        enabled: true,
+        authMethod: command.authMethod,
+        authHeaderName: command.authHeaderName,
+        encryptedCredentials: command.encryptedCredentials,
+      });
 
       // Save to repository
       return (await this.repository.save(
@@ -114,16 +113,15 @@ export class CreateMcpIntegrationUseCase {
       }
 
       // Create domain entity (credentials already encrypted by controller)
-      const integration = new CustomMcpIntegration(
-        null,
-        command.name,
-        orgId,
-        command.serverUrl,
-        true,
-        command.authMethod,
-        command.authHeaderName,
-        command.encryptedCredentials,
-      );
+      const integration = new CustomMcpIntegration({
+        name: command.name,
+        organizationId: orgId,
+        serverUrl: command.serverUrl,
+        enabled: true,
+        authMethod: command.authMethod,
+        authHeaderName: command.authHeaderName,
+        encryptedCredentials: command.encryptedCredentials,
+      });
 
       // Save to repository
       return (await this.repository.save(integration)) as CustomMcpIntegration;

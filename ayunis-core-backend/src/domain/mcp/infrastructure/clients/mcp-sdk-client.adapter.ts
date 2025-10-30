@@ -36,9 +36,9 @@ export class McpSdkClientAdapter extends McpClientPort {
     try {
       client = await this.createClient(config);
 
-      const result = await this.withTimeout(client.listTools(), 'listTools');
+      const result = await this.withTimeout(client.listTools());
 
-      return (result as any).tools;
+      return result.tools;
     } finally {
       if (client) {
         await client.close();
@@ -55,12 +55,34 @@ export class McpSdkClientAdapter extends McpClientPort {
     try {
       client = await this.createClient(config);
 
-      const result = await this.withTimeout(
-        client.listResources(),
-        'listResources',
-      );
+      const result = await this.withTimeout(client.listResources());
 
-      return (result as any).resources;
+      return result.resources;
+    } finally {
+      if (client) {
+        await client.close();
+      }
+    }
+  }
+
+  /**
+   * List all resource templates available on the MCP server
+   */
+  async listResourceTemplates(
+    config: McpConnectionConfig,
+  ): Promise<McpResource[]> {
+    let client: Client | null = null;
+
+    try {
+      client = await this.createClient(config);
+      const result = await this.withTimeout(client.listResourceTemplates());
+
+      return result.resourceTemplates.map((resourceTemplate) => ({
+        uri: resourceTemplate.uriTemplate,
+        name: resourceTemplate.name,
+        description: resourceTemplate.description,
+        mimeType: resourceTemplate.mimeType,
+      }));
     } finally {
       if (client) {
         await client.close();
@@ -77,12 +99,9 @@ export class McpSdkClientAdapter extends McpClientPort {
     try {
       client = await this.createClient(config);
 
-      const result = await this.withTimeout(
-        client.listPrompts(),
-        'listPrompts',
-      );
+      const result = await this.withTimeout(client.listPrompts());
 
-      return (result as any).prompts;
+      return result.prompts;
     } finally {
       if (client) {
         await client.close();
@@ -107,12 +126,11 @@ export class McpSdkClientAdapter extends McpClientPort {
           name: call.toolName,
           arguments: call.parameters,
         }),
-        'callTool',
       );
 
       return {
-        content: (result as any).content,
-        isError: Boolean((result as any).isError),
+        content: result.content,
+        isError: Boolean(result.isError),
       };
     } finally {
       if (client) {
@@ -128,7 +146,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     uri: string,
     parameters?: Record<string, unknown>,
-  ): Promise<{ content: string; mimeType: string }> {
+  ): Promise<{ content: unknown; mimeType: string }> {
     let client: Client | null = null;
 
     try {
@@ -136,18 +154,15 @@ export class McpSdkClientAdapter extends McpClientPort {
 
       const request = parameters ? { uri, arguments: parameters } : { uri };
 
-      const result = await this.withTimeout(
-        client.readResource(request),
-        'readResource',
-      );
+      const result = await this.withTimeout(client.readResource(request));
 
       // MCP resources can have text or blob content
-      const firstContent = (result as any).contents[0];
+      const firstContent = result.contents[0];
       const content =
         'text' in firstContent ? firstContent.text : firstContent.blob;
 
       return {
-        content: content as string,
+        content: content,
         mimeType: firstContent.mimeType || 'text/plain',
       };
     } finally {
@@ -163,7 +178,7 @@ export class McpSdkClientAdapter extends McpClientPort {
   async getPrompt(
     config: McpConnectionConfig,
     name: string,
-    args: Record<string, unknown>,
+    args: Record<string, string>,
   ): Promise<{ messages: unknown[] }> {
     let client: Client | null = null;
 
@@ -173,13 +188,12 @@ export class McpSdkClientAdapter extends McpClientPort {
       const result = await this.withTimeout(
         client.getPrompt({
           name,
-          arguments: args as Record<string, string>,
+          arguments: args,
         }),
-        'getPrompt',
       );
 
       return {
-        messages: (result as any).messages,
+        messages: result.messages,
       };
     } finally {
       if (client) {
@@ -201,9 +215,9 @@ export class McpSdkClientAdapter extends McpClientPort {
       client = await this.createClient(config);
 
       // Try to list all capabilities to validate connection
-      await this.withTimeout(client.listTools(), 'validateConnection');
-      await this.withTimeout(client.listResources(), 'validateConnection');
-      await this.withTimeout(client.listPrompts(), 'validateConnection');
+      await this.withTimeout(client.listTools());
+      await this.withTimeout(client.listResources());
+      await this.withTimeout(client.listPrompts());
 
       return { valid: true };
     } catch (error) {
@@ -256,10 +270,7 @@ export class McpSdkClientAdapter extends McpClientPort {
   /**
    * Wrap a promise with timeout enforcement
    */
-  private async withTimeout<T>(
-    promise: Promise<T>,
-    operation: string,
-  ): Promise<T> {
+  private async withTimeout<T>(promise: Promise<T>): Promise<T> {
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(
         () => reject(new Error('MCP request timeout')),

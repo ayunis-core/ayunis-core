@@ -34,7 +34,7 @@
     "failedToRemove": "Fehler beim Entfernen der Quelle"
   },
   "mcpIntegrations": {
-    "title": "MCP-Integrationen",
+    "title": "Integrationen",
     "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten des Agenten zu erweitern",
     "connectedCount": "{{count}} verbunden",
     "toggleAriaLabel": "{{name}}-Integration umschalten",

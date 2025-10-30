@@ -92,9 +92,10 @@ export class DiscoverMcpCapabilitiesUseCase {
       const connectionConfig = this.buildConnectionConfig(integration);
 
       // Discover capabilities from MCP server
-      const [tools, resources, prompts] = await Promise.all([
+      const [tools, resources, resourceTemplates, prompts] = await Promise.all([
         this.mcpClient.listTools(connectionConfig),
         this.mcpClient.listResources(connectionConfig),
+        this.mcpClient.listResourceTemplates(connectionConfig),
         this.mcpClient.listPrompts(connectionConfig),
       ]);
 
@@ -104,6 +105,9 @@ export class DiscoverMcpCapabilitiesUseCase {
       );
       const mcpResources = resources.map((resource) =>
         this.mapToMcpResource(resource, query.integrationId),
+      );
+      const mcpResourceTemplates = resourceTemplates.map((resourceTemplate) =>
+        this.mapToMcpResource(resourceTemplate, query.integrationId),
       );
       const mcpPrompts = prompts.map((prompt) =>
         this.mapToMcpPrompt(prompt, query.integrationId),
@@ -119,7 +123,7 @@ export class DiscoverMcpCapabilitiesUseCase {
 
       return {
         tools: mcpTools,
-        resources: mcpResources,
+        resources: mcpResources.concat(mcpResourceTemplates),
         prompts: mcpPrompts,
       };
     } catch (error) {
@@ -199,14 +203,14 @@ export class DiscoverMcpCapabilitiesUseCase {
     // Map arguments if present (resources can have parameters)
     const args: ResourceArgument[] | undefined = undefined;
 
-    return new McpResource(
-      sdkResource.uri,
-      sdkResource.name,
-      sdkResource.description,
-      sdkResource.mimeType,
-      integrationId,
-      args,
-    );
+    return new McpResource({
+      uri: sdkResource.uri,
+      name: sdkResource.name,
+      description: sdkResource.description,
+      mimeType: sdkResource.mimeType,
+      integrationId: integrationId,
+      arguments: args,
+    });
   }
 
   /**

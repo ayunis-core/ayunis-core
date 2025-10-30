@@ -8,6 +8,7 @@ import { PredefinedMcpIntegrationRegistryService } from './application/services/
 import { McpIntegrationsRepositoryPort } from './application/ports/mcp-integrations.repository.port';
 import { McpIntegrationsRepository } from './infrastructure/persistence/postgres/mcp-integrations.repository';
 import { McpIntegrationRecord } from './infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
 import { SourcesModule } from '../sources/sources.module';
 
 // Use Cases
@@ -49,6 +50,7 @@ import { McpIntegrationDtoMapper } from './presenters/http/mappers/mcp-integrati
       provide: McpIntegrationsRepositoryPort,
       useClass: McpIntegrationsRepository,
     },
+    McpIntegrationMapper,
     PredefinedMcpIntegrationRegistryService,
     // Use Cases
     CreateMcpIntegrationUseCase,

@@ -22,19 +22,19 @@ export class McpResource {
   public readonly integrationId: UUID;
   public readonly arguments?: ResourceArgument[];
 
-  constructor(
-    uri: string,
-    name: string,
-    description: string | undefined,
-    mimeType: string | undefined,
-    integrationId: UUID,
-    args?: ResourceArgument[],
-  ) {
-    this.uri = uri;
-    this.name = name;
-    this.description = description;
-    this.mimeType = mimeType;
-    this.integrationId = integrationId;
-    this.arguments = args;
+  constructor(params: {
+    uri: string;
+    name: string;
+    description?: string;
+    mimeType?: string;
+    integrationId: UUID;
+    arguments?: ResourceArgument[];
+  }) {
+    this.uri = params.uri;
+    this.name = params.name;
+    this.description = params.description;
+    this.mimeType = params.mimeType;
+    this.integrationId = params.integrationId;
+    this.arguments = params.arguments;
   }
 }

@@ -46,10 +46,7 @@ export class ValidateMcpIntegrationUseCase {
   async execute(
     command: ValidateMcpIntegrationCommand,
   ): Promise<ValidationResult> {
-    const startTime = Date.now();
-    this.logger.log(
-      `[MCP] operation=validate integration=${command.integrationId} status=started`,
-    );
+    this.logger.log('validateMcpIntegration');
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -74,31 +71,35 @@ export class ValidateMcpIntegrationUseCase {
 
       // Attempt connection and capability discovery
       try {
-        const [tools, resources, prompts] = await Promise.all([
-          this.mcpClient.listTools(connectionConfig),
-          this.mcpClient.listResources(connectionConfig),
-          this.mcpClient.listPrompts(connectionConfig),
-        ]);
+        const [tools, resources, resourceTemplates, prompts] =
+          await Promise.all([
+            this.mcpClient.listTools(connectionConfig),
+            this.mcpClient.listResources(connectionConfig),
+            this.mcpClient.listResourceTemplates(connectionConfig),
+            this.mcpClient.listPrompts(connectionConfig),
+          ]);
 
-        const duration = Date.now() - startTime;
-        this.logger.log(
-          `[MCP] operation=validate integration=${command.integrationId} name="${integration.name}" status=success tools=${tools.length} resources=${resources.length} prompts=${prompts.length} duration=${duration}ms`,
-        );
+        this.logger.log('validationSucceeded', {
+          id: command.integrationId,
+          toolCount: tools.length,
+          resourceCount: resources.length,
+          promptCount: prompts.length,
+        });
 
         return {
           isValid: true,
           toolCount: tools.length,
-          resourceCount: resources.length,
+          resourceCount: resources.length + resourceTemplates.length,
           promptCount: prompts.length,
         };
       } catch (connectionError) {
-        const duration = Date.now() - startTime;
         const errorMsg =
           (connectionError as Error).message || 'Connection failed';
 
-        this.logger.warn(
-          `[MCP] operation=validate integration=${command.integrationId} name="${integration.name}" status=failed error="${errorMsg}" duration=${duration}ms`,
-        );
+        this.logger.warn('validationFailed', {
+          id: command.integrationId,
+          error: errorMsg,
+        });
 
         return {
           isValid: false,
@@ -106,22 +107,17 @@ export class ValidateMcpIntegrationUseCase {
         };
       }
     } catch (error) {
-      const duration = Date.now() - startTime;
-
       if (
         error instanceof ApplicationError ||
         error instanceof UnauthorizedException
       ) {
-        this.logger.warn(
-          `[MCP] operation=validate integration=${command.integrationId} status=error error="${error.message}" duration=${duration}ms`,
-        );
         throw error;
       }
 
-      this.logger.error(
-        `[MCP] operation=validate integration=${command.integrationId} status=unexpected_error error="${(error as Error).message}" duration=${duration}ms`,
-        { error: error as Error },
-      );
+      this.logger.error('unexpectedError', {
+        id: command.integrationId,
+        error: error as Error,
+      });
       throw new UnexpectedMcpError(
         'Unexpected error occurred during validation',
       );

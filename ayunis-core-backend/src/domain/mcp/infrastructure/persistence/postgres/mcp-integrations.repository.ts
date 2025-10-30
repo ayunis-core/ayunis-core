@@ -18,6 +18,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   constructor(
     @InjectRepository(McpIntegrationRecord)
     private readonly repository: Repository<McpIntegrationRecord>,
+    private readonly mcpIntegrationMapper: McpIntegrationMapper,
   ) {
     super();
   }
@@ -25,7 +26,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   async save(integration: McpIntegration): Promise<McpIntegration> {
     this.logger.log('save', { integrationId: integration.id });
 
-    const record = McpIntegrationMapper.toRecord(integration);
+    const record = this.mcpIntegrationMapper.toRecord(integration);
     const savedRecord = await this.repository.save(record);
 
     // Reload to ensure we have the complete record with all relations
@@ -39,7 +40,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       );
     }
 
-    return McpIntegrationMapper.toDomain(reloadedRecord);
+    return this.mcpIntegrationMapper.toDomain(reloadedRecord);
   }
 
   async findById(id: UUID): Promise<McpIntegration | null> {
@@ -53,7 +54,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       return null;
     }
 
-    return McpIntegrationMapper.toDomain(record);
+    return this.mcpIntegrationMapper.toDomain(record);
   }
 
   async findByIds(ids: UUID[]): Promise<McpIntegration[]> {
@@ -67,7 +68,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       where: { id: In(ids) },
     });
 
-    return records.map((record) => McpIntegrationMapper.toDomain(record));
+    return records.map((record) => this.mcpIntegrationMapper.toDomain(record));
   }
 
   async findAll(): Promise<McpIntegration[]> {
@@ -77,7 +78,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       order: { createdAt: 'DESC' },
     });
 
-    return records.map((record) => McpIntegrationMapper.toDomain(record));
+    return records.map((record) => this.mcpIntegrationMapper.toDomain(record));
   }
 
   async findByOrganizationId(organizationId: UUID): Promise<McpIntegration[]> {
@@ -88,7 +89,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       order: { createdAt: 'DESC' },
     });
 
-    return records.map((record) => McpIntegrationMapper.toDomain(record));
+    return records.map((record) => this.mcpIntegrationMapper.toDomain(record));
   }
 
   async findByOrganizationIdAndEnabled(
@@ -104,7 +105,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       order: { createdAt: 'DESC' },
     });
 
-    return records.map((record) => McpIntegrationMapper.toDomain(record));
+    return records.map((record) => this.mcpIntegrationMapper.toDomain(record));
   }
 
   async delete(id: UUID): Promise<void> {

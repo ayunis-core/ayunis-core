@@ -1,7 +1,9 @@
+import { randomUUID } from 'crypto';
 import { McpTool } from './mcp-tool.entity';
 
 describe('McpTool', () => {
   it('should instantiate correctly with all fields', () => {
+    const integrationId = randomUUID();
     const inputSchema = {
       type: 'object',
       properties: {
@@ -14,26 +16,27 @@ describe('McpTool', () => {
       'search',
       'Search for information',
       inputSchema,
-      'integration-123',
+      integrationId,
     );
 
     expect(tool.name).toBe('search');
     expect(tool.description).toBe('Search for information');
     expect(tool.inputSchema).toEqual(inputSchema);
-    expect(tool.integrationId).toBe('integration-123');
+    expect(tool.integrationId).toBe(integrationId);
   });
 
   it('should handle optional description', () => {
+    const integrationId = randomUUID();
     const tool = new McpTool(
       'test-tool',
       undefined,
       { type: 'object' },
-      'integration-456',
+      integrationId,
     );
 
     expect(tool.name).toBe('test-tool');
     expect(tool.description).toBeUndefined();
-    expect(tool.integrationId).toBe('integration-456');
+    expect(tool.integrationId).toBe(integrationId);
   });
 
   it('should handle complex input schema', () => {
@@ -61,7 +64,7 @@ describe('McpTool', () => {
       'complex-tool',
       'A tool with complex schema',
       complexSchema,
-      'integration-789',
+      randomUUID(),
     );
 
     expect(tool.inputSchema).toEqual(complexSchema);
