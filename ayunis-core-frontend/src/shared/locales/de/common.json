@@ -58,11 +58,10 @@
     "view": "Ansehen",
     "close": "Schließen",
     "start": "Jetzt starten"
-  }
-  ,
+  },
   "welcome": {
     "title": "Willkommen bei",
-    "subtitle": "Erhalten Sie einen kurzen Überblick über die wichtigsten Funktionen und nächsten Schritte in Ayunis Core.",
+    "subtitle": "Erhalten Sie einen kurzen Überblick über die wichtigsten Funktionen in Ayunis Core.",
     "cta": "Jetzt loslegen"
   }
 }

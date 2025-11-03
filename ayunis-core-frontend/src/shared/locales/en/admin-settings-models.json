@@ -46,10 +46,28 @@
       "cta": "Watch video"
     },
     "tabs": {
-      "enabled": "Enabled Providers",
-      "eu": "European Models",
-      "intl": "International Models",
+      "recommended": "Recommended Models",
       "self": "Self-hosted Models"
+    },
+    "emptyState": {
+      "recommended": {
+        "title": "No recommended models available",
+        "description": "There are currently no recommended models configured. Please check your configuration."
+      },
+      "selfHosted": {
+        "title": "No self-hosted models available",
+        "description": "There are currently no self-hosted models configured. Please check your configuration."
+      }
+    },
+    "card": {
+      "recommended": {
+        "title": "Ayunis",
+        "description": "Operated in 🇩🇪 Germany in sovereign Telekom Cloud."
+      },
+      "selfHosted": {
+        "title": "Open Source Models",
+        "description": "Hosted on your local environment."
+      }
     }
   }
 }

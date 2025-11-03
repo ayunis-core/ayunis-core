@@ -22,7 +22,8 @@
   },
   "step5": {
     "title": "Mitglieder einladen",
-    "description": "Laden Sie Ihre Mitarbeiter, Arbeitskollegen oder andere Nutzer ein und verteilen Sie Berechtigungen. die z. B. Anträge automatisiert prüfen, Formulare ausfüllen oder Verwaltungsvorgänge im digitalen Alltag vereinfachen."
+    "descriptionPrefix": "Laden Sie Ihre Mitarbeiter, Arbeitskollegen oder andere Nutzer ein und verteilen Sie Berechtigungen ",
+    "description": "– alles zentral und transparent in den Einstellungen. So steuern Sie Zugriffe genau dort, wo sie gebraucht werden."
   },
   "step6": {
     "title": "Sie haben die Wahl.",
@@ -36,8 +37,7 @@
   "applyErrorNoModel": "Kein freigeschaltetes Modell für {{provider}} gefunden. Aktivieren Sie es unter Admin → Modell-Einstellungen.",
   "applyErrorGeneric": "Standardmodell konnte nicht gesetzt werden. Bitte erneut versuchen.",
   "step7": {
-    "title": "Ihr Account ist bereit. Datensicher mit europäischem Modell Mistral.",
-    "description": "Sie starten mit dem datensicheren, speziell für kommunale Verwaltungen ausgewählten europäischen Modell Mistral. Sie können jederzeit weitere KI-Modelle hinzufügen.",
+    "title": "Ihr Account ist bereit. <br/> Sicher, souverän und datenschutzkonform 🇩🇪",
     "cta": "Jetzt starten"
   },
   "aide": {

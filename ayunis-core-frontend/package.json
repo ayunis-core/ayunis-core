@@ -44,6 +44,7 @@
     "i18next": "^25.2.1",
     "i18next-browser-languagedetector": "^8.2.0",
     "lucide-react": "^0.476.0",
+    "motion": "^12.23.24",
     "react": "^19.0.0",
     "react-day-picker": "^9.9.0",
     "react-dom": "^19.0.0",
@@ -73,6 +74,5 @@
     "vite": "^6.1.0",
     "vitest": "^3.0.5",
     "web-vitals": "^4.2.4"
-  },
-  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
+  }
 }

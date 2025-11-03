@@ -1900,6 +1900,28 @@
         ]
       }
     },
+    "/subscriptions/status": {
+      "get": {
+        "operationId": "SubscriptionsController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current subscription and trial status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get subscription/trial status for UI gating",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
     "/subscriptions/price": {
       "get": {
         "operationId": "SubscriptionsController_getCurrentPrice",
@@ -4988,6 +5010,81 @@
         },
         "required": [
           "pricePerSeatMonthly"
+        ]
+      },
+      "TrialStatusDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Trial unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date when the trial was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date when the trial was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Organization ID associated with the trial",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages sent during the trial",
+            "example": 50
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 100
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "orgId",
+          "messagesSent",
+          "maxMessages"
+        ]
+      },
+      "SubscriptionStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "hasActiveSubscription": {
+            "type": "boolean",
+            "description": "Whether the organization has an active subscription",
+            "example": false
+          },
+          "isMessageLimitReached": {
+            "type": "boolean",
+            "description": "Whether the message limit has been reached",
+            "example": false
+          },
+          "trial": {
+            "nullable": true,
+            "description": "Trial information if no active subscription exists",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrialStatusDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "hasActiveSubscription",
+          "isMessageLimitReached"
         ]
       },
       "UpdateSeatsDto": {

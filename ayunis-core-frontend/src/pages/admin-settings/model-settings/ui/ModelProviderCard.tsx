@@ -1,15 +1,13 @@
 // Types
-import type { Provider } from "../model/openapi";
 import type { ModelWithConfigResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 // Utils
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { Layers } from "lucide-react";
 
 // Ui
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -19,7 +17,6 @@ import { Switch } from "@/shared/ui/shadcn/switch";
 import { Label } from "@/shared/ui/shadcn/label";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { Badge } from "@/shared/ui/shadcn/badge";
-import { Button } from "@/shared/ui/shadcn/button";
 import { Avatar } from "@/shared/ui/shadcn/avatar";
 
 import {
@@ -27,75 +24,47 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/shadcn/tooltip";
-import ProviderConfirmationDialog from "@/entities/model/ui/ProviderConfirmationDialog";
 
 // API
-import { ModelProviderWithPermittedStatusResponseDtoHostedIn } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import { useCreatePermittedModel } from "../api/useCreatePermittedModel";
 import { useDeletePermittedModel } from "../api/useDeletePermittedModel";
-import { useCreatePermittedProvider } from "../api/useCreatePermittedProvider";
-import { useDeletePermittedProvider } from "../api/useDeletePermittedProvider";
 
 // Widgets
 import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
 
 // Static
-import mistralLogo from "@/shared/assets/models/mistral-logo.png";
-import anthropicLogo from "@/shared/assets/models/anthropic-logo.png";
-import openaiLogo from "@/shared/assets/models/openai-logo.svg";
+import ayunisModelLogo from "@/shared/assets/models/ayunis-model.svg";
 
 interface ModelProviderCardProps {
-  provider: Provider;
+  cardType: "recommended" | "self";
   models: ModelWithConfigResponseDto[];
+  providers: Array<{ provider: string; isPermitted: boolean }>;
 }
 
 export default function ModelProviderCard({
-  provider,
+  cardType,
   models,
+  providers,
 }: ModelProviderCardProps) {
   const { t } = useTranslation("admin-settings-models");
   const { createPermittedModel } = useCreatePermittedModel();
   const { deletePermittedModel } = useDeletePermittedModel();
-  const { createPermittedProvider } = useCreatePermittedProvider();
-  const { deletePermittedProvider } = useDeletePermittedProvider();
 
-  const hostedInLabel: Record<
-    ModelProviderWithPermittedStatusResponseDtoHostedIn,
-    string
-  > = {
-    DE: t("models.hostedIn.de"),
-    US: t("models.hostedIn.us"),
-    EU: t("models.hostedIn.eu"),
-    SELF_HOSTED: t("models.hostedIn.selfHosted"),
-    AYUNIS: t("models.hostedIn.ayunis"),
+  const cardTitle = cardType === "recommended" 
+    ? t("models.card.recommended.title")
+    : t("models.card.selfHosted.title");
+  
+  const cardDescription = cardType === "recommended"
+    ? t("models.card.recommended.description")
+    : t("models.card.selfHosted.description");
+
+  const getIcon = () => {
+    if (cardType === "recommended") {
+      return <img src={ayunisModelLogo} alt={cardTitle} className="h-6 w-6 rounded-sm" />;
+    }
+
+    return <Layers className="h-6 w-6 text-foreground" />;
   };
-
-  function getProviderLogo(): string | undefined {
-    switch (provider.provider) {
-      case "mistral":
-        return mistralLogo;
-      case "anthropic":
-        return anthropicLogo;
-      case "openai":
-        return openaiLogo;
-      default:
-        return undefined;
-    }
-  }
-
-  function handleProviderToggle() {
-    if (provider.isPermitted) {
-      // Delete permitted provider
-      deletePermittedProvider({
-        provider: provider.provider,
-      });
-    } else {
-      // Create permitted provider
-      createPermittedProvider({
-        provider: provider.provider,
-      });
-    }
-  }
 
   function handleModelToggle(
     model: ModelWithConfigResponseDto,
@@ -107,60 +76,38 @@ export default function ModelProviderCard({
       });
       return;
     }
+
     if (!isPermitted && model.permittedModelId) {
       deletePermittedModel(model.permittedModelId);
       return;
     }
   }
-  const logoSrc = getProviderLogo();
-  const [expanded, setExpanded] = useState<boolean>(provider.isPermitted);
+
+  const isModelEnabled = (model: ModelWithConfigResponseDto) => {
+    const provider = providers.find((p) => p.provider === model.provider);
+    return provider?.isPermitted ?? false;
+  };
 
   return (
     <Card className="rounded-3xl border-0 shadow-sm">
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-3">
           <Avatar className="flex items-center h-10 w-10 justify-center rounded-sm shadow-sm">
-            {logoSrc ? (
-              <img src={logoSrc} alt={provider.displayName} className="h-6 w-6 rounded-sm" />
-            ) : (
-              <div className="h-6 w-6 rounded-sm bg-accent text-foreground flex items-center justify-center text-xs font-semibold">
-                {provider.displayName.slice(0, 2)}
-              </div>
-            )}
+            {getIcon()}
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-base font-semibold">{provider.displayName}</span>
-            <CardDescription className="text-sm font-normal">{hostedInLabel[provider.hostedIn]}</CardDescription>
+            <span className="text-base font-semibold">{cardTitle}</span>
+            <CardDescription className="text-sm font-normal">{cardDescription}</CardDescription>
           </div>
         </CardTitle>
-
-        <CardAction className="flex items-center gap-2 my-auto ml-5">
-          {!provider.isPermitted && (
-            <Button variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)}>
-              {t("models.providerConfirmation.learnMore")}
-            </Button>
-          )}
-          <ProviderConfirmationDialog
-            provider={provider}
-            onConfirm={handleProviderToggle}
-          >
-            <Button variant="outline" size="sm">
-              <span>
-                {provider.isPermitted
-                  ? t("models.disableProvider")
-                  : t("models.enableProvider")}
-              </span>
-            </Button>
-          </ProviderConfirmationDialog>
-        </CardAction>
       </CardHeader>
-      {expanded && (
       <CardContent>
         <div className="space-y-3">
           {models
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((model, index) => {
-              const modelKey = `model-${provider}:${model.name}`;
+              const modelKey = `model-${model.provider}:${model.name}`;
+              const providerPermitted = isModelEnabled(model);
               return (
                 <div key={modelKey} className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -223,12 +170,12 @@ export default function ModelProviderCard({
 
                     </div>
                     <TooltipIf
-                      condition={!provider.isPermitted}
+                      condition={!providerPermitted}
                       tooltip={t("models.providerDisabled")}
                     >
                       <Switch
                         id={modelKey}
-                        disabled={!provider.isPermitted}
+                        disabled={!providerPermitted}
                         checked={model.isPermitted}
                         onCheckedChange={(isPermitted) =>
                           handleModelToggle(model, isPermitted)
@@ -242,7 +189,6 @@ export default function ModelProviderCard({
             })}
         </div>
       </CardContent>
-      )}
     </Card>
   );
 }

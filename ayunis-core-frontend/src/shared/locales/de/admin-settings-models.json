@@ -46,10 +46,28 @@
       "cta": "Video ansehen"
     },
     "tabs": {
-      "enabled": "Aktivierte Provider",
-      "eu": "Europäische Modelle",
-      "intl": "Internationale Modelle",
+      "recommended": "Empfohlene Modelle",
       "self": "Selbst-Gehostete Modelle"
+    },
+    "emptyState": {
+      "recommended": {
+        "title": "Keine empfohlenen Modelle verfügbar",
+        "description": "Es sind derzeit keine empfohlenen Modelle konfiguriert. Bitte überprüfen Sie Ihre Konfiguration."
+      },
+      "selfHosted": {
+        "title": "Keine selbst-gehosteten Modelle verfügbar",
+        "description": "Es sind derzeit keine selbst-gehosteten Modelle konfiguriert. Bitte überprüfen Sie Ihre Konfiguration."
+      }
+    },
+    "card": {
+      "recommended": {
+        "title": "Ayunis",
+        "description": "Betrieben in 🇩🇪 Deutschland in souveräner Telekom Cloud."
+      },
+      "selfHosted": {
+        "title": "Open Source Modelle",
+        "description": "Gehostet auf Ihrer lokalen Umgebung."
+      }
     }
   }
 }

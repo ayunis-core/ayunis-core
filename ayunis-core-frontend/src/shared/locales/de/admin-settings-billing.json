@@ -119,5 +119,17 @@
     "createErrorNoOfSeatsRequired": "Anzahl der Plätze ist erforderlich",
     "uncancelErrorSubscriptionNotFound": "Abonnement nicht gefunden",
     "uncancelError": "Ein unerwarteter Fehler ist aufgetreten"
+  },
+  "trialLimitBanner": {
+    "title": "Sie haben Ihr Limit erreicht.",
+    "descriptionPart1": "Erhalten Sie jetzt ein individuelles Angebot,",
+    "descriptionPart2": " um Ayunis Core an Ihrem Arbeitsplatz zu nutzen – unser Sales-Team berät Sie persönlich und findet den passenden Plan.",
+    "extendTrial": "Testphase verlängern",
+    "contactSales": "Angebot einholen",
+    "avatarAlt": {
+      "benatsha": "Benatsha",
+      "liza": "Liza",
+      "moriz": "Moriz"
+    }
   }
 }
