@@ -44,6 +44,12 @@ import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-bil
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
 import { GetCurrentPriceUseCase } from '../../application/use-cases/get-current-price/get-current-price.use-case';
 import { PriceResponseDto } from './dto/price-response.dto';
+import { GetSubscriptionStatusUseCase } from '../../application/use-cases/get-subscription-status/get-subscription-status.use-case';
+import { GetSubscriptionStatusQuery } from '../../application/use-cases/get-subscription-status/get-subscription-status.query';
+import {
+  SubscriptionStatusResponseDto,
+  TrialStatusDto,
+} from './dto/subscription-status.response.dto';
 
 @ApiTags('subscriptions')
 @Controller('subscriptions')
@@ -53,6 +59,8 @@ import { PriceResponseDto } from './dto/price-response.dto';
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
   PriceResponseDto,
+  SubscriptionStatusResponseDto,
+  TrialStatusDto,
 )
 export class SubscriptionsController {
   private readonly logger = new Logger(SubscriptionsController.name);
@@ -67,6 +75,7 @@ export class SubscriptionsController {
     private readonly updateSeatsUseCase: UpdateSeatsUseCase,
     private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
     private readonly getCurrentPriceUseCase: GetCurrentPriceUseCase,
+    private readonly getSubscriptionStatusUseCase: GetSubscriptionStatusUseCase,
   ) {}
 
   @Roles(UserRole.ADMIN)
@@ -149,6 +158,25 @@ export class SubscriptionsController {
     );
 
     return { hasActiveSubscription };
+  }
+
+  @Get('status')
+  @ApiOperation({
+    summary: 'Get subscription/trial status for UI gating',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Current subscription and trial status',
+    schema: { $ref: getSchemaPath(SubscriptionStatusResponseDto) },
+  })
+  async getStatus(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<SubscriptionStatusResponseDto> {
+    this.logger.log(`Getting subscription status for org ${orgId}`);
+
+    return this.getSubscriptionStatusUseCase.execute(
+      new GetSubscriptionStatusQuery(orgId),
+    );
   }
 
   @Get('price')
