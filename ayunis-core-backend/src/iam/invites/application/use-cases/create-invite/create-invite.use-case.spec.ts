@@ -10,6 +10,7 @@ import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/
 import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import {
   EmailNotAvailableError,
   InvalidSeatsError,
@@ -188,6 +189,41 @@ describe('CreateInviteUseCase', () => {
       expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
       expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
       expect(invitesRepository.create).toHaveBeenCalled();
+    });
+
+    it('should create invite when no active subscription is found in cloud instance', async () => {
+      // Arrange
+      const command = new CreateInviteCommand({
+        email: mockEmail,
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      configService.get
+        .mockReturnValueOnce([]) // auth.emailProviderBlacklist
+        .mockReturnValueOnce(true) // app.isCloudHosted
+        .mockReturnValueOnce('7d') // auth.jwt.inviteExpiresIn
+        .mockReturnValueOnce(true); // extra config calls (ignored)
+
+      getActiveSubscriptionUseCase.execute.mockRejectedValue(
+        new SubscriptionNotFoundError(mockOrgId),
+      );
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(getActiveSubscriptionUseCase.execute).toHaveBeenCalled();
+      expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
+      expect(invitesRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: mockEmail,
+          orgId: mockOrgId,
+        }),
+      );
     });
 
     it('should update seats when no available seats in cloud instance', async () => {
