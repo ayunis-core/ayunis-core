@@ -26,6 +26,11 @@
       "success": "Erfolgreich verbunden. {{prompts}} Prompts, {{resources}} Ressourcen, {{tools}} Tools gefunden.",
       "error": "Verbindung fehlgeschlagen: {{message}}"
     },
+    "comingSoonDialog": {
+      "title": "Demnächst verfügbar",
+      "description": "Vordefinierte Integrationen sind in Arbeit. Schauen Sie bald wieder vorbei!",
+      "close": "Verstanden"
+    },
     "page": {
       "accessDenied": "Zugriff verweigert",
       "accessDeniedMessage": "Sie benötigen Administratorrechte, um auf diese Seite zuzugreifen.",

@@ -8,7 +8,6 @@ import { CreatePredefinedDialog } from "./create-predefined-dialog";
 import { CreateCustomDialog } from "./create-custom-dialog";
 import { EditIntegrationDialog } from "./edit-integration-dialog";
 import { DeleteConfirmationDialog } from "./delete-confirmation-dialog";
-import { useMe } from "@/widgets/app-sidebar/api/useMe";
 import SettingsLayout from "../../admin-settings-layout";
 import { useMcpIntegrationsQueries } from "../api/useMcpIntegrationsQueries";
 import type { McpIntegration } from "../model/types";
@@ -18,11 +17,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/shadcn/dropdown-menu";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@/shared/ui/shadcn/item";
+import { ComingSoonDialog } from "./coming-soon-dialog";
 
 export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   const { t } = useTranslation("admin-settings-integrations");
-  const { user } = useMe();
-  const isAdmin = user?.role === "admin";
 
   // Dialog states
   const [createPredefinedOpen, setCreatePredefinedOpen] = useState(false);
@@ -32,6 +36,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   );
   const [deleteIntegration, setDeleteIntegration] =
     useState<McpIntegration | null>(null);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   // Queries
   const {
@@ -42,24 +47,14 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
     predefinedConfigs,
   } = useMcpIntegrationsQueries();
 
-  // Authorization check
-  if (!isAdmin) {
-    return (
-      <SettingsLayout>
-        <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <AlertCircle className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-            <h2 className="mb-2 text-2xl font-bold">
-              {t("integrations.page.accessDenied")}
-            </h2>
-            <p className="text-muted-foreground">
-              {t("integrations.page.accessDeniedMessage")}
-            </p>
-          </div>
-        </div>
-      </SettingsLayout>
-    );
-  }
+  const handleOpenCreatePredefined = () => {
+    if (!predefinedConfigs.length) {
+      setComingSoonOpen(true);
+      return;
+    }
+
+    setCreatePredefinedOpen(true);
+  };
 
   // Loading state
   if (isLoadingIntegrations) {
@@ -68,7 +63,16 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-64 w-full" />
+              <Item key={i}>
+                <ItemContent>
+                  <ItemTitle>
+                    <Skeleton className="h-4 w-24" />
+                  </ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <Skeleton className="h-4 w-4" />
+                </ItemActions>
+              </Item>
             ))}
           </div>
         </div>
@@ -119,7 +123,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setCreatePredefinedOpen(true)}>
+            <DropdownMenuItem onClick={handleOpenCreatePredefined}>
               {t("integrations.page.addPredefined")}
             </DropdownMenuItem>
             {!isCloud && (
@@ -140,7 +144,6 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
           integrations={integrations}
           onEdit={setEditIntegration}
           onDelete={setDeleteIntegration}
-          isAdmin={isAdmin}
         />
 
         <CreatePredefinedDialog
@@ -165,6 +168,11 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
           integration={deleteIntegration}
           open={!!deleteIntegration}
           onOpenChange={(open) => !open && setDeleteIntegration(null)}
+        />
+
+        <ComingSoonDialog
+          open={comingSoonOpen}
+          onOpenChange={setComingSoonOpen}
         />
       </div>
     </SettingsLayout>

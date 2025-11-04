@@ -26,6 +26,11 @@
       "success": "Connected successfully. Found {{prompts}} prompts, {{resources}} resources, {{tools}} tools.",
       "error": "Connection failed: {{message}}"
     },
+    "comingSoonDialog": {
+      "title": "Coming Soon",
+      "description": "Predefined integrations are on the way. Check back soon!",
+      "close": "Got it"
+    },
     "page": {
       "accessDenied": "Access Denied",
       "accessDeniedMessage": "You need administrator privileges to access this page.",
