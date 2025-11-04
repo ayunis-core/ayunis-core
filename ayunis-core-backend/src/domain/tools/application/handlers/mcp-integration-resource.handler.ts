@@ -11,7 +11,7 @@ import { ToolExecutionFailedError } from '../tools.errors';
 import { parseCSV } from 'src/common/util/csv';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
-import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceCreator } from '../../../../domain/sources/domain/source-creator.enum';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, Length } from 'class-validator';
+import { IsString, IsOptional, Length, MinLength } from 'class-validator';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -25,4 +25,26 @@ export class UpdateMcpIntegrationDto {
   @IsString()
   @Length(1, 255)
   name?: string;
+
+  @ApiProperty({
+    description:
+      'Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.',
+    example: 'new-secret-value-123',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  credentials?: string;
+
+  @ApiProperty({
+    description:
+      'Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.',
+    example: 'X-API-Key',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Length(1, 255)
+  authHeaderName?: string;
 }

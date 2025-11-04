@@ -70,6 +70,8 @@
       "credentialsPlaceholder": "Geben Sie Ihre Anmeldedaten ein",
       "credentialsDescriptionApiKey": "Ihr API-Schlüssel",
       "credentialsDescriptionBearerToken": "Ihr Bearer-Token",
+      "optionalField": "Optional",
+      "noCredentialsRequired": "Für diese Integration sind keine zusätzlichen Anmeldedaten erforderlich.",
       "cancel": "Abbrechen",
       "creating": "Wird erstellt...",
       "create": "Erstellen"
@@ -113,6 +115,7 @@
       "credentials": "Anmeldedaten (Optional)",
       "credentialsPlaceholder": "Leer lassen, um bestehende beizubehalten",
       "credentialsDescription": "Geben Sie neue Anmeldedaten ein oder lassen Sie das Feld leer, um die bestehenden beizubehalten",
+      "noCredentialsMessage": "Diese Integration verwendet keine Authentifizierungsdaten.",
       "cancel": "Abbrechen",
       "updating": "Wird aktualisiert...",
       "update": "Aktualisieren"

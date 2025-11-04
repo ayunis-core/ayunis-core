@@ -3,36 +3,44 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
-  IsOptional,
-  Length,
-  MinLength,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
+import { CredentialFieldType } from '../../../domain/predefined-mcp-integration-config';
+
+/**
+ * DTO for a single config value (credential field value).
+ */
+export class ConfigValueDto {
+  @ApiProperty({
+    description: 'The name/type of the credential field',
+    enum: CredentialFieldType,
+    example: CredentialFieldType.TOKEN,
+  })
+  @IsEnum(CredentialFieldType)
+  @IsNotEmpty()
+  name: CredentialFieldType;
+
+  @ApiProperty({
+    description: 'The value for this credential field (will be encrypted)',
+    example: 'sk_test_123abc',
+  })
+  @IsString()
+  @IsNotEmpty()
+  value: string;
+}
 
 /**
  * DTO for creating a predefined MCP integration.
  * Used when creating an integration from a predefined configuration.
  *
  * Validation Rules:
- * - name: Required, 1-255 characters
  * - slug: Required, must be valid predefined integration slug
- * - authMethod: Optional, must be valid enum value if provided
- * - credentials: Optional, but required if authMethod is CUSTOM_HEADER or BEARER_TOKEN
- * - authHeaderName: Optional, can be overridden from predefined defaults
+ * - configValues: Required array of config values for credential fields
  */
 export class CreatePredefinedIntegrationDto {
-  @ApiProperty({
-    description: 'The name for this integration instance',
-    example: 'Production Test Integration',
-    minLength: 1,
-    maxLength: 255,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Length(1, 255)
-  name: string;
-
   @ApiProperty({
     description: 'The predefined integration slug',
     example: PredefinedMcpIntegrationSlug.TEST,
@@ -43,36 +51,13 @@ export class CreatePredefinedIntegrationDto {
   slug: PredefinedMcpIntegrationSlug;
 
   @ApiProperty({
-    description:
-      'Authentication method (overrides predefined defaults if provided)',
-    enum: McpAuthMethod,
-    example: McpAuthMethod.BEARER_TOKEN,
-    required: false,
-    nullable: true,
+    description: 'List of config values for credential fields',
+    type: [ConfigValueDto],
+    example: [{ name: CredentialFieldType.TOKEN, value: 'sk_test_123abc' }],
   })
-  @IsOptional()
-  @IsEnum(McpAuthMethod)
-  authMethod?: McpAuthMethod;
-
-  @ApiProperty({
-    description:
-      'Custom auth header name (e.g., X-API-Key). Can override predefined defaults for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header).',
-    example: 'X-API-Key',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @Length(1, 255)
-  authHeaderName?: string;
-
-  @ApiProperty({
-    description:
-      'Authentication credentials (will be encrypted). Required if authMethod requires credentials.',
-    example: 'sk_test_123abc',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
-  credentials?: string;
+  @IsArray()
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => ConfigValueDto)
+  configValues!: ConfigValueDto[];
 }

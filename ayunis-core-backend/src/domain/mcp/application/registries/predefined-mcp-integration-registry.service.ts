@@ -31,6 +31,7 @@ export class PredefinedMcpIntegrationRegistry {
     // Locaboo integration (Bearer token auth)
     const locabooUrl = this.configService.get<string>('LOCABOO_4_URL');
     if (locabooUrl) {
+      const locabooServerUrl = `${locabooUrl.replace(/\/$/, '')}/mcp`;
       this.configs.set(PredefinedMcpIntegrationSlug.LOCABOO, {
         slug: PredefinedMcpIntegrationSlug.LOCABOO,
         displayName: 'Locaboo 4',
@@ -38,7 +39,7 @@ export class PredefinedMcpIntegrationRegistry {
           'Connect to Locaboo 4 booking system for access to bookings, resources, services, and inventory data',
         authType: McpAuthMethod.BEARER_TOKEN,
         authHeaderName: 'Authorization',
-        serverUrl: locabooUrl,
+        serverUrl: locabooServerUrl,
         credentialFields: [
           {
             label: 'Locaboo 3 API Token',
@@ -83,7 +84,7 @@ export class PredefinedMcpIntegrationRegistry {
           'LOCABOO_4_URL environment variable not configured for Locaboo integration',
         );
       }
-      return `${baseUrl}/mcp`;
+      return `${baseUrl.replace(/\/$/, '')}/mcp`;
     }
 
     if (slug === PredefinedMcpIntegrationSlug.TEST) {

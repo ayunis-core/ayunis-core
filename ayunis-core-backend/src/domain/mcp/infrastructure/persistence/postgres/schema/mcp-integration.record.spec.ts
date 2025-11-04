@@ -9,6 +9,7 @@ import {
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
 } from './index';
+import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
 
 describe('MCP Integration Persistence Records', () => {
   it('should instantiate custom integration record with base fields', () => {
@@ -21,7 +22,6 @@ describe('MCP Integration Persistence Records', () => {
 
     expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
     expect(record).toBeInstanceOf(McpIntegrationRecord);
-    expect(record.predefinedSlug).toBeUndefined();
   });
 
   it('should instantiate predefined integration record and require slug', () => {
@@ -30,10 +30,10 @@ describe('MCP Integration Persistence Records', () => {
     record.orgId = randomUUID();
     record.name = 'Predefined';
     record.serverUrl = 'https://registry.example.com/mcp';
-    record.predefinedSlug = 'TEST';
+    record.predefinedSlug = PredefinedMcpIntegrationSlug.TEST;
 
     expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
-    expect(record.predefinedSlug).toBe('TEST');
+    expect(record.predefinedSlug).toBe(PredefinedMcpIntegrationSlug.TEST);
   });
 
   it('should model one-to-one auth association via integrationId', () => {

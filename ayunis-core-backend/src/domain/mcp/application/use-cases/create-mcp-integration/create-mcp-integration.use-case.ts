@@ -6,13 +6,11 @@ import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mc
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import {
   InvalidPredefinedSlugError,
   InvalidServerUrlError,
@@ -26,7 +24,6 @@ import { UUID } from 'crypto';
 import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
-import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
 import { McpIntegrationAuth } from 'src/domain/mcp/domain';
 
 @Injectable()
@@ -38,6 +35,7 @@ export class CreateMcpIntegrationUseCase {
     private readonly registryService: PredefinedMcpIntegrationRegistry,
     private readonly contextService: ContextService,
     private readonly factory: McpIntegrationFactory,
+    private readonly authFactory: McpIntegrationAuthFactory,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly validateUseCase: ValidateMcpIntegrationUseCase,
   ) {}
@@ -97,10 +95,13 @@ export class CreateMcpIntegrationUseCase {
       let integrationAuth: McpIntegrationAuth;
       switch (config.authType) {
         case McpAuthMethod.NO_AUTH:
-          integrationAuth = new NoAuthMcpIntegrationAuth({});
+          integrationAuth = this.authFactory.createAuth({
+            method: McpAuthMethod.NO_AUTH,
+          });
           break;
         case McpAuthMethod.BEARER_TOKEN:
-          integrationAuth = new BearerMcpIntegrationAuth({
+          integrationAuth = this.authFactory.createAuth({
+            method: McpAuthMethod.BEARER_TOKEN,
             authToken:
               command.credentialFields.find(
                 (field) => field.name === CredentialFieldType.TOKEN,
@@ -108,7 +109,8 @@ export class CreateMcpIntegrationUseCase {
           });
           break;
         case McpAuthMethod.OAUTH:
-          integrationAuth = new OAuthMcpIntegrationAuth({
+          integrationAuth = this.authFactory.createAuth({
+            method: McpAuthMethod.OAUTH,
             clientId:
               command.credentialFields.find(
                 (field) => field.name === CredentialFieldType.CLIENT_ID,
@@ -123,7 +125,8 @@ export class CreateMcpIntegrationUseCase {
           throw new Error(`Unknown MCP auth type: ${config.authType}`);
       }
 
-      const integration = new PredefinedMcpIntegration({
+      const integration = this.factory.createIntegration({
+        kind: McpIntegrationKind.PREDEFINED,
         orgId,
         slug: config.slug,
         name: config.displayName,
@@ -160,7 +163,7 @@ export class CreateMcpIntegrationUseCase {
 
   private async createCustomIntegration(
     command: CreateCustomMcpIntegrationCommand,
-    orgId: string,
+    orgId: UUID,
   ): Promise<CustomMcpIntegration> {
     this.logger.log('createCustomIntegration', {
       serverUrl: command.serverUrl,
@@ -196,10 +199,10 @@ export class CreateMcpIntegrationUseCase {
           command.credentials,
         );
 
-        const auth = new BearerMcpIntegrationAuth({
+        const auth = this.authFactory.createAuth({
+          method: McpAuthMethod.BEARER_TOKEN,
           authToken: encryptedToken,
         });
-        auth.setToken(encryptedToken);
 
         integration = this.factory.createIntegration({
           kind: McpIntegrationKind.CUSTOM,
@@ -222,10 +225,11 @@ export class CreateMcpIntegrationUseCase {
         );
 
         const headerName = command.authHeaderName ?? 'X-API-Key';
-        const auth = new CustomHeaderMcpIntegrationAuth({
+        const auth = this.authFactory.createAuth({
+          method: McpAuthMethod.CUSTOM_HEADER,
+          secret: encryptedKey,
           headerName,
         });
-        auth.setSecret(encryptedKey, headerName);
 
         integration = this.factory.createIntegration({
           kind: McpIntegrationKind.CUSTOM,
@@ -236,7 +240,9 @@ export class CreateMcpIntegrationUseCase {
         });
       } else {
         // NO_AUTH doesn't need any credentials
-        const auth = new NoAuthMcpIntegrationAuth();
+        const auth = this.authFactory.createAuth({
+          method: McpAuthMethod.NO_AUTH,
+        });
         integration = this.factory.createIntegration({
           kind: McpIntegrationKind.CUSTOM,
           orgId,

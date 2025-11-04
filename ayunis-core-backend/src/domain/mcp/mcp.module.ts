@@ -20,6 +20,7 @@ import {
 } from './infrastructure/persistence/postgres/schema';
 import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from './application/factories/mcp-integration-auth.factory';
 import { SourcesModule } from '../sources/sources.module';
 
 // Use Cases
@@ -73,6 +74,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     },
     McpIntegrationMapper,
     McpIntegrationFactory,
+    McpIntegrationAuthFactory,
     McpClientService,
     PredefinedMcpIntegrationRegistry,
     // Use Cases

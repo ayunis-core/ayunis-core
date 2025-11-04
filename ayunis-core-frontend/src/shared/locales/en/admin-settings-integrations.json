@@ -70,6 +70,8 @@
       "credentialsPlaceholder": "Enter your credentials",
       "credentialsDescriptionApiKey": "Your API key",
       "credentialsDescriptionBearerToken": "Your bearer token",
+      "optionalField": "Optional",
+      "noCredentialsRequired": "This integration does not require additional credentials.",
       "cancel": "Cancel",
       "creating": "Creating...",
       "create": "Create"
@@ -113,6 +115,7 @@
       "credentials": "Credentials (Optional)",
       "credentialsPlaceholder": "Leave empty to keep existing",
       "credentialsDescription": "Enter new credentials or leave empty to keep existing ones",
+      "noCredentialsMessage": "This integration does not use authentication credentials.",
       "cancel": "Cancel",
       "updating": "Updating...",
       "update": "Update"

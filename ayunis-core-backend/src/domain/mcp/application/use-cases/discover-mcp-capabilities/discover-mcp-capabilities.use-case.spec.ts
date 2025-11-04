@@ -1,11 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { UUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientPort } from '../../ports/mcp-client.port';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -13,24 +12,64 @@ import {
   McpIntegrationDisabledError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import {
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
+import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
+import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
+import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 
 describe('DiscoverMcpCapabilitiesUseCase', () => {
   let useCase: DiscoverMcpCapabilitiesUseCase;
-  let repository: McpIntegrationsRepositoryPort;
-  let mcpClient: McpClientPort;
-  let registryService: PredefinedMcpIntegrationRegistry;
-  let contextService: ContextService;
+  let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
+  let mcpClientService: jest.Mocked<McpClientService>;
+  let contextService: jest.Mocked<ContextService>;
   let loggerLogSpy: jest.SpyInstance;
+  let loggerWarnSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  const mockOrgId = 'org-123' as UUID;
-  const mockIntegrationId = 'integration-456' as UUID;
+  const mockOrgId = randomUUID() as UUID;
+  const mockIntegrationId = randomUUID() as UUID;
+
+  const buildPredefinedIntegration = (
+    overrides: Partial<
+      ConstructorParameters<typeof PredefinedMcpIntegration>[0]
+    > = {},
+  ) =>
+    new PredefinedMcpIntegration({
+      id: overrides.id ?? mockIntegrationId,
+      name: overrides.name ?? 'Predefined Integration',
+      orgId: overrides.orgId ?? mockOrgId,
+      slug: overrides.slug ?? PredefinedMcpIntegrationSlug.TEST,
+      serverUrl: overrides.serverUrl ?? 'https://registry.example.com/mcp',
+      auth: overrides.auth ?? new NoAuthMcpIntegrationAuth(),
+      enabled: overrides.enabled ?? true,
+      connectionStatus: overrides.connectionStatus,
+      lastConnectionError: overrides.lastConnectionError,
+      lastConnectionCheck: overrides.lastConnectionCheck,
+      createdAt: overrides.createdAt,
+      updatedAt: overrides.updatedAt,
+    });
+
+  const buildCustomIntegration = (
+    overrides: Partial<
+      ConstructorParameters<typeof CustomMcpIntegration>[0]
+    > = {},
+  ) =>
+    new CustomMcpIntegration({
+      id: overrides.id ?? mockIntegrationId,
+      name: overrides.name ?? 'Custom Integration',
+      orgId: overrides.orgId ?? mockOrgId,
+      serverUrl: overrides.serverUrl ?? 'https://custom.example.com/mcp',
+      auth:
+        overrides.auth ??
+        new BearerMcpIntegrationAuth({ authToken: 'encrypted-token' }),
+      enabled: overrides.enabled ?? true,
+      connectionStatus: overrides.connectionStatus,
+      lastConnectionError: overrides.lastConnectionError,
+      lastConnectionCheck: overrides.lastConnectionCheck,
+      createdAt: overrides.createdAt,
+      updatedAt: overrides.updatedAt,
+    });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -43,17 +82,12 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
           },
         },
         {
-          provide: McpClientPort,
+          provide: McpClientService,
           useValue: {
             listTools: jest.fn(),
             listResources: jest.fn(),
+            listResourceTemplates: jest.fn(),
             listPrompts: jest.fn(),
-          },
-        },
-        {
-          provide: PredefinedMcpIntegrationRegistry,
-          useValue: {
-            getConfig: jest.fn(),
           },
         },
         {
@@ -65,20 +99,17 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<DiscoverMcpCapabilitiesUseCase>(
-      DiscoverMcpCapabilitiesUseCase,
-    );
-    repository = module.get<McpIntegrationsRepositoryPort>(
+    useCase = module.get(DiscoverMcpCapabilitiesUseCase);
+    repository = module.get(
       McpIntegrationsRepositoryPort,
-    );
-    mcpClient = module.get<McpClientPort>(McpClientPort);
-    registryService = module.get<PredefinedMcpIntegrationRegistry>(
-      PredefinedMcpIntegrationRegistry,
-    );
-    contextService = module.get<ContextService>(ContextService);
+    ) as jest.Mocked<McpIntegrationsRepositoryPort>;
+    mcpClientService = module.get(
+      McpClientService,
+    ) as jest.Mocked<McpClientService>;
+    contextService = module.get(ContextService) as jest.Mocked<ContextService>;
 
-    // Spy on logger methods
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
@@ -86,421 +117,165 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     jest.clearAllMocks();
   });
 
+  const arrangeSuccessfulClientCalls = () => {
+    mcpClientService.listTools.mockResolvedValue([
+      {
+        name: 'test_tool',
+        description: 'Tool description',
+        inputSchema: { type: 'object', properties: {}, required: [] },
+      },
+    ] as any);
+    mcpClientService.listResources.mockResolvedValue([
+      {
+        uri: 'file://static.txt',
+        name: 'Static Resource',
+        description: 'Static description',
+        mimeType: 'text/plain',
+      },
+    ] as any);
+    mcpClientService.listResourceTemplates.mockResolvedValue([
+      {
+        uri: 'dynamic://{id}',
+        name: 'Dynamic Resource',
+        description: 'Dynamic description',
+        mimeType: 'application/json',
+      },
+    ] as any);
+    mcpClientService.listPrompts.mockResolvedValue([
+      {
+        name: 'test_prompt',
+        description: 'Prompt description',
+        arguments: [{ name: 'arg', required: true }],
+      },
+    ] as any);
+  };
+
   describe('execute', () => {
-    it('should successfully discover capabilities from enabled predefined integration', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
+    it('discovers capabilities for enabled predefined integration', async () => {
+      const integration = buildPredefinedIntegration();
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
+
+      const result = await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
       );
 
-      const mockTools = [
-        {
-          name: 'test_tool',
-          description: 'A test tool',
-          inputSchema: {
-            type: 'object',
-            properties: { param1: { type: 'string' } },
-            required: ['param1'],
-          },
-        },
-      ];
-
-      const mockResources = [
-        {
-          uri: 'file://test.txt',
-          name: 'test.txt',
-          description: 'A test file',
-          mimeType: 'text/plain',
-        },
-      ];
-
-      const mockPrompts = [
-        {
-          name: 'test_prompt',
-          description: 'A test prompt',
-          arguments: [{ name: 'arg1', required: true }],
-        },
-      ];
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test Server',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'listTools').mockResolvedValue(mockTools);
-      jest.spyOn(mcpClient, 'listResources').mockResolvedValue(mockResources);
-      jest.spyOn(mcpClient, 'listPrompts').mockResolvedValue(mockPrompts);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act
-      const result = await useCase.execute(query);
-
-      // Assert
       expect(result.tools).toHaveLength(1);
-      expect(result.tools[0].name).toBe('test_tool');
-      expect(result.tools[0].integrationId).toBe(mockIntegrationId);
-      expect(result.resources).toHaveLength(1);
-      expect(result.resources[0].uri).toBe('file://test.txt');
-      expect(result.resources[0].integrationId).toBe(mockIntegrationId);
+      expect(result.resources).toHaveLength(2);
       expect(result.prompts).toHaveLength(1);
-      expect(result.prompts[0].name).toBe('test_prompt');
-      expect(result.prompts[0].integrationId).toBe(mockIntegrationId);
+      expect(
+        result.resources.every(
+          (resource) => resource.integrationId === mockIntegrationId,
+        ),
+      ).toBe(true);
 
-      expect(contextService.get).toHaveBeenCalledWith('orgId');
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.listTools).toHaveBeenCalled();
-      expect(mcpClient.listResources).toHaveBeenCalled();
-      expect(mcpClient.listPrompts).toHaveBeenCalled();
-
+      expect(mcpClientService.listTools).toHaveBeenCalledWith(integration);
+      expect(mcpClientService.listResourceTemplates).toHaveBeenCalledWith(
+        integration,
+      );
       expect(loggerLogSpy).toHaveBeenCalledWith('discoverMcpCapabilities', {
         id: mockIntegrationId,
       });
-      expect(loggerLogSpy).toHaveBeenCalledWith('discoverySucceeded', {
-        id: mockIntegrationId,
-        toolCount: 1,
-        resourceCount: 1,
-        promptCount: 1,
-      });
+      expect(loggerLogSpy).toHaveBeenCalledWith(
+        'discoverMcpCapabilitiesSucceeded',
+        expect.objectContaining({
+          id: mockIntegrationId,
+          name: integration.name,
+          tools: 1,
+          resources: 2,
+          prompts: 1,
+        }),
+      );
     });
 
-    it('should successfully discover capabilities from enabled custom integration', async () => {
-      // Arrange
-      const mockIntegration = new CustomMcpIntegration(
-        mockIntegrationId,
-        'Custom Integration',
-        mockOrgId,
-        'http://custom-server.com/mcp',
-        true,
-        McpAuthMethod.BEARER_TOKEN,
-        'Authorization',
-        'encrypted-token',
-        new Date(),
-        new Date(),
+    it('supports custom integrations via client service', async () => {
+      const integration = buildCustomIntegration();
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
+
+      await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
       );
 
-      const mockTools = [
-        { name: 'custom_tool', inputSchema: { type: 'object' } },
-      ];
-      const mockResources = [];
-      const mockPrompts = [];
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(mcpClient, 'listTools').mockResolvedValue(mockTools);
-      jest.spyOn(mcpClient, 'listResources').mockResolvedValue(mockResources);
-      jest.spyOn(mcpClient, 'listPrompts').mockResolvedValue(mockPrompts);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act
-      const result = await useCase.execute(query);
-
-      // Assert
-      expect(result.tools).toHaveLength(1);
-      expect(result.resources).toHaveLength(0);
-      expect(result.prompts).toHaveLength(0);
-      expect(mcpClient.listTools).toHaveBeenCalledWith({
-        serverUrl: 'http://custom-server.com/mcp',
-        authHeaderName: 'Authorization',
-        authToken: 'encrypted-token',
-      });
+      expect(mcpClientService.listTools).toHaveBeenCalledWith(integration);
+      expect(mcpClientService.listResources).toHaveBeenCalledWith(integration);
+      expect(mcpClientService.listPrompts).toHaveBeenCalledWith(integration);
     });
 
-    it('should return empty arrays when MCP server has no capabilities', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Empty Server',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
+    it('throws McpIntegrationNotFoundError when integration is missing', async () => {
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(McpIntegrationNotFoundError);
+
+      expect(mcpClientService.listTools).not.toHaveBeenCalled();
+      expect(loggerWarnSpy).toHaveBeenCalledWith(
+        'discoverMcpCapabilitiesFailed',
+        expect.objectContaining({ id: mockIntegrationId }),
       );
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test Server',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'listTools').mockResolvedValue([]);
-      jest.spyOn(mcpClient, 'listResources').mockResolvedValue([]);
-      jest.spyOn(mcpClient, 'listPrompts').mockResolvedValue([]);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act
-      const result = await useCase.execute(query);
-
-      // Assert
-      expect(result.tools).toEqual([]);
-      expect(result.resources).toEqual([]);
-      expect(result.prompts).toEqual([]);
-
-      expect(loggerLogSpy).toHaveBeenCalledWith('discoverySucceeded', {
-        id: mockIntegrationId,
-        toolCount: 0,
-        resourceCount: 0,
-        promptCount: 0,
-      });
     });
 
-    it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
-      // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(null);
+    it('throws McpIntegrationAccessDeniedError for different organization', async () => {
+      const integration = buildPredefinedIntegration({ orgId: randomUUID() });
 
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
 
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        McpIntegrationNotFoundError,
-      );
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.listTools).not.toHaveBeenCalled();
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(McpIntegrationAccessDeniedError);
+
+      expect(mcpClientService.listTools).not.toHaveBeenCalled();
     });
 
-    it('should throw McpIntegrationAccessDeniedError when integration belongs to different organization', async () => {
-      // Arrange
-      const differentOrgId = 'different-org-789';
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        differentOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+    it('throws McpIntegrationDisabledError when integration disabled', async () => {
+      const integration = buildPredefinedIntegration({ enabled: false });
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
 
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(McpIntegrationDisabledError);
 
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        McpIntegrationAccessDeniedError,
-      );
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.listTools).not.toHaveBeenCalled();
+      expect(mcpClientService.listTools).not.toHaveBeenCalled();
     });
 
-    it('should throw McpIntegrationDisabledError when integration is disabled', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Disabled Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        false, // disabled
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+    it('throws UnauthorizedException when user not authenticated', async () => {
+      contextService.get.mockReturnValue(undefined);
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(UnauthorizedException);
 
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        McpIntegrationDisabledError,
-      );
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.listTools).not.toHaveBeenCalled();
-    });
-
-    it('should throw UnauthorizedException when user not authenticated', async () => {
-      // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(undefined);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).not.toHaveBeenCalled();
     });
 
-    it('should use organizationId from ContextService (not from query)', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test Server',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'listTools').mockResolvedValue([]);
-      jest.spyOn(mcpClient, 'listResources').mockResolvedValue([]);
-      jest.spyOn(mcpClient, 'listPrompts').mockResolvedValue([]);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act
-      await useCase.execute(query);
-
-      // Assert
-      expect(contextService.get).toHaveBeenCalledWith('orgId');
-      // Verify query does not contain orgId
-      expect(query).not.toHaveProperty('orgId');
-      expect(query).not.toHaveProperty('organizationId');
-    });
-
-    it('should wrap unexpected errors in UnexpectedMcpError', async () => {
-      // Arrange
+    it('wraps unexpected errors in UnexpectedMcpError', async () => {
+      const integration = buildPredefinedIntegration();
       const unexpectedError = new Error('Connection timeout');
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test Server',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'listTools').mockRejectedValue(unexpectedError);
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
+      mcpClientService.listTools.mockRejectedValue(unexpectedError);
 
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(UnexpectedMcpError);
 
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(UnexpectedMcpError);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error discovering capabilities',
-        { error: unexpectedError },
+        'discoverMcpCapabilitiesUnexpectedError',
+        expect.objectContaining({
+          id: mockIntegrationId,
+          error: 'Connection timeout',
+        }),
       );
-    });
-
-    it('should re-throw ApplicationError without wrapping', async () => {
-      // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(null);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        McpIntegrationNotFoundError,
-      );
-      // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
-    });
-
-    it('should re-throw UnauthorizedException without wrapping', async () => {
-      // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(undefined);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
-    });
-
-    it('should log discovery operations and results', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test Server',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'listTools').mockResolvedValue([
-        { name: 'tool1', inputSchema: { type: 'object' } },
-        { name: 'tool2', inputSchema: { type: 'object' } },
-      ]);
-      jest.spyOn(mcpClient, 'listResources').mockResolvedValue([]);
-      jest
-        .spyOn(mcpClient, 'listPrompts')
-        .mockResolvedValue([{ name: 'prompt1', arguments: [] }]);
-
-      const query = new DiscoverMcpCapabilitiesQuery(mockIntegrationId);
-
-      // Act
-      await useCase.execute(query);
-
-      // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('discoverMcpCapabilities', {
-        id: mockIntegrationId,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('discoverySucceeded', {
-        id: mockIntegrationId,
-        toolCount: 2,
-        resourceCount: 0,
-        promptCount: 1,
-      });
     });
   });
 });

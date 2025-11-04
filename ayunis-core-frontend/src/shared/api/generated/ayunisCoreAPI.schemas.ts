@@ -1027,9 +1027,9 @@ export type McpIntegrationResponseDtoAuthMethod = typeof McpIntegrationResponseD
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const McpIntegrationResponseDtoAuthMethod = {
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
-  BEARER_TOKEN: 'BEARER_TOKEN',
   NO_AUTH: 'NO_AUTH',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+  CUSTOM_HEADER: 'CUSTOM_HEADER',
   OAUTH: 'OAUTH',
 } as const;
 
@@ -1081,6 +1081,26 @@ export interface McpIntegrationResponseDto {
 }
 
 /**
+ * The name/type of the credential field
+ */
+export type ConfigValueDtoName = typeof ConfigValueDtoName[keyof typeof ConfigValueDtoName];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConfigValueDtoName = {
+  token: 'token',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+} as const;
+
+export interface ConfigValueDto {
+  /** The name/type of the credential field */
+  name: ConfigValueDtoName;
+  /** The value for this credential field (will be encrypted) */
+  value: string;
+}
+
+/**
  * The predefined integration slug
  */
 export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrationDtoSlug[keyof typeof CreatePredefinedIntegrationDtoSlug];
@@ -1092,39 +1112,11 @@ export const CreatePredefinedIntegrationDtoSlug = {
   LOCABOO: 'LOCABOO',
 } as const;
 
-/**
- * Authentication method (overrides predefined defaults if provided)
- * @nullable
- */
-export type CreatePredefinedIntegrationDtoAuthMethod = typeof CreatePredefinedIntegrationDtoAuthMethod[keyof typeof CreatePredefinedIntegrationDtoAuthMethod] | null;
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreatePredefinedIntegrationDtoAuthMethod = {
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
-  BEARER_TOKEN: 'BEARER_TOKEN',
-  NO_AUTH: 'NO_AUTH',
-  OAUTH: 'OAUTH',
-} as const;
-
 export interface CreatePredefinedIntegrationDto {
-  /**
-   * The name for this integration instance
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
   /** The predefined integration slug */
   slug: CreatePredefinedIntegrationDtoSlug;
-  /**
-   * Authentication method (overrides predefined defaults if provided)
-   * @nullable
-   */
-  authMethod?: CreatePredefinedIntegrationDtoAuthMethod;
-  /** Custom auth header name (e.g., X-API-Key). Can override predefined defaults for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header). */
-  authHeaderName?: string;
-  /** Authentication credentials (will be encrypted). Required if authMethod requires credentials. */
-  credentials?: string;
+  /** List of config values for credential fields */
+  configValues: ConfigValueDto[];
 }
 
 /**
@@ -1136,9 +1128,9 @@ export type CreateCustomIntegrationDtoAuthMethod = typeof CreateCustomIntegratio
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateCustomIntegrationDtoAuthMethod = {
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
-  BEARER_TOKEN: 'BEARER_TOKEN',
   NO_AUTH: 'NO_AUTH',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+  CUSTOM_HEADER: 'CUSTOM_HEADER',
   OAUTH: 'OAUTH',
 } as const;
 
@@ -1170,13 +1162,12 @@ export type CredentialFieldDtoType = typeof CredentialFieldDtoType[keyof typeof 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CredentialFieldDtoType = {
-  text: 'text',
-  password: 'password',
+  token: 'token',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
 } as const;
 
 export interface CredentialFieldDto {
-  /** Field name for credential input */
-  name: string;
   /** User-friendly label for the credential field */
   label: string;
   /** Input type (text or password) */
@@ -1197,7 +1188,7 @@ export type PredefinedConfigResponseDtoAuthType = typeof PredefinedConfigRespons
 export const PredefinedConfigResponseDtoAuthType = {
   NO_AUTH: 'NO_AUTH',
   BEARER_TOKEN: 'BEARER_TOKEN',
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
+  API_KEY: 'API_KEY',
   OAUTH: 'OAUTH',
 } as const;
 
@@ -1223,6 +1214,17 @@ export interface UpdateMcpIntegrationDto {
    * @maxLength 255
    */
   name?: string;
+  /**
+   * Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.
+   * @minLength 1
+   */
+  credentials?: string;
+  /**
+   * Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.
+   * @minLength 1
+   * @maxLength 255
+   */
+  authHeaderName?: string;
 }
 
 /**

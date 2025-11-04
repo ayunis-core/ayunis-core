@@ -6,6 +6,7 @@ import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mc
 import { UnexpectedMcpError } from '../../mcp.errors';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationConfig } from '../../../domain/predefined-mcp-integration-config';
 
 describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
   let useCase: ListPredefinedMcpIntegrationConfigsUseCase;
@@ -46,12 +47,13 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
     it('should return list of predefined configs', () => {
       // Arrange
       const mockConfigs = [
-        {
+        new PredefinedMcpIntegrationConfig({
           slug: PredefinedMcpIntegrationSlug.TEST,
           displayName: 'Test MCP Server',
           description: 'Test integration',
+          serverUrl: 'https://registry.example.com/mcp',
           authType: McpAuthMethod.NO_AUTH,
-        },
+        }),
       ];
       jest.spyOn(registryService, 'getAllConfigs').mockReturnValue(mockConfigs);
 

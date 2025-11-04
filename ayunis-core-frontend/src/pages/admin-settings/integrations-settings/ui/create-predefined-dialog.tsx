@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,6 +32,7 @@ import type {
   CreatePredefinedIntegrationFormData,
 } from "../model/types";
 import { useCreatePredefinedIntegration } from "../api/useCreatePredefinedIntegration";
+import type { ConfigValueDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 interface CreatePredefinedDialogProps {
   open: boolean;
@@ -51,20 +53,48 @@ export function CreatePredefinedDialog({
     });
   const form = useForm<CreatePredefinedIntegrationFormData>({
     defaultValues: {
-      name: "",
-      slug: "TEST" as any,
-      authMethod: undefined,
-      authHeaderName: "",
-      credentials: "",
+      slug: undefined,
+      configValues: [],
     },
   });
 
   const selectedSlug = form.watch("slug");
-  const selectedConfig = predefinedConfigs.find((c) => c.slug === selectedSlug);
-  const selectedAuthMethod = form.watch("authMethod");
+  const selectedConfig = useMemo(
+    () => predefinedConfigs.find((c) => c.slug === selectedSlug),
+    [predefinedConfigs, selectedSlug],
+  );
+  const credentialFields = selectedConfig?.credentialFields ?? [];
 
-  const handleSubmit = (data: any) => {
-    createPredefinedIntegration(data);
+  useEffect(() => {
+    if (!selectedConfig) {
+      form.setValue("configValues", []);
+      return;
+    }
+
+    const values = credentialFields.map<ConfigValueDto>((field) => {
+      const existing = form
+        .getValues("configValues")
+        .find((value) => value.name === field.type);
+
+      return {
+        name: field.type,
+        value: existing?.value ?? "",
+      };
+    });
+
+    form.setValue("configValues", values);
+  }, [credentialFields, form, selectedConfig]);
+
+  const handleSubmit = (data: CreatePredefinedIntegrationFormData) => {
+    const payload: CreatePredefinedIntegrationFormData = {
+      slug: data.slug,
+      configValues: (data.configValues ?? []).map((value) => ({
+        name: value.name,
+        value: value.value,
+      })),
+    };
+
+    createPredefinedIntegration(payload);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -130,143 +160,53 @@ export function CreatePredefinedDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("integrations.createPredefinedDialog.name")}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t(
-                        "integrations.createPredefinedDialog.namePlaceholder",
-                      )}
-                      {...field}
-                      disabled={isCreating}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t("integrations.createPredefinedDialog.nameDescription")}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {selectedConfig && credentialFields.length > 0 && (
+              <div className="space-y-4">
+                {credentialFields.map((field, index) => (
+                  <FormField
+                    key={field.type}
+                    control={form.control}
+                    name={`configValues.${index}.value`}
+                    render={({ field: valueField }) => {
+                      const inputType =
+                        field.type === "token" || field.type === "clientSecret"
+                          ? "password"
+                          : "text";
 
-            {selectedConfig && selectedConfig.defaultAuthMethod && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="authMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t("integrations.createPredefinedDialog.authMethod")}
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={isCreating}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={t(
-                                "integrations.createPredefinedDialog.authMethodPlaceholder",
-                              )}
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="CUSTOM_HEADER">
-                            {t(
-                              "integrations.createPredefinedDialog.authMethodApiKey",
-                            )}
-                          </SelectItem>
-                          <SelectItem value="BEARER_TOKEN">
-                            {t(
-                              "integrations.createPredefinedDialog.authMethodBearerToken",
-                            )}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {selectedAuthMethod && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="authHeaderName"
-                      render={({ field }) => (
+                      return (
                         <FormItem>
-                          <FormLabel>
-                            {t(
-                              "integrations.createPredefinedDialog.headerName",
-                            )}
-                          </FormLabel>
+                          <FormLabel>{field.label}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder={
-                                selectedConfig.defaultAuthHeaderName ||
-                                t(
-                                  "integrations.createPredefinedDialog.headerNamePlaceholder",
-                                )
-                              }
-                              {...field}
+                              type={inputType}
+                              placeholder={field.help || field.label}
                               disabled={isCreating}
+                              {...valueField}
                             />
                           </FormControl>
-                          <FormDescription>
-                            {t(
-                              "integrations.createPredefinedDialog.headerNameDescription",
-                            )}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="credentials"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {t(
-                              "integrations.createPredefinedDialog.credentials",
-                            )}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="password"
-                              placeholder={t(
-                                "integrations.createPredefinedDialog.credentialsPlaceholder",
+                          {field.help && (
+                            <FormDescription>{field.help}</FormDescription>
+                          )}
+                          {!field.required && (
+                            <FormDescription>
+                              {t(
+                                "integrations.createPredefinedDialog.optionalField",
                               )}
-                              {...field}
-                              disabled={isCreating}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            {selectedAuthMethod === "CUSTOM_HEADER"
-                              ? t(
-                                  "integrations.createPredefinedDialog.credentialsDescriptionApiKey",
-                                )
-                              : t(
-                                  "integrations.createPredefinedDialog.credentialsDescriptionBearerToken",
-                                )}
-                          </FormDescription>
+                            </FormDescription>
+                          )}
                           <FormMessage />
                         </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-              </>
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {selectedConfig && credentialFields.length === 0 && (
+              <FormDescription>
+                {t("integrations.createPredefinedDialog.noCredentialsRequired")}
+              </FormDescription>
             )}
 
             <DialogFooter>

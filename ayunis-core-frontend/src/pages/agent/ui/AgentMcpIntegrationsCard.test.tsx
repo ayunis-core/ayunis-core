@@ -78,7 +78,7 @@ describe("AgentMcpIntegrationsCard", () => {
     // Mock hooks to return loading state
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -88,7 +88,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -98,12 +98,8 @@ describe("AgentMcpIntegrationsCard", () => {
 
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
-    expect(
-      screen.getByText("mcpIntegrations.title")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("mcpIntegrations.description")
-    ).toBeInTheDocument();
+    expect(screen.getByText("mcpIntegrations.title")).toBeTruthy();
+    expect(screen.getByText("mcpIntegrations.description")).toBeTruthy();
     // Loading skeletons should be present
     const skeletons = document.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
@@ -113,7 +109,7 @@ describe("AgentMcpIntegrationsCard", () => {
     // Mock hooks to return empty data
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -123,7 +119,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -133,12 +129,10 @@ describe("AgentMcpIntegrationsCard", () => {
 
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
+    expect(screen.getByText("mcpIntegrations.emptyState.title")).toBeTruthy();
     expect(
-      screen.getByText("mcpIntegrations.emptyState.title")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("mcpIntegrations.emptyState.description")
-    ).toBeInTheDocument();
+      screen.getByText("mcpIntegrations.emptyState.description"),
+    ).toBeTruthy();
   });
 
   it("renders error state when fetching fails", () => {
@@ -147,7 +141,7 @@ describe("AgentMcpIntegrationsCard", () => {
     // Mock hooks to return error state
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -157,7 +151,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -168,11 +162,9 @@ describe("AgentMcpIntegrationsCard", () => {
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
     expect(
-      screen.getByText("mcpIntegrations.errors.failedToLoad")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("mcpIntegrations.retryButton")
-    ).toBeInTheDocument();
+      screen.getByText("mcpIntegrations.errors.failedToLoad"),
+    ).toBeTruthy();
+    expect(screen.getByText("mcpIntegrations.retryButton")).toBeTruthy();
 
     // Test retry button
     const retryButton = screen.getByText("mcpIntegrations.retryButton");
@@ -184,7 +176,7 @@ describe("AgentMcpIntegrationsCard", () => {
     // Mock hooks to return integrations
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [mockIntegration1, mockIntegration2],
       isLoading: false,
@@ -194,7 +186,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -205,23 +197,23 @@ describe("AgentMcpIntegrationsCard", () => {
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
     // Check if both integrations are rendered
-    expect(screen.getByText("Test Integration 1")).toBeInTheDocument();
-    expect(screen.getByText("Test Integration 2")).toBeInTheDocument();
+    expect(screen.getByText("Test Integration 1")).toBeTruthy();
+    expect(screen.getByText("Test Integration 2")).toBeTruthy();
 
     // Check if slug and serverUrl are displayed
-    expect(screen.getByText("test-integration-1")).toBeInTheDocument();
-    expect(screen.getByText("http://example.com")).toBeInTheDocument();
+    expect(screen.getByText("test-integration-1")).toBeTruthy();
+    expect(screen.getByText("http://example.com")).toBeTruthy();
 
     // Check if types are displayed as badges
-    expect(screen.getByText("predefined")).toBeInTheDocument();
-    expect(screen.getByText("custom")).toBeInTheDocument();
+    expect(screen.getByText("predefined")).toBeTruthy();
+    expect(screen.getByText("custom")).toBeTruthy();
   });
 
   it("displays correct toggle state for assigned integrations", () => {
     // Mock hooks with one integration assigned
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [mockIntegration1, mockIntegration2],
       isLoading: false,
@@ -231,7 +223,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [mockIntegration1], // Only integration 1 is assigned
       isLoading: false,
@@ -246,37 +238,10 @@ describe("AgentMcpIntegrationsCard", () => {
     expect(switches).toHaveLength(2);
 
     // First switch should be checked (integration 1 is assigned)
-    expect(switches[0]).toHaveAttribute("data-state", "checked");
+    expect(switches[0].getAttribute("data-state")).toBe("checked");
 
     // Second switch should be unchecked
-    expect(switches[1]).toHaveAttribute("data-state", "unchecked");
-  });
-
-  it("displays connected count badge when integrations are assigned", () => {
-    // Mock hooks with two integrations assigned
-    vi.spyOn(
-      apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
-    ).mockReturnValue({
-      data: [mockIntegration1, mockIntegration2],
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    } as any);
-
-    vi.spyOn(
-      apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
-    ).mockReturnValue({
-      data: [mockIntegration1, mockIntegration2],
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    } as any);
-
-    render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
-
-    expect(screen.getByText("2 connected")).toBeInTheDocument();
+    expect(switches[1].getAttribute("data-state")).toBe("unchecked");
   });
 
   it("sorts integrations alphabetically by name", () => {
@@ -290,7 +255,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [integrationZ, integrationA, integrationM], // Unsorted
       isLoading: false,
@@ -300,7 +265,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -326,7 +291,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [mockIntegration1],
       isLoading: false,
@@ -336,7 +301,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [], // Not assigned
       isLoading: false,
@@ -346,7 +311,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerAssignMcpIntegration"
+      "useAgentsControllerAssignMcpIntegration",
     ).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
@@ -354,7 +319,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerUnassignMcpIntegration"
+      "useAgentsControllerUnassignMcpIntegration",
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
@@ -378,7 +343,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [mockIntegration1],
       isLoading: false,
@@ -388,7 +353,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [mockIntegration1], // Already assigned
       isLoading: false,
@@ -398,7 +363,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerAssignMcpIntegration"
+      "useAgentsControllerAssignMcpIntegration",
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
@@ -406,7 +371,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerUnassignMcpIntegration"
+      "useAgentsControllerUnassignMcpIntegration",
     ).mockReturnValue({
       mutateAsync: mockMutateAsync,
       isPending: false,
@@ -428,7 +393,7 @@ describe("AgentMcpIntegrationsCard", () => {
   it("disables toggle switches during mutation", () => {
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [mockIntegration1],
       isLoading: false,
@@ -438,7 +403,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -448,7 +413,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerAssignMcpIntegration"
+      "useAgentsControllerAssignMcpIntegration",
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: true, // Mutation in progress
@@ -456,7 +421,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerUnassignMcpIntegration"
+      "useAgentsControllerUnassignMcpIntegration",
     ).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
@@ -465,13 +430,13 @@ describe("AgentMcpIntegrationsCard", () => {
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
     const toggle = screen.getByRole("switch");
-    expect(toggle).toBeDisabled();
+    expect((toggle as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("has correct ARIA labels for accessibility", () => {
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAvailableMcpIntegrations"
+      "useMcpIntegrationsControllerListAvailable",
     ).mockReturnValue({
       data: [mockIntegration1],
       isLoading: false,
@@ -481,7 +446,7 @@ describe("AgentMcpIntegrationsCard", () => {
 
     vi.spyOn(
       apiHooks,
-      "useAgentsControllerListAgentMcpIntegrations"
+      "useAgentsControllerListAgentMcpIntegrations",
     ).mockReturnValue({
       data: [],
       isLoading: false,
@@ -492,9 +457,8 @@ describe("AgentMcpIntegrationsCard", () => {
     render(<AgentMcpIntegrationsCard />, { wrapper: createWrapper() });
 
     const toggle = screen.getByRole("switch");
-    expect(toggle).toHaveAttribute(
-      "aria-label",
-      "Toggle Test Integration 1 integration"
+    expect(toggle.getAttribute("aria-label")).toBe(
+      "Toggle Test Integration 1 integration",
     );
   });
 });

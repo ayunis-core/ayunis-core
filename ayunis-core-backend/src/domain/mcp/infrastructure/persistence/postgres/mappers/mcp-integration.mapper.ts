@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { McpIntegration } from '../../../../domain/mcp-integration.entity';
 import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
-import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
 import { McpIntegrationAuth } from '../../../../domain/auth/mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../../../domain/auth/oauth-mcp-integration-auth.entity';
+import { McpIntegrationFactory } from '../../../../application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from '../../../../application/factories/mcp-integration-auth.factory';
+import { McpAuthMethod } from '../../../../domain/value-objects/mcp-auth-method.enum';
+import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
 import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
@@ -18,7 +21,7 @@ import {
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
 } from '../schema';
-import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { UUID } from 'crypto';
 
 /**
  * Mapper for converting between MCP integration domain entities and database records.
@@ -26,6 +29,10 @@ import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/p
  */
 @Injectable()
 export class McpIntegrationMapper {
+  constructor(
+    private readonly integrationFactory: McpIntegrationFactory,
+    private readonly authFactory: McpIntegrationAuthFactory,
+  ) {}
   /**
    * Converts a database record to a domain entity.
    * Determines the entity type from the record's class and creates the appropriate subclass.
@@ -52,14 +59,38 @@ export class McpIntegrationMapper {
     } as const;
 
     if (record instanceof PredefinedMcpIntegrationRecord) {
-      return new PredefinedMcpIntegration({
-        ...baseParams,
-        slug: record.predefinedSlug as PredefinedMcpIntegrationSlug,
+      return this.integrationFactory.createIntegration({
+        kind: McpIntegrationKind.PREDEFINED,
+        orgId: baseParams.orgId,
+        name: baseParams.name,
+        serverUrl: baseParams.serverUrl,
+        auth: baseParams.auth,
+        slug: record.predefinedSlug,
+        id: baseParams.id,
+        enabled: baseParams.enabled,
+        createdAt: baseParams.createdAt,
+        updatedAt: baseParams.updatedAt,
+        connectionStatus: baseParams.connectionStatus,
+        lastConnectionError: baseParams.lastConnectionError,
+        lastConnectionCheck: baseParams.lastConnectionCheck,
       });
     }
 
     if (record instanceof CustomMcpIntegrationRecord) {
-      return new CustomMcpIntegration(baseParams);
+      return this.integrationFactory.createIntegration({
+        kind: McpIntegrationKind.CUSTOM,
+        orgId: baseParams.orgId,
+        name: baseParams.name,
+        serverUrl: baseParams.serverUrl,
+        auth: baseParams.auth,
+        id: baseParams.id,
+        enabled: baseParams.enabled,
+        createdAt: baseParams.createdAt,
+        updatedAt: baseParams.updatedAt,
+        connectionStatus: baseParams.connectionStatus,
+        lastConnectionError: baseParams.lastConnectionError,
+        lastConnectionCheck: baseParams.lastConnectionCheck,
+      });
     }
 
     throw new Error(
@@ -76,30 +107,43 @@ export class McpIntegrationMapper {
    * @throws Error if the entity type is unknown
    */
   toRecord(entity: McpIntegration): McpIntegrationRecord {
-    let record: McpIntegrationRecord;
-
-    switch (entity.kind) {
-      case McpIntegrationKind.PREDEFINED:
-        record = new PredefinedMcpIntegrationRecord();
-        record.predefinedSlug = (entity as PredefinedMcpIntegration).slug;
-        break;
-      case McpIntegrationKind.CUSTOM:
-        record = new CustomMcpIntegrationRecord();
-        record.predefinedSlug = undefined;
-        break;
-      default:
-        throw new Error(
-          `Unknown MCP integration kind: ${(entity.kind as string) ?? 'undefined'}`,
-        );
+    const authRecord = this.authToRecord(entity.auth, entity.id);
+    if (entity instanceof PredefinedMcpIntegration) {
+      const record = new PredefinedMcpIntegrationRecord();
+      record.id = entity.id;
+      record.orgId = entity.orgId;
+      record.name = entity.name;
+      record.serverUrl = entity.serverUrl;
+      record.enabled = entity.enabled;
+      record.createdAt = entity.createdAt;
+      record.updatedAt = entity.updatedAt;
+      record.connectionStatus = entity.connectionStatus;
+      record.lastConnectionError = entity.lastConnectionError;
+      record.lastConnectionCheck = entity.lastConnectionCheck;
+      record.predefinedSlug = entity.slug;
+      record.auth = authRecord;
+      authRecord.integration = record;
+      return record;
     }
-
-    this.mapCommonIntegrationFields(record, entity);
-
-    const authRecord = this.authToRecord(entity.auth, record.id);
-    authRecord.integration = record;
-    record.auth = authRecord;
-
-    return record;
+    if (entity instanceof CustomMcpIntegration) {
+      const record = new CustomMcpIntegrationRecord();
+      record.id = entity.id;
+      record.orgId = entity.orgId;
+      record.name = entity.name;
+      record.serverUrl = entity.serverUrl;
+      record.enabled = entity.enabled;
+      record.createdAt = entity.createdAt;
+      record.updatedAt = entity.updatedAt;
+      record.connectionStatus = entity.connectionStatus;
+      record.lastConnectionError = entity.lastConnectionError;
+      record.lastConnectionCheck = entity.lastConnectionCheck;
+      record.auth = authRecord;
+      authRecord.integration = record;
+      return record;
+    }
+    throw new Error(
+      `Unknown MCP integration entity type: ${entity.constructor.name}`,
+    );
   }
 
   /**
@@ -114,7 +158,8 @@ export class McpIntegrationMapper {
     }
 
     if (record instanceof NoAuthMcpIntegrationAuthRecord) {
-      return new NoAuthMcpIntegrationAuth({
+      return this.authFactory.createAuth({
+        method: McpAuthMethod.NO_AUTH,
         id: record.id,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -122,34 +167,37 @@ export class McpIntegrationMapper {
     }
 
     if (record instanceof BearerMcpIntegrationAuthRecord) {
-      return new BearerMcpIntegrationAuth({
+      return this.authFactory.createAuth({
+        method: McpAuthMethod.BEARER_TOKEN,
+        authToken: record.authToken,
         id: record.id,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
-        authToken: record.authToken,
       });
     }
 
     if (record instanceof CustomHeaderMcpIntegrationAuthRecord) {
-      return new CustomHeaderMcpIntegrationAuth({
+      return this.authFactory.createAuth({
+        method: McpAuthMethod.CUSTOM_HEADER,
+        secret: record.secret,
+        headerName: record.headerName,
         id: record.id,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
-        secret: record.secret,
-        headerName: record.headerName,
       });
     }
 
     if (record instanceof OAuthMcpIntegrationAuthRecord) {
-      return new OAuthMcpIntegrationAuth({
-        id: record.id,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
+      return this.authFactory.createAuth({
+        method: McpAuthMethod.OAUTH,
         clientId: record.clientId,
         clientSecret: record.clientSecret,
         accessToken: record.accessToken,
         refreshToken: record.refreshToken,
         tokenExpiresAt: record.tokenExpiresAt,
+        id: record.id,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
       });
     }
 
@@ -160,7 +208,7 @@ export class McpIntegrationMapper {
 
   private authToRecord(
     auth: McpIntegrationAuth,
-    integrationId: string,
+    integrationId: UUID,
   ): McpIntegrationAuthRecord {
     let record: McpIntegrationAuthRecord;
 
@@ -168,7 +216,7 @@ export class McpIntegrationMapper {
       record = new NoAuthMcpIntegrationAuthRecord();
     } else if (auth instanceof BearerMcpIntegrationAuth) {
       const bearerRecord = new BearerMcpIntegrationAuthRecord();
-      bearerRecord.authToken = auth.authToken;
+      bearerRecord.authToken = auth.authToken ?? '';
       record = bearerRecord;
     } else if (auth instanceof CustomHeaderMcpIntegrationAuth) {
       const headerRecord = new CustomHeaderMcpIntegrationAuthRecord();
@@ -192,30 +240,7 @@ export class McpIntegrationMapper {
     record.id = auth.id;
     record.createdAt = auth.createdAt;
     record.updatedAt = auth.updatedAt;
-    record.integrationId = integrationId;
 
     return record;
-  }
-
-  private mapCommonIntegrationFields(
-    record: McpIntegrationRecord,
-    entity: McpIntegration,
-  ): void {
-    record.id = entity.id;
-    record.orgId = entity.orgId;
-    record.name = entity.name;
-    record.serverUrl = entity.serverUrl;
-    record.enabled = entity.enabled;
-    record.createdAt = entity.createdAt;
-    record.updatedAt = entity.updatedAt;
-    record.connectionStatus = entity.connectionStatus;
-    record.lastConnectionError = entity.lastConnectionError;
-    record.lastConnectionCheck = entity.lastConnectionCheck;
-
-    if (entity instanceof PredefinedMcpIntegration) {
-      record.predefinedSlug = entity.slug;
-    } else {
-      record.predefinedSlug = undefined;
-    }
   }
 }

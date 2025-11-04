@@ -1,12 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 export class CredentialFieldDto {
-  @ApiProperty({
-    description: 'Field name for credential input',
-    example: 'apiToken',
-  })
-  name: string;
-
   @ApiProperty({
     description: 'User-friendly label for the credential field',
     example: 'Locaboo 3 API Token',
@@ -15,10 +10,10 @@ export class CredentialFieldDto {
 
   @ApiProperty({
     description: 'Input type (text or password)',
-    enum: ['text', 'password'],
-    example: 'password',
+    enum: CredentialFieldType,
+    example: CredentialFieldType.TOKEN,
   })
-  type: 'text' | 'password';
+  type: CredentialFieldType;
 
   @ApiProperty({
     description: 'Whether this field is required',

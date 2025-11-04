@@ -1,44 +1,50 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { UUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { RetrieveMcpResourceUseCase } from './retrieve-mcp-resource.use-case';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientPort } from '../../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
+import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import {
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
+import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
-import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('RetrieveMcpResourceUseCase', () => {
   let useCase: RetrieveMcpResourceUseCase;
-  let repository: McpIntegrationsRepositoryPort;
-  let mcpClient: McpClientPort;
-  let credentialEncryption: McpCredentialEncryptionPort;
-  let registryService: PredefinedMcpIntegrationRegistry;
-  let contextService: ContextService;
-  let createDataSourceUseCase: CreateDataSourceUseCase;
+  let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
+  let mcpClientService: jest.Mocked<McpClientService>;
+  let contextService: jest.Mocked<ContextService>;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  const mockOrgId = 'org-123' as UUID;
-  const mockIntegrationId = 'integration-456' as UUID;
+  const mockOrgId = randomUUID() as UUID;
+  const mockIntegrationId = randomUUID() as UUID;
   const mockResourceUri = 'dataset://sales-data.csv';
-  const mockCsvContent = 'name,age,city\nJohn,30,NYC\nJane,25,LA';
+
+  const buildIntegration = (overrides: Partial<
+    ConstructorParameters<typeof PredefinedMcpIntegration>[0]
+  > = {}) =>
+    new PredefinedMcpIntegration({
+      id: overrides.id ?? mockIntegrationId,
+      name: overrides.name ?? 'Test Integration',
+      orgId: overrides.orgId ?? mockOrgId,
+      slug: overrides.slug ?? PredefinedMcpIntegrationSlug.TEST,
+      serverUrl: overrides.serverUrl ?? 'https://registry.example.com/mcp',
+      auth: overrides.auth ?? new NoAuthMcpIntegrationAuth(),
+      enabled: overrides.enabled ?? true,
+      connectionStatus: overrides.connectionStatus,
+      lastConnectionError: overrides.lastConnectionError,
+      lastConnectionCheck: overrides.lastConnectionCheck,
+      createdAt: overrides.createdAt,
+      updatedAt: overrides.updatedAt,
+    });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -51,21 +57,9 @@ describe('RetrieveMcpResourceUseCase', () => {
           },
         },
         {
-          provide: McpClientPort,
+          provide: McpClientService,
           useValue: {
             readResource: jest.fn(),
-          },
-        },
-        {
-          provide: McpCredentialEncryptionPort,
-          useValue: {
-            decrypt: jest.fn(),
-          },
-        },
-        {
-          provide: PredefinedMcpIntegrationRegistry,
-          useValue: {
-            getConfig: jest.fn(),
           },
         },
         {
@@ -74,34 +68,16 @@ describe('RetrieveMcpResourceUseCase', () => {
             get: jest.fn(),
           },
         },
-        {
-          provide: CreateDataSourceUseCase,
-          useValue: {
-            execute: jest.fn(),
-          },
-        },
       ],
     }).compile();
 
-    useCase = module.get<RetrieveMcpResourceUseCase>(
-      RetrieveMcpResourceUseCase,
-    );
-    repository = module.get<McpIntegrationsRepositoryPort>(
-      McpIntegrationsRepositoryPort,
-    );
-    mcpClient = module.get<McpClientPort>(McpClientPort);
-    credentialEncryption = module.get<McpCredentialEncryptionPort>(
-      McpCredentialEncryptionPort,
-    );
-    registryService = module.get<PredefinedMcpIntegrationRegistry>(
-      PredefinedMcpIntegrationRegistry,
-    );
-    contextService = module.get<ContextService>(ContextService);
-    createDataSourceUseCase = module.get<CreateDataSourceUseCase>(
-      CreateDataSourceUseCase,
-    );
+    useCase = module.get(RetrieveMcpResourceUseCase);
+    repository = module.get(McpIntegrationsRepositoryPort) as jest.Mocked<
+      McpIntegrationsRepositoryPort
+    >;
+    mcpClientService = module.get(McpClientService) as jest.Mocked<McpClientService>;
+    contextService = module.get(ContextService) as jest.Mocked<ContextService>;
 
-    // Spy on logger methods
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
@@ -111,559 +87,131 @@ describe('RetrieveMcpResourceUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should successfully retrieve CSV resource and create data source', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: mockOrgId,
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-      });
+    it('retrieves resource content and returns mime type', async () => {
+      const integration = buildIntegration();
+      const mockResponse = { content: 'file-content', mimeType: 'text/plain' };
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: mockCsvContent,
-        mimeType: 'text/csv',
-      });
-      jest
-        .spyOn(createDataSourceUseCase, 'execute')
-        .mockResolvedValue({} as any);
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
+      mcpClientService.readResource.mockResolvedValue(mockResponse);
 
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
+      const result = await useCase.execute(
+        new RetrieveMcpResourceCommand(mockIntegrationId, mockResourceUri),
       );
 
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(contextService.get).toHaveBeenCalledWith('orgId');
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.readResource).toHaveBeenCalledWith(
-        expect.objectContaining({
-          serverUrl: 'http://localhost:3100/mcp',
-        }),
+      expect(result).toEqual(mockResponse);
+      expect(mcpClientService.readResource).toHaveBeenCalledWith(
+        integration,
         mockResourceUri,
         undefined,
       );
-
-      // Verify CreateDataSourceUseCase was called with correct parameters
-      expect(createDataSourceUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: expect.stringContaining(mockResourceUri),
-          data: {
-            headers: ['name', 'age', 'city'],
-            rows: [
-              ['John', '30', 'NYC'],
-              ['Jane', '25', 'LA'],
-            ],
-          },
-          createdBy: SourceCreator.SYSTEM,
-        }),
-      );
-
       expect(loggerLogSpy).toHaveBeenCalledWith('retrieveMcpResource', {
-        id: mockIntegrationId,
-        uri: mockResourceUri,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('resourceRetrieved', {
-        id: mockIntegrationId,
-        uri: mockResourceUri,
-        mimeType: 'text/csv',
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('handlingCsvResource', {
-        uri: mockResourceUri,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('csvResourceImported', {
-        uri: mockResourceUri,
+        integrationId: mockIntegrationId,
+        resourceUri: mockResourceUri,
+        parameters: undefined,
       });
     });
 
-    it('should successfully retrieve non-CSV resource without creating data source', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: mockOrgId,
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
+    it('passes parameters through to client service', async () => {
+      const integration = buildIntegration();
+      const parameters = { id: '123', locale: 'en' };
+
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
+      mcpClientService.readResource.mockResolvedValue({
+        content: { data: true },
+        mimeType: 'application/json',
       });
 
-      const mockTextContent = 'Some text content';
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: mockTextContent,
-        mimeType: 'text/plain',
-      });
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        'resource://text-file.txt',
+      await useCase.execute(
+        new RetrieveMcpResourceCommand(
+          mockIntegrationId,
+          mockResourceUri,
+          parameters,
+        ),
       );
 
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(mcpClient.readResource).toHaveBeenCalledWith(
-        expect.objectContaining({
-          serverUrl: 'http://localhost:3100/mcp',
-        }),
-        'resource://text-file.txt',
-        undefined,
-      );
-
-      // Should NOT call CreateDataSourceUseCase for non-CSV
-      expect(createDataSourceUseCase.execute).not.toHaveBeenCalled();
-
-      expect(loggerLogSpy).toHaveBeenCalledWith('resourceRetrieved', {
-        id: mockIntegrationId,
-        uri: 'resource://text-file.txt',
-        mimeType: 'text/plain',
-      });
-    });
-
-    it('should handle parameterized resource URIs correctly', async () => {
-      // Arrange
-      const mockIntegration = new CustomMcpIntegration(
-        mockIntegrationId,
-        'Custom Integration',
-        mockOrgId,
-        'http://custom-server.com/mcp',
-        true,
-      );
-
-      const mockParameters = { category: 'electronics', year: 2024 };
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: mockCsvContent,
-        mimeType: 'text/csv',
-      });
-      jest
-        .spyOn(createDataSourceUseCase, 'execute')
-        .mockResolvedValue({} as any);
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        'dataset://items?category={category}&year={year}',
-        mockParameters,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(mcpClient.readResource).toHaveBeenCalledWith(
-        expect.objectContaining({
-          serverUrl: 'http://custom-server.com/mcp',
-        }),
-        'dataset://items?category={category}&year={year}',
-        mockParameters,
-      );
-    });
-
-    it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
-      // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(null);
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
+      expect(mcpClientService.readResource).toHaveBeenCalledWith(
+        integration,
         mockResourceUri,
+        parameters,
       );
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        McpIntegrationNotFoundError,
-      );
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.readResource).not.toHaveBeenCalled();
     });
 
-    it('should throw McpIntegrationAccessDeniedError when integration belongs to different organization', async () => {
-      // Arrange
-      const differentOrgId = 'different-org-789';
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: differentOrgId, // Different org
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-      });
+    it('throws McpIntegrationNotFoundError when integration missing', async () => {
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(null);
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
+      await expect(
+        useCase.execute(
+          new RetrieveMcpResourceCommand(mockIntegrationId, mockResourceUri),
+        ),
+      ).rejects.toThrow(McpIntegrationNotFoundError);
 
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        McpIntegrationAccessDeniedError,
-      );
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.readResource).not.toHaveBeenCalled();
+      expect(mcpClientService.readResource).not.toHaveBeenCalled();
     });
 
-    it('should throw McpIntegrationDisabledError when integration is disabled', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: mockOrgId,
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: false, // Disabled
-      });
+    it('throws McpIntegrationAccessDeniedError for different organization', async () => {
+      const integration = buildIntegration({ orgId: randomUUID() });
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
 
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
+      await expect(
+        useCase.execute(
+          new RetrieveMcpResourceCommand(mockIntegrationId, mockResourceUri),
+        ),
+      ).rejects.toThrow(McpIntegrationAccessDeniedError);
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        McpIntegrationDisabledError,
-      );
-      expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.readResource).not.toHaveBeenCalled();
+      expect(mcpClientService.readResource).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException when user not authenticated', async () => {
-      // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(undefined);
+    it('throws McpIntegrationDisabledError when integration disabled', async () => {
+      const integration = buildIntegration({ enabled: false });
 
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      expect(contextService.get).toHaveBeenCalledWith('orgId');
+      await expect(
+        useCase.execute(
+          new RetrieveMcpResourceCommand(mockIntegrationId, mockResourceUri),
+        ),
+      ).rejects.toThrow(McpIntegrationDisabledError);
+
+      expect(mcpClientService.readResource).not.toHaveBeenCalled();
+    });
+
+    it('throws UnauthorizedException when orgId missing', async () => {
+      contextService.get.mockReturnValue(undefined);
+
+      await expect(
+        useCase.execute(
+          new RetrieveMcpResourceCommand(mockIntegrationId, mockResourceUri),
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+
       expect(repository.findById).not.toHaveBeenCalled();
-      expect(mcpClient.readResource).not.toHaveBeenCalled();
     });
 
-    it('should use organizationId from ContextService (not from command)', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: mockOrgId,
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
+    it('wraps unexpected errors in UnexpectedMcpError', async () => {
+      const integration = buildIntegration();
+      const unexpectedError = new Error('Network failure');
+
+      contextService.get.mockReturnValue(mockOrgId);
+      repository.findById.mockResolvedValue(integration);
+      mcpClientService.readResource.mockRejectedValue(unexpectedError);
+
+      await expect(
+        useCase.execute(
+          new RetrieveMcpResourceCommand(mockIntegrationId, mockResourceUri),
+        ),
+      ).rejects.toThrow(UnexpectedMcpError);
+
+      expect(loggerErrorSpy).toHaveBeenCalledWith('retrieveMcpResourceFailed', {
+        integrationId: mockIntegrationId,
+        resourceUri: mockResourceUri,
+        error: 'Network failure',
       });
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: mockCsvContent,
-        mimeType: 'text/csv',
-      });
-      jest
-        .spyOn(createDataSourceUseCase, 'execute')
-        .mockResolvedValue({} as any);
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(contextService.get).toHaveBeenCalledWith('orgId');
-      // Verify command does not contain orgId
-      expect(command).not.toHaveProperty('orgId');
-      expect(command).not.toHaveProperty('organizationId');
-    });
-
-    it('should wrap unexpected errors in UnexpectedMcpError', async () => {
-      // Arrange
-      const unexpectedError = new Error('Database connection failed');
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockRejectedValue(unexpectedError);
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnexpectedMcpError,
-      );
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error retrieving resource',
-        { error: unexpectedError },
-      );
-    });
-
-    it('should log resource retrievals and operations', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: mockOrgId,
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-      });
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: mockCsvContent,
-        mimeType: 'text/csv',
-      });
-      jest
-        .spyOn(createDataSourceUseCase, 'execute')
-        .mockResolvedValue({} as any);
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('retrieveMcpResource', {
-        id: mockIntegrationId,
-        uri: mockResourceUri,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('resourceRetrieved', {
-        id: mockIntegrationId,
-        uri: mockResourceUri,
-        mimeType: 'text/csv',
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('handlingCsvResource', {
-        uri: mockResourceUri,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith('csvResourceImported', {
-        uri: mockResourceUri,
-      });
-    });
-
-    it('should build connection config with authentication for predefined integration', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-        McpAuthMethod.BEARER_TOKEN,
-        'Authorization',
-        'encrypted-token',
-      );
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest
-        .spyOn(credentialEncryption, 'decrypt')
-        .mockResolvedValue('decrypted-token');
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: 'test content',
-        mimeType: 'text/plain',
-      });
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(credentialEncryption.decrypt).toHaveBeenCalledWith(
-        'encrypted-token',
-      );
-      expect(mcpClient.readResource).toHaveBeenCalledWith(
-        expect.objectContaining({
-          serverUrl: 'http://localhost:3100/mcp',
-          authHeaderName: 'Authorization',
-          authToken: 'decrypted-token',
-        }),
-        mockResourceUri,
-        undefined,
-      );
-    });
-
-    it('should build connection config with authentication for custom integration', async () => {
-      // Arrange
-      const mockIntegration = new CustomMcpIntegration(
-        mockIntegrationId,
-        'Custom Integration',
-        mockOrgId,
-        'http://custom-server.com/mcp',
-        true,
-        McpAuthMethod.BEARER_TOKEN,
-        'X-API-Key',
-        'encrypted-key',
-      );
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest
-        .spyOn(credentialEncryption, 'decrypt')
-        .mockResolvedValue('decrypted-key');
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: 'test content',
-        mimeType: 'text/plain',
-      });
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(credentialEncryption.decrypt).toHaveBeenCalledWith(
-        'encrypted-key',
-      );
-      expect(mcpClient.readResource).toHaveBeenCalledWith(
-        expect.objectContaining({
-          serverUrl: 'http://custom-server.com/mcp',
-          authHeaderName: 'X-API-Key',
-          authToken: 'decrypted-key',
-        }),
-        mockResourceUri,
-        undefined,
-      );
-    });
-
-    it('should build connection config without authentication when not configured', async () => {
-      // Arrange
-      const mockIntegration = new CustomMcpIntegration(
-        mockIntegrationId,
-        'Custom Integration',
-        mockOrgId,
-        'http://custom-server.com/mcp',
-        true,
-        undefined, // No auth
-      );
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: 'test content',
-        mimeType: 'text/plain',
-      });
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(mcpClient.readResource).toHaveBeenCalledWith(
-        expect.objectContaining({
-          serverUrl: 'http://custom-server.com/mcp',
-        }),
-        mockResourceUri,
-        undefined,
-      );
-      // Should not have auth fields
-      const callArgs = (mcpClient.readResource as jest.Mock).mock
-        .calls[0][0] as Record<string, unknown>;
-      expect(callArgs).not.toHaveProperty('authHeaderName');
-      expect(callArgs).not.toHaveProperty('authToken');
-    });
-
-    it('should pass createdBy as SYSTEM when creating CSV data source', async () => {
-      // Arrange
-      const mockIntegration = new PredefinedMcpIntegration({
-        id: mockIntegrationId,
-        name: 'Test Integration',
-        organizationId: mockOrgId,
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-      });
-
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
-      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(registryService, 'getConfig').mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        displayName: 'Test',
-        description: 'Test',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
-        content: mockCsvContent,
-        mimeType: 'text/csv',
-      });
-
-      const executeSpy = jest
-        .spyOn(createDataSourceUseCase, 'execute')
-        .mockResolvedValue({} as any);
-
-      const command = new RetrieveMcpResourceCommand(
-        mockIntegrationId,
-        mockResourceUri,
-      );
-
-      // Act
-      await useCase.execute(command);
-
-      // Assert
-      expect(executeSpy).toHaveBeenCalledTimes(1);
-      const commandArg = executeSpy.mock
-        .calls[0][0] as CreateCSVDataSourceCommand;
-      expect(commandArg).toBeInstanceOf(CreateCSVDataSourceCommand);
-      expect(commandArg.createdBy).toBe(SourceCreator.SYSTEM);
     });
   });
 });

@@ -6,6 +6,8 @@ import { McpIntegrationsRepositoryPort } from '../../../application/ports/mcp-in
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpIntegrationRecord } from './schema/mcp-integration.record';
+import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
+import { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
 
 /**
@@ -19,6 +21,10 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   constructor(
     @InjectRepository(McpIntegrationRecord)
     private readonly repository: Repository<McpIntegrationRecord>,
+    @InjectRepository(McpIntegrationAuthRecord)
+    private readonly authRepository: Repository<McpIntegrationAuthRecord>,
+    @InjectRepository(PredefinedMcpIntegrationRecord)
+    private readonly predefinedRepository: Repository<PredefinedMcpIntegrationRecord>,
     private readonly mcpIntegrationMapper: McpIntegrationMapper,
   ) {
     super();
@@ -28,16 +34,40 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     this.logger.log('save', { integrationId: integration.id });
 
     const record = this.mcpIntegrationMapper.toRecord(integration);
-    const savedRecord = await this.repository.save(record);
+    const authRecord = record.auth;
+
+    if (!authRecord) {
+      throw new Error('Expected MCP integration auth record to be present');
+    }
+
+    await this.repository.manager.transaction(async (manager) => {
+      const integrationRepo = manager.getRepository(McpIntegrationRecord);
+      const authRepo = manager.getRepository(McpIntegrationAuthRecord);
+
+      const recordWithOptionalAuth = record as McpIntegrationRecord & {
+        auth?: McpIntegrationAuthRecord;
+      };
+      recordWithOptionalAuth.auth =
+        undefined as unknown as McpIntegrationAuthRecord;
+
+      await integrationRepo.save(record);
+
+      authRecord.integration = record;
+      authRecord.integrationId = record.id;
+
+      await authRepo.save(authRecord);
+
+      recordWithOptionalAuth.auth = authRecord;
+    });
 
     // Reload to ensure we have the complete record with all relations
     const reloadedRecord = await this.repository.findOne({
-      where: { id: savedRecord.id },
+      where: { id: record.id },
     });
 
     if (!reloadedRecord) {
       throw new Error(
-        `Failed to reload saved MCP integration with ID ${savedRecord.id}`,
+        `Failed to reload saved MCP integration with ID ${record.id}`,
       );
     }
 
@@ -83,10 +113,13 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   ): Promise<McpIntegration | null> {
     this.logger.log('findByOrgIdAndSlug', { organizationId, slug });
 
-    const record = await this.repository.findOne({
+    const record = await this.predefinedRepository.findOne({
       where: {
         orgId: organizationId,
         predefinedSlug: slug,
+      },
+      relations: {
+        auth: true,
       },
     });
 

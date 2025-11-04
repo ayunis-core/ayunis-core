@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -49,7 +50,7 @@ export function CreateCustomDialog({
     defaultValues: {
       name: "",
       serverUrl: "",
-      authMethod: undefined,
+      authMethod: "NO_AUTH",
       authHeaderName: "",
       credentials: "",
     },
@@ -57,8 +58,51 @@ export function CreateCustomDialog({
 
   const selectedAuthMethod = form.watch("authMethod");
 
-  const handleSubmit = (data: any) => {
-    createCustomIntegration(data);
+  const previousAuthMethod =
+    useRef<typeof selectedAuthMethod>(selectedAuthMethod);
+
+  useEffect(() => {
+    if (previousAuthMethod.current === selectedAuthMethod) {
+      return;
+    }
+
+    if (!selectedAuthMethod || selectedAuthMethod === "NO_AUTH") {
+      form.setValue("credentials", "");
+      form.setValue("authHeaderName", "");
+    }
+
+    if (selectedAuthMethod === "BEARER_TOKEN") {
+      form.setValue("authHeaderName", "");
+    }
+
+    previousAuthMethod.current = selectedAuthMethod;
+  }, [form, selectedAuthMethod]);
+
+  const handleSubmit = (data: CreateCustomIntegrationFormData) => {
+    const payload: CreateCustomIntegrationFormData = {
+      name: data.name,
+      serverUrl: data.serverUrl,
+      authMethod: data.authMethod,
+    };
+
+    if (data.authMethod && data.authMethod !== "NO_AUTH") {
+      const trimmedCredentials = data.credentials?.trim();
+      if (trimmedCredentials) {
+        payload.credentials = trimmedCredentials;
+      }
+
+      if (data.authMethod === "CUSTOM_HEADER") {
+        const trimmedHeaderName = data.authHeaderName?.trim();
+        if (trimmedHeaderName) {
+          payload.authHeaderName = trimmedHeaderName;
+        }
+      }
+    } else {
+      payload.authMethod =
+        data.authMethod === "NO_AUTH" ? "NO_AUTH" : undefined;
+    }
+
+    createCustomIntegration(payload);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -143,8 +187,12 @@ export function CreateCustomDialog({
                     {t("integrations.createCustomDialog.authMethod")}
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
+                    onValueChange={(value) =>
+                      field.onChange(
+                        value as CreateCustomIntegrationFormData["authMethod"],
+                      )
+                    }
+                    value={field.value ?? undefined}
                     disabled={isCreating}
                   >
                     <FormControl>
@@ -157,6 +205,9 @@ export function CreateCustomDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="NO_AUTH">
+                        {t("integrations.createCustomDialog.authMethodNone")}
+                      </SelectItem>
                       <SelectItem value="CUSTOM_HEADER">
                         {t("integrations.createCustomDialog.authMethodApiKey")}
                       </SelectItem>
@@ -175,7 +226,7 @@ export function CreateCustomDialog({
               )}
             />
 
-            {selectedAuthMethod && (
+            {selectedAuthMethod === "CUSTOM_HEADER" && (
               <>
                 <FormField
                   control={form.control}
@@ -223,19 +274,45 @@ export function CreateCustomDialog({
                         />
                       </FormControl>
                       <FormDescription>
-                        {selectedAuthMethod === "CUSTOM_HEADER"
-                          ? t(
-                              "integrations.createCustomDialog.credentialsDescriptionApiKey",
-                            )
-                          : t(
-                              "integrations.createCustomDialog.credentialsDescriptionBearerToken",
-                            )}
+                        {t(
+                          "integrations.createCustomDialog.credentialsDescriptionApiKey",
+                        )}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </>
+            )}
+
+            {selectedAuthMethod === "BEARER_TOKEN" && (
+              <FormField
+                control={form.control}
+                name="credentials"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("integrations.createCustomDialog.credentials")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder={t(
+                          "integrations.createCustomDialog.credentialsPlaceholder",
+                        )}
+                        {...field}
+                        disabled={isCreating}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        "integrations.createCustomDialog.credentialsDescriptionBearerToken",
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <DialogFooter>

@@ -48,6 +48,10 @@ export function getAuthMethodLabel(authMethod?: string): string {
       ns: "admin-settings-integrations",
     });
   switch (authMethod) {
+    case "NO_AUTH":
+      return i18n.t("integrations.helpers.authMethod.none", {
+        ns: "admin-settings-integrations",
+      });
     case "CUSTOM_HEADER":
       return i18n.t("integrations.helpers.authMethod.apiKey", {
         ns: "admin-settings-integrations",

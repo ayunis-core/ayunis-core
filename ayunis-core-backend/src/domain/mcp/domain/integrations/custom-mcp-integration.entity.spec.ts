@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { CustomMcpIntegration } from './custom-mcp-integration.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../auth/custom-header-mcp-integration-auth.entity';
 
@@ -6,7 +7,7 @@ describe('CustomMcpIntegration', () => {
     const auth = new CustomHeaderMcpIntegrationAuth();
     const integration = new CustomMcpIntegration({
       name: 'Custom Integration',
-      orgId: 'org-123',
+      orgId: randomUUID(),
       serverUrl: 'https://initial.example.com/mcp',
       auth,
     });

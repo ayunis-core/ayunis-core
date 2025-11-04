@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { McpIntegrationDtoMapper } from './mcp-integration-dto.mapper';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
@@ -10,8 +11,8 @@ import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/pred
 describe('McpIntegrationDtoMapper', () => {
   const mapper = new McpIntegrationDtoMapper();
   const baseParams = {
-    id: 'integration-1',
-    orgId: 'org-1',
+    id: randomUUID(),
+    orgId: randomUUID(),
     name: 'Integration',
     serverUrl: 'https://example.com/mcp',
     enabled: true,

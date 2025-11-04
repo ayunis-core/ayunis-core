@@ -5,6 +5,7 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../../domain/auth/oauth-mcp-integration-auth.entity';
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 
 /**
  * Mapper for converting MCP integration entities to DTOs.
@@ -45,8 +46,8 @@ export class McpIntegrationDtoMapper {
     };
 
     // Add type-specific fields
-    if (integration.isPredefined()) {
-      baseDto.slug = integration.predefinedSlug;
+    if (integration instanceof PredefinedMcpIntegration) {
+      baseDto.slug = integration.slug;
       baseDto.serverUrl = undefined; // Not exposed for predefined
     } else {
       baseDto.slug = undefined;

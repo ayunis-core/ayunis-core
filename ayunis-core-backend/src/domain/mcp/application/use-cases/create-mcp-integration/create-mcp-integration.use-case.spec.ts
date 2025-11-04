@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { CreateMcpIntegrationUseCase } from './create-mcp-integration.use-case';
 import { CreatePredefinedMcpIntegrationCommand } from './create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from './create-custom-mcp-integration.command';
@@ -7,17 +8,27 @@ import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repo
 import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
+import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
+import {
+  McpIntegration,
+  PredefinedMcpIntegration,
+  CustomMcpIntegration,
+} from '../../../domain/mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import {
-  DuplicateLocabooIntegrationError,
+  CredentialFieldType,
+  CredentialFieldValue,
+  PredefinedMcpIntegrationConfig,
+} from '../../../domain/predefined-mcp-integration-config';
+import {
+  DuplicateMcpIntegrationError,
   InvalidPredefinedSlugError,
   InvalidServerUrlError,
   McpAuthNotImplementedError,
@@ -29,16 +40,36 @@ describe('CreateMcpIntegrationUseCase', () => {
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let registry: jest.Mocked<PredefinedMcpIntegrationRegistry>;
   let context: jest.Mocked<ContextService>;
-  let factory: jest.Mocked<McpIntegrationFactory>;
+  let factory: McpIntegrationFactory;
+  let authFactory: McpIntegrationAuthFactory;
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
+  let factorySpy: jest.SpyInstance;
+  let authSpy: jest.SpyInstance;
+  let savedIntegrations: McpIntegration[];
 
-  const orgId = 'org-123';
-  const integrationId = 'integration-123';
+  const orgId = randomUUID();
+
+  const buildConfig = (
+    overrides: Partial<PredefinedMcpIntegrationConfig> = {},
+  ) => ({
+    slug: overrides.slug ?? PredefinedMcpIntegrationSlug.LOCABOO,
+    displayName: overrides.displayName ?? 'Locaboo 4',
+    description:
+      overrides.description ?? 'Connect to Locaboo 4 booking system data',
+    serverUrl: overrides.serverUrl ?? 'https://api.locaboo.example.com/mcp',
+    authType: overrides.authType ?? McpAuthMethod.BEARER_TOKEN,
+    authHeaderName: overrides.authHeaderName ?? 'Authorization',
+    credentialFields: overrides.credentialFields,
+  });
 
   beforeEach(async () => {
+    savedIntegrations = [];
     repository = {
-      save: jest.fn(),
+      save: jest.fn(async (integration) => {
+        savedIntegrations.push(integration as McpIntegration);
+        return integration as any;
+      }),
       findById: jest.fn(),
       findAll: jest.fn(),
       findByOrgIdAndSlug: jest.fn(),
@@ -48,6 +79,7 @@ describe('CreateMcpIntegrationUseCase', () => {
     registry = {
       isValidSlug: jest.fn(),
       getConfig: jest.fn(),
+      getAllConfigs: jest.fn(),
       getServerUrl: jest.fn(),
     } as any;
 
@@ -55,9 +87,11 @@ describe('CreateMcpIntegrationUseCase', () => {
       get: jest.fn(),
     } as any;
 
-    factory = {
-      createIntegration: jest.fn(),
-    } as any;
+    factory = new McpIntegrationFactory();
+    factorySpy = jest.spyOn(factory, 'createIntegration');
+
+    authFactory = new McpIntegrationAuthFactory();
+    authSpy = jest.spyOn(authFactory, 'createAuth');
 
     encryption = {
       encrypt: jest.fn(),
@@ -65,7 +99,7 @@ describe('CreateMcpIntegrationUseCase', () => {
     } as any;
 
     validateUseCase = {
-      execute: jest.fn(),
+      execute: jest.fn().mockResolvedValue({ isValid: true }),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -74,72 +108,72 @@ describe('CreateMcpIntegrationUseCase', () => {
         { provide: McpIntegrationsRepositoryPort, useValue: repository },
         { provide: PredefinedMcpIntegrationRegistry, useValue: registry },
         { provide: ContextService, useValue: context },
-        { provide: McpIntegrationFactory, useValue: factory },
+        McpIntegrationFactory,
+        McpIntegrationAuthFactory,
         { provide: McpCredentialEncryptionPort, useValue: encryption },
         { provide: ValidateMcpIntegrationUseCase, useValue: validateUseCase },
       ],
     }).compile();
 
     useCase = module.get(CreateMcpIntegrationUseCase);
+    factory = module.get(McpIntegrationFactory);
+    authFactory = module.get(McpIntegrationAuthFactory);
+    factorySpy = jest.spyOn(factory, 'createIntegration');
+    authSpy = jest.spyOn(authFactory, 'createAuth');
   });
 
   describe('predefined integrations', () => {
-    it('creates bearer token integration with encrypted credentials', async () => {
+    it('creates bearer token integration with credential fields', async () => {
       const command = new CreatePredefinedMcpIntegrationCommand(
-        'Locaboo',
         PredefinedMcpIntegrationSlug.LOCABOO,
-        McpAuthMethod.BEARER_TOKEN,
-        'Authorization',
-        'plaintext-token',
+        [
+          {
+            name: CredentialFieldType.TOKEN,
+            value: 'plaintext-token',
+          } satisfies CredentialFieldValue,
+        ],
       );
+
+      const config = buildConfig({
+        credentialFields: [
+          {
+            label: 'API Token',
+            type: CredentialFieldType.TOKEN,
+            required: true,
+          },
+        ],
+      });
 
       context.get.mockReturnValue(orgId);
       registry.isValidSlug.mockReturnValue(true);
-      registry.getConfig.mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.LOCABOO,
-        displayName: 'Locaboo',
-        authType: McpAuthMethod.BEARER_TOKEN,
-        authHeaderName: 'Authorization',
-      });
-      registry.getServerUrl.mockReturnValue('https://locaboo.com/mcp');
+      registry.getConfig.mockReturnValue(config);
       repository.findByOrgIdAndSlug.mockResolvedValue(null);
-      encryption.encrypt.mockResolvedValue('encrypted-token');
-
-      const auth = new BearerMcpIntegrationAuth({
-        authToken: 'encrypted-token',
-      });
-      const integration = new PredefinedMcpIntegration({
-        id: integrationId,
-        name: command.name,
-        orgId,
-        slug: command.slug,
-        serverUrl: 'https://locaboo.com/mcp',
-        auth,
-      });
-
-      factory.createIntegration.mockReturnValue(integration);
-      repository.save.mockResolvedValue(integration);
-      validateUseCase.execute.mockResolvedValue({ isValid: true });
 
       const result = await useCase.execute(command);
 
-      expect(encryption.encrypt).toHaveBeenCalledWith('plaintext-token');
-      expect(factory.createIntegration).toHaveBeenCalledWith({
+      expect(authSpy).toHaveBeenCalledWith({
+        method: McpAuthMethod.BEARER_TOKEN,
+        authToken: 'plaintext-token',
+      });
+      expect(factorySpy).toHaveBeenCalledWith({
         kind: McpIntegrationKind.PREDEFINED,
         orgId,
-        name: command.name,
-        serverUrl: 'https://locaboo.com/mcp',
-        slug: command.slug,
+        name: config.displayName,
+        serverUrl: config.serverUrl,
+        slug: config.slug,
         auth: expect.any(BearerMcpIntegrationAuth),
       });
-      expect(repository.save).toHaveBeenCalledWith(integration);
-      expect(result).toBe(integration);
+      expect(repository.save).toHaveBeenCalledTimes(2);
+      expect(result).toBeInstanceOf(PredefinedMcpIntegration);
+      expect(result.slug).toBe(config.slug);
+      expect(result.getAuthType()).toBe(McpAuthMethod.BEARER_TOKEN);
+      expect(savedIntegrations[0]).toBeInstanceOf(PredefinedMcpIntegration);
     });
 
     it('throws when slug is invalid', async () => {
       const command = new CreatePredefinedMcpIntegrationCommand(
-        'Invalid',
         PredefinedMcpIntegrationSlug.TEST,
+        [],
       );
       context.get.mockReturnValue(orgId);
       registry.isValidSlug.mockReturnValue(false);
@@ -149,30 +183,62 @@ describe('CreateMcpIntegrationUseCase', () => {
       );
     });
 
-    it('prevents duplicate locaboo integrations', async () => {
+    it('prevents duplicate integrations for same slug', async () => {
       const command = new CreatePredefinedMcpIntegrationCommand(
-        'Locaboo',
         PredefinedMcpIntegrationSlug.LOCABOO,
-        McpAuthMethod.NO_AUTH,
+        [],
       );
 
       context.get.mockReturnValue(orgId);
       registry.isValidSlug.mockReturnValue(true);
-      registry.getConfig.mockReturnValue({
-        slug: PredefinedMcpIntegrationSlug.LOCABOO,
-        displayName: 'Locaboo',
-        authType: McpAuthMethod.NO_AUTH,
-      });
-      registry.getServerUrl.mockReturnValue('https://locaboo.com/mcp');
-      repository.findByOrgIdAndSlug.mockResolvedValue({} as any);
+      registry.getConfig.mockReturnValue(buildConfig());
+      repository.findByOrgIdAndSlug.mockResolvedValue(
+        new PredefinedMcpIntegration({
+          orgId,
+          name: 'Existing',
+          slug: PredefinedMcpIntegrationSlug.LOCABOO,
+          serverUrl: 'https://api.locaboo.example.com/mcp',
+          auth: new NoAuthMcpIntegrationAuth(),
+        }),
+      );
 
       await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        DuplicateLocabooIntegrationError,
+        DuplicateMcpIntegrationError,
       );
     });
   });
 
   describe('custom integrations', () => {
+    it('creates custom integration with bearer auth', async () => {
+      const command = new CreateCustomMcpIntegrationCommand(
+        'Custom',
+        'https://example.com/mcp',
+        McpAuthMethod.BEARER_TOKEN,
+        undefined,
+        'plaintext-token',
+      );
+
+      context.get.mockReturnValue(orgId);
+      encryption.encrypt.mockResolvedValue('encrypted-token');
+
+      const result = await useCase.execute(command);
+
+      expect(encryption.encrypt).toHaveBeenCalledWith('plaintext-token');
+      expect(authSpy).toHaveBeenCalledWith({
+        method: McpAuthMethod.BEARER_TOKEN,
+        authToken: 'encrypted-token',
+      });
+      expect(factorySpy).toHaveBeenCalledWith({
+        kind: McpIntegrationKind.CUSTOM,
+        orgId,
+        name: command.name,
+        serverUrl: command.serverUrl,
+        auth: expect.any(BearerMcpIntegrationAuth),
+      });
+      expect(result).toBeInstanceOf(CustomMcpIntegration);
+      expect(result.getAuthType()).toBe(McpAuthMethod.BEARER_TOKEN);
+    });
+
     it('creates custom integration with custom header auth', async () => {
       const command = new CreateCustomMcpIntegrationCommand(
         'Custom',
@@ -185,33 +251,60 @@ describe('CreateMcpIntegrationUseCase', () => {
       context.get.mockReturnValue(orgId);
       encryption.encrypt.mockResolvedValue('encrypted-secret');
 
-      const auth = new CustomHeaderMcpIntegrationAuth({
-        secret: 'encrypted-secret',
-        headerName: 'X-API-Key',
-      });
-      const integration = new CustomMcpIntegration({
-        id: integrationId,
-        name: command.name,
-        orgId,
-        serverUrl: command.serverUrl,
-        auth,
-      });
-
-      factory.createIntegration.mockReturnValue(integration);
-      repository.save.mockResolvedValue(integration);
-      validateUseCase.execute.mockResolvedValue({ isValid: true });
-
       const result = await useCase.execute(command);
 
       expect(encryption.encrypt).toHaveBeenCalledWith('plaintext-secret');
-      expect(factory.createIntegration).toHaveBeenCalledWith({
-        kind: McpIntegrationKind.CUSTOM,
-        orgId,
-        name: command.name,
-        serverUrl: command.serverUrl,
-        auth: expect.any(CustomHeaderMcpIntegrationAuth),
+      expect(authSpy).toHaveBeenCalledWith({
+        method: McpAuthMethod.CUSTOM_HEADER,
+        secret: 'encrypted-secret',
+        headerName: 'X-API-Key',
       });
-      expect(result).toBe(integration);
+      expect(result).toBeInstanceOf(CustomMcpIntegration);
+      expect(result.getAuthType()).toBe(McpAuthMethod.CUSTOM_HEADER);
+    });
+
+    it('creates custom integration without auth when method omitted', async () => {
+      const command = new CreateCustomMcpIntegrationCommand(
+        'Custom',
+        'https://example.com/mcp',
+      );
+
+      context.get.mockReturnValue(orgId);
+
+      const result = await useCase.execute(command);
+
+      expect(authSpy).toHaveBeenCalledWith({
+        method: McpAuthMethod.NO_AUTH,
+      });
+      expect(result).toBeInstanceOf(CustomMcpIntegration);
+      expect(result.getAuthType()).toBe(McpAuthMethod.NO_AUTH);
+    });
+
+    it('rejects invalid server URLs', async () => {
+      const command = new CreateCustomMcpIntegrationCommand(
+        'Custom',
+        'not-a-valid-url',
+      );
+
+      context.get.mockReturnValue(orgId);
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvalidServerUrlError,
+      );
+    });
+
+    it('rejects missing credentials for bearer auth', async () => {
+      const command = new CreateCustomMcpIntegrationCommand(
+        'Custom',
+        'https://example.com/mcp',
+        McpAuthMethod.BEARER_TOKEN,
+      );
+
+      context.get.mockReturnValue(orgId);
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        McpValidationFailedError,
+      );
     });
 
     it('rejects missing credentials for custom header auth', async () => {
@@ -228,41 +321,31 @@ describe('CreateMcpIntegrationUseCase', () => {
       );
     });
 
-    it('rejects invalid URLs', async () => {
+    it('throws not implemented error for oauth', async () => {
       const command = new CreateCustomMcpIntegrationCommand(
-        'Invalid',
-        'not-a-url',
+        'Custom',
+        'https://example.com/mcp',
+        McpAuthMethod.OAUTH,
       );
+
       context.get.mockReturnValue(orgId);
 
       await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        InvalidServerUrlError,
+        McpAuthNotImplementedError,
       );
     });
   });
 
-  it('throws when user is unauthenticated', async () => {
-    context.get.mockReturnValue(undefined);
+  it('throws UnauthorizedException when context lacks orgId', async () => {
     const command = new CreateCustomMcpIntegrationCommand(
       'Custom',
       'https://example.com/mcp',
     );
+
+    context.get.mockReturnValue(undefined);
 
     await expect(useCase.execute(command)).rejects.toBeInstanceOf(
       UnauthorizedException,
-    );
-  });
-
-  it('throws for unsupported oauth auth type', async () => {
-    context.get.mockReturnValue(orgId);
-    const command = new CreateCustomMcpIntegrationCommand(
-      'Custom',
-      'https://example.com/mcp',
-      McpAuthMethod.OAUTH,
-    );
-
-    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-      McpAuthNotImplementedError,
     );
   });
 });

@@ -4,13 +4,13 @@ import { McpResource, ResourceArgument } from './mcp-resource.entity';
 describe('McpResource', () => {
   it('should instantiate correctly with all required fields', () => {
     const integrationId = randomUUID();
-    const resource = new McpResource(
-      'file://docs/readme.md',
-      'README',
-      'Project documentation',
-      'text/markdown',
+    const resource = new McpResource({
+      uri: 'file://docs/readme.md',
+      name: 'README',
+      description: 'Project documentation',
+      mimeType: 'text/markdown',
       integrationId,
-    );
+    });
 
     expect(resource.uri).toBe('file://docs/readme.md');
     expect(resource.name).toBe('README');
@@ -21,13 +21,12 @@ describe('McpResource', () => {
   });
 
   it('should handle optional description', () => {
-    const resource = new McpResource(
-      'http://api.example.com/data',
-      'API Data',
-      undefined,
-      'application/json',
-      randomUUID(),
-    );
+    const resource = new McpResource({
+      uri: 'http://api.example.com/data',
+      name: 'API Data',
+      mimeType: 'application/json',
+      integrationId: randomUUID(),
+    });
 
     expect(resource.uri).toBe('http://api.example.com/data');
     expect(resource.name).toBe('API Data');
@@ -36,13 +35,12 @@ describe('McpResource', () => {
   });
 
   it('should handle optional mimeType', () => {
-    const resource = new McpResource(
-      'custom://resource',
-      'Custom Resource',
-      'A custom resource type',
-      undefined,
-      randomUUID(),
-    );
+    const resource = new McpResource({
+      uri: 'custom://resource',
+      name: 'Custom Resource',
+      description: 'A custom resource type',
+      integrationId: randomUUID(),
+    });
 
     expect(resource.uri).toBe('custom://resource');
     expect(resource.name).toBe('Custom Resource');
@@ -63,14 +61,14 @@ describe('McpResource', () => {
       },
     ];
 
-    const resource = new McpResource(
-      'file://dynamic/{path}',
-      'Dynamic File',
-      'Access files dynamically',
-      'application/octet-stream',
-      randomUUID(),
-      args,
-    );
+    const resource = new McpResource({
+      uri: 'file://dynamic/{path}',
+      name: 'Dynamic File',
+      description: 'Access files dynamically',
+      mimeType: 'application/octet-stream',
+      integrationId: randomUUID(),
+      arguments: args,
+    });
 
     expect(resource.arguments).toEqual(args);
     expect(resource.arguments).toHaveLength(2);
@@ -82,13 +80,11 @@ describe('McpResource', () => {
 
   it('should handle resource with no description or mimeType', () => {
     const integrationId = randomUUID();
-    const resource = new McpResource(
-      'resource://test',
-      'Test Resource',
-      undefined,
-      undefined,
+    const resource = new McpResource({
+      uri: 'resource://test',
+      name: 'Test Resource',
       integrationId,
-    );
+    });
 
     expect(resource.uri).toBe('resource://test');
     expect(resource.name).toBe('Test Resource');
@@ -98,14 +94,14 @@ describe('McpResource', () => {
   });
 
   it('should handle empty arguments array', () => {
-    const resource = new McpResource(
-      'resource://with-empty-args',
-      'Resource',
-      'Has empty args',
-      'text/plain',
-      randomUUID(),
-      [],
-    );
+    const resource = new McpResource({
+      uri: 'resource://with-empty-args',
+      name: 'Resource',
+      description: 'Has empty args',
+      mimeType: 'text/plain',
+      integrationId: randomUUID(),
+      arguments: [],
+    });
 
     expect(resource.arguments).toEqual([]);
     expect(resource.arguments).toHaveLength(0);

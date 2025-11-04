@@ -10,7 +10,7 @@ export class PredefinedMcpIntegration extends McpIntegration {
 
   constructor(params: {
     id?: UUID;
-    orgId: string;
+    orgId: UUID;
     name: string;
     slug: PredefinedMcpIntegrationSlug;
     serverUrl: string;

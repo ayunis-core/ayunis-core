@@ -1,11 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import {
-  PredefinedMcpIntegrationRegistry,
-  PredefinedMcpIntegrationConfig,
-} from './predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from './predefined-mcp-integration-registry.service';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from '../../domain/value-objects/mcp-auth-method.enum';
+import { CredentialFieldType } from '../../domain/predefined-mcp-integration-config';
 
 describe('PredefinedMcpIntegrationRegistryService', () => {
   let service: PredefinedMcpIntegrationRegistry;
@@ -64,6 +62,7 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
         expect(config.description).toContain('Locaboo 4 booking system');
         expect(config.authType).toBe(McpAuthMethod.BEARER_TOKEN);
         expect(config.authHeaderName).toBe('Authorization');
+        expect(config.serverUrl).toBe('https://api.locaboo.example.com/mcp');
       });
 
       it('should return Locaboo credential fields', () => {
@@ -73,9 +72,8 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
         expect(config.credentialFields).toHaveLength(1);
 
         const tokenField = config.credentialFields![0];
-        expect(tokenField.name).toBe('apiToken');
         expect(tokenField.label).toBe('Locaboo 3 API Token');
-        expect(tokenField.type).toBe('password');
+        expect(tokenField.type).toBe(CredentialFieldType.TOKEN);
         expect(tokenField.required).toBe(true);
         expect(tokenField.help).toContain('Locaboo 3 API token');
       });

@@ -8,6 +8,8 @@ import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-in
 import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../../../domain/auth/oauth-mcp-integration-auth.entity';
+import { McpIntegrationFactory } from '../../../../application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from '../../../../application/factories/mcp-integration-auth.factory';
 import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
@@ -21,13 +23,17 @@ import {
 
 describe('McpIntegrationMapper', () => {
   let mapper: McpIntegrationMapper;
+  let integrationFactory: McpIntegrationFactory;
+  let authFactory: McpIntegrationAuthFactory;
 
   beforeEach(() => {
-    mapper = new McpIntegrationMapper();
+    integrationFactory = new McpIntegrationFactory();
+    authFactory = new McpIntegrationAuthFactory();
+    mapper = new McpIntegrationMapper(integrationFactory, authFactory);
   });
 
   const baseParams = {
-    orgId: 'org-123',
+    orgId: randomUUID(),
     name: 'Test Integration',
     serverUrl: 'https://example.com/mcp',
     enabled: true,
@@ -49,9 +55,9 @@ describe('McpIntegrationMapper', () => {
       expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
       expect(record.orgId).toBe(baseParams.orgId);
       expect(record.auth).toBeInstanceOf(NoAuthMcpIntegrationAuthRecord);
-      expect((record.auth as McpIntegrationAuthRecord).integrationId).toBe(
-        record.id,
-      );
+      const authRecord = record.auth as McpIntegrationAuthRecord;
+      expect(authRecord.integration).toBe(record);
+      expect(authRecord.integrationId).toBeUndefined();
     });
 
     it('maps predefined integration with bearer auth and slug', () => {
@@ -67,7 +73,11 @@ describe('McpIntegrationMapper', () => {
       const record = mapper.toRecord(integration);
 
       expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
-      expect(record.predefinedSlug).toBe(PredefinedMcpIntegrationSlug.TEST);
+      const predefinedRecord = record as PredefinedMcpIntegrationRecord;
+      expect(predefinedRecord).toBeInstanceOf(PredefinedMcpIntegrationRecord);
+      expect(predefinedRecord.predefinedSlug).toBe(
+        PredefinedMcpIntegrationSlug.TEST,
+      );
       expect(record.auth).toBeInstanceOf(BearerMcpIntegrationAuthRecord);
       expect((record.auth as BearerMcpIntegrationAuthRecord).authToken).toBe(
         'encrypted-token',

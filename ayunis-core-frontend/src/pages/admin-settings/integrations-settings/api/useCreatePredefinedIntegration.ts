@@ -33,7 +33,15 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
   function createPredefinedIntegration(
     data: CreatePredefinedIntegrationFormData,
   ) {
-    mutation.mutate({ data });
+    const payload: CreatePredefinedIntegrationFormData = {
+      slug: data.slug,
+      configValues: (data.configValues ?? []).map((value) => ({
+        name: value.name,
+        value: value.value?.trim() ?? "",
+      })),
+    };
+
+    mutation.mutate({ data: payload });
   }
 
   return {

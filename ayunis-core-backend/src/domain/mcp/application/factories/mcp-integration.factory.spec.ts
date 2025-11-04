@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { McpIntegrationFactory } from './mcp-integration.factory';
 import { McpIntegrationKind } from '../../domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -9,7 +10,7 @@ import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integ
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 
 describe('McpIntegrationFactory', () => {
-  const orgId = 'org-123';
+  const orgId = randomUUID();
   const name = 'Test Integration';
   const serverUrl = 'http://localhost:3000';
   let factory: McpIntegrationFactory;
@@ -36,7 +37,7 @@ describe('McpIntegrationFactory', () => {
     });
 
     it('creates predefined integrations with slug and auth', () => {
-      const auth = new BearerMcpIntegrationAuth();
+      const auth = new BearerMcpIntegrationAuth({ authToken: 'token' });
       const integration = factory.createIntegration({
         kind: McpIntegrationKind.PREDEFINED,
         orgId,
@@ -53,7 +54,7 @@ describe('McpIntegrationFactory', () => {
     });
 
     it('throws when predefined integration is missing slug', () => {
-      const auth = new BearerMcpIntegrationAuth();
+      const auth = new BearerMcpIntegrationAuth({ authToken: 'token' });
 
       expect(() =>
         factory.createIntegration({

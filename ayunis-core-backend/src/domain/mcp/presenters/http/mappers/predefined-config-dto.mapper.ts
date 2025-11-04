@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PredefinedMcpIntegrationConfig } from '../../../application/registries/predefined-mcp-integration-registry.service';
-import { PredefinedConfigResponseDto } from '../dto/predefined-config-response.dto';
+import { PredefinedMcpIntegrationConfig } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
+import {
+  CredentialFieldDto,
+  PredefinedConfigResponseDto,
+} from '../dto/predefined-config-response.dto';
 
 /**
  * Mapper for converting predefined MCP integration configs to DTOs.
@@ -15,13 +18,19 @@ export class PredefinedConfigDtoMapper {
    * @returns The DTO representation
    */
   toDto(config: PredefinedMcpIntegrationConfig): PredefinedConfigResponseDto {
+    const credentialFields: CredentialFieldDto[] =
+      config.credentialFields?.map((field) => ({
+        label: field.label,
+        type: field.type,
+        required: field.required,
+      })) ?? [];
     return {
       slug: config.slug,
       displayName: config.displayName,
       description: config.description,
       authType: config.authType,
       authHeaderName: config.authHeaderName,
-      credentialFields: config.credentialFields,
+      credentialFields: credentialFields,
     };
   }
 
@@ -37,4 +46,3 @@ export class PredefinedConfigDtoMapper {
     return configs.map((config) => this.toDto(config));
   }
 }
-

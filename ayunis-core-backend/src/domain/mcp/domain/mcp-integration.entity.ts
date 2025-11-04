@@ -10,7 +10,7 @@ import { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
  */
 export abstract class McpIntegration {
   public readonly id: UUID;
-  public readonly orgId: string;
+  public readonly orgId: UUID;
   public name: string;
   public enabled: boolean;
   public readonly createdAt: Date;
@@ -23,7 +23,7 @@ export abstract class McpIntegration {
 
   protected constructor(params: {
     id?: UUID;
-    orgId: string;
+    orgId: UUID;
     name: string;
     enabled?: boolean;
     createdAt?: Date;
@@ -108,3 +108,6 @@ export abstract class McpIntegration {
     this.updatedAt = new Date();
   }
 }
+
+export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
+export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';

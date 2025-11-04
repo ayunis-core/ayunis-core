@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { McpClientService } from './mcp-client.service';
 import { McpClientPort } from '../ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
+import { randomUUID } from 'crypto';
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -9,7 +10,6 @@ import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integrati
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../../domain/value-objects/mcp-integration-kind.enum';
 import { McpAuthenticationError } from '../mcp.errors';
 
 class MockMcpClientPort extends McpClientPort {
@@ -34,8 +34,8 @@ describe('McpClientService', () => {
   let encryption: MockCredentialEncryptionPort;
 
   const baseIntegrationParams = {
-    id: 'integration-123',
-    orgId: 'org-123',
+    id: randomUUID(),
+    orgId: randomUUID(),
     name: 'Test Integration',
     serverUrl: 'https://example.com/mcp',
     enabled: true,
@@ -79,7 +79,6 @@ describe('McpClientService', () => {
       });
       const integration = new PredefinedMcpIntegration({
         ...baseIntegrationParams,
-        kind: undefined as any, // ignored by constructor
         slug: PredefinedMcpIntegrationSlug.TEST,
         auth,
       });

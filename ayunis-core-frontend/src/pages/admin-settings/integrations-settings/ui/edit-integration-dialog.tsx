@@ -18,17 +18,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shared/ui/shadcn/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/shadcn/select";
 import { Input } from "@/shared/ui/shadcn/input";
 import { Button } from "@/shared/ui/shadcn/button";
 import type { McpIntegration, UpdateIntegrationFormData } from "../model/types";
 import { useUpdateIntegration } from "../api/useUpdateIntegration";
+import { getAuthMethodLabel } from "../lib/helpers";
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
@@ -48,7 +42,6 @@ export function EditIntegrationDialog({
   const form = useForm<UpdateIntegrationFormData>({
     defaultValues: {
       name: "",
-      authMethod: undefined,
       authHeaderName: "",
       credentials: "",
     },
@@ -58,22 +51,42 @@ export function EditIntegrationDialog({
     if (integration && open) {
       form.reset({
         name: integration.name,
-        authMethod: integration.authMethod as
-          | "CUSTOM_HEADER"
-          | "BEARER_TOKEN"
-          | undefined,
-        authHeaderName: integration.authHeaderName || "",
+        authHeaderName: "",
         credentials: "",
       });
     }
   }, [integration, open, form]);
 
-  const selectedAuthMethod = form.watch("authMethod");
+  const handleSubmit = (data: UpdateIntegrationFormData) => {
+    if (!integration) return;
 
-  const handleSubmit = (data: any) => {
-    if (integration) {
-      updateIntegration(integration.id, data);
+    const payload: UpdateIntegrationFormData = {};
+
+    if (data.name && data.name !== integration.name) {
+      payload.name = data.name;
     }
+
+    const trimmedCredentials = data.credentials?.trim();
+    if (trimmedCredentials) {
+      payload.credentials = trimmedCredentials;
+    }
+
+    if (integration.authMethod === "CUSTOM_HEADER") {
+      const trimmedHeaderName = data.authHeaderName?.trim();
+      if (
+        trimmedHeaderName &&
+        trimmedHeaderName !== integration.authHeaderName
+      ) {
+        payload.authHeaderName = trimmedHeaderName;
+      }
+    }
+
+    if (Object.keys(payload).length === 0) {
+      onOpenChange(false);
+      return;
+    }
+
+    updateIntegration(integration.id, payload);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -84,6 +97,8 @@ export function EditIntegrationDialog({
   };
 
   if (!integration) return null;
+
+  const authMethod = integration.authMethod ?? "NO_AUTH";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -120,43 +135,16 @@ export function EditIntegrationDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="authMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t("integrations.editDialog.authMethod")}
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isUpdating}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            "integrations.editDialog.authMethodNone",
-                          )}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="CUSTOM_HEADER">
-                        {t("integrations.editDialog.authMethodApiKey")}
-                      </SelectItem>
-                      <SelectItem value="BEARER_TOKEN">
-                        {t("integrations.editDialog.authMethodBearerToken")}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <FormLabel className="block">
+                {t("integrations.editDialog.authMethod")}
+              </FormLabel>
+              <p className="text-sm text-muted-foreground">
+                {getAuthMethodLabel(authMethod)}
+              </p>
+            </div>
 
-            {selectedAuthMethod && (
+            {authMethod === "CUSTOM_HEADER" && (
               <>
                 <FormField
                   control={form.control}
@@ -168,9 +156,10 @@ export function EditIntegrationDialog({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t(
-                            "integrations.editDialog.headerNamePlaceholder",
-                          )}
+                          placeholder={
+                            integration.authHeaderName ||
+                            t("integrations.editDialog.headerNamePlaceholder")
+                          }
                           {...field}
                           disabled={isUpdating}
                         />
@@ -209,6 +198,40 @@ export function EditIntegrationDialog({
                   )}
                 />
               </>
+            )}
+
+            {authMethod === "BEARER_TOKEN" && (
+              <FormField
+                control={form.control}
+                name="credentials"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t("integrations.editDialog.credentials")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder={t(
+                          "integrations.editDialog.credentialsPlaceholder",
+                        )}
+                        {...field}
+                        disabled={isUpdating}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t("integrations.editDialog.credentialsDescription")}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {authMethod === "NO_AUTH" && (
+              <FormDescription>
+                {t("integrations.editDialog.noCredentialsMessage")}
+              </FormDescription>
             )}
 
             <DialogFooter>

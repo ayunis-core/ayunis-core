@@ -13,6 +13,7 @@
 This document outlines the integration testing strategy for MCP (Model Context Protocol) integration feature. **Note:** This is a testing plan document. Actual test execution is deferred to a future ticket requiring dedicated test infrastructure setup.
 
 **Testing Goals:**
+
 - Verify end-to-end MCP integration workflows
 - Ensure proper error handling and recovery
 - Validate authentication mechanisms
@@ -20,6 +21,7 @@ This document outlines the integration testing strategy for MCP (Model Context P
 - Confirm agent integration works correctly
 
 **Testing Approach:**
+
 - Use mock/test MCP server
 - Test both predefined and custom integrations
 - Cover happy paths and error scenarios
@@ -34,8 +36,8 @@ Create a lightweight mock MCP server using the MCP SDK:
 **Location:** `test/helpers/mock-mcp-server.ts`
 
 ```typescript
-import { Server } from '@modelcontextprotocol/sdk/server';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio';
+import { Server } from "@modelcontextprotocol/sdk/server";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
 
 /**
  * Mock MCP server for integration testing.
@@ -47,8 +49,8 @@ export class MockMcpServer {
   constructor() {
     this.server = new Server(
       {
-        name: 'test-mcp-server',
-        version: '1.0.0',
+        name: "test-mcp-server",
+        version: "1.0.0",
       },
       {
         capabilities: {
@@ -66,135 +68,173 @@ export class MockMcpServer {
 
   private registerTools() {
     // Tool 1: Echo (simple string return)
-    this.server.tool('echo', 'Echoes back the input', {
-      message: {
-        type: 'string',
-        description: 'Message to echo',
+    this.server.tool(
+      "echo",
+      "Echoes back the input",
+      {
+        message: {
+          type: "string",
+          description: "Message to echo",
+        },
       },
-    }, async (params) => {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Echo: ${params.message}`,
-          },
-        ],
-      };
-    });
+      async (params) => {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Echo: ${params.message}`,
+            },
+          ],
+        };
+      },
+    );
 
     // Tool 2: Calculate (arithmetic operations)
-    this.server.tool('calculate', 'Performs arithmetic calculation', {
-      operation: {
-        type: 'string',
-        enum: ['add', 'subtract', 'multiply', 'divide'],
+    this.server.tool(
+      "calculate",
+      "Performs arithmetic calculation",
+      {
+        operation: {
+          type: "string",
+          enum: ["add", "subtract", "multiply", "divide"],
+        },
+        a: { type: "number" },
+        b: { type: "number" },
       },
-      a: { type: 'number' },
-      b: { type: 'number' },
-    }, async (params) => {
-      const { operation, a, b } = params;
-      let result: number;
+      async (params) => {
+        const { operation, a, b } = params;
+        let result: number;
 
-      switch (operation) {
-        case 'add': result = a + b; break;
-        case 'subtract': result = a - b; break;
-        case 'multiply': result = a * b; break;
-        case 'divide':
-          if (b === 0) {
-            throw new Error('Division by zero');
-          }
-          result = a / b;
-          break;
-        default:
-          throw new Error(`Unknown operation: ${operation}`);
-      }
+        switch (operation) {
+          case "add":
+            result = a + b;
+            break;
+          case "subtract":
+            result = a - b;
+            break;
+          case "multiply":
+            result = a * b;
+            break;
+          case "divide":
+            if (b === 0) {
+              throw new Error("Division by zero");
+            }
+            result = a / b;
+            break;
+          default:
+            throw new Error(`Unknown operation: ${operation}`);
+        }
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Result: ${result}`,
-          },
-        ],
-      };
-    });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Result: ${result}`,
+            },
+          ],
+        };
+      },
+    );
 
     // Tool 3: Timeout Simulator (for testing timeouts)
-    this.server.tool('slow_operation', 'Simulates a slow operation', {
-      delay: {
-        type: 'number',
-        description: 'Delay in milliseconds',
+    this.server.tool(
+      "slow_operation",
+      "Simulates a slow operation",
+      {
+        delay: {
+          type: "number",
+          description: "Delay in milliseconds",
+        },
       },
-    }, async (params) => {
-      await new Promise((resolve) => setTimeout(resolve, params.delay));
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Completed after ${params.delay}ms`,
-          },
-        ],
-      };
-    });
+      async (params) => {
+        await new Promise((resolve) => setTimeout(resolve, params.delay));
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Completed after ${params.delay}ms`,
+            },
+          ],
+        };
+      },
+    );
   }
 
   private registerResources() {
     // Resource 1: Sample CSV data
-    this.server.resource('test://sample.csv', 'Sample CSV data', 'text/csv', async () => {
-      const csv = `id,name,value\n1,Item A,100\n2,Item B,200\n3,Item C,300`;
-      return {
-        contents: [
-          {
-            uri: 'test://sample.csv',
-            mimeType: 'text/csv',
-            text: csv,
-          },
-        ],
-      };
-    });
+    this.server.resource(
+      "test://sample.csv",
+      "Sample CSV data",
+      "text/csv",
+      async () => {
+        const csv = `id,name,value\n1,Item A,100\n2,Item B,200\n3,Item C,300`;
+        return {
+          contents: [
+            {
+              uri: "test://sample.csv",
+              mimeType: "text/csv",
+              text: csv,
+            },
+          ],
+        };
+      },
+    );
 
     // Resource 2: Parameterized resource
-    this.server.resource('test://data/{year}.csv', 'Yearly data', 'text/csv', async (uri) => {
-      const match = uri.match(/test:\/\/data\/(\d{4})\.csv/);
-      const year = match ? match[1] : '2025';
-      const csv = `date,revenue\n${year}-01-01,10000\n${year}-02-01,12000`;
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: 'text/csv',
-            text: csv,
-          },
-        ],
-      };
-    });
+    this.server.resource(
+      "test://data/{year}.csv",
+      "Yearly data",
+      "text/csv",
+      async (uri) => {
+        const match = uri.match(/test:\/\/data\/(\d{4})\.csv/);
+        const year = match ? match[1] : "2025";
+        const csv = `date,revenue\n${year}-01-01,10000\n${year}-02-01,12000`;
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/csv",
+              text: csv,
+            },
+          ],
+        };
+      },
+    );
   }
 
   private registerPrompts() {
     // Prompt 1: Code review template
-    this.server.prompt('code-review', 'Code review template', [
-      {
-        name: 'code',
-        description: 'Code to review',
-        required: true,
-      },
-      {
-        name: 'language',
-        description: 'Programming language',
-        required: false,
-      },
-    ], async (params) => {
-      return {
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `Please review this ${params.language || 'code'}:\n\n${params.code}`,
+    this.server.prompt(
+      "code-review",
+      "Code review template",
+      [
+        {
+          name: "code",
+          description: "Code to review",
+          required: true,
+        },
+        {
+          name: "language",
+          description: "Programming language",
+          required: false,
+        },
+      ],
+      async (params) => {
+        return {
+          messages: [
+            {
+              role: "user",
+              content: {
+                type: "text",
+                text: `Please review this ${params.language || "code"}:\n\n${
+                  params.code
+                }`,
+              },
             },
-          },
-        ],
-      };
-    });
+          ],
+        };
+      },
+    );
   }
 
   async start(port: number = 3100) {
@@ -240,7 +280,9 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Verify predefined integration creation and validation workflow.
 
 **Steps:**
+
 1. Create predefined integration via API
+
    ```http
    POST /api/mcp-integrations/predefined
    {
@@ -253,11 +295,13 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
    ```
 
 2. Validate integration
+
    ```http
    POST /api/mcp-integrations/{id}/validate
    ```
 
 3. Assert validation success
+
    ```json
    {
      "valid": true,
@@ -272,12 +316,14 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 4. Check integration is enabled by default
 
 **Expected Results:**
+
 - ✅ Integration created successfully
 - ✅ Validation returns success with capability counts
 - ✅ Integration is enabled
 - ✅ Logs show successful discovery
 
 **Error Cases to Test:**
+
 - Invalid slug
 - Missing credentials
 - Wrong auth method
@@ -290,7 +336,9 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Verify custom integration creation with manual server URL.
 
 **Steps:**
+
 1. Create custom integration
+
    ```http
    POST /api/mcp-integrations/custom
    {
@@ -307,11 +355,13 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 3. Verify discovery works
 
 **Expected Results:**
+
 - ✅ Integration created with custom URL
 - ✅ Validation discovers capabilities
 - ✅ Authentication headers sent correctly
 
 **Error Cases to Test:**
+
 - Invalid URL format
 - Missing server URL
 - Connection refused
@@ -323,10 +373,12 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** End-to-end test of agent using MCP tool.
 
 **Steps:**
+
 1. Create agent
 2. Assign MCP integration to agent
 3. Create thread with agent
 4. Send message that triggers tool use
+
    ```
    User: "Echo this message: Hello World"
    ```
@@ -337,12 +389,14 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
    - Return result to user
 
 **Expected Results:**
+
 - ✅ Tool discovered and available to agent
 - ✅ Tool executed successfully
 - ✅ Result returned: "Echo: Hello World"
 - ✅ Logs show tool execution
 
 **Error Cases to Test:**
+
 - Disabled integration
 - Invalid tool parameters
 - Tool execution failure
@@ -354,7 +408,9 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Test CSV resource retrieval and data source creation.
 
 **Steps:**
+
 1. Retrieve CSV resource via MCP
+
    ```http
    POST /api/mcp/retrieve-resource
    {
@@ -370,12 +426,14 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 4. Verify agent can access CSV data in conversations
 
 **Expected Results:**
+
 - ✅ CSV retrieved from MCP server
 - ✅ Data source created with proper metadata
 - ✅ Data indexed for semantic search
 - ✅ Agent can query CSV data
 
 **Error Cases to Test:**
+
 - Malformed CSV
 - Large CSV (size limit)
 - Invalid encoding
@@ -388,7 +446,9 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Test resources with URI templates.
 
 **Steps:**
+
 1. Retrieve resource with parameters
+
    ```http
    POST /api/mcp/retrieve-resource
    {
@@ -405,6 +465,7 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 3. Verify correct data returned
 
 **Expected Results:**
+
 - ✅ URI template processed
 - ✅ Parameters passed to MCP server
 - ✅ Correct year's data returned
@@ -416,7 +477,9 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Test prompt retrieval from MCP server.
 
 **Steps:**
+
 1. Get prompt via API
+
    ```http
    POST /api/mcp/get-prompt
    {
@@ -434,6 +497,7 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 3. Use prompt in agent conversation
 
 **Expected Results:**
+
 - ✅ Prompt retrieved with arguments
 - ✅ Formatted as expected
 - ✅ Agent can use prompt template
@@ -445,10 +509,13 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Verify proper error handling for timeouts.
 
 **Setup:**
+
 - Configure tool to take > 30 seconds
 
 **Steps:**
+
 1. Execute slow tool
+
    ```
    Agent executes: slow_operation(delay=35000)
    ```
@@ -458,6 +525,7 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 3. Check error message is user-friendly
 
 **Expected Results:**
+
 - ✅ Operation times out after 30s
 - ✅ Error message includes integration name and ID
 - ✅ Error message suggests troubleshooting steps
@@ -470,9 +538,11 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Test authentication error handling.
 
 **Setup:**
+
 - Create integration with invalid credentials
 
 **Steps:**
+
 1. Validate integration with wrong credentials
 
 2. Verify authentication error
@@ -482,6 +552,7 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 4. Re-validate successfully
 
 **Expected Results:**
+
 - ✅ Clear authentication error message
 - ✅ Suggests credential verification
 - ✅ After update, validation succeeds
@@ -493,9 +564,11 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Test health check endpoint.
 
 **Steps:**
+
 1. Create multiple integrations (some enabled, some disabled)
 
 2. Call health endpoint
+
    ```http
    GET /api/mcp-integrations/health
    ```
@@ -507,6 +580,7 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 5. Verify unhealthy status
 
 **Expected Results:**
+
 - ✅ Health check returns integration statuses
 - ✅ Overall status "healthy" when at least one enabled
 - ✅ Overall status "unhealthy" when all disabled
@@ -519,11 +593,13 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 **Objective:** Test multiple tool executions in parallel.
 
 **Steps:**
+
 1. Agent executes multiple tools simultaneously
 2. Verify all complete successfully
 3. Check no race conditions or deadlocks
 
 **Expected Results:**
+
 - ✅ All tools execute correctly
 - ✅ Results returned in proper order
 - ✅ No connection pool exhaustion
@@ -533,6 +609,7 @@ npm install --save-dev @modelcontextprotocol/sdk-test-utils
 ### Setup Test Environment
 
 **Prerequisites:**
+
 ```bash
 # Install test dependencies
 npm install --save-dev @modelcontextprotocol/sdk
@@ -543,6 +620,7 @@ npm run test:mcp-server:start
 ```
 
 **Environment Variables:**
+
 ```bash
 # .env.test
 TEST_MCP_SERVER_URL=http://localhost:3100/mcp
@@ -552,16 +630,19 @@ TEST_MCP_API_KEY=test-api-key-12345
 ### Execute Tests
 
 **Run all integration tests:**
+
 ```bash
 npm run test:integration:mcp
 ```
 
 **Run specific scenario:**
+
 ```bash
 npm run test:integration:mcp -- --grep "Create and Validate"
 ```
 
 **Run with coverage:**
+
 ```bash
 npm run test:integration:mcp:coverage
 ```
@@ -596,12 +677,12 @@ test/
 
 ```typescript
 // test/integration/mcp/scenarios/01-create-integration.spec.ts
-import request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../../../../src/app/app.module';
+import request from "supertest";
+import { INestApplication } from "@nestjs/common";
+import { Test } from "@nestjs/testing";
+import { AppModule } from "../../../../src/app/app.module";
 
-describe('MCP Integration: Create Predefined Integration', () => {
+describe("MCP Integration: Create Predefined Integration", () => {
   let app: INestApplication;
   let authToken: string;
 
@@ -615,10 +696,10 @@ describe('MCP Integration: Create Predefined Integration', () => {
 
     // Authenticate as org admin
     const authResponse = await request(app.getHttpServer())
-      .post('/api/auth/login')
+      .post("/api/auth/login")
       .send({
-        email: 'admin@test.com',
-        password: 'test-password',
+        email: "admin@test.com",
+        password: "test-password",
       });
 
     authToken = authResponse.body.accessToken;
@@ -628,23 +709,25 @@ describe('MCP Integration: Create Predefined Integration', () => {
     await app.close();
   });
 
-  it('should create predefined integration successfully', async () => {
+  it("should create predefined integration successfully", async () => {
     const response = await request(app.getHttpServer())
-      .post('/api/mcp-integrations/predefined')
-      .set('Authorization', `Bearer ${authToken}`)
+      .post("/api/mcp-integrations/predefined")
+      .set("Authorization", `Bearer ${authToken}`)
       .send({
-        name: 'Test MCP Server',
-        slug: 'test-mcp',
-        authMethod: 'api_key',
-        authHeaderName: 'X-API-Key',
-        credentials: 'test-api-key-12345',
+        slug: "TEST",
+        configValues: [
+          {
+            name: "token",
+            value: "test-api-key-12345",
+          },
+        ],
       })
       .expect(201);
 
     expect(response.body).toMatchObject({
       id: expect.any(String),
-      name: 'Test MCP Server',
-      type: 'predefined',
+      name: "Test MCP Server",
+      type: "predefined",
       enabled: true,
     });
 
@@ -653,20 +736,17 @@ describe('MCP Integration: Create Predefined Integration', () => {
     expect(response.body.encryptedCredentials).toBeUndefined();
   });
 
-  it('should reject invalid slug', async () => {
+  it("should reject invalid slug", async () => {
     const response = await request(app.getHttpServer())
-      .post('/api/mcp-integrations/predefined')
-      .set('Authorization', `Bearer ${authToken}`)
+      .post("/api/mcp-integrations/predefined")
+      .set("Authorization", `Bearer ${authToken}`)
       .send({
-        name: 'Invalid Integration',
-        slug: 'invalid-slug-xyz',
-        authMethod: 'api_key',
-        authHeaderName: 'X-API-Key',
-        credentials: 'test-key',
+        slug: "invalid-slug-xyz",
+        configValues: [],
       })
       .expect(400);
 
-    expect(response.body.code).toBe('INVALID_PREDEFINED_SLUG');
+    expect(response.body.code).toBe("INVALID_PREDEFINED_SLUG");
   });
 });
 ```
@@ -676,6 +756,7 @@ describe('MCP Integration: Create Predefined Integration', () => {
 ### Phase 1: Test Infrastructure Setup (Separate Ticket)
 
 **Tasks:**
+
 - [ ] Implement MockMcpServer class
 - [ ] Create test fixtures (CSV files, test data)
 - [ ] Set up CI/CD pipeline for integration tests
@@ -687,6 +768,7 @@ describe('MCP Integration: Create Predefined Integration', () => {
 ### Phase 2: Implement Test Scenarios (Separate Ticket)
 
 **Tasks:**
+
 - [ ] Implement Scenarios 1-5 (happy paths)
 - [ ] Implement Scenarios 6-8 (error cases)
 - [ ] Implement Scenarios 9-10 (edge cases)
@@ -698,6 +780,7 @@ describe('MCP Integration: Create Predefined Integration', () => {
 ### Phase 3: CI/CD Integration
 
 **Tasks:**
+
 - [ ] Add integration tests to PR checks
 - [ ] Set up test reporting
 - [ ] Configure test parallelization
@@ -716,6 +799,13 @@ Integration tests are successful when:
 - ✅ Tests catch real bugs before production
 - ✅ Tests run in CI/CD pipeline
 - ✅ Clear test failure messages for debugging
+
+## Manual QA Checklist – MCP UI
+
+- [ ] Predefined creation dialog populates credential inputs based on selected config and submits `slug + configValues` only.
+- [ ] Custom creation dialog hides credential inputs for `None`, shows single credential field for Bearer/API Key, and clears unused fields when switching methods.
+- [ ] Edit dialog allows renaming while displaying immutable auth type; rotating bearer/custom header credentials succeeds without exposing stored secrets.
+- [ ] Edit dialog hides credential inputs for integrations with no authentication and closes without request when no changes are made.
 
 ## References
 

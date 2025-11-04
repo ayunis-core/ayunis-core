@@ -51,12 +51,12 @@ import { CreatePredefinedMcpIntegrationCommand } from '../../application/use-cas
 import { CreateCustomMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
 import { GetMcpIntegrationQuery } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.query';
 import { ListOrgMcpIntegrationsQuery } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.query';
-import { ListAvailableMcpIntegrationsQuery } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.query';
 import { UpdateMcpIntegrationCommand } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.command';
 import { DeleteMcpIntegrationCommand } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.command';
 import { EnableMcpIntegrationCommand } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.command';
 import { DisableMcpIntegrationCommand } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.command';
 import { ValidateMcpIntegrationCommand } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.command';
+import { CredentialFieldValue } from '../../domain/predefined-mcp-integration-config';
 
 /**
  * Controller for managing MCP integrations (organization admin level).
@@ -103,14 +103,19 @@ export class McpIntegrationsController {
   async createPredefined(
     @Body() dto: CreatePredefinedIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('createPredefined', { name: dto.name, slug: dto.slug });
+    this.logger.log('createPredefined', { slug: dto.slug });
+
+    // Map DTO config values to domain credential fields
+    const credentialFields: CredentialFieldValue[] = dto.configValues.map(
+      (cv) => ({
+        name: cv.name,
+        value: cv.value,
+      }),
+    );
 
     const command = new CreatePredefinedMcpIntegrationCommand(
-      dto.name,
       dto.slug,
-      dto.authMethod,
-      dto.authHeaderName,
-      dto.credentials,
+      credentialFields,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -195,9 +200,8 @@ export class McpIntegrationsController {
   async listAvailable(): Promise<McpIntegrationResponseDto[]> {
     this.logger.log('listAvailableMcpIntegrations');
 
-    const integrations = await this.listAvailableMcpIntegrationsUseCase.execute(
-      new ListAvailableMcpIntegrationsQuery(),
-    );
+    const integrations =
+      await this.listAvailableMcpIntegrationsUseCase.execute();
 
     return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
   }
@@ -242,7 +246,12 @@ export class McpIntegrationsController {
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('update', { id });
 
-    const command = new UpdateMcpIntegrationCommand(id, dto.name);
+    const command = new UpdateMcpIntegrationCommand(
+      id,
+      dto.name,
+      dto.credentials,
+      dto.authHeaderName,
+    );
 
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
     return this.mcpIntegrationDtoMapper.toDto(integration);

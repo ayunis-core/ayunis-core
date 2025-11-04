@@ -8,7 +8,7 @@ export class CustomMcpIntegration extends McpIntegration {
 
   constructor(params: {
     id?: UUID;
-    orgId: string;
+    orgId: UUID;
     name: string;
     serverUrl: string;
     auth: McpIntegrationAuth;

@@ -3,14 +3,16 @@ import { McpAuthMethod } from '../value-objects/mcp-auth-method.enum';
 import { McpIntegrationAuth } from './mcp-integration-auth.entity';
 
 export class BearerMcpIntegrationAuth extends McpIntegrationAuth {
-  public authToken: string;
+  public authToken?: string;
 
-  constructor(params: {
-    id?: UUID;
-    authToken: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
+  constructor(
+    params: {
+      id?: UUID;
+      authToken?: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+    } = {},
+  ) {
     super(params);
     this.authToken = params.authToken;
   }

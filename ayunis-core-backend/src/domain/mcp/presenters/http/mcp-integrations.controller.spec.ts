@@ -19,6 +19,8 @@ import { McpAuthMethod } from '../../domain/value-objects/mcp-auth-method.enum';
 import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
 import { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
 import { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
+import { randomUUID } from 'crypto';
+import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 
 describe('McpIntegrationsController', () => {
   let controller: McpIntegrationsController;
@@ -377,6 +379,42 @@ describe('McpIntegrationsController', () => {
         expect.objectContaining({
           integrationId: '123e4567-e89b-12d3-a456-426614174000',
           name: 'Updated Name',
+        }),
+      );
+    });
+
+    it('should forward credential rotation parameters', async () => {
+      const dto: UpdateMcpIntegrationDto = {
+        credentials: 'new-secret-token',
+        authHeaderName: 'X-New-Header',
+      };
+
+      updateUseCase.execute.mockResolvedValue(
+        new CustomMcpIntegration({
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          name: 'Custom',
+          orgId: randomUUID(),
+          serverUrl: 'https://example.com/mcp',
+          enabled: true,
+          auth: new CustomHeaderMcpIntegrationAuth({
+            secret: 'encrypted',
+            headerName: 'X-New-Header',
+          }),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      );
+
+      await controller.update(
+        '123e4567-e89b-12d3-a456-426614174000' as any,
+        dto,
+      );
+
+      expect(updateUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          integrationId: '123e4567-e89b-12d3-a456-426614174000',
+          credentials: 'new-secret-token',
+          authHeaderName: 'X-New-Header',
         }),
       );
     });

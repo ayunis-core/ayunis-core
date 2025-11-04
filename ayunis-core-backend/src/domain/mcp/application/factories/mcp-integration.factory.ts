@@ -5,37 +5,66 @@ import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integ
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpIntegrationAuth } from '../../domain/auth/mcp-integration-auth.entity';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class McpIntegrationFactory {
   createIntegration(params: {
     kind: McpIntegrationKind.CUSTOM;
-    orgId: string;
+    orgId: UUID;
     name: string;
     serverUrl: string;
     auth: McpIntegrationAuth;
+    id?: UUID;
+    enabled?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    connectionStatus?: string;
+    lastConnectionError?: string;
+    lastConnectionCheck?: Date;
   }): CustomMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind.PREDEFINED;
-    orgId: string;
+    orgId: UUID;
     name: string;
     serverUrl: string;
     auth: McpIntegrationAuth;
     slug: PredefinedMcpIntegrationSlug;
+    id?: UUID;
+    enabled?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    connectionStatus?: string;
+    lastConnectionError?: string;
+    lastConnectionCheck?: Date;
   }): PredefinedMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind;
-    orgId: string;
+    orgId: UUID;
     name: string;
     serverUrl: string;
     auth: McpIntegrationAuth;
     slug?: PredefinedMcpIntegrationSlug;
+    id?: UUID;
+    enabled?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    connectionStatus?: string;
+    lastConnectionError?: string;
+    lastConnectionCheck?: Date;
   }): McpIntegration {
     const base = {
+      id: params.id,
       orgId: params.orgId,
       name: params.name,
       serverUrl: params.serverUrl,
       auth: params.auth,
+      enabled: params.enabled,
+      createdAt: params.createdAt,
+      updatedAt: params.updatedAt,
+      connectionStatus: params.connectionStatus,
+      lastConnectionError: params.lastConnectionError,
+      lastConnectionCheck: params.lastConnectionCheck,
     } as const;
 
     switch (params.kind) {
@@ -52,7 +81,9 @@ export class McpIntegrationFactory {
       case McpIntegrationKind.CUSTOM:
         return new CustomMcpIntegration(base);
       default:
-        throw new Error(`Unknown MCP integration kind: ${params.kind}`);
+        throw new Error(
+          `Unknown MCP integration kind: ${params.kind as string}`,
+        );
     }
   }
 }
