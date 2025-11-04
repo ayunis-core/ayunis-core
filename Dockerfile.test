@@ -50,8 +50,8 @@ RUN npm ci --only=production && npm rebuild bcrypt --build-from-source
 # Copy built backend from builder stage
 COPY --from=backend-builder /app/dist ./dist
 
-# Copy frontend files from builder stage
-COPY --from=backend-builder /app/frontend ./frontend
+# Copy frontend files from builder stage into dist/frontend
+COPY --from=backend-builder /app/frontend ./dist/frontend
 
 # Create uploads directory
 RUN mkdir -p uploads
