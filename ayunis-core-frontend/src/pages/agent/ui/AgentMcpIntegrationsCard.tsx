@@ -6,7 +6,6 @@ import {
   CardDescription,
 } from "@/shared/ui/shadcn/card";
 import { Switch } from "@/shared/ui/shadcn/switch";
-import { Badge } from "@/shared/ui/shadcn/badge";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
 import { Plug } from "lucide-react";
@@ -15,6 +14,13 @@ import { useParams } from "@tanstack/react-router";
 import { useAgentMcpIntegrationsQueries } from "../api/useAgentMcpIntegrationsQueries";
 import { useAssignMcpIntegration } from "../api/useAssignMcpIntegration";
 import { useUnassignMcpIntegration } from "../api/useUnassignMcpIntegration";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@/shared/ui/shadcn/item";
+import { cn } from "@/shared/lib/shadcn/utils";
 
 export default function AgentMcpIntegrationsCard() {
   const { t } = useTranslation("agent");
@@ -134,38 +140,27 @@ export default function AgentMcpIntegrationsCard() {
             return (
               <div key={integration.id}>
                 {index > 0 && <Separator className="my-4" />}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold">
-                        {integration.name}
-                      </h4>
-                      {integration.type && (
-                        <Badge variant="outline" className="text-xs">
-                          {integration.type}
-                        </Badge>
-                      )}
-                    </div>
-                    {integration.slug && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {integration.slug}
-                      </p>
-                    )}
-                    {integration.serverUrl && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {integration.serverUrl}
-                      </p>
-                    )}
-                  </div>
-                  <Switch
-                    checked={assigned}
-                    onCheckedChange={() => handleToggle(integration.id)}
-                    disabled={isPending}
-                    aria-label={t("mcpIntegrations.toggleAriaLabel", {
-                      name: integration.name,
-                    })}
-                  />
-                </div>
+                <Item
+                  className={cn(
+                    index === 0 && "pt-0",
+                    index === sortedIntegrations.length - 1 && "pb-0",
+                    "px-0",
+                  )}
+                >
+                  <ItemContent>
+                    <ItemTitle>{integration.name}</ItemTitle>
+                  </ItemContent>
+                  <ItemActions>
+                    <Switch
+                      checked={assigned}
+                      onCheckedChange={() => handleToggle(integration.id)}
+                      disabled={isPending}
+                      aria-label={t("mcpIntegrations.toggleAriaLabel", {
+                        name: integration.name,
+                      })}
+                    />
+                  </ItemActions>
+                </Item>
               </div>
             );
           })}
