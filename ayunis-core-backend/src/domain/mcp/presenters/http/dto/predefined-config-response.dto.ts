@@ -1,5 +1,40 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class CredentialFieldDto {
+  @ApiProperty({
+    description: 'Field name for credential input',
+    example: 'apiToken',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'User-friendly label for the credential field',
+    example: 'Locaboo 3 API Token',
+  })
+  label: string;
+
+  @ApiProperty({
+    description: 'Input type (text or password)',
+    enum: ['text', 'password'],
+    example: 'password',
+  })
+  type: 'text' | 'password';
+
+  @ApiProperty({
+    description: 'Whether this field is required',
+    example: true,
+  })
+  required: boolean;
+
+  @ApiProperty({
+    description: 'Help text to guide users',
+    required: false,
+    example:
+      'Your Locaboo 3 API token will be used to authenticate with Locaboo 4',
+  })
+  help?: string;
+}
+
 /**
  * Response DTO for predefined MCP integration configuration metadata.
  * Returns public information about available predefined integrations.
@@ -8,33 +43,40 @@ import { ApiProperty } from '@nestjs/swagger';
 export class PredefinedConfigResponseDto {
   @ApiProperty({
     description: 'Unique slug identifier for the predefined integration',
-    example: 'TEST',
+    example: 'LOCABOO',
   })
   slug: string;
 
   @ApiProperty({
     description: 'Display name for the integration',
-    example: 'Test MCP Server',
+    example: 'Locaboo 4',
   })
   displayName: string;
 
   @ApiProperty({
     description: 'Description of what this integration provides',
-    example: 'Test integration for development and testing',
+    example: 'Connect to Locaboo 4 booking system',
   })
   description: string;
 
   @ApiProperty({
-    description: 'Default authentication method (if any)',
-    required: false,
+    description: 'Authentication method for this integration',
+    enum: ['NO_AUTH', 'BEARER_TOKEN', 'API_KEY', 'OAUTH'],
     example: 'BEARER_TOKEN',
   })
-  defaultAuthMethod?: string;
+  authType: string;
 
   @ApiProperty({
-    description: 'Default authentication header name (if any)',
+    description: 'HTTP header name for authentication (if applicable)',
     required: false,
     example: 'Authorization',
   })
-  defaultAuthHeaderName?: string;
+  authHeaderName?: string;
+
+  @ApiProperty({
+    description: 'Credential fields required for this integration',
+    type: [CredentialFieldDto],
+    required: false,
+  })
+  credentialFields?: CredentialFieldDto[];
 }

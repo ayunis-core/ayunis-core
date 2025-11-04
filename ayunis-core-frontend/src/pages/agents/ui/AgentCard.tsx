@@ -1,11 +1,3 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardAction,
-  CardContent,
-  CardFooter,
-} from "@/shared/ui/shadcn/card";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Edit, MessageCircle, Trash2 } from "lucide-react";
 // import EditAgentDialog from "./EditAgentDialog";
@@ -14,7 +6,13 @@ import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useTranslation } from "react-i18next";
 import type { Agent } from "../model/openapi";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Badge } from "@/shared/ui/shadcn/badge";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/shared/ui/shadcn/item";
 
 interface AgentCardProps {
   agent: Agent;
@@ -39,62 +37,48 @@ export default function AgentCard({ agent }: AgentCardProps) {
   }
 
   return (
-    <Card
+    <Item
+      variant="outline"
+      className="cursor-pointer"
       onClick={() =>
         router.navigate({ to: "/agents/$id", params: { id: agent.id } })
       }
     >
-      <CardHeader>
-        <CardTitle className="text-lg">{agent.name}</CardTitle>
-        <CardAction>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/chat"
-              search={{ agentId: agent.id }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button variant="ghost">
-                <MessageCircle className="h-4 w-4" />{" "}
-                {t("card.startChatButton")}
-              </Button>
-            </Link>
-            <Link
-              to="/agents/$id"
-              params={{ id: agent.id }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button variant="ghost" size="icon">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              disabled={deleteAgent.isPending}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <p className="line-clamp-2">{agent.instructions}</p>
-      </CardContent>
-      {agent.tools.length > 0 && (
-        <CardFooter>
-          <div className="flex flex-col gap-2">
-            {agent.tools.map((tool) => (
-              <Badge key={tool.type} variant="outline">
-                {tool.type}
-              </Badge>
-            ))}
-          </div>
-        </CardFooter>
-      )}
-    </Card>
+      <ItemContent>
+        <ItemTitle>{agent.name}</ItemTitle>
+        <ItemDescription>{agent.instructions}</ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <Link
+          to="/chat"
+          search={{ agentId: agent.id }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button variant="ghost">
+            <MessageCircle className="h-4 w-4" /> {t("card.startChatButton")}
+          </Button>
+        </Link>
+        <Link
+          to="/agents/$id"
+          params={{ id: agent.id }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button variant="ghost" size="icon">
+            <Edit className="h-4 w-4" />
+          </Button>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete();
+          }}
+          disabled={deleteAgent.isPending}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </ItemActions>
+    </Item>
   );
 }

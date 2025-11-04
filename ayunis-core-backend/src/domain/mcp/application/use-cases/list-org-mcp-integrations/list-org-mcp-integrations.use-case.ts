@@ -35,7 +35,7 @@ export class ListOrgMcpIntegrationsUseCase {
         throw new UnauthorizedException('User not authenticated');
       }
 
-      return await this.repository.findByOrganizationId(orgId);
+      return await this.repository.findAll(orgId);
     } catch (error) {
       if (
         error instanceof ApplicationError ||

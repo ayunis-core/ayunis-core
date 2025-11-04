@@ -19,8 +19,8 @@ import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from 'src/domain/mcp/domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from 'src/domain/mcp/domain/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 
 describe('ListAgentMcpIntegrationsUseCase', () => {
   let useCase: ListAgentMcpIntegrationsUseCase;

@@ -6,7 +6,7 @@ import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientPort } from '../../ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import {
@@ -19,8 +19,8 @@ import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 
@@ -29,7 +29,7 @@ describe('RetrieveMcpResourceUseCase', () => {
   let repository: McpIntegrationsRepositoryPort;
   let mcpClient: McpClientPort;
   let credentialEncryption: McpCredentialEncryptionPort;
-  let registryService: PredefinedMcpIntegrationRegistryService;
+  let registryService: PredefinedMcpIntegrationRegistry;
   let contextService: ContextService;
   let createDataSourceUseCase: CreateDataSourceUseCase;
   let loggerLogSpy: jest.SpyInstance;
@@ -63,7 +63,7 @@ describe('RetrieveMcpResourceUseCase', () => {
           },
         },
         {
-          provide: PredefinedMcpIntegrationRegistryService,
+          provide: PredefinedMcpIntegrationRegistry,
           useValue: {
             getConfig: jest.fn(),
           },
@@ -93,8 +93,8 @@ describe('RetrieveMcpResourceUseCase', () => {
     credentialEncryption = module.get<McpCredentialEncryptionPort>(
       McpCredentialEncryptionPort,
     );
-    registryService = module.get<PredefinedMcpIntegrationRegistryService>(
-      PredefinedMcpIntegrationRegistryService,
+    registryService = module.get<PredefinedMcpIntegrationRegistry>(
+      PredefinedMcpIntegrationRegistry,
     );
     contextService = module.get<ContextService>(ContextService);
     createDataSourceUseCase = module.get<CreateDataSourceUseCase>(
@@ -127,7 +127,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
         content: mockCsvContent,
@@ -206,7 +206,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
         content: mockTextContent,
@@ -386,7 +386,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
         content: mockCsvContent,
@@ -448,7 +448,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
         content: mockCsvContent,
@@ -503,7 +503,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest
         .spyOn(credentialEncryption, 'decrypt')
@@ -639,7 +639,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'readResource').mockResolvedValue({
         content: mockCsvContent,

@@ -18,7 +18,7 @@ import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/predefined-mcp-integration-slug.enum';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { UUID } from 'crypto';
 
 describe('AssignMcpIntegrationToAgentUseCase', () => {

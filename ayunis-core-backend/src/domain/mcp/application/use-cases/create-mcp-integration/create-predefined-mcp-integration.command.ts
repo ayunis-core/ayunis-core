@@ -1,12 +1,9 @@
-import { McpAuthMethod } from 'src/domain/mcp/domain/mcp-auth-method.enum';
-import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/predefined-mcp-integration-slug.enum';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { CredentialFieldValue } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 export class CreatePredefinedMcpIntegrationCommand {
   constructor(
-    public readonly name: string,
     public readonly slug: PredefinedMcpIntegrationSlug,
-    public readonly authMethod?: McpAuthMethod,
-    public readonly authHeaderName?: string,
-    public readonly encryptedCredentials?: string,
+    public readonly credentialFields: CredentialFieldValue[],
   ) {}
 }

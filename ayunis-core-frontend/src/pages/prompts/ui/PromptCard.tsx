@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardAction,
-} from "@/shared/ui/shadcn/card";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Edit, MessageCircle, Trash2 } from "lucide-react";
 import EditPromptDialog from "./EditPromptDialog";
@@ -13,6 +6,13 @@ import { useConfirmation } from "@/widgets/confirmation-modal";
 import { useTranslation } from "react-i18next";
 import type { Prompt } from "../model/openapi";
 import { Link } from "@tanstack/react-router";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/shared/ui/shadcn/item";
 
 interface PromptCardProps {
   prompt: Prompt;
@@ -37,38 +37,36 @@ export default function PromptCard({ prompt }: PromptCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg mb-1">{prompt.title}</CardTitle>
-        <CardDescription className="line-clamp-2">
+    <Item variant="outline">
+      <ItemContent>
+        <ItemTitle>{prompt.title}</ItemTitle>
+        <ItemDescription className="line-clamp-2">
           {prompt.content}
-        </CardDescription>
-        <CardAction>
-          <div className="flex items-center gap-2">
-            <Link to="/chat" search={{ prompt: prompt.id }}>
-              <Button variant="ghost">
-                <MessageCircle className="h-4 w-4" /> Start Chat
-              </Button>
-            </Link>
-            <EditPromptDialog
-              selectedPrompt={prompt}
-              trigger={
-                <Button variant="ghost" size="icon">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              }
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              disabled={deletePrompt.isPending}
-            >
-              <Trash2 className="h-4 w-4" />
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <Link to="/chat" search={{ prompt: prompt.id }}>
+          <Button variant="ghost">
+            <MessageCircle className="h-4 w-4" /> Start Chat
+          </Button>
+        </Link>
+        <EditPromptDialog
+          selectedPrompt={prompt}
+          trigger={
+            <Button variant="ghost" size="icon">
+              <Edit className="h-4 w-4" />
             </Button>
-          </div>
-        </CardAction>
-      </CardHeader>
-    </Card>
+          }
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDelete}
+          disabled={deletePrompt.isPending}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </ItemActions>
+    </Item>
   );
 }

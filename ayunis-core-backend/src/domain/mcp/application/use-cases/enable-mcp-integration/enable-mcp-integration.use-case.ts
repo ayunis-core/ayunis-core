@@ -33,7 +33,7 @@ export class EnableMcpIntegrationUseCase {
         throw new McpIntegrationNotFoundError(command.integrationId);
       }
 
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(command.integrationId);
       }
 

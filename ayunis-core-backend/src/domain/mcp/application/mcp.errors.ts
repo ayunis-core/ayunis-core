@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
+  NotImplementedException,
 } from '@nestjs/common';
 
 export enum McpErrorCode {
@@ -17,6 +19,8 @@ export enum McpErrorCode {
   MCP_TOOL_EXECUTION_FAILED = 'MCP_TOOL_EXECUTION_FAILED',
   MCP_RESOURCE_RETRIEVAL_FAILED = 'MCP_RESOURCE_RETRIEVAL_FAILED',
   UNEXPECTED_MCP_ERROR = 'UNEXPECTED_MCP_ERROR',
+  MCP_AUTH_NOT_IMPLEMENTED = 'MCP_AUTH_NOT_IMPLEMENTED',
+  DUPLICATE_MCP_INTEGRATION = 'DUPLICATE_MCP_INTEGRATION',
 }
 
 export abstract class McpError extends ApplicationError {
@@ -39,6 +43,18 @@ export abstract class McpError extends ApplicationError {
         });
       case 403:
         return new ForbiddenException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 409:
+        return new ConflictException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 501:
+        return new NotImplementedException({
           code: this.code,
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
@@ -211,6 +227,34 @@ export class McpResourceRetrievalFailedError extends McpError {
         `Reason: ${reason}. Verify the resource URI and server availability.`,
       McpErrorCode.MCP_RESOURCE_RETRIEVAL_FAILED,
       500,
+      metadata,
+    );
+  }
+}
+
+export class McpAuthenticationError extends McpError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(message, McpErrorCode.MCP_AUTHENTICATION_FAILED, 401, metadata);
+  }
+}
+
+export class McpAuthNotImplementedError extends McpError {
+  constructor(authMethod: string, metadata?: ErrorMetadata) {
+    super(
+      `Authentication method '${authMethod}' is not yet implemented. Please use a different authentication method.`,
+      McpErrorCode.MCP_AUTH_NOT_IMPLEMENTED,
+      501,
+      metadata,
+    );
+  }
+}
+
+export class DuplicateMcpIntegrationError extends McpError {
+  constructor(slug: string, metadata?: ErrorMetadata) {
+    super(
+      `A MCP integration with slug '${slug}' already exists for this organization. Only one MCP integration with the same slug is allowed per organization.`,
+      McpErrorCode.DUPLICATE_MCP_INTEGRATION,
+      409,
       metadata,
     );
   }

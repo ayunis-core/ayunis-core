@@ -1,13 +1,8 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import {
-  McpClientPort,
-  McpConnectionConfig,
-  McpToolCall,
-} from '../../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { McpToolCall } from '../../ports/mcp-client.port';
+import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -16,11 +11,6 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  McpIntegration,
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
 
 /**
  * Result of tool execution
@@ -37,9 +27,7 @@ export class ExecuteMcpToolUseCase {
 
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
-    private readonly mcpClient: McpClientPort,
-    private readonly credentialEncryption: McpCredentialEncryptionPort,
-    private readonly registryService: PredefinedMcpIntegrationRegistryService,
+    private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -60,7 +48,7 @@ export class ExecuteMcpToolUseCase {
         throw new McpIntegrationNotFoundError(command.integrationId);
       }
 
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(
           command.integrationId,
           integration.name,
@@ -74,9 +62,6 @@ export class ExecuteMcpToolUseCase {
         );
       }
 
-      // Build connection config
-      const connectionConfig = await this.buildConnectionConfig(integration);
-
       // Execute tool (errors are caught and returned, not thrown)
       try {
         const toolCall: McpToolCall = {
@@ -84,8 +69,8 @@ export class ExecuteMcpToolUseCase {
           parameters: command.parameters,
         };
 
-        const result = await this.mcpClient.callTool(
-          connectionConfig,
+        const result = await this.mcpClientService.callTool(
+          integration,
           toolCall,
         );
 
@@ -136,44 +121,5 @@ export class ExecuteMcpToolUseCase {
         'Unexpected error occurred during tool execution',
       );
     }
-  }
-
-  /**
-   * Builds MCP connection config from integration entity
-   */
-  private async buildConnectionConfig(
-    integration: McpIntegration,
-  ): Promise<McpConnectionConfig> {
-    let serverUrl: string;
-
-    // Get server URL based on integration type
-    if (integration.type === 'predefined') {
-      const predefinedIntegration = integration as PredefinedMcpIntegration;
-      const config = this.registryService.getConfig(predefinedIntegration.slug);
-      serverUrl = config.url;
-    } else {
-      const customIntegration = integration as CustomMcpIntegration;
-      serverUrl = customIntegration.serverUrl;
-    }
-
-    const connectionConfig: McpConnectionConfig = {
-      serverUrl,
-    };
-
-    // Add authentication if configured
-    if (
-      integration.authMethod &&
-      integration.authHeaderName &&
-      integration.encryptedCredentials
-    ) {
-      const decryptedToken = await this.credentialEncryption.decrypt(
-        integration.encryptedCredentials,
-      );
-
-      connectionConfig.authHeaderName = integration.authHeaderName;
-      connectionConfig.authToken = decryptedToken;
-    }
-
-    return connectionConfig;
   }
 }

@@ -615,6 +615,19 @@ export const SourceResponseDtoType = {
   data: 'data',
 } as const;
 
+/**
+ * Creator of the source
+ */
+export type SourceResponseDtoCreatedBy = typeof SourceResponseDtoCreatedBy[keyof typeof SourceResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SourceResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
 export interface SourceResponseDto {
   /** Unique identifier for the source */
   id: string;
@@ -624,8 +637,8 @@ export interface SourceResponseDto {
   name: string;
   /** Type of source */
   type: SourceResponseDtoType;
-  /** Whether the source was created by LLM */
-  createdByLLM: boolean;
+  /** Creator of the source */
+  createdBy: SourceResponseDtoCreatedBy;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -642,6 +655,19 @@ export type FileSourceResponseDtoType = typeof FileSourceResponseDtoType[keyof t
 export const FileSourceResponseDtoType = {
   text: 'text',
   data: 'data',
+} as const;
+
+/**
+ * Creator of the source
+ */
+export type FileSourceResponseDtoCreatedBy = typeof FileSourceResponseDtoCreatedBy[keyof typeof FileSourceResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FileSourceResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
 } as const;
 
 /**
@@ -676,8 +702,8 @@ export interface FileSourceResponseDto {
   name: string;
   /** Type of source */
   type: FileSourceResponseDtoType;
-  /** Whether the source was created by LLM */
-  createdByLLM: boolean;
+  /** Creator of the source */
+  createdBy: FileSourceResponseDtoCreatedBy;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -701,6 +727,19 @@ export const UrlSourceResponseDtoType = {
 } as const;
 
 /**
+ * Creator of the source
+ */
+export type UrlSourceResponseDtoCreatedBy = typeof UrlSourceResponseDtoCreatedBy[keyof typeof UrlSourceResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UrlSourceResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
+/**
  * Type of text
  */
 export type UrlSourceResponseDtoTextType = typeof UrlSourceResponseDtoTextType[keyof typeof UrlSourceResponseDtoTextType];
@@ -721,8 +760,8 @@ export interface UrlSourceResponseDto {
   name: string;
   /** Type of source */
   type: UrlSourceResponseDtoType;
-  /** Whether the source was created by LLM */
-  createdByLLM: boolean;
+  /** Creator of the source */
+  createdBy: UrlSourceResponseDtoCreatedBy;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -743,6 +782,19 @@ export type CSVDataSourceResponseDtoType = typeof CSVDataSourceResponseDtoType[k
 export const CSVDataSourceResponseDtoType = {
   text: 'text',
   data: 'data',
+} as const;
+
+/**
+ * Creator of the source
+ */
+export type CSVDataSourceResponseDtoCreatedBy = typeof CSVDataSourceResponseDtoCreatedBy[keyof typeof CSVDataSourceResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CSVDataSourceResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
 } as const;
 
 /**
@@ -775,8 +827,8 @@ export interface CSVDataSourceResponseDto {
   name: string;
   /** Type of source */
   type: CSVDataSourceResponseDtoType;
-  /** Whether the source was created by LLM */
-  createdByLLM: boolean;
+  /** Creator of the source */
+  createdBy: CSVDataSourceResponseDtoCreatedBy;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -967,6 +1019,34 @@ export const McpIntegrationResponseDtoType = {
   custom: 'custom',
 } as const;
 
+/**
+ * Authentication method used
+ */
+export type McpIntegrationResponseDtoAuthMethod = typeof McpIntegrationResponseDtoAuthMethod[keyof typeof McpIntegrationResponseDtoAuthMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpIntegrationResponseDtoAuthMethod = {
+  CUSTOM_HEADER: 'CUSTOM_HEADER',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+  NO_AUTH: 'NO_AUTH',
+  OAUTH: 'OAUTH',
+} as const;
+
+/**
+ * Connection status of the integration
+ */
+export type McpIntegrationResponseDtoConnectionStatus = typeof McpIntegrationResponseDtoConnectionStatus[keyof typeof McpIntegrationResponseDtoConnectionStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpIntegrationResponseDtoConnectionStatus = {
+  connected: 'connected',
+  disconnected: 'disconnected',
+  error: 'error',
+  unknown: 'unknown',
+} as const;
+
 export interface McpIntegrationResponseDto {
   /** Unique identifier of the integration */
   id: string;
@@ -983,11 +1063,17 @@ export interface McpIntegrationResponseDto {
   /** Organization that owns this integration */
   organizationId: string;
   /** Authentication method used */
-  authMethod?: string;
+  authMethod?: McpIntegrationResponseDtoAuthMethod;
   /** Custom auth header name */
   authHeaderName?: string;
   /** Whether credentials are configured (never exposes actual credentials) */
   hasCredentials: boolean;
+  /** Connection status of the integration */
+  connectionStatus?: McpIntegrationResponseDtoConnectionStatus;
+  /** Last error message if connection failed */
+  lastConnectionError?: string;
+  /** Timestamp of the last connection check */
+  lastConnectionCheck?: string;
   /** Timestamp when the integration was created */
   createdAt: string;
   /** Timestamp when the integration was last updated */
@@ -1003,57 +1089,117 @@ export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrat
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreatePredefinedIntegrationDtoSlug = {
   TEST: 'TEST',
+  LOCABOO: 'LOCABOO',
 } as const;
 
 /**
- * Authentication method
+ * Authentication method (overrides predefined defaults if provided)
+ * @nullable
  */
-export type CreatePredefinedIntegrationDtoAuthMethod = typeof CreatePredefinedIntegrationDtoAuthMethod[keyof typeof CreatePredefinedIntegrationDtoAuthMethod];
+export type CreatePredefinedIntegrationDtoAuthMethod = typeof CreatePredefinedIntegrationDtoAuthMethod[keyof typeof CreatePredefinedIntegrationDtoAuthMethod] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreatePredefinedIntegrationDtoAuthMethod = {
-  API_KEY: 'API_KEY',
+  CUSTOM_HEADER: 'CUSTOM_HEADER',
   BEARER_TOKEN: 'BEARER_TOKEN',
+  NO_AUTH: 'NO_AUTH',
+  OAUTH: 'OAUTH',
 } as const;
 
 export interface CreatePredefinedIntegrationDto {
-  /** The name for this integration instance */
+  /**
+   * The name for this integration instance
+   * @minLength 1
+   * @maxLength 255
+   */
   name: string;
   /** The predefined integration slug */
   slug: CreatePredefinedIntegrationDtoSlug;
-  /** Authentication method */
+  /**
+   * Authentication method (overrides predefined defaults if provided)
+   * @nullable
+   */
   authMethod?: CreatePredefinedIntegrationDtoAuthMethod;
-  /** Custom auth header name (e.g., X-API-Key) */
+  /** Custom auth header name (e.g., X-API-Key). Can override predefined defaults for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header). */
   authHeaderName?: string;
-  /** Authentication credentials (will be encrypted) */
+  /** Authentication credentials (will be encrypted). Required if authMethod requires credentials. */
   credentials?: string;
 }
 
 /**
- * Authentication method
+ * Authentication method for the MCP server
+ * @nullable
  */
-export type CreateCustomIntegrationDtoAuthMethod = typeof CreateCustomIntegrationDtoAuthMethod[keyof typeof CreateCustomIntegrationDtoAuthMethod];
+export type CreateCustomIntegrationDtoAuthMethod = typeof CreateCustomIntegrationDtoAuthMethod[keyof typeof CreateCustomIntegrationDtoAuthMethod] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateCustomIntegrationDtoAuthMethod = {
-  API_KEY: 'API_KEY',
+  CUSTOM_HEADER: 'CUSTOM_HEADER',
   BEARER_TOKEN: 'BEARER_TOKEN',
+  NO_AUTH: 'NO_AUTH',
+  OAUTH: 'OAUTH',
 } as const;
 
 export interface CreateCustomIntegrationDto {
-  /** The name for this integration instance */
+  /**
+   * The name for this integration instance
+   * @minLength 1
+   * @maxLength 255
+   */
   name: string;
   /** The URL of the custom MCP server */
   serverUrl: string;
-  /** Authentication method */
+  /**
+   * Authentication method for the MCP server
+   * @nullable
+   */
   authMethod?: CreateCustomIntegrationDtoAuthMethod;
-  /** Custom auth header name (e.g., X-API-Key) */
+  /** Custom auth header name (e.g., X-API-Key). Required for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header). */
   authHeaderName?: string;
-  /** Authentication credentials (will be encrypted) */
+  /** Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods. */
   credentials?: string;
 }
+
+/**
+ * Input type (text or password)
+ */
+export type CredentialFieldDtoType = typeof CredentialFieldDtoType[keyof typeof CredentialFieldDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CredentialFieldDtoType = {
+  text: 'text',
+  password: 'password',
+} as const;
+
+export interface CredentialFieldDto {
+  /** Field name for credential input */
+  name: string;
+  /** User-friendly label for the credential field */
+  label: string;
+  /** Input type (text or password) */
+  type: CredentialFieldDtoType;
+  /** Whether this field is required */
+  required: boolean;
+  /** Help text to guide users */
+  help?: string;
+}
+
+/**
+ * Authentication method for this integration
+ */
+export type PredefinedConfigResponseDtoAuthType = typeof PredefinedConfigResponseDtoAuthType[keyof typeof PredefinedConfigResponseDtoAuthType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PredefinedConfigResponseDtoAuthType = {
+  NO_AUTH: 'NO_AUTH',
+  BEARER_TOKEN: 'BEARER_TOKEN',
+  CUSTOM_HEADER: 'CUSTOM_HEADER',
+  OAUTH: 'OAUTH',
+} as const;
 
 export interface PredefinedConfigResponseDto {
   /** Unique slug identifier for the predefined integration */
@@ -1062,33 +1208,21 @@ export interface PredefinedConfigResponseDto {
   displayName: string;
   /** Description of what this integration provides */
   description: string;
-  /** Default authentication method (if any) */
-  defaultAuthMethod?: string;
-  /** Default authentication header name (if any) */
-  defaultAuthHeaderName?: string;
+  /** Authentication method for this integration */
+  authType: PredefinedConfigResponseDtoAuthType;
+  /** HTTP header name for authentication (if applicable) */
+  authHeaderName?: string;
+  /** Credential fields required for this integration */
+  credentialFields?: CredentialFieldDto[];
 }
 
-/**
- * Authentication method
- */
-export type UpdateMcpIntegrationDtoAuthMethod = typeof UpdateMcpIntegrationDtoAuthMethod[keyof typeof UpdateMcpIntegrationDtoAuthMethod];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateMcpIntegrationDtoAuthMethod = {
-  API_KEY: 'API_KEY',
-  BEARER_TOKEN: 'BEARER_TOKEN',
-} as const;
-
 export interface UpdateMcpIntegrationDto {
-  /** The new name for the integration */
+  /**
+   * The new name for the integration
+   * @minLength 1
+   * @maxLength 255
+   */
   name?: string;
-  /** Authentication method */
-  authMethod?: UpdateMcpIntegrationDtoAuthMethod;
-  /** Custom auth header name (e.g., X-API-Key) */
-  authHeaderName?: string;
-  /** New authentication credentials (will be encrypted) */
-  credentials?: string;
 }
 
 /**

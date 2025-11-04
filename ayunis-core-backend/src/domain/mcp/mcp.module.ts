@@ -4,17 +4,29 @@ import { McpCredentialEncryptionPort } from './application/ports/mcp-credential-
 import { McpCredentialEncryptionService } from './infrastructure/encryption/mcp-credential-encryption.service';
 import { McpClientPort } from './application/ports/mcp-client.port';
 import { McpSdkClientAdapter } from './infrastructure/clients/mcp-sdk-client.adapter';
-import { PredefinedMcpIntegrationRegistryService } from './application/services/predefined-mcp-integration-registry.service';
+import { McpClientService } from './application/services/mcp-client.service';
+import { PredefinedMcpIntegrationRegistry } from './application/registries/predefined-mcp-integration-registry.service';
 import { McpIntegrationsRepositoryPort } from './application/ports/mcp-integrations.repository.port';
 import { McpIntegrationsRepository } from './infrastructure/persistence/postgres/mcp-integrations.repository';
-import { McpIntegrationRecord } from './infrastructure/persistence/postgres/schema/mcp-integration.record';
+import {
+  BearerMcpIntegrationAuthRecord,
+  CustomHeaderMcpIntegrationAuthRecord,
+  CustomMcpIntegrationRecord,
+  McpIntegrationAuthRecord,
+  McpIntegrationRecord,
+  NoAuthMcpIntegrationAuthRecord,
+  OAuthMcpIntegrationAuthRecord,
+  PredefinedMcpIntegrationRecord,
+} from './infrastructure/persistence/postgres/schema';
 import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mappers/mcp-integration.mapper';
+import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
 import { SourcesModule } from '../sources/sources.module';
 
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
 import { GetMcpIntegrationUseCase } from './application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
 import { ListOrgMcpIntegrationsUseCase } from './application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
+import { ListAvailableMcpIntegrationsUseCase } from './application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
 import { UpdateMcpIntegrationUseCase } from './application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
 import { DeleteMcpIntegrationUseCase } from './application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case';
 import { EnableMcpIntegrationUseCase } from './application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case';
@@ -25,15 +37,24 @@ import { RetrieveMcpResourceUseCase } from './application/use-cases/retrieve-mcp
 import { DiscoverMcpCapabilitiesUseCase } from './application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case';
 import { ExecuteMcpToolUseCase } from './application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { GetMcpPromptUseCase } from './application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case';
-import { GetMcpHealthUseCase } from './application/use-cases/get-mcp-health/get-mcp-health.use-case';
 
-// Controller and Mapper
+// Controller and Mappers
 import { McpIntegrationsController } from './presenters/http/mcp-integrations.controller';
 import { McpIntegrationDtoMapper } from './presenters/http/mappers/mcp-integration-dto.mapper';
+import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-config-dto.mapper';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([McpIntegrationRecord]),
+    TypeOrmModule.forFeature([
+      McpIntegrationRecord,
+      CustomMcpIntegrationRecord,
+      PredefinedMcpIntegrationRecord,
+      McpIntegrationAuthRecord,
+      NoAuthMcpIntegrationAuthRecord,
+      BearerMcpIntegrationAuthRecord,
+      CustomHeaderMcpIntegrationAuthRecord,
+      OAuthMcpIntegrationAuthRecord,
+    ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
   ],
   controllers: [McpIntegrationsController],
@@ -51,11 +72,14 @@ import { McpIntegrationDtoMapper } from './presenters/http/mappers/mcp-integrati
       useClass: McpIntegrationsRepository,
     },
     McpIntegrationMapper,
-    PredefinedMcpIntegrationRegistryService,
+    McpIntegrationFactory,
+    McpClientService,
+    PredefinedMcpIntegrationRegistry,
     // Use Cases
     CreateMcpIntegrationUseCase,
     GetMcpIntegrationUseCase,
     ListOrgMcpIntegrationsUseCase,
+    ListAvailableMcpIntegrationsUseCase,
     UpdateMcpIntegrationUseCase,
     DeleteMcpIntegrationUseCase,
     EnableMcpIntegrationUseCase,
@@ -66,15 +90,15 @@ import { McpIntegrationDtoMapper } from './presenters/http/mappers/mcp-integrati
     DiscoverMcpCapabilitiesUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
-    GetMcpHealthUseCase,
-    // Mapper
+    // Mappers
     McpIntegrationDtoMapper,
+    PredefinedConfigDtoMapper,
   ],
   exports: [
     McpCredentialEncryptionPort,
     McpClientPort,
     McpIntegrationsRepositoryPort,
-    PredefinedMcpIntegrationRegistryService,
+    PredefinedMcpIntegrationRegistry,
     RetrieveMcpResourceUseCase,
     DiscoverMcpCapabilitiesUseCase,
     ExecuteMcpToolUseCase,

@@ -1,21 +1,20 @@
 import { randomUUID } from 'crypto';
-import {
-  McpIntegration,
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from './mcp-integration.entity';
-import { McpAuthMethod } from './mcp-auth-method.enum';
-import { PredefinedMcpIntegrationSlug } from './predefined-mcp-integration-slug.enum';
+import { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from './auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from './auth/bearer-mcp-integration-auth.entity';
+import { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
+import { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
+import { PredefinedMcpIntegrationSlug } from './value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
 
-describe('McpIntegration', () => {
-  describe('Base class', () => {
-    // We'll use PredefinedMcpIntegration for testing the abstract base class functionality
-
-    it('should generate a UUID when id is null', () => {
-      const integration = new PredefinedMcpIntegration({
+describe('McpIntegration (Base Class)', () => {
+  describe('Common base class behavior', () => {
+    it('should generate a UUID when id is not provided', () => {
+      const integration = new CustomMcpIntegration({
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
       expect(integration.id).toBeDefined();
@@ -24,56 +23,44 @@ describe('McpIntegration', () => {
       );
     });
 
-    it('should use provided UUID when id is not null', () => {
+    it('should use provided UUID when id is provided', () => {
       const providedId = randomUUID();
-      const integration = new PredefinedMcpIntegration({
+      const integration = new CustomMcpIntegration({
         id: providedId,
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
       expect(integration.id).toBe(providedId);
     });
 
     it('should set default values correctly', () => {
-      const integration = new PredefinedMcpIntegration({
+      const integration = new CustomMcpIntegration({
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
       expect(integration.name).toBe('Test Integration');
-      expect(integration.organizationId).toBe('org-123');
+      expect(integration.orgId).toBe('org-123');
+      expect(integration.serverUrl).toBe('http://localhost:3000');
       expect(integration.enabled).toBe(true);
-      expect(integration.authMethod).toBeUndefined();
-      expect(integration.authHeaderName).toBeUndefined();
-      expect(integration.encryptedCredentials).toBeUndefined();
+      expect(integration.connectionStatus).toBe('pending');
       expect(integration.createdAt).toBeInstanceOf(Date);
       expect(integration.updatedAt).toBeInstanceOf(Date);
-    });
-
-    it('should set authentication fields when provided', () => {
-      const integration = new PredefinedMcpIntegration({
-        name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-        authMethod: McpAuthMethod.API_KEY,
-        authHeaderName: 'X-API-Key',
-        encryptedCredentials: 'encrypted-credentials',
-      });
-
-      expect(integration.authMethod).toBe(McpAuthMethod.API_KEY);
-      expect(integration.authHeaderName).toBe('X-API-Key');
-      expect(integration.encryptedCredentials).toBe('encrypted-credentials');
+      expect(integration.getAuthType()).toBe(McpAuthMethod.NO_AUTH);
+      expect(integration.auth.hasCredentials()).toBe(false);
     });
 
     it('should disable the integration and update timestamp', () => {
-      const integration = new PredefinedMcpIntegration({
+      const integration = new CustomMcpIntegration({
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
         enabled: true,
       });
 
@@ -88,10 +75,11 @@ describe('McpIntegration', () => {
     });
 
     it('should enable the integration and update timestamp', () => {
-      const integration = new PredefinedMcpIntegration({
+      const integration = new CustomMcpIntegration({
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
         enabled: false,
       });
 
@@ -105,129 +93,105 @@ describe('McpIntegration', () => {
       );
     });
 
-    it('should update credentials and timestamp', () => {
-      const integration = new PredefinedMcpIntegration({
-        name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-        authMethod: McpAuthMethod.API_KEY,
-        authHeaderName: 'X-API-Key',
-        encryptedCredentials: 'old-credentials',
+    it('should update name and timestamp', () => {
+      const integration = new CustomMcpIntegration({
+        name: 'Old Name',
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
       const beforeUpdate = new Date();
 
-      integration.updateCredentials('new-encrypted-credentials');
+      integration.updateName('New Name');
 
-      expect(integration.encryptedCredentials).toBe(
-        'new-encrypted-credentials',
-      );
+      expect(integration.name).toBe('New Name');
       expect(integration.updatedAt.getTime()).toBeGreaterThanOrEqual(
         beforeUpdate.getTime(),
       );
     });
 
-    it('should return true for hasAuthentication when authMethod is set', () => {
-      const integration = new PredefinedMcpIntegration({
+    it('should update connection status with error', () => {
+      const integration = new CustomMcpIntegration({
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-        authMethod: McpAuthMethod.BEARER_TOKEN,
-        authHeaderName: 'Authorization',
-        encryptedCredentials: 'encrypted-token',
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
-      expect(integration.hasAuthentication()).toBe(true);
+      const beforeUpdate = new Date();
+
+      integration.updateConnectionStatus('error', 'Connection failed');
+
+      expect(integration.connectionStatus).toBe('error');
+      expect(integration.lastConnectionError).toBe('Connection failed');
+      expect(integration.lastConnectionCheck).toBeInstanceOf(Date);
+      expect(integration.lastConnectionCheck!.getTime()).toBeGreaterThanOrEqual(
+        beforeUpdate.getTime(),
+      );
     });
 
-    it('should return false for hasAuthentication when authMethod is not set', () => {
-      const integration = new PredefinedMcpIntegration({
+    it('should update connection status to connected without error', () => {
+      const integration = new CustomMcpIntegration({
         name: 'Test Integration',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
+        orgId: 'org-123',
+        serverUrl: 'http://localhost:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
-      expect(integration.hasAuthentication()).toBe(false);
+      integration.updateConnectionStatus('connected');
+
+      expect(integration.connectionStatus).toBe('connected');
+      expect(integration.lastConnectionError).toBeUndefined();
+      expect(integration.lastConnectionCheck).toBeInstanceOf(Date);
     });
   });
 
-  describe('PredefinedMcpIntegration', () => {
-    it('should have correct type discriminator', () => {
+  describe('Predefined vs Custom distinction', () => {
+    it('should identify predefined integration correctly', () => {
+      const auth = new BearerMcpIntegrationAuth();
       const integration = new PredefinedMcpIntegration({
-        name: 'Test Predefined',
-        organizationId: 'org-123',
+        name: 'Predefined Integration',
+        orgId: 'org-123',
         slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3000',
+        auth,
       });
 
-      expect(integration.type).toBe('predefined');
-    });
-
-    it('should set slug correctly', () => {
-      const integration = new PredefinedMcpIntegration({
-        name: 'Test Predefined',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
-      });
-
+      expect(integration.kind).toBe(McpIntegrationKind.PREDEFINED);
+      expect(integration.isPredefined()).toBe(true);
+      expect(integration.isCustom()).toBe(false);
       expect(integration.slug).toBe(PredefinedMcpIntegrationSlug.TEST);
+      expect(integration.getAuthType()).toBe(McpAuthMethod.BEARER_TOKEN);
     });
 
-    it('should support authentication fields', () => {
-      const integration = new PredefinedMcpIntegration({
-        name: 'Test Predefined',
-        organizationId: 'org-123',
-        slug: PredefinedMcpIntegrationSlug.TEST,
-        enabled: true,
-        authMethod: McpAuthMethod.API_KEY,
-        authHeaderName: 'X-API-Key',
-        encryptedCredentials: 'encrypted-key',
-      });
-
-      expect(integration.hasAuthentication()).toBe(true);
-      expect(integration.authMethod).toBe(McpAuthMethod.API_KEY);
-      expect(integration.authHeaderName).toBe('X-API-Key');
-      expect(integration.encryptedCredentials).toBe('encrypted-key');
-    });
-  });
-
-  describe('CustomMcpIntegration', () => {
-    it('should have correct type discriminator', () => {
+    it('should identify custom integration correctly', () => {
       const integration = new CustomMcpIntegration({
-        name: 'Test Custom',
-        organizationId: 'org-123',
-        serverUrl: 'http://localhost:3000',
+        name: 'Custom Integration',
+        orgId: 'org-123',
+        serverUrl: 'http://custom-server:3000',
+        auth: new BearerMcpIntegrationAuth(),
       });
 
-      expect(integration.type).toBe('custom');
+      expect(integration.kind).toBe(McpIntegrationKind.CUSTOM);
+      expect(integration.isPredefined()).toBe(false);
+      expect(integration.isCustom()).toBe(true);
+      expect(integration.serverUrl).toBe('http://custom-server:3000');
     });
 
-    it('should set serverUrl correctly', () => {
+    it('allows replacing authentication strategy', () => {
       const integration = new CustomMcpIntegration({
-        name: 'Test Custom',
-        organizationId: 'org-123',
-        serverUrl: 'http://localhost:3000',
+        name: 'Custom Integration',
+        orgId: 'org-123',
+        serverUrl: 'http://custom-server:3000',
+        auth: new NoAuthMcpIntegrationAuth(),
       });
 
-      expect(integration.serverUrl).toBe('http://localhost:3000');
-    });
+      const bearerAuth = new BearerMcpIntegrationAuth();
+      integration.setAuth(bearerAuth);
 
-    it('should support authentication fields', () => {
-      const integration = new CustomMcpIntegration({
-        name: 'Test Custom',
-        organizationId: 'org-123',
-        serverUrl: 'http://localhost:3000',
-        enabled: true,
-        authMethod: McpAuthMethod.BEARER_TOKEN,
-        authHeaderName: 'Authorization',
-        encryptedCredentials: 'encrypted-token',
-      });
-
-      expect(integration.hasAuthentication()).toBe(true);
-      expect(integration.authMethod).toBe(McpAuthMethod.BEARER_TOKEN);
-      expect(integration.authHeaderName).toBe('Authorization');
-      expect(integration.encryptedCredentials).toBe('encrypted-token');
+      expect(integration.auth).toBe(bearerAuth);
+      expect(integration.getAuthType()).toBe(McpAuthMethod.BEARER_TOKEN);
     });
   });
 });

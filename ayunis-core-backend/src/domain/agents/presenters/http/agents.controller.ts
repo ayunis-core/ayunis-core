@@ -51,8 +51,6 @@ import { UnassignMcpIntegrationFromAgentUseCase } from '../../application/use-ca
 import { UnassignMcpIntegrationFromAgentCommand } from '../../application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.command';
 import { ListAgentMcpIntegrationsUseCase } from '../../application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.use-case';
 import { ListAgentMcpIntegrationsQuery } from '../../application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.query';
-import { ListAvailableMcpIntegrationsUseCase } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
-import { ListAvailableMcpIntegrationsQuery } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.query';
 
 // Import DTOs and mappers
 import { CreateAgentDto } from './dto/create-agent.dto';
@@ -93,7 +91,6 @@ export class AgentsController {
     private readonly assignMcpIntegrationToAgentUseCase: AssignMcpIntegrationToAgentUseCase,
     private readonly unassignMcpIntegrationFromAgentUseCase: UnassignMcpIntegrationFromAgentUseCase,
     private readonly listAgentMcpIntegrationsUseCase: ListAgentMcpIntegrationsUseCase,
-    private readonly listAvailableMcpIntegrationsUseCase: ListAvailableMcpIntegrationsUseCase,
     private readonly agentDtoMapper: AgentDtoMapper,
     private readonly agentSourceDtoMapper: AgentSourceDtoMapper,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
@@ -528,31 +525,6 @@ export class AgentsController {
 
     const integrations = await this.listAgentMcpIntegrationsUseCase.execute(
       new ListAgentMcpIntegrationsQuery(agentId),
-    );
-
-    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
-  }
-
-  @Get(':agentId/mcp-integrations/available')
-  @ApiOperation({ summary: 'List available MCP integrations for organization' })
-  @ApiParam({
-    name: 'agentId',
-    description: 'The UUID of the agent (for API consistency)',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all enabled MCP integrations for the organization',
-    type: [McpIntegrationResponseDto],
-  })
-  async listAvailableMcpIntegrations(
-    @Param('agentId', ParseUUIDPipe) agentId: UUID,
-  ): Promise<McpIntegrationResponseDto[]> {
-    this.logger.log('listAvailableMcpIntegrations', { agentId });
-
-    const integrations = await this.listAvailableMcpIntegrationsUseCase.execute(
-      new ListAvailableMcpIntegrationsQuery(agentId),
     );
 
     return this.mcpIntegrationDtoMapper.toDtoArray(integrations);

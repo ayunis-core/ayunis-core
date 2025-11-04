@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 /**
  * Response DTO for MCP integration data.
@@ -55,9 +56,10 @@ export class McpIntegrationResponseDto {
   @ApiProperty({
     description: 'Authentication method used',
     required: false,
-    example: 'BEARER_TOKEN',
+    enum: McpAuthMethod,
+    example: McpAuthMethod.BEARER_TOKEN,
   })
-  authMethod?: string;
+  authMethod?: McpAuthMethod;
 
   @ApiProperty({
     description: 'Custom auth header name',
@@ -72,6 +74,28 @@ export class McpIntegrationResponseDto {
     example: true,
   })
   hasCredentials: boolean;
+
+  @ApiProperty({
+    description: 'Connection status of the integration',
+    required: false,
+    enum: ['connected', 'disconnected', 'error', 'unknown'],
+    example: 'connected',
+  })
+  connectionStatus?: string;
+
+  @ApiProperty({
+    description: 'Last error message if connection failed',
+    required: false,
+    example: 'Failed to reach server: Connection timeout',
+  })
+  lastConnectionError?: string;
+
+  @ApiProperty({
+    description: 'Timestamp of the last connection check',
+    required: false,
+    example: '2025-10-28T14:30:00.000Z',
+  })
+  lastConnectionCheck?: Date;
 
   @ApiProperty({
     description: 'Timestamp when the integration was created',

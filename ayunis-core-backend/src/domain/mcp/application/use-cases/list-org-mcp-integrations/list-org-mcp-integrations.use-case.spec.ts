@@ -11,7 +11,7 @@ import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { UUID, randomUUID } from 'crypto';
 
 describe('ListOrgMcpIntegrationsUseCase', () => {
@@ -29,9 +29,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
     const mockRepository = {
       save: jest.fn(),
       findById: jest.fn(),
-      findByIds: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findByOrganizationIdAndEnabled: jest.fn(),
+      findAll: jest.fn(),
+      findByOrgIdAndSlug: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -99,9 +98,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
         ),
       ];
 
-      jest
-        .spyOn(repository, 'findByOrganizationId')
-        .mockResolvedValue(mockIntegrations);
+      jest.spyOn(repository, 'findAll').mockResolvedValue(mockIntegrations);
 
       const query = new ListOrgMcpIntegrationsQuery();
 
@@ -110,15 +107,15 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
 
       // Assert
       expect(result).toEqual(mockIntegrations);
-      expect(repository.findByOrganizationId).toHaveBeenCalledTimes(1);
-      expect(repository.findByOrganizationId).toHaveBeenCalledWith(mockOrgId);
+      expect(repository.findAll).toHaveBeenCalledTimes(1);
+      expect(repository.findAll).toHaveBeenCalledWith(mockOrgId);
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(loggerLogSpy).toHaveBeenCalledWith('listOrgMcpIntegrations');
     });
 
     it('should return empty array when organization has no integrations', async () => {
       // Arrange
-      jest.spyOn(repository, 'findByOrganizationId').mockResolvedValue([]);
+      jest.spyOn(repository, 'findAll').mockResolvedValue([]);
 
       const query = new ListOrgMcpIntegrationsQuery();
 
@@ -127,8 +124,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
 
       // Assert
       expect(result).toEqual([]);
-      expect(repository.findByOrganizationId).toHaveBeenCalledTimes(1);
-      expect(repository.findByOrganizationId).toHaveBeenCalledWith(mockOrgId);
+      expect(repository.findAll).toHaveBeenCalledTimes(1);
+      expect(repository.findAll).toHaveBeenCalledWith(mockOrgId);
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(loggerLogSpy).toHaveBeenCalledWith('listOrgMcpIntegrations');
     });
@@ -146,12 +143,12 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       await expect(useCase.execute(query)).rejects.toThrow(
         'User not authenticated',
       );
-      expect(repository.findByOrganizationId).not.toHaveBeenCalled();
+      expect(repository.findAll).not.toHaveBeenCalled();
     });
 
     it('should use organizationId from ContextService (not from query)', async () => {
       // Arrange
-      jest.spyOn(repository, 'findByOrganizationId').mockResolvedValue([]);
+      jest.spyOn(repository, 'findAll').mockResolvedValue([]);
 
       const query = new ListOrgMcpIntegrationsQuery();
 
@@ -160,15 +157,13 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
 
       // Assert
       expect(contextService.get).toHaveBeenCalledWith('orgId');
-      expect(repository.findByOrganizationId).toHaveBeenCalledWith(mockOrgId);
+      expect(repository.findAll).toHaveBeenCalledWith(mockOrgId);
     });
 
     it('should wrap unexpected errors in UnexpectedMcpError', async () => {
       // Arrange
       const unexpectedError = new Error('Database connection failed');
-      jest
-        .spyOn(repository, 'findByOrganizationId')
-        .mockRejectedValue(unexpectedError);
+      jest.spyOn(repository, 'findAll').mockRejectedValue(unexpectedError);
 
       const query = new ListOrgMcpIntegrationsQuery();
 
@@ -182,7 +177,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
 
     it('should log operation start', async () => {
       // Arrange
-      jest.spyOn(repository, 'findByOrganizationId').mockResolvedValue([]);
+      jest.spyOn(repository, 'findAll').mockResolvedValue([]);
 
       const query = new ListOrgMcpIntegrationsQuery();
 

@@ -11,7 +11,7 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { PredefinedMcpIntegration } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
 
 describe('EnableMcpIntegrationUseCase', () => {
   let useCase: EnableMcpIntegrationUseCase;

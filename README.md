@@ -90,6 +90,72 @@ If no email configuration is provided,
 - invite accept links will be displayed to the inviting user instead of being sent to the invited user
 - password reset will not work (coming soon)
 
+### MCP (Model Context Protocol) Configuration
+
+MCP integration enables Ayunis Core to connect to external data sources through MCP servers like Locaboo 4.
+
+#### Required Configuration
+
+**MCP_ENCRYPTION_KEY** (Required):
+- Encrypts all MCP integration credentials (API keys, bearer tokens) at rest in the database
+- Uses AES-256-GCM encryption
+- Must be a 64-character hexadecimal string (32 bytes)
+- Generate a secure key with:
+  ```bash
+  openssl rand -hex 32
+  ```
+- The application will fail to start if this variable is not set or is invalid
+
+**LOCABOO_4_URL** (Required for Locaboo 4 integration):
+- Base URL of the Locaboo 4 MCP server instance
+- Example values:
+  - Local development: `http://localhost:8080`
+  - Production: `https://locaboo.your-domain.com`
+- Used when creating Locaboo 4 MCP integrations
+
+#### Authentication Approach
+
+Ayunis Core uses a simplified authentication system for MCP integrations:
+
+1. **NO_AUTH**: For public MCP servers requiring no authentication
+2. **BEARER_TOKEN**: For API tokens and simple authentication
+   - Users provide their Locaboo 3 API token when creating a Locaboo 4 integration
+   - Tokens are stored encrypted using the `MCP_ENCRYPTION_KEY`
+   - No automatic token refresh is performed
+   - Manual token rotation is supported through the UI
+3. **OAUTH** (Future): Reserved for standard OAuth 2.1 implementations
+
+#### Security Considerations
+
+- All credentials are encrypted at rest using AES-256-GCM
+- Encryption key is read from environment variables, never stored in code or database
+- Tokens are never logged or displayed in plain text in logs
+- Use HTTPS in production to protect tokens in transit
+- Rotate the MCP_ENCRYPTION_KEY periodically by:
+  1. Generating a new key with `openssl rand -hex 32`
+  2. Updating MCP_ENCRYPTION_KEY environment variable
+  3. Restarting the application (no data migration needed - decryption uses the new key)
+
+#### Configuration Validation
+
+The application validates MCP configuration on startup:
+- `MCP_ENCRYPTION_KEY` must be set and valid (64 hex characters)
+- If validation fails, the application will not start
+- Check application logs for specific error messages if startup fails
+
+#### Creating MCP Integrations
+
+Admins can create MCP integrations through the admin UI or API:
+
+1. Navigate to Admin Settings → Integrations → MCP
+2. Click "Add Integration"
+3. Select integration type (e.g., "Locaboo 4")
+4. Provide server URL and authentication credentials
+5. Test connection before saving
+6. Once saved, organization users can use the integration in agents
+
+For API-based creation, see the MCP integration endpoints in the OpenAPI documentation.
+
 ### Model Configuration
 
 Before you can access models as a user inside the product, you must create them from outside the product via HTTP requests (the experience of this will get better as soon as we have an admin UI). Models you create will be available for admin users to enable for their particular organisation.

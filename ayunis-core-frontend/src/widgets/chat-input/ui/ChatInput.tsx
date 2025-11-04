@@ -14,7 +14,10 @@ import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import AgentButton from "./AgentButton";
 import useKeyboardShortcut from "@/features/useKeyboardShortcut";
 import { useTranslation } from "react-i18next";
-import type { SourceResponseDtoType } from "@/shared/api";
+import type {
+  SourceResponseDtoCreatedBy,
+  SourceResponseDtoType,
+} from "@/shared/api";
 import { Badge } from "@/shared/ui/shadcn/badge";
 import PlusButton from "./PlusButton";
 import ModelSelector from "./ModelSelector";
@@ -34,7 +37,7 @@ interface ChatInputProps {
     id: string;
     name: string;
     type: SourceResponseDtoType;
-    createdByLLM?: boolean;
+    createdBy?: SourceResponseDtoCreatedBy;
   }[];
   isStreaming?: boolean;
   isCreatingFileSource?: boolean;
@@ -127,33 +130,37 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
               {/* Sources */}
-              {sources.length > 0 && (
+              {sources.filter((source) => source.createdBy !== "system")
+                .length > 0 && (
                 <div className="flex flex-wrap gap-2 items-center">
-                  {sources.map((source) => (
-                    <Badge
-                      key={source.id}
-                      variant="secondary"
-                      className={cn(
-                        "flex items-center gap-1 cursor-pointer",
-                        source.createdByLLM && "bg-[#8178C3]/10 text-[#8178C3]",
-                      )}
-                      onClick={() =>
-                        source.type === "data" && onDownloadSource(source.id)
-                      }
-                    >
-                      {getSourceIcon(source)}
-                      {source.name}
-                      <div
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveSource(source.id);
-                        }}
+                  {sources
+                    .filter((source) => source.createdBy !== "system")
+                    .map((source) => (
+                      <Badge
+                        key={source.id}
+                        variant="secondary"
+                        className={cn(
+                          "flex items-center gap-1 cursor-pointer",
+                          source.createdBy === "llm" &&
+                            "bg-[#8178C3]/10 text-[#8178C3]",
+                        )}
+                        onClick={() =>
+                          source.type === "data" && onDownloadSource(source.id)
+                        }
                       >
-                        <XIcon className="h-3 w-3" />
-                      </div>
-                    </Badge>
-                  ))}
+                        {getSourceIcon(source)}
+                        {source.name}
+                        <div
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveSource(source.id);
+                          }}
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </div>
+                      </Badge>
+                    ))}
                 </div>
               )}
 

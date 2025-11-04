@@ -24,8 +24,7 @@ import { RemoveSourceFromAgentUseCase } from './application/use-cases/remove-sou
 import { AssignMcpIntegrationToAgentUseCase } from './application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.use-case';
 import { UnassignMcpIntegrationFromAgentUseCase } from './application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.use-case';
 import { ListAgentMcpIntegrationsUseCase } from './application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.use-case';
-import { ListAvailableMcpIntegrationsUseCase } from './application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
-
+import { ListAvailableMcpIntegrationsUseCase } from '../mcp/application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
 // Presenters
 import { AgentsController } from './presenters/http/agents.controller';
 import { AgentDtoMapper } from './presenters/http/mappers/agent.mapper';

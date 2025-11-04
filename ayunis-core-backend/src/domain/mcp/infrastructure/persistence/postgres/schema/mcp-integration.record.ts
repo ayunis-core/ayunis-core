@@ -1,76 +1,38 @@
-import {
-  Column,
-  Entity,
-  Index,
-  ManyToOne,
-  TableInheritance,
-  ChildEntity,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, Index, OneToOne, TableInheritance } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { McpIntegrationAuthRecord } from './mcp-integration-auth.record';
 
-/**
- * Abstract base record for all MCP integrations.
- * Uses TypeORM's single-table inheritance pattern with a discriminator column.
- */
-@Entity({ name: 'mcp_integrations' })
-@TableInheritance({ column: { type: 'varchar', name: 'type' } })
-@Unique(['organizationId', 'name'])
+@Entity('mcp_integrations')
+@TableInheritance({ column: { type: 'varchar', name: 'integration_type' } })
+@Index(['orgId', 'predefinedSlug'], {
+  unique: true,
+  where: 'predefined_slug IS NOT NULL',
+})
 export abstract class McpIntegrationRecord extends BaseRecord {
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ name: 'org_id' })
+  orgId: string;
+
+  @Column()
   name: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    nullable: true,
-    name: 'auth_method',
-  })
-  authMethod?: string;
+  @Column({ name: 'server_url' })
+  serverUrl: string;
 
-  @Column({
-    type: 'varchar',
-    length: 100,
-    nullable: true,
-    name: 'auth_header_name',
-  })
-  authHeaderName?: string;
-
-  @Column({
-    type: 'text',
-    nullable: true,
-    name: 'encrypted_credentials',
-  })
-  encryptedCredentials?: string;
-
-  @Column({ type: 'boolean', default: true })
+  @Column({ default: true })
   enabled: boolean;
 
-  @Column({ name: 'organization_id' })
-  @Index('idx_mcp_integrations_org')
-  organizationId: string;
+  @Column({ name: 'connection_status', default: 'pending' })
+  connectionStatus: string;
 
-  @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
-  organization: OrgRecord;
-}
+  @Column({ name: 'last_connection_error', type: 'text', nullable: true })
+  lastConnectionError?: string;
 
-/**
- * Predefined MCP integration record with a slug.
- * Discriminator value: 'predefined'
- */
-@ChildEntity('predefined')
-export class PredefinedMcpIntegrationRecord extends McpIntegrationRecord {
-  @Column({ type: 'varchar', length: 50 })
-  slug: string;
-}
+  @Column({ name: 'last_connection_check', type: 'timestamp', nullable: true })
+  lastConnectionCheck?: Date;
 
-/**
- * Custom MCP integration record with a server URL.
- * Discriminator value: 'custom'
- */
-@ChildEntity('custom')
-export class CustomMcpIntegrationRecord extends McpIntegrationRecord {
-  @Column({ type: 'text', name: 'server_url' })
-  serverUrl: string;
+  @OneToOne(() => McpIntegrationAuthRecord, (auth) => auth.integration, {
+    cascade: ['insert', 'update'],
+    eager: true,
+  })
+  auth!: McpIntegrationAuthRecord;
 }

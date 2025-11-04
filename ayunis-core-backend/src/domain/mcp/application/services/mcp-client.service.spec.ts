@@ -1,0 +1,169 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { McpClientService } from './mcp-client.service';
+import { McpClientPort } from '../ports/mcp-client.port';
+import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
+import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { McpIntegrationKind } from '../../domain/value-objects/mcp-integration-kind.enum';
+import { McpAuthenticationError } from '../mcp.errors';
+
+class MockMcpClientPort extends McpClientPort {
+  listTools = jest.fn();
+  listResources = jest.fn();
+  listResourceTemplates = jest.fn();
+  listPrompts = jest.fn();
+  callTool = jest.fn();
+  readResource = jest.fn();
+  getPrompt = jest.fn();
+  validateConnection = jest.fn();
+}
+
+class MockCredentialEncryptionPort extends McpCredentialEncryptionPort {
+  encrypt = jest.fn();
+  decrypt = jest.fn();
+}
+
+describe('McpClientService', () => {
+  let service: McpClientService;
+  let client: MockMcpClientPort;
+  let encryption: MockCredentialEncryptionPort;
+
+  const baseIntegrationParams = {
+    id: 'integration-123',
+    orgId: 'org-123',
+    name: 'Test Integration',
+    serverUrl: 'https://example.com/mcp',
+    enabled: true,
+    createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2025-01-01T00:00:00.000Z'),
+    connectionStatus: 'pending',
+  } as const;
+
+  beforeEach(async () => {
+    client = new MockMcpClientPort();
+    encryption = new MockCredentialEncryptionPort();
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        McpClientService,
+        { provide: McpClientPort, useValue: client },
+        { provide: McpCredentialEncryptionPort, useValue: encryption },
+      ],
+    }).compile();
+
+    module.useLogger(false);
+    service = module.get(McpClientService);
+  });
+
+  describe('buildConnectionConfig', () => {
+    it('returns base config for no-auth integrations', async () => {
+      const integration = new CustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config).toEqual({ serverUrl: baseIntegrationParams.serverUrl });
+      expect(encryption.decrypt).not.toHaveBeenCalled();
+    });
+
+    it('builds config for bearer auth', async () => {
+      const auth = new BearerMcpIntegrationAuth({
+        authToken: 'encrypted-token',
+      });
+      const integration = new PredefinedMcpIntegration({
+        ...baseIntegrationParams,
+        kind: undefined as any, // ignored by constructor
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        auth,
+      });
+
+      encryption.decrypt.mockResolvedValue('decrypted-token');
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config).toEqual({
+        serverUrl: baseIntegrationParams.serverUrl,
+        authHeaderName: 'Authorization',
+        authToken: 'Bearer decrypted-token',
+      });
+    });
+
+    it('builds config for custom header auth', async () => {
+      const auth = new CustomHeaderMcpIntegrationAuth({
+        secret: 'encrypted-secret',
+        headerName: 'X-API-Key',
+      });
+      const integration = new CustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth,
+      });
+
+      encryption.decrypt.mockResolvedValue('decrypted-secret');
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config).toEqual({
+        serverUrl: baseIntegrationParams.serverUrl,
+        authHeaderName: 'X-API-Key',
+        authToken: 'decrypted-secret',
+      });
+    });
+
+    it('builds config for oauth auth with valid token', async () => {
+      const auth = new OAuthMcpIntegrationAuth({
+        clientId: 'client',
+        clientSecret: 'secret',
+        accessToken: 'encrypted-token',
+        tokenExpiresAt: new Date(Date.now() + 60_000),
+      });
+      const integration = new CustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth,
+      });
+
+      encryption.decrypt.mockResolvedValue('decrypted-token');
+
+      const config = await service.buildConnectionConfig(integration);
+
+      expect(config).toEqual({
+        serverUrl: baseIntegrationParams.serverUrl,
+        authHeaderName: 'Authorization',
+        authToken: 'Bearer decrypted-token',
+      });
+    });
+
+    it('throws if bearer auth token missing', async () => {
+      const auth = new BearerMcpIntegrationAuth();
+      const integration = new CustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth,
+      });
+
+      await expect(
+        service.buildConnectionConfig(integration),
+      ).rejects.toBeInstanceOf(McpAuthenticationError);
+    });
+
+    it('throws if oauth token expired', async () => {
+      const auth = new OAuthMcpIntegrationAuth({
+        accessToken: 'encrypted-token',
+        tokenExpiresAt: new Date(Date.now() - 60_000),
+      });
+      const integration = new CustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth,
+      });
+
+      await expect(
+        service.buildConnectionConfig(integration),
+      ).rejects.toBeInstanceOf(McpAuthenticationError);
+    });
+  });
+});

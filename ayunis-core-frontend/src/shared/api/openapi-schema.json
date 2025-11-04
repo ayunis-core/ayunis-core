@@ -1751,42 +1751,6 @@
         ]
       }
     },
-    "/agents/{agentId}/mcp-integrations/available": {
-      "get": {
-        "operationId": "AgentsController_listAvailableMcpIntegrations",
-        "parameters": [
-          {
-            "name": "agentId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the agent (for API consistency)",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns all enabled MCP integrations for the organization",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List available MCP integrations for organization",
-        "tags": [
-          "agents"
-        ]
-      }
-    },
     "/mcp-integrations/predefined": {
       "post": {
         "operationId": "McpIntegrationsController_createPredefined",
@@ -1905,6 +1869,31 @@
           }
         },
         "summary": "List available predefined MCP integration configurations",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/available": {
+      "get": {
+        "operationId": "McpIntegrationsController_listAvailable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of available enabled integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all available (enabled) MCP integrations for organization",
         "tags": [
           "mcp-integrations"
         ]
@@ -4345,9 +4334,14 @@
               "data"
             ]
           },
-          "createdByLLM": {
-            "type": "boolean",
-            "description": "Whether the source was created by LLM"
+          "createdBy": {
+            "type": "string",
+            "description": "Creator of the source",
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -4363,7 +4357,7 @@
           "threadId",
           "name",
           "type",
-          "createdByLLM",
+          "createdBy",
           "createdAt",
           "updatedAt"
         ]
@@ -4391,9 +4385,14 @@
               "data"
             ]
           },
-          "createdByLLM": {
-            "type": "boolean",
-            "description": "Whether the source was created by LLM"
+          "createdBy": {
+            "type": "string",
+            "description": "Creator of the source",
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -4424,7 +4423,7 @@
           "threadId",
           "name",
           "type",
-          "createdByLLM",
+          "createdBy",
           "createdAt",
           "updatedAt",
           "textType",
@@ -4454,9 +4453,14 @@
               "data"
             ]
           },
-          "createdByLLM": {
-            "type": "boolean",
-            "description": "Whether the source was created by LLM"
+          "createdBy": {
+            "type": "string",
+            "description": "Creator of the source",
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -4484,7 +4488,7 @@
           "threadId",
           "name",
           "type",
-          "createdByLLM",
+          "createdBy",
           "createdAt",
           "updatedAt",
           "textType",
@@ -4514,9 +4518,14 @@
               "data"
             ]
           },
-          "createdByLLM": {
-            "type": "boolean",
-            "description": "Whether the source was created by LLM"
+          "createdBy": {
+            "type": "string",
+            "description": "Creator of the source",
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -4563,7 +4572,7 @@
           "threadId",
           "name",
           "type",
-          "createdByLLM",
+          "createdBy",
           "createdAt",
           "updatedAt",
           "dataType",
@@ -4982,6 +4991,12 @@
           "authMethod": {
             "type": "string",
             "description": "Authentication method used",
+            "enum": [
+              "API_KEY",
+              "BEARER_TOKEN",
+              "NO_AUTH",
+              "OAUTH"
+            ],
             "example": "BEARER_TOKEN"
           },
           "authHeaderName": {
@@ -4993,6 +5008,28 @@
             "type": "boolean",
             "description": "Whether credentials are configured (never exposes actual credentials)",
             "example": true
+          },
+          "connectionStatus": {
+            "type": "string",
+            "description": "Connection status of the integration",
+            "enum": [
+              "connected",
+              "disconnected",
+              "error",
+              "unknown"
+            ],
+            "example": "connected"
+          },
+          "lastConnectionError": {
+            "type": "string",
+            "description": "Last error message if connection failed",
+            "example": "Failed to reach server: Connection timeout"
+          },
+          "lastConnectionCheck": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of the last connection check",
+            "example": "2025-10-28T14:30:00.000Z"
           },
           "createdAt": {
             "format": "date-time",
@@ -5024,33 +5061,39 @@
           "name": {
             "type": "string",
             "description": "The name for this integration instance",
-            "example": "Production Test Integration"
+            "example": "Production Test Integration",
+            "minLength": 1,
+            "maxLength": 255
           },
           "slug": {
             "type": "string",
             "description": "The predefined integration slug",
             "example": "TEST",
             "enum": [
-              "TEST"
+              "TEST",
+              "LOCABOO"
             ]
           },
           "authMethod": {
             "type": "string",
-            "description": "Authentication method",
-            "example": "BEARER_TOKEN",
+            "description": "Authentication method (overrides predefined defaults if provided)",
             "enum": [
               "API_KEY",
-              "BEARER_TOKEN"
-            ]
+              "BEARER_TOKEN",
+              "NO_AUTH",
+              "OAUTH"
+            ],
+            "example": "BEARER_TOKEN",
+            "nullable": true
           },
           "authHeaderName": {
             "type": "string",
-            "description": "Custom auth header name (e.g., X-API-Key)",
-            "example": "Authorization"
+            "description": "Custom auth header name (e.g., X-API-Key). Can override predefined defaults for API_KEY auth method. Ignored for BEARER_TOKEN (always uses Authorization header).",
+            "example": "X-API-Key"
           },
           "credentials": {
             "type": "string",
-            "description": "Authentication credentials (will be encrypted)",
+            "description": "Authentication credentials (will be encrypted). Required if authMethod requires credentials.",
             "example": "sk_test_123abc"
           }
         },
@@ -5065,7 +5108,9 @@
           "name": {
             "type": "string",
             "description": "The name for this integration instance",
-            "example": "My Custom MCP Server"
+            "example": "My Custom MCP Server",
+            "minLength": 1,
+            "maxLength": 255
           },
           "serverUrl": {
             "type": "string",
@@ -5074,21 +5119,24 @@
           },
           "authMethod": {
             "type": "string",
-            "description": "Authentication method",
-            "example": "API_KEY",
+            "description": "Authentication method for the MCP server",
             "enum": [
               "API_KEY",
-              "BEARER_TOKEN"
-            ]
+              "BEARER_TOKEN",
+              "NO_AUTH",
+              "OAUTH"
+            ],
+            "example": "API_KEY",
+            "nullable": true
           },
           "authHeaderName": {
             "type": "string",
-            "description": "Custom auth header name (e.g., X-API-Key)",
+            "description": "Custom auth header name (e.g., X-API-Key). Required for API_KEY auth method. Ignored for BEARER_TOKEN (always uses Authorization header).",
             "example": "X-API-Key"
           },
           "credentials": {
             "type": "string",
-            "description": "Authentication credentials (will be encrypted)",
+            "description": "Authentication credentials (will be encrypted). Required for API_KEY and BEARER_TOKEN auth methods.",
             "example": "my-api-key-12345"
           }
         },
@@ -5097,39 +5145,93 @@
           "serverUrl"
         ]
       },
+      "CredentialFieldDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Field name for credential input",
+            "example": "apiToken"
+          },
+          "label": {
+            "type": "string",
+            "description": "User-friendly label for the credential field",
+            "example": "Locaboo 3 API Token"
+          },
+          "type": {
+            "type": "string",
+            "description": "Input type (text or password)",
+            "enum": [
+              "text",
+              "password"
+            ],
+            "example": "password"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this field is required",
+            "example": true
+          },
+          "help": {
+            "type": "string",
+            "description": "Help text to guide users",
+            "example": "Your Locaboo 3 API token will be used to authenticate with Locaboo 4"
+          }
+        },
+        "required": [
+          "name",
+          "label",
+          "type",
+          "required"
+        ]
+      },
       "PredefinedConfigResponseDto": {
         "type": "object",
         "properties": {
           "slug": {
             "type": "string",
             "description": "Unique slug identifier for the predefined integration",
-            "example": "TEST"
+            "example": "LOCABOO"
           },
           "displayName": {
             "type": "string",
             "description": "Display name for the integration",
-            "example": "Test MCP Server"
+            "example": "Locaboo 4"
           },
           "description": {
             "type": "string",
             "description": "Description of what this integration provides",
-            "example": "Test integration for development and testing"
+            "example": "Connect to Locaboo 4 booking system"
           },
-          "defaultAuthMethod": {
+          "authType": {
             "type": "string",
-            "description": "Default authentication method (if any)",
+            "description": "Authentication method for this integration",
+            "enum": [
+              "NO_AUTH",
+              "BEARER_TOKEN",
+              "API_KEY",
+              "OAUTH"
+            ],
             "example": "BEARER_TOKEN"
           },
-          "defaultAuthHeaderName": {
+          "authHeaderName": {
             "type": "string",
-            "description": "Default authentication header name (if any)",
+            "description": "HTTP header name for authentication (if applicable)",
             "example": "Authorization"
+          },
+          "credentialFields": {
+            "description": "Credential fields required for this integration",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CredentialFieldDto"
+            }
           }
         },
         "required": [
           "slug",
           "displayName",
-          "description"
+          "description",
+          "authType"
         ]
       },
       "UpdateMcpIntegrationDto": {
@@ -5138,26 +5240,9 @@
           "name": {
             "type": "string",
             "description": "The new name for the integration",
-            "example": "Updated Integration Name"
-          },
-          "authMethod": {
-            "type": "string",
-            "description": "Authentication method",
-            "example": "BEARER_TOKEN",
-            "enum": [
-              "API_KEY",
-              "BEARER_TOKEN"
-            ]
-          },
-          "authHeaderName": {
-            "type": "string",
-            "description": "Custom auth header name (e.g., X-API-Key)",
-            "example": "Authorization"
-          },
-          "credentials": {
-            "type": "string",
-            "description": "New authentication credentials (will be encrypted)",
-            "example": "new-credentials-456"
+            "example": "Updated Integration Name",
+            "minLength": 1,
+            "maxLength": 255
           }
         }
       },

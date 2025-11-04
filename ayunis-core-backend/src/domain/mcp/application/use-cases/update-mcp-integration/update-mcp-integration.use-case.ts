@@ -36,21 +36,13 @@ export class UpdateMcpIntegrationUseCase {
         throw new McpIntegrationNotFoundError(command.integrationId);
       }
 
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(command.integrationId);
       }
 
       // Update fields (only if provided)
       if (command.name !== undefined) {
         integration.updateName(command.name);
-      }
-
-      if (command.authMethod !== undefined) {
-        integration.updateAuth(
-          command.authMethod,
-          command.authHeaderName,
-          command.encryptedCredentials,
-        );
       }
 
       return await this.repository.save(integration);

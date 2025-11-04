@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 
 /**
  * Repository port for MCP integration persistence.
@@ -21,36 +22,27 @@ export abstract class McpIntegrationsRepositoryPort {
   abstract findById(id: UUID): Promise<McpIntegration | null>;
 
   /**
-   * Finds multiple MCP integrations by their IDs.
-   * @param ids Array of integration IDs
-   * @returns Array of found integrations
-   */
-  abstract findByIds(ids: UUID[]): Promise<McpIntegration[]>;
-
-  /**
-   * Finds all MCP integrations across all organizations.
-   * Used for system-wide health checks.
-   * @returns Array of all integrations
-   */
-  abstract findAll(): Promise<McpIntegration[]>;
-
-  /**
    * Finds all MCP integrations for an organization.
-   * @param organizationId The organization ID
+   * @param orgId The organization ID
+   * @param filter Optional filter to apply to the query
    * @returns Array of integrations
    */
-  abstract findByOrganizationId(
-    organizationId: UUID,
+  abstract findAll(
+    orgId: UUID,
+    filter?: { enabled?: boolean },
   ): Promise<McpIntegration[]>;
 
   /**
-   * Finds all enabled MCP integrations for an organization.
+   * Finds an MCP integration by organization ID and predefined slug.
+   * Used to check for duplicate predefined integrations (e.g., Locaboo).
    * @param organizationId The organization ID
-   * @returns Array of enabled integrations
+   * @param slug The predefined integration slug
+   * @returns The integration or null if not found
    */
-  abstract findByOrganizationIdAndEnabled(
+  abstract findByOrgIdAndSlug(
     organizationId: UUID,
-  ): Promise<McpIntegration[]>;
+    slug: PredefinedMcpIntegrationSlug,
+  ): Promise<McpIntegration | null>;
 
   /**
    * Deletes an MCP integration by its ID.

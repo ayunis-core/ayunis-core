@@ -157,7 +157,7 @@ export function CreateCustomDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="API_KEY">
+                      <SelectItem value="CUSTOM_HEADER">
                         {t("integrations.createCustomDialog.authMethodApiKey")}
                       </SelectItem>
                       <SelectItem value="BEARER_TOKEN">
@@ -223,7 +223,7 @@ export function CreateCustomDialog({
                         />
                       </FormControl>
                       <FormDescription>
-                        {selectedAuthMethod === "API_KEY"
+                        {selectedAuthMethod === "CUSTOM_HEADER"
                           ? t(
                               "integrations.createCustomDialog.credentialsDescriptionApiKey",
                             )

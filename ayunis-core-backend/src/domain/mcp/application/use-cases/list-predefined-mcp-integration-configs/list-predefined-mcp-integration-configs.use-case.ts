@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   PredefinedMcpIntegrationConfig,
-  PredefinedMcpIntegrationRegistryService,
-} from '../../services/predefined-mcp-integration-registry.service';
+  PredefinedMcpIntegrationRegistry,
+} from '../../registries/predefined-mcp-integration-registry.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
 
@@ -17,7 +17,7 @@ export class ListPredefinedMcpIntegrationConfigsUseCase {
   );
 
   constructor(
-    private readonly registryService: PredefinedMcpIntegrationRegistryService,
+    private readonly registryService: PredefinedMcpIntegrationRegistry,
   ) {}
 
   execute(): PredefinedMcpIntegrationConfig[] {

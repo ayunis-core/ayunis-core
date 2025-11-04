@@ -5,7 +5,7 @@ import { GetMcpPromptUseCase } from './get-mcp-prompt.use-case';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientPort } from '../../ports/mcp-client.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -17,14 +17,14 @@ import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 describe('GetMcpPromptUseCase', () => {
   let useCase: GetMcpPromptUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let mcpClient: McpClientPort;
-  let registryService: PredefinedMcpIntegrationRegistryService;
+  let registryService: PredefinedMcpIntegrationRegistry;
   let contextService: ContextService;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
@@ -50,7 +50,7 @@ describe('GetMcpPromptUseCase', () => {
           },
         },
         {
-          provide: PredefinedMcpIntegrationRegistryService,
+          provide: PredefinedMcpIntegrationRegistry,
           useValue: {
             getConfig: jest.fn(),
           },
@@ -69,8 +69,8 @@ describe('GetMcpPromptUseCase', () => {
       McpIntegrationsRepositoryPort,
     );
     mcpClient = module.get<McpClientPort>(McpClientPort);
-    registryService = module.get<PredefinedMcpIntegrationRegistryService>(
-      PredefinedMcpIntegrationRegistryService,
+    registryService = module.get<PredefinedMcpIntegrationRegistry>(
+      PredefinedMcpIntegrationRegistry,
     );
     contextService = module.get<ContextService>(ContextService);
 
@@ -114,7 +114,7 @@ describe('GetMcpPromptUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
 
@@ -349,7 +349,7 @@ describe('GetMcpPromptUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
 
@@ -387,7 +387,7 @@ describe('GetMcpPromptUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'getPrompt').mockRejectedValue(unexpectedError);
 
@@ -430,7 +430,7 @@ describe('GetMcpPromptUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
 

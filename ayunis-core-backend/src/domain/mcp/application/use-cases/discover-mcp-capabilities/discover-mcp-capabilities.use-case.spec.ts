@@ -5,7 +5,7 @@ import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientPort } from '../../ports/mcp-client.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -17,14 +17,14 @@ import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 describe('DiscoverMcpCapabilitiesUseCase', () => {
   let useCase: DiscoverMcpCapabilitiesUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let mcpClient: McpClientPort;
-  let registryService: PredefinedMcpIntegrationRegistryService;
+  let registryService: PredefinedMcpIntegrationRegistry;
   let contextService: ContextService;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
@@ -51,7 +51,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
           },
         },
         {
-          provide: PredefinedMcpIntegrationRegistryService,
+          provide: PredefinedMcpIntegrationRegistry,
           useValue: {
             getConfig: jest.fn(),
           },
@@ -72,8 +72,8 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       McpIntegrationsRepositoryPort,
     );
     mcpClient = module.get<McpClientPort>(McpClientPort);
-    registryService = module.get<PredefinedMcpIntegrationRegistryService>(
-      PredefinedMcpIntegrationRegistryService,
+    registryService = module.get<PredefinedMcpIntegrationRegistry>(
+      PredefinedMcpIntegrationRegistry,
     );
     contextService = module.get<ContextService>(ContextService);
 
@@ -137,7 +137,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'listTools').mockResolvedValue(mockTools);
       jest.spyOn(mcpClient, 'listResources').mockResolvedValue(mockResources);
@@ -240,7 +240,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'listTools').mockResolvedValue([]);
       jest.spyOn(mcpClient, 'listResources').mockResolvedValue([]);
@@ -371,7 +371,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'listTools').mockResolvedValue([]);
       jest.spyOn(mcpClient, 'listResources').mockResolvedValue([]);
@@ -411,7 +411,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'listTools').mockRejectedValue(unexpectedError);
 
@@ -475,7 +475,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test Server',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'listTools').mockResolvedValue([
         { name: 'tool1', inputSchema: { type: 'object' } },

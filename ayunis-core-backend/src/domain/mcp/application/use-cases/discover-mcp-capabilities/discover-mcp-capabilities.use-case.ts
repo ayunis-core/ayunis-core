@@ -2,13 +2,11 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import {
-  McpClientPort,
-  McpConnectionConfig,
   McpTool as McpToolDto,
   McpResource as McpResourceDto,
   McpPrompt as McpPromptDto,
 } from '../../ports/mcp-client.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -23,11 +21,6 @@ import {
   ResourceArgument,
 } from '../../../domain/mcp-resource.entity';
 import { McpPrompt, PromptArgument } from '../../../domain/mcp-prompt.entity';
-import {
-  McpIntegration,
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
 import { UUID } from 'crypto';
 
 /**
@@ -49,8 +42,7 @@ export class DiscoverMcpCapabilitiesUseCase {
 
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
-    private readonly mcpClient: McpClientPort,
-    private readonly registryService: PredefinedMcpIntegrationRegistryService,
+    private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -73,7 +65,7 @@ export class DiscoverMcpCapabilitiesUseCase {
       }
 
       // Verify organization access
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(
           query.integrationId,
           integration.name,
@@ -88,15 +80,12 @@ export class DiscoverMcpCapabilitiesUseCase {
         );
       }
 
-      // Build connection config
-      const connectionConfig = this.buildConnectionConfig(integration);
-
       // Discover capabilities from MCP server
       const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-        this.mcpClient.listTools(connectionConfig),
-        this.mcpClient.listResources(connectionConfig),
-        this.mcpClient.listResourceTemplates(connectionConfig),
-        this.mcpClient.listPrompts(connectionConfig),
+        this.mcpClientService.listTools(integration),
+        this.mcpClientService.listResources(integration),
+        this.mcpClientService.listResourceTemplates(integration),
+        this.mcpClientService.listPrompts(integration),
       ]);
 
       // Map to domain entities
@@ -148,37 +137,6 @@ export class DiscoverMcpCapabilitiesUseCase {
         error instanceof Error ? error.message : 'Unknown error',
       );
     }
-  }
-
-  /**
-   * Builds connection configuration from integration entity
-   */
-  private buildConnectionConfig(
-    integration: McpIntegration,
-  ): McpConnectionConfig {
-    let serverUrl: string;
-
-    // Get server URL based on integration type
-    if (integration.type === 'predefined') {
-      const predefined = integration as PredefinedMcpIntegration;
-      const config = this.registryService.getConfig(predefined.slug);
-      serverUrl = config.url;
-    } else {
-      const custom = integration as CustomMcpIntegration;
-      serverUrl = custom.serverUrl;
-    }
-
-    // Build config with authentication if present
-    const config: McpConnectionConfig = {
-      serverUrl,
-    };
-
-    if (integration.hasAuthentication()) {
-      config.authHeaderName = integration.authHeaderName;
-      config.authToken = integration.encryptedCredentials;
-    }
-
-    return config;
   }
 
   /**

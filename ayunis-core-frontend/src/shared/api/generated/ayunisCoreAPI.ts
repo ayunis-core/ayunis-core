@@ -3664,94 +3664,6 @@ export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<Retu
 
 
 /**
- * @summary List available MCP integrations for organization
- */
-export const agentsControllerListAvailableMcpIntegrations = (
-    agentId: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<McpIntegrationResponseDto[]>(
-      {url: `/agents/${agentId}/mcp-integrations/available`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getAgentsControllerListAvailableMcpIntegrationsQueryKey = (agentId: string,) => {
-    return [`/agents/${agentId}/mcp-integrations/available`] as const;
-    }
-
-    
-export const getAgentsControllerListAvailableMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAgentsControllerListAvailableMcpIntegrationsQueryKey(agentId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>> = ({ signal }) => agentsControllerListAvailableMcpIntegrations(agentId, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(agentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AgentsControllerListAvailableMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>>
-export type AgentsControllerListAvailableMcpIntegrationsQueryError = unknown
-
-
-export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
- agentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>,
-          TError,
-          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
- agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>,
-          TError,
-          Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
- agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List available MCP integrations for organization
- */
-
-export function useAgentsControllerListAvailableMcpIntegrations<TData = Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError = unknown>(
- agentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof agentsControllerListAvailableMcpIntegrations>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAgentsControllerListAvailableMcpIntegrationsQueryOptions(agentId,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * @summary Create a new predefined MCP integration
  */
 export const mcpIntegrationsControllerCreatePredefined = (
@@ -4046,6 +3958,94 @@ export function useMcpIntegrationsControllerListPredefinedConfigs<TData = Awaite
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMcpIntegrationsControllerListPredefinedConfigsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List all available (enabled) MCP integrations for organization
+ */
+export const mcpIntegrationsControllerListAvailable = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto[]>(
+      {url: `/mcp-integrations/available`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getMcpIntegrationsControllerListAvailableQueryKey = () => {
+    return [`/mcp-integrations/available`] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerListAvailableQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerListAvailableQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>> = ({ signal }) => mcpIntegrationsControllerListAvailable(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerListAvailableQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>>
+export type McpIntegrationsControllerListAvailableQueryError = unknown
+
+
+export function useMcpIntegrationsControllerListAvailable<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerListAvailable<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerListAvailable<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all available (enabled) MCP integrations for organization
+ */
+
+export function useMcpIntegrationsControllerListAvailable<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerListAvailable>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerListAvailableQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

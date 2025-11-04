@@ -10,13 +10,13 @@ export const createPredefinedIntegrationSchema = z.object({
     .min(1, 'Name is required')
     .max(255, 'Name must be 255 characters or less'),
   slug: z.string().min(1, 'Predefined integration type is required'),
-  authMethod: z.enum(['API_KEY', 'BEARER_TOKEN']).optional(),
+  authMethod: z.enum(['CUSTOM_HEADER', 'BEARER_TOKEN']).optional(),
   authHeaderName: z.string().optional(),
   credentials: z.string().optional(),
 }) satisfies z.ZodType<{
   name: string;
   slug: string;
-  authMethod?: 'API_KEY' | 'BEARER_TOKEN';
+  authMethod?: 'CUSTOM_HEADER' | 'BEARER_TOKEN';
   authHeaderName?: string;
   credentials?: string;
 }>;
@@ -31,13 +31,13 @@ export const createCustomIntegrationSchema = z.object({
     .min(1, 'Name is required')
     .max(255, 'Name must be 255 characters or less'),
   serverUrl: z.string().url('Server URL must be a valid URL'),
-  authMethod: z.enum(['API_KEY', 'BEARER_TOKEN']).optional(),
+  authMethod: z.enum(['CUSTOM_HEADER', 'BEARER_TOKEN']).optional(),
   authHeaderName: z.string().optional(),
   credentials: z.string().optional(),
 }) satisfies z.ZodType<{
   name: string;
   serverUrl: string;
-  authMethod?: 'API_KEY' | 'BEARER_TOKEN';
+  authMethod?: 'CUSTOM_HEADER' | 'BEARER_TOKEN';
   authHeaderName?: string;
   credentials?: string;
 }>;
@@ -52,12 +52,12 @@ export const updateIntegrationSchema = z.object({
     .min(1, 'Name is required')
     .max(255, 'Name must be 255 characters or less')
     .optional(),
-  authMethod: z.enum(['API_KEY', 'BEARER_TOKEN']).optional(),
+  authMethod: z.enum(['CUSTOM_HEADER', 'BEARER_TOKEN']).optional(),
   authHeaderName: z.string().optional(),
   credentials: z.string().optional(),
 }) satisfies z.ZodType<{
   name?: string;
-  authMethod?: 'API_KEY' | 'BEARER_TOKEN';
+  authMethod?: 'CUSTOM_HEADER' | 'BEARER_TOKEN';
   authHeaderName?: string;
   credentials?: string;
 }>;

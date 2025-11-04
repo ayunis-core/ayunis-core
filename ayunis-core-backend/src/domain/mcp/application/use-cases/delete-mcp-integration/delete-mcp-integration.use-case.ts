@@ -45,7 +45,7 @@ export class DeleteMcpIntegrationUseCase {
       }
 
       // Verify access
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(command.integrationId);
       }
 

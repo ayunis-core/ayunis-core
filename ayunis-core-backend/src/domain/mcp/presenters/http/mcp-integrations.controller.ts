@@ -29,36 +29,34 @@ import { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
 import { McpIntegrationResponseDto } from './dto/mcp-integration-response.dto';
 import { ValidationResponseDto } from './dto/validation-response.dto';
 import { PredefinedConfigResponseDto } from './dto/predefined-config-response.dto';
-import { McpHealthResponseDto } from './dto/mcp-health-response.dto';
 
-// Mapper
+// Mappers
 import { McpIntegrationDtoMapper } from './mappers/mcp-integration-dto.mapper';
+import { PredefinedConfigDtoMapper } from './mappers/predefined-config-dto.mapper';
 
 // Use Cases
 import { CreateMcpIntegrationUseCase } from '../../application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
 import { GetMcpIntegrationUseCase } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
 import { ListOrgMcpIntegrationsUseCase } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
+import { ListAvailableMcpIntegrationsUseCase } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
 import { UpdateMcpIntegrationUseCase } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
 import { DeleteMcpIntegrationUseCase } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.use-case';
 import { EnableMcpIntegrationUseCase } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.use-case';
 import { DisableMcpIntegrationUseCase } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
 import { ValidateMcpIntegrationUseCase } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
-import { GetMcpHealthUseCase } from '../../application/use-cases/get-mcp-health/get-mcp-health.use-case';
 
 // Commands and Queries
 import { CreatePredefinedMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
 import { GetMcpIntegrationQuery } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.query';
 import { ListOrgMcpIntegrationsQuery } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.query';
+import { ListAvailableMcpIntegrationsQuery } from '../../application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.query';
 import { UpdateMcpIntegrationCommand } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.command';
 import { DeleteMcpIntegrationCommand } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.command';
 import { EnableMcpIntegrationCommand } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.command';
 import { DisableMcpIntegrationCommand } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.command';
 import { ValidateMcpIntegrationCommand } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.command';
-
-// Ports
-import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credential-encryption.port';
 
 /**
  * Controller for managing MCP integrations (organization admin level).
@@ -74,15 +72,15 @@ export class McpIntegrationsController {
     private readonly createMcpIntegrationUseCase: CreateMcpIntegrationUseCase,
     private readonly getMcpIntegrationUseCase: GetMcpIntegrationUseCase,
     private readonly listOrgMcpIntegrationsUseCase: ListOrgMcpIntegrationsUseCase,
+    private readonly listAvailableMcpIntegrationsUseCase: ListAvailableMcpIntegrationsUseCase,
     private readonly updateMcpIntegrationUseCase: UpdateMcpIntegrationUseCase,
     private readonly deleteMcpIntegrationUseCase: DeleteMcpIntegrationUseCase,
     private readonly enableMcpIntegrationUseCase: EnableMcpIntegrationUseCase,
     private readonly disableMcpIntegrationUseCase: DisableMcpIntegrationUseCase,
     private readonly validateMcpIntegrationUseCase: ValidateMcpIntegrationUseCase,
     private readonly listPredefinedConfigsUseCase: ListPredefinedMcpIntegrationConfigsUseCase,
-    private readonly getMcpHealthUseCase: GetMcpHealthUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
-    private readonly credentialEncryption: McpCredentialEncryptionPort,
+    private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
   ) {}
 
   @Post('predefined')
@@ -107,17 +105,12 @@ export class McpIntegrationsController {
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('createPredefined', { name: dto.name, slug: dto.slug });
 
-    // Encrypt credentials at HTTP layer
-    const encryptedCreds = dto.credentials
-      ? await this.credentialEncryption.encrypt(dto.credentials)
-      : undefined;
-
     const command = new CreatePredefinedMcpIntegrationCommand(
       dto.name,
       dto.slug,
       dto.authMethod,
       dto.authHeaderName,
-      encryptedCreds,
+      dto.credentials,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -142,17 +135,12 @@ export class McpIntegrationsController {
       serverUrl: dto.serverUrl,
     });
 
-    // Encrypt credentials at HTTP layer
-    const encryptedCreds = dto.credentials
-      ? await this.credentialEncryption.encrypt(dto.credentials)
-      : undefined;
-
     const command = new CreateCustomMcpIntegrationCommand(
       dto.name,
       dto.serverUrl,
       dto.authMethod,
       dto.authHeaderName,
-      encryptedCreds,
+      dto.credentials,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -192,14 +180,26 @@ export class McpIntegrationsController {
 
     const configs = this.listPredefinedConfigsUseCase.execute();
 
-    // Map to response DTOs (excluding server URL for security)
-    return configs.map((config) => ({
-      slug: config.slug,
-      displayName: config.displayName,
-      description: config.description,
-      defaultAuthMethod: config.defaultAuthMethod,
-      defaultAuthHeaderName: config.defaultAuthHeaderName,
-    }));
+    return this.predefinedConfigDtoMapper.toDtoArray(configs);
+  }
+
+  @Get('available')
+  @ApiOperation({
+    summary: 'List all available (enabled) MCP integrations for organization',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of available enabled integrations',
+    type: [McpIntegrationResponseDto],
+  })
+  async listAvailable(): Promise<McpIntegrationResponseDto[]> {
+    this.logger.log('listAvailableMcpIntegrations');
+
+    const integrations = await this.listAvailableMcpIntegrationsUseCase.execute(
+      new ListAvailableMcpIntegrationsQuery(),
+    );
+
+    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
   }
 
   @Get(':id')
@@ -242,18 +242,7 @@ export class McpIntegrationsController {
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('update', { id });
 
-    // Encrypt credentials if provided
-    const encryptedCreds = dto.credentials
-      ? await this.credentialEncryption.encrypt(dto.credentials)
-      : undefined;
-
-    const command = new UpdateMcpIntegrationCommand(
-      id,
-      dto.name,
-      dto.authMethod,
-      dto.authHeaderName,
-      encryptedCreds,
-    );
+    const command = new UpdateMcpIntegrationCommand(id, dto.name);
 
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
     return this.mcpIntegrationDtoMapper.toDto(integration);
@@ -346,46 +335,6 @@ export class McpIntegrationsController {
         prompts: result.promptCount || 0,
       },
       error: result.errorMessage,
-    };
-  }
-
-  @Get('health')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Check MCP integrations health',
-    description:
-      'Endpoint for monitoring MCP integration health. Returns cached status without live validation.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'At least one integration is healthy',
-    type: McpHealthResponseDto,
-  })
-  @ApiResponse({
-    status: 503,
-    description: 'All integrations are unhealthy or none exist',
-    type: McpHealthResponseDto,
-  })
-  async getHealth(): Promise<McpHealthResponseDto> {
-    this.logger.log('getHealth');
-
-    const result = await this.getMcpHealthUseCase.execute();
-
-    // Return appropriate HTTP status code based on health
-    // Note: HttpCode decorator above handles 200, we set 503 in response header if needed
-    // For monitoring tools, we return 200 with status in body for both cases
-
-    return {
-      status: result.status,
-      timestamp: result.timestamp,
-      integrations: result.integrations.map((integration) => ({
-        id: integration.id,
-        name: integration.name,
-        type: integration.type,
-        status: integration.status,
-        lastChecked: integration.lastChecked,
-        enabled: integration.enabled,
-      })),
     };
   }
 }

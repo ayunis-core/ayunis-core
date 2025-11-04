@@ -6,7 +6,7 @@ import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientPort, McpToolResult } from '../../ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -18,15 +18,15 @@ import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 describe('ExecuteMcpToolUseCase', () => {
   let useCase: ExecuteMcpToolUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let mcpClient: McpClientPort;
   let credentialEncryption: McpCredentialEncryptionPort;
-  let registryService: PredefinedMcpIntegrationRegistryService;
+  let registryService: PredefinedMcpIntegrationRegistry;
   let contextService: ContextService;
   let loggerLogSpy: jest.SpyInstance;
   let loggerWarnSpy: jest.SpyInstance;
@@ -60,7 +60,7 @@ describe('ExecuteMcpToolUseCase', () => {
           },
         },
         {
-          provide: PredefinedMcpIntegrationRegistryService,
+          provide: PredefinedMcpIntegrationRegistry,
           useValue: {
             getConfig: jest.fn(),
           },
@@ -82,8 +82,8 @@ describe('ExecuteMcpToolUseCase', () => {
     credentialEncryption = module.get<McpCredentialEncryptionPort>(
       McpCredentialEncryptionPort,
     );
-    registryService = module.get<PredefinedMcpIntegrationRegistryService>(
-      PredefinedMcpIntegrationRegistryService,
+    registryService = module.get<PredefinedMcpIntegrationRegistry>(
+      PredefinedMcpIntegrationRegistry,
     );
     contextService = module.get<ContextService>(ContextService);
 
@@ -119,7 +119,7 @@ describe('ExecuteMcpToolUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'callTool').mockResolvedValue(mockToolResult);
 
@@ -179,7 +179,7 @@ describe('ExecuteMcpToolUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'callTool').mockRejectedValue(toolError);
 
@@ -224,7 +224,7 @@ describe('ExecuteMcpToolUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'callTool').mockRejectedValue(toolError);
 
@@ -374,7 +374,7 @@ describe('ExecuteMcpToolUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'callTool').mockResolvedValue(mockToolResult);
 
@@ -438,7 +438,7 @@ describe('ExecuteMcpToolUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
       });
       jest.spyOn(mcpClient, 'callTool').mockResolvedValue(mockToolResult);
 
@@ -486,7 +486,7 @@ describe('ExecuteMcpToolUseCase', () => {
         slug: PredefinedMcpIntegrationSlug.TEST,
         displayName: 'Test',
         description: 'Test',
-        url: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
         defaultAuthMethod: McpAuthMethod.BEARER_TOKEN,
         defaultAuthHeaderName: 'Authorization',
       });
@@ -610,7 +610,7 @@ describe('ExecuteMcpToolUseCase', () => {
         expect.any(Object),
       );
       // Should not have auth fields
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       const callArgs = (mcpClient.callTool as jest.Mock).mock
         .calls[0][0] as Record<string, unknown>;
       expect(callArgs).not.toHaveProperty('authHeaderName');

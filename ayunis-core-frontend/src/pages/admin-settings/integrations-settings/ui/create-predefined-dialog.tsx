@@ -180,7 +180,7 @@ export function CreatePredefinedDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="API_KEY">
+                          <SelectItem value="CUSTOM_HEADER">
                             {t(
                               "integrations.createPredefinedDialog.authMethodApiKey",
                             )}
@@ -252,7 +252,7 @@ export function CreatePredefinedDialog({
                             />
                           </FormControl>
                           <FormDescription>
-                            {selectedAuthMethod === "API_KEY"
+                            {selectedAuthMethod === "CUSTOM_HEADER"
                               ? t(
                                   "integrations.createPredefinedDialog.credentialsDescriptionApiKey",
                                 )

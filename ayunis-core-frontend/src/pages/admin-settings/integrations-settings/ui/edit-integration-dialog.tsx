@@ -59,7 +59,7 @@ export function EditIntegrationDialog({
       form.reset({
         name: integration.name,
         authMethod: integration.authMethod as
-          | "API_KEY"
+          | "CUSTOM_HEADER"
           | "BEARER_TOKEN"
           | undefined,
         authHeaderName: integration.authHeaderName || "",
@@ -143,7 +143,7 @@ export function EditIntegrationDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="API_KEY">
+                      <SelectItem value="CUSTOM_HEADER">
                         {t("integrations.editDialog.authMethodApiKey")}
                       </SelectItem>
                       <SelectItem value="BEARER_TOKEN">

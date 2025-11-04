@@ -36,7 +36,7 @@ export class DisableMcpIntegrationUseCase {
       }
 
       // Verify organization access
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(command.integrationId);
       }
 

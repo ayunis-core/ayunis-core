@@ -1,17 +1,23 @@
 import { randomUUID } from 'crypto';
 import { McpIntegrationMapper } from './mcp-integration.mapper';
+import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
+import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from '../../../../domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from '../../../../domain/auth/oauth-mcp-integration-auth.entity';
 import {
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-  McpIntegration,
-} from '../../../../domain/mcp-integration.entity';
-import {
-  PredefinedMcpIntegrationRecord,
+  BearerMcpIntegrationAuthRecord,
+  CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
+  McpIntegrationAuthRecord,
   McpIntegrationRecord,
-} from '../schema/mcp-integration.record';
-import { McpAuthMethod } from '../../../../domain/mcp-auth-method.enum';
-import { PredefinedMcpIntegrationSlug } from '../../../../domain/predefined-mcp-integration-slug.enum';
+  NoAuthMcpIntegrationAuthRecord,
+  OAuthMcpIntegrationAuthRecord,
+  PredefinedMcpIntegrationRecord,
+} from '../schema';
 
 describe('McpIntegrationMapper', () => {
   let mapper: McpIntegrationMapper;
@@ -20,259 +26,200 @@ describe('McpIntegrationMapper', () => {
     mapper = new McpIntegrationMapper();
   });
 
+  const baseParams = {
+    orgId: 'org-123',
+    name: 'Test Integration',
+    serverUrl: 'https://example.com/mcp',
+    enabled: true,
+    createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2025-01-01T00:00:00.000Z'),
+    connectionStatus: 'pending',
+  } as const;
+
+  describe('toRecord', () => {
+    it('maps custom integration with no auth', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+      const integration = new CustomMcpIntegration({
+        ...baseParams,
+        auth,
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
+      expect(record.orgId).toBe(baseParams.orgId);
+      expect(record.auth).toBeInstanceOf(NoAuthMcpIntegrationAuthRecord);
+      expect((record.auth as McpIntegrationAuthRecord).integrationId).toBe(
+        record.id,
+      );
+    });
+
+    it('maps predefined integration with bearer auth and slug', () => {
+      const auth = new BearerMcpIntegrationAuth({
+        authToken: 'encrypted-token',
+      });
+      const integration = new PredefinedMcpIntegration({
+        ...baseParams,
+        auth,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
+      expect(record.predefinedSlug).toBe(PredefinedMcpIntegrationSlug.TEST);
+      expect(record.auth).toBeInstanceOf(BearerMcpIntegrationAuthRecord);
+      expect((record.auth as BearerMcpIntegrationAuthRecord).authToken).toBe(
+        'encrypted-token',
+      );
+    });
+
+    it('maps custom integration with custom header auth', () => {
+      const auth = new CustomHeaderMcpIntegrationAuth({
+        secret: 'encrypted-secret',
+        headerName: 'X-API-Key',
+      });
+      const integration = new CustomMcpIntegration({
+        ...baseParams,
+        auth,
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record.auth).toBeInstanceOf(CustomHeaderMcpIntegrationAuthRecord);
+      expect(
+        (record.auth as CustomHeaderMcpIntegrationAuthRecord).headerName,
+      ).toBe('X-API-Key');
+    });
+
+    it('maps custom integration with oauth auth', () => {
+      const expiresAt = new Date('2025-01-02T00:00:00.000Z');
+      const auth = new OAuthMcpIntegrationAuth({
+        clientId: 'client',
+        clientSecret: 'secret',
+        accessToken: 'access',
+        tokenExpiresAt: expiresAt,
+      });
+      const integration = new CustomMcpIntegration({
+        ...baseParams,
+        auth,
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record.auth).toBeInstanceOf(OAuthMcpIntegrationAuthRecord);
+      expect((record.auth as OAuthMcpIntegrationAuthRecord).clientId).toBe(
+        'client',
+      );
+      expect(
+        (record.auth as OAuthMcpIntegrationAuthRecord).tokenExpiresAt,
+      ).toBe(expiresAt);
+    });
+  });
+
   describe('toDomain', () => {
-    describe('PredefinedMcpIntegration', () => {
-      it('should map predefined record to domain entity', () => {
-        // Arrange
-        const record = new PredefinedMcpIntegrationRecord();
-        record.id = randomUUID();
-        record.name = 'Test Integration';
-        record.organizationId = randomUUID();
-        record.slug = PredefinedMcpIntegrationSlug.TEST;
-        record.enabled = true;
-        record.authMethod = McpAuthMethod.API_KEY;
-        record.authHeaderName = 'X-API-Key';
-        record.encryptedCredentials = 'encrypted-value';
-        record.createdAt = new Date('2024-01-01');
-        record.updatedAt = new Date('2024-01-02');
+    it('maps custom integration with no auth', () => {
+      const record = new CustomMcpIntegrationRecord();
+      record.id = randomUUID();
+      record.orgId = baseParams.orgId;
+      record.name = baseParams.name;
+      record.serverUrl = baseParams.serverUrl;
+      record.enabled = baseParams.enabled;
+      record.connectionStatus = baseParams.connectionStatus;
+      record.createdAt = baseParams.createdAt;
+      record.updatedAt = baseParams.updatedAt;
 
-        // Act
-        const domain = mapper.toDomain(record);
+      const authRecord = new NoAuthMcpIntegrationAuthRecord();
+      authRecord.id = randomUUID();
+      authRecord.integrationId = record.id;
+      authRecord.createdAt = baseParams.createdAt;
+      authRecord.updatedAt = baseParams.updatedAt;
+      authRecord.integration = record;
+      record.auth = authRecord;
 
-        // Assert
-        expect(domain).toBeInstanceOf(PredefinedMcpIntegration);
-        expect(domain.id).toBe(record.id);
-        expect(domain.name).toBe(record.name);
-        expect(domain.organizationId).toBe(record.organizationId);
-        expect(domain.type).toBe('predefined');
-        expect((domain as PredefinedMcpIntegration).slug).toBe(record.slug);
-        expect(domain.enabled).toBe(record.enabled);
-        expect(domain.authMethod).toBe(record.authMethod);
-        expect(domain.authHeaderName).toBe(record.authHeaderName);
-        expect(domain.encryptedCredentials).toBe(record.encryptedCredentials);
-        expect(domain.createdAt).toEqual(record.createdAt);
-        expect(domain.updatedAt).toEqual(record.updatedAt);
-      });
+      const domain = mapper.toDomain(record);
 
-      it('should map predefined record with minimal fields', () => {
-        // Arrange
-        const record = new PredefinedMcpIntegrationRecord();
-        record.id = randomUUID();
-        record.name = 'Minimal Integration';
-        record.organizationId = randomUUID();
-        record.slug = PredefinedMcpIntegrationSlug.TEST;
-        record.enabled = false;
-        record.createdAt = new Date();
-        record.updatedAt = new Date();
-
-        // Act
-        const domain = mapper.toDomain(record);
-
-        // Assert
-        expect(domain).toBeInstanceOf(PredefinedMcpIntegration);
-        expect(domain.authMethod).toBeUndefined();
-        expect(domain.authHeaderName).toBeUndefined();
-        expect(domain.encryptedCredentials).toBeUndefined();
-      });
+      expect(domain).toBeInstanceOf(CustomMcpIntegration);
+      expect(domain.kind).toBe(McpIntegrationKind.CUSTOM);
+      expect(domain.auth).toBeInstanceOf(NoAuthMcpIntegrationAuth);
     });
 
-    describe('CustomMcpIntegration', () => {
-      it('should map custom record to domain entity', () => {
-        // Arrange
-        const record = new CustomMcpIntegrationRecord();
-        record.id = randomUUID();
-        record.name = 'Custom Integration';
-        record.organizationId = randomUUID();
-        record.serverUrl = 'http://custom-server.com';
-        record.enabled = true;
-        record.authMethod = McpAuthMethod.BEARER_TOKEN;
-        record.authHeaderName = 'Authorization';
-        record.encryptedCredentials = 'encrypted-token';
-        record.createdAt = new Date('2024-01-01');
-        record.updatedAt = new Date('2024-01-02');
+    it('maps predefined integration with bearer auth', () => {
+      const record = new PredefinedMcpIntegrationRecord();
+      record.id = randomUUID();
+      record.orgId = baseParams.orgId;
+      record.name = baseParams.name;
+      record.serverUrl = baseParams.serverUrl;
+      record.predefinedSlug = PredefinedMcpIntegrationSlug.LOCABOO;
+      record.enabled = baseParams.enabled;
+      record.createdAt = baseParams.createdAt;
+      record.updatedAt = baseParams.updatedAt;
+      record.connectionStatus = 'connected';
 
-        // Act
-        const domain = mapper.toDomain(record);
+      const authRecord = new BearerMcpIntegrationAuthRecord();
+      authRecord.id = randomUUID();
+      authRecord.integrationId = record.id;
+      authRecord.authToken = 'encrypted';
+      authRecord.integration = record;
+      authRecord.createdAt = baseParams.createdAt;
+      authRecord.updatedAt = baseParams.updatedAt;
+      record.auth = authRecord;
 
-        // Assert
-        expect(domain).toBeInstanceOf(CustomMcpIntegration);
-        expect(domain.id).toBe(record.id);
-        expect(domain.name).toBe(record.name);
-        expect(domain.organizationId).toBe(record.organizationId);
-        expect(domain.type).toBe('custom');
-        expect((domain as CustomMcpIntegration).serverUrl).toBe(
-          record.serverUrl,
-        );
-        expect(domain.enabled).toBe(record.enabled);
-        expect(domain.authMethod).toBe(record.authMethod);
-        expect(domain.authHeaderName).toBe(record.authHeaderName);
-        expect(domain.encryptedCredentials).toBe(record.encryptedCredentials);
-        expect(domain.createdAt).toEqual(record.createdAt);
-        expect(domain.updatedAt).toEqual(record.updatedAt);
-      });
+      const domain = mapper.toDomain(record);
 
-      it('should map custom record with minimal fields', () => {
-        // Arrange
-        const record = new CustomMcpIntegrationRecord();
-        record.id = randomUUID();
-        record.name = 'Minimal Custom';
-        record.organizationId = randomUUID();
-        record.serverUrl = 'http://example.com';
-        record.enabled = true;
-        record.createdAt = new Date();
-        record.updatedAt = new Date();
-
-        // Act
-        const domain = mapper.toDomain(record);
-
-        // Assert
-        expect(domain).toBeInstanceOf(CustomMcpIntegration);
-        expect(domain.authMethod).toBeUndefined();
-        expect(domain.authHeaderName).toBeUndefined();
-        expect(domain.encryptedCredentials).toBeUndefined();
-      });
+      expect(domain).toBeInstanceOf(PredefinedMcpIntegration);
+      expect(domain.kind).toBe(McpIntegrationKind.PREDEFINED);
+      expect(domain.auth).toBeInstanceOf(BearerMcpIntegrationAuth);
+      expect((domain.auth as BearerMcpIntegrationAuth).authToken).toBe(
+        'encrypted',
+      );
     });
 
-    it('should throw error for unknown record type', () => {
-      // Arrange
-      const record = {
-        id: randomUUID(),
-      } as unknown as McpIntegrationRecord;
+    it('maps custom integration with custom header auth', () => {
+      const record = new CustomMcpIntegrationRecord();
+      record.id = randomUUID();
+      record.orgId = baseParams.orgId;
+      record.name = baseParams.name;
+      record.serverUrl = baseParams.serverUrl;
+      record.enabled = baseParams.enabled;
+      record.createdAt = baseParams.createdAt;
+      record.updatedAt = baseParams.updatedAt;
 
-      // Act & Assert
-      expect(() => mapper.toDomain(record)).toThrow(
-        'Unknown MCP integration record type',
+      const authRecord = new CustomHeaderMcpIntegrationAuthRecord();
+      authRecord.id = randomUUID();
+      authRecord.integrationId = record.id;
+      authRecord.secret = 'encrypted-secret';
+      authRecord.headerName = 'X-API-Key';
+      authRecord.integration = record;
+      authRecord.createdAt = baseParams.createdAt;
+      authRecord.updatedAt = baseParams.updatedAt;
+      record.auth = authRecord;
+
+      const domain = mapper.toDomain(record);
+
+      expect(domain.auth).toBeInstanceOf(CustomHeaderMcpIntegrationAuth);
+      expect((domain.auth as CustomHeaderMcpIntegrationAuth).secret).toBe(
+        'encrypted-secret',
       );
     });
   });
 
-  describe('toRecord', () => {
-    describe('PredefinedMcpIntegration', () => {
-      it('should map predefined domain entity to record', () => {
-        // Arrange
-        const domain = new PredefinedMcpIntegration({
-          id: randomUUID(),
-          name: 'Test Integration',
-          organizationId: randomUUID(),
-          slug: PredefinedMcpIntegrationSlug.TEST,
-          enabled: true,
-          authMethod: McpAuthMethod.API_KEY,
-          authHeaderName: 'X-API-Key',
-          encryptedCredentials: 'encrypted-value',
-          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-02'),
-        });
-
-        // Act
-        const record = mapper.toRecord(domain);
-
-        // Assert
-        expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
-        expect(record.id).toBe(domain.id);
-        expect(record.name).toBe(domain.name);
-        expect(record.organizationId).toBe(domain.organizationId);
-        expect((record as PredefinedMcpIntegrationRecord).slug).toBe(
-          domain.slug,
-        );
-        expect(record.enabled).toBe(domain.enabled);
-        expect(record.authMethod).toBe(domain.authMethod);
-        expect(record.authHeaderName).toBe(domain.authHeaderName);
-        expect(record.encryptedCredentials).toBe(domain.encryptedCredentials);
-        expect(record.createdAt).toEqual(domain.createdAt);
-        expect(record.updatedAt).toEqual(domain.updatedAt);
-      });
-
-      it('should map predefined domain entity with minimal fields', () => {
-        // Arrange
-        const domain = new PredefinedMcpIntegration({
-          id: randomUUID(),
-          name: 'Minimal Integration',
-          organizationId: randomUUID(),
-          slug: PredefinedMcpIntegrationSlug.TEST,
-          enabled: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-
-        // Act
-        const record = mapper.toRecord(domain);
-
-        // Assert
-        expect(record).toBeInstanceOf(PredefinedMcpIntegrationRecord);
-        expect(record.authMethod).toBeUndefined();
-        expect(record.authHeaderName).toBeUndefined();
-        expect(record.encryptedCredentials).toBeUndefined();
-      });
+  it('round-trips an integration through record mapping', () => {
+    const auth = new CustomHeaderMcpIntegrationAuth({
+      secret: 'encrypted-secret',
+      headerName: 'X-API-Key',
+    });
+    const original = new CustomMcpIntegration({
+      ...baseParams,
+      auth,
     });
 
-    describe('CustomMcpIntegration', () => {
-      it('should map custom domain entity to record', () => {
-        // Arrange
-        const domain = new CustomMcpIntegration({
-          id: randomUUID(),
-          name: 'Custom Integration',
-          organizationId: randomUUID(),
-          serverUrl: 'http://custom-server.com',
-          enabled: true,
-          authMethod: McpAuthMethod.BEARER_TOKEN,
-          authHeaderName: 'Authorization',
-          encryptedCredentials: 'encrypted-token',
-          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-02'),
-        });
+    const record = mapper.toRecord(original);
+    const reconstructed = mapper.toDomain(record);
 
-        // Act
-        const record = mapper.toRecord(domain);
-
-        // Assert
-        expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
-        expect(record.id).toBe(domain.id);
-        expect(record.name).toBe(domain.name);
-        expect(record.organizationId).toBe(domain.organizationId);
-        expect((record as CustomMcpIntegrationRecord).serverUrl).toBe(
-          domain.serverUrl,
-        );
-        expect(record.enabled).toBe(domain.enabled);
-        expect(record.authMethod).toBe(domain.authMethod);
-        expect(record.authHeaderName).toBe(domain.authHeaderName);
-        expect(record.encryptedCredentials).toBe(domain.encryptedCredentials);
-        expect(record.createdAt).toEqual(domain.createdAt);
-        expect(record.updatedAt).toEqual(domain.updatedAt);
-      });
-
-      it('should map custom domain entity with minimal fields', () => {
-        // Arrange
-        const domain = new CustomMcpIntegration({
-          id: randomUUID(),
-          name: 'Minimal Custom',
-          organizationId: randomUUID(),
-          serverUrl: 'http://example.com',
-          enabled: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-
-        // Act
-        const record = mapper.toRecord(domain);
-
-        // Assert
-        expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
-        expect(record.authMethod).toBeUndefined();
-        expect(record.authHeaderName).toBeUndefined();
-        expect(record.encryptedCredentials).toBeUndefined();
-      });
-    });
-
-    it('should throw error for unknown entity type', () => {
-      // Arrange
-      const entity = {
-        type: 'unknown',
-      } as unknown as McpIntegration;
-
-      // Act & Assert
-      expect(() => mapper.toRecord(entity)).toThrow(
-        'Unknown MCP integration entity type',
-      );
-    });
+    expect(reconstructed.kind).toBe(McpIntegrationKind.CUSTOM);
+    expect(
+      (reconstructed.auth as CustomHeaderMcpIntegrationAuth).headerName,
+    ).toBe('X-API-Key');
   });
 });

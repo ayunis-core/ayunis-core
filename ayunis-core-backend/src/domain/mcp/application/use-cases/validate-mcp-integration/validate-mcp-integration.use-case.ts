@@ -1,12 +1,8 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { UUID } from 'crypto';
 import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import {
-  McpClientPort,
-  McpConnectionConfig,
-} from '../../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -14,11 +10,7 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  McpIntegration,
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
+import { McpIntegration } from '../../../domain/mcp-integration.entity';
 
 /**
  * Result of MCP integration validation
@@ -37,75 +29,70 @@ export class ValidateMcpIntegrationUseCase {
 
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
-    private readonly mcpClient: McpClientPort,
-    private readonly credentialEncryption: McpCredentialEncryptionPort,
-    private readonly registryService: PredefinedMcpIntegrationRegistryService,
+    private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(
     command: ValidateMcpIntegrationCommand,
   ): Promise<ValidationResult> {
-    this.logger.log('validateMcpIntegration');
+    this.logger.log('validateMcpIntegration', {
+      id: command.integrationId,
+    });
 
     try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
+      const orgId = this.getOrgIdOrThrow();
+      const integration = await this.getIntegrationOrThrow(
+        command.integrationId,
+      );
 
-      const integration = await this.repository.findById(command.integrationId);
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(command.integrationId);
-      }
+      this.ensureOrgAccess(integration, orgId);
 
-      if (integration.organizationId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(
-          command.integrationId,
-          integration.name,
-        );
-      }
+      const capabilityResult = await this.collectCapabilities(
+        integration,
+        command.integrationId,
+      );
 
-      // Build connection config
-      const connectionConfig = await this.buildConnectionConfig(integration);
-
-      // Attempt connection and capability discovery
-      try {
-        const [tools, resources, resourceTemplates, prompts] =
-          await Promise.all([
-            this.mcpClient.listTools(connectionConfig),
-            this.mcpClient.listResources(connectionConfig),
-            this.mcpClient.listResourceTemplates(connectionConfig),
-            this.mcpClient.listPrompts(connectionConfig),
-          ]);
-
-        this.logger.log('validationSucceeded', {
-          id: command.integrationId,
-          toolCount: tools.length,
-          resourceCount: resources.length,
-          promptCount: prompts.length,
-        });
-
+      if (capabilityResult.kind === 'failure') {
         return {
-          isValid: true,
-          toolCount: tools.length,
-          resourceCount: resources.length + resourceTemplates.length,
-          promptCount: prompts.length,
+          isValid: false,
+          errorMessage: capabilityResult.error,
         };
-      } catch (connectionError) {
-        const errorMsg =
-          (connectionError as Error).message || 'Connection failed';
+      }
+
+      const { tools, resources, resourceTemplates, prompts } = capabilityResult;
+      const toolCount = tools.length;
+      const resourceCount = resources.length + resourceTemplates.length;
+      const promptCount = prompts.length;
+      const totalCapabilities = toolCount + resourceCount + promptCount;
+
+      if (totalCapabilities === 0) {
+        const errorMessage = 'No capabilities found on MCP server';
 
         this.logger.warn('validationFailed', {
           id: command.integrationId,
-          error: errorMsg,
+          error: errorMessage,
         });
 
         return {
           isValid: false,
-          errorMessage: errorMsg,
+          errorMessage,
         };
       }
+
+      this.logger.log('validationSucceeded', {
+        id: command.integrationId,
+        toolCount,
+        resourceCount,
+        promptCount,
+      });
+
+      return {
+        isValid: true,
+        toolCount,
+        resourceCount,
+        promptCount,
+      };
     } catch (error) {
       if (
         error instanceof ApplicationError ||
@@ -124,42 +111,148 @@ export class ValidateMcpIntegrationUseCase {
     }
   }
 
-  /**
-   * Builds MCP connection config from integration entity
-   */
-  private async buildConnectionConfig(
-    integration: McpIntegration,
-  ): Promise<McpConnectionConfig> {
-    let serverUrl: string;
+  private getOrgIdOrThrow(): UUID {
+    const orgId = this.contextService.get('orgId');
 
-    // Get server URL based on integration type
-    if (integration.type === 'predefined') {
-      const predefinedIntegration = integration as PredefinedMcpIntegration;
-      const config = this.registryService.getConfig(predefinedIntegration.slug);
-      serverUrl = config.url;
-    } else {
-      const customIntegration = integration as CustomMcpIntegration;
-      serverUrl = customIntegration.serverUrl;
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
     }
 
-    const connectionConfig: McpConnectionConfig = {
-      serverUrl,
-    };
+    return orgId;
+  }
 
-    // Add authentication if configured
-    if (
-      integration.authMethod &&
-      integration.authHeaderName &&
-      integration.encryptedCredentials
-    ) {
-      const decryptedToken = await this.credentialEncryption.decrypt(
-        integration.encryptedCredentials,
+  private async getIntegrationOrThrow(
+    integrationId: UUID,
+  ): Promise<McpIntegration> {
+    const integration = await this.repository.findById(integrationId);
+
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(integrationId);
+    }
+
+    return integration;
+  }
+
+  private ensureOrgAccess(integration: McpIntegration, orgId: UUID): void {
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(
+        integration.id,
+        integration.name,
       );
+    }
+  }
 
-      connectionConfig.authHeaderName = integration.authHeaderName;
-      connectionConfig.authToken = decryptedToken;
+  private async collectCapabilities(
+    integration: McpIntegration,
+    integrationId: UUID,
+  ): Promise<
+    | {
+        kind: 'success';
+        tools: unknown[];
+        resources: unknown[];
+        resourceTemplates: unknown[];
+        prompts: unknown[];
+      }
+    | { kind: 'failure'; error: string }
+  > {
+    const requests: [
+      Promise<unknown[]>,
+      Promise<unknown[]>,
+      Promise<unknown[]>,
+      Promise<unknown[]>,
+    ] = [
+      this.mcpClientService.listTools(integration),
+      this.mcpClientService.listResources(integration),
+      this.mcpClientService.listResourceTemplates(integration),
+      this.mcpClientService.listPrompts(integration),
+    ];
+
+    const [toolsResult, resourcesResult, templatesResult, promptsResult] =
+      await Promise.allSettled(requests);
+
+    let criticalFailure: PromiseRejectedResult | undefined;
+
+    for (const result of [
+      toolsResult,
+      resourcesResult,
+      templatesResult,
+      promptsResult,
+    ]) {
+      if (this.isCriticalFailure(result)) {
+        criticalFailure = result;
+        break;
+      }
     }
 
-    return connectionConfig;
+    if (criticalFailure) {
+      const errorMessage = this.extractErrorMessage(criticalFailure.reason);
+
+      this.logger.warn('validationFailed', {
+        id: integrationId,
+        error: errorMessage,
+      });
+
+      return {
+        kind: 'failure',
+        error: errorMessage,
+      };
+    }
+
+    return {
+      kind: 'success',
+      tools: this.extractArray(toolsResult),
+      resources: this.extractArray(resourcesResult),
+      resourceTemplates: this.extractArray(templatesResult),
+      prompts: this.extractArray(promptsResult),
+    };
+  }
+
+  private isCriticalFailure(
+    result: PromiseSettledResult<unknown[]>,
+  ): result is PromiseRejectedResult {
+    return (
+      result.status === 'rejected' && !this.isMethodMissingError(result.reason)
+    );
+  }
+
+  private isMethodMissingError(reason: unknown): boolean {
+    if (!reason || typeof reason !== 'object') {
+      return false;
+    }
+
+    const message = this.extractMessage(reason);
+    const code = (reason as { code?: unknown }).code;
+
+    return message.includes('Method not found') || code === -32601;
+  }
+
+  private extractArray(result: PromiseSettledResult<unknown[]>): unknown[] {
+    return result.status === 'fulfilled' ? result.value : [];
+  }
+
+  private extractErrorMessage(reason: unknown): string {
+    const message = this.extractMessage(reason);
+
+    if (message.trim()) {
+      return message;
+    }
+
+    return 'Connection failed';
+  }
+
+  private extractMessage(reason: unknown): string {
+    if (reason instanceof Error) {
+      return reason.message ?? '';
+    }
+
+    if (reason && typeof reason === 'object' && 'message' in reason) {
+      const message = (reason as { message?: unknown }).message;
+
+      if (typeof message === 'string') {
+        return message;
+      }
+    }
+
+    return '';
   }
 }

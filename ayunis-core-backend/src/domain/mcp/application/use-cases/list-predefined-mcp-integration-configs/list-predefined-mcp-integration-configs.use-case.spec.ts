@@ -2,13 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from './list-predefined-mcp-integration-configs.use-case';
 import { ListPredefinedMcpIntegrationConfigsQuery } from './list-predefined-mcp-integration-configs.query';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/predefined-mcp-integration-slug.enum';
+import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
   let useCase: ListPredefinedMcpIntegrationConfigsUseCase;
-  let registryService: PredefinedMcpIntegrationRegistryService;
+  let registryService: PredefinedMcpIntegrationRegistry;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
@@ -17,7 +18,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
       providers: [
         ListPredefinedMcpIntegrationConfigsUseCase,
         {
-          provide: PredefinedMcpIntegrationRegistryService,
+          provide: PredefinedMcpIntegrationRegistry,
           useValue: {
             getAllConfigs: jest.fn(),
           },
@@ -28,8 +29,8 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
     useCase = module.get<ListPredefinedMcpIntegrationConfigsUseCase>(
       ListPredefinedMcpIntegrationConfigsUseCase,
     );
-    registryService = module.get<PredefinedMcpIntegrationRegistryService>(
-      PredefinedMcpIntegrationRegistryService,
+    registryService = module.get<PredefinedMcpIntegrationRegistry>(
+      PredefinedMcpIntegrationRegistry,
     );
 
     // Spy on logger methods
@@ -49,7 +50,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
           slug: PredefinedMcpIntegrationSlug.TEST,
           displayName: 'Test MCP Server',
           description: 'Test integration',
-          url: 'http://localhost:3100/mcp',
+          authType: McpAuthMethod.NO_AUTH,
         },
       ];
       jest.spyOn(registryService, 'getAllConfigs').mockReturnValue(mockConfigs);
@@ -122,9 +123,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
 
       // Should only have PredefinedMcpIntegrationRegistryService
       expect(constructorParams.length).toBe(1);
-      expect(constructorParams[0]).toBe(
-        PredefinedMcpIntegrationRegistryService,
-      );
+      expect(constructorParams[0]).toBe(PredefinedMcpIntegrationRegistry);
     });
   });
 });

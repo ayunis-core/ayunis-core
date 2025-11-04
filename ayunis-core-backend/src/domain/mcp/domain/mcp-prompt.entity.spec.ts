@@ -97,7 +97,12 @@ describe('McpPrompt', () => {
       { name: 'third', required: true },
     ];
 
-    const prompt = new McpPrompt('ordered-prompt', 'Test order', args, randomUUID());
+    const prompt = new McpPrompt(
+      'ordered-prompt',
+      'Test order',
+      args,
+      randomUUID(),
+    );
 
     expect(prompt.arguments[0].name).toBe('first');
     expect(prompt.arguments[1].name).toBe('second');

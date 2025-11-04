@@ -85,7 +85,7 @@ export class AssignMcpIntegrationToAgentUseCase {
       }
 
       // Validate integration belongs to same org
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationWrongOrganizationError(command.integrationId);
       }
 

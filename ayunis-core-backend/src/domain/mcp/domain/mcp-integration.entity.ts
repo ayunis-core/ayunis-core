@@ -1,151 +1,110 @@
 import { randomUUID, UUID } from 'crypto';
-import { McpAuthMethod } from './mcp-auth-method.enum';
-import { PredefinedMcpIntegrationSlug } from './predefined-mcp-integration-slug.enum';
+import { McpIntegrationAuth } from './auth/mcp-integration-auth.entity';
+import { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
+import { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
 
 /**
- * Abstract base class for all MCP integrations.
- * Defines common fields and business logic shared by all integration types.
+ * Base domain model for MCP integrations. Holds shared metadata while delegating
+ * integration-specific fields (e.g. slug, serverUrl) to concrete subclasses and
+ * authentication concerns to the composed `McpIntegrationAuth` hierarchy.
  */
 export abstract class McpIntegration {
   public readonly id: UUID;
+  public readonly orgId: string;
   public name: string;
-  public abstract readonly type: 'predefined' | 'custom';
-  public authMethod?: McpAuthMethod;
-  public authHeaderName?: string;
-  public encryptedCredentials?: string;
   public enabled: boolean;
-  public readonly organizationId: string;
   public readonly createdAt: Date;
   public updatedAt: Date;
+  public connectionStatus: string;
+  public lastConnectionError?: string;
+  public lastConnectionCheck?: Date;
 
-  constructor(params: {
+  private _auth: McpIntegrationAuth;
+
+  protected constructor(params: {
     id?: UUID;
+    orgId: string;
     name: string;
-    organizationId: string;
     enabled?: boolean;
-    authMethod?: McpAuthMethod;
-    authHeaderName?: string;
-    encryptedCredentials?: string;
     createdAt?: Date;
     updatedAt?: Date;
+    connectionStatus?: string;
+    lastConnectionError?: string;
+    lastConnectionCheck?: Date;
+    auth: McpIntegrationAuth;
   }) {
     this.id = params.id ?? randomUUID();
+    this.orgId = params.orgId;
     this.name = params.name;
-    this.organizationId = params.organizationId;
     this.enabled = params.enabled ?? true;
-    this.authMethod = params.authMethod;
-    this.authHeaderName = params.authHeaderName;
-    this.encryptedCredentials = params.encryptedCredentials;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+    this.connectionStatus = params.connectionStatus ?? 'pending';
+    this.lastConnectionError = params.lastConnectionError;
+    this.lastConnectionCheck = params.lastConnectionCheck;
+    this._auth = params.auth;
   }
 
   /**
-   * Disables the integration and updates the timestamp.
+   * Returns discriminator describing whether integration is predefined or custom.
    */
+  abstract get kind(): McpIntegrationKind;
+
+  /**
+   * All integrations expose their MCP server URL via this accessor.
+   */
+  abstract get serverUrl(): string;
+
+  /**
+   * Returns authentication object currently linked to this integration.
+   */
+  get auth(): McpIntegrationAuth {
+    return this._auth;
+  }
+
+  /**
+   * Replaces authentication method and refreshes update timestamp.
+   */
+  setAuth(auth: McpIntegrationAuth): void {
+    this._auth = auth;
+    this.touch();
+  }
+
+  getAuthType(): McpAuthMethod {
+    return this._auth.getMethod();
+  }
+
+  updateConnectionStatus(status: string, error?: string): void {
+    this.connectionStatus = status;
+    this.lastConnectionError = error;
+    this.lastConnectionCheck = new Date();
+    this.touch();
+  }
+
   disable(): void {
     this.enabled = false;
-    this.updatedAt = new Date();
+    this.touch();
   }
 
-  /**
-   * Enables the integration and updates the timestamp.
-   */
   enable(): void {
     this.enabled = true;
-    this.updatedAt = new Date();
+    this.touch();
   }
 
-  /**
-   * Updates the encrypted credentials and updates the timestamp.
-   * @param newEncryptedCredentials The new encrypted credentials
-   */
-  updateCredentials(newEncryptedCredentials: string): void {
-    this.encryptedCredentials = newEncryptedCredentials;
-    this.updatedAt = new Date();
-  }
-
-  /**
-   * Updates the name of the integration.
-   * @param newName The new name for the integration
-   */
   updateName(newName: string): void {
     this.name = newName;
+    this.touch();
+  }
+
+  isPredefined(): boolean {
+    return this.kind === McpIntegrationKind.PREDEFINED;
+  }
+
+  isCustom(): boolean {
+    return this.kind === McpIntegrationKind.CUSTOM;
+  }
+
+  protected touch(): void {
     this.updatedAt = new Date();
-  }
-
-  /**
-   * Updates the authentication configuration.
-   * @param authMethod The authentication method (optional)
-   * @param authHeaderName The authentication header name (optional)
-   * @param encryptedCredentials The encrypted credentials (optional)
-   */
-  updateAuth(
-    authMethod?: McpAuthMethod,
-    authHeaderName?: string,
-    encryptedCredentials?: string,
-  ): void {
-    this.authMethod = authMethod;
-    this.authHeaderName = authHeaderName;
-    this.encryptedCredentials = encryptedCredentials;
-    this.updatedAt = new Date();
-  }
-
-  /**
-   * Checks if the integration has authentication configured.
-   * @returns true if authMethod is set, false otherwise
-   */
-  hasAuthentication(): boolean {
-    return this.authMethod !== undefined;
-  }
-}
-
-/**
- * Predefined MCP integration with a known slug.
- * Used for integrations that are pre-configured in the system.
- */
-export class PredefinedMcpIntegration extends McpIntegration {
-  readonly type = 'predefined';
-  public readonly slug: PredefinedMcpIntegrationSlug;
-
-  constructor(params: {
-    id?: UUID;
-    name: string;
-    organizationId: string;
-    slug: PredefinedMcpIntegrationSlug;
-    enabled?: boolean;
-    authMethod?: McpAuthMethod;
-    authHeaderName?: string;
-    encryptedCredentials?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
-    super(params);
-    this.slug = params.slug;
-  }
-}
-
-/**
- * Custom MCP integration with a user-provided server URL.
- * Used for integrations that connect to custom MCP servers.
- */
-export class CustomMcpIntegration extends McpIntegration {
-  readonly type = 'custom';
-  public readonly serverUrl: string;
-
-  constructor(params: {
-    id?: UUID;
-    name: string;
-    organizationId: string;
-    serverUrl: string;
-    enabled?: boolean;
-    authMethod?: McpAuthMethod;
-    authHeaderName?: string;
-    encryptedCredentials?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
-    super(params);
-    this.serverUrl = params.serverUrl;
   }
 }

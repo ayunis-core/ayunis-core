@@ -1,0 +1,6 @@
+export enum McpAuthMethod {
+  NO_AUTH = 'NO_AUTH',
+  BEARER_TOKEN = 'BEARER_TOKEN',
+  CUSTOM_HEADER = 'CUSTOM_HEADER',
+  OAUTH = 'OAUTH',
+}

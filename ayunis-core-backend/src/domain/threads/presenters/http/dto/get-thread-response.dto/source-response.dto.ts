@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import {
   SourceType,
   TextType,
@@ -19,8 +20,8 @@ export abstract class SourceResponseDto {
   @ApiProperty({ description: 'Type of source', enum: SourceType })
   type: string;
 
-  @ApiProperty({ description: 'Whether the source was created by LLM' })
-  createdByLLM: boolean;
+  @ApiProperty({ description: 'Creator of the source', enum: SourceCreator })
+  createdBy: SourceCreator;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;

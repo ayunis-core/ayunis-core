@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-  McpIntegration,
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
+import { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
+import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from '../../../domain/auth/oauth-mcp-integration-auth.entity';
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 
 /**
@@ -20,29 +20,64 @@ export class McpIntegrationDtoMapper {
    * @returns The DTO representation
    */
   toDto(integration: McpIntegration): McpIntegrationResponseDto {
+    const type =
+      integration.kind === McpIntegrationKind.PREDEFINED
+        ? 'predefined'
+        : 'custom';
+
+    const auth = integration.auth;
+    let hasCredentials = auth.hasCredentials();
+
     const baseDto: McpIntegrationResponseDto = {
       id: integration.id,
       name: integration.name,
-      type: integration.type,
+      type: type,
       enabled: integration.enabled,
-      organizationId: integration.organizationId,
-      authMethod: integration.authMethod,
-      authHeaderName: integration.authHeaderName,
-      hasCredentials: !!integration.encryptedCredentials,
+      organizationId: integration.orgId,
+      authMethod: integration.getAuthType(),
+      authHeaderName: this.getAuthHeaderName(auth),
+      hasCredentials: hasCredentials,
+      connectionStatus: integration.connectionStatus,
+      lastConnectionError: integration.lastConnectionError,
+      lastConnectionCheck: integration.lastConnectionCheck,
       createdAt: integration.createdAt,
       updatedAt: integration.updatedAt,
     };
 
     // Add type-specific fields
-    if (integration instanceof PredefinedMcpIntegration) {
-      baseDto.slug = integration.slug;
+    if (integration.isPredefined()) {
+      baseDto.slug = integration.predefinedSlug;
       baseDto.serverUrl = undefined; // Not exposed for predefined
-    } else if (integration instanceof CustomMcpIntegration) {
+    } else {
       baseDto.slug = undefined;
       baseDto.serverUrl = integration.serverUrl;
     }
 
     return baseDto;
+  }
+
+  /**
+   * Gets the auth header name from the integration if applicable.
+   * @param integration - The MCP integration entity
+   * @returns The auth header name or undefined
+   */
+  private getAuthHeaderName(
+    auth:
+      | BearerMcpIntegrationAuth
+      | CustomHeaderMcpIntegrationAuth
+      | OAuthMcpIntegrationAuth
+      | McpIntegration['auth'],
+  ): string | undefined {
+    if (auth instanceof BearerMcpIntegrationAuth) {
+      return auth.getAuthHeaderName();
+    }
+    if (auth instanceof CustomHeaderMcpIntegrationAuth) {
+      return auth.getAuthHeaderName();
+    }
+    if (auth instanceof OAuthMcpIntegrationAuth) {
+      return auth.getAuthHeaderName();
+    }
+    return undefined;
   }
 
   /**

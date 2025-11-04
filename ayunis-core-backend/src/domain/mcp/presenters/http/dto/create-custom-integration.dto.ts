@@ -6,17 +6,27 @@ import {
   IsEnum,
   IsOptional,
   Length,
+  MinLength,
 } from 'class-validator';
-import { McpAuthMethod } from '../../../domain/mcp-auth-method.enum';
+import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 
 /**
  * DTO for creating a custom MCP integration.
  * Used when creating an integration with a custom server URL.
+ *
+ * Validation Rules:
+ * - name: Required, 1-255 characters
+ * - serverUrl: Required, valid HTTP/HTTPS URL
+ * - authMethod: Optional, must be valid enum value if provided
+ * - credentials: Optional, but required if authMethod is CUSTOM_HEADER or BEARER_TOKEN
+ * - authHeaderName: Optional, recommended for CUSTOM_HEADER auth method
  */
 export class CreateCustomIntegrationDto {
   @ApiProperty({
     description: 'The name for this integration instance',
     example: 'My Custom MCP Server',
+    minLength: 1,
+    maxLength: 255,
   })
   @IsString()
   @IsNotEmpty()
@@ -36,30 +46,35 @@ export class CreateCustomIntegrationDto {
   serverUrl: string;
 
   @ApiProperty({
-    description: 'Authentication method',
-    example: McpAuthMethod.API_KEY,
+    description: 'Authentication method for the MCP server',
     enum: McpAuthMethod,
+    example: McpAuthMethod.CUSTOM_HEADER,
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsEnum(McpAuthMethod)
   authMethod?: McpAuthMethod;
 
   @ApiProperty({
-    description: 'Custom auth header name (e.g., X-API-Key)',
+    description:
+      'Custom auth header name (e.g., X-API-Key). Required for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header).',
     example: 'X-API-Key',
     required: false,
   })
   @IsOptional()
   @IsString()
+  @Length(1, 255)
   authHeaderName?: string;
 
   @ApiProperty({
-    description: 'Authentication credentials (will be encrypted)',
-    example: 'my-api-key-12345',
+    description:
+      'Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods.',
+    example: 'my-secret-value-12345',
     required: false,
   })
   @IsOptional()
   @IsString()
+  @MinLength(1)
   credentials?: string;
 }

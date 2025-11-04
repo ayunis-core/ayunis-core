@@ -1,11 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import {
-  McpClientPort,
-  McpConnectionConfig,
-} from '../../ports/mcp-client.port';
-import { PredefinedMcpIntegrationRegistryService } from '../../services/predefined-mcp-integration-registry.service';
+import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -14,11 +10,6 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  McpIntegration,
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
 
 export interface PromptMessage {
   role: string;
@@ -36,8 +27,7 @@ export class GetMcpPromptUseCase {
 
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
-    private readonly mcpClient: McpClientPort,
-    private readonly registryService: PredefinedMcpIntegrationRegistryService,
+    private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -58,7 +48,7 @@ export class GetMcpPromptUseCase {
         throw new McpIntegrationNotFoundError(query.integrationId);
       }
 
-      if (integration.organizationId !== orgId) {
+      if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(query.integrationId);
       }
 
@@ -66,12 +56,9 @@ export class GetMcpPromptUseCase {
         throw new McpIntegrationDisabledError(query.integrationId);
       }
 
-      // Build connection config
-      const connectionConfig = this.buildConnectionConfig(integration);
-
       // Retrieve prompt from MCP server
-      const promptResponse = await this.mcpClient.getPrompt(
-        connectionConfig,
+      const promptResponse = await this.mcpClientService.getPrompt(
+        integration,
         query.promptName,
         query.args || {},
       );
@@ -105,33 +92,5 @@ export class GetMcpPromptUseCase {
       });
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
-  }
-
-  private buildConnectionConfig(
-    integration: McpIntegration,
-  ): McpConnectionConfig {
-    let serverUrl: string;
-
-    // Determine server URL based on integration type
-    if (integration.type === 'predefined') {
-      const predefined = integration as PredefinedMcpIntegration;
-      const config = this.registryService.getConfig(predefined.slug);
-      serverUrl = config.url;
-    } else {
-      const custom = integration as CustomMcpIntegration;
-      serverUrl = custom.serverUrl;
-    }
-
-    // Build connection config with optional auth
-    const connectionConfig: McpConnectionConfig = {
-      serverUrl,
-    };
-
-    if (integration.authHeaderName && integration.encryptedCredentials) {
-      connectionConfig.authHeaderName = integration.authHeaderName;
-      connectionConfig.authToken = integration.encryptedCredentials;
-    }
-
-    return connectionConfig;
   }
 }

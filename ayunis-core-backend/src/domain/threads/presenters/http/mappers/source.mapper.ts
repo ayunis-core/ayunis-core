@@ -6,7 +6,6 @@ import {
 } from 'src/domain/sources/domain/sources/text-source.entity';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
-import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { UUID } from 'crypto';
 import {
   FileSourceResponseDto,
@@ -42,7 +41,7 @@ export class SourceDtoMapper {
     fileDto.textType = source.textType;
     fileDto.fileType = source.fileType;
     fileDto.name = source.name;
-    fileDto.createdByLLM = source.createdBy === SourceCreator.LLM;
+    fileDto.createdBy = source.createdBy;
     fileDto.createdAt = source.createdAt.toISOString();
     fileDto.updatedAt = source.updatedAt.toISOString();
 
@@ -60,7 +59,7 @@ export class SourceDtoMapper {
     urlDto.textType = source.textType;
     urlDto.url = source.url;
     urlDto.name = source.name;
-    urlDto.createdByLLM = source.createdBy === SourceCreator.LLM;
+    urlDto.createdBy = source.createdBy;
     urlDto.createdAt = source.createdAt.toISOString();
     urlDto.updatedAt = source.updatedAt.toISOString();
 
@@ -78,7 +77,7 @@ export class SourceDtoMapper {
     csvDto.dataType = source.dataType;
     csvDto.data = source.data;
     csvDto.name = source.name;
-    csvDto.createdByLLM = source.createdBy === SourceCreator.LLM;
+    csvDto.createdBy = source.createdBy;
     csvDto.createdAt = source.createdAt.toISOString();
     csvDto.updatedAt = source.updatedAt.toISOString();
 
