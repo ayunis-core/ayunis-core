@@ -34,7 +34,7 @@ export class GetActiveSubscriptionUseCase {
     subscription: Subscription;
     availableSeats: number;
     nextRenewalDate: Date;
-  } | null> {
+  }> {
     this.logger.log('Getting subscription', {
       orgId: query.orgId,
       requestingUserId: query.requestingUserId,
