@@ -18,6 +18,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserEmailProviderBlacklistedError } from 'src/iam/users/application/users.errors';
+import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 
 interface CreateInviteResult {
   token: string;
@@ -58,17 +59,33 @@ export class CreateInviteUseCase {
       if (existingUser) {
         throw new EmailNotAvailableError();
       }
+
       const isCloud = this.configService.get<boolean>(
         'app.isCloudHosted',
         false,
       );
       if (isCloud) {
-        const subscription = await this.getActiveSubscriptionUseCase.execute(
-          new GetActiveSubscriptionQuery({
-            orgId: command.orgId,
-            requestingUserId: command.userId,
-          }),
-        );
+        let subscription: Awaited<
+          ReturnType<GetActiveSubscriptionUseCase['execute']>
+        > = null;
+
+        try {
+          subscription = await this.getActiveSubscriptionUseCase.execute(
+            new GetActiveSubscriptionQuery({
+              orgId: command.orgId,
+              requestingUserId: command.userId,
+            }),
+          );
+        } catch (error) {
+          if (error instanceof SubscriptionNotFoundError) {
+            this.logger.debug('No active subscription found, proceeding', {
+              orgId: command.orgId,
+            });
+          } else {
+            throw error;
+          }
+        }
+
         if (subscription && subscription.availableSeats < 0) {
           throw new InvalidSeatsError({
             orgId: command.orgId,
