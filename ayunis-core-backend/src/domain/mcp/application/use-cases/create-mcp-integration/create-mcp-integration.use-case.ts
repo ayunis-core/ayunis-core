@@ -100,12 +100,23 @@ export class CreateMcpIntegrationUseCase {
           });
           break;
         case McpAuthMethod.BEARER_TOKEN:
+          const tokenField = command.credentialFields.find(
+            (field) => field.name === CredentialFieldType.TOKEN,
+          );
+          const rawToken = tokenField?.value?.trim();
+
+          if (!rawToken) {
+            throw new McpValidationFailedError(
+              '',
+              config.displayName,
+              'Bearer token credentials are required',
+              CredentialFieldType.TOKEN,
+            );
+          }
+
           integrationAuth = this.authFactory.createAuth({
             method: McpAuthMethod.BEARER_TOKEN,
-            authToken:
-              command.credentialFields.find(
-                (field) => field.name === CredentialFieldType.TOKEN,
-              )?.value ?? '',
+            authToken: await this.credentialEncryption.encrypt(rawToken),
           });
           break;
         case McpAuthMethod.OAUTH:

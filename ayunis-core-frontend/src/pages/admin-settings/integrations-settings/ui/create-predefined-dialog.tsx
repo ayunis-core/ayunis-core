@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -38,12 +37,14 @@ interface CreatePredefinedDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   predefinedConfigs: PredefinedConfig[];
+  isCloud: boolean;
 }
 
 export function CreatePredefinedDialog({
   open,
   onOpenChange,
   predefinedConfigs,
+  isCloud,
 }: CreatePredefinedDialogProps) {
   const { t } = useTranslation("admin-settings-integrations");
   const { createPredefinedIntegration, isCreating } =
@@ -109,11 +110,10 @@ export function CreatePredefinedDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>
-            {t("integrations.createPredefinedDialog.title")}
+            {isCloud
+              ? t("integrations.createPredefinedDialog.titleCloud")
+              : t("integrations.createPredefinedDialog.title")}
           </DialogTitle>
-          <DialogDescription>
-            {t("integrations.createPredefinedDialog.description")}
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -130,7 +130,7 @@ export function CreatePredefinedDialog({
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value}
+                    value={field.value ?? ""}
                     disabled={isCreating}
                   >
                     <FormControl>
@@ -162,32 +162,45 @@ export function CreatePredefinedDialog({
 
             {selectedConfig && credentialFields.length > 0 && (
               <div className="space-y-4">
-                {credentialFields.map((field, index) => (
+                {credentialFields.map((credentialField, index) => (
                   <FormField
-                    key={field.type}
+                    key={credentialField.type}
                     control={form.control}
                     name={`configValues.${index}.value`}
                     render={({ field: valueField }) => {
                       const inputType =
-                        field.type === "token" || field.type === "clientSecret"
+                        credentialField.type === "token" ||
+                        credentialField.type === "clientSecret"
                           ? "password"
                           : "text";
+                      const {
+                        value,
+                        onChange,
+                        onBlur,
+                        name,
+                        ref: fieldRef,
+                      } = valueField;
 
                       return (
                         <FormItem>
-                          <FormLabel>{field.label}</FormLabel>
+                          <FormLabel>{credentialField.label}</FormLabel>
                           <FormControl>
                             <Input
                               type={inputType}
-                              placeholder={field.help || field.label}
                               disabled={isCreating}
-                              {...valueField}
+                              name={name}
+                              onBlur={onBlur}
+                              onChange={onChange}
+                              ref={fieldRef}
+                              value={value ?? ""}
                             />
                           </FormControl>
-                          {field.help && (
-                            <FormDescription>{field.help}</FormDescription>
+                          {credentialField.help && (
+                            <FormDescription>
+                              {credentialField.help}
+                            </FormDescription>
                           )}
-                          {!field.required && (
+                          {!credentialField.required && (
                             <FormDescription>
                               {t(
                                 "integrations.createPredefinedDialog.optionalField",

@@ -23,6 +23,7 @@ export class PredefinedConfigDtoMapper {
         label: field.label,
         type: field.type,
         required: field.required,
+        help: field.help,
       })) ?? [];
     return {
       slug: config.slug,

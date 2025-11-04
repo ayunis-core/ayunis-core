@@ -15,4 +15,5 @@ export const appConfig = registerAs('app', () => ({
       process.env.INVITE_ACCEPT_ENDPOINT || '/accept-invite',
   },
   orgEventsWebhookUrl: process.env.ORG_EVENTS_WEBHOOK_URL,
+  isDevelopment: process.env.NODE_ENV === 'development',
 }));

@@ -12,8 +12,14 @@ import { useMe } from "@/widgets/app-sidebar/api/useMe";
 import SettingsLayout from "../../admin-settings-layout";
 import { useMcpIntegrationsQueries } from "../api/useMcpIntegrationsQueries";
 import type { McpIntegration } from "../model/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/shadcn/dropdown-menu";
 
-export function McpIntegrationsPage() {
+export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   const { t } = useTranslation("admin-settings-integrations");
   const { user } = useMe();
   const isAdmin = user?.role === "admin";
@@ -95,14 +101,35 @@ export function McpIntegrationsPage() {
 
   const headerActions = (
     <div className="flex gap-2">
-      <Button onClick={() => setCreatePredefinedOpen(true)}>
-        <Plus className="h-4 w-4" />
-        {t("integrations.page.addPredefined")}
-      </Button>
-      <Button variant="outline" onClick={() => setCreateCustomOpen(true)}>
-        <Plus className="h-4 w-4" />
-        {t("integrations.page.addCustom")}
-      </Button>
+      {isCloud ? (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCreateCustomOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          {t("integrations.page.add")}
+        </Button>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4" />
+              {t("integrations.page.add")}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setCreatePredefinedOpen(true)}>
+              {t("integrations.page.addPredefined")}
+            </DropdownMenuItem>
+            {!isCloud && (
+              <DropdownMenuItem onClick={() => setCreateCustomOpen(true)}>
+                {t("integrations.page.addCustom")}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 
@@ -120,6 +147,7 @@ export function McpIntegrationsPage() {
           open={createPredefinedOpen}
           onOpenChange={setCreatePredefinedOpen}
           predefinedConfigs={predefinedConfigs}
+          isCloud={isCloud}
         />
 
         <CreateCustomDialog

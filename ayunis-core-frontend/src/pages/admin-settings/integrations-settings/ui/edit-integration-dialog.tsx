@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -22,7 +21,6 @@ import { Input } from "@/shared/ui/shadcn/input";
 import { Button } from "@/shared/ui/shadcn/button";
 import type { McpIntegration, UpdateIntegrationFormData } from "../model/types";
 import { useUpdateIntegration } from "../api/useUpdateIntegration";
-import { getAuthMethodLabel } from "../lib/helpers";
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
@@ -105,9 +103,6 @@ export function EditIntegrationDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>{t("integrations.editDialog.title")}</DialogTitle>
-          <DialogDescription>
-            {t("integrations.editDialog.description")}
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -127,22 +122,10 @@ export function EditIntegrationDialog({
                       disabled={isUpdating}
                     />
                   </FormControl>
-                  <FormDescription>
-                    {t("integrations.editDialog.nameDescription")}
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div>
-              <FormLabel className="block">
-                {t("integrations.editDialog.authMethod")}
-              </FormLabel>
-              <p className="text-sm text-muted-foreground">
-                {getAuthMethodLabel(authMethod)}
-              </p>
-            </div>
 
             {authMethod === "CUSTOM_HEADER" && (
               <>
@@ -164,9 +147,6 @@ export function EditIntegrationDialog({
                           disabled={isUpdating}
                         />
                       </FormControl>
-                      <FormDescription>
-                        {t("integrations.editDialog.headerNameDescription")}
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -219,9 +199,6 @@ export function EditIntegrationDialog({
                         disabled={isUpdating}
                       />
                     </FormControl>
-                    <FormDescription>
-                      {t("integrations.editDialog.credentialsDescription")}
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

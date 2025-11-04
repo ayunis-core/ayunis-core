@@ -33,7 +33,8 @@
       "errorLoadingMessage": "Beim Laden der Integrationen ist ein Fehler aufgetreten",
       "retry": "Erneut versuchen",
       "addPredefined": "Vordefinierte hinzufügen",
-      "addCustom": "Benutzerdefinierte hinzufügen"
+      "addCustom": "Benutzerdefinierte hinzufügen",
+      "add": "Integration hinzufügen"
     },
     "card": {
       "openMenu": "Menü öffnen",
@@ -78,7 +79,7 @@
     },
     "createPredefinedDialog": {
       "title": "Vordefinierte Integration hinzufügen",
-      "description": "Wählen Sie eine vordefinierte Integration aus und konfigurieren Sie die Authentifizierung.",
+      "titleCloud": "Integration hinzufügen",
       "integrationType": "Integrationstyp",
       "integrationTypePlaceholder": "Integration auswählen",
       "name": "Name",
@@ -101,20 +102,13 @@
     },
     "editDialog": {
       "title": "Integration bearbeiten",
-      "description": "Aktualisieren Sie den Namen und die Authentifizierungsdetails für diese Integration.",
       "name": "Name",
       "namePlaceholder": "Meine Integration",
-      "nameDescription": "Ein freundlicher Name für diese Integration",
-      "authMethod": "Authentifizierungsmethode (Optional)",
-      "authMethodNone": "Keine",
-      "authMethodApiKey": "API-Schlüssel",
-      "authMethodBearerToken": "Bearer-Token",
       "headerName": "Header-Name",
       "headerNamePlaceholder": "X-API-Key",
       "headerNameDescription": "Der HTTP-Header-Name für die Authentifizierung",
       "credentials": "Anmeldedaten (Optional)",
       "credentialsPlaceholder": "Leer lassen, um bestehende beizubehalten",
-      "credentialsDescription": "Geben Sie neue Anmeldedaten ein oder lassen Sie das Feld leer, um die bestehenden beizubehalten",
       "noCredentialsMessage": "Diese Integration verwendet keine Authentifizierungsdaten.",
       "cancel": "Abbrechen",
       "updating": "Wird aktualisiert...",

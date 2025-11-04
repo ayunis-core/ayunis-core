@@ -16,7 +16,7 @@ import {
 } from "@/shared/ui/shadcn/dropdown-menu";
 import { Switch } from "@/shared/ui/shadcn/switch";
 import { Label } from "@/shared/ui/shadcn/label";
-import { MoreVertical, CheckCircle2 } from "lucide-react";
+import { MoreVertical, CheckCircle2, Loader2 } from "lucide-react";
 import type { McpIntegration } from "../model/types";
 import { getIntegrationTypeLabel, getAuthMethodLabel } from "../lib/helpers";
 import {
@@ -59,7 +59,7 @@ export function IntegrationCard({
         <ItemTitle>{integration.name}</ItemTitle>
         <ItemDescription>
           {integration.type === "predefined"
-            ? `${typeLabel} - ${integration.slug}`
+            ? ``
             : `${typeLabel} - ${integration.serverUrl}`}
         </ItemDescription>
       </ItemContent>
@@ -78,6 +78,7 @@ export function IntegrationCard({
           onClick={() => onValidate(integration)}
           disabled={isValidating}
         >
+          {isValidating && <Loader2 className="h-4 w-4 animate-spin" />}
           {isValidating
             ? t("integrations.card.testing")
             : t("integrations.card.testConnection")}

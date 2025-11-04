@@ -33,7 +33,8 @@
       "errorLoadingMessage": "An error occurred while loading integrations",
       "retry": "Retry",
       "addPredefined": "Add Predefined",
-      "addCustom": "Add Custom"
+      "addCustom": "Add Custom",
+      "add": "Add Integration"
     },
     "card": {
       "openMenu": "Open menu",
@@ -78,7 +79,7 @@
     },
     "createPredefinedDialog": {
       "title": "Add Predefined Integration",
-      "description": "Select a predefined integration and configure authentication.",
+      "titleCloud": "Add Integration",
       "integrationType": "Integration Type",
       "integrationTypePlaceholder": "Select an integration",
       "name": "Name",
@@ -101,20 +102,13 @@
     },
     "editDialog": {
       "title": "Edit Integration",
-      "description": "Update the name and authentication details for this integration.",
       "name": "Name",
       "namePlaceholder": "My Integration",
-      "nameDescription": "A friendly name for this integration",
-      "authMethod": "Authentication Method (Optional)",
-      "authMethodNone": "None",
-      "authMethodApiKey": "API Key",
-      "authMethodBearerToken": "Bearer Token",
       "headerName": "Header Name",
       "headerNamePlaceholder": "X-API-Key",
       "headerNameDescription": "The HTTP header name for authentication",
       "credentials": "Credentials (Optional)",
       "credentialsPlaceholder": "Leave empty to keep existing",
-      "credentialsDescription": "Enter new credentials or leave empty to keep existing ones",
       "noCredentialsMessage": "This integration does not use authentication credentials.",
       "cancel": "Cancel",
       "updating": "Updating...",

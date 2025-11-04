@@ -19,33 +19,36 @@ export class PredefinedMcpIntegrationRegistry {
   }
 
   private registerIntegrations(): void {
-    // Test integration (no auth)
-    this.configs.set(PredefinedMcpIntegrationSlug.TEST, {
-      slug: PredefinedMcpIntegrationSlug.TEST,
-      displayName: 'Test MCP Server',
-      description: 'Test integration for development and testing',
-      serverUrl: 'http://localhost:3100/mcp',
-      authType: McpAuthMethod.NO_AUTH,
-    });
+    const isDevelopment = this.configService.get<boolean>('app.isDevelopment');
+    if (isDevelopment) {
+      // Test integration (no auth)
+      this.configs.set(PredefinedMcpIntegrationSlug.TEST, {
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        displayName: 'Test MCP Server',
+        description: 'Test integration for development and testing',
+        serverUrl: 'http://localhost:3100/mcp',
+        authType: McpAuthMethod.NO_AUTH,
+      });
+    }
 
     // Locaboo integration (Bearer token auth)
     const locabooUrl = this.configService.get<string>('LOCABOO_4_URL');
     if (locabooUrl) {
-      const locabooServerUrl = `${locabooUrl.replace(/\/$/, '')}/mcp`;
+      const locabooServerUrl = `${locabooUrl.replace(/\/$/, '')}`;
       this.configs.set(PredefinedMcpIntegrationSlug.LOCABOO, {
         slug: PredefinedMcpIntegrationSlug.LOCABOO,
-        displayName: 'Locaboo 4',
+        displayName: 'Locaboo',
         description:
-          'Connect to Locaboo 4 booking system for access to bookings, resources, services, and inventory data',
+          'Verbinden Sie Ihren Locaboo Account, um Zugriff auf Buchungen, Ressourcen, und andere Locaboo Datenzu erhalten',
         authType: McpAuthMethod.BEARER_TOKEN,
         authHeaderName: 'Authorization',
         serverUrl: locabooServerUrl,
         credentialFields: [
           {
-            label: 'Locaboo 3 API Token',
+            label: 'Locaboo API Token',
             type: CredentialFieldType.TOKEN,
             required: true,
-            help: 'Your Locaboo 3 API token will be used to authenticate with Locaboo 4',
+            help: 'Sie finden Ihren API Token in Ihren persönlichen Einstellungen unter dem Menüpunkt "Konto"',
           },
         ],
       });

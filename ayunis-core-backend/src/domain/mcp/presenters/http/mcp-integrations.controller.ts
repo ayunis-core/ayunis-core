@@ -10,6 +10,7 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -57,6 +58,7 @@ import { EnableMcpIntegrationCommand } from '../../application/use-cases/enable-
 import { DisableMcpIntegrationCommand } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.command';
 import { ValidateMcpIntegrationCommand } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.command';
 import { CredentialFieldValue } from '../../domain/predefined-mcp-integration-config';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Controller for managing MCP integrations (organization admin level).
@@ -81,6 +83,7 @@ export class McpIntegrationsController {
     private readonly listPredefinedConfigsUseCase: ListPredefinedMcpIntegrationConfigsUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('predefined')
@@ -139,6 +142,14 @@ export class McpIntegrationsController {
       name: dto.name,
       serverUrl: dto.serverUrl,
     });
+
+    const isCloud =
+      this.configService.get<boolean>('app.isCloudHosted') ?? false;
+    if (isCloud) {
+      throw new ForbiddenException(
+        'Custom MCP integrations are not allowed on cloud',
+      );
+    }
 
     const command = new CreateCustomMcpIntegrationCommand(
       dto.name,
