@@ -67,7 +67,7 @@ export class CreateInviteUseCase {
       if (isCloud) {
         let subscription: Awaited<
           ReturnType<GetActiveSubscriptionUseCase['execute']>
-        > = null;
+        > | null = null;
 
         try {
           subscription = await this.getActiveSubscriptionUseCase.execute(
