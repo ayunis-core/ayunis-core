@@ -46,7 +46,7 @@ export function useAssignMcpIntegration(
         // Return context with snapshot
         return { previousAssignments };
       },
-      onError: (error, variables, context) => {
+      onError: (_error, variables, context) => {
         // Rollback on error
         if (context?.previousAssignments) {
           queryClient.setQueryData(
