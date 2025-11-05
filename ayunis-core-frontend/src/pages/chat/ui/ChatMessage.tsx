@@ -18,6 +18,7 @@ import SendEmailWidget from "./chat-widgets/SendEmailWidget";
 import ExecutableToolWidget from "./chat-widgets/ExecutableToolWidget";
 import ThinkingBlockWidget from "./chat-widgets/ThinkingBlockWidget";
 import CreateCalendarEventWidget from "./chat-widgets/CreateCalendarEventWidget";
+import { BarChartWidget, LineChartWidget, PieChartWidget } from "@/widgets/charts";
 import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import AgentActivityHint from "@/widgets/agent-activity-hint/ui/AgentActivityHint";
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
@@ -180,6 +181,39 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
               return (
                 <CreateCalendarEventWidget
                   key={`create-calendar-event-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.bar_chart
+            ) {
+              return (
+                <BarChartWidget
+                  key={`bar-chart-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.line_chart
+            ) {
+              return (
+                <LineChartWidget
+                  key={`line-chart-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.pie_chart
+            ) {
+              return (
+                <PieChartWidget
+                  key={`pie-chart-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                 />
