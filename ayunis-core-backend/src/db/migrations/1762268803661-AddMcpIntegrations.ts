@@ -5,7 +5,7 @@ export class AddMcpIntegrations1762268803661 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "sources" DROP CONSTRAINT "FK_b8571f7b820de796d0b0cef0e86"`,
+      `ALTER TABLE "sources" DROP CONSTRAINT IF EXISTS "FK_b8571f7b820de796d0b0cef0e86"`,
     );
     await queryRunner.query(
       `CREATE TABLE "mcp_integration_auth_methods" ("id" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "integrationId" character varying NOT NULL, "secret" text, "headerName" character varying DEFAULT 'X-API-Key', "authToken" text, "clientId" character varying, "clientSecret" text, "accessToken" text, "refreshToken" text, "tokenExpiresAt" TIMESTAMP, "auth_type" character varying NOT NULL, CONSTRAINT "REL_f9a00329298c444ddc3f0d200c" UNIQUE ("integrationId"), CONSTRAINT "PK_a0d873d844c1ee6e6e5a1c4c701" PRIMARY KEY ("id"))`,
@@ -28,11 +28,17 @@ export class AddMcpIntegrations1762268803661 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "IDX_7a73ddc48bd3b817feb4340a02" ON "agent_mcp_integrations" ("mcpIntegrationsId") `,
     );
-    await queryRunner.query(`ALTER TABLE "sources" DROP COLUMN "createdByLLM"`);
+    if (await queryRunner.hasColumn('sources', 'createdByLLM')) {
+      await queryRunner.query(
+        `ALTER TABLE "sources" DROP COLUMN "createdByLLM"`,
+      );
+    }
     await queryRunner.query(
-      `ALTER TABLE "sources" DROP CONSTRAINT "UQ_b8571f7b820de796d0b0cef0e86"`,
+      `ALTER TABLE "sources" DROP CONSTRAINT IF EXISTS "UQ_b8571f7b820de796d0b0cef0e86"`,
     );
-    await queryRunner.query(`ALTER TABLE "sources" DROP COLUMN "sourceId"`);
+    if (await queryRunner.hasColumn('sources', 'sourceId')) {
+      await queryRunner.query(`ALTER TABLE "sources" DROP COLUMN "sourceId"`);
+    }
     await queryRunner.query(
       `CREATE TYPE "public"."sources_createdby_enum" AS ENUM('user', 'llm', 'system')`,
     );
@@ -40,17 +46,19 @@ export class AddMcpIntegrations1762268803661 implements MigrationInterface {
       `ALTER TABLE "sources" ADD "createdBy" "public"."sources_createdby_enum" NOT NULL DEFAULT 'user'`,
     );
     await queryRunner.query(
-      `ALTER TABLE "subscriptions" DROP CONSTRAINT "FK_16519322477ef8b09d68ce04889"`,
+      `ALTER TABLE "subscriptions" DROP CONSTRAINT IF EXISTS "FK_16519322477ef8b09d68ce04889"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "subscriptions" DROP CONSTRAINT "REL_16519322477ef8b09d68ce0488"`,
+      `ALTER TABLE "subscriptions" DROP CONSTRAINT IF EXISTS "REL_16519322477ef8b09d68ce0488"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "source_content_chunks" DROP CONSTRAINT "FK_bd61e255ed429f6f327137c3f69"`,
+      `ALTER TABLE "source_content_chunks" DROP CONSTRAINT IF EXISTS "FK_bd61e255ed429f6f327137c3f69"`,
     );
-    await queryRunner.query(
-      `ALTER TABLE "source_content_chunks" ALTER COLUMN "sourceId" DROP NOT NULL`,
-    );
+    if (await queryRunner.hasColumn('source_content_chunks', 'sourceId')) {
+      await queryRunner.query(
+        `ALTER TABLE "source_content_chunks" ALTER COLUMN "sourceId" DROP NOT NULL`,
+      );
+    }
     await queryRunner.query(
       `ALTER TABLE "subscriptions" ADD CONSTRAINT "FK_16519322477ef8b09d68ce04889" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
