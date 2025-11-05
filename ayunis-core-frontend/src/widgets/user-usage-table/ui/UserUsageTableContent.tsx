@@ -45,6 +45,7 @@ export function UserUsageTableContent({
   onPageChange,
 }: UserUsageTableContentProps) {
   const { t, i18n } = useTranslation("admin-settings-usage");
+  const { t: tCommon } = useTranslation("common");
 
   const formatCompact = (value?: number) => {
     if (value === undefined) {
@@ -188,6 +189,7 @@ export function UserUsageTableContent({
                     if (currentPage > 0) onPageChange(currentPage - 1);
                   }}
                   className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
+                  label={tCommon("common.pagination.previous")}
                 />
               </PaginationItem>
               {pageNumbers.map((page, index) => {
@@ -223,6 +225,7 @@ export function UserUsageTableContent({
                     if (currentPage < totalPages - 1) onPageChange(currentPage + 1);
                   }}
                   className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+                  label={tCommon("common.pagination.next")}
                 />
               </PaginationItem>
             </PaginationContent>

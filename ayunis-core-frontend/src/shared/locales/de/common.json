@@ -62,7 +62,11 @@
     "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
   },
   "common": {
-    "loading": "Laden..."
+    "loading": "Laden...",
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter"
+    }
   },
   "error": {
     "title": "Ein Fehler ist aufgetreten",
