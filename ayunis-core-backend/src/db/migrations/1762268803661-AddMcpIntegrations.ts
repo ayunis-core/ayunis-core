@@ -51,9 +51,11 @@ export class AddMcpIntegrations1762268803661 implements MigrationInterface {
         `CREATE TYPE "public"."sources_createdby_enum" AS ENUM('user', 'llm', 'system')`,
       );
     }
-    await queryRunner.query(
-      `ALTER TABLE "sources" ADD "createdBy" "public"."sources_createdby_enum" NOT NULL DEFAULT 'user'`,
-    );
+    if (!(await queryRunner.hasColumn('sources', 'createdBy'))) {
+      await queryRunner.query(
+        `ALTER TABLE "sources" ADD "createdBy" "public"."sources_createdby_enum" NOT NULL DEFAULT 'user'`,
+      );
+    }
     await queryRunner.query(
       `ALTER TABLE "subscriptions" DROP CONSTRAINT IF EXISTS "FK_16519322477ef8b09d68ce04889"`,
     );
