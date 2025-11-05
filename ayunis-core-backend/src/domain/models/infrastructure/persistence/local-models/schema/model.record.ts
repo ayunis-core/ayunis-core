@@ -3,7 +3,7 @@ import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from '../../../../domain/value-objects/embedding-dimensions.enum';
 import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
+import { Currency } from '../../../../domain/value-objects/currency.enum';
 
 @Entity({ name: 'models' })
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
@@ -122,5 +122,5 @@ export class EmbeddingModelRecord extends ModelRecord {
     length: 3,
     nullable: true,
   })
-  currency?: string;
+  currency?: Currency;
 }

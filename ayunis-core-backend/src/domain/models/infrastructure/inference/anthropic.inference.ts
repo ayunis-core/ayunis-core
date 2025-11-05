@@ -275,6 +275,9 @@ export class AnthropicInferenceHandler extends InferenceHandler {
       meta: {
         inputTokens: response.usage.input_tokens,
         outputTokens: response.usage.output_tokens,
+        totalTokens:
+          (response.usage.input_tokens || 0) +
+          (response.usage.output_tokens || 0),
       },
     };
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, Brain, CreditCard, Plug } from 'lucide-react';
+import { ArrowLeft, Users, Brain, CreditCard, Plug, BarChart3 } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -71,6 +71,14 @@ export function AdminSettingsSidebar() {
                 <Link to={'/admin-settings/billing'}>
                   <CreditCard />
                   <span>{t('layout.billing')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to={'/admin-settings/usage'}>
+                  <BarChart3 />
+                  <span>{t('layout.usage')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

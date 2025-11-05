@@ -1,0 +1,50 @@
+{
+  "filters": {
+    "selectDateRange": "Datumsbereich auswählen",
+    "last7Days": "Letzte 7 Tage",
+    "last30Days": "Letzte 30 Tage",
+    "last90Days": "Letzte 90 Tage",
+    "custom": "Benutzerdefiniert",
+    "allTime": "Alle Zeit",
+    "allProviders": "Alle Anbieter",
+    "allModels": "Alle Modelle"
+  },
+  "stats": {
+    "totalTokens": "Verbrauchte Tokens",
+    "activeUsers": "Aktive Nutzer",
+    "estimatedCost": "Geschätzte Kosten"
+  },
+  "charts": {
+    "noData": "Keine Daten verfügbar",
+    "modelDistribution": {
+      "title": "Modellverteilung",
+      "description": "Verbrauch nach Modell",
+      "models": "Modelle",
+      "more": "mehr"
+    },
+    "tokenConsumption": {
+      "title": "Token Verbrauch",
+      "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
+    },
+    "providerConsumption": {
+      "title": "Verbrauch nach Provider",
+      "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
+    }
+  },
+  "userUsage": {
+    "title": "Nutzerverbrauch",
+    "subtitle": "Individual Nutzerverbrauch",
+    "viewAll": "Alle anzeigen",
+    "noData": "Keine Nutzerverbrauchdaten verfügbar",
+    "error": "Fehler beim Laden der Nutzerverbrauchdaten",
+    "user": "Nutzer",
+    "tokens": "Tokens",
+    "requests": "Anfragen",
+    "models": "Models",
+    "lastActive": "Letzte Aktivität",
+    "status": "Status",
+    "active": "aktiv",
+    "inactive": "inaktiv"
+  }
+}
+
