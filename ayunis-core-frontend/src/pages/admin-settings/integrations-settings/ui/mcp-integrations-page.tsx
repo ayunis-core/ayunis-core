@@ -109,7 +109,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setCreateCustomOpen(true)}
+          onClick={handleOpenCreatePredefined}
         >
           <Plus className="h-4 w-4" />
           {t("integrations.page.add")}
