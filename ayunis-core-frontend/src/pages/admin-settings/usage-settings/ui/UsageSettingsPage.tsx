@@ -1,0 +1,54 @@
+import SettingsLayout from "../../admin-settings-layout";
+import { UsageStatsCards } from "./UsageStatsCards";
+import { ProviderConsumption } from "@/widgets/provider-consumption-chart";
+import { ModelDistribution } from "@/widgets/model-distribution-chart";
+import { UserUsageTable } from "@/widgets/user-usage-table";
+import { UsageFilters } from "./UsageFilters";
+import { useState } from "react";
+
+export default function UsageSettingsPage() {
+  const [dateRange, setDateRange] = useState<{
+    startDate?: Date;
+    endDate?: Date;
+  }>({});
+  const [selectedProvider, setSelectedProvider] = useState<string | undefined>();
+  const [selectedModel, setSelectedModel] = useState<string | undefined>();
+
+  return (
+    <SettingsLayout>
+      <div className="space-y-8">
+        <UsageFilters
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          selectedProvider={selectedProvider}
+          onProviderChange={setSelectedProvider}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+        />
+
+        <UsageStatsCards
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+        />
+
+        <ProviderConsumption
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+          selectedProvider={selectedProvider}
+        />
+
+        <ModelDistribution
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+          selectedModel={selectedModel}
+        />
+
+        <UserUsageTable
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+        />
+      </div>
+    </SettingsLayout>
+  );
+}
+

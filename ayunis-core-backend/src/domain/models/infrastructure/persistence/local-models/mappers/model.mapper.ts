@@ -24,6 +24,9 @@ export class ModelMapper {
         isArchived: record.isArchived,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        inputTokenCost: record.inputTokenCost,
+        outputTokenCost: record.outputTokenCost,
+        currency: record.currency,
       });
     }
 
@@ -37,6 +40,9 @@ export class ModelMapper {
         isArchived: record.isArchived,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        inputTokenCost: record.inputTokenCost,
+        outputTokenCost: record.outputTokenCost,
+        currency: record.currency,
       });
     }
 
@@ -56,6 +62,9 @@ export class ModelMapper {
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;
+      record.inputTokenCost = domain.inputTokenCost;
+      record.outputTokenCost = domain.outputTokenCost;
+      record.currency = domain.currency;
       return record;
     }
 
@@ -69,6 +78,9 @@ export class ModelMapper {
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;
+      record.inputTokenCost = domain.inputTokenCost;
+      record.outputTokenCost = domain.outputTokenCost;
+      record.currency = domain.currency;
       return record;
     }
 

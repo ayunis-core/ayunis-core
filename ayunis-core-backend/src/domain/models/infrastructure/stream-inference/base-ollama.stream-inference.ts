@@ -225,6 +225,14 @@ export class BaseOllamaStreamInferenceHandler
       : { thinkingDelta: null, textContentDelta: null };
     const finishReason = chunk.done ? chunk.done_reason : null;
 
+    const usage =
+      chunk.done && (chunk.prompt_eval_count || chunk.eval_count)
+        ? {
+            inputTokens: chunk.prompt_eval_count,
+            outputTokens: chunk.eval_count,
+          }
+        : undefined;
+
     return new StreamInferenceResponseChunk({
       thinkingDelta: thinkingContent ?? thinkingDelta,
       textContentDelta,
@@ -239,6 +247,7 @@ export class BaseOllamaStreamInferenceHandler
             }),
         ) ?? [],
       finishReason,
+      usage,
     });
   };
 }
