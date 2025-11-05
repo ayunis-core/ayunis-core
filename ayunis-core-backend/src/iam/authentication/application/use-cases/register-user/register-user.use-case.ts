@@ -30,6 +30,8 @@ import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/se
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { OrgCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/org-created.webhook-event';
 import { Transactional } from '@nestjs-cls/transactional';
+import { PermitAllModelsForOrgUseCase } from 'src/domain/models/application/use-cases/permit-all-models-for-org/permit-all-models-for-org.use-case';
+import { PermitAllModelsForOrgCommand } from 'src/domain/models/application/use-cases/permit-all-models-for-org/permit-all-models-for-org.command';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -45,6 +47,7 @@ export class RegisterUserUseCase {
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly permitAllModelsForOrgUseCase: PermitAllModelsForOrgUseCase,
   ) {}
 
   @Transactional()
@@ -125,6 +128,16 @@ export class RegisterUserUseCase {
           userId: user.id,
           orgId: org.id,
         }),
+      );
+
+      // Permit all available models for the organization with userId for legal acceptance
+      // This is done after user creation so we can create legal acceptances for providers
+      this.logger.debug('Permitting all models for organization', {
+        orgId: org.id,
+        userId: user.id,
+      });
+      await this.permitAllModelsForOrgUseCase.execute(
+        new PermitAllModelsForOrgCommand(org.id, user.id),
       );
 
       if (shouldConfirmEmail) {

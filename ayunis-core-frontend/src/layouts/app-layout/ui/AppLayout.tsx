@@ -7,7 +7,7 @@ import { SidebarProvider, SidebarInset } from "@/shared/ui/shadcn/sidebar";
 // Widgets
 import AppSidebar from "@/widgets/app-sidebar";
 import WelcomeDialog from "@/widgets/onboarding/ui/welcome/WelcomeDialog";
-import AideDialog from "@/widgets/onboarding/ui/aide/AideDialog";
+// import AideDialog from "@/widgets/onboarding/ui/aide/AideDialog";
 
 // API
 import { useMe } from "@/widgets/app-sidebar/api/useMe";
@@ -27,7 +27,7 @@ export default function AppLayout({ children, sidebar }: AppLayoutProps) {
           {children}
 
           <WelcomeDialog userEmail={user?.email} />
-          <AideDialog userEmail={user?.email} />
+          {/* <AideDialog userEmail={user?.email} /> */}
         </div>
       </SidebarInset>
     </SidebarProvider>

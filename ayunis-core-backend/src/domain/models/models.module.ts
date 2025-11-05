@@ -69,6 +69,7 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
 import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
 import { ConfigService } from '@nestjs/config';
+import { PermitAllModelsForOrgUseCase } from './application/use-cases/permit-all-models-for-org/permit-all-models-for-org.use-case';
 
 @Module({
   imports: [
@@ -211,6 +212,8 @@ import { ConfigService } from '@nestjs/config';
     GetAllPermittedProvidersUseCase,
     GetAllModelProviderInfosWithPermittedStatusUseCase,
     IsProviderPermittedUseCase,
+    // Permit All Models Use Case
+    PermitAllModelsForOrgUseCase,
   ],
   exports: [
     InferenceHandlerRegistry,
@@ -224,6 +227,8 @@ import { ConfigService } from '@nestjs/config';
     GetAllPermittedProvidersUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
+    // Permit All Models Use Case
+    PermitAllModelsForOrgUseCase,
     // Use Cases
     GetInferenceUseCase,
     StreamInferenceUseCase,
