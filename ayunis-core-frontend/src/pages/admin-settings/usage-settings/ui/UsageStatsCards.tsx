@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 // Ui
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
+import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/shadcn/card";
 
 // Api
 import { useUsageStats, useUsageConfig } from "@/entities/usage";
@@ -48,14 +49,16 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-          >
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="mt-4 h-8 w-32" />
-          </div>
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-32" />
+            </CardContent>
+          </Card>
         ))}
       </div>
     );
@@ -66,34 +69,46 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <div>
-        <p className="text-sm font-medium text-muted-foreground">
-          {t("stats.totalTokens")}
-        </p>
-        <p className="mt-2 text-xl font-semibold">
-          {formatCompact(stats.totalTokens)}
-        </p>
-      </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            {t("stats.totalTokens")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xl font-semibold">
+            {formatCompact(stats.totalTokens)}
+          </p>
+        </CardContent>
+      </Card>
 
-      <div>
-        <p className="text-sm font-medium text-muted-foreground">
-          {t("stats.activeUsers")}
-        </p>
-        <p className="mt-2 text-xl font-semibold">
-          {formatCompact(stats.activeUsers)}
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            {t("stats.activeUsers")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xl font-semibold">
+            {formatCompact(stats.activeUsers)}
+          </p>
+        </CardContent>
+      </Card>
 
       {config?.showCostInformation && (
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            {t("stats.estimatedCost")}
-          </p>
-          <p className="mt-2 text-xl font-semibold">
-            {formatCost(stats.totalCost, stats.currency)}
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t("stats.estimatedCost")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xl font-semibold">
+              {formatCost(stats.totalCost, stats.currency)}
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -22,7 +22,10 @@ import {
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
+  PaginationLink,
 } from "@/shared/ui/shadcn/pagination";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/ui/shadcn/card";
 
 // Lib
 import { getInitials } from "@/shared/lib/getInitials";
@@ -50,126 +53,183 @@ export function UserUsageTableContent({
     return formatCompactNumber(value, i18n.language);
   };
 
+  const getPageNumbers = () => {
+    const total = Math.max(totalPages ?? 0, 1);
+    const current = currentPage + 1; // convert to 1-based
+    const delta = 1; // how many pages around current to show
+  
+    // Always include first, last, and nearby pages
+    const pages: (number | "ellipsis")[] = [];
+    const range = [];
+  
+    for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+      range.push(i);
+    }
+  
+    const showLeftEllipsis = range[0] > 2;
+    const showRightEllipsis = range[range.length - 1] < total - 1;
+  
+    pages.push(1);
+    if (showLeftEllipsis) {
+      pages.push("ellipsis");
+    }
+
+    pages.push(...range);
+    if (showRightEllipsis) {
+      pages.push("ellipsis");
+    }
+
+    if (total > 1) {
+      pages.push(total);
+    }
+  
+    return pages;
+  };
+  
+
+  const pageNumbers = getPageNumbers();
+
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold">{t("userUsage.title")}</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("userUsage.subtitle")}
-          </p>
-        </div>
-      </div>
-
-      <Table className="mt-6">
-        <TableHeader>
-          <TableRow className="border-border/40">
-            <TableHead>{t("userUsage.user")}</TableHead>
-            <TableHead>{t("userUsage.tokens")}</TableHead>
-            <TableHead>{t("userUsage.requests")}</TableHead>
-            <TableHead className="w-[150px]">{t("userUsage.models")}</TableHead>
-            <TableHead>{t("userUsage.lastActive")}</TableHead>
-            <TableHead>{t("userUsage.status")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.length > 0 ? (
-            users.map((user) => (
-              <TableRow key={user.userId} className="border-border/20 transition hover:bg-muted/20">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarFallback>{getInitials(user.userName)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{user.userName}</div>
-                      <div className="text-sm text-muted-foreground">{user.userEmail}</div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("userUsage.title")}</CardTitle>
+        <CardDescription>{t("userUsage.subtitle")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table className="w-[750px]">
+          <TableHeader>
+            <TableRow className="border-border/40">
+              <TableHead>{t("userUsage.user")}</TableHead>
+              <TableHead>{t("userUsage.tokens")}</TableHead>
+              <TableHead>{t("userUsage.requests")}</TableHead>
+              <TableHead className="w-[150px]">{t("userUsage.models")}</TableHead>
+              <TableHead>{t("userUsage.lastActive")}</TableHead>
+              <TableHead>{t("userUsage.status")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.length > 0 ? (
+              users.map((user) => (
+                <TableRow key={user.userId} className="border-border/20 transition hover:bg-muted/20">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarFallback>{getInitials(user.userName)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{user.userName}</div>
+                        <div className="text-sm text-muted-foreground">{user.userEmail}</div>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">{formatCompact(user.tokens)}</div>
-                  <div className="text-xs text-muted-foreground">{t("userUsage.tokens")}</div>
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">{formatCompact(user.requests)}</div>
-                  <div className="text-xs text-muted-foreground">{t("userUsage.requests")}</div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {user.modelBreakdown?.slice(0, 3).map((model) => (
-                      <Badge key={model.modelId} variant="outline" className="text-xs">
-                        {model.displayName}
-                      </Badge>
-                    ))}
-                    {user.modelBreakdown && user.modelBreakdown.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{user.modelBreakdown.length - 3}
-                      </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{formatCompact(user.tokens)}</div>
+                    <div className="text-xs text-muted-foreground">{t("userUsage.tokens")}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{formatCompact(user.requests)}</div>
+                    <div className="text-xs text-muted-foreground">{t("userUsage.requests")}</div>
+                  </TableCell>
+                  <TableCell>
+                    {user.modelBreakdown && user.modelBreakdown.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {user.modelBreakdown.slice(0, 3).map((model) => (
+                          <Badge key={model.modelId} variant="outline" className="text-xs">
+                            {model.displayName}
+                          </Badge>
+                        ))}
+                        {user.modelBreakdown.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{user.modelBreakdown.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">-</span>
                     )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {user.lastActivity ? (
-                    <span className="text-sm">
-                      {/* TODO: Fix typing issue on the dto level */}
-                      {formatDistanceToNow(new Date(user.lastActivity as unknown as string), { addSuffix: true })}
-                    </span>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={user.isActive ? "default" : "secondary"}>
-                    {user.isActive ? t("userUsage.active") : t("userUsage.inactive")}
-                  </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {user.lastActivity ? (
+                      <span className="text-sm">
+                        {/* TODO: Fix typing issue on the dto level */}
+                        {formatDistanceToNow(new Date(user.lastActivity as unknown as string), { addSuffix: true })}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={user.isActive ? "default" : "secondary"}>
+                      {user.isActive ? t("userUsage.active") : t("userUsage.inactive")}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  {t("userUsage.emptyState")}
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                No users match the selected filters on this page. Try adjusting your filters or navigate to another page.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            )}
+          </TableBody>
+        </Table>
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center mt-6">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage > 0) onPageChange(currentPage - 1);
-                }}
-                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <div className="text-sm text-muted-foreground px-2">
-                {Math.max(totalPages ?? 0, 1)}
-              </div>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage < totalPages - 1) onPageChange(currentPage + 1);
-                }}
-                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    </div>
+        {/* Pagination Controls */}
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 0) onPageChange(currentPage - 1);
+                  }}
+                  className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {pageNumbers.map((page, index) => {
+                if (page === "ellipsis") {
+                  return (
+                    <PaginationItem key={`ellipsis-${index}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                const pageIndex = page - 1; // Convert to 0-based
+                const isActive = pageIndex === currentPage;
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href="#"
+                      isActive={isActive}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onPageChange(pageIndex);
+                      }}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages - 1) onPageChange(currentPage + 1);
+                  }}
+                  className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

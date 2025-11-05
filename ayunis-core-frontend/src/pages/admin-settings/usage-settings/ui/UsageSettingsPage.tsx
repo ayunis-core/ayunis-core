@@ -5,7 +5,6 @@ import { ModelDistribution } from "@/widgets/model-distribution-chart";
 import { UserUsageTable } from "@/widgets/user-usage-table";
 import { UsageFilters } from "./UsageFilters";
 import { useState } from "react";
-import { Separator } from "@/shared/ui/shadcn/separator";
 
 export default function UsageSettingsPage() {
   const [dateRange, setDateRange] = useState<{
@@ -17,7 +16,7 @@ export default function UsageSettingsPage() {
 
   return (
     <SettingsLayout>
-      <div>
+      <div className="space-y-8">
         <UsageFilters
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
@@ -27,30 +26,23 @@ export default function UsageSettingsPage() {
           onModelChange={setSelectedModel}
         />
 
-        <Separator className="my-8" />
-
         <UsageStatsCards
           startDate={dateRange.startDate}
           endDate={dateRange.endDate}
         />
 
-        <Separator className="my-8" />
+        <ProviderConsumption
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+          selectedProvider={selectedProvider}
+        />
 
-        <div className="space-y-8">
-          <ProviderConsumption
-            startDate={dateRange.startDate}
-            endDate={dateRange.endDate}
-            selectedProvider={selectedProvider}
-          />
+        <ModelDistribution
+          startDate={dateRange.startDate}
+          endDate={dateRange.endDate}
+          selectedModel={selectedModel}
+        />
 
-          <ModelDistribution
-            startDate={dateRange.startDate}
-            endDate={dateRange.endDate}
-            selectedModel={selectedModel}
-          />
-        </div>
-
-        <Separator className="my-8" />
         <UserUsageTable
           startDate={dateRange.startDate}
           endDate={dateRange.endDate}

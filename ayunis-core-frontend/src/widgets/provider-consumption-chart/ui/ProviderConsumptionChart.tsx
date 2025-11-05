@@ -12,7 +12,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/shared/ui/shadcn/chart";
-import { ProviderConsumptionHeader } from "./ProviderConsumptionHeader";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/ui/shadcn/card";
 
 interface ProviderConsumptionChartProps {
   chartData: Array<Record<string, number | string>>;
@@ -24,13 +24,13 @@ export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderCon
   const seriesKeys = useMemo(() => Object.keys(chartConfig), [chartConfig]);
 
   return (
-    <div>
-      <ProviderConsumptionHeader
-        title={t("charts.providerConsumption.title")}
-        description={t("charts.providerConsumption.description")}
-      />
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("charts.providerConsumption.title")}</CardTitle>
+        <CardDescription>{t("charts.providerConsumption.description")}</CardDescription>
+      </CardHeader>
 
-      <div className="mt-6">
+      <CardContent>
         <ChartContainer config={chartConfig} className="aspect-[2.4/1] w-full">
           <AreaChart data={chartData}>
             <defs>
@@ -80,8 +80,8 @@ export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderCon
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 

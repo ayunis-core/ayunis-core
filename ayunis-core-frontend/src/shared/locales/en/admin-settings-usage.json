@@ -16,6 +16,9 @@
   },
   "charts": {
     "noData": "No data available",
+    "noDataDescription": "There is no consumption data available for the selected time period.",
+    "errorTitle": "Error loading data",
+    "errorUnknown": "Unknown error",
     "modelDistribution": {
       "title": "Model Distribution",
       "description": "Model distribution breakdown",
@@ -44,7 +47,8 @@
     "lastActive": "Last Active",
     "status": "Status",
     "active": "active",
-    "inactive": "inactive"
+    "inactive": "inactive",
+    "emptyState": "No users match the selected filters on this page. Try adjusting your filters or navigate to another page."
   }
 }
 

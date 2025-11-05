@@ -2071,11 +2071,27 @@ endDate?: string;
  * Whether to include time series data for trend charts. Defaults to true.
  */
 includeTimeSeries?: boolean;
+/**
+ * Filter by provider (e.g., openai, anthropic)
+ */
+provider?: string;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
 };
 
 export type AdminUsageControllerGetProviderUsageChartParams = {
 startDate?: string;
 endDate?: string;
+/**
+ * Filter by provider (e.g., openai, anthropic)
+ */
+provider?: string;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
 };
 
 export type AdminUsageControllerGetModelDistributionParams = {
@@ -2091,6 +2107,10 @@ endDate?: string;
  * Maximum number of individual models to show before grouping into "Others". Defaults to 10.
  */
 maxModels?: number;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
 };
 
 export type AdminUsageControllerGetUserUsageParams = {
