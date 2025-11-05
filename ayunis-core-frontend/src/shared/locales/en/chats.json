@@ -50,6 +50,9 @@
         "invalidRange": "End must be after start",
         "selectDate": "Select date"
       },
+      "bar_chart": "Bar Chart",
+      "line_chart": "Line Chart",
+      "pie_chart": "Pie Chart",
       "tool_use": "Generate answer"
     }
   },

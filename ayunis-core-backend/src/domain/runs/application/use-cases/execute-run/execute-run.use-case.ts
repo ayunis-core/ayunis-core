@@ -172,10 +172,14 @@ export class ExecuteRunUseCase {
         );
       }
 
-      // Add native tools from the agent
+      // Add native tools from the agent (excluding always-available tools)
       tools.push(
         ...thread.agent.tools.filter(
-          (tool) => tool.type !== ToolType.INTERNET_SEARCH,
+          (tool) =>
+            tool.type !== ToolType.INTERNET_SEARCH &&
+            tool.type !== ToolType.BAR_CHART &&
+            tool.type !== ToolType.LINE_CHART &&
+            tool.type !== ToolType.PIE_CHART,
         ),
       );
     }
@@ -223,6 +227,29 @@ export class ExecuteRunUseCase {
       await this.assembleToolsUseCase.execute(
         new AssembleToolCommand({
           type: ToolType.CREATE_CALENDAR_EVENT,
+        }),
+      ),
+    );
+
+    // Chart tools are always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.BAR_CHART,
+        }),
+      ),
+    );
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.LINE_CHART,
+        }),
+      ),
+    );
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.PIE_CHART,
         }),
       ),
     );

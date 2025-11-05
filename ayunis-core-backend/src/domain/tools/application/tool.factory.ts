@@ -18,6 +18,9 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import { SendEmailTool } from '../domain/tools/send-email-tool.entity';
 import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
 import { CodeExecutionTool } from '../domain/tools/code-execution-tool.entity';
+import { BarChartTool } from '../domain/tools/bar-chart-tool.entity';
+import { LineChartTool } from '../domain/tools/line-chart-tool.entity';
+import { PieChartTool } from '../domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 
 @Injectable()
@@ -60,6 +63,12 @@ export class ToolFactory {
         return new SendEmailTool();
       case ToolType.CREATE_CALENDAR_EVENT:
         return new CreateCalendarEventTool();
+      case ToolType.BAR_CHART:
+        return new BarChartTool();
+      case ToolType.LINE_CHART:
+        return new LineChartTool();
+      case ToolType.PIE_CHART:
+        return new PieChartTool();
       case ToolType.CODE_EXECUTION:
         if (
           params.context &&
