@@ -107,7 +107,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
     <div className="flex gap-2">
       {isCloud ? (
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
           onClick={handleOpenCreatePredefined}
         >

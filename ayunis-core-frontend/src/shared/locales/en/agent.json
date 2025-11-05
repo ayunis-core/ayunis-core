@@ -39,10 +39,6 @@
     "connectedCount": "{{count}} connected",
     "toggleAriaLabel": "Toggle {{name}} integration",
     "retryButton": "Retry",
-    "emptyState": {
-      "title": "No integrations available",
-      "description": "Ask your organization admin to set up MCP integrations in organization settings."
-    },
     "success": {
       "connected": "Integration connected",
       "disconnected": "Integration disconnected"

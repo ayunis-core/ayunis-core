@@ -8,7 +8,6 @@ import {
 import { Switch } from "@/shared/ui/shadcn/switch";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
-import { Plug } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "@tanstack/react-router";
 import { useAgentMcpIntegrationsQueries } from "../api/useAgentMcpIntegrationsQueries";
@@ -98,25 +97,7 @@ export default function AgentMcpIntegrationsCard() {
 
   // Empty state
   if (!availableIntegrations || availableIntegrations.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("mcpIntegrations.title")}</CardTitle>
-          <CardDescription>{t("mcpIntegrations.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <Plug className="h-12 w-12 text-muted-foreground mb-4" />
-            <h4 className="text-lg font-semibold mb-2">
-              {t("mcpIntegrations.emptyState.title")}
-            </h4>
-            <p className="text-sm text-muted-foreground max-w-md">
-              {t("mcpIntegrations.emptyState.description")}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   // Sort integrations alphabetically by name

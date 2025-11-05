@@ -39,10 +39,6 @@
     "connectedCount": "{{count}} verbunden",
     "toggleAriaLabel": "{{name}}-Integration umschalten",
     "retryButton": "Erneut versuchen",
-    "emptyState": {
-      "title": "Keine Integrationen verfügbar",
-      "description": "Bitten Sie Ihren Organisationsadministrator, MCP-Integrationen in den Organisationseinstellungen einzurichten."
-    },
     "success": {
       "connected": "Integration verbunden",
       "disconnected": "Integration getrennt"
