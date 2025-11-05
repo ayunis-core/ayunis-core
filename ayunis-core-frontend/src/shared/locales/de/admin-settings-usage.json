@@ -16,6 +16,9 @@
   },
   "charts": {
     "noData": "Keine Daten verfügbar",
+    "noDataDescription": "Für den ausgewählten Zeitraum sind keine Verbrauchsdaten verfügbar.",
+    "errorTitle": "Fehler beim Laden der Daten",
+    "errorUnknown": "Unbekannter Fehler",
     "modelDistribution": {
       "title": "Modellverteilung",
       "description": "Verbrauch nach Modell",
@@ -44,7 +47,8 @@
     "lastActive": "Letzte Aktivität",
     "status": "Status",
     "active": "aktiv",
-    "inactive": "inaktiv"
+    "inactive": "inaktiv",
+    "emptyState": "Keine Benutzer entsprechen den ausgewählten Filtern auf dieser Seite. Versuchen Sie, Ihre Filter anzupassen oder zu einer anderen Seite zu navigieren."
   }
 }
 

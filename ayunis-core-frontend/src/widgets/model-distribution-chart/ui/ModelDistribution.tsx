@@ -30,7 +30,7 @@ export function ModelDistribution({ startDate, endDate, selectedModel }: ModelDi
     endDate: endDate?.toISOString(),
     maxModels: 10,
     modelId: selectedModel,
-  } as Parameters<typeof useModelDistribution>[0]);
+  });
 
   // Prepare all chart data structures
   const { chartData, chartConfig, modelBreakdown } = useMemo(() => {

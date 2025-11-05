@@ -1,21 +1,24 @@
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/ui/shadcn/card";
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
+import { useTranslation } from "react-i18next";
 
 export function UserUsageTableLoading() {
+  const { t } = useTranslation("admin-settings-usage");
+
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-64 mt-2" />
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("userUsage.title")}</CardTitle>
+        <CardDescription>{t("userUsage.subtitle")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
         </div>
-        <Skeleton className="h-10 w-24" />
-      </div>
-      <div className="space-y-2">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 

@@ -8,8 +8,6 @@
 export interface IsCloudResponseDto {
   /** Whether the deployment is running in a cloud environment */
   isCloud: boolean;
-  /** Whether new user registration is disabled */
-  isRegistrationDisabled: boolean;
 }
 
 /**
@@ -26,7 +24,6 @@ export const ModelWithConfigResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -49,31 +46,17 @@ export interface ModelWithConfigResponseDto {
   isReasoning: boolean;
   /** Whether the model can use tools */
   canUseTools: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
   /** Whether the model is permitted to be used */
   isPermitted: boolean;
   /** Whether the model is the default model */
   isDefault: boolean;
   /** Whether the model is an embedding model */
   isEmbedding: boolean;
-  /**
-   * Whether this model enforces anonymous mode. Null if not permitted.
-   * @nullable
-   */
-  anonymousOnly: boolean | null;
 }
 
 export interface CreatePermittedModelDto {
   /** The id of the model */
   modelId: string;
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly?: boolean;
-}
-
-export interface UpdatePermittedModelDto {
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly: boolean;
 }
 
 /**
@@ -90,7 +73,6 @@ export const PermittedLanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -102,6 +84,18 @@ export type PermittedLanguageModelResponseDtoType = typeof PermittedLanguageMode
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedLanguageModelResponseDtoType = {
   language: 'language',
+} as const;
+
+/**
+ * Currency for cost calculation (ISO 4217 code)
+ * @nullable
+ */
+export type PermittedLanguageModelResponseDtoCurrency = typeof PermittedLanguageModelResponseDtoCurrency[keyof typeof PermittedLanguageModelResponseDtoCurrency] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PermittedLanguageModelResponseDtoCurrency = {
+  EUR: 'EUR',
 } as const;
 
 export interface PermittedLanguageModelResponseDto {
@@ -121,24 +115,21 @@ export interface PermittedLanguageModelResponseDto {
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether this model enforces anonymous mode */
-  anonymousOnly: boolean;
-}
-
-/**
- * The permitted language model
- * @nullable
- */
-export type PermittedLanguageModelResponseDtoNullablePermittedLanguageModel = PermittedLanguageModelResponseDto | null;
-
-export interface PermittedLanguageModelResponseDtoNullable {
   /**
-   * The permitted language model
+   * Cost per 1K input tokens
    * @nullable
    */
-  permittedLanguageModel: PermittedLanguageModelResponseDtoNullablePermittedLanguageModel;
+  inputTokenCost: number | null;
+  /**
+   * Cost per 1K output tokens
+   * @nullable
+   */
+  outputTokenCost: number | null;
+  /**
+   * Currency for cost calculation (ISO 4217 code)
+   * @nullable
+   */
+  currency: PermittedLanguageModelResponseDtoCurrency;
 }
 
 export interface SetUserDefaultModelDto {
@@ -165,7 +156,6 @@ export const ModelProviderInfoResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -206,7 +196,6 @@ export const CreatePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -228,7 +217,6 @@ export const PermittedProviderResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -269,7 +257,6 @@ export const DeletePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -291,7 +278,6 @@ export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -323,351 +309,6 @@ export interface ModelProviderWithPermittedStatusResponseDto {
 export interface EmbeddingModelEnabledResponseDto {
   /** Whether the organization has an embedding model enabled */
   isEmbeddingModelEnabled: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The type of the model (always embedding)
- */
-export type PermittedEmbeddingModelResponseDtoType = typeof PermittedEmbeddingModelResponseDtoType[keyof typeof PermittedEmbeddingModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
-} as const;
-
-export interface PermittedEmbeddingModelResponseDto {
-  /** The id of the permitted model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: PermittedEmbeddingModelResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always embedding) */
-  type: PermittedEmbeddingModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /**
-   * The number of dimensions for embeddings
-   * @nullable
-   */
-  dimensions: number | null;
-}
-
-/**
- * The provider of the model
- */
-export type CreateLanguageModelRequestDtoProvider = typeof CreateLanguageModelRequestDtoProvider[keyof typeof CreateLanguageModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateLanguageModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-export interface CreateLanguageModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: CreateLanguageModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type UpdateLanguageModelRequestDtoProvider = typeof UpdateLanguageModelRequestDtoProvider[keyof typeof UpdateLanguageModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateLanguageModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-export interface UpdateLanguageModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: UpdateLanguageModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type CreateEmbeddingModelRequestDtoProvider = typeof CreateEmbeddingModelRequestDtoProvider[keyof typeof CreateEmbeddingModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateEmbeddingModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type CreateEmbeddingModelRequestDtoDimensions = typeof CreateEmbeddingModelRequestDtoDimensions[keyof typeof CreateEmbeddingModelRequestDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateEmbeddingModelRequestDtoDimensions = {
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface CreateEmbeddingModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: CreateEmbeddingModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The dimensions of the embedding */
-  dimensions: CreateEmbeddingModelRequestDtoDimensions;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type UpdateEmbeddingModelRequestDtoProvider = typeof UpdateEmbeddingModelRequestDtoProvider[keyof typeof UpdateEmbeddingModelRequestDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateEmbeddingModelRequestDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type UpdateEmbeddingModelRequestDtoDimensions = typeof UpdateEmbeddingModelRequestDtoDimensions[keyof typeof UpdateEmbeddingModelRequestDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateEmbeddingModelRequestDtoDimensions = {
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface UpdateEmbeddingModelRequestDto {
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: UpdateEmbeddingModelRequestDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The dimensions of the embedding */
-  dimensions: UpdateEmbeddingModelRequestDtoDimensions;
-  /** Whether the model is archived */
-  isArchived: boolean;
-}
-
-/**
- * The provider of the model
- */
-export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoProvider[keyof typeof LanguageModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The type of the model (always language)
- */
-export type LanguageModelResponseDtoType = typeof LanguageModelResponseDtoType[keyof typeof LanguageModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LanguageModelResponseDtoType = {
-  language: 'language',
-} as const;
-
-export interface LanguageModelResponseDto {
-  /** The unique identifier of the model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: LanguageModelResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always language) */
-  type: LanguageModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /** Whether the model supports streaming */
-  canStream: boolean;
-  /** Whether the model supports tool use */
-  canUseTools: boolean;
-  /** Whether the model has reasoning capabilities */
-  isReasoning: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
-  /** The date the model was created */
-  createdAt: string;
-  /** The date the model was last updated */
-  updatedAt: string;
-}
-
-/**
- * The provider of the model
- */
-export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDtoProvider[keyof typeof EmbeddingModelResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The type of the model (always embedding)
- */
-export type EmbeddingModelResponseDtoType = typeof EmbeddingModelResponseDtoType[keyof typeof EmbeddingModelResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
-} as const;
-
-/**
- * The dimensions of the embedding
- */
-export type EmbeddingModelResponseDtoDimensions = typeof EmbeddingModelResponseDtoDimensions[keyof typeof EmbeddingModelResponseDtoDimensions];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EmbeddingModelResponseDtoDimensions = {
-  DIMENSION_1024: 'DIMENSION_1024',
-  DIMENSION_1536: 'DIMENSION_1536',
-  DIMENSION_2560: 'DIMENSION_2560',
-  NUMBER_1024: 1024,
-  NUMBER_1536: 1536,
-  NUMBER_2560: 2560,
-} as const;
-
-export interface EmbeddingModelResponseDto {
-  /** The unique identifier of the model */
-  id: string;
-  /** The name of the model */
-  name: string;
-  /** The provider of the model */
-  provider: EmbeddingModelResponseDtoProvider;
-  /** The display name of the model */
-  displayName: string;
-  /** The type of the model (always embedding) */
-  type: EmbeddingModelResponseDtoType;
-  /** Whether the model is archived */
-  isArchived: boolean;
-  /** The dimensions of the embedding */
-  dimensions: EmbeddingModelResponseDtoDimensions;
-  /** The date the model was created */
-  createdAt: string;
-  /** The date the model was last updated */
-  updatedAt: string;
-}
-
-export interface CreateOrgRequestDto {
-  /** Organization display name */
-  name: string;
-}
-
-export interface SuperAdminOrgResponseDto {
-  /** Organization unique identifier */
-  id: string;
-  /** Organization display name */
-  name: string;
-  /** Date when the organization was created */
-  createdAt: string;
-}
-
-export interface SuperAdminOrgListResponseDto {
-  /** Collection of organizations accessible to super admins */
-  orgs: SuperAdminOrgResponseDto[];
 }
 
 /**
@@ -776,301 +417,11 @@ export interface ResetPasswordDto {
   newPasswordConfirmation: string;
 }
 
-/**
- * Role for the user
- */
-export type CreateUserDtoRole = typeof CreateUserDtoRole[keyof typeof CreateUserDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateUserDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface CreateUserDto {
-  /** Email address for the user */
-  email: string;
-  /** Name of the user */
-  name: string;
-  /** Role for the user */
-  role: CreateUserDtoRole;
-  /** Send password reset email */
-  sendPasswordResetEmail: boolean;
-}
-
-/**
- * Role to assign to the invited user
- */
-export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateInviteDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface CreateInviteDto {
-  /** Email address of the person to invite */
-  email: string;
-  /** Role to assign to the invited user */
-  role: CreateInviteDtoRole;
-}
-
-export interface CreateInviteResponseDto {
-  /**
-   * URL of the invite, returned when not using email configuration
-   * @nullable
-   */
-  url: string | null;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteDetailResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteDetailResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteDetailResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteDetailResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteDetailResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-  /** Name of the organization */
-  organizationName: string;
-}
-
-export interface AcceptInviteDto {
-  /** JWT token from the invite */
-  inviteToken: string;
-  /** Name of the user accepting the invite */
-  userName: string;
-  /** Password of the user accepting the invite */
-  password: string;
-  /** Marketing acceptance */
-  hasAcceptedMarketing: boolean;
-}
-
-export interface AcceptInviteResponseDto {
-  /** ID of the accepted invite */
-  inviteId: string;
-  /** Email of the user who accepted the invite */
-  email: string;
-  /** Organization ID the user was invited to */
-  orgId: string;
-}
-
-export interface SubscriptionBillingInfoResponseDto {
-  /** Company name */
-  companyName: string;
-  /** Street */
-  street: string;
-  /** Number */
-  houseNumber: string;
-  /** City */
-  city: string;
-  /** Postal code */
-  postalCode: string;
-  /** Country */
-  country: string;
-  /** USt-ID */
-  vatNumber?: string;
-}
-
-/**
- * Date when the subscription was cancelled (if applicable)
- */
-export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
-
-/**
- * Renewal cycle of the subscription
- */
-export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SubscriptionResponseDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-} as const;
-
-export interface SubscriptionResponseDto {
-  /** Unique identifier of the subscription */
-  id: string;
-  /** Date when the subscription was created */
-  createdAt: string;
-  /** Date when the subscription was last updated */
-  updatedAt: string;
-  /** Date when the subscription was cancelled (if applicable) */
-  cancelledAt?: SubscriptionResponseDtoCancelledAt;
-  /** Organization ID associated with the subscription */
-  orgId: string;
-  /** Number of seats in the subscription */
-  noOfSeats: number;
-  /** Price per seat in the subscription */
-  pricePerSeat: number;
-  /** Renewal cycle of the subscription */
-  renewalCycle: SubscriptionResponseDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles */
-  renewalCycleAnchor: string;
-  /** Number of available seats (total seats minus invites) */
-  availableSeats: number;
-  /** Date of the next renewal */
-  nextRenewalDate: string;
-  /** Billing information */
-  billingInfo: SubscriptionBillingInfoResponseDto;
-}
-
-export interface SubscriptionResponseDtoNullable {
-  /** Subscription */
-  subscription?: SubscriptionResponseDto;
-}
-
-export interface CreateSubscriptionRequestDto {
-  /**
-   * Number of seats for the subscription
-   * @minimum 1
-   */
-  noOfSeats?: number;
-  /** Company name for the subscription */
-  companyName: string;
-  /** Sub text for the subscription */
-  subText?: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface ActiveSubscriptionResponseDto {
-  /** Whether the organization has an active subscription */
-  hasActiveSubscription: boolean;
-}
-
-export interface UpdateBillingInfoDto {
-  /** Company name for the subscription */
-  companyName: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface PriceResponseDto {
-  /** Current price per seat per month in the configured currency */
-  pricePerSeatMonthly: number;
-}
-
-export interface UpdateSeatsDto { [key: string]: unknown }
-
-export interface UploadFileResponseDto {
-  /** Name of the uploaded object */
-  objectName: string;
-  /** Size of the uploaded file in bytes */
-  size: number;
-  /** ETag of the uploaded object */
-  etag: string;
-  /** Content type of the uploaded file */
-  contentType?: string;
-  /** Last modified date of the uploaded object */
-  lastModified?: string;
-}
-
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
   /** The id of the agent */
   agentId?: string;
-  /** Enable anonymous mode for this thread */
-  isAnonymous?: boolean;
 }
 
 /**
@@ -1084,8 +435,6 @@ export const UserMessageResponseDtoRole = {
   user: 'user',
 } as const;
 
-export type UserMessageResponseDtoContentItem = TextMessageContentResponseDto | ImageMessageContentResponseDto;
-
 export interface UserMessageResponseDto {
   /** Unique identifier for the message */
   id: string;
@@ -1095,8 +444,8 @@ export interface UserMessageResponseDto {
   createdAt: string;
   /** Role of the message sender */
   role: UserMessageResponseDtoRole;
-  /** Array of content items for user messages (text and/or images) */
-  content: UserMessageResponseDtoContentItem[];
+  /** Array of text content items for user messages */
+  content: TextMessageContentResponseDto[];
 }
 
 /**
@@ -1185,7 +534,6 @@ export const TextMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
-  image: 'image',
 } as const;
 
 export interface TextMessageContentResponseDto {
@@ -1207,7 +555,6 @@ export const ToolUseMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
-  image: 'image',
 } as const;
 
 /**
@@ -1238,7 +585,6 @@ export const ToolResultMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
-  image: 'image',
 } as const;
 
 export interface ToolResultMessageContentResponseDto {
@@ -1264,7 +610,6 @@ export const ThinkingMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
-  image: 'image',
 } as const;
 
 export interface ThinkingMessageContentResponseDto {
@@ -1272,30 +617,6 @@ export interface ThinkingMessageContentResponseDto {
   type: ThinkingMessageContentResponseDtoType;
   /** The thinking content of the message */
   thinking: string;
-}
-
-/**
- * Type of the message content
- */
-export type ImageMessageContentResponseDtoType = typeof ImageMessageContentResponseDtoType[keyof typeof ImageMessageContentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ImageMessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
-  image: 'image',
-} as const;
-
-export interface ImageMessageContentResponseDto {
-  /** Type of the message content */
-  type: ImageMessageContentResponseDtoType;
-  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
-  imageUrl: string;
-  /** Optional alternative text for the image */
-  altText?: string;
 }
 
 export interface ModelResponseDto {
@@ -1307,10 +628,6 @@ export interface ModelResponseDto {
   provider: string;
   /** The display name of the model */
   displayName: string;
-  /** Whether this model requires anonymous mode (PII redaction) */
-  anonymousOnly: boolean;
-  /** Whether the model supports vision (image processing) */
-  canVision: boolean;
 }
 
 /**
@@ -1401,8 +718,6 @@ export type FileSourceResponseDtoFileType = typeof FileSourceResponseDtoFileType
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoFileType = {
   pdf: 'pdf',
-  docx: 'docx',
-  pptx: 'pptx',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -1572,8 +887,6 @@ export interface GetThreadResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-  /** Whether the thread is in anonymous mode (PII redaction enabled) */
-  isAnonymous: boolean;
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -1585,8 +898,16 @@ export interface GetThreadsResponseDtoItem {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-  /** Whether the thread is in anonymous mode (PII redaction enabled) */
-  isAnonymous: boolean;
+}
+
+export interface UpdateThreadModelDto {
+  /** The id of the model */
+  modelId: string;
+}
+
+export interface UpdateThreadAgentDto {
+  /** The UUID of the agent to update */
+  agentId: string;
 }
 
 /**
@@ -1604,13 +925,9 @@ export const ToolAssignmentDtoType = {
   send_email: 'send_email',
   create_calendar_event: 'create_calendar_event',
   code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1650,13 +967,9 @@ export const ToolResponseDtoType = {
   send_email: 'send_email',
   create_calendar_event: 'create_calendar_event',
   code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolResponseDto {
@@ -1706,10 +1019,6 @@ export interface AgentResponseDto {
   tools: ToolResponseDto[];
   /** The sources assigned to this agent */
   sources: AgentSourceResponseDto[];
-  /** Whether this agent is shared with the current user (vs. owned by them) */
-  isShared: boolean;
-  /** The unique identifier of the user who owns this agent (same as userId) */
-  ownerId: string;
 }
 
 export interface UpdateAgentDto {
@@ -1796,68 +1105,6 @@ export interface McpIntegrationResponseDto {
   createdAt: string;
   /** Timestamp when the integration was last updated */
   updatedAt: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
-  returnsPii: boolean;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType[keyof typeof CreateAgentShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateAgentShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-} as const;
-
-export interface CreateAgentShareDto {
-  /** Type of entity being shared */
-  entityType: CreateAgentShareDtoEntityType;
-  /** ID of the agent to share */
-  agentId: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-} as const;
-
-/**
- * Type of share scope (organization or user)
- */
-export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoScopeType = {
-  org: 'org',
-  user: 'user',
-} as const;
-
-export interface ShareResponseDto {
-  /** Unique identifier of the share */
-  id: string;
-  /** Type of entity being shared */
-  entityType: ShareResponseDtoEntityType;
-  /** ID of the entity being shared */
-  entityId: string;
-  /** Type of share scope (organization or user) */
-  scopeType: ShareResponseDtoScopeType;
-  /** ID of the user who created the share */
-  ownerId: string;
-  /** When the share was created */
-  createdAt: string;
-  /** When the share was last updated */
-  updatedAt: string;
 }
 
 /**
@@ -1890,7 +1137,6 @@ export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrat
 export const CreatePredefinedIntegrationDtoSlug = {
   TEST: 'TEST',
   LOCABOO: 'LOCABOO',
-  LEGAL_CODES: 'LEGAL_CODES',
 } as const;
 
 export interface CreatePredefinedIntegrationDto {
@@ -1898,8 +1144,6 @@ export interface CreatePredefinedIntegrationDto {
   slug: CreatePredefinedIntegrationDtoSlug;
   /** List of config values for credential fields */
   configValues: ConfigValueDto[];
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
-  returnsPii?: boolean;
 }
 
 /**
@@ -1935,8 +1179,6 @@ export interface CreateCustomIntegrationDto {
   authHeaderName?: string;
   /** Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods. */
   credentials?: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
-  returnsPii?: boolean;
 }
 
 /**
@@ -1999,12 +1241,17 @@ export interface UpdateMcpIntegrationDto {
    * @maxLength 255
    */
   name?: string;
-  /** Authentication credentials (will be encrypted). Provide to rotate the stored secret/token. */
+  /**
+   * Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.
+   * @minLength 1
+   */
   credentials?: string;
-  /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
+  /**
+   * Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.
+   * @minLength 1
+   * @maxLength 255
+   */
   authHeaderName?: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
-  returnsPii?: boolean;
 }
 
 /**
@@ -2038,7 +1285,6 @@ export const MessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
-  image: 'image',
 } as const;
 
 export interface MessageContentResponseDto {
@@ -2203,66 +1449,488 @@ export interface ToolResultInput {
   result: string;
 }
 
+/**
+ * The input to use for the inference
+ */
+export type SendMessageDtoInput = TextInput | ToolResultInput;
+
 export interface SendMessageDto {
   /** The thread to use for the inference. */
   threadId: string;
-  /** Text content of the user message (for user input) */
-  text?: string;
-  /** JSON array of alt texts matching the order of uploaded images */
-  imageAltTexts?: string[];
-  /** Tool result input (for tool_result type only) */
-  toolResult?: ToolResultInput;
+  /** The input to use for the inference */
+  input: SendMessageDtoInput;
   /** Enable streaming mode for real-time response updates */
   streaming?: boolean;
 }
 
-export interface SuperAdminTrialResponseDto {
-  /** Trial unique identifier */
+export interface SubscriptionBillingInfoResponseDto {
+  /** Company name */
+  companyName: string;
+  /** Street */
+  street: string;
+  /** Number */
+  houseNumber: string;
+  /** City */
+  city: string;
+  /** Postal code */
+  postalCode: string;
+  /** Country */
+  country: string;
+  /** USt-ID */
+  vatNumber?: string;
+}
+
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Renewal cycle of the subscription
+ */
+export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubscriptionResponseDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+export interface SubscriptionResponseDto {
+  /** Unique identifier of the subscription */
   id: string;
-  /** Organization ID associated with this trial */
-  orgId: string;
-  /**
-   * Number of messages sent in this trial
-   * @minimum 0
-   */
-  messagesSent: number;
-  /**
-   * Maximum number of messages allowed in this trial
-   * @minimum 1
-   */
-  maxMessages: number;
-  /** Date when the trial was created */
+  /** Date when the subscription was created */
   createdAt: string;
-  /** Date when the trial was last updated */
+  /** Date when the subscription was last updated */
   updatedAt: string;
-}
-
-export interface SuperAdminTrialResponseDtoNullable {
-  /** Trial */
-  trial?: SuperAdminTrialResponseDto;
-}
-
-export interface CreateTrialRequestDto {
-  /** Organization ID for which to create the trial */
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Organization ID associated with the subscription */
   orgId: string;
-  /**
-   * Maximum number of messages allowed in the trial
-   * @minimum 1
-   */
-  maxMessages: number;
+  /** Number of seats in the subscription */
+  noOfSeats: number;
+  /** Price per seat in the subscription */
+  pricePerSeat: number;
+  /** Renewal cycle of the subscription */
+  renewalCycle: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles */
+  renewalCycleAnchor: string;
+  /** Number of available seats (total seats minus invites) */
+  availableSeats: number;
+  /** Date of the next renewal */
+  nextRenewalDate: string;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
 }
 
-export interface UpdateTrialRequestDto {
+export interface CreateSubscriptionRequestDto {
   /**
-   * Maximum number of messages allowed in the trial
+   * Number of seats for the subscription
    * @minimum 1
    */
-  maxMessages?: number;
+  noOfSeats?: number;
+  /** Company name for the subscription */
+  companyName: string;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+}
+
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
+}
+
+export interface UpdateBillingInfoDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+}
+
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
+}
+
+export interface UpdateSeatsDto { [key: string]: unknown }
+
+/**
+ * Role to assign to the invited user
+ */
+export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateInviteDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface CreateInviteDto {
+  /** Email address of the person to invite */
+  email: string;
+  /** Role to assign to the invited user */
+  role: CreateInviteDtoRole;
+}
+
+export interface CreateInviteResponseDto {
   /**
-   * Number of messages already sent (can be used to reset or adjust)
-   * @minimum 0
+   * URL of the invite, returned when not using email configuration
+   * @nullable
    */
-  messagesSent?: number;
+  url: string | null;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteDetailResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteDetailResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteDetailResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteDetailResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteDetailResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+  /** Name of the organization */
+  organizationName: string;
+}
+
+export interface AcceptInviteDto {
+  /** JWT token from the invite */
+  inviteToken: string;
+  /** Name of the user accepting the invite */
+  userName: string;
+  /** Password of the user accepting the invite */
+  password: string;
+  /** Marketing acceptance */
+  hasAcceptedMarketing: boolean;
+}
+
+export interface AcceptInviteResponseDto {
+  /** ID of the accepted invite */
+  inviteId: string;
+  /** Email of the user who accepted the invite */
+  email: string;
+  /** Organization ID the user was invited to */
+  orgId: string;
+}
+
+export interface UsageConfigResponseDto {
+  /** Whether the deployment is self-hosted. Determines feature availability. */
+  isSelfHosted: boolean;
+  /** Whether cost information should be displayed in the UI. True for self-hosted, false for cloud deployments. */
+  showCostInformation: boolean;
+  /** Default currency code used for cost calculations and display */
+  defaultCurrency: string;
+  /** Number of decimal places to use when formatting cost values */
+  costDecimalPlaces: number;
+}
+
+export interface UsageStatsResponseDto {
+  /** Total tokens consumed across all users and models in the specified period */
+  totalTokens: number;
+  /** Total number of API requests made in the specified period */
+  totalRequests: number;
+  /** Total cost incurred in the period. Only available in self-hosted deployments. */
+  totalCost?: number;
+  /** Currency code for cost information. Only available in self-hosted deployments. */
+  currency?: string;
+  /** Number of users who made requests within the active user threshold (last 30 days) */
+  activeUsers: number;
+  /** Total number of unique users who made requests in the specified period */
+  totalUsers: number;
+  /** List of the most frequently used model names, ordered by usage */
+  topModels: string[];
+}
+
+export interface TimeSeriesPointDto {
+  /** Date of the data point */
+  date: string;
+  /** Number of tokens at this point */
+  tokens: number;
+  /** Number of requests at this point */
+  requests: number;
+  /** Cost at this point (self-hosted mode only) */
+  cost?: number;
+}
+
+/**
+ * Model provider
+ */
+export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProviderUsageDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+} as const;
+
+export interface ProviderUsageDto {
+  /** Model provider */
+  provider: ProviderUsageDtoProvider;
+  /** Total tokens for this provider */
+  tokens: number;
+  /** Total requests for this provider */
+  requests: number;
+  /** Total cost for this provider (self-hosted mode only) */
+  cost?: number;
+  /** Percentage of total usage */
+  percentage: number;
+  /** Time series data for this provider */
+  timeSeriesData: TimeSeriesPointDto[];
+}
+
+export interface ProviderUsageResponseDto {
+  /** Provider usage statistics */
+  providers: ProviderUsageDto[];
+}
+
+export interface ProviderValuesDto {
+  /** Tokens for OpenAI */
+  openai?: number;
+  /** Tokens for Anthropic */
+  anthropic?: number;
+  /** Tokens for Mistral */
+  mistral?: number;
+  /** Tokens for Ollama */
+  ollama?: number;
+  /** Tokens for Synaforce */
+  synaforce?: number;
+  /** Tokens for Ayunis (internal) */
+  ayunis?: number;
+}
+
+export interface ProviderTimeSeriesRowDto {
+  /** Date of the data point */
+  date: string;
+  /** Tokens per provider for this date */
+  values: ProviderValuesDto;
+}
+
+export interface ProviderUsageChartResponseDto {
+  /** Aligned time series rows by date with provider token values */
+  timeSeries: ProviderTimeSeriesRowDto[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelDistributionDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+} as const;
+
+export interface ModelDistributionDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelDistributionDtoProvider;
+  /** Total tokens for this model */
+  tokens: number;
+  /** Total requests for this model */
+  requests: number;
+  /** Total cost for this model (self-hosted mode only) */
+  cost?: number;
+  /** Percentage of total usage */
+  percentage: number;
+}
+
+export interface ModelDistributionResponseDto {
+  /** Model distribution statistics */
+  models: ModelDistributionDto[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelBreakdownDtoProvider = typeof ModelBreakdownDtoProvider[keyof typeof ModelBreakdownDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelBreakdownDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+} as const;
+
+export interface ModelBreakdownDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelBreakdownDtoProvider;
+  /** Tokens used for this model */
+  tokens: number;
+  /** Requests made to this model */
+  requests: number;
+  /** Cost for this model (self-hosted mode only) */
+  cost?: number;
+  /** Percentage of user's total usage */
+  percentage: number;
+}
+
+/**
+ * Last activity date (null if no activity)
+ * @nullable
+ */
+export type UserUsageDtoLastActivity = { [key: string]: unknown } | null;
+
+export interface UserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total tokens for this user */
+  tokens: number;
+  /** Total requests for this user */
+  requests: number;
+  /** Total cost for this user (self-hosted mode only) */
+  cost?: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity?: UserUsageDtoLastActivity;
+  /** Whether the user is considered active */
+  isActive: boolean;
+  /** Model breakdown for this user */
+  modelBreakdown: ModelBreakdownDto[];
+}
+
+export interface PaginationDto {
+  /** Maximum number of items per page */
+  limit: number;
+  /** Number of items to skip */
+  offset: number;
+  /** Total number of items available */
+  total?: number;
+}
+
+export interface UserUsageResponseDto {
+  /** User usage statistics */
+  data: UserUsageDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
 }
 
 export interface CreatePromptDto {
@@ -2344,25 +2012,11 @@ export const MeResponseDtoRole = {
   user: 'user',
 } as const;
 
-/**
- * User system role
- */
-export type MeResponseDtoSystemRole = typeof MeResponseDtoSystemRole[keyof typeof MeResponseDtoSystemRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MeResponseDtoSystemRole = {
-  customer: 'customer',
-  super_admin: 'super_admin',
-} as const;
-
 export interface MeResponseDto {
   /** User email address */
   email: string;
   /** User role */
   role: MeResponseDtoRole;
-  /** User system role */
-  systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
 }
@@ -2374,52 +2028,6 @@ export interface CreateEmbeddingModelDto { [key: string]: unknown }
 export interface UpdateLanguageModelDto { [key: string]: unknown }
 
 export interface UpdateEmbeddingModelDto { [key: string]: unknown }
-
-export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
-
-export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
-
-export type SuperAdminModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
-
-export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
-
-export type SuperAdminOrgsControllerGetAllOrgsParams = {
-/**
- * Number of organizations to skip before collecting results.
- */
-offset?: number;
-/**
- * Maximum number of organizations to return.
- */
-limit?: number;
-};
-
-export type UserControllerValidateResetTokenParams = {
-/**
- * Password reset token from email
- */
-token: string;
-};
-
-export type UserControllerValidateResetToken200 = {
-  valid?: boolean;
-};
-
-export type StorageControllerUploadFileBody = {
-  /** The file to upload */
-  file: Blob;
-};
-
-export type ThreadsControllerFindAllParams = {
-/**
- * Search threads by title
- */
-search?: string;
-/**
- * Filter threads by agent ID
- */
-agentId?: string;
-};
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
@@ -2437,40 +2045,133 @@ export type AgentsControllerAddFileSourceBody = {
   file: Blob;
 };
 
-export type SharesControllerGetSharesParams = {
+export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+
+export type AdminUsageControllerGetUsageStatsParams = {
 /**
- * ID of the entity to get shares for
+ * Start date in ISO format. If provided, must be used with endDate.
  */
-entityId: string;
+startDate?: string;
 /**
- * Type of the entity
+ * End date in ISO format. If provided, must be used with startDate.
  */
-entityType: SharesControllerGetSharesEntityType;
+endDate?: string;
 };
 
-export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
+export type AdminUsageControllerGetProviderUsageParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+/**
+ * Whether to include time series data for trend charts. Defaults to true.
+ */
+includeTimeSeries?: boolean;
+/**
+ * Filter by provider (e.g., openai, anthropic)
+ */
+provider?: string;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
+};
+
+export type AdminUsageControllerGetProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+/**
+ * Filter by provider (e.g., openai, anthropic)
+ */
+provider?: string;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
+};
+
+export type AdminUsageControllerGetModelDistributionParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+/**
+ * Maximum number of individual models to show before grouping into "Others". Defaults to 10.
+ */
+maxModels?: number;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
+};
+
+export type AdminUsageControllerGetUserUsageParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+/**
+ * Number of users per page (1-1000). Defaults to 50.
+ */
+limit?: number;
+/**
+ * Number of users to skip for pagination. Defaults to 0.
+ */
+offset?: number;
+/**
+ * Search term to filter users by name or email
+ */
+search?: string;
+/**
+ * Field to sort users by. Defaults to tokens.
+ */
+sortBy?: AdminUsageControllerGetUserUsageSortBy;
+/**
+ * Sort order (ascending or descending). Defaults to desc.
+ */
+sortOrder?: AdminUsageControllerGetUserUsageSortOrder;
+/**
+ * Whether to include detailed model usage breakdown for each user. Defaults to true.
+ */
+includeModelBreakdown?: boolean;
+};
+
+export type AdminUsageControllerGetUserUsageSortBy = typeof AdminUsageControllerGetUserUsageSortBy[keyof typeof AdminUsageControllerGetUserUsageSortBy];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SharesControllerGetSharesEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
+export const AdminUsageControllerGetUserUsageSortBy = {
+  tokens: 'tokens',
+  requests: 'requests',
+  cost: 'cost',
+  lastActivity: 'lastActivity',
+  userName: 'userName',
 } as const;
 
-export type RunsControllerSendMessageBody = {
-  threadId: string;
-  /** Message text (optional if images provided) */
-  text?: string;
-  /** Image files to attach (max 10, max 10MB each, 50MB total) */
-  images?: Blob[];
-  /** JSON array of alt texts matching image order */
-  imageAltTexts?: string;
-  /** JSON object for tool result input */
-  toolResult?: string;
-  streaming?: boolean;
-};
+export type AdminUsageControllerGetUserUsageSortOrder = typeof AdminUsageControllerGetUserUsageSortOrder[keyof typeof AdminUsageControllerGetUserUsageSortOrder];
 
-export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AdminUsageControllerGetUserUsageSortOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type StorageControllerUploadFileBody = {
+  file?: Blob;
+};
 
 export type AdminControllerGetModelParams = {
 name: string;
