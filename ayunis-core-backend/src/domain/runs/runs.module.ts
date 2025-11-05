@@ -10,6 +10,7 @@ import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-ru
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SourcesModule } from 'src/domain/sources/sources.module';
     SubscriptionsModule,
     McpModule,
     SourcesModule,
+    UsageModule,
   ],
   controllers: [RunsController],
   providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],

@@ -8,6 +8,8 @@ import { ModelsModule } from 'src/domain/models/models.module';
 import { SeedMinimalCommand } from 'src/cli/application/commands/seed-minimal.command';
 import { HashingModule } from 'src/iam/hashing/hashing.module';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { SeedUsageCommand } from 'src/cli/application/commands/seed-usage.command';
+import { UsageModule } from 'src/domain/usage/usage.module';
 
 @Module({
   imports: [
@@ -17,7 +19,13 @@ import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module'
     ModelsModule,
     HashingModule,
     SubscriptionsModule,
+    UsageModule,
   ],
-  providers: [SeedUsersCommand, SeedModelsCommand, SeedMinimalCommand],
+  providers: [
+    SeedUsersCommand,
+    SeedModelsCommand,
+    SeedMinimalCommand,
+    SeedUsageCommand,
+  ],
 })
 export class CliModule {}

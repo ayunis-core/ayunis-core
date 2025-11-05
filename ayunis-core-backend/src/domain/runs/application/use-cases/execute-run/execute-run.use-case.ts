@@ -48,6 +48,7 @@ import {
   StreamInferenceResponseChunk,
 } from '../../../../models/application/ports/stream-inference.handler';
 import { UUID } from 'crypto';
+import * as crypto from 'crypto';
 import langfuse from 'src/common/evals/langfuse';
 import { LangfuseTraceClient } from 'langfuse';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
@@ -66,6 +67,8 @@ import { DiscoverMcpCapabilitiesUseCase } from 'src/domain/mcp/application/use-c
 import { DiscoverMcpCapabilitiesQuery } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
+import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
+import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -89,6 +92,7 @@ export class ExecuteRunUseCase {
     private readonly configService: ConfigService,
     private readonly contextService: ContextService,
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
+    private readonly collectUsageUseCase: CollectUsageUseCase,
   ) {}
 
   async execute(
@@ -398,6 +402,7 @@ export class ExecuteRunUseCase {
               tools: params.tools,
               instructions: params.instructions,
               threadId: params.thread.id,
+              orgId: params.orgId,
             })) {
               finalMessage = partialMessage; // Keep track of the last message
               yield partialMessage;
@@ -458,6 +463,14 @@ export class ExecuteRunUseCase {
                 inferenceResponse.content,
               ),
             );
+
+            this.collectUsageAsync(
+              params.orgId,
+              params.model,
+              inferenceResponse.meta,
+              assistantMessage.id,
+            );
+
             params.trace.event({
               name: 'new_message',
               output: assistantMessage,
@@ -670,6 +683,7 @@ export class ExecuteRunUseCase {
     tools: Tool[];
     instructions?: string;
     threadId: UUID;
+    orgId: UUID;
   }): AsyncGenerator<AssistantMessage, void, unknown> {
     const { model, messages, tools, instructions, threadId } = params;
 
@@ -705,16 +719,20 @@ export class ExecuteRunUseCase {
 
     // Track whether streaming completed successfully or was interrupted
     let streamCompletedSuccessfully = false;
+    // Track chunks for usage collection
+    const allChunks: StreamInferenceResponseChunk[] = [];
 
     // Convert observable to async iterable
     const asyncIterable = {
       [Symbol.asyncIterator]() {
         let completed = false;
         let error: any = null;
-        const chunks: StreamInferenceResponseChunk[] = [];
+        let consumedIndex = 0;
 
         const subscription = stream$.subscribe({
-          next: (chunk) => chunks.push(chunk),
+          next: (chunk) => {
+            allChunks.push(chunk); // Track for usage collection and iterator
+          },
           error: (err) => {
             error = err as Error;
             completed = true;
@@ -726,7 +744,7 @@ export class ExecuteRunUseCase {
 
         return {
           async next() {
-            while (chunks.length === 0 && !completed) {
+            while (consumedIndex >= allChunks.length && !completed) {
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
 
@@ -735,8 +753,8 @@ export class ExecuteRunUseCase {
               throw error;
             }
 
-            if (chunks.length > 0) {
-              const chunk = chunks.shift()!;
+            if (consumedIndex < allChunks.length) {
+              const chunk = allChunks[consumedIndex++];
               return { value: chunk, done: false } as IteratorResult<
                 StreamInferenceResponseChunk,
                 void
@@ -766,6 +784,16 @@ export class ExecuteRunUseCase {
         yield message;
       }
     } finally {
+      // Collect usage data from streaming chunks (fire-and-forget)
+      if (streamCompletedSuccessfully && allChunks.length > 0) {
+        this.collectUsageFromStreamingChunks(
+          params.orgId,
+          model,
+          allChunks,
+          assistantMessage.id,
+        );
+      }
+
       // Save the assistant message with accumulated content
       const savedMessageId =
         await this.saveAssistantMessageWithAccumulatedContent(
@@ -1128,5 +1156,139 @@ export class ExecuteRunUseCase {
       threadId,
       deletedCount: messages.length,
     });
+  }
+
+  /**
+   * Collects usage data asynchronously without blocking the main flow.
+   * Validates required data and executes usage collection in a fire-and-forget manner.
+   */
+  private collectUsageAsync(
+    orgId: UUID,
+    model: LanguageModel,
+    meta: { inputTokens?: number; outputTokens?: number; totalTokens?: number },
+    requestId?: UUID,
+  ): void {
+    this.logger.log('collectUsageAsync called', {
+      orgId,
+      modelId: model.id,
+      modelName: model.name,
+      inputTokens: meta.inputTokens,
+      outputTokens: meta.outputTokens,
+      totalTokens: meta.totalTokens,
+      requestId,
+    });
+
+    // Don't block the main flow - run async
+    setImmediate(() => {
+      void (async () => {
+        try {
+          const userId = this.contextService.get('userId');
+
+          if (
+            !userId ||
+            !meta.inputTokens ||
+            !meta.outputTokens ||
+            !meta.totalTokens
+          ) {
+            this.logger.log(
+              'Skipping usage collection - missing required data',
+              {
+                userId: !!userId,
+                inputTokens: meta.inputTokens,
+                outputTokens: meta.outputTokens,
+                totalTokens: meta.totalTokens,
+              },
+            );
+            return;
+          }
+
+          await this.collectUsageUseCase.execute(
+            new CollectUsageCommand(
+              userId,
+              orgId,
+              model.id,
+              model.provider,
+              requestId || crypto.randomUUID(),
+              meta.inputTokens,
+              meta.outputTokens,
+              meta.totalTokens,
+            ),
+          );
+        } catch (error) {
+          // Already logged in CollectUsageUseCase, just debug log here
+          this.logger.debug('Usage collection failed in async handler', {
+            error: error as Error,
+          });
+        }
+      })();
+    });
+  }
+
+  /**
+   * Accumulates usage data from streaming chunks and triggers async collection.
+   * Only processes chunks that contain usage information.
+   */
+  private collectUsageFromStreamingChunks(
+    orgId: UUID,
+    model: LanguageModel,
+    chunks: StreamInferenceResponseChunk[],
+    requestId?: UUID,
+  ): void {
+    const { totalInputTokens, totalOutputTokens } =
+      this.accumulateUsageFromChunks(chunks);
+
+    if (totalInputTokens === 0 && totalOutputTokens === 0) {
+      this.logger.debug('No usage data found in streaming chunks', {
+        orgId,
+        modelId: model.id,
+        totalChunks: chunks.length,
+      });
+
+      return;
+    }
+
+    const totalTokens = totalInputTokens + totalOutputTokens;
+
+    this.logger.log('Collecting usage from streaming chunks', {
+      orgId,
+      modelId: model.id,
+      modelName: model.name,
+      totalInputTokens,
+      totalOutputTokens,
+      totalTokens,
+      requestId,
+    });
+
+    this.collectUsageAsync(
+      orgId,
+      model,
+      {
+        inputTokens: totalInputTokens,
+        outputTokens: totalOutputTokens,
+        totalTokens,
+      },
+      requestId,
+    );
+  }
+
+  /**
+   * Accumulates input and output tokens from streaming chunks.
+   * Returns zero values if no chunks contain usage data.
+   */
+  private accumulateUsageFromChunks(chunks: StreamInferenceResponseChunk[]): {
+    totalInputTokens: number;
+    totalOutputTokens: number;
+  } {
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+
+    for (const chunk of chunks) {
+      if (chunk.usage) {
+        totalInputTokens += chunk.usage.inputTokens || 0;
+        totalOutputTokens += chunk.usage.outputTokens || 0;
+      }
+    }
+
+    return { totalInputTokens, totalOutputTokens };
   }
 }
