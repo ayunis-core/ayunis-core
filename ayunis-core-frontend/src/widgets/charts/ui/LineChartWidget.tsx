@@ -1,16 +1,17 @@
+// Utils
 import { useMemo } from "react";
+
+// Types
 import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
-import { cn } from "@/shared/lib/shadcn/utils";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+
+// UI
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/shared/ui/shadcn/chart";
+import { colorVar, computeChartWidth, seriesLabelsToConfig, CHART_COLORS } from "@/widgets/charts/lib/ChartUtils";
+import { ChartCard } from "@/widgets/charts/ui/ChartCard";
+import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
+import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
+import { XAxisTick } from "@/widgets/charts/ui/XAxisTick";
 
 interface YAxisSeries {
   label: string;
@@ -24,15 +25,6 @@ interface ChartParams {
   insight?: string;
 }
 
-const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--primary) / 0.8)",
-  "hsl(var(--primary) / 0.6)",
-  "hsl(var(--primary) / 0.4)",
-  "hsl(var(--primary) / 0.3)",
-  "hsl(var(--primary) / 0.2)",
-];
-
 export default function LineChartWidget({
   content,
   isStreaming = false,
@@ -40,6 +32,10 @@ export default function LineChartWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
+  const THRESHOLD = 10;
+  const PER_POINT_PX = 70;
+  const MAX_TICK_CHARS = 12;
+
   const params = (content.params || {}) as ChartParams;
 
   const chartData = useMemo(() => {
@@ -69,67 +65,48 @@ export default function LineChartWidget({
   const isLoading = isStreaming && !hasData;
 
   if (isLoading) {
-    return (
-      <div
-        className={cn(
-          "my-2 w-full h-64 bg-muted animate-pulse rounded-lg",
-          isLoading && "animate-pulse"
-        )}
-      />
-    );
+    return <ChartLoadingState />;
   }
 
   if (!hasData) {
-    return (
-      <div className="my-2 w-full p-4 text-sm text-muted-foreground">
-        No chart data available
-      </div>
-    );
+    return <ChartEmptyState />;
   }
 
   const yAxisSeries = params.yAxis || [];
+  const xCount = (params.xAxis?.length ?? chartData.length);
+  const dynamicWidth = computeChartWidth(xCount, THRESHOLD, PER_POINT_PX);
 
   return (
-    <div className="my-2 w-full space-y-4" key={`${content.name}-${content.id}`}>
-      {params.chartTitle && (
-        <h3 className="text-lg font-semibold">{params.chartTitle}</h3>
+    <ChartCard
+      title={params.chartTitle}
+      insight={params.insight}
+      config={seriesLabelsToConfig(
+        yAxisSeries.map((s) => s.label),
+        CHART_COLORS,
       )}
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis
-            dataKey="name"
-            className="text-xs"
+      containerStyle={dynamicWidth ? { width: dynamicWidth } : undefined}
+      containerClassName="min-h-[300px] max-h-[400px]"
+      key={`${content.name}-${content.id}`}
+    >
+      <LineChart data={chartData}>
+        <CartesianGrid />
+        <XAxis dataKey="name" tick={<XAxisTick maxChars={MAX_TICK_CHARS} doTruncate={xCount > THRESHOLD} />} />
+        <YAxis />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        {yAxisSeries.map((series) => (
+          <Line
+            key={series.label}
+            type="monotone"
+            dataKey={series.label}
+            stroke={colorVar(series.label)}
+            strokeWidth={2}
+            dot={{ fill: colorVar(series.label), r: 4 }}
+            activeDot={{ r: 6 }}
           />
-          <YAxis className="text-xs" />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "calc(var(--radius) - 2px)",
-            }}
-          />
-          <Legend />
-          {yAxisSeries.map((series, index) => (
-            <Line
-              key={series.label}
-              type="monotone"
-              dataKey={series.label}
-              stroke={COLORS[index % COLORS.length]}
-              strokeWidth={2}
-              dot={{ fill: COLORS[index % COLORS.length], r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-      {params.insight && params.insight.trim() && (
-        <p className="text-sm text-muted-foreground">{params.insight}</p>
-      )}
-    </div>
+        ))}
+      </LineChart>
+    </ChartCard>
   );
 }
 

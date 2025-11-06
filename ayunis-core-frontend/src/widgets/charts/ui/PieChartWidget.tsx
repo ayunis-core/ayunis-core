@@ -1,14 +1,16 @@
-import { useMemo } from "react";
+// Types
 import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
-import { cn } from "@/shared/lib/shadcn/utils";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+
+// Utils
+import { useMemo } from "react";
+import { colorVar, pieNamesToConfig, CHART_COLORS } from "@/widgets/charts/lib/ChartUtils";
+
+// UI
+import { PieChart, Pie, Cell } from "recharts";
+import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/shared/ui/shadcn/chart";
+import { ChartCard } from "@/widgets/charts/ui/ChartCard";
+import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
+import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
 
 interface PieDataPoint {
   label: string;
@@ -21,15 +23,6 @@ interface ChartParams {
   insight?: string;
 }
 
-const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--primary) / 0.8)",
-  "hsl(var(--primary) / 0.6)",
-  "hsl(var(--primary) / 0.4)",
-  "hsl(var(--primary) / 0.3)",
-  "hsl(var(--primary) / 0.2)",
-];
-
 export default function PieChartWidget({
   content,
   isStreaming = false,
@@ -41,7 +34,6 @@ export default function PieChartWidget({
 
   const chartData = useMemo(() => {
     const data = params.data || [];
-    
     if (data.length === 0) {
       return [];
     }
@@ -57,63 +49,44 @@ export default function PieChartWidget({
   const isLoading = isStreaming && !hasData;
 
   if (isLoading) {
-    return (
-      <div
-        className={cn(
-          "my-2 w-full h-64 bg-muted animate-pulse rounded-lg",
-          isLoading && "animate-pulse"
-        )}
-      />
-    );
+    return <ChartLoadingState />;
   }
 
   if (!hasData) {
-    return (
-      <div className="my-2 w-full p-4 text-sm text-muted-foreground">
-        No chart data available
-      </div>
-    );
+    return <ChartEmptyState />;
   }
 
   return (
-    <div className="my-2 w-full space-y-4" key={`${content.name}-${content.id}`}>
-      {params.chartTitle && (
-        <h3 className="text-lg font-semibold">{params.chartTitle}</h3>
+    <ChartCard
+      title={params.chartTitle}
+      insight={params.insight}
+      config={pieNamesToConfig(
+        chartData.map((e) => e.name),
+        CHART_COLORS,
       )}
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={({ name, percent }) =>
-              `${name}: ${(percent * 100).toFixed(0)}%`
-            }
-            outerRadius={80}
-            fill="hsl(var(--primary))"
-            dataKey="value"
-          >
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "hsl(var(--popover))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "calc(var(--radius) - 2px)",
-            }}
-          />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
-      {params.insight && params.insight.trim() && (
-        <p className="text-sm text-muted-foreground">{params.insight}</p>
-      )}
-    </div>
+      containerClassName="min-h-[300px]"
+      key={`${content.name}-${content.id}`}
+    >
+      <PieChart>
+        <Pie
+          data={chartData}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={({ name, percent }) =>
+            `${name}: ${(percent * 100).toFixed(0)}%`
+          }
+          outerRadius={100}
+          innerRadius={80}
+          dataKey="value"
+        >
+          {chartData.map((entry) => (
+            <Cell key={entry.name} name={entry.name} fill={colorVar(String(entry.name))} />
+          ))}
+        </Pie>
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+      </PieChart>
+    </ChartCard>
   );
 }
