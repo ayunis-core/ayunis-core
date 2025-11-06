@@ -94,9 +94,9 @@ export default function LineChartWidget({
         <YAxis />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        {yAxisSeries.map((series) => (
+        {yAxisSeries.map((series, index) => (
           <Line
-            key={series.label}
+            key={`${series.label}-${index}`}
             type="monotone"
             dataKey={series.label}
             stroke={colorVar(series.label)}
