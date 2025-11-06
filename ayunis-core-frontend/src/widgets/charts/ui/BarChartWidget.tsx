@@ -93,9 +93,9 @@ export default function BarChartWidget({
         <YAxis className="text-xs" />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        {yAxisSeries.map((series) => (
+        {yAxisSeries.map((series, index) => (
           <Bar
-            key={series.label}
+            key={`${series.label}-${index}`}
             dataKey={series.label}
             fill={colorVar(series.label)}
             radius={[4, 4, 0, 0]}
