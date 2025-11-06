@@ -54,6 +54,9 @@
       "line_chart": "Liniendiagramm",
       "pie_chart": "Kreisdiagramm",
       "tool_use": "Generiere Antwort"
+    },
+    "charts": {
+      "emptyState": "Keine Diagrammdaten verfügbar"
     }
   },
   "newChat": {

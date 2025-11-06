@@ -54,6 +54,9 @@
       "line_chart": "Line Chart",
       "pie_chart": "Pie Chart",
       "tool_use": "Generate answer"
+    },
+    "charts": {
+      "emptyState": "No chart data available"
     }
   },
   "newChat": {
