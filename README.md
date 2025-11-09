@@ -291,6 +291,71 @@ Examples
 - Create some agents for your most important use cases
 - Chat with your enabled models, add prompts via the book icon button below the chat input
 
+## 💻 Development
+
+### Git Hooks (Husky)
+
+This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks for code quality checks.
+
+#### Setup
+
+When you clone the repository, Git hooks are automatically set up when you run:
+
+```bash
+npm install
+```
+
+This installs Husky and configures Git to use the hooks in the `.husky/` directory.
+
+#### Available Hooks
+
+- **pre-commit**: Runs linting and formatting checks on staged files
+  - Frontend: ESLint, Prettier, and TypeScript type checking
+  - Backend: ESLint, Prettier, and TypeScript type checking
+  - Auto-fixes issues when possible (set `PRECOMMIT_NO_FIX=1` to disable auto-fix)
+
+- **commit-msg**: Validates commit message format
+  - Requires a type prefix (e.g., `feat:`, `fix:`, `chore:`, etc.)
+  - Requires a task ID with `AYC-` prefix (e.g., `AYC-123`)
+
+#### Commit Message Format
+
+Commit messages must follow this format:
+
+```
+<type>: <description> (AYC-<task-id>)
+```
+
+Examples:
+- `feat: add new chart widget (AYC-123)`
+- `fix: correct date validation (AYC-456)`
+- `chore: update dependencies (AYC-789)`
+
+Valid types: `feat`, `feature`, `fix`, `chore`, `refactor`, `docs`, `style`, `perf`, `test`, `build`, `ci`, `revert`, `check`
+
+#### Manual Setup
+
+If hooks aren't working, you can manually set them up:
+
+```bash
+npm install
+npx husky install
+```
+
+**Note**: On some systems (especially Windows), Git may not preserve executable permissions for hook files. If hooks aren't running, ensure the hook files are executable:
+
+```bash
+chmod +x .husky/pre-commit
+chmod +x .husky/commit-msg
+```
+
+On Windows (Git Bash), you can use the same `chmod` commands, or use PowerShell:
+
+```powershell
+git update-index --chmod=+x .husky/pre-commit
+git update-index --chmod=+x .husky/commit-msg
+```
+
 ## 📚 Resources
 
 - **Documentation (Coming Soon)**
