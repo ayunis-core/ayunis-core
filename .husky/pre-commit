@@ -1,0 +1,249 @@
+#!/usr/bin/env sh
+# Pretty output helpers
+RED="\033[31m"; GREEN="\033[32m"; YELLOW="\033[33m"; BOLD="\033[1m"; NC="\033[0m"
+print_section() {
+  printf "%b\n" "${BOLD}$1${NC}"
+  printf "%s\n" "────────────────────────────────────────"
+}
+
+# Generic helper to run a command in a directory
+run_in_dir() {
+  dir="$1"; shift
+  (cd "$dir" >/dev/null 2>&1 && "$@")
+}
+
+START_TS=$(date +%s)
+
+# Autofix mode (enabled by default): PRECOMMIT_NO_FIX=1 to disable
+PRECOMMIT_NO_FIX="${PRECOMMIT_NO_FIX:-0}"
+if [ "$PRECOMMIT_NO_FIX" != "1" ]; then
+  printf "%b\n" "${YELLOW}Auto-fix enabled: eslint --fix and prettier --write will run (set PRECOMMIT_NO_FIX=1 to disable)${NC}"
+fi
+
+# Collect staged files
+STAGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR)
+
+# Frontend: staged files
+FE_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-frontend/src/.*\.(js|jsx|ts|tsx|json|css|md)$' || true)
+FE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-frontend/src/.*\.(ts|tsx)$' || true)
+
+# Backend: staged TS files
+BE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-backend/(src|apps|libs|test)/.*\.ts$' || true)
+
+# Args depending on FIX mode (auto-fix enabled by default)
+if [ "$PRECOMMIT_NO_FIX" = "1" ]; then
+  FE_PRETTIER_ARGS="--check --log-level warn"
+  BE_PRETTIER_ARGS="--check --log-level warn"
+  ESLINT_FIX_ARGS=""
+else
+  FE_PRETTIER_ARGS="--write"
+  BE_PRETTIER_ARGS="--write"
+  ESLINT_FIX_ARGS="--fix"
+fi
+
+# Status files (for parallel jobs)
+STATUS_DIR=".git/.precommit-status"
+mkdir -p "$STATUS_DIR"
+FE_PRETTIER_STATUS_FILE="$STATUS_DIR/fe_prettier.status"
+FE_TSC_STATUS_FILE="$STATUS_DIR/fe_tsc.status"
+FE_ESLINT_STATUS_FILE="$STATUS_DIR/fe_eslint.status"
+BE_ESLINT_STATUS_FILE="$STATUS_DIR/be_eslint.status"
+BE_PRETTIER_STATUS_FILE="$STATUS_DIR/be_prettier.status"
+BE_TSC_STATUS_FILE="$STATUS_DIR/be_tsc.status"
+
+# Jobs
+run_fe_prettier() {
+  STATUS_FILE="$1"
+  print_section "Frontend • Prettier (staged)"
+  printf "%s\n" "$FE_STAGED" \
+    | sed 's#^ayunis-core-frontend/##' \
+    | sed 's#^# - #'
+  set +e
+  (
+    cd ayunis-core-frontend >/dev/null 2>&1
+    printf "%s" "$FE_STAGED" \
+      | sed 's#^ayunis-core-frontend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 npx --yes prettier $FE_PRETTIER_ARGS
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+run_fe_tsc() {
+  STATUS_FILE="$1"
+  print_section "Frontend • TypeScript typecheck (staged TS)"
+  printf "%s\n" "$FE_TS_STAGED" \
+    | sed 's#^ayunis-core-frontend/##' \
+    | sed 's#^# - #'
+  set +e
+  (
+    cd ayunis-core-frontend >/dev/null 2>&1
+    printf "%s" "$FE_TS_STAGED" \
+      | sed 's#^ayunis-core-frontend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 npx --yes tsc-files --noEmit -p tsconfig.json
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+run_fe_eslint() {
+  STATUS_FILE="$1"
+  print_section "Frontend • ESLint (staged TS)"
+  printf "%s\n" "$FE_TS_STAGED" \
+    | sed 's#^ayunis-core-frontend/##' \
+    | sed 's#^# - #' 
+  set +e
+  (
+    cd ayunis-core-frontend >/dev/null 2>&1
+    printf "%s" "$FE_TS_STAGED" \
+      | sed 's#^ayunis-core-frontend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 npx --yes eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+run_be_eslint() {
+  STATUS_FILE="$1"
+  print_section "Backend • ESLint (staged TS)"
+  printf "%s\n" "$BE_TS_STAGED" \
+    | sed 's#^ayunis-core-backend/##' \
+    | sed 's#^# - #'
+  set +e
+  (
+    cd ayunis-core-backend >/dev/null 2>&1
+    printf "%s" "$BE_TS_STAGED" \
+      | sed 's#^ayunis-core-backend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 npx --yes eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+run_be_prettier() {
+  STATUS_FILE="$1"
+  print_section "Backend • Prettier (staged TS)"
+  printf "%s\n" "$BE_TS_STAGED" \
+    | sed 's#^ayunis-core-backend/##' \
+    | sed 's#^# - #'
+  set +e
+  (
+    cd ayunis-core-backend >/dev/null 2>&1
+    printf "%s" "$BE_TS_STAGED" \
+      | sed 's#^ayunis-core-backend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 npx --yes prettier $BE_PRETTIER_ARGS
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+run_be_tsc() {
+  STATUS_FILE="$1"
+  print_section "Backend • TypeScript typecheck (staged TS)"
+  printf "%s\n" "$BE_TS_STAGED" \
+    | sed 's#^ayunis-core-backend/##' \
+    | sed 's#^# - #'
+  set +e
+  (
+    cd ayunis-core-backend >/dev/null 2>&1
+    printf "%s" "$BE_TS_STAGED" \
+      | sed 's#^ayunis-core-backend/##' \
+      | tr '\n' '\0' \
+      | xargs -0 npx --yes tsc-files --noEmit -p tsconfig.json
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
+# Launch jobs in parallel where possible
+if [ -n "$FE_STAGED" ]; then
+  run_fe_prettier "$FE_PRETTIER_STATUS_FILE" &
+fi
+if [ -n "$FE_TS_STAGED" ]; then
+  run_fe_eslint "$FE_ESLINT_STATUS_FILE" &
+  run_fe_tsc "$FE_TSC_STATUS_FILE" &
+fi
+if [ -n "$BE_TS_STAGED" ]; then
+  run_be_eslint "$BE_ESLINT_STATUS_FILE" &
+  run_be_prettier "$BE_PRETTIER_STATUS_FILE" &
+  run_be_tsc "$BE_TSC_STATUS_FILE" &
+fi
+
+wait
+
+# Read statuses (default 0 when not run)
+FE_STATUS=$(cat "$FE_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
+FE_TSC_STATUS=$(cat "$FE_TSC_STATUS_FILE" 2>/dev/null || printf "0")
+FE_ESLINT_STATUS=$(cat "$FE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
+ESLINT_STATUS=$(cat "$BE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
+PRETTIER_STATUS=$(cat "$BE_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
+BE_TSC_STATUS=$(cat "$BE_TSC_STATUS_FILE" 2>/dev/null || printf "0")
+
+# Summary and exit code
+FAILED=0
+if [ -n "$FE_STAGED" ]; then
+  if [ "$FE_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Frontend Prettier failed${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Frontend Prettier passed${NC}"
+  fi
+  if [ -n "$FE_TS_STAGED" ]; then
+    if [ "$FE_ESLINT_STATUS" -ne 0 ]; then
+      printf "%b\n" "${RED}❌ Frontend ESLint failed${NC}"
+      FAILED=1
+    else
+      printf "%b\n" "${GREEN}✅ Frontend ESLint passed${NC}"
+    fi
+    if [ "$FE_TSC_STATUS" -ne 0 ]; then
+      printf "%b\n" "${RED}❌ Frontend TypeScript typecheck failed${NC}"
+      FAILED=1
+    else
+      printf "%b\n" "${GREEN}✅ Frontend TypeScript typecheck passed${NC}"
+    fi
+  fi
+fi
+if [ -n "$BE_TS_STAGED" ]; then
+  if [ "$ESLINT_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Backend ESLint failed${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Backend ESLint passed${NC}"
+  fi
+  if [ "$PRETTIER_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Backend Prettier failed${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Backend Prettier passed${NC}"
+  fi
+  if [ "$BE_TSC_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Backend TypeScript typecheck failed${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Backend TypeScript typecheck passed${NC}"
+  fi
+fi
+
+END_TS=$(date +%s)
+ELAPSED=$((END_TS - START_TS))
+
+if [ "$FAILED" -ne 0 ]; then
+  printf "%b\n" "${RED}${BOLD}Pre-commit checks failed.${NC} Fix the issues above and try again."
+  printf "Completed in %ds\n" "$ELAPSED"
+  exit 1
+else
+  printf "%b\n" "${GREEN}${BOLD}All pre-commit checks passed.${NC} ✅"
+  printf "Completed in %ds\n" "$ELAPSED"
+fi
+
