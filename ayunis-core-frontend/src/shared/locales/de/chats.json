@@ -49,11 +49,7 @@
         "downloadIcs": "Kalendereintrag herunterladen (.ics)",
         "invalidRange": "Ende muss nach dem Beginn liegen",
         "selectDate": "Datum wählen"
-      },
-      "bar_chart": "Balkendiagramm",
-      "line_chart": "Liniendiagramm",
-      "pie_chart": "Kreisdiagramm",
-      "tool_use": "Generiere Antwort"
+      }
     },
     "charts": {
       "emptyState": "Keine Diagrammdaten verfügbar"

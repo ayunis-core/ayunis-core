@@ -1,22 +1,18 @@
-// Utils
-import { useMemo } from "react";
-
 // Types
 import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
+import type { YAxisSeries } from "@/widgets/charts/lib/ChartUtils";
+
+// Utils
+import { useMemo } from "react";
+import { colorVar, seriesLabelsToConfig, slugifyForCssVar, transformChartData } from "@/widgets/charts/lib/ChartUtils";
 
 // UI
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/shared/ui/shadcn/chart";
-import { colorVar, seriesLabelsToConfig, computeChartWidth, CHART_COLORS } from "@/widgets/charts/lib/ChartUtils";
 import { ChartCard } from "@/widgets/charts/ui/ChartCard";
 import { XAxisTick } from "@/widgets/charts/ui/XAxisTick";
 import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
 import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
-
-interface YAxisSeries {
-  label: string;
-  values: number[];
-}
 
 interface ChartParams {
   chartTitle?: string;
@@ -34,31 +30,11 @@ export default function BarChartWidget({
 }) {
   const params = (content.params || {}) as ChartParams;
   const THRESHOLD = 10;
+  const MAX_TICK_CHARS = 12;
   const PER_POINT_PX = 70;
 
-  const MAX_TICK_CHARS = 12;
-
   const chartData = useMemo(() => {
-    const xAxis = params.xAxis || [];
-    const yAxis = params.yAxis || [];
-
-    if (xAxis.length === 0 || yAxis.length === 0) {
-      return [];
-    }
-
-    // Transform data to recharts format
-    // Each xAxis point becomes a data point with values from all series
-    return xAxis.map((xLabel, index) => {
-      const dataPoint: Record<string, string | number> = { name: xLabel };
-      
-      yAxis.forEach((series) => {
-        if (series.values[index] !== undefined) {
-          dataPoint[series.label] = series.values[index];
-        }
-      });
-      
-      return dataPoint;
-    });
+    return transformChartData(params.xAxis || [], params.yAxis || []);
   }, [params.xAxis, params.yAxis]);
 
   const hasData = chartData.length > 0 && (params.yAxis || []).length > 0;
@@ -73,7 +49,6 @@ export default function BarChartWidget({
   }
 
   const yAxisSeries = params.yAxis || [];
-  const dynamicWidth = computeChartWidth(chartData.length, THRESHOLD, PER_POINT_PX);
 
   return (
     <ChartCard
@@ -81,10 +56,10 @@ export default function BarChartWidget({
       insight={params.insight}
       config={seriesLabelsToConfig(
         yAxisSeries.map((s) => s.label),
-        CHART_COLORS,
       )}
-      containerStyle={dynamicWidth ? { width: dynamicWidth } : undefined}
-      containerClassName="min-h-[300px]"
+      xCount={chartData.length}
+      threshold={THRESHOLD}
+      perPointPx={PER_POINT_PX}
       key={`${content.name}-${content.id}`}
     >
       <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
@@ -93,14 +68,18 @@ export default function BarChartWidget({
         <YAxis className="text-xs" />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        {yAxisSeries.map((series, index) => (
-          <Bar
-            key={`${series.label}-${index}`}
-            dataKey={series.label}
-            fill={colorVar(series.label)}
-            radius={[4, 4, 0, 0]}
-          />
-        ))}
+        {yAxisSeries.map((series, index) => {
+          const slugifiedKey = slugifyForCssVar(series.label);
+          return (
+            <Bar
+              key={`${series.label}-${index}`}
+              dataKey={slugifiedKey}
+              name={series.label}
+              fill={colorVar(series.label)}
+              radius={[4, 4, 0, 0]}
+            />
+          );
+        })}
       </BarChart>
     </ChartCard>
   );

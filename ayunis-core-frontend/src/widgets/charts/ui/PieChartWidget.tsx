@@ -1,9 +1,10 @@
 // Types
 import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
+import type { PieDataPoint } from "@/widgets/charts/lib/ChartUtils";
 
 // Utils
 import { useMemo } from "react";
-import { colorVar, pieNamesToConfig, CHART_COLORS } from "@/widgets/charts/lib/ChartUtils";
+import { colorVar, pieNamesToConfig, transformPieChartData } from "@/widgets/charts/lib/ChartUtils";
 
 // UI
 import { PieChart, Pie, Cell } from "recharts";
@@ -11,11 +12,6 @@ import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } fr
 import { ChartCard } from "@/widgets/charts/ui/ChartCard";
 import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
 import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
-
-interface PieDataPoint {
-  label: string;
-  value: number;
-}
 
 interface ChartParams {
   chartTitle?: string;
@@ -33,16 +29,7 @@ export default function PieChartWidget({
   const params = (content.params || {}) as ChartParams;
 
   const chartData = useMemo(() => {
-    const data = params.data || [];
-    if (data.length === 0) {
-      return [];
-    }
-
-    // Transform to recharts format
-    return data.map((item) => ({
-      name: item.label,
-      value: item.value,
-    }));
+    return transformPieChartData(params.data || []);
   }, [params.data]);
 
   const hasData = chartData.length > 0;
@@ -62,9 +49,7 @@ export default function PieChartWidget({
       insight={params.insight}
       config={pieNamesToConfig(
         chartData.map((e) => e.name),
-        CHART_COLORS,
       )}
-      containerClassName="min-h-[300px]"
       key={`${content.name}-${content.id}`}
     >
       <PieChart>
@@ -81,7 +66,7 @@ export default function PieChartWidget({
           dataKey="value"
         >
           {chartData.map((entry) => (
-            <Cell key={entry.name} name={entry.name} fill={colorVar(String(entry.name))} />
+            <Cell key={`pie-${entry.name}`} name={entry.name} fill={colorVar(String(entry.name))} />
           ))}
         </Pie>
         <ChartTooltip content={<ChartTooltipContent />} />
