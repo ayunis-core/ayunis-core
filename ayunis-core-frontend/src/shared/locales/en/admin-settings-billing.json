@@ -118,5 +118,17 @@
     "createErrorNoOfSeatsRequired": "Number of seats is required",
     "uncancelErrorSubscriptionNotFound": "Subscription not found",
     "uncancelError": "An unexpected error occurred"
+  },
+  "trialLimitBanner": {
+    "title": "You have reached your limit.",
+    "descriptionPart1": "Get a personalized quote now,",
+    "descriptionPart2": " to use Ayunis Core in your workplace – our sales team will personally advise you and find the right plan.",
+    "extendTrial": "Extend Trial",
+    "contactSales": "Get Quote",
+    "avatarAlt": {
+      "benatsha": "Benatsha",
+      "liza": "Liza",
+      "moriz": "Moriz"
+    }
   }
 }

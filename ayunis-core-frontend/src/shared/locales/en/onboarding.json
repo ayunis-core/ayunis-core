@@ -1,0 +1,21 @@
+{
+  "step2": {
+    "title": "Chat with Ayunis Core",
+    "descriptionPrefix": "Use the intuitive chat, ",
+    "description": "to interact with Ayunis Core directly, get quick answers, and make your daily work more efficient."
+  },
+  "step3": {
+    "title": "Create assistants",
+    "descriptionPrefix": "Create your own assistants, ",
+    "description": "that, for example, automatically check applications, fill out forms, or simplify administrative processes in digital everyday life."
+  },
+  "step4": {
+    "title": "Invite members",
+    "descriptionPrefix": "Invite your employees, colleagues or other users and assign permissions ",
+    "description": "– everything centrally and transparently in the settings. This way you control access exactly where it is needed."
+  },
+  "step5": {
+    "title": "Your account is ready. <br/> Privacy-first with the European model Mistral.",
+    "cta": "Start now"
+  }
+}

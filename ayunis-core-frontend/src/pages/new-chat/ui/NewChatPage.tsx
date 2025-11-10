@@ -8,6 +8,8 @@ import { showError } from "@/shared/lib/toast";
 import { generateUUID } from "@/shared/lib/uuid";
 import type { AgentResponseDto } from "@/shared/api";
 import { SourceResponseDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import TrialLimitBanner from "@/widgets/subscription/ui/TrialLimitBanner";
+import { useSubscriptionStatus } from "@/features/subscription";
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -26,6 +28,7 @@ export default function NewChatPage({
 }: NewChatPageProps) {
   const { t } = useTranslation("chats");
   const { initiateChat } = useInitiateChat();
+  const { data: subscriptionStatus, isLoading: isLoadingSubscription } = useSubscriptionStatus();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [sources, setSources] = useState<
@@ -37,6 +40,9 @@ export default function NewChatPage({
     }>
   >([]);
   const selectedAgent = agents.find((agent) => agent.id === agentId);
+
+  const isLimitReached = subscriptionStatus?.isMessageLimitReached ?? false;
+  const showBanner = !isLoadingSubscription && isLimitReached;
 
   function handleFileUpload(file: File) {
     const isCsvFile = file.name.endsWith(".csv");
@@ -78,12 +84,18 @@ export default function NewChatPage({
       return;
     }
 
+    // If limit is reached, prevent sending
+    if (isLimitReached) {
+      return;
+    }
+
     initiateChat(message, modelId, agentId, sources);
   }
 
   return (
     <NewChatPageLayout
       header={<ContentAreaHeader title={t("newChat.newChat")} />}
+      trialLimitBanner={showBanner ? <TrialLimitBanner /> : undefined}
     >
       <div className="text-center">
         <h1 className="text-2xl font-bold">{t("newChat.title")}</h1>

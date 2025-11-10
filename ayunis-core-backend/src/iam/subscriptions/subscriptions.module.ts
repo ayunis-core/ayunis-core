@@ -22,6 +22,7 @@ import { GetCurrentPriceUseCase } from './application/use-cases/get-current-pric
 import { TrialRecord } from './infrastructure/persistence/local/schema/trial.record';
 import { CreateTrialUseCase } from './application/use-cases/create-trial/create-trial.use-case';
 import { GetTrialUseCase } from './application/use-cases/get-trial/get-trial.use-case';
+import { GetSubscriptionStatusUseCase } from './application/use-cases/get-subscription-status/get-subscription-status.use-case';
 import { IncrementTrialMessagesUseCase } from './application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { TrialRepository } from './application/ports/trial.repository';
 import { LocalTrialsRepository } from './infrastructure/persistence/local/local-trials.repository';
@@ -60,6 +61,7 @@ import { LocalTrialsRepository } from './infrastructure/persistence/local/local-
     GetCurrentPriceUseCase,
     CreateTrialUseCase,
     GetTrialUseCase,
+    GetSubscriptionStatusUseCase,
     IncrementTrialMessagesUseCase,
   ],
   exports: [
@@ -70,6 +72,7 @@ import { LocalTrialsRepository } from './infrastructure/persistence/local/local-
     UpdateSeatsUseCase,
     CreateTrialUseCase,
     GetTrialUseCase,
+    GetSubscriptionStatusUseCase,
     IncrementTrialMessagesUseCase,
   ],
 })

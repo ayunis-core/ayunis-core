@@ -1,0 +1,21 @@
+{
+  "step2": {
+    "title": "Mit Ayunis Core chatten",
+    "descriptionPrefix": "Nutzen Sie den intuitiven Chat, ",
+    "description": "um direkt mit Ayunis Core zu interagieren, schnelle Antworten zu erhalten und Ihren Arbeitsalltag effizienter zu gestalten."
+  },
+  "step3": {
+    "title": "Assistenten anlegen",
+    "descriptionPrefix": "Erstellen Sie Ihre eigenen Assistenten, ",
+    "description": "die z. B. Anträge automatisiert prüfen, Formulare ausfüllen oder Verwaltungsvorgänge im digitalen Alltag vereinfachen."
+  },
+  "step4": {
+    "title": "Mitglieder einladen",
+    "descriptionPrefix": "Laden Sie Ihre Mitarbeiter, Arbeitskollegen oder andere Nutzer ein und verteilen Sie Berechtigungen ",
+    "description": "– alles zentral und transparent in den Einstellungen. So steuern Sie Zugriffe genau dort, wo sie gebraucht werden."
+  },
+  "step5": {
+    "title": "Ihr Account ist bereit. <br/> Sicher, souverän und datenschutzkonform 🇩🇪",
+    "cta": "Jetzt starten"
+  }
+}
