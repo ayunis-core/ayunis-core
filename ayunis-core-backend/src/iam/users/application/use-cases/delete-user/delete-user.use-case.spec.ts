@@ -65,6 +65,7 @@ describe('DeleteUserUseCase', () => {
       id: userId,
       role: UserRole.USER,
       orgId,
+      email: 'user@example.com',
     };
 
     jest
@@ -72,9 +73,11 @@ describe('DeleteUserUseCase', () => {
       .mockResolvedValueOnce(requestUser as any)
       .mockResolvedValueOnce(userToDelete as any);
     jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
+    jest.spyOn(mockInvitesRepository, 'deleteByEmail').mockResolvedValue(undefined);
 
     await useCase.execute(command);
 
+    expect(mockInvitesRepository.deleteByEmail).toHaveBeenCalledWith(userToDelete.email);
     expect(mockUsersRepository.delete).toHaveBeenCalledWith(userId);
   });
 
@@ -98,6 +101,7 @@ describe('DeleteUserUseCase', () => {
       id: userId,
       role: UserRole.USER,
       orgId,
+      email: 'user@example.com',
     };
 
     jest
@@ -105,9 +109,11 @@ describe('DeleteUserUseCase', () => {
       .mockResolvedValueOnce(requestUser as any)
       .mockResolvedValueOnce(userToDelete as any);
     jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
+    jest.spyOn(mockInvitesRepository, 'deleteByEmail').mockResolvedValue(undefined);
 
     await useCase.execute(command);
 
+    expect(mockInvitesRepository.deleteByEmail).toHaveBeenCalledWith(userToDelete.email);
     expect(mockUsersRepository.delete).toHaveBeenCalledWith(userId);
   });
 
@@ -124,6 +130,7 @@ describe('DeleteUserUseCase', () => {
       id: adminId,
       role: UserRole.ADMIN,
       orgId,
+      email: 'admin@example.com',
     };
 
     jest
@@ -137,6 +144,7 @@ describe('DeleteUserUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       CannotDeleteLastAdminError,
     );
+    expect(mockInvitesRepository.deleteByEmail).not.toHaveBeenCalled();
     expect(mockUsersRepository.delete).not.toHaveBeenCalled();
   });
 
@@ -160,6 +168,7 @@ describe('DeleteUserUseCase', () => {
       id: adminId1,
       role: UserRole.ADMIN,
       orgId,
+      email: 'admin1@example.com',
     };
 
     const orgUsers = [requestUser, userToDelete];
@@ -172,9 +181,11 @@ describe('DeleteUserUseCase', () => {
       orgUsers as any,
     );
     jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
+    jest.spyOn(mockInvitesRepository, 'deleteByEmail').mockResolvedValue(undefined);
 
     await useCase.execute(command);
 
+    expect(mockInvitesRepository.deleteByEmail).toHaveBeenCalledWith(userToDelete.email);
     expect(mockUsersRepository.delete).toHaveBeenCalledWith(adminId1);
   });
 
@@ -262,15 +273,18 @@ describe('DeleteUserUseCase', () => {
       id: userId,
       role: UserRole.USER,
       orgId,
+      email: 'user@example.com',
     };
 
     jest
       .spyOn(mockUsersRepository, 'findOneById')
       .mockResolvedValueOnce(user as any)
       .mockResolvedValueOnce(user as any);
+    jest.spyOn(mockInvitesRepository, 'deleteByEmail').mockResolvedValue(undefined);
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);
 
     await expect(useCase.execute(command)).rejects.toThrow('Repository error');
+    expect(mockInvitesRepository.deleteByEmail).toHaveBeenCalledWith(user.email);
     expect(mockUsersRepository.delete).toHaveBeenCalledWith(userId);
   });
 });
