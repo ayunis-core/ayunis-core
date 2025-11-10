@@ -1,6 +1,6 @@
 
 // Utils
-import * as React from "react";
+import { useMemo } from "react";
 import { cn } from "@/shared/lib/shadcn/utils";
 
 // UI
@@ -17,9 +17,10 @@ type ChartCardProps = {
   title?: string;
   insight?: string;
   config: ChartConfig;
-  containerClassName?: string;
-  containerStyle?: React.CSSProperties;
   className?: string;
+  xCount?: number;
+  threshold?: number;
+  perPointPx?: number;
   children: React.ComponentProps<typeof ChartContainer>["children"];
 };
 
@@ -27,23 +28,32 @@ export function ChartCard({
   title,
   insight,
   config,
-  containerClassName,
-  containerStyle,
   className,
+  xCount,
+  threshold = 10,
+  perPointPx = 70,
   children,
 }: ChartCardProps) {
+  const dynamicWidth = useMemo(() => {
+    if (!xCount) {
+      return undefined;
+    }
+
+    return xCount > threshold ? xCount * perPointPx : undefined;
+  }, [xCount, threshold, perPointPx]);
+
   return (
     <Card className={cn("my-2", className)}>
       {title && (
-        <CardHeader className="border-b">
+        <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
       )}
 
       <CardContent className="overflow-auto">
         <ChartContainer
-          className={containerClassName}
-          style={containerStyle}
+          className="min-h-[300px] max-h-[400px]"
+          style={dynamicWidth ? { width: dynamicWidth } : undefined}
           config={config}
         >
           {children}
@@ -51,7 +61,7 @@ export function ChartCard({
       </CardContent>
 
       {insight && insight.trim() && (
-        <CardFooter className="border-t">
+        <CardFooter>
           <p className="text-sm text-muted-foreground">{insight}</p>
         </CardFooter>
       )}
