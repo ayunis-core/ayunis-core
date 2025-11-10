@@ -5,50 +5,17 @@
     "description": "um direkt mit Ayunis Core zu interagieren, schnelle Antworten zu erhalten und Ihren Arbeitsalltag effizienter zu gestalten."
   },
   "step3": {
-    "title": "Modelle hinzufügen",
-    "description": "Wählen Sie zwischen europäischen (Mistral) oder US-amerikanischen (OpenAI, Anthropic) Modellen oder hosten Sie Ihre eigenen.",
-    "note": "Wir haben bereits die sichersten Modelle für Sie ausgewählt.",
-    "euModelsTitle": "Europäische Modelle",
-    "euModelsSubtitle": "Mistral",
-    "usModelsTitle": "Amerikanische Modelle",
-    "usModelsSubtitle": "OpenAI, Anthropic",
-    "ownModelsTitle": "Eigene Modelle",
-    "ownModelsSubtitle": "Ollama"
-  },
-  "step4": {
     "title": "Assistenten anlegen",
     "descriptionPrefix": "Erstellen Sie Ihre eigenen Assistenten, ",
-    "description": "die z. B. Anträge automatisiert prüfen, Formulare ausfüllen oder Verwaltungsvorgänge im digitalen Alltag vereinfachen."
+    "description": "die z. B. Anträge automatisiert prüfen, Formulare ausfüllen oder Verwaltungsvorgänge im digitalen Alltag vereinfachen."
   },
-  "step5": {
+  "step4": {
     "title": "Mitglieder einladen",
     "descriptionPrefix": "Laden Sie Ihre Mitarbeiter, Arbeitskollegen oder andere Nutzer ein und verteilen Sie Berechtigungen ",
     "description": "– alles zentral und transparent in den Einstellungen. So steuern Sie Zugriffe genau dort, wo sie gebraucht werden."
   },
-  "step6": {
-    "title": "Sie haben die Wahl.",
-    "description": "Möchten Sie ein europäisches Modell (Maximale Leistung) oder ein Open-Source-Modell mit geringerer Leistung aber erhöhter Sicherheit verwenden?",
-    "euHighlightTitle": "Maximale Leistung.",
-    "euHighlightDesc": "Mit Mistral profitieren Sie von herausragender Leistung, während Ihre Daten vollständig in Europa verbleiben.",
-    "ownHighlightTitle": "Maximale Sicherheit.",
-    "ownHighlightDesc": "Open-Source-Modelle bieten maximale Sicherheit, bringen jedoch spürbare Einschränkungen bei der Ergebnisqualität mit sich."
-  },
-  "applySuccess": "Standardmodell auf {{provider}} gesetzt.",
-  "applyErrorNoModel": "Kein freigeschaltetes Modell für {{provider}} gefunden. Aktivieren Sie es unter Admin → Modell-Einstellungen.",
-  "applyErrorGeneric": "Standardmodell konnte nicht gesetzt werden. Bitte erneut versuchen.",
-  "step7": {
+  "step5": {
     "title": "Ihr Account ist bereit. <br/> Sicher, souverän und datenschutzkonform 🇩🇪",
     "cta": "Jetzt starten"
-  },
-  "aide": {
-    "ariaLabel": "Aide Dialog",
-    "close": "Schließen",
-    "titlePrefix": "Jetzt",
-    "titleEmphasis": "Assistent erstellen",
-    "description": "Erstellen Sie Ihre eigenen Assistenten, um Gebührensatzungen zu analysieren, Rechtsrecherchen zu machen oder E‑Mails zu schreiben.",
-    "watch": "Video ansehen",
-    "create": "Jetzt erstellen"
   }
 }
-
-

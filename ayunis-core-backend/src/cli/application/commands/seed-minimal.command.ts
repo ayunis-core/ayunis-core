@@ -5,12 +5,17 @@ import { HashingHandler } from 'src/iam/hashing/application/ports/hashing.handle
 import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { PermittedProvidersRepository } from 'src/domain/models/application/ports/permitted-providers.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { PermittedProvider } from 'src/domain/models/domain/permitted-model-provider.entity';
 import { SubscriptionRepository } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
-import { PermitAllModelsForOrgUseCase } from 'src/domain/models/application/use-cases/permit-all-models-for-org/permit-all-models-for-org.use-case';
-import { PermitAllModelsForOrgCommand } from 'src/domain/models/application/use-cases/permit-all-models-for-org/permit-all-models-for-org.command';
 
 function ensureNonProduction() {
   if ((process.env.NODE_ENV || 'development') === 'production') {
@@ -24,13 +29,18 @@ export class SeedMinimalCommand extends CommandRunner {
   private readonly adminEmail = 'admin@demo.local';
   private readonly adminPassword = 'admin';
   private readonly adminName = 'Admin';
+  private readonly modelName = 'gpt-4o-mini';
+  private readonly modelDisplayName = 'GPT-4o mini';
+  private readonly modelProvider = ModelProvider.OPENAI;
 
   constructor(
     private readonly usersRepo: UsersRepository,
     private readonly orgsRepo: OrgsRepository,
+    private readonly modelsRepo: ModelsRepository,
+    private readonly permittedProvidersRepo: PermittedProvidersRepository,
+    private readonly permittedModelsRepo: PermittedModelsRepository,
     private readonly subscriptionRepo: SubscriptionRepository,
     private readonly hashingHandler: HashingHandler,
-    private readonly permitAllModelsForOrgUseCase: PermitAllModelsForOrgUseCase,
   ) {
     super();
   }
@@ -38,16 +48,37 @@ export class SeedMinimalCommand extends CommandRunner {
   async run(): Promise<void> {
     ensureNonProduction();
 
+    // Check if model already exists
+    let model = await this.modelsRepo.findOne({
+      name: this.modelName,
+      provider: this.modelProvider,
+    });
+
+    if (!model) {
+      // Create available model
+      model = new LanguageModel({
+        name: this.modelName,
+        displayName: this.modelDisplayName,
+        provider: this.modelProvider,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+      });
+      await this.modelsRepo.save(model);
+      console.log(`Created model: ${this.modelName}`);
+    } else {
+      console.log(`Model already exists: ${this.modelName}`);
+    }
+
     // Check if user already exists
     const existingUser = await this.usersRepo.findOneByEmail(this.adminEmail);
 
     let org: Org;
-    let user: User;
     if (existingUser) {
       console.log(`User already exists: ${this.adminEmail}`);
       // Get the existing org
       org = await this.orgsRepo.findById(existingUser.orgId);
-      user = existingUser;
       console.log(`Using existing org: ${org.name}`);
     } else {
       // Create org & admin user
@@ -55,7 +86,7 @@ export class SeedMinimalCommand extends CommandRunner {
       console.log(`Created org: ${this.orgName}`);
 
       const passwordHash = await this.hashingHandler.hash(this.adminPassword);
-      user = await this.usersRepo.create(
+      await this.usersRepo.create(
         new User({
           email: this.adminEmail,
           passwordHash,
@@ -103,12 +134,34 @@ export class SeedMinimalCommand extends CommandRunner {
       console.log(`Active subscription already exists for org: ${org.name}`);
     }
 
-    // Permit all available models for the organization
-    console.log('Permitting all available models for organization...');
-    await this.permitAllModelsForOrgUseCase.execute(
-      new PermitAllModelsForOrgCommand(org.id, user.id),
-    );
-    console.log('Permitted all available models for organization');
+    // Create permitted provider & permitted model
+    // These operations are idempotent by nature (they handle duplicates internally)
+    try {
+      await this.permittedProvidersRepo.create(
+        org.id,
+        new PermittedProvider({
+          provider: this.modelProvider,
+          orgId: org.id,
+        }),
+      );
+      console.log(`Created permitted provider: ${this.modelProvider}`);
+    } catch {
+      console.log(
+        `Permitted provider may already exist: ${this.modelProvider}`,
+      );
+    }
+
+    try {
+      await this.permittedModelsRepo.create(
+        new PermittedModel({
+          model,
+          orgId: org.id,
+        }),
+      );
+      console.log(`Created permitted model: ${this.modelName}`);
+    } catch {
+      console.log(`Permitted model may already exist: ${this.modelName}`);
+    }
 
     console.log('Seeding completed successfully');
   }

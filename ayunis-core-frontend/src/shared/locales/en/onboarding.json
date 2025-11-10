@@ -5,50 +5,17 @@
     "description": "to interact with Ayunis Core directly, get quick answers, and make your daily work more efficient."
   },
   "step3": {
-    "title": "Add models",
-    "description": "Choose between European (Mistral) or US (OpenAI, Anthropic) models, or host your own.",
-    "note": "We have already selected the most secure models for you.",
-    "euModelsTitle": "European models",
-    "euModelsSubtitle": "Mistral",
-    "usModelsTitle": "American models",
-    "usModelsSubtitle": "OpenAI, Anthropic",
-    "ownModelsTitle": "Own models",
-    "ownModelsSubtitle": "Ollama"
-  },
-  "step4": {
     "title": "Create assistants",
     "descriptionPrefix": "Create your own assistants, ",
     "description": "that, for example, automatically check applications, fill out forms, or simplify administrative processes in digital everyday life."
   },
-  "step5": {
+  "step4": {
     "title": "Invite members",
-    "description": "Invite your employees, colleagues or other users and assign permissions. that, for example, automatically check applications, fill out forms, or simplify administrative processes in digital everyday life."
+    "descriptionPrefix": "Invite your employees, colleagues or other users and assign permissions ",
+    "description": "– everything centrally and transparently in the settings. This way you control access exactly where it is needed."
   },
-  "step6": {
-    "title": "You have the choice.",
-    "description": "Do you want to use a European model (maximum performance) or an open-source model with lower performance but increased security?",
-    "euHighlightTitle": "Maximum performance.",
-    "euHighlightDesc": "With Mistral you benefit from outstanding performance while your data stays entirely in Europe.",
-    "ownHighlightTitle": "Maximum security.",
-    "ownHighlightDesc": "Open-source models offer maximum security but come with noticeable limitations in result quality."
-  },
-  "applySuccess": "Default model set to {{provider}}.",
-  "applyErrorNoModel": "No permitted model found for {{provider}}. Enable it in Admin → Model Settings.",
-  "applyErrorGeneric": "Could not set default model. Please try again.",
-  "step7": {
-    "title": "Your account is ready. Privacy-first with the European model Mistral.",
-    "description": "You start with the privacy-safe European model Mistral, selected especially for public administrations. You can add more AI models at any time.",
+  "step5": {
+    "title": "Your account is ready. <br/> Privacy-first with the European model Mistral.",
     "cta": "Start now"
-  },
-  "aide": {
-    "ariaLabel": "Aide Dialog",
-    "close": "Close",
-    "titlePrefix": "Create",
-    "titleEmphasis": "assistant now",
-    "description": "Create your own assistants to analyze fee schedules, perform legal research, or draft emails.",
-    "watch": "Watch video",
-    "create": "Create now"
   }
 }
-
-

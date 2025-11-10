@@ -1,7 +1,7 @@
 import NewChatPageLayout from "./NewChatPageLayout";
 import ChatInput from "@/widgets/chat-input";
 import { useInitiateChat } from "../api/useInitiateChat";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
 import { showError } from "@/shared/lib/toast";
@@ -9,8 +9,7 @@ import { generateUUID } from "@/shared/lib/uuid";
 import type { AgentResponseDto } from "@/shared/api";
 import { SourceResponseDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import TrialLimitBanner from "@/widgets/subscription/ui/TrialLimitBanner";
-import { useSubscriptionStatus } from "@/entities/subscription/lib/useSubscriptionStatus";
-import { cn } from "@/shared/lib/shadcn/utils";
+import { useSubscriptionStatus } from "@/features/subscription";
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -40,27 +39,10 @@ export default function NewChatPage({
       file: File;
     }>
   >([]);
-  const [shouldAnimateBanner, setShouldAnimateBanner] = useState(false);
-  const [showBanner, setShowBanner] = useState(false);
-  const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectedAgent = agents.find((agent) => agent.id === agentId);
 
   const isLimitReached = subscriptionStatus?.isMessageLimitReached ?? false;
-
-  // Show banner with fade-in animation when limit is reached and data is loaded
-  useEffect(() => {
-    if (!isLoadingSubscription) {
-      if (isLimitReached) {
-        // Small delay to ensure smooth transition
-        const timer = setTimeout(() => {
-          setShowBanner(true);
-        }, 50);
-        return () => clearTimeout(timer);
-      } else {
-        setShowBanner(false);
-      }
-    }
-  }, [isLimitReached, isLoadingSubscription]);
+  const showBanner = !isLoadingSubscription && isLimitReached;
 
   function handleFileUpload(file: File) {
     const isCsvFile = file.name.endsWith(".csv");
@@ -102,35 +84,18 @@ export default function NewChatPage({
       return;
     }
 
-    // If limit is reached, prevent sending and animate banner
+    // If limit is reached, prevent sending
     if (isLimitReached) {
-      if (bannerTimeoutRef.current) {
-        clearTimeout(bannerTimeoutRef.current);
-      }
-
-      setShouldAnimateBanner(true);
-      bannerTimeoutRef.current = setTimeout(() => {
-        setShouldAnimateBanner(false);
-      }, 500);
       return;
     }
 
     initiateChat(message, modelId, agentId, sources);
   }
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (bannerTimeoutRef.current) {
-        clearTimeout(bannerTimeoutRef.current);
-      }
-    };
-  }, []);
-
   return (
     <NewChatPageLayout
-      positionTrialMessageBanner={isLimitReached}
       header={<ContentAreaHeader title={t("newChat.newChat")} />}
+      trialLimitBanner={showBanner ? <TrialLimitBanner /> : undefined}
     >
       <div className="text-center">
         <h1 className="text-2xl font-bold">{t("newChat.title")}</h1>
@@ -155,21 +120,6 @@ export default function NewChatPage({
           onDownloadSource={() => null}
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         />
-      </div>
-
-      <div
-        className={cn(
-          "transition-all duration-500 ease-out",
-          showBanner
-            ? "opacity-100 translate-y-0 max-h-[500px]"
-            : "opacity-0 -translate-y-4 max-h-0 overflow-hidden"
-        )}
-      >
-        {showBanner && (
-          <TrialLimitBanner
-            animate={shouldAnimateBanner}
-          />
-        )}
       </div>
     </NewChatPageLayout>
   );

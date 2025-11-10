@@ -4,4 +4,3 @@ export function useSubscriptionStatus() {
   return useSubscriptionsControllerGetStatus();
 }
 
-

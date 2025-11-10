@@ -1,71 +1,63 @@
-import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import {
   ModelWithConfigResponseDtoProvider,
+  type ModelWithConfigResponseDto,
 } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 import ModelProviderCard from "./ModelProviderCard";
 import SettingsLayout from "../../admin-settings-layout";
+import { useTranslation } from "react-i18next";
 import { useModelsWithConfig, useProvidersWithPermittedStatus } from "../api";
-import ProviderTabs from "./ProviderTabs";
-import ModelsEmptyState from "./ModelsEmptyState";
 
 export default function ModelSettingsPage() {
+  const { t } = useTranslation("admin-settings-models");
   const { models } = useModelsWithConfig();
   const { providers } = useProvidersWithPermittedStatus();
 
-  type TabKey = "recommended" | "self";
-  const [tab, setTab] = useState<TabKey>("recommended");
+  // Group models by provider
+  const groupedModels = models.reduce(
+    (acc, model) => {
+      acc[model.provider] = acc[model.provider] || [];
+      acc[model.provider].push(model);
+      return acc;
+    },
+    {} as Record<
+      ModelWithConfigResponseDtoProvider,
+      ModelWithConfigResponseDto[]
+    >,
+  );
 
-  const SELF: ModelWithConfigResponseDtoProvider[] = [
-    ModelWithConfigResponseDtoProvider.ollama,
-  ];
-
-  const RECOMMENDED: ModelWithConfigResponseDtoProvider[] = [
+  const providerPriority: Array<ModelWithConfigResponseDtoProvider> = [
     ModelWithConfigResponseDtoProvider.ayunis,
     ModelWithConfigResponseDtoProvider.synaforce,
     ModelWithConfigResponseDtoProvider.mistral,
+    ModelWithConfigResponseDtoProvider.ollama,
     ModelWithConfigResponseDtoProvider.anthropic,
     ModelWithConfigResponseDtoProvider.openai,
   ];
 
-  const visibleProviderIds: Array<ModelWithConfigResponseDtoProvider> = useMemo(() => {
-    switch (tab) {
-      case "self":
-        return SELF;
-      case "recommended":
-      default:
-        return RECOMMENDED;
-    }
-  }, [tab, RECOMMENDED, SELF]);
-
-  // Aggregate all models from visible providers
-  const aggregatedModels = useMemo(() => {
-    return models.filter((model) => visibleProviderIds.includes(model.provider));
-  }, [models, visibleProviderIds]);
-
-  const hasModels = aggregatedModels.length > 0;
-
-  // Create providers map for permission checking
-  const providersMap = useMemo(() => {
-    return providers.map((p) => ({
-      provider: p.provider,
-      isPermitted: p.isPermitted,
-    }));
-  }, [providers]);
+  const modelProviderCards = providerPriority.map((provider) =>
+    groupedModels[provider] ? (
+      <ModelProviderCard
+        key={provider}
+        provider={providers.find((p) => p.provider === provider)!}
+        models={groupedModels[provider]}
+      />
+    ) : null,
+  );
 
   return (
     <SettingsLayout>
-      <div className="space-y-4 px-2">
-        <ProviderTabs selected={tab} onChange={setTab} />
-
-        {hasModels && (
-          <ModelProviderCard
-            cardType={tab}
-            models={aggregatedModels}
-            providers={providersMap}
-          />
+      <div className="space-y-4">
+        {modelProviderCards.length > 0 && modelProviderCards}
+        {modelProviderCards.length === 0 && (
+          <Card>
+            <CardContent>
+              <div className="text-center text-muted-foreground">
+                <p>{t("models.noModelsAvailable")}</p>
+              </div>
+            </CardContent>
+          </Card>
         )}
-
-        {!hasModels && <ModelsEmptyState tab={tab} />}
       </div>
     </SettingsLayout>
   );

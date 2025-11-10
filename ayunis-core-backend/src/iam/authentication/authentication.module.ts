@@ -29,7 +29,6 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
-import { ModelsModule } from 'src/domain/models/models.module';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -50,7 +49,6 @@ export class AuthenticationModule {
         HashingModule,
         SubscriptionsModule,
         WebhooksModule,
-        ModelsModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],

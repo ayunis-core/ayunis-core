@@ -9,15 +9,15 @@
     "embeddingTooltip": "Das Modell wird verwendet, um Dokumente zu embedden, was für die Dokumentenanalyse-Funktionen erforderlich ist",
     "tools": "Tools",
     "toolsTooltip": "Das Modell kann Tools verwenden, wie z.B. die Internetrecherche, Dokumentenanalyse oder Datenaufbereitung",
-    "enableProvider": "Aktivieren",
+    "enableProvider": "Provider freischalten",
     "disableProvider": "Provider deaktivieren",
     "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist.",
     "hostedIn": {
-      "de": "Betrieben in 🇩🇪 Deutschland",
-      "us": "Betrieben in 🇺🇸 USA",
-      "eu": "Betrieben in 🇪🇺 Europa",
+      "de": "Betrieben in 🇩🇪",
+      "us": "Betrieben in 🇺🇸",
+      "eu": "Betrieben in 🇪🇺",
       "selfHosted": "Betrieben auf Ihrer eigenen Infrastruktur",
-      "ayunis": "Betrieben in 🇩🇪 in Sovereign Cloud"
+      "ayunis": "Betrieben in 🇩🇪 in souveräner Cloud"
     },
     "providerConfirmation": {
       "enableProvider": "{{provider}} freischalten",
@@ -25,8 +25,7 @@
       "enableProviderDescription": "Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen freigeschalteten Modelle zugreifen.",
       "disableProviderDescription": "Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen freigeschalteten Modelle zugreifen.",
       "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>.",
-      "mistralProviderHint": "Zusätzlich wird das OCR-Modell von Mistral verwendet, um hochgeladene PDF-Dateien zu analysieren und ein verbessertes Ergebnis gegenüber regulären OCR-Tools zu erzielen.",
-      "learnMore": "Mehr erfahren"
+      "mistralProviderHint": "Zusätzlich wird das OCR-Modell von Mistral verwendet, um hochgeladene PDF-Dateien zu analysieren und ein verbessertes Ergebnis gegenüber regulären OCR-Tools zu erzielen."
     },
     "deletePermittedModel": {
       "title": "Model löschen",
@@ -39,35 +38,6 @@
       "modelProviderNotPermitted": "Der Modell-Provider ist nicht freigeschaltet.",
       "modelNotFound": "Das Modell wurde nicht gefunden.",
       "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
-    },
-    "configureBanner": {
-      "title": "Modelle jetzt konfigurieren",
-      "subtitle": "Sehen Sie sich jetzt unsere Videoanleitung an, um Ihre Modelle zu konfigurieren.",
-      "cta": "Video ansehen"
-    },
-    "tabs": {
-      "recommended": "Empfohlene Modelle",
-      "self": "Selbst-Gehostete Modelle"
-    },
-    "emptyState": {
-      "recommended": {
-        "title": "Keine empfohlenen Modelle verfügbar",
-        "description": "Es sind derzeit keine empfohlenen Modelle konfiguriert. Bitte überprüfen Sie Ihre Konfiguration."
-      },
-      "selfHosted": {
-        "title": "Keine selbst-gehosteten Modelle verfügbar",
-        "description": "Es sind derzeit keine selbst-gehosteten Modelle konfiguriert. Bitte überprüfen Sie Ihre Konfiguration."
-      }
-    },
-    "card": {
-      "recommended": {
-        "title": "Ayunis",
-        "description": "Betrieben in 🇩🇪 Deutschland in souveräner Telekom Cloud."
-      },
-      "selfHosted": {
-        "title": "Open Source Modelle",
-        "description": "Gehostet auf Ihrer lokalen Umgebung."
-      }
     }
   }
 }

@@ -5,10 +5,8 @@ import { HasActiveSubscriptionQuery } from '../has-active-subscription/has-activ
 import { GetTrialUseCase } from '../get-trial/get-trial.use-case';
 import { GetTrialQuery } from '../get-trial/get-trial.query';
 import { SubscriptionStatusResponseDto } from '../../../presenters/http/dto/subscription-status.response.dto';
-import {
-  SubscriptionError,
-  UnexpectedSubscriptionError,
-} from '../../subscription.errors';
+import { UnexpectedSubscriptionError } from '../../subscription.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetSubscriptionStatusUseCase {
@@ -72,7 +70,7 @@ export class GetSubscriptionStatusUseCase {
         },
       };
     } catch (error: unknown) {
-      if (error instanceof SubscriptionError) {
+      if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
