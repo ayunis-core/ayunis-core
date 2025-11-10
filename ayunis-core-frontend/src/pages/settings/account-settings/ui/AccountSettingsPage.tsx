@@ -9,6 +9,9 @@ import {
 import { Button } from "@/shared/ui/shadcn/button";
 import { useTranslation } from "react-i18next";
 import PasswordSettingsPage from "./PasswordSettingsPage";
+import { useDeleteAccount } from "../api/useDeleteAccount";
+import { useConfirmation } from "@/widgets/confirmation-modal/model/useConfirmation";
+import { useMe } from "@/widgets/app-sidebar/api/useMe";
 
 export default function AccountSettingsPage({
   user,
@@ -16,6 +19,26 @@ export default function AccountSettingsPage({
   user: { name: string; email: string };
 }) {
   const { t } = useTranslation("settings");
+  const { user: currentUser } = useMe();
+  const { deleteAccount, isLoading } = useDeleteAccount();
+  const { confirm } = useConfirmation();
+
+  const handleDeleteAccount = () => {
+    if (!currentUser?.id) {
+      return;
+    }
+
+    confirm({
+      title: t("account.deleteAccountConfirmTitle"),
+      description: t("account.deleteAccountConfirmDescription"),
+      confirmText: t("account.deleteAccountConfirmButton"),
+      cancelText: t("account.deleteAccountCancelButton"),
+      variant: "destructive",
+      onConfirm: () => {
+        deleteAccount(currentUser.id);
+      },
+    });
+  };
 
   return (
     <SettingsLayout title={t("account.title")}>
@@ -35,8 +58,14 @@ export default function AccountSettingsPage({
                   {t("account.deleteAccountDescription")}
                 </div>
               </div>
-              <Button variant="destructive">
-                {t("account.deleteAccount")}
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={isLoading || !currentUser?.id}
+              >
+                {isLoading
+                  ? t("account.deleteAccountLoading")
+                  : t("account.deleteAccount")}
               </Button>
             </div>
           </CardContent>

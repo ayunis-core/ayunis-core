@@ -1214,16 +1214,9 @@ export interface UpdateMcpIntegrationDto {
    * @maxLength 255
    */
   name?: string;
-  /**
-   * Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.
-   * @minLength 1
-   */
+  /** Authentication credentials (will be encrypted). Provide to rotate the stored secret/token. */
   credentials?: string;
-  /**
-   * Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.
-   * @minLength 1
-   * @maxLength 255
-   */
+  /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
   authHeaderName?: string;
 }
 
@@ -1763,6 +1756,8 @@ export const MeResponseDtoRole = {
 } as const;
 
 export interface MeResponseDto {
+  /** User ID */
+  id: string;
   /** User email address */
   email: string;
   /** User role */

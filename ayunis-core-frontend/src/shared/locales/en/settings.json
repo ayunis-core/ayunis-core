@@ -31,6 +31,16 @@
     "accountActions": "Account Actions",
     "deleteAccount": "Delete Account",
     "deleteAccountDescription": "Permanently delete your account and all associated data.",
+    "deleteAccountLoading": "Deleting...",
+    "deleteAccountConfirmTitle": "Delete Account",
+    "deleteAccountConfirmDescription": "Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.",
+    "deleteAccountConfirmButton": "Delete Account",
+    "deleteAccountCancelButton": "Cancel",
+    "deleteAccountSuccess": "Your account has been deleted successfully",
+    "deleteAccountError": {
+      "lastAdmin": "Cannot delete account: You are the last admin of your organization. Please assign another admin before deleting your account.",
+      "generic": "Failed to delete account. Please try again."
+    },
     "error": {
       "invalidName": "Invalid name provided",
       "updateFailed": "Failed to update. Please try again.",

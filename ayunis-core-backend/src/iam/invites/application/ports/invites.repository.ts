@@ -9,4 +9,5 @@ export abstract class InvitesRepository {
   abstract findByOrgId(orgId: UUID): Promise<Invite[]>;
   abstract accept(id: UUID): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
+  abstract deleteByEmail(email: string): Promise<void>;
 }

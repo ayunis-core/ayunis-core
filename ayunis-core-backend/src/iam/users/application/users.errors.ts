@@ -25,6 +25,7 @@ export enum UserErrorCode {
   UNEXPECTED_USER_ERROR = 'UNEXPECTED_USER_ERROR',
   PASSWORD_RESET_EMAIL_SENDING_FAILED = 'PASSWORD_RESET_EMAIL_SENDING_FAILED',
   USER_EMAIL_PROVIDER_BLACKLISTED = 'USER_EMAIL_PROVIDER_BLACKLISTED',
+  CANNOT_DELETE_LAST_ADMIN = 'CANNOT_DELETE_LAST_ADMIN',
 }
 
 /**
@@ -229,6 +230,20 @@ export class UserEmailProviderBlacklistedError extends UserError {
     super(
       `Email provider blacklisted: ${emailProvider}`,
       UserErrorCode.USER_EMAIL_PROVIDER_BLACKLISTED,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when attempting to delete the last admin of an organization
+ */
+export class CannotDeleteLastAdminError extends UserError {
+  constructor(orgId: string, metadata?: ErrorMetadata) {
+    super(
+      `Cannot delete the last admin of an organization`,
+      UserErrorCode.CANNOT_DELETE_LAST_ADMIN,
       400,
       metadata,
     );
