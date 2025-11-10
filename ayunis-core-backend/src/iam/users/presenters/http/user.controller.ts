@@ -321,13 +321,12 @@ export class UserController {
     );
   }
 
-  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a user',
     description:
-      'Delete a user by their ID. Only users within the same organization can be deleted.',
+      'Delete a user by their ID. Users can delete themselves, or admins can delete users within the same organization. Cannot delete the last admin.',
   })
   @ApiParam({
     name: 'id',
@@ -354,9 +353,6 @@ export class UserController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
     this.logger.log('deleteUser', { userId });
-    if (userId === currentUserId) {
-      throw new UnauthorizedException('You cannot delete yourself');
-    }
 
     await this.deleteUserUseCase.execute(
       new DeleteUserCommand({

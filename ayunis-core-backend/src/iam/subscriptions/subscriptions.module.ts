@@ -33,7 +33,7 @@ import { LocalTrialsRepository } from './infrastructure/persistence/local/local-
       SubscriptionBillingInfoRecord,
       TrialRecord,
     ]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => InvitesModule),
     WebhooksModule,
   ],

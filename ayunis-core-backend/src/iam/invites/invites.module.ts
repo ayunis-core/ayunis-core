@@ -54,7 +54,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
       }),
     }),
     OrgsModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => SubscriptionsModule),
     EmailsModule,
     EmailTemplatesModule,
@@ -90,6 +90,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,
     InviteJwtService,
+    InvitesRepository,
   ],
 })
 export class InvitesModule {}

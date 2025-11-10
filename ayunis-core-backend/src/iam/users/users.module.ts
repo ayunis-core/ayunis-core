@@ -39,6 +39,8 @@ import { SendPasswordResetEmailUseCase } from './application/use-cases/send-pass
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { forwardRef } from '@nestjs/common';
+import { InvitesModule } from '../invites/invites.module';
 
 @Module({
   imports: [
@@ -47,6 +49,7 @@ import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
     EmailsModule,
     EmailTemplatesModule,
     WebhooksModule,
+    forwardRef(() => InvitesModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -118,7 +118,7 @@ export class LocalUsersRepository extends UsersRepository {
       throw new UserNotFoundError(`User with ID ${id} not found`);
     }
 
-    await this.userRepository.delete(id);
+    await this.userRepository.remove(existingUser);
     this.logger.debug('User deleted successfully', { userId: id });
   }
 

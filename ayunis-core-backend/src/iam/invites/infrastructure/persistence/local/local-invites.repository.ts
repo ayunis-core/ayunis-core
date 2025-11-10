@@ -71,4 +71,14 @@ export class LocalInvitesRepository implements InvitesRepository {
     await this.inviteRepository.delete(id);
     this.logger.debug('Invite deleted successfully', { id });
   }
+
+  async deleteByEmail(email: string): Promise<void> {
+    this.logger.log('deleteByEmail', { email });
+    const result = await this.inviteRepository.delete({ email });
+
+    this.logger.debug('Invites deleted by email', {
+      email,
+      deletedCount: result.affected ?? 0,
+    });
+  }
 }

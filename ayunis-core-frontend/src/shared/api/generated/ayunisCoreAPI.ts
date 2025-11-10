@@ -1851,7 +1851,7 @@ export const useUserControllerResendEmailConfirmation = <TError = void,
     }
     
 /**
- * Delete a user by their ID. Only users within the same organization can be deleted.
+ * Delete a user by their ID. Users can delete themselves, or admins can delete users within the same organization. Cannot delete the last admin.
  * @summary Delete a user
  */
 export const userControllerDeleteUser = (
