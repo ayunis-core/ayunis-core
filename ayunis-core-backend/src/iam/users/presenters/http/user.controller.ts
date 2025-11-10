@@ -362,7 +362,6 @@ export class UserController {
       new DeleteUserCommand({
         userId,
         orgId,
-        requestUserId: currentUserId,
       }),
     );
   }

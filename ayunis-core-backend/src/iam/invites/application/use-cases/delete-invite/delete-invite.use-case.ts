@@ -12,7 +12,6 @@ export class DeleteInviteUseCase {
   async execute(command: DeleteInviteCommand): Promise<void> {
     this.logger.log('execute', {
       inviteId: command.inviteId,
-      requestingUserId: command.requestingUserId,
     });
 
     // Find the invite to verify it exists and check permissions
@@ -27,7 +26,6 @@ export class DeleteInviteUseCase {
 
     this.logger.debug('Invite deleted successfully', {
       inviteId: command.inviteId,
-      deletedBy: command.requestingUserId,
     });
   }
 }

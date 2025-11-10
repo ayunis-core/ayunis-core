@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
 import { ConfigService, ConfigModule } from '@nestjs/config';
@@ -39,10 +39,12 @@ import { SendPasswordResetEmailUseCase } from './application/use-cases/send-pass
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { InvitesModule } from '../invites/invites.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserRecord]),
+    InvitesModule,
     HashingModule,
     EmailsModule,
     EmailTemplatesModule,

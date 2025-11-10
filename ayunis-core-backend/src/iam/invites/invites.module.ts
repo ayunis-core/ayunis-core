@@ -21,6 +21,7 @@ import { DeleteInviteUseCase } from './application/use-cases/delete-invite/delet
 import { GetInvitesByOrgUseCase } from './application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInviteByTokenUseCase } from './application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
 import { SendInvitationEmailUseCase } from './application/use-cases/send-invitation-email/send-invitation-email.use-case';
+import { DeleteInviteByEmailUseCase } from './application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -54,8 +55,8 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
       }),
     }),
     OrgsModule,
-    UsersModule,
     forwardRef(() => SubscriptionsModule),
+    forwardRef(() => UsersModule),
     EmailsModule,
     EmailTemplatesModule,
   ],
@@ -80,6 +81,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,
+    DeleteInviteByEmailUseCase,
   ],
   controllers: [InvitesController],
   exports: [
@@ -90,6 +92,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,
     InviteJwtService,
+    DeleteInviteByEmailUseCase,
   ],
 })
 export class InvitesModule {}
