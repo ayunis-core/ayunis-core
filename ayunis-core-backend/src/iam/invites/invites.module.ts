@@ -85,6 +85,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
   ],
   controllers: [InvitesController],
   exports: [
+    InvitesRepository, // Export repository for CLI user management
     CreateInviteUseCase,
     AcceptInviteUseCase,
     DeleteInviteUseCase,
