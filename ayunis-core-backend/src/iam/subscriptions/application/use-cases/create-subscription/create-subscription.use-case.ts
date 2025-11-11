@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { IsFromOrgUseCase } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.use-case';
-import { IsFromOrgQuery } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.query';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { ConfigService } from '@nestjs/config';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
@@ -34,7 +32,6 @@ export class CreateSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly configService: ConfigService,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
@@ -47,14 +44,9 @@ export class CreateSubscriptionUseCase {
     try {
       const systemRole = this.contextService.get('systemRole');
       const orgRole = this.contextService.get('role');
-      const isFromOrg = await this.isFromOrgUseCase.execute(
-        new IsFromOrgQuery({
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        }),
-      );
+      const orgId = this.contextService.get('orgId');
       const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && isFromOrg;
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
       if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           command.requestingUserId,

@@ -5,6 +5,10 @@ import { ModelError, UnexpectedModelError } from '../../models.errors';
 import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelProviderLocation } from 'src/domain/models/domain/value-objects/model-provider-locations.enum';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export interface PermittedProviderWithInfo {
   provider: ModelProvider;
@@ -20,12 +24,20 @@ export class GetAllPermittedProvidersUseCase {
   constructor(
     private readonly permittedProvidersRepository: PermittedProvidersRepository,
     private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
     query: GetAllPermittedProvidersQuery,
   ): Promise<PermittedProviderWithInfo[]> {
     try {
+      const orgId = this.contextService.get('orgId');
+      const systemRole = this.contextService.get('systemRole');
+      const isFromOrg = orgId === query.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isFromOrg && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
       const permittedProviders =
         await this.permittedProvidersRepository.findAll(query.orgId);
 
@@ -56,7 +68,7 @@ export class GetAllPermittedProvidersUseCase {
 
       return enrichedProviders;
     } catch (error) {
-      if (error instanceof ModelError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error(error);

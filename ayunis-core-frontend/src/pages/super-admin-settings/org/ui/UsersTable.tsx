@@ -101,6 +101,7 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
               <TableRow>
                 <TableHead>{t("table.name")}</TableHead>
                 <TableHead>{t("table.createdAt")}</TableHead>
+                <TableHead>{t("table.email")}</TableHead>
                 <TableHead className="w-[100px]">
                   {t("table.actions")}
                 </TableHead>
@@ -111,6 +112,7 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                   <TableCell className="w-[100px]">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

@@ -7,6 +7,11 @@ import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-m
 import { DeletePermittedModelUseCase } from '../delete-permitted-model/delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from '../delete-permitted-model/delete-permitted-model.command';
 import { Transactional } from '@nestjs-cls/transactional';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeletePermittedProviderUseCase {
@@ -16,11 +21,20 @@ export class DeletePermittedProviderUseCase {
     private readonly permittedProvidersRepository: PermittedProvidersRepository,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
   async execute(command: DeletePermittedProviderCommand): Promise<void> {
     try {
+      const orgId = this.contextService.get('orgId');
+      const orgRole = this.contextService.get('role');
+      const systemRole = this.contextService.get('systemRole');
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isOrgAdmin && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
       this.logger.debug(
         `Deleting permitted provider ${command.permittedProvider.provider} for organization ${command.orgId}`,
       );
@@ -50,7 +64,7 @@ export class DeletePermittedProviderUseCase {
         command.permittedProvider,
       );
     } catch (error) {
-      if (error instanceof ModelError) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error(error);

@@ -78,8 +78,8 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOne(params: FindOneParams): Promise<PermittedModel | null> {
     const where =
       'id' in params
-        ? { id: params.id, orgId: params.orgId }
-        : { name: params.name, provider: params.provider, orgId: params.orgId };
+        ? { id: params.id }
+        : { name: params.name, provider: params.provider };
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
     });
@@ -94,8 +94,8 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   ): Promise<PermittedLanguageModel | null> {
     const where =
       'id' in params
-        ? { id: params.id, orgId: params.orgId }
-        : { name: params.name, provider: params.provider, orgId: params.orgId };
+        ? { id: params.id }
+        : { name: params.name, provider: params.provider };
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
       relations: {

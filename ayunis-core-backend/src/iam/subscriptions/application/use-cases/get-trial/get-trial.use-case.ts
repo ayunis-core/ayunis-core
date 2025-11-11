@@ -2,10 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/subscriptions/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { GetTrialQuery } from './get-trial.query';
-import {
-  SubscriptionError,
-  UnexpectedTrialError,
-} from '../../subscription.errors';
+import { UnexpectedTrialError } from '../../subscription.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetTrialUseCase {
@@ -38,7 +36,7 @@ export class GetTrialUseCase {
 
       return trial;
     } catch (error) {
-      if (error instanceof SubscriptionError) {
+      if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }

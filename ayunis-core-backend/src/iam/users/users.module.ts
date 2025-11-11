@@ -24,7 +24,6 @@ import { ValidateUserUseCase } from './application/use-cases/validate-user/valid
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
 import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
-import { IsFromOrgUseCase } from './application/use-cases/is-from-org/is-from-org.use-case';
 import { ConfirmEmailUseCase } from './application/use-cases/confirm-email/confirm-email.use-case';
 import { ResendEmailConfirmationUseCase } from './application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
 import { EmailConfirmationJwtService } from './application/services/email-confirmation-jwt.service';
@@ -93,7 +92,6 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
     UpdatePasswordUseCase,
-    IsFromOrgUseCase,
     ConfirmEmailUseCase,
     ResendEmailConfirmationUseCase,
     SendConfirmationEmailUseCase,
@@ -115,7 +113,6 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     FindUserByIdUseCase,
     FindUsersByOrgIdUseCase,
     IsValidPasswordUseCase,
-    IsFromOrgUseCase,
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
     UsersRepository, // Export repository for seeding

@@ -8,6 +8,8 @@ import {
 } from '../../models.errors';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedLanguageModelUseCase {
@@ -24,14 +26,17 @@ export class GetPermittedLanguageModelUseCase {
       query,
     });
     const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
+    const systemRole = this.contextService.get('systemRole');
+
     try {
       const model = await this.permittedModelsRepository.findOneLanguage({
         id: query.id,
-        orgId,
       });
+      const isFromOrg = orgId === model?.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isFromOrg && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
       if (!model) {
         this.logger.error('model not found', {
           query,

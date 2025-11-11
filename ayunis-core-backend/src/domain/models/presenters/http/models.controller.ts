@@ -451,15 +451,12 @@ export class ModelsController {
   async createPermittedProvider(
     @Body() createPermittedProviderDto: CreatePermittedProviderDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
     const permittedProvider = new PermittedProvider({
       provider: createPermittedProviderDto.provider,
       orgId,
     });
     const command = new CreatePermittedProviderCommand({
-      userId,
-      orgId,
       permittedProvider,
     });
     await this.createPermittedProviderUseCase.execute(command);

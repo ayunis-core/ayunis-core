@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
 import extractErrorData from "@/shared/api/extract-error-data";
+import { useRouter } from "@tanstack/react-router";
 
 interface UseSuperAdminCreateUserOptions {
   orgId: string;
@@ -17,16 +18,20 @@ export function useSuperAdminCreateUser(
   options: UseSuperAdminCreateUserOptions,
 ) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { t } = useTranslation("super-admin-settings-org");
   const createUserMutation = useSuperAdminUsersControllerCreateUser({
     mutation: {
       onSuccess: () => {
-        console.log("Create user succeeded, invalidating queries");
         showSuccess(t("createUser.success"));
         queryClient.invalidateQueries({
           queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(
             options.orgId,
           ),
+        });
+        router.invalidate({
+          filter: (route) =>
+            route.id === "/_authenticated/super-admin-settings/orgs/$id",
         });
 
         if (options.onSuccessCallback) {

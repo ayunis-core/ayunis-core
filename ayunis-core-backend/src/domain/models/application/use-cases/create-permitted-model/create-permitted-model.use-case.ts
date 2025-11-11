@@ -7,6 +7,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IsProviderPermittedUseCase } from '../is-provider-permitted/is-provider-permitted.use-case';
 import { IsProviderPermittedQuery } from '../is-provider-permitted/is-provider-permitted.query';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class CreatePermittedModelUseCase {
@@ -15,6 +19,7 @@ export class CreatePermittedModelUseCase {
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelRegistry: ModelRegistry,
     private readonly isProviderPermittedUseCase: IsProviderPermittedUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CreatePermittedModelCommand): Promise<PermittedModel> {
@@ -23,6 +28,14 @@ export class CreatePermittedModelUseCase {
       orgId: command.orgId,
     });
     try {
+      const orgId = this.contextService.get('orgId');
+      const orgRole = this.contextService.get('role');
+      const systemRole = this.contextService.get('systemRole');
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isOrgAdmin && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
       const model = this.modelRegistry.getAvailableModel(command.modelId);
       const isProviderPermitted = await this.isProviderPermittedUseCase.execute(
         new IsProviderPermittedQuery(command.orgId, model.provider),

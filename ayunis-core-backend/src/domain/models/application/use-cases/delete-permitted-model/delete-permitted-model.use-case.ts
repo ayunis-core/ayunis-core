@@ -26,6 +26,10 @@ import { FindAllThreadsUseCase } from 'src/domain/threads/application/use-cases/
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 import { Transactional } from '@nestjs-cls/transactional';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class DeletePermittedModelUseCase {
@@ -40,6 +44,7 @@ export class DeletePermittedModelUseCase {
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
@@ -49,9 +54,16 @@ export class DeletePermittedModelUseCase {
       orgId: command.orgId,
     });
     try {
+      const orgId = this.contextService.get('orgId');
+      const orgRole = this.contextService.get('role');
+      const systemRole = this.contextService.get('systemRole');
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isOrgAdmin && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
       const model = await this.permittedModelsRepository.findOne({
         id: command.permittedModelId,
-        orgId: command.orgId,
       });
       if (!model) {
         this.logger.error('Model not found', {

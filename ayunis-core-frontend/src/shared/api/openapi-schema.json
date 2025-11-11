@@ -502,7 +502,420 @@
         ]
       }
     },
+    "/super-admin/models/{orgId}/available": {
+      "get": {
+        "description": "Retrieve all available models from the registry with their permitted status for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_getAvailableModels",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to check permitted status for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved available models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelWithConfigResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all available models",
+        "tags": [
+          "Super Admin Models"
+        ]
+      }
+    },
+    "/super-admin/models/{orgId}/permitted-models": {
+      "get": {
+        "description": "Retrieve all permitted models for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_getPermittedModels",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to get permitted models for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved permitted models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all permitted models for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      },
+      "post": {
+        "description": "Create a new permitted model for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_createPermittedModel",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to create permitted model for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePermittedModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created permitted model"
+          },
+          "400": {
+            "description": "Invalid model data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "409": {
+            "description": "Model already permitted for this organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a permitted model for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      }
+    },
+    "/super-admin/models/{orgId}/permitted-models/{id}": {
+      "delete": {
+        "description": "Delete a permitted model for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_deletePermittedModel",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to delete permitted model for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Permitted model ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted permitted model"
+          },
+          "400": {
+            "description": "Cannot delete the last permitted language model or default model"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a permitted model for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      }
+    },
+    "/super-admin/models/{orgId}/permitted-providers": {
+      "get": {
+        "description": "Retrieve all permitted providers for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_getPermittedProviders",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to get permitted providers for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved permitted providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermittedProviderResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all permitted providers for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      },
+      "post": {
+        "description": "Create a new permitted provider for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_createPermittedProvider",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to create permitted provider for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePermittedProviderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created permitted provider"
+          },
+          "400": {
+            "description": "Invalid provider data provided or provider already permitted"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a permitted provider for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      },
+      "delete": {
+        "description": "Delete a permitted provider for the specified organization. This endpoint is only accessible to super admin.",
+        "operationId": "SuperAdminModelsController_deletePermittedProvider",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to delete permitted provider for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletePermittedProviderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully deleted permitted provider"
+          },
+          "400": {
+            "description": "Invalid provider data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Permitted provider not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a permitted provider for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      }
+    },
+    "/super-admin/models/{orgId}/providers/all-with-permitted-status": {
+      "get": {
+        "description": "Returns all available model providers with information about whether each is permitted for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_getAllModelProviderInfosWithPermittedStatus",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to check permitted status for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all model provider infos with permitted status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelProviderWithPermittedStatusResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get all model provider infos with permitted status for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      }
+    },
     "/super-admin/orgs": {
+      "post": {
+        "description": "Create a new organization in the system. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminOrgsController_createOrg",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Organization information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrgRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created organization for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new organization",
+        "tags": [
+          "Super Admin Orgs"
+        ]
+      },
       "get": {
         "description": "Retrieve every organization in the system. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminOrgsController_getAllOrgs",
@@ -4299,6 +4712,73 @@
         },
         "required": [
           "isEmbeddingModelEnabled"
+        ]
+      },
+      "PermittedEmbeddingModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the permitted model"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the model"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "mistral",
+              "ollama",
+              "synaforce",
+              "ayunis"
+            ],
+            "description": "The provider of the model"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The display name of the model"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "embedding"
+            ],
+            "description": "The type of the model (always embedding)"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the model is archived"
+          },
+          "dimensions": {
+            "type": "number",
+            "description": "The number of dimensions for embeddings",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "displayName",
+          "type",
+          "isArchived",
+          "dimensions"
+        ]
+      },
+      "CreateOrgRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Organization display name",
+            "example": "Acme Corporation"
+          }
+        },
+        "required": [
+          "name"
         ]
       },
       "SuperAdminOrgResponseDto": {

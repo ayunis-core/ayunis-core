@@ -6,6 +6,7 @@
   "table": {
     "name": "Name",
     "createdAt": "Erstellt am",
+    "email": "E-Mail",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
     "delete": "Löschen"
@@ -130,7 +131,7 @@
   "createUser": {
     "button": "Benutzer hinzufügen",
     "title": "Neuen Benutzer erstellen",
-    "description": "Erstellen Sie einen neuen Benutzer in dieser Organisation. Ein zufälliges Passwort wird generiert und eine Passwort-Reset-E-Mail wird an den Benutzer gesendet.",
+    "description": "Erstellen Sie einen neuen Benutzer in dieser Organisation. Ein zufälliges Passwort wird generiert und eine Passwort-Reset-E-Mail kann optional an den Benutzer gesendet werden.",
     "nameLabel": "Name",
     "namePlaceholder": "Benutzernamen eingeben",
     "nameRequired": "Name ist erforderlich",
@@ -147,7 +148,7 @@
     "creating": "Wird erstellt...",
     "cancel": "Abbrechen",
     "sendPasswordResetEmailLabel": "Passwort-Reset-E-Mail an Benutzer senden",
-    "success": "Benutzer erfolgreich erstellt. Eine Passwort-Reset-E-Mail wurde gesendet.",
+    "success": "Benutzer erfolgreich erstellt.",
     "error": "Benutzer konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "emailProviderBlacklisted": "Dieser E-Mail-Anbieter ist nicht erlaubt.",
     "userAlreadyExists": "Ein Benutzer mit dieser E-Mail existiert bereits."
@@ -160,6 +161,7 @@
   "tabs": {
     "org": "Organisation",
     "users": "Benutzer",
-    "subscriptions": "Abonnements"
+    "subscriptions": "Abonnements",
+    "models": "Modelle"
   }
 }

@@ -5,6 +5,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/shared/lib/toast";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "@tanstack/react-router";
 
 interface UseSuperAdminDeleteUserOptions {
   orgId: string;
@@ -15,16 +16,20 @@ export function useSuperAdminDeleteUser(
   options: UseSuperAdminDeleteUserOptions,
 ) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { t } = useTranslation("super-admin-settings-org");
   const deleteUserMutation = useSuperAdminUsersControllerDeleteUser({
     mutation: {
       onSuccess: () => {
-        console.log("Delete user succeeded, invalidating queries");
         showSuccess(t("deleteUser.success"));
         queryClient.invalidateQueries({
           queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(
             options.orgId,
           ),
+        });
+        router.invalidate({
+          filter: (route) =>
+            route.id === "/_authenticated/super-admin-settings/orgs/$id",
         });
 
         // Call the success callback

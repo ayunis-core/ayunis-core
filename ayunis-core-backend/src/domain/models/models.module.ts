@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
+import { SuperAdminModelsController } from './presenters/http/super-admin-models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelRegistry } from './application/registry/model.registry';
@@ -83,7 +84,7 @@ import { ConfigService } from '@nestjs/config';
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
-  controllers: [ModelsController],
+  controllers: [ModelsController, SuperAdminModelsController],
   providers: [
     ModelRegistry,
     ModelProviderInfoRegistry,

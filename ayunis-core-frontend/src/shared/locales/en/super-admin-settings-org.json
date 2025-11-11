@@ -6,6 +6,7 @@
   "table": {
     "name": "Name",
     "createdAt": "Created",
+    "email": "Email",
     "actions": "Actions",
     "sendPasswordReset": "Send Password Reset",
     "delete": "Delete"
@@ -130,7 +131,7 @@
   "createUser": {
     "button": "Add User",
     "title": "Create New User",
-    "description": "Create a new user in this organization. A random password will be generated and a password reset email will be sent to the user.",
+    "description": "Create a new user in this organization. A random password will be generated and a password reset email can optionally be sent to the user.",
     "nameLabel": "Name",
     "namePlaceholder": "Enter user name",
     "nameRequired": "Name is required",
@@ -147,7 +148,7 @@
     "creating": "Creating...",
     "cancel": "Cancel",
     "sendPasswordResetEmailLabel": "Send password reset email to user",
-    "success": "User created successfully. A password reset email has been sent.",
+    "success": "User created successfully.",
     "error": "Failed to create user. Please try again.",
     "emailProviderBlacklisted": "This email provider is not allowed.",
     "userAlreadyExists": "A user with this email already exists."
@@ -160,6 +161,7 @@
   "tabs": {
     "org": "Organization",
     "users": "Users",
-    "subscriptions": "Subscriptions"
+    "subscriptions": "Subscriptions",
+    "models": "Models"
   }
 }

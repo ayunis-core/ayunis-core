@@ -9,10 +9,16 @@ import {
 } from "@/shared/api";
 import SuperAdminSettingsOrgPage from "@/pages/super-admin-settings/org";
 import extractErrorData from "@/shared/api/extract-error-data";
+import { z } from "zod";
+
+const searchSchema = z.object({
+  tab: z.enum(["org", "users", "subscriptions", "models"]).optional(),
+});
 
 export const Route = createFileRoute(
   "/_authenticated/super-admin-settings/orgs/$id",
 )({
+  validateSearch: searchSchema,
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { id } }) => {
     const org = await queryClient.fetchQuery({
@@ -46,11 +52,13 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { org, users, subscription } = Route.useLoaderData();
+  const { tab } = Route.useSearch();
   return (
     <SuperAdminSettingsOrgPage
       org={org}
       users={users.users}
       subscription={subscription}
+      initialTab={tab}
     />
   );
 }

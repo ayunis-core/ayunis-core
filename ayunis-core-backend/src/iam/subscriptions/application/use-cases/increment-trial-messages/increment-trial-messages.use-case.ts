@@ -6,9 +6,9 @@ import {
   TrialNotFoundError,
   TrialCapacityExceededError,
   TrialUpdateFailedError,
-  SubscriptionError,
   UnexpectedTrialError,
 } from '../../subscription.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class IncrementTrialMessagesUseCase {
@@ -78,8 +78,7 @@ export class IncrementTrialMessagesUseCase {
 
       return updatedTrial;
     } catch (error) {
-      if (error instanceof SubscriptionError) {
-        // Already logged and properly typed error, just rethrow
+      if (error instanceof ApplicationError) {
         throw error;
       }
 

@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GetActiveSubscriptionQuery } from './get-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
-import { IsFromOrgUseCase } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.use-case';
-import { IsFromOrgQuery } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.query';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
@@ -28,7 +26,6 @@ export class GetActiveSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly contextService: ContextService,
@@ -48,14 +45,9 @@ export class GetActiveSubscriptionUseCase {
       this.logger.debug('Checking if user is from organization');
       const systemRole = this.contextService.get('systemRole');
       const orgRole = this.contextService.get('role');
-      const isFromOrg = await this.isFromOrgUseCase.execute(
-        new IsFromOrgQuery({
-          userId: query.requestingUserId,
-          orgId: query.orgId,
-        }),
-      );
+      const orgId = this.contextService.get('orgId');
       const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && isFromOrg;
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === query.orgId;
       if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           query.requestingUserId,

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ui/shadcn/button";
 import {
@@ -12,27 +12,32 @@ import {
 } from "@/shared/ui/shadcn/dialog";
 import { Input } from "@/shared/ui/shadcn/input";
 import { Label } from "@/shared/ui/shadcn/label";
+import { useSuperAdminCreateOrg } from "../api/useSuperAdminCreateOrg";
 
 export default function CreateOrgDialog() {
   const { t } = useTranslation("super-admin-settings-orgs");
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setName("");
-    setSlug("");
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsOpen(false);
     resetForm();
-  };
+  }, [resetForm]);
+
+  const { createOrg, isLoading } = useSuperAdminCreateOrg({
+    onSuccessCallback: handleClose,
+  });
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // TODO: Replace with create organization mutation once available
-    handleClose();
+    if (!name.trim()) {
+      return;
+    }
+    createOrg({ name: name.trim() });
   };
 
   return (
@@ -54,28 +59,23 @@ export default function CreateOrgDialog() {
               onChange={(event) => setName(event.target.value)}
               placeholder={t("dialog.namePlaceholder") ?? ""}
               required
+              disabled={isLoading}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="org-slug">{t("dialog.slugLabel")}</Label>
-            <Input
-              id="org-slug"
-              value={slug}
-              onChange={(event) => setSlug(event.target.value)}
-              placeholder={t("dialog.slugPlaceholder") ?? ""}
-              pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
-              title={t("dialog.slugDescription") ?? ""}
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("dialog.slugDescription")}
-            </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isLoading}
+            >
               {t("dialog.cancel")}
             </Button>
-            <Button type="submit">{t("dialog.create")}</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading
+                ? (t("dialog.creating") ?? "Creating...")
+                : t("dialog.create")}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

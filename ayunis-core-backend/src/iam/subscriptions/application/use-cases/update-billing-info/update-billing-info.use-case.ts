@@ -14,8 +14,6 @@ import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/se
 import { SubscriptionBillingInfoUpdatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-billing-info-updated.webhook-event';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { IsFromOrgUseCase } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.use-case';
-import { IsFromOrgQuery } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.query';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
@@ -28,21 +26,15 @@ export class UpdateBillingInfoUseCase {
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly contextService: ContextService,
-    private readonly isFromOrgUseCase: IsFromOrgUseCase,
   ) {}
 
   async execute(command: UpdateBillingInfoCommand): Promise<void> {
     try {
       const systemRole = this.contextService.get('systemRole');
       const orgRole = this.contextService.get('role');
-      const isFromOrg = await this.isFromOrgUseCase.execute(
-        new IsFromOrgQuery({
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        }),
-      );
+      const orgId = this.contextService.get('orgId');
       const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isOrgAdmin = orgRole === UserRole.ADMIN && isFromOrg;
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
       if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           command.requestingUserId,

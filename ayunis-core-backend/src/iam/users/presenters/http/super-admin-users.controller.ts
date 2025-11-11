@@ -226,7 +226,7 @@ export class SuperAdminUsersController {
         orgId,
         name: createUserDto.name,
         role: createUserDto.role,
-        emailVerified: false,
+        emailVerified: true,
         hasAcceptedMarketing: false,
       }),
     );

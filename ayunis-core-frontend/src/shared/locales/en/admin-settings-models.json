@@ -1,6 +1,8 @@
 {
   "models": {
+    "loading": "Loading models...",
     "noModelsAvailable": "No models available. Please check your configuration.",
+    "noModelsForProvider": "No models available for this provider.",
     "streaming": "Streaming",
     "streamingTooltip": "The model sends answers as a stream. This way, the answer is delivered step by step",
     "reasoning": "Reasoning",
