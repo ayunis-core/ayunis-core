@@ -28,10 +28,10 @@ export class InviteRecord extends BaseRecord {
   @Column({
     type: 'uuid',
   })
-  inviterId: UUID;
+  inviterId?: UUID;
 
-  @ManyToOne(() => UserRecord, { nullable: false })
-  inviter: UserRecord;
+  @ManyToOne(() => UserRecord, { onDelete: 'SET NULL' })
+  inviter?: UserRecord;
 
   @Column({ nullable: true })
   acceptedAt?: Date;
