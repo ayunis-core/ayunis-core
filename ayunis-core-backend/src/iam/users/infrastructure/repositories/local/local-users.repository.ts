@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UUID } from 'crypto';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { UserRecord } from './schema/user.record';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMapper } from './mappers/user.mapper';
@@ -37,7 +37,7 @@ export class LocalUsersRepository extends UsersRepository {
   async findOneByEmail(email: string): Promise<User | null> {
     this.logger.log('findOneByEmail', { email });
     const userRecord = await this.userRepository.findOne({
-      where: { email },
+      where: { email: ILike(email) },
     });
     if (!userRecord) {
       this.logger.debug('User not found by email', { email });
@@ -62,9 +62,9 @@ export class LocalUsersRepository extends UsersRepository {
 
   async create(user: User): Promise<User> {
     this.logger.log('create', { userId: user.id, email: user.email });
-    // Check if user already exists by email
+    // Check if user already exists by email (case-insensitive)
     const existingUser = await this.userRepository.findOne({
-      where: { email: user.email },
+      where: { email: ILike(user.email) },
     });
 
     if (existingUser) {

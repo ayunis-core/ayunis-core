@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { UUID } from 'crypto';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
@@ -58,7 +58,9 @@ export class LocalInvitesRepository implements InvitesRepository {
 
   async findOneByEmail(email: string): Promise<Invite | null> {
     this.logger.log('findOneByEmail', { email });
-    const entity = await this.inviteRepository.findOne({ where: { email } });
+    const entity = await this.inviteRepository.findOne({
+      where: { email: ILike(email) },
+    });
     if (!entity) {
       this.logger.debug('Invite not found by email', { email });
       return null;
