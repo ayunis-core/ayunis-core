@@ -1,4 +1,5 @@
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { Org } from 'src/iam/orgs/domain/org.entity';
@@ -9,6 +10,7 @@ export class User {
   public emailVerified: boolean;
   public passwordHash: string;
   public role: UserRole;
+  public systemRole: SystemRole;
   public orgId: UUID;
   public name: string;
   public hasAcceptedMarketing: boolean;
@@ -21,6 +23,7 @@ export class User {
     emailVerified: boolean;
     passwordHash: string;
     role: UserRole;
+    systemRole?: SystemRole;
     orgId: UUID;
     org?: Org;
     name: string;
@@ -33,6 +36,7 @@ export class User {
     this.emailVerified = params.emailVerified;
     this.passwordHash = params.passwordHash;
     this.role = params.role;
+    this.systemRole = params.systemRole ?? SystemRole.CUSTOMER;
     this.orgId = params.orgId;
     this.name = params.name;
     this.hasAcceptedMarketing = params.hasAcceptedMarketing;

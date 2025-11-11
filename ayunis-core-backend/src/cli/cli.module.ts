@@ -11,6 +11,8 @@ import { SeedUsersCommand } from 'src/cli/application/commands/seed/seed-users.c
 import { SeedModelsCommand } from 'src/cli/application/commands/seed/seed-models.command';
 import { DeleteUserCommand } from 'src/cli/application/commands/users/delete-user.command';
 import { GetUserCommand } from 'src/cli/application/commands/users/get-user.command';
+import { MakeSuperAdminCommand } from 'src/cli/application/commands/users/make-super-admin.command';
+import { RemoveSuperAdminCommand } from 'src/cli/application/commands/users/remove-super-admin.command';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { GetUserCommand } from 'src/cli/application/commands/users/get-user.comm
     SeedMinimalCommand,
     DeleteUserCommand,
     GetUserCommand,
+    MakeSuperAdminCommand,
+    RemoveSuperAdminCommand,
   ],
 })
 export class CliModule {}

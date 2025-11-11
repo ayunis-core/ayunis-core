@@ -12,7 +12,6 @@ import { AgentToolAssignmentRecord } from './agent-tool.record';
 import { AgentSourceAssignmentRecord } from './agent-source-assignment.record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
-import { User } from '../../../../../../iam/users/domain/user.entity';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 
 @Entity({ name: 'agents' })
@@ -33,7 +32,7 @@ export class AgentRecord extends BaseRecord {
   userId: UUID;
 
   @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
-  user: User;
+  user: UserRecord;
 
   @OneToMany(() => AgentToolAssignmentRecord, (agentTool) => agentTool.agent, {
     cascade: true,

@@ -8,6 +8,7 @@ export class UserMapper {
       email: entity.email,
       emailVerified: entity.emailVerified,
       role: entity.role,
+      systemRole: entity.systemRole,
       orgId: entity.orgId,
       passwordHash: entity.passwordHash,
       name: entity.name,
@@ -23,6 +24,7 @@ export class UserMapper {
     entity.email = domain.email;
     entity.emailVerified = domain.emailVerified;
     entity.role = domain.role;
+    entity.systemRole = domain.systemRole;
     entity.orgId = domain.orgId;
     entity.passwordHash = domain.passwordHash;
     entity.name = domain.name;

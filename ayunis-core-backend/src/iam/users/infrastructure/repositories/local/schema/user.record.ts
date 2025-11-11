@@ -3,6 +3,7 @@ import { BaseRecord } from '../../../../../../common/db/base-record';
 import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRole } from '../../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { SystemRole } from '../../../../domain/value-objects/system-role.enum';
 
 @Entity({ name: 'users' })
 export class UserRecord extends BaseRecord {
@@ -23,6 +24,9 @@ export class UserRecord extends BaseRecord {
     enum: UserRole,
   })
   role: UserRole;
+
+  @Column({ type: 'enum', enum: SystemRole, default: SystemRole.CUSTOMER })
+  systemRole?: SystemRole;
 
   @Column({
     type: 'uuid',
