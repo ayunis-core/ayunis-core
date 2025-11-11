@@ -76,6 +76,9 @@ import type {
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
   SuccessResponseDto,
+  SuperAdminOrgListResponseDto,
+  SuperAdminOrgResponseDto,
+  SuperAdminOrgsControllerGetAllOrgsParams,
   ThreadsControllerAddFileSourceBody,
   ThreadsControllerGetThreadSources200Item,
   UpdateAgentDto,
@@ -1434,6 +1437,185 @@ export function useModelsControllerIsEmbeddingModelEnabled<TData = Awaited<Retur
 
 
 /**
+ * Retrieve every organization in the system. Only accessible to users with the super admin system role.
+ * @summary List all organizations
+ */
+export const superAdminOrgsControllerGetAllOrgs = (
+    params?: SuperAdminOrgsControllerGetAllOrgsParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuperAdminOrgListResponseDto>(
+      {url: `/super-admin/orgs`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminOrgsControllerGetAllOrgsQueryKey = (params?: SuperAdminOrgsControllerGetAllOrgsParams,) => {
+    return [`/super-admin/orgs`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminOrgsControllerGetAllOrgsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError = void>(params?: SuperAdminOrgsControllerGetAllOrgsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminOrgsControllerGetAllOrgsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>> = ({ signal }) => superAdminOrgsControllerGetAllOrgs(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminOrgsControllerGetAllOrgsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>>
+export type SuperAdminOrgsControllerGetAllOrgsQueryError = void
+
+
+export function useSuperAdminOrgsControllerGetAllOrgs<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError = void>(
+ params: undefined |  SuperAdminOrgsControllerGetAllOrgsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOrgsControllerGetAllOrgs<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError = void>(
+ params?: SuperAdminOrgsControllerGetAllOrgsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOrgsControllerGetAllOrgs<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError = void>(
+ params?: SuperAdminOrgsControllerGetAllOrgsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all organizations
+ */
+
+export function useSuperAdminOrgsControllerGetAllOrgs<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError = void>(
+ params?: SuperAdminOrgsControllerGetAllOrgsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetAllOrgs>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminOrgsControllerGetAllOrgsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve an organization by its ID. Only accessible to users with the super admin system role.
+ * @summary Get an organization by ID
+ */
+export const superAdminOrgsControllerGetOrgById = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminOrgsControllerGetOrgByIdQueryKey = (id: string,) => {
+    return [`/super-admin/orgs/${id}`] as const;
+    }
+
+    
+export const getSuperAdminOrgsControllerGetOrgByIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminOrgsControllerGetOrgByIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>> = ({ signal }) => superAdminOrgsControllerGetOrgById(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminOrgsControllerGetOrgByIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>>
+export type SuperAdminOrgsControllerGetOrgByIdQueryError = void
+
+
+export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get an organization by ID
+ */
+
+export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOrgsControllerGetOrgById>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminOrgsControllerGetOrgByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
  * @summary Get users in current organization
  */
@@ -2041,6 +2223,1465 @@ export const useUserControllerResetPassword = <TError = void,
       > => {
 
       const mutationOptions = getUserControllerResetPasswordMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.
+ * @summary Get users by organization ID
+ */
+export const superAdminUsersControllerGetUsersByOrgId = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UsersListResponseDto>(
+      {url: `/super-admin/users/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsersControllerGetUsersByOrgIdQueryKey = (orgId: string,) => {
+    return [`/super-admin/users/${orgId}`] as const;
+    }
+
+    
+export const getSuperAdminUsersControllerGetUsersByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>> = ({ signal }) => superAdminUsersControllerGetUsersByOrgId(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsersControllerGetUsersByOrgIdQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>>
+export type SuperAdminUsersControllerGetUsersByOrgIdQueryError = void
+
+
+export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get users by organization ID
+ */
+
+export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsersControllerGetUsersByOrgIdQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Send an invitation to a user to join an organization with a specific role
+ * @summary Create a new invite
+ */
+export const invitesControllerCreate = (
+    createInviteDto: CreateInviteDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CreateInviteResponseDto>(
+      {url: `/invites`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createInviteDto, signal
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreate>>, TError,{data: CreateInviteDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreate>>, TError,{data: CreateInviteDto}, TContext> => {
+
+const mutationKey = ['invitesControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerCreate>>, {data: CreateInviteDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  invitesControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerCreate>>>
+    export type InvitesControllerCreateMutationBody = CreateInviteDto
+    export type InvitesControllerCreateMutationError = void
+
+    /**
+ * @summary Create a new invite
+ */
+export const useInvitesControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreate>>, TError,{data: CreateInviteDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerCreate>>,
+        TError,
+        {data: CreateInviteDto},
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Retrieve all invites for the organization with calculated status and sent date
+ * @summary Get all invites for current user's organization
+ */
+export const invitesControllerGetInvites = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<InviteResponseDto[]>(
+      {url: `/invites`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getInvitesControllerGetInvitesQueryKey = () => {
+    return [`/invites`] as const;
+    }
+
+    
+export const getInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInvitesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInvites>>> = ({ signal }) => invitesControllerGetInvites(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InvitesControllerGetInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof invitesControllerGetInvites>>>
+export type InvitesControllerGetInvitesQueryError = void
+
+
+export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof invitesControllerGetInvites>>,
+          TError,
+          Awaited<ReturnType<typeof invitesControllerGetInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof invitesControllerGetInvites>>,
+          TError,
+          Awaited<ReturnType<typeof invitesControllerGetInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all invites for current user's organization
+ */
+
+export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInvitesControllerGetInvitesQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve invite details including organization name by token
+ * @summary Get a single invite by token
+ */
+export const invitesControllerGetInviteByToken = (
+    token: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<InviteDetailResponseDto>(
+      {url: `/invites/${token}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getInvitesControllerGetInviteByTokenQueryKey = (token: string,) => {
+    return [`/invites/${token}`] as const;
+    }
+
+    
+export const getInvitesControllerGetInviteByTokenQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInviteByTokenQueryKey(token);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>> = ({ signal }) => invitesControllerGetInviteByToken(token, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InvitesControllerGetInviteByTokenQueryResult = NonNullable<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>>
+export type InvitesControllerGetInviteByTokenQueryError = void
+
+
+export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
+ token: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>,
+          TError,
+          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>,
+          TError,
+          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a single invite by token
+ */
+
+export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInvitesControllerGetInviteByTokenQueryOptions(token,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Accept an invitation using the JWT token
+ * @summary Accept an invite
+ */
+export const invitesControllerAcceptInvite = (
+    acceptInviteDto: AcceptInviteDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AcceptInviteResponseDto>(
+      {url: `/invites/accept`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: acceptInviteDto, signal
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerAcceptInviteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, TError,{data: AcceptInviteDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, TError,{data: AcceptInviteDto}, TContext> => {
+
+const mutationKey = ['invitesControllerAcceptInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, {data: AcceptInviteDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  invitesControllerAcceptInvite(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerAcceptInviteMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>>
+    export type InvitesControllerAcceptInviteMutationBody = AcceptInviteDto
+    export type InvitesControllerAcceptInviteMutationError = void
+
+    /**
+ * @summary Accept an invite
+ */
+export const useInvitesControllerAcceptInvite = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, TError,{data: AcceptInviteDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerAcceptInvite>>,
+        TError,
+        {data: AcceptInviteDto},
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerAcceptInviteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete an invitation (only allowed by the user who created it)
+ * @summary Delete an invite
+ */
+export const invitesControllerDeleteInvite = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/invites/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerDeleteInviteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['invitesControllerDeleteInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  invitesControllerDeleteInvite(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerDeleteInviteMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>>
+    
+    export type InvitesControllerDeleteInviteMutationError = void
+
+    /**
+ * @summary Delete an invite
+ */
+export const useInvitesControllerDeleteInvite = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerDeleteInvite>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerDeleteInviteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Get subscription details for the current organization
+ */
+export const subscriptionsControllerGetSubscription = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SubscriptionResponseDto>(
+      {url: `/subscriptions`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSubscriptionsControllerGetSubscriptionQueryKey = () => {
+    return [`/subscriptions`] as const;
+    }
+
+    
+export const getSubscriptionsControllerGetSubscriptionQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerGetSubscriptionQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>> = ({ signal }) => subscriptionsControllerGetSubscription(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SubscriptionsControllerGetSubscriptionQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>>
+export type SubscriptionsControllerGetSubscriptionQueryError = void
+
+
+export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get subscription details for the current organization
+ */
+
+export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSubscriptionsControllerGetSubscriptionQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a new subscription for the current organization
+ */
+export const subscriptionsControllerCreateSubscription = (
+    createSubscriptionRequestDto: CreateSubscriptionRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SubscriptionResponseDto>(
+      {url: `/subscriptions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSubscriptionRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerCreateSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, TError,{data: CreateSubscriptionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, TError,{data: CreateSubscriptionRequestDto}, TContext> => {
+
+const mutationKey = ['subscriptionsControllerCreateSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, {data: CreateSubscriptionRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  subscriptionsControllerCreateSubscription(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerCreateSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>>
+    export type SubscriptionsControllerCreateSubscriptionMutationBody = CreateSubscriptionRequestDto
+    export type SubscriptionsControllerCreateSubscriptionMutationError = void
+
+    /**
+ * @summary Create a new subscription for the current organization
+ */
+export const useSubscriptionsControllerCreateSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, TError,{data: CreateSubscriptionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>,
+        TError,
+        {data: CreateSubscriptionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerCreateSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Cancel the subscription for the current organization
+ */
+export const subscriptionsControllerCancelSubscription = (
+    
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/subscriptions`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerCancelSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, TError,void, TContext> => {
+
+const mutationKey = ['subscriptionsControllerCancelSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, void> = () => {
+          
+
+          return  subscriptionsControllerCancelSubscription()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerCancelSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>>
+    
+    export type SubscriptionsControllerCancelSubscriptionMutationError = void
+
+    /**
+ * @summary Cancel the subscription for the current organization
+ */
+export const useSubscriptionsControllerCancelSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerCancelSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Check if the current organization has an active subscription
+ */
+export const subscriptionsControllerHasActiveSubscription = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ActiveSubscriptionResponseDto>(
+      {url: `/subscriptions/active`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSubscriptionsControllerHasActiveSubscriptionQueryKey = () => {
+    return [`/subscriptions/active`] as const;
+    }
+
+    
+export const getSubscriptionsControllerHasActiveSubscriptionQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerHasActiveSubscriptionQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>> = ({ signal }) => subscriptionsControllerHasActiveSubscription(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SubscriptionsControllerHasActiveSubscriptionQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>>
+export type SubscriptionsControllerHasActiveSubscriptionQueryError = void
+
+
+export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Check if the current organization has an active subscription
+ */
+
+export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSubscriptionsControllerHasActiveSubscriptionQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get the current price per seat monthly
+ */
+export const subscriptionsControllerGetCurrentPrice = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PriceResponseDto>(
+      {url: `/subscriptions/price`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSubscriptionsControllerGetCurrentPriceQueryKey = () => {
+    return [`/subscriptions/price`] as const;
+    }
+
+    
+export const getSubscriptionsControllerGetCurrentPriceQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerGetCurrentPriceQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>> = ({ signal }) => subscriptionsControllerGetCurrentPrice(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SubscriptionsControllerGetCurrentPriceQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>>
+export type SubscriptionsControllerGetCurrentPriceQueryError = void
+
+
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>,
+          TError,
+          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current price per seat monthly
+ */
+
+export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSubscriptionsControllerGetCurrentPriceQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update the number of seats for the current organization
+ */
+export const subscriptionsControllerUpdateSeats = (
+    updateSeatsDto: UpdateSeatsDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/subscriptions/seats`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSeatsDto
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerUpdateSeatsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext> => {
+
+const mutationKey = ['subscriptionsControllerUpdateSeats'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, {data: UpdateSeatsDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  subscriptionsControllerUpdateSeats(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerUpdateSeatsMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>>
+    export type SubscriptionsControllerUpdateSeatsMutationBody = UpdateSeatsDto
+    export type SubscriptionsControllerUpdateSeatsMutationError = void
+
+    /**
+ * @summary Update the number of seats for the current organization
+ */
+export const useSubscriptionsControllerUpdateSeats = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>,
+        TError,
+        {data: UpdateSeatsDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerUpdateSeatsMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update the billing information for the current organization
+ */
+export const subscriptionsControllerUpdateBillingInfo = (
+    updateBillingInfoDto: UpdateBillingInfoDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/subscriptions/billing-info`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBillingInfoDto
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerUpdateBillingInfoMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext> => {
+
+const mutationKey = ['subscriptionsControllerUpdateBillingInfo'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, {data: UpdateBillingInfoDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  subscriptionsControllerUpdateBillingInfo(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerUpdateBillingInfoMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>>
+    export type SubscriptionsControllerUpdateBillingInfoMutationBody = UpdateBillingInfoDto
+    export type SubscriptionsControllerUpdateBillingInfoMutationError = void
+
+    /**
+ * @summary Update the billing information for the current organization
+ */
+export const useSubscriptionsControllerUpdateBillingInfo = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>,
+        TError,
+        {data: UpdateBillingInfoDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerUpdateBillingInfoMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Uncancel the subscription for the current organization
+ */
+export const subscriptionsControllerUncancelSubscription = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/subscriptions/uncancel`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSubscriptionsControllerUncancelSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, TError,void, TContext> => {
+
+const mutationKey = ['subscriptionsControllerUncancelSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, void> = () => {
+          
+
+          return  subscriptionsControllerUncancelSubscription()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscriptionsControllerUncancelSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>>
+    
+    export type SubscriptionsControllerUncancelSubscriptionMutationError = void
+
+    /**
+ * @summary Uncancel the subscription for the current organization
+ */
+export const useSubscriptionsControllerUncancelSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getSubscriptionsControllerUncancelSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Retrieve subscription details for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Get subscription details for a specific organization
+ */
+export const superAdminSubscriptionsControllerGetSubscription = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SubscriptionResponseDto>(
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey = (orgId: string,) => {
+    return [`/super-admin/subscriptions/${orgId}`] as const;
+    }
+
+    
+export const getSuperAdminSubscriptionsControllerGetSubscriptionQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>> = ({ signal }) => superAdminSubscriptionsControllerGetSubscription(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSubscriptionsControllerGetSubscriptionQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>>
+export type SuperAdminSubscriptionsControllerGetSubscriptionQueryError = void
+
+
+export function useSuperAdminSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get subscription details for a specific organization
+ */
+
+export function useSuperAdminSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerGetSubscription>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSubscriptionsControllerGetSubscriptionQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Create a new subscription for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Create a new subscription for a specific organization
+ */
+export const superAdminSubscriptionsControllerCreateSubscription = (
+    orgId: string,
+    createSubscriptionRequestDto: CreateSubscriptionRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SubscriptionResponseDto>(
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSubscriptionRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerCreateSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCreateSubscription>>, TError,{orgId: string;data: CreateSubscriptionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCreateSubscription>>, TError,{orgId: string;data: CreateSubscriptionRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerCreateSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCreateSubscription>>, {orgId: string;data: CreateSubscriptionRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionsControllerCreateSubscription(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerCreateSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCreateSubscription>>>
+    export type SuperAdminSubscriptionsControllerCreateSubscriptionMutationBody = CreateSubscriptionRequestDto
+    export type SuperAdminSubscriptionsControllerCreateSubscriptionMutationError = void
+
+    /**
+ * @summary Create a new subscription for a specific organization
+ */
+export const useSuperAdminSubscriptionsControllerCreateSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCreateSubscription>>, TError,{orgId: string;data: CreateSubscriptionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerCreateSubscription>>,
+        TError,
+        {orgId: string;data: CreateSubscriptionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerCreateSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Cancel the subscription for a specific organization
+ */
+export const superAdminSubscriptionsControllerCancelSubscription = (
+    orgId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerCancelSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCancelSubscription>>, TError,{orgId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCancelSubscription>>, TError,{orgId: string}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerCancelSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCancelSubscription>>, {orgId: string}> = (props) => {
+          const {orgId} = props ?? {};
+
+          return  superAdminSubscriptionsControllerCancelSubscription(orgId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerCancelSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCancelSubscription>>>
+    
+    export type SuperAdminSubscriptionsControllerCancelSubscriptionMutationError = void
+
+    /**
+ * @summary Cancel the subscription for a specific organization
+ */
+export const useSuperAdminSubscriptionsControllerCancelSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerCancelSubscription>>, TError,{orgId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerCancelSubscription>>,
+        TError,
+        {orgId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerCancelSubscriptionMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update the number of seats for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update the number of seats for a specific organization
+ */
+export const superAdminSubscriptionsControllerUpdateSeats = (
+    orgId: string,
+    updateSeatsDto: UpdateSeatsDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/seats`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSeatsDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerUpdateSeatsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateSeats>>, TError,{orgId: string;data: UpdateSeatsDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateSeats>>, TError,{orgId: string;data: UpdateSeatsDto}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerUpdateSeats'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateSeats>>, {orgId: string;data: UpdateSeatsDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionsControllerUpdateSeats(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerUpdateSeatsMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateSeats>>>
+    export type SuperAdminSubscriptionsControllerUpdateSeatsMutationBody = UpdateSeatsDto
+    export type SuperAdminSubscriptionsControllerUpdateSeatsMutationError = void
+
+    /**
+ * @summary Update the number of seats for a specific organization
+ */
+export const useSuperAdminSubscriptionsControllerUpdateSeats = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateSeats>>, TError,{orgId: string;data: UpdateSeatsDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateSeats>>,
+        TError,
+        {orgId: string;data: UpdateSeatsDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerUpdateSeatsMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update the billing information for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update the billing information for a specific organization
+ */
+export const superAdminSubscriptionsControllerUpdateBillingInfo = (
+    orgId: string,
+    updateBillingInfoDto: UpdateBillingInfoDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/billing-info`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBillingInfoDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerUpdateBillingInfoMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateBillingInfo>>, TError,{orgId: string;data: UpdateBillingInfoDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateBillingInfo>>, TError,{orgId: string;data: UpdateBillingInfoDto}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerUpdateBillingInfo'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateBillingInfo>>, {orgId: string;data: UpdateBillingInfoDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSubscriptionsControllerUpdateBillingInfo(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerUpdateBillingInfoMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateBillingInfo>>>
+    export type SuperAdminSubscriptionsControllerUpdateBillingInfoMutationBody = UpdateBillingInfoDto
+    export type SuperAdminSubscriptionsControllerUpdateBillingInfoMutationError = void
+
+    /**
+ * @summary Update the billing information for a specific organization
+ */
+export const useSuperAdminSubscriptionsControllerUpdateBillingInfo = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateBillingInfo>>, TError,{orgId: string;data: UpdateBillingInfoDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerUpdateBillingInfo>>,
+        TError,
+        {orgId: string;data: UpdateBillingInfoDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerUpdateBillingInfoMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Uncancel the subscription for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Uncancel the subscription for a specific organization
+ */
+export const superAdminSubscriptionsControllerUncancelSubscription = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/subscriptions/${orgId}/uncancel`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSubscriptionsControllerUncancelSubscriptionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUncancelSubscription>>, TError,{orgId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUncancelSubscription>>, TError,{orgId: string}, TContext> => {
+
+const mutationKey = ['superAdminSubscriptionsControllerUncancelSubscription'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUncancelSubscription>>, {orgId: string}> = (props) => {
+          const {orgId} = props ?? {};
+
+          return  superAdminSubscriptionsControllerUncancelSubscription(orgId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSubscriptionsControllerUncancelSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUncancelSubscription>>>
+    
+    export type SuperAdminSubscriptionsControllerUncancelSubscriptionMutationError = void
+
+    /**
+ * @summary Uncancel the subscription for a specific organization
+ */
+export const useSuperAdminSubscriptionsControllerUncancelSubscription = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSubscriptionsControllerUncancelSubscription>>, TError,{orgId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSubscriptionsControllerUncancelSubscription>>,
+        TError,
+        {orgId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSubscriptionsControllerUncancelSubscriptionMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -4588,961 +6229,6 @@ export const useRunsControllerSendMessage = <TError = void,
       > => {
 
       const mutationOptions = getRunsControllerSendMessageMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Get subscription details for the current organization
- */
-export const subscriptionsControllerGetSubscription = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SubscriptionResponseDto>(
-      {url: `/subscriptions`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSubscriptionsControllerGetSubscriptionQueryKey = () => {
-    return [`/subscriptions`] as const;
-    }
-
-    
-export const getSubscriptionsControllerGetSubscriptionQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerGetSubscriptionQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>> = ({ signal }) => subscriptionsControllerGetSubscription(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SubscriptionsControllerGetSubscriptionQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>>
-export type SubscriptionsControllerGetSubscriptionQueryError = void
-
-
-export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>,
-          TError,
-          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>,
-          TError,
-          Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get subscription details for the current organization
- */
-
-export function useSubscriptionsControllerGetSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetSubscription>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSubscriptionsControllerGetSubscriptionQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Create a new subscription for the current organization
- */
-export const subscriptionsControllerCreateSubscription = (
-    createSubscriptionRequestDto: CreateSubscriptionRequestDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SubscriptionResponseDto>(
-      {url: `/subscriptions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createSubscriptionRequestDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSubscriptionsControllerCreateSubscriptionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, TError,{data: CreateSubscriptionRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, TError,{data: CreateSubscriptionRequestDto}, TContext> => {
-
-const mutationKey = ['subscriptionsControllerCreateSubscription'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, {data: CreateSubscriptionRequestDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  subscriptionsControllerCreateSubscription(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SubscriptionsControllerCreateSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>>
-    export type SubscriptionsControllerCreateSubscriptionMutationBody = CreateSubscriptionRequestDto
-    export type SubscriptionsControllerCreateSubscriptionMutationError = void
-
-    /**
- * @summary Create a new subscription for the current organization
- */
-export const useSubscriptionsControllerCreateSubscription = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>, TError,{data: CreateSubscriptionRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof subscriptionsControllerCreateSubscription>>,
-        TError,
-        {data: CreateSubscriptionRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSubscriptionsControllerCreateSubscriptionMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Cancel the subscription for the current organization
- */
-export const subscriptionsControllerCancelSubscription = (
-    
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/subscriptions`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getSubscriptionsControllerCancelSubscriptionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, TError,void, TContext> => {
-
-const mutationKey = ['subscriptionsControllerCancelSubscription'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, void> = () => {
-          
-
-          return  subscriptionsControllerCancelSubscription()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SubscriptionsControllerCancelSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>>
-    
-    export type SubscriptionsControllerCancelSubscriptionMutationError = void
-
-    /**
- * @summary Cancel the subscription for the current organization
- */
-export const useSubscriptionsControllerCancelSubscription = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof subscriptionsControllerCancelSubscription>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getSubscriptionsControllerCancelSubscriptionMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Check if the current organization has an active subscription
- */
-export const subscriptionsControllerHasActiveSubscription = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<ActiveSubscriptionResponseDto>(
-      {url: `/subscriptions/active`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSubscriptionsControllerHasActiveSubscriptionQueryKey = () => {
-    return [`/subscriptions/active`] as const;
-    }
-
-    
-export const getSubscriptionsControllerHasActiveSubscriptionQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerHasActiveSubscriptionQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>> = ({ signal }) => subscriptionsControllerHasActiveSubscription(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SubscriptionsControllerHasActiveSubscriptionQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>>
-export type SubscriptionsControllerHasActiveSubscriptionQueryError = void
-
-
-export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>,
-          TError,
-          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>,
-          TError,
-          Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Check if the current organization has an active subscription
- */
-
-export function useSubscriptionsControllerHasActiveSubscription<TData = Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerHasActiveSubscription>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSubscriptionsControllerHasActiveSubscriptionQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Get the current price per seat monthly
- */
-export const subscriptionsControllerGetCurrentPrice = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PriceResponseDto>(
-      {url: `/subscriptions/price`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSubscriptionsControllerGetCurrentPriceQueryKey = () => {
-    return [`/subscriptions/price`] as const;
-    }
-
-    
-export const getSubscriptionsControllerGetCurrentPriceQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerGetCurrentPriceQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>> = ({ signal }) => subscriptionsControllerGetCurrentPrice(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SubscriptionsControllerGetCurrentPriceQueryResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>>
-export type SubscriptionsControllerGetCurrentPriceQueryError = void
-
-
-export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>,
-          TError,
-          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>,
-          TError,
-          Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the current price per seat monthly
- */
-
-export function useSubscriptionsControllerGetCurrentPrice<TData = Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerGetCurrentPrice>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSubscriptionsControllerGetCurrentPriceQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Update the number of seats for the current organization
- */
-export const subscriptionsControllerUpdateSeats = (
-    updateSeatsDto: UpdateSeatsDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/subscriptions/seats`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateSeatsDto
-    },
-      );
-    }
-  
-
-
-export const getSubscriptionsControllerUpdateSeatsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext> => {
-
-const mutationKey = ['subscriptionsControllerUpdateSeats'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, {data: UpdateSeatsDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  subscriptionsControllerUpdateSeats(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SubscriptionsControllerUpdateSeatsMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>>
-    export type SubscriptionsControllerUpdateSeatsMutationBody = UpdateSeatsDto
-    export type SubscriptionsControllerUpdateSeatsMutationError = void
-
-    /**
- * @summary Update the number of seats for the current organization
- */
-export const useSubscriptionsControllerUpdateSeats = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>, TError,{data: UpdateSeatsDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof subscriptionsControllerUpdateSeats>>,
-        TError,
-        {data: UpdateSeatsDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSubscriptionsControllerUpdateSeatsMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Update the billing information for the current organization
- */
-export const subscriptionsControllerUpdateBillingInfo = (
-    updateBillingInfoDto: UpdateBillingInfoDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/subscriptions/billing-info`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBillingInfoDto
-    },
-      );
-    }
-  
-
-
-export const getSubscriptionsControllerUpdateBillingInfoMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext> => {
-
-const mutationKey = ['subscriptionsControllerUpdateBillingInfo'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, {data: UpdateBillingInfoDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  subscriptionsControllerUpdateBillingInfo(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SubscriptionsControllerUpdateBillingInfoMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>>
-    export type SubscriptionsControllerUpdateBillingInfoMutationBody = UpdateBillingInfoDto
-    export type SubscriptionsControllerUpdateBillingInfoMutationError = void
-
-    /**
- * @summary Update the billing information for the current organization
- */
-export const useSubscriptionsControllerUpdateBillingInfo = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>, TError,{data: UpdateBillingInfoDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof subscriptionsControllerUpdateBillingInfo>>,
-        TError,
-        {data: UpdateBillingInfoDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSubscriptionsControllerUpdateBillingInfoMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Uncancel the subscription for the current organization
- */
-export const subscriptionsControllerUncancelSubscription = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/subscriptions/uncancel`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getSubscriptionsControllerUncancelSubscriptionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, TError,void, TContext> => {
-
-const mutationKey = ['subscriptionsControllerUncancelSubscription'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, void> = () => {
-          
-
-          return  subscriptionsControllerUncancelSubscription()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SubscriptionsControllerUncancelSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>>
-    
-    export type SubscriptionsControllerUncancelSubscriptionMutationError = void
-
-    /**
- * @summary Uncancel the subscription for the current organization
- */
-export const useSubscriptionsControllerUncancelSubscription = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof subscriptionsControllerUncancelSubscription>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getSubscriptionsControllerUncancelSubscriptionMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Send an invitation to a user to join an organization with a specific role
- * @summary Create a new invite
- */
-export const invitesControllerCreate = (
-    createInviteDto: CreateInviteDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<CreateInviteResponseDto>(
-      {url: `/invites`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createInviteDto, signal
-    },
-      );
-    }
-  
-
-
-export const getInvitesControllerCreateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreate>>, TError,{data: CreateInviteDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreate>>, TError,{data: CreateInviteDto}, TContext> => {
-
-const mutationKey = ['invitesControllerCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerCreate>>, {data: CreateInviteDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  invitesControllerCreate(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type InvitesControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerCreate>>>
-    export type InvitesControllerCreateMutationBody = CreateInviteDto
-    export type InvitesControllerCreateMutationError = void
-
-    /**
- * @summary Create a new invite
- */
-export const useInvitesControllerCreate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreate>>, TError,{data: CreateInviteDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof invitesControllerCreate>>,
-        TError,
-        {data: CreateInviteDto},
-        TContext
-      > => {
-
-      const mutationOptions = getInvitesControllerCreateMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Retrieve all invites for the organization with calculated status and sent date
- * @summary Get all invites for current user's organization
- */
-export const invitesControllerGetInvites = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<InviteResponseDto[]>(
-      {url: `/invites`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getInvitesControllerGetInvitesQueryKey = () => {
-    return [`/invites`] as const;
-    }
-
-    
-export const getInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInvitesQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInvites>>> = ({ signal }) => invitesControllerGetInvites(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type InvitesControllerGetInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof invitesControllerGetInvites>>>
-export type InvitesControllerGetInvitesQueryError = void
-
-
-export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof invitesControllerGetInvites>>,
-          TError,
-          Awaited<ReturnType<typeof invitesControllerGetInvites>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof invitesControllerGetInvites>>,
-          TError,
-          Awaited<ReturnType<typeof invitesControllerGetInvites>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all invites for current user's organization
- */
-
-export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getInvitesControllerGetInvitesQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Retrieve invite details including organization name by token
- * @summary Get a single invite by token
- */
-export const invitesControllerGetInviteByToken = (
-    token: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<InviteDetailResponseDto>(
-      {url: `/invites/${token}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getInvitesControllerGetInviteByTokenQueryKey = (token: string,) => {
-    return [`/invites/${token}`] as const;
-    }
-
-    
-export const getInvitesControllerGetInviteByTokenQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInviteByTokenQueryKey(token);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>> = ({ signal }) => invitesControllerGetInviteByToken(token, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type InvitesControllerGetInviteByTokenQueryResult = NonNullable<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>>
-export type InvitesControllerGetInviteByTokenQueryError = void
-
-
-export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
- token: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>,
-          TError,
-          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
- token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>,
-          TError,
-          Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
- token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a single invite by token
- */
-
-export function useInvitesControllerGetInviteByToken<TData = Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError = void>(
- token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInviteByToken>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getInvitesControllerGetInviteByTokenQueryOptions(token,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Accept an invitation using the JWT token
- * @summary Accept an invite
- */
-export const invitesControllerAcceptInvite = (
-    acceptInviteDto: AcceptInviteDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<AcceptInviteResponseDto>(
-      {url: `/invites/accept`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: acceptInviteDto, signal
-    },
-      );
-    }
-  
-
-
-export const getInvitesControllerAcceptInviteMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, TError,{data: AcceptInviteDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, TError,{data: AcceptInviteDto}, TContext> => {
-
-const mutationKey = ['invitesControllerAcceptInvite'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, {data: AcceptInviteDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  invitesControllerAcceptInvite(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type InvitesControllerAcceptInviteMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>>
-    export type InvitesControllerAcceptInviteMutationBody = AcceptInviteDto
-    export type InvitesControllerAcceptInviteMutationError = void
-
-    /**
- * @summary Accept an invite
- */
-export const useInvitesControllerAcceptInvite = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerAcceptInvite>>, TError,{data: AcceptInviteDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof invitesControllerAcceptInvite>>,
-        TError,
-        {data: AcceptInviteDto},
-        TContext
-      > => {
-
-      const mutationOptions = getInvitesControllerAcceptInviteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Delete an invitation (only allowed by the user who created it)
- * @summary Delete an invite
- */
-export const invitesControllerDeleteInvite = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/invites/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getInvitesControllerDeleteInviteMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['invitesControllerDeleteInvite'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  invitesControllerDeleteInvite(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type InvitesControllerDeleteInviteMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>>
-    
-    export type InvitesControllerDeleteInviteMutationError = void
-
-    /**
- * @summary Delete an invite
- */
-export const useInvitesControllerDeleteInvite = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteInvite>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof invitesControllerDeleteInvite>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getInvitesControllerDeleteInviteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

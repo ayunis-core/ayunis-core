@@ -147,6 +147,7 @@ export class RegisterUserUseCase {
         email: user.email,
         emailVerified: user.emailVerified,
         role: user.role,
+        systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
       });

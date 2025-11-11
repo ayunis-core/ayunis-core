@@ -38,6 +38,7 @@ import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
 import brandFullDark from "@/shared/assets/brand/brand-full-dark.svg";
 import { useTheme } from "@/features/theme";
 import { useSidebar } from "@/shared/ui/shadcn/sidebar";
+import { MeResponseDtoSystemRole } from "@/shared/api/generated/ayunisCoreAPI.schemas";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -150,6 +151,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <Link to="/admin-settings" onClick={closeMobileWithCleanup}>
                       <Settings2 />
                       {t("sidebar.adminSettings")}
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {user?.systemRole === MeResponseDtoSystemRole.super_admin && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/super-admin-settings"
+                      onClick={closeMobileWithCleanup}
+                    >
+                      <Settings2 />
+                      {t("sidebar.superAdminSettings")}
                     </Link>
                   </DropdownMenuItem>
                 )}

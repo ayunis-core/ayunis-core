@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../../application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { OrgRecord } from './schema/org.record';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
@@ -11,6 +11,7 @@ import {
   OrgCreationFailedError,
   OrgUpdateFailedError,
   OrgDeletionFailedError,
+  OrgRetrievalFailedError,
 } from '../../../application/orgs.errors';
 
 @Injectable()
@@ -29,7 +30,9 @@ export class LocalOrgsRepository extends OrgsRepository {
     this.logger.log('findById', { id });
 
     try {
-      const orgEntity = await this.orgRepository.findOne({ where: { id } });
+      const orgEntity = await this.orgRepository.findOne({
+        where: { id },
+      });
       if (!orgEntity) {
         this.logger.warn('Organization not found', { id });
         throw new OrgNotFoundError(id);
@@ -68,6 +71,26 @@ export class LocalOrgsRepository extends OrgsRepository {
       select: { id: true },
     });
     return orgs.map((org) => org.id);
+  }
+
+  async findAllForSuperAdmin(): Promise<Org[]> {
+    this.logger.log('findAllForSuperAdmin', {});
+
+    try {
+      const findOptions: FindManyOptions<OrgRecord> = {
+        order: { createdAt: 'DESC' },
+        relations: { users: true },
+      };
+
+      const orgRecords = await this.orgRepository.find(findOptions);
+
+      return orgRecords.map((record) => OrgMapper.toDomain(record));
+    } catch (error) {
+      this.logger.error('Failed to retrieve organizations for super admin', {
+        error,
+      });
+      throw new OrgRetrievalFailedError(error.message);
+    }
   }
 
   async create(org: Org): Promise<Org> {

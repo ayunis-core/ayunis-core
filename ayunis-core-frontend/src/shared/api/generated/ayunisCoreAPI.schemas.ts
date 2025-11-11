@@ -284,6 +284,20 @@ export interface EmbeddingModelEnabledResponseDto {
   isEmbeddingModelEnabled: boolean;
 }
 
+export interface SuperAdminOrgResponseDto {
+  /** Organization unique identifier */
+  id: string;
+  /** Organization display name */
+  name: string;
+  /** Date when the organization was created */
+  createdAt: string;
+}
+
+export interface SuperAdminOrgListResponseDto {
+  /** Collection of organizations accessible to super admins */
+  orgs: SuperAdminOrgResponseDto[];
+}
+
 /**
  * User role
  */
@@ -389,6 +403,253 @@ export interface ResetPasswordDto {
    */
   newPasswordConfirmation: string;
 }
+
+/**
+ * Role to assign to the invited user
+ */
+export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateInviteDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface CreateInviteDto {
+  /** Email address of the person to invite */
+  email: string;
+  /** Role to assign to the invited user */
+  role: CreateInviteDtoRole;
+}
+
+export interface CreateInviteResponseDto {
+  /**
+   * URL of the invite, returned when not using email configuration
+   * @nullable
+   */
+  url: string | null;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteDetailResponseDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+/**
+ * Current status of the invite
+ */
+export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteDetailResponseDtoStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  expired: 'expired',
+} as const;
+
+export interface InviteDetailResponseDto {
+  /** Unique identifier of the invite */
+  id: string;
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: InviteDetailResponseDtoRole;
+  /** Current status of the invite */
+  status: InviteDetailResponseDtoStatus;
+  /** Date when the invite was sent */
+  sentDate: string;
+  /** Date when the invite expires */
+  expiresAt: string;
+  /** Date when the invite was accepted (if applicable) */
+  acceptedAt?: string;
+  /** Name of the organization */
+  organizationName: string;
+}
+
+export interface AcceptInviteDto {
+  /** JWT token from the invite */
+  inviteToken: string;
+  /** Name of the user accepting the invite */
+  userName: string;
+  /** Password of the user accepting the invite */
+  password: string;
+  /** Marketing acceptance */
+  hasAcceptedMarketing: boolean;
+}
+
+export interface AcceptInviteResponseDto {
+  /** ID of the accepted invite */
+  inviteId: string;
+  /** Email of the user who accepted the invite */
+  email: string;
+  /** Organization ID the user was invited to */
+  orgId: string;
+}
+
+export interface SubscriptionBillingInfoResponseDto {
+  /** Company name */
+  companyName: string;
+  /** Street */
+  street: string;
+  /** Number */
+  houseNumber: string;
+  /** City */
+  city: string;
+  /** Postal code */
+  postalCode: string;
+  /** Country */
+  country: string;
+  /** USt-ID */
+  vatNumber?: string;
+}
+
+/**
+ * Date when the subscription was cancelled (if applicable)
+ */
+export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
+
+/**
+ * Renewal cycle of the subscription
+ */
+export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SubscriptionResponseDtoRenewalCycle = {
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
+export interface SubscriptionResponseDto {
+  /** Unique identifier of the subscription */
+  id: string;
+  /** Date when the subscription was created */
+  createdAt: string;
+  /** Date when the subscription was last updated */
+  updatedAt: string;
+  /** Date when the subscription was cancelled (if applicable) */
+  cancelledAt?: SubscriptionResponseDtoCancelledAt;
+  /** Organization ID associated with the subscription */
+  orgId: string;
+  /** Number of seats in the subscription */
+  noOfSeats: number;
+  /** Price per seat in the subscription */
+  pricePerSeat: number;
+  /** Renewal cycle of the subscription */
+  renewalCycle: SubscriptionResponseDtoRenewalCycle;
+  /** Date that serves as the anchor for renewal cycles */
+  renewalCycleAnchor: string;
+  /** Number of available seats (total seats minus invites) */
+  availableSeats: number;
+  /** Date of the next renewal */
+  nextRenewalDate: string;
+  /** Billing information */
+  billingInfo: SubscriptionBillingInfoResponseDto;
+}
+
+export interface CreateSubscriptionRequestDto {
+  /**
+   * Number of seats for the subscription
+   * @minimum 1
+   */
+  noOfSeats?: number;
+  /** Company name for the subscription */
+  companyName: string;
+  /** Sub text for the subscription */
+  subText?: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+}
+
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
+}
+
+export interface UpdateBillingInfoDto {
+  /** Company name for the subscription */
+  companyName: string;
+  /** Street for the subscription */
+  street: string;
+  /** House number for the subscription */
+  houseNumber: string;
+  /** Postal code for the subscription */
+  postalCode: string;
+  /** City for the subscription */
+  city: string;
+  /** Country for the subscription */
+  country: string;
+  /** VAT number for the subscription */
+  vatNumber?: string;
+}
+
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
+}
+
+export interface UpdateSeatsDto { [key: string]: unknown }
 
 export interface CreateThreadDto {
   /** The id of the model */
@@ -1214,16 +1475,9 @@ export interface UpdateMcpIntegrationDto {
    * @maxLength 255
    */
   name?: string;
-  /**
-   * Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.
-   * @minLength 1
-   */
+  /** Authentication credentials (will be encrypted). Provide to rotate the stored secret/token. */
   credentials?: string;
-  /**
-   * Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.
-   * @minLength 1
-   * @maxLength 255
-   */
+  /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
   authHeaderName?: string;
 }
 
@@ -1436,253 +1690,6 @@ export interface SendMessageDto {
   streaming?: boolean;
 }
 
-export interface SubscriptionBillingInfoResponseDto {
-  /** Company name */
-  companyName: string;
-  /** Street */
-  street: string;
-  /** Number */
-  houseNumber: string;
-  /** City */
-  city: string;
-  /** Postal code */
-  postalCode: string;
-  /** Country */
-  country: string;
-  /** USt-ID */
-  vatNumber?: string;
-}
-
-/**
- * Date when the subscription was cancelled (if applicable)
- */
-export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
-
-/**
- * Renewal cycle of the subscription
- */
-export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SubscriptionResponseDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
-} as const;
-
-export interface SubscriptionResponseDto {
-  /** Unique identifier of the subscription */
-  id: string;
-  /** Date when the subscription was created */
-  createdAt: string;
-  /** Date when the subscription was last updated */
-  updatedAt: string;
-  /** Date when the subscription was cancelled (if applicable) */
-  cancelledAt?: SubscriptionResponseDtoCancelledAt;
-  /** Organization ID associated with the subscription */
-  orgId: string;
-  /** Number of seats in the subscription */
-  noOfSeats: number;
-  /** Price per seat in the subscription */
-  pricePerSeat: number;
-  /** Renewal cycle of the subscription */
-  renewalCycle: SubscriptionResponseDtoRenewalCycle;
-  /** Date that serves as the anchor for renewal cycles */
-  renewalCycleAnchor: string;
-  /** Number of available seats (total seats minus invites) */
-  availableSeats: number;
-  /** Date of the next renewal */
-  nextRenewalDate: string;
-  /** Billing information */
-  billingInfo: SubscriptionBillingInfoResponseDto;
-}
-
-export interface CreateSubscriptionRequestDto {
-  /**
-   * Number of seats for the subscription
-   * @minimum 1
-   */
-  noOfSeats?: number;
-  /** Company name for the subscription */
-  companyName: string;
-  /** Sub text for the subscription */
-  subText?: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface ActiveSubscriptionResponseDto {
-  /** Whether the organization has an active subscription */
-  hasActiveSubscription: boolean;
-}
-
-export interface UpdateBillingInfoDto {
-  /** Company name for the subscription */
-  companyName: string;
-  /** Street for the subscription */
-  street: string;
-  /** House number for the subscription */
-  houseNumber: string;
-  /** Postal code for the subscription */
-  postalCode: string;
-  /** City for the subscription */
-  city: string;
-  /** Country for the subscription */
-  country: string;
-  /** VAT number for the subscription */
-  vatNumber?: string;
-}
-
-export interface PriceResponseDto {
-  /** Current price per seat per month in the configured currency */
-  pricePerSeatMonthly: number;
-}
-
-export interface UpdateSeatsDto { [key: string]: unknown }
-
-/**
- * Role to assign to the invited user
- */
-export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateInviteDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface CreateInviteDto {
-  /** Email address of the person to invite */
-  email: string;
-  /** Role to assign to the invited user */
-  role: CreateInviteDtoRole;
-}
-
-export interface CreateInviteResponseDto {
-  /**
-   * URL of the invite, returned when not using email configuration
-   * @nullable
-   */
-  url: string | null;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-}
-
-/**
- * Role assigned to the invited user
- */
-export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteDetailResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-/**
- * Current status of the invite
- */
-export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InviteDetailResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
-} as const;
-
-export interface InviteDetailResponseDto {
-  /** Unique identifier of the invite */
-  id: string;
-  /** Email address of the invited user */
-  email: string;
-  /** Role assigned to the invited user */
-  role: InviteDetailResponseDtoRole;
-  /** Current status of the invite */
-  status: InviteDetailResponseDtoStatus;
-  /** Date when the invite was sent */
-  sentDate: string;
-  /** Date when the invite expires */
-  expiresAt: string;
-  /** Date when the invite was accepted (if applicable) */
-  acceptedAt?: string;
-  /** Name of the organization */
-  organizationName: string;
-}
-
-export interface AcceptInviteDto {
-  /** JWT token from the invite */
-  inviteToken: string;
-  /** Name of the user accepting the invite */
-  userName: string;
-  /** Password of the user accepting the invite */
-  password: string;
-  /** Marketing acceptance */
-  hasAcceptedMarketing: boolean;
-}
-
-export interface AcceptInviteResponseDto {
-  /** ID of the accepted invite */
-  inviteId: string;
-  /** Email of the user who accepted the invite */
-  email: string;
-  /** Organization ID the user was invited to */
-  orgId: string;
-}
-
 export interface CreatePromptDto {
   /**
    * The title of the prompt
@@ -1762,11 +1769,25 @@ export const MeResponseDtoRole = {
   user: 'user',
 } as const;
 
+/**
+ * User system role
+ */
+export type MeResponseDtoSystemRole = typeof MeResponseDtoSystemRole[keyof typeof MeResponseDtoSystemRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MeResponseDtoSystemRole = {
+  customer: 'customer',
+  super_admin: 'super_admin',
+} as const;
+
 export interface MeResponseDto {
   /** User email address */
   email: string;
   /** User role */
   role: MeResponseDtoRole;
+  /** User system role */
+  systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
 }
@@ -1778,6 +1799,17 @@ export interface CreateEmbeddingModelDto { [key: string]: unknown }
 export interface UpdateLanguageModelDto { [key: string]: unknown }
 
 export interface UpdateEmbeddingModelDto { [key: string]: unknown }
+
+export type SuperAdminOrgsControllerGetAllOrgsParams = {
+/**
+ * Number of organizations to skip before collecting results.
+ */
+offset?: number;
+/**
+ * Maximum number of organizations to return.
+ */
+limit?: number;
+};
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 

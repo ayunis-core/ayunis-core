@@ -15,6 +15,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SubscriptionUncancelledWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-uncancelled.webhook-event';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class UncancelSubscriptionUseCase {
@@ -25,6 +28,7 @@ export class UncancelSubscriptionUseCase {
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UncancelSubscriptionCommand): Promise<void> {
@@ -34,18 +38,17 @@ export class UncancelSubscriptionUseCase {
     });
 
     try {
-      this.logger.debug('Checking if user is from organization');
+      const systemRole = this.contextService.get('systemRole');
+      const orgRole = this.contextService.get('role');
       const isFromOrg = await this.isFromOrgUseCase.execute(
         new IsFromOrgQuery({
           userId: command.requestingUserId,
           orgId: command.orgId,
         }),
       );
-      if (!isFromOrg) {
-        this.logger.warn('Unauthorized subscription access attempt', {
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        });
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      const isOrgAdmin = orgRole === UserRole.ADMIN && isFromOrg;
+      if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           command.requestingUserId,
           command.orgId,

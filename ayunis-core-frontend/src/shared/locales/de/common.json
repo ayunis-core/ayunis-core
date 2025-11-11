@@ -8,6 +8,7 @@
     "upgrade": "Upgrade",
     "accountSettings": "Konto-Einstellungen",
     "adminSettings": "Admin-Einstellungen",
+    "superAdminSettings": "Super Admin-Einstellungen",
     "signOut": "Abmelden",
     "chats": "Chats",
     "loadingChats": "Chats werden geladen...",

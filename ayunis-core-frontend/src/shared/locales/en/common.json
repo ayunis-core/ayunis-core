@@ -8,6 +8,7 @@
     "upgrade": "Upgrade",
     "accountSettings": "Account Settings",
     "adminSettings": "Admin Settings",
+    "superAdminSettings": "Super Admin Settings",
     "signOut": "Sign out",
     "chats": "Chats",
     "loadingChats": "Loading chats...",

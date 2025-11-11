@@ -6,12 +6,14 @@ import { ActiveUser } from '../../domain/active-user.entity';
 import { Request } from 'express';
 import { UUID } from 'crypto';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 interface JwtPayload {
   sub: UUID;
   email: string;
   emailVerified: boolean;
   role: UserRole;
+  systemRole: SystemRole;
   orgId: UUID;
   name: string;
 }
@@ -50,6 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: payload.email,
       emailVerified: payload.emailVerified,
       role: payload.role,
+      systemRole: payload.systemRole,
       orgId: payload.orgId,
       name: payload.name,
     });

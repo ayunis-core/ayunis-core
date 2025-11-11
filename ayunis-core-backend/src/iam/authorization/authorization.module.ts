@@ -5,6 +5,7 @@ import { RateLimitGuard } from './application/guards/rate-limit.guard';
 import { Module } from '@nestjs/common';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
+import { SystemRolesGuard } from './application/guards/system-roles.guard';
 
 @Module({
   imports: [SubscriptionsModule],
@@ -16,6 +17,10 @@ import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: SystemRolesGuard,
     },
     {
       provide: APP_GUARD,

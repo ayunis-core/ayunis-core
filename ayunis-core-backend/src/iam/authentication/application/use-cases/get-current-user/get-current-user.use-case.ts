@@ -8,12 +8,14 @@ import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 interface JwtPayload {
   sub: UUID;
   email: string;
   emailVerified: boolean;
   role: UserRole;
+  systemRole: SystemRole;
   orgId: UUID;
   name: string;
 }
@@ -60,6 +62,7 @@ export class GetCurrentUserUseCase {
         email: user.email,
         emailVerified: user.emailVerified,
         role: user.role,
+        systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
       });

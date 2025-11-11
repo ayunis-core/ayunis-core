@@ -40,6 +40,7 @@ import { PasswordResetJwtService } from './application/services/password-reset-j
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 import { InvitesModule } from '../invites/invites.module';
+import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
 
 @Module({
   imports: [
@@ -66,7 +67,7 @@ import { InvitesModule } from '../invites/invites.module';
       }),
     }),
   ],
-  controllers: [UserController],
+  controllers: [UserController, SuperAdminUsersController],
   providers: [
     {
       provide: UsersRepository,

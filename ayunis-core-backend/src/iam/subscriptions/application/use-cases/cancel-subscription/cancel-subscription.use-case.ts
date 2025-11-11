@@ -15,6 +15,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SubscriptionCancelledWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-cancelled.webhook-event';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @Injectable()
 export class CancelSubscriptionUseCase {
@@ -25,6 +28,7 @@ export class CancelSubscriptionUseCase {
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CancelSubscriptionCommand): Promise<void> {
@@ -34,18 +38,20 @@ export class CancelSubscriptionUseCase {
     });
 
     try {
-      this.logger.debug('Checking if user is from organization');
-      const isFromOrg = await this.isFromOrgUseCase.execute(
-        new IsFromOrgQuery({
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        }),
-      );
-      if (!isFromOrg) {
-        this.logger.warn('Unauthorized subscription access attempt', {
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        });
+      const systemRole = this.contextService.get('systemRole');
+      const orgRole = this.contextService.get('role');
+      const isFromOrg =
+        systemRole === SystemRole.SUPER_ADMIN ||
+        (orgRole === UserRole.ADMIN &&
+          (await this.isFromOrgUseCase.execute(
+            new IsFromOrgQuery({
+              userId: command.requestingUserId,
+              orgId: command.orgId,
+            }),
+          )));
+      const isOrgAdmin = orgRole === UserRole.ADMIN && isFromOrg;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           command.requestingUserId,
           command.orgId,

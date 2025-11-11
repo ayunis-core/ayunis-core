@@ -18,6 +18,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { User } from 'src/iam/users/domain/user.entity';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetActiveSubscriptionUseCase {
@@ -28,6 +31,7 @@ export class GetActiveSubscriptionUseCase {
     private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetActiveSubscriptionQuery): Promise<{
@@ -42,17 +46,17 @@ export class GetActiveSubscriptionUseCase {
 
     try {
       this.logger.debug('Checking if user is from organization');
+      const systemRole = this.contextService.get('systemRole');
+      const orgRole = this.contextService.get('role');
       const isFromOrg = await this.isFromOrgUseCase.execute(
         new IsFromOrgQuery({
           userId: query.requestingUserId,
           orgId: query.orgId,
         }),
       );
-      if (!isFromOrg) {
-        this.logger.warn('Unauthorized subscription access attempt', {
-          userId: query.requestingUserId,
-          orgId: query.orgId,
-        });
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      const isOrgAdmin = orgRole === UserRole.ADMIN && isFromOrg;
+      if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           query.requestingUserId,
           query.orgId,

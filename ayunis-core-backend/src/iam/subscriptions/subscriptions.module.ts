@@ -11,6 +11,7 @@ import { LocalSubscriptionsRepository } from './infrastructure/persistence/local
 import { SubscriptionRecord } from './infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionMapper } from './infrastructure/persistence/local/mappers/subscription.mapper';
 import { SubscriptionsController } from './presenters/http/subscriptions.controller';
+import { SuperAdminSubscriptionsController } from './presenters/http/super-admin-subscriptions.controller';
 import { SubscriptionResponseMapper } from './presenters/http/mappers/subscription-response.mapper';
 import { UsersModule } from '../users/users.module';
 import { InvitesModule } from '../invites/invites.module';
@@ -37,7 +38,7 @@ import { LocalTrialsRepository } from './infrastructure/persistence/local/local-
     forwardRef(() => InvitesModule),
     WebhooksModule,
   ],
-  controllers: [SubscriptionsController],
+  controllers: [SubscriptionsController, SuperAdminSubscriptionsController],
   providers: [
     {
       provide: SubscriptionRepository,
