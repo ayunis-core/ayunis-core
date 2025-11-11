@@ -37,7 +37,7 @@ export function useSuperAdminDeletePermittedModel(orgId: string) {
                   return {
                     ...model,
                     isPermitted: false,
-                    permittedModelId: undefined,
+                    permittedModelId: null,
                   };
                 }
                 return model;
@@ -93,4 +93,3 @@ export function useSuperAdminDeletePermittedModel(orgId: string) {
     error: deletePermittedModelMutation.error,
   };
 }
-
