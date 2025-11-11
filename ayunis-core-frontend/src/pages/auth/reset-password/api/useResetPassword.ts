@@ -45,6 +45,9 @@ export function useResetPassword(token: string) {
           case "INVALID_TOKEN":
             showError(t("resetPassword.invalidToken"));
             break;
+          case "INVALID_PASSWORD":
+            showError(t("resetPassword.invalidPassword"));
+            break;
           default:
             showError(t("resetPassword.error"));
         }
