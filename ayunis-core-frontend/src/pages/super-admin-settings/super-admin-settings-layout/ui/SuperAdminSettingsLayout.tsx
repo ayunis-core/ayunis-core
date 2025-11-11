@@ -5,26 +5,24 @@ import { SuperAdminSettingsSidebar } from "./SuperAdminSettingsSidebar";
 import { useTranslation } from "react-i18next";
 
 interface SuperAdminSettingsLayoutProps {
+  pageTitle?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
 }
 
 export default function SuperAdminSettingsLayout({
+  pageTitle,
   children,
   action,
 }: SuperAdminSettingsLayoutProps) {
   const { t } = useTranslation("super-admin-settings-layout");
   const contentHeader = (
-    <ContentAreaHeader title={t("layout.title")} action={action} />
+    <ContentAreaHeader title={pageTitle || t("layout.title")} action={action} />
   );
 
   return (
     <AppLayout sidebar={<SuperAdminSettingsSidebar />}>
-      <ContentAreaLayout
-        contentHeader={contentHeader}
-        contentArea={children}
-      />
+      <ContentAreaLayout contentHeader={contentHeader} contentArea={children} />
     </AppLayout>
   );
 }
-

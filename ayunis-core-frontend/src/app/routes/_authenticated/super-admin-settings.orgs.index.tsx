@@ -6,7 +6,7 @@ import {
 } from "@/shared/api";
 
 export const Route = createFileRoute(
-  "/_authenticated/super-admin-settings/orgs",
+  "/_authenticated/super-admin-settings/orgs/",
 )({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {

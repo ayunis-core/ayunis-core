@@ -3,6 +3,7 @@ import { UsersRepository } from '../../ports/users.repository';
 import { DeleteUserCommand } from './delete-user.command';
 import { UserNotFoundError, UserUnauthorizedError } from '../../users.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { UserDeletedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/user-deleted.webhook-event';
@@ -27,28 +28,27 @@ export class DeleteUserUseCase {
   async execute(command: DeleteUserCommand): Promise<void> {
     this.logger.log('deleteUser', { userId: command.userId });
     const requestingUserId = this.contextService.get('userId');
-    if (!requestingUserId) {
-      this.logger.error('User not authenticated');
+    const requestUserOrgId = this.contextService.get('orgId');
+    if (!requestingUserId || !requestUserOrgId) {
       throw new UserUnauthorizedError('User not authenticated');
     }
-    const requestUser =
-      await this.usersRepository.findOneById(requestingUserId);
-    if (!requestUser) {
-      this.logger.error('User not found', { userId: requestingUserId });
-      throw new UserNotFoundError(requestingUserId);
-    }
-    if (
-      requestUser.orgId !== command.orgId ||
-      requestUser.role !== UserRole.ADMIN
-    ) {
-      throw new UserUnauthorizedError(
-        'You are not allowed to delete this user',
-      );
-    }
+    const orgRole = this.contextService.get('role');
+    const systemRole = this.contextService.get('systemRole');
+
     const userToDelete = await this.usersRepository.findOneById(command.userId);
     if (!userToDelete) {
       this.logger.error('User not found', { userId: command.userId });
       throw new UserNotFoundError(command.userId);
+    }
+
+    // Super admins can delete any user, regular admins can only delete users from their org
+    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const isOrgAdmin =
+      orgRole === UserRole.ADMIN && requestUserOrgId === userToDelete.orgId;
+    if (!isSuperAdmin && !isOrgAdmin) {
+      throw new UserUnauthorizedError(
+        'You are not allowed to delete this user',
+      );
     }
 
     await this.usersRepository.delete(command.userId);

@@ -50,10 +50,10 @@ export class TriggerPasswordResetUseCase {
         email: user.email,
       });
     } catch (error) {
+      if (error instanceof UserNotFoundError) {
+        return; // Silently return without error for security reasons
+      }
       if (error instanceof ApplicationError) {
-        if (error instanceof UserNotFoundError) {
-          return; // Silently return without error for security reasons
-        }
         throw error;
       }
       this.logger.error('Error triggering password reset', {

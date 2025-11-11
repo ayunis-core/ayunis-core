@@ -45,6 +45,7 @@ import type {
   CreatePromptDto,
   CreateSubscriptionRequestDto,
   CreateThreadDto,
+  CreateUserDto,
   DeletePermittedProviderDto,
   EmbeddingModelEnabledResponseDto,
   ErrorResponseDto,
@@ -2316,6 +2317,200 @@ export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<Retu
 
 
 
+/**
+ * Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.
+ * @summary Delete a user
+ */
+export const superAdminUsersControllerDeleteUser = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/users/${userId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminUsersControllerDeleteUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerDeleteUser>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerDeleteUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['superAdminUsersControllerDeleteUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminUsersControllerDeleteUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  superAdminUsersControllerDeleteUser(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminUsersControllerDeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminUsersControllerDeleteUser>>>
+    
+    export type SuperAdminUsersControllerDeleteUserMutationError = void
+
+    /**
+ * @summary Delete a user
+ */
+export const useSuperAdminUsersControllerDeleteUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerDeleteUser>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminUsersControllerDeleteUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminUsersControllerDeleteUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Send a password reset email to the specified user. This endpoint is only accessible to super admins.
+ * @summary Trigger password reset for a user
+ */
+export const superAdminUsersControllerTriggerPasswordReset = (
+    userId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/users/${userId}/trigger-password-reset`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminUsersControllerTriggerPasswordResetMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerTriggerPasswordReset>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerTriggerPasswordReset>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['superAdminUsersControllerTriggerPasswordReset'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminUsersControllerTriggerPasswordReset>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  superAdminUsersControllerTriggerPasswordReset(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminUsersControllerTriggerPasswordResetMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminUsersControllerTriggerPasswordReset>>>
+    
+    export type SuperAdminUsersControllerTriggerPasswordResetMutationError = void
+
+    /**
+ * @summary Trigger password reset for a user
+ */
+export const useSuperAdminUsersControllerTriggerPasswordReset = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerTriggerPasswordReset>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminUsersControllerTriggerPasswordReset>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminUsersControllerTriggerPasswordResetMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.
+ * @summary Create a new user in an organization
+ */
+export const superAdminUsersControllerCreateUser = (
+    orgId: string,
+    createUserDto: CreateUserDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserResponseDto>(
+      {url: `/super-admin/users/${orgId}/create`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createUserDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminUsersControllerCreateUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerCreateUser>>, TError,{orgId: string;data: CreateUserDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerCreateUser>>, TError,{orgId: string;data: CreateUserDto}, TContext> => {
+
+const mutationKey = ['superAdminUsersControllerCreateUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminUsersControllerCreateUser>>, {orgId: string;data: CreateUserDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminUsersControllerCreateUser(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminUsersControllerCreateUserMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminUsersControllerCreateUser>>>
+    export type SuperAdminUsersControllerCreateUserMutationBody = CreateUserDto
+    export type SuperAdminUsersControllerCreateUserMutationError = void
+
+    /**
+ * @summary Create a new user in an organization
+ */
+export const useSuperAdminUsersControllerCreateUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerCreateUser>>, TError,{orgId: string;data: CreateUserDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminUsersControllerCreateUser>>,
+        TError,
+        {orgId: string;data: CreateUserDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminUsersControllerCreateUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * Send an invitation to a user to join an organization with a specific role
  * @summary Create a new invite

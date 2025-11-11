@@ -15,6 +15,8 @@ import {
 } from "@/shared/ui/shadcn/table";
 import { useTranslation } from "react-i18next";
 import type { SuperAdminOrgResponseDto } from "@/shared/api";
+import { useRouter } from "@tanstack/react-router";
+import { formatDate } from "@/shared/lib/format-date";
 
 interface OrgsTableProps {
   orgs: SuperAdminOrgResponseDto[];
@@ -22,13 +24,7 @@ interface OrgsTableProps {
 
 export default function OrgsTable({ orgs }: OrgsTableProps) {
   const { t } = useTranslation("super-admin-settings-orgs");
-
-  const formatDate = (value: string) =>
-    new Date(value).toLocaleDateString(undefined, {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const router = useRouter();
 
   return (
     <Card>
@@ -54,7 +50,15 @@ export default function OrgsTable({ orgs }: OrgsTableProps) {
             </TableHeader>
             <TableBody>
               {orgs.map((org) => (
-                <TableRow key={org.id}>
+                <TableRow
+                  key={org.id}
+                  onClick={() =>
+                    router.navigate({
+                      to: "/super-admin-settings/orgs/$id",
+                      params: { id: org.id },
+                    })
+                  }
+                >
                   <TableCell className="font-medium">{org.name}</TableCell>
                   <TableCell>{formatDate(org.createdAt)}</TableCell>
                 </TableRow>

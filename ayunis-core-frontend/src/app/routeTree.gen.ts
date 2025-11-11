@@ -24,7 +24,6 @@ import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticate
 import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAgentsIndexImport } from './routes/_authenticated/agents.index'
 import { Route as AuthenticatedAdminSettingsIndexImport } from './routes/_authenticated/admin-settings.index'
-import { Route as AuthenticatedSuperAdminSettingsOrgsImport } from './routes/_authenticated/super-admin-settings.orgs'
 import { Route as AuthenticatedSettingsGeneralImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
@@ -35,6 +34,7 @@ import { Route as AuthenticatedAdminSettingsIntegrationsImport } from './routes/
 import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
 import { Route as onboardingPasswordResetImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotImport } from './routes/(onboarding)/password.forgot'
+import { Route as AuthenticatedSuperAdminSettingsOrgsIndexImport } from './routes/_authenticated/super-admin-settings.orgs.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 
 // Create/Update Routes
@@ -120,13 +120,6 @@ const AuthenticatedAdminSettingsIndexRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
-const AuthenticatedSuperAdminSettingsOrgsRoute =
-  AuthenticatedSuperAdminSettingsOrgsImport.update({
-    id: '/super-admin-settings/orgs',
-    path: '/super-admin-settings/orgs',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-
 const AuthenticatedSettingsGeneralRoute =
   AuthenticatedSettingsGeneralImport.update({
     id: '/settings/general',
@@ -195,11 +188,18 @@ const onboardingPasswordForgotRoute = onboardingPasswordForgotImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AuthenticatedSuperAdminSettingsOrgsIndexRoute =
+  AuthenticatedSuperAdminSettingsOrgsIndexImport.update({
+    id: '/super-admin-settings/orgs/',
+    path: '/super-admin-settings/orgs/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
 const AuthenticatedSuperAdminSettingsOrgsIdRoute =
   AuthenticatedSuperAdminSettingsOrgsIdImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedSuperAdminSettingsOrgsRoute,
+    id: '/super-admin-settings/orgs/$id',
+    path: '/super-admin-settings/orgs/$id',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -325,13 +325,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsGeneralImport
       parentRoute: typeof AuthenticatedImport
     }
-    '/_authenticated/super-admin-settings/orgs': {
-      id: '/_authenticated/super-admin-settings/orgs'
-      path: '/super-admin-settings/orgs'
-      fullPath: '/super-admin-settings/orgs'
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsImport
-      parentRoute: typeof AuthenticatedImport
-    }
     '/_authenticated/admin-settings/': {
       id: '/_authenticated/admin-settings/'
       path: '/admin-settings'
@@ -376,30 +369,22 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/super-admin-settings/orgs/$id': {
       id: '/_authenticated/super-admin-settings/orgs/$id'
-      path: '/$id'
+      path: '/super-admin-settings/orgs/$id'
       fullPath: '/super-admin-settings/orgs/$id'
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdImport
-      parentRoute: typeof AuthenticatedSuperAdminSettingsOrgsImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/super-admin-settings/orgs/': {
+      id: '/_authenticated/super-admin-settings/orgs/'
+      path: '/super-admin-settings/orgs'
+      fullPath: '/super-admin-settings/orgs'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexImport
+      parentRoute: typeof AuthenticatedImport
     }
   }
 }
 
 // Create and export the route tree
-
-interface AuthenticatedSuperAdminSettingsOrgsRouteChildren {
-  AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
-}
-
-const AuthenticatedSuperAdminSettingsOrgsRouteChildren: AuthenticatedSuperAdminSettingsOrgsRouteChildren =
-  {
-    AuthenticatedSuperAdminSettingsOrgsIdRoute:
-      AuthenticatedSuperAdminSettingsOrgsIdRoute,
-  }
-
-const AuthenticatedSuperAdminSettingsOrgsRouteWithChildren =
-  AuthenticatedSuperAdminSettingsOrgsRoute._addFileChildren(
-    AuthenticatedSuperAdminSettingsOrgsRouteChildren,
-  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
@@ -410,13 +395,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
-  AuthenticatedSuperAdminSettingsOrgsRoute: typeof AuthenticatedSuperAdminSettingsOrgsRouteWithChildren
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
   AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
+  AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -430,8 +416,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
-  AuthenticatedSuperAdminSettingsOrgsRoute:
-    AuthenticatedSuperAdminSettingsOrgsRouteWithChildren,
   AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
   AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
@@ -439,6 +423,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
     AuthenticatedSuperAdminSettingsIndexRoute,
+  AuthenticatedSuperAdminSettingsOrgsIdRoute:
+    AuthenticatedSuperAdminSettingsOrgsIdRoute,
+  AuthenticatedSuperAdminSettingsOrgsIndexRoute:
+    AuthenticatedSuperAdminSettingsOrgsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -463,7 +451,6 @@ export interface FileRoutesByFullPath {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
-  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsRouteWithChildren
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -471,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -491,7 +479,6 @@ export interface FileRoutesByTo {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
-  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsRouteWithChildren
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -499,6 +486,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 export interface FileRoutesById {
@@ -520,7 +508,6 @@ export interface FileRoutesById {
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
-  '/_authenticated/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsRouteWithChildren
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -528,6 +515,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -550,7 +538,6 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/settings/account'
     | '/settings/general'
-    | '/super-admin-settings/orgs'
     | '/admin-settings'
     | '/agents'
     | '/chat'
@@ -558,6 +545,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/super-admin-settings'
     | '/super-admin-settings/orgs/$id'
+    | '/super-admin-settings/orgs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -577,7 +565,6 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/settings/account'
     | '/settings/general'
-    | '/super-admin-settings/orgs'
     | '/admin-settings'
     | '/agents'
     | '/chat'
@@ -585,6 +572,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/super-admin-settings'
     | '/super-admin-settings/orgs/$id'
+    | '/super-admin-settings/orgs'
   id:
     | '__root__'
     | '/'
@@ -604,7 +592,6 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/general'
-    | '/_authenticated/super-admin-settings/orgs'
     | '/_authenticated/admin-settings/'
     | '/_authenticated/agents/'
     | '/_authenticated/chat/'
@@ -612,6 +599,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/super-admin-settings/'
     | '/_authenticated/super-admin-settings/orgs/$id'
+    | '/_authenticated/super-admin-settings/orgs/'
   fileRoutesById: FileRoutesById
 }
 
@@ -674,13 +662,14 @@ export const routeTree = rootRoute
         "/_authenticated/chats/$threadId",
         "/_authenticated/settings/account",
         "/_authenticated/settings/general",
-        "/_authenticated/super-admin-settings/orgs",
         "/_authenticated/admin-settings/",
         "/_authenticated/agents/",
         "/_authenticated/chat/",
         "/_authenticated/prompts/",
         "/_authenticated/settings/",
-        "/_authenticated/super-admin-settings/"
+        "/_authenticated/super-admin-settings/",
+        "/_authenticated/super-admin-settings/orgs/$id",
+        "/_authenticated/super-admin-settings/orgs/"
       ]
     },
     "/(onboarding)/accept-invite": {
@@ -736,13 +725,6 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/settings.general.tsx",
       "parent": "/_authenticated"
     },
-    "/_authenticated/super-admin-settings/orgs": {
-      "filePath": "_authenticated/super-admin-settings.orgs.tsx",
-      "parent": "/_authenticated",
-      "children": [
-        "/_authenticated/super-admin-settings/orgs/$id"
-      ]
-    },
     "/_authenticated/admin-settings/": {
       "filePath": "_authenticated/admin-settings.index.tsx",
       "parent": "/_authenticated"
@@ -769,7 +751,11 @@ export const routeTree = rootRoute
     },
     "/_authenticated/super-admin-settings/orgs/$id": {
       "filePath": "_authenticated/super-admin-settings.orgs.$id.tsx",
-      "parent": "/_authenticated/super-admin-settings/orgs"
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/super-admin-settings/orgs/": {
+      "filePath": "_authenticated/super-admin-settings.orgs.index.tsx",
+      "parent": "/_authenticated"
     }
   }
 }

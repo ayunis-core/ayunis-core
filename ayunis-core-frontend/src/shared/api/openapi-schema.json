@@ -973,6 +973,138 @@
         ]
       }
     },
+    "/super-admin/users/{userId}": {
+      "delete": {
+        "description": "Delete a user by their ID. This endpoint is only accessible to super admins and allows deletion of users from any organization.",
+        "operationId": "SuperAdminUsersController_deleteUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully deleted"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while deleting user"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": [
+          "Super Admin Users"
+        ]
+      }
+    },
+    "/super-admin/users/{userId}/trigger-password-reset": {
+      "post": {
+        "description": "Send a password reset email to the specified user. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminUsersController_triggerPasswordReset",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "description": "User ID to send password reset email to",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Password reset email sent successfully"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while sending password reset email"
+          }
+        },
+        "summary": "Trigger password reset for a user",
+        "tags": [
+          "Super Admin Users"
+        ]
+      }
+    },
+    "/super-admin/users/{orgId}/create": {
+      "post": {
+        "description": "Create a new user in the specified organization with a randomly generated password. A password reset email will be sent to the user. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminUsersController_createUser",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to create the user in",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "User information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "500": {
+            "description": "Internal server error occurred while creating user"
+          }
+        },
+        "summary": "Create a new user in an organization",
+        "tags": [
+          "Super Admin Users"
+        ]
+      }
+    },
     "/invites": {
       "post": {
         "description": "Send an invitation to a user to join an organization with a specific role",
@@ -4401,6 +4533,41 @@
           "resetToken",
           "newPassword",
           "newPasswordConfirmation"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address for the user",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the user",
+            "example": "John Doe"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role for the user",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "sendPasswordResetEmail": {
+            "type": "boolean",
+            "description": "Send password reset email",
+            "example": true
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "role",
+          "sendPasswordResetEmail"
         ]
       },
       "CreateInviteDto": {

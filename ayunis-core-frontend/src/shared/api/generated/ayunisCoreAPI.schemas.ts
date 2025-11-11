@@ -405,6 +405,29 @@ export interface ResetPasswordDto {
 }
 
 /**
+ * Role for the user
+ */
+export type CreateUserDtoRole = typeof CreateUserDtoRole[keyof typeof CreateUserDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateUserDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface CreateUserDto {
+  /** Email address for the user */
+  email: string;
+  /** Name of the user */
+  name: string;
+  /** Role for the user */
+  role: CreateUserDtoRole;
+  /** Send password reset email */
+  sendPasswordResetEmail: boolean;
+}
+
+/**
  * Role to assign to the invited user
  */
 export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];

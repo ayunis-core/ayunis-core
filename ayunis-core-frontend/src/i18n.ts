@@ -21,6 +21,8 @@ import enSuperAdminSettingsLayout from "./shared/locales/en/super-admin-settings
 import deSuperAdminSettingsLayout from "./shared/locales/de/super-admin-settings-layout.json";
 import enSuperAdminSettingsOrgs from "./shared/locales/en/super-admin-settings-orgs.json";
 import deSuperAdminSettingsOrgs from "./shared/locales/de/super-admin-settings-orgs.json";
+import enSuperAdminSettingsOrg from "./shared/locales/en/super-admin-settings-org.json";
+import deSuperAdminSettingsOrg from "./shared/locales/de/super-admin-settings-org.json";
 import enSettings from "./shared/locales/en/settings.json";
 import deSettings from "./shared/locales/de/settings.json";
 import enChats from "./shared/locales/en/chats.json";
@@ -43,6 +45,7 @@ const resources = {
     "admin-settings-integrations": enAdminSettingsIntegrations,
     "super-admin-settings-layout": enSuperAdminSettingsLayout,
     "super-admin-settings-orgs": enSuperAdminSettingsOrgs,
+    "super-admin-settings-org": enSuperAdminSettingsOrg,
     settings: enSettings,
     chats: enChats,
     prompts: enPrompts,
@@ -59,6 +62,7 @@ const resources = {
     "admin-settings-integrations": deAdminSettingsIntegrations,
     "super-admin-settings-layout": deSuperAdminSettingsLayout,
     "super-admin-settings-orgs": deSuperAdminSettingsOrgs,
+    "super-admin-settings-org": deSuperAdminSettingsOrg,
     settings: deSettings,
     chats: deChats,
     prompts: dePrompts,

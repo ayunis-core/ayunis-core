@@ -1,4 +1,3 @@
-import SuperAdminOrgsPage from "./ui/SuperAdminOrgsPage";
+import SuperAdminOrgsPage from "./ui/Page";
 
 export default SuperAdminOrgsPage;
-
