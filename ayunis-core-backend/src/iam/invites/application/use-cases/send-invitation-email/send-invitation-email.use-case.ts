@@ -45,9 +45,13 @@ export class SendInvitationEmailUseCase {
       this.logger.debug('Fetching inviting user information', {
         inviterId: command.invite.inviterId,
       });
-      const invitingUser = await this.findUserByIdUseCase.execute(
-        new FindUserByIdQuery(command.invite.inviterId),
-      );
+      let invitingUserName: string | null = null;
+      if (command.invite.inviterId) {
+        const invitingUser = await this.findUserByIdUseCase.execute(
+          new FindUserByIdQuery(command.invite.inviterId),
+        );
+        invitingUserName = invitingUser.name;
+      }
 
       // Create invitation email template
       this.logger.debug('Creating invitation email template', {
@@ -60,7 +64,7 @@ export class SendInvitationEmailUseCase {
         invitingCompanyName: org.name,
         productName: 'Ayunis Core',
         currentYear: new Date().getFullYear().toString(),
-        adminName: invitingUser.name,
+        adminName: invitingUserName,
       });
 
       // Render email content
