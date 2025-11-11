@@ -30,7 +30,7 @@ export abstract class LegalAcceptanceRecord extends BaseRecord {
   user: UserRecord;
 
   @Column()
-  orgId: string;
+  orgId: UUID;
 
   @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;

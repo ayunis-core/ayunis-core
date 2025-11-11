@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
 import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance.entity';
 import { Repository } from 'typeorm';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class LocalLegalAcceptancesRepository extends LegalAcceptancesRepository {
@@ -23,7 +24,7 @@ export class LocalLegalAcceptancesRepository extends LegalAcceptancesRepository 
   }
 
   async findOne(
-    orgId: string,
+    orgId: UUID,
     type: LegalAcceptanceType,
     version: string,
   ): Promise<LegalAcceptance | null> {

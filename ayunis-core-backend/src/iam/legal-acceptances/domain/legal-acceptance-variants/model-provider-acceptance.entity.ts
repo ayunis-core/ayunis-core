@@ -8,8 +8,8 @@ export class ModelProviderAcceptance extends LegalAcceptance {
 
   constructor(params: {
     id?: UUID;
-    userId: string;
-    orgId: string;
+    userId: UUID;
+    orgId: UUID;
     version: string;
     provider: ModelProvider;
     createdAt?: Date;

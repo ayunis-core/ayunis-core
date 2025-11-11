@@ -1,14 +1,15 @@
+import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
 
 export abstract class CreateLegalAcceptanceCommand {
-  userId: string;
-  orgId: string;
+  userId: UUID;
+  orgId: UUID;
   type: LegalAcceptanceType;
 
   constructor(params: {
-    userId: string;
-    orgId: string;
+    userId: UUID;
+    orgId: UUID;
     type: LegalAcceptanceType;
   }) {
     this.userId = params.userId;
@@ -18,7 +19,7 @@ export abstract class CreateLegalAcceptanceCommand {
 }
 
 export class CreateTosAcceptanceCommand extends CreateLegalAcceptanceCommand {
-  constructor(params: { userId: string; orgId: string }) {
+  constructor(params: { userId: UUID; orgId: UUID }) {
     super({
       ...params,
       type: LegalAcceptanceType.TERMS_OF_SERVICE,
@@ -27,7 +28,7 @@ export class CreateTosAcceptanceCommand extends CreateLegalAcceptanceCommand {
 }
 
 export class CreatePrivacyPolicyAcceptanceCommand extends CreateLegalAcceptanceCommand {
-  constructor(params: { userId: string; orgId: string }) {
+  constructor(params: { userId: UUID; orgId: UUID }) {
     super({
       ...params,
       type: LegalAcceptanceType.PRIVACY_POLICY,
@@ -38,11 +39,7 @@ export class CreatePrivacyPolicyAcceptanceCommand extends CreateLegalAcceptanceC
 export class CreateModelProviderAcceptanceCommand extends CreateLegalAcceptanceCommand {
   provider: ModelProvider;
 
-  constructor(params: {
-    userId: string;
-    orgId: string;
-    provider: ModelProvider;
-  }) {
+  constructor(params: { userId: UUID; orgId: UUID; provider: ModelProvider }) {
     super({
       ...params,
       type: LegalAcceptanceType.MODEL_PROVIDER,
