@@ -10,6 +10,12 @@ export interface PieDataPoint {
   value: number;
 }
 
+export interface TransformedPieDataPoint {
+  name: string;
+  value: number;
+  slug: string;
+}
+
 const CHART_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -31,9 +37,7 @@ export function colorVar(labelOrSlug: string): string {
   return `var(--color-${key})`;
 }
 
-export function seriesLabelsToConfig(
-  labels: string[],
-): ChartConfig {
+export function seriesLabelsToConfig(labels: string[]): ChartConfig {
   return Object.fromEntries(
     labels.map((label, index) => [
       slugifyForCssVar(label),
@@ -42,9 +46,7 @@ export function seriesLabelsToConfig(
   );
 }
 
-export function pieNamesToConfig(
-  names: Array<string | number>,
-): ChartConfig {
+export function pieNamesToConfig(names: Array<string | number>): ChartConfig {
   return Object.fromEntries(
     names.map((name, index) => [
       slugifyForCssVar(String(name)),
@@ -65,7 +67,7 @@ export function transformChartData(
   // Each xAxis point becomes a data point with values from all series
   return xAxis.map((xLabel, index) => {
     const dataPoint: Record<string, string | number> = { name: xLabel };
-    
+
     yAxis.forEach((series) => {
       if (series.values[index] !== undefined) {
         const slugifiedKey = slugifyForCssVar(series.label);
@@ -73,14 +75,14 @@ export function transformChartData(
         dataPoint[slugifiedKey] = series.values[index];
       }
     });
-    
+
     return dataPoint;
   });
 }
 
 export function transformPieChartData(
   data: PieDataPoint[],
-): Array<{ name: string; value: number }> {
+): TransformedPieDataPoint[] {
   if (data.length === 0) {
     return [];
   }
@@ -89,7 +91,6 @@ export function transformPieChartData(
   return data.map((item) => ({
     name: item.label,
     value: item.value,
+    slug: slugifyForCssVar(item.label),
   }));
 }
-
-
