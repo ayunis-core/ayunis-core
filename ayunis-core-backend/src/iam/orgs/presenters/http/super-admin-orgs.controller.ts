@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -8,7 +7,6 @@ import {
   Logger,
   Param,
   Post,
-  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -35,8 +33,6 @@ import { CreateOrgCommand } from '../../application/use-cases/create-org/create-
 import { CreateOrgRequestDto } from './dtos/create-org-request.dto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
-import { CreateTrialUseCase } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.use-case';
-import { CreateTrialCommand } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.command';
 
 @ApiTags('Super Admin Orgs')
 @Controller('super-admin/orgs')
@@ -49,7 +45,6 @@ export class SuperAdminOrgsController {
     private readonly superAdminOrgResponseDtoMapper: SuperAdminOrgResponseDtoMapper,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
-    private readonly createTrialUseCase: CreateTrialUseCase,
   ) {}
 
   @Post()
@@ -80,11 +75,6 @@ export class SuperAdminOrgsController {
 
     const command = new CreateOrgCommand(createOrgDto.name);
     const org = await this.createOrgUseCase.execute(command);
-    const trialMaxMessages = 200; // TODO: Get from config
-    await this.createTrialUseCase.execute(
-      new CreateTrialCommand(org.id, trialMaxMessages),
-    );
-
     return this.superAdminOrgResponseDtoMapper.toDto(org);
   }
 
