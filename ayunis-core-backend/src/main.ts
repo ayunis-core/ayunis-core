@@ -1,3 +1,5 @@
+// Sentry - !! Initialize Sentry before any other imports
+import './common/sentry/instrument';
 // Utils
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';

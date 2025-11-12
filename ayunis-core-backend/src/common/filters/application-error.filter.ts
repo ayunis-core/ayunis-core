@@ -1,6 +1,7 @@
-import { ExceptionFilter, Catch, ArgumentsHost, Logger } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApplicationError } from '../errors/base.error';
+import * as Sentry from '@sentry/nestjs';
 
 /**
  * Global exception filter that handles domain-specific ApplicationErrors
@@ -8,9 +9,8 @@ import { ApplicationError } from '../errors/base.error';
  */
 @Catch(ApplicationError)
 export class ApplicationErrorFilter implements ExceptionFilter {
-  private readonly logger = new Logger(ApplicationErrorFilter.name);
-
   catch(exception: ApplicationError, host: ArgumentsHost) {
+    Sentry.captureException(exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
