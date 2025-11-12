@@ -1,14 +1,26 @@
 // Types
 import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
-import type { PieDataPoint } from "@/widgets/charts/lib/ChartUtils";
+import type {
+  PieDataPoint,
+  TransformedPieDataPoint,
+} from "@/widgets/charts/lib/ChartUtils";
 
 // Utils
 import { useMemo } from "react";
-import { colorVar, pieNamesToConfig, transformPieChartData } from "@/widgets/charts/lib/ChartUtils";
+import {
+  colorVar,
+  pieNamesToConfig,
+  transformPieChartData,
+} from "@/widgets/charts/lib/ChartUtils";
 
 // UI
 import { PieChart, Pie, Cell } from "recharts";
-import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/shared/ui/shadcn/chart";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/shared/ui/shadcn/chart";
 import { ChartCard } from "@/widgets/charts/ui/ChartCard";
 import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
 import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
@@ -28,7 +40,7 @@ export default function PieChartWidget({
 }) {
   const params = (content.params || {}) as ChartParams;
 
-  const chartData = useMemo(() => {
+  const chartData = useMemo<TransformedPieDataPoint[]>(() => {
     return transformPieChartData(params.data || []);
   }, [params.data]);
 
@@ -47,9 +59,7 @@ export default function PieChartWidget({
     <ChartCard
       title={params.chartTitle}
       insight={params.insight}
-      config={pieNamesToConfig(
-        chartData.map((e) => e.name),
-      )}
+      config={pieNamesToConfig(chartData.map((e) => e.name))}
       key={`${content.name}-${content.id}`}
     >
       <PieChart>
@@ -66,11 +76,15 @@ export default function PieChartWidget({
           dataKey="value"
         >
           {chartData.map((entry) => (
-            <Cell key={`pie-${entry.name}`} name={entry.name} fill={colorVar(String(entry.name))} />
+            <Cell
+              key={entry.slug}
+              name={entry.name}
+              fill={colorVar(entry.slug)}
+            />
           ))}
         </Pie>
         <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
+        <ChartLegend content={<ChartLegendContent nameKey="slug" />} />
       </PieChart>
     </ChartCard>
   );
