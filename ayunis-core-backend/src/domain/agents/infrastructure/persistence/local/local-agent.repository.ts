@@ -134,9 +134,10 @@ export class LocalAgentRepository implements AgentRepository {
         newSourceAssignments,
         sourceAssignmentsToDelete,
       });
-      for (const sa of sourceAssignmentsToDelete) {
-        await queryRunner.manager.delete(AgentSourceAssignmentRecord, sa.id);
-      }
+      await queryRunner.manager.remove(
+        AgentSourceAssignmentRecord,
+        sourceAssignmentsToDelete,
+      );
 
       const updatedAgent = new Agent({
         ...agent,
@@ -189,12 +190,14 @@ export class LocalAgentRepository implements AgentRepository {
       // Reload with MCP integrations to return complete data
       const reloadedAgent = await this.agentRepository.findOne({
         where: { id: agent.id },
-        relations: [
-          'mcpIntegrations',
-          'agentTools',
-          'model',
-          'sourceAssignments',
-        ],
+        relations: {
+          mcpIntegrations: true,
+          agentTools: true,
+          model: true,
+          sourceAssignments: {
+            source: true,
+          },
+        },
       });
 
       if (!reloadedAgent) {
