@@ -4,15 +4,15 @@ import {
   getSuperAdminModelsControllerGetPermittedModelsQueryKey,
   type ModelWithConfigResponseDto,
   useSuperAdminModelsControllerManageOrgDefaultModel,
-} from "@/shared/api";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from '@tanstack/react-router';
 
 export function useSuperAdminManageOrgDefaultModel(orgId: string) {
   const queryClient = useQueryClient();
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const router = useRouter();
 
   const manageOrgDefaultModelMutation =
@@ -49,16 +49,13 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
           return { previousModels, queryKey };
         },
         onSuccess: () => {
-          showSuccess(t("models.defaultModel.success"));
+          showSuccess(t('models.defaultModel.success'));
         },
         onError: (_, __, context) => {
-          showError(t("models.defaultModel.error"));
+          showError(t('models.defaultModel.error'));
 
           if (context?.previousModels && context?.queryKey) {
-            queryClient.setQueryData(
-              context.queryKey,
-              context.previousModels,
-            );
+            queryClient.setQueryData(context.queryKey, context.previousModels);
           }
         },
         onSettled: async () => {
@@ -94,5 +91,3 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
     error: manageOrgDefaultModelMutation.error,
   };
 }
-
-

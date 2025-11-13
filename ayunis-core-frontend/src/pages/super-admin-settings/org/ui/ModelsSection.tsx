@@ -1,19 +1,19 @@
-import { Card, CardContent } from "@/shared/ui/shadcn/card";
+import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import {
   ModelWithConfigResponseDtoProvider,
   type ModelWithConfigResponseDto,
-} from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import ModelProviderCard from "./ModelProviderCard";
-import { useSuperAdminModels } from "../api/useSuperAdminModels";
-import { useTranslation } from "react-i18next";
-import { SuperAdminOrgDefaultModelCard } from "./SuperAdminOrgDefaultModelCard";
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import ModelProviderCard from './ModelProviderCard';
+import { useSuperAdminModels } from '../api/useSuperAdminModels';
+import { useTranslation } from 'react-i18next';
+import { SuperAdminOrgDefaultModelCard } from './SuperAdminOrgDefaultModelCard';
 
 interface ModelsSectionProps {
   orgId: string;
 }
 
 export default function ModelsSection({ orgId }: ModelsSectionProps) {
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const { models, providers, isLoading } = useSuperAdminModels(orgId);
 
   if (isLoading) {
@@ -21,7 +21,7 @@ export default function ModelsSection({ orgId }: ModelsSectionProps) {
       <Card>
         <CardContent>
           <div className="text-center text-muted-foreground py-8">
-            <p>{t("models.loading")}</p>
+            <p>{t('models.loading')}</p>
           </div>
         </CardContent>
       </Card>
@@ -84,7 +84,7 @@ export default function ModelsSection({ orgId }: ModelsSectionProps) {
         <Card>
           <CardContent>
             <div className="text-center text-muted-foreground py-8">
-              <p>{t("models.noModelsAvailable")}</p>
+              <p>{t('models.noModelsAvailable')}</p>
             </div>
           </CardContent>
         </Card>
