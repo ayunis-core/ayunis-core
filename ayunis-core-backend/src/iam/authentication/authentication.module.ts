@@ -26,6 +26,7 @@ import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { TrialsModule } from '../trials/trials.module';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
@@ -48,6 +49,7 @@ export class AuthenticationModule {
         EmailTemplatesModule,
         HashingModule,
         SubscriptionsModule,
+        TrialsModule,
         WebhooksModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Trial } from 'src/iam/subscriptions/domain/trial.entity';
+import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { IncrementTrialMessagesCommand } from './increment-trial-messages.command';
 import {
@@ -7,7 +7,7 @@ import {
   TrialCapacityExceededError,
   TrialUpdateFailedError,
   UnexpectedTrialError,
-} from '../../subscription.errors';
+} from '../../trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -95,3 +95,4 @@ export class IncrementTrialMessagesUseCase {
     }
   }
 }
+

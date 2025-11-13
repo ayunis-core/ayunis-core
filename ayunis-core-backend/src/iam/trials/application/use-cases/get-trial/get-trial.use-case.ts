@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Trial } from 'src/iam/subscriptions/domain/trial.entity';
+import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { GetTrialQuery } from './get-trial.query';
-import { UnexpectedTrialError } from '../../subscription.errors';
+import { UnexpectedTrialError } from '../../trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -55,3 +55,4 @@ export class GetTrialUseCase {
     }
   }
 }
+

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TrialRepository } from 'src/iam/subscriptions/application/ports/trial.repository';
-import { Trial } from 'src/iam/subscriptions/domain/trial.entity';
+import { TrialRepository } from 'src/iam/trials/application/ports/trial.repository';
+import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRecord } from './schema/trial.record';
 import { UUID } from 'crypto';
 
@@ -85,3 +85,4 @@ export class LocalTrialsRepository extends TrialRepository {
     });
   }
 }
+

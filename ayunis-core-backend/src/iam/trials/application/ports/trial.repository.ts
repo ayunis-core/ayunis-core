@@ -6,3 +6,4 @@ export abstract class TrialRepository {
   abstract findByOrgId(orgId: UUID): Promise<Trial | null>;
   abstract incrementMessagesSent(orgId: UUID): Promise<Trial | null>;
 }
+

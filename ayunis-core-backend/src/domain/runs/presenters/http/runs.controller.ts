@@ -35,8 +35,8 @@ import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execut
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { RunInput } from '../../domain/run-input.entity';
-import { IncrementTrialMessagesUseCase } from 'src/iam/subscriptions/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
-import { IncrementTrialMessagesCommand } from 'src/iam/subscriptions/application/use-cases/increment-trial-messages/increment-trial-messages.command';
+import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
+import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { Response } from 'express';

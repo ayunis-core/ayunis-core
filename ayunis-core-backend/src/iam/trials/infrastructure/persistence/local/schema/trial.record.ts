@@ -18,3 +18,4 @@ export class TrialRecord extends BaseRecord {
   @Column()
   maxMessages: number;
 }
+
