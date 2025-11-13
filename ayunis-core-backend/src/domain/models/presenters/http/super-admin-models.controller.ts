@@ -1,14 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
   Body,
-  Logger,
-  Param,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Logger,
+  Param,
   Patch,
+  Post,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -84,6 +85,9 @@ import { ModelResponseDto } from './dto/model-response.dto';
 import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-dto.mapper';
 import { DeleteModelUseCase } from '../../application/use-cases/delete-model/delete-model.use-case';
 import { DeleteModelCommand } from '../../application/use-cases/delete-model/delete-model.command';
+import { ManageOrgDefaultModelUseCase } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.use-case';
+import { ManageOrgDefaultModelCommand } from '../../application/use-cases/manage-org-default-model/manage-org-default-model.command';
+import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
 
 @ApiTags('Super Admin Models')
 @Controller('super-admin/models')
@@ -128,6 +132,7 @@ export class SuperAdminModelsController {
     private readonly updateEmbeddingModelUseCase: UpdateEmbeddingModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
     private readonly deleteModelUseCase: DeleteModelUseCase,
+    private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
   ) {}
 
   @Get(':orgId/available')
@@ -185,6 +190,63 @@ export class SuperAdminModelsController {
     );
 
     return responseDtos;
+  }
+
+  @Put(':orgId/default-model')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Set or update the organization default model',
+    description:
+      'Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model. This endpoint is only accessible to super admins.',
+  })
+  @ApiParam({
+    name: 'orgId',
+    description: 'Organization ID to set the default model for',
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({ type: SetOrgDefaultModelDto })
+  @ApiOkResponse({
+    description: 'Successfully set or updated the organization default model',
+    schema: {
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid model data provided',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Permitted model not found',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async manageOrgDefaultModel(
+    @Param('orgId') orgId: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() setOrgDefaultModelDto: SetOrgDefaultModelDto,
+  ): Promise<PermittedLanguageModelResponseDto> {
+    this.logger.log(
+      `Super admin ${userId} setting default model ${setOrgDefaultModelDto.permittedModelId} for org ${orgId}`,
+    );
+
+    const command = new ManageOrgDefaultModelCommand(
+      setOrgDefaultModelDto.permittedModelId,
+      orgId,
+    );
+
+    const model = await this.manageOrgDefaultModelUseCase.execute(command);
+
+    this.logger.log(
+      `Successfully set default model ${model.id} for org ${orgId} by super admin ${userId}`,
+    );
+
+    return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
   @Delete('catalog/:id')

@@ -510,6 +510,61 @@
         "tags": ["Super Admin Models"]
       }
     },
+    "/super-admin/models/{orgId}/default-model": {
+      "put": {
+        "description": "Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_manageOrgDefaultModel",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to set the default model for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the organization default model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Set or update the organization default model",
+        "tags": ["Super Admin Models"]
+      }
+    },
     "/super-admin/models/{orgId}/permitted-models": {
       "get": {
         "description": "Retrieve all permitted models for the specified organization. This endpoint is only accessible to super admins.",

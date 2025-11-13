@@ -6,6 +6,7 @@ import {
 import ModelProviderCard from "./ModelProviderCard";
 import { useSuperAdminModels } from "../api/useSuperAdminModels";
 import { useTranslation } from "react-i18next";
+import { SuperAdminOrgDefaultModelCard } from "./SuperAdminOrgDefaultModelCard";
 
 interface ModelsSectionProps {
   orgId: string;
@@ -73,6 +74,11 @@ export default function ModelsSection({ orgId }: ModelsSectionProps) {
 
   return (
     <div className="space-y-4">
+      <SuperAdminOrgDefaultModelCard
+        models={models}
+        isLoading={isLoading}
+        orgId={orgId}
+      />
       {modelProviderCards.length > 0 && modelProviderCards}
       {modelProviderCards.length === 0 && (
         <Card>
