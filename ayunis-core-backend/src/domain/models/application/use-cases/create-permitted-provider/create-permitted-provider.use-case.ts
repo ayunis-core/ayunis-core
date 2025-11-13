@@ -2,7 +2,7 @@ import { PermittedProvidersRepository } from 'src/domain/models/application/port
 import { PermittedProvider } from 'src/domain/models/domain/permitted-model-provider.entity';
 import { CreatePermittedProviderCommand } from './create-permitted-provider.command';
 import { Injectable, Logger } from '@nestjs/common';
-import { ModelError, UnexpectedModelError } from '../../models.errors';
+import { UnexpectedModelError } from '../../models.errors';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { CreateModelProviderAcceptanceCommand } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.command';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';

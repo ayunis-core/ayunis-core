@@ -137,8 +137,9 @@ export class AcceptInviteUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Accept invite failed', { error });
-      throw new UnexpectedInviteError(error);
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Accept invite failed', { error: err });
+      throw new UnexpectedInviteError(err);
     }
   }
 }

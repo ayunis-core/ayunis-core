@@ -1,7 +1,7 @@
 import { PermittedProvidersRepository } from 'src/domain/models/application/ports/permitted-providers.repository';
 import { DeletePermittedProviderCommand } from './delete-permitted-provider.command';
 import { Injectable, Logger } from '@nestjs/common';
-import { ModelError, UnexpectedModelError } from '../../models.errors';
+import { UnexpectedModelError } from '../../models.errors';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
 import { DeletePermittedModelUseCase } from '../delete-permitted-model/delete-permitted-model.use-case';

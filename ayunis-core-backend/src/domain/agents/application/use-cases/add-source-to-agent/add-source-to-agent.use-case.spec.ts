@@ -131,12 +131,12 @@ describe('AddSourceToAgentUseCase', () => {
 
       // Assert
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockAgentId,
@@ -201,9 +201,9 @@ describe('AddSourceToAgentUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           sourceAssignments: expect.arrayContaining([
@@ -231,9 +231,9 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnauthorizedException,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).not.toHaveBeenCalled();
     });
 
@@ -251,12 +251,12 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         AgentNotFoundError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -287,7 +287,7 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SourceAlreadyAssignedError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 

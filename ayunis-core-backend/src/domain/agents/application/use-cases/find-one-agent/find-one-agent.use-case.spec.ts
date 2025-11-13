@@ -96,9 +96,9 @@ describe('FindOneAgentUseCase', () => {
       const result = await useCase.execute(query);
 
       // Assert
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
@@ -121,7 +121,6 @@ describe('FindOneAgentUseCase', () => {
         'User not authenticated',
       );
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(agentRepository.findOne).not.toHaveBeenCalled();
       expect(logSpy).toHaveBeenCalledWith('Failed to find agent', {
@@ -141,7 +140,6 @@ describe('FindOneAgentUseCase', () => {
         `Agent with ID ${mockAgentId} not found`,
       );
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
@@ -158,9 +156,8 @@ describe('FindOneAgentUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(applicationError);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
@@ -183,9 +180,8 @@ describe('FindOneAgentUseCase', () => {
         'Database connection failed',
       );
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,

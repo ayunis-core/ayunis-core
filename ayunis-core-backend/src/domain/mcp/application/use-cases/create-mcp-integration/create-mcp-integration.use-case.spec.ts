@@ -21,7 +21,6 @@ import {
 } from '../../../domain/mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import {
   CredentialFieldType,
   CredentialFieldValue,
@@ -68,7 +67,7 @@ describe('CreateMcpIntegrationUseCase', () => {
     repository = {
       save: jest.fn(async (integration) => {
         savedIntegrations.push(integration as McpIntegration);
-        return integration as any;
+        return integration;
       }),
       findById: jest.fn(),
       findAll: jest.fn(),

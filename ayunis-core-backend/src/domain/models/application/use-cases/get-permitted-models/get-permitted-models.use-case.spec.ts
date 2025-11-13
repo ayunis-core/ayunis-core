@@ -164,8 +164,6 @@ describe('GetPermittedModelsUseCase', () => {
       const repositoryError = new Error('Database connection failed');
       permittedModelsRepository.findAll.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(
         'Database connection failed',
@@ -177,8 +175,6 @@ describe('GetPermittedModelsUseCase', () => {
       const query = new GetPermittedModelsQuery(mockOrgId, undefined);
 
       permittedModelsRepository.findAll.mockRejectedValue('string error');
-
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
 
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toBeDefined();

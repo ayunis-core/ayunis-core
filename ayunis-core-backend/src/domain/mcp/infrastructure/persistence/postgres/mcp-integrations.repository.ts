@@ -33,7 +33,11 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   async save(integration: McpIntegration): Promise<McpIntegration> {
     this.logger.log('save', { integrationId: integration.id });
 
-    const record = this.mcpIntegrationMapper.toRecord(integration);
+    const recordResult = this.mcpIntegrationMapper.toRecord(integration);
+    if (recordResult instanceof Error) {
+      throw recordResult;
+    }
+    const record: McpIntegrationRecord = recordResult;
     const authRecord = record.auth;
 
     if (!authRecord) {

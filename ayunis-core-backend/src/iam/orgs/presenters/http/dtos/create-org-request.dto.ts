@@ -11,4 +11,3 @@ export class CreateOrgRequestDto {
   @IsNotEmpty()
   name: string;
 }
-

@@ -37,8 +37,6 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
   let getMcpPromptUseCase: jest.Mocked<GetMcpPromptUseCase>;
   let retrieveMcpResourceUseCase: jest.Mocked<RetrieveMcpResourceUseCase>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
-  let contextService: jest.Mocked<ContextService>;
-  let configService: jest.Mocked<ConfigService>;
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
@@ -142,8 +140,6 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
     getMcpPromptUseCase = module.get(GetMcpPromptUseCase);
     retrieveMcpResourceUseCase = module.get(RetrieveMcpResourceUseCase);
     findThreadUseCase = module.get(FindThreadUseCase);
-    contextService = module.get(ContextService);
-    configService = module.get(ConfigService);
   });
 
   describe('MCP Discovery', () => {
@@ -183,22 +179,22 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
       } as unknown as Thread;
 
       const mockDiscoveredTools = [
-        new McpToolEntity(
-          'slack_send_message',
-          'Send a message to Slack',
-          { type: 'object', properties: {} },
-          mockIntegrationId1,
-        ),
+        {
+          name: 'slack_send_message',
+          description: 'Send a message to Slack',
+          inputSchema: { type: 'object', properties: {} },
+          integrationId: mockIntegrationId1,
+        } as McpToolEntity,
       ];
 
       const mockDiscoveredResources = [
-        new McpResource(
-          'slack://channel/general',
-          'General Channel',
-          'Access to general channel',
-          'text/plain',
-          mockIntegrationId1,
-        ),
+        new McpResource({
+          uri: 'slack://channel/general',
+          name: 'General Channel',
+          description: 'Access to general channel',
+          mimeType: 'text/plain',
+          integrationId: mockIntegrationId1,
+        }),
       ];
 
       const mockDiscoveredPrompts = [
@@ -217,11 +213,6 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
       // by verifying the use case was called with correct parameters
 
       // Act - call a method that triggers discovery
-      const executeRunSpy = jest.spyOn(
-        useCase as any,
-        'discoverMcpCapabilitiesForAgent',
-      );
-
       // Call the private method directly for testing
       const result = await (useCase as any).discoverMcpCapabilitiesForAgent(
         mockAgent,
@@ -246,20 +237,20 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
       } as unknown as Agent;
 
       const mockTools1 = [
-        new McpToolEntity(
-          'tool1',
-          'Tool 1',
-          { type: 'object' },
-          mockIntegrationId1,
-        ),
+        {
+          name: 'tool1',
+          description: 'Tool 1',
+          inputSchema: { type: 'object' },
+          integrationId: mockIntegrationId1,
+        } as McpToolEntity,
       ];
       const mockTools2 = [
-        new McpToolEntity(
-          'tool2',
-          'Tool 2',
-          { type: 'object' },
-          mockIntegrationId2,
-        ),
+        {
+          name: 'tool2',
+          description: 'Tool 2',
+          inputSchema: { type: 'object' },
+          integrationId: mockIntegrationId2,
+        } as McpToolEntity,
       ];
 
       discoverMcpCapabilitiesUseCase.execute
@@ -291,12 +282,12 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
       } as unknown as Agent;
 
       const mockTools = [
-        new McpToolEntity(
-          'tool1',
-          'Tool 1',
-          { type: 'object' },
-          mockIntegrationId1,
-        ),
+        {
+          name: 'tool1',
+          description: 'Tool 1',
+          inputSchema: { type: 'object' },
+          integrationId: mockIntegrationId1,
+        } as McpToolEntity,
       ];
 
       // First integration succeeds, second fails
@@ -390,10 +381,10 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
     it('should convert MCP tools to Tool entities correctly', () => {
       // Arrange
       const mockMcpTools = [
-        new McpToolEntity(
-          'slack_send_message',
-          'Send a message to Slack',
-          {
+        {
+          name: 'slack_send_message',
+          description: 'Send a message to Slack',
+          inputSchema: {
             type: 'object',
             properties: {
               channel: { type: 'string' },
@@ -401,12 +392,12 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
             },
             required: ['channel', 'message'],
           },
-          mockIntegrationId1,
-        ),
-        new McpToolEntity(
-          'github_create_issue',
-          'Create a GitHub issue',
-          {
+          integrationId: mockIntegrationId1,
+        } as McpToolEntity,
+        {
+          name: 'github_create_issue',
+          description: 'Create a GitHub issue',
+          inputSchema: {
             type: 'object',
             properties: {
               title: { type: 'string' },
@@ -414,8 +405,8 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
             },
             required: ['title'],
           },
-          mockIntegrationId2,
-        ),
+          integrationId: mockIntegrationId2,
+        } as McpToolEntity,
       ];
 
       // Act
@@ -434,12 +425,12 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
     it('should handle MCP tools without descriptions', () => {
       // Arrange
       const mockMcpTools = [
-        new McpToolEntity(
-          'test_tool',
-          undefined,
-          { type: 'object', properties: {} },
-          mockIntegrationId1,
-        ),
+        {
+          name: 'test_tool',
+          description: undefined,
+          inputSchema: { type: 'object', properties: {} },
+          integrationId: mockIntegrationId1,
+        } as McpToolEntity,
       ];
 
       // Act
@@ -753,11 +744,6 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
     });
 
     it('should validate tool parameters (promptName and integrationId required)', () => {
-      // Arrange
-      const mockAgent = {
-        mcpIntegrationIds: [mockIntegrationId1],
-      } as unknown as Agent;
-
       // Act
       const tool = (useCase as any).createMcpPromptRetrievalTool();
 
@@ -820,7 +806,10 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
         id: mockThreadId,
       } as unknown as Thread;
 
-      retrieveMcpResourceUseCase.execute.mockResolvedValue(undefined);
+      retrieveMcpResourceUseCase.execute.mockResolvedValue({
+        content: 'CSV content',
+        mimeType: 'text/csv',
+      });
 
       // Act
       const result = await (useCase as any).executeMcpResourceRetrieval(
@@ -867,7 +856,10 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
         id: mockThreadId,
       } as unknown as Thread;
 
-      retrieveMcpResourceUseCase.execute.mockResolvedValue(undefined);
+      retrieveMcpResourceUseCase.execute.mockResolvedValue({
+        content: 'CSV content',
+        mimeType: 'text/csv',
+      });
 
       // Act
       const result = await (useCase as any).executeMcpResourceRetrieval(
@@ -1044,7 +1036,10 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
         id: mockThreadId,
       } as unknown as Thread;
 
-      retrieveMcpResourceUseCase.execute.mockResolvedValue(undefined);
+      retrieveMcpResourceUseCase.execute.mockResolvedValue({
+        content: 'CSV content',
+        mimeType: 'text/csv',
+      });
 
       const loggerSpy = jest.spyOn(useCase['logger'], 'log');
 
@@ -1088,7 +1083,10 @@ describe('ExecuteRunUseCase - MCP Discovery Integration', () => {
         id: mockThreadId,
       } as unknown as Thread;
 
-      retrieveMcpResourceUseCase.execute.mockResolvedValue(undefined);
+      retrieveMcpResourceUseCase.execute.mockResolvedValue({
+        content: 'CSV content',
+        mimeType: 'text/csv',
+      });
 
       // Act
       await (useCase as any).executeMcpResourceRetrieval(

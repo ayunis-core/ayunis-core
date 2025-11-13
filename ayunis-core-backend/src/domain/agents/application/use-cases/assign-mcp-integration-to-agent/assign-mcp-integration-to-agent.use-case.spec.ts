@@ -19,6 +19,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { UUID } from 'crypto';
 
 describe('AssignMcpIntegrationToAgentUseCase', () => {
@@ -57,6 +58,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       findByIds: jest.fn(),
       findByOrganizationId: jest.fn(),
       findByOrganizationIdAndEnabled: jest.fn(),
+      findByOrgIdAndSlug: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -102,13 +104,15 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       }),
     });
 
-    mockIntegration = new PredefinedMcpIntegration(
-      mockIntegrationId,
-      'Test MCP Integration',
-      mockOrgId,
-      PredefinedMcpIntegrationSlug.TEST,
-      true, // enabled
-    );
+    mockIntegration = new PredefinedMcpIntegration({
+      id: mockIntegrationId,
+      name: 'Test MCP Integration',
+      orgId: mockOrgId,
+      slug: PredefinedMcpIntegrationSlug.TEST,
+      serverUrl: 'http://test.example.com',
+      auth: new NoAuthMcpIntegrationAuth({}),
+      enabled: true,
+    });
   });
 
   afterEach(() => {
@@ -150,20 +154,20 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('orgId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mcpIntegrationsRepository.findById).toHaveBeenCalledWith(
         mockIntegrationId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockAgentId,
@@ -217,7 +221,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           mcpIntegrationIds: [existingIntegrationId, mockIntegrationId],
@@ -242,9 +246,9 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnauthorizedException,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).not.toHaveBeenCalled();
     });
 
@@ -266,12 +270,12 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         AgentNotFoundError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
     });
 
@@ -294,7 +298,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         AgentNotFoundError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
     });
 
@@ -326,7 +330,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         McpIntegrationNotFoundError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -346,13 +350,15 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         mcpIntegrationIds: [],
       });
 
-      const disabledIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Disabled Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        false, // disabled
-      );
+      const disabledIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Disabled Integration',
+        orgId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://test.example.com',
+        auth: new NoAuthMcpIntegrationAuth({}),
+        enabled: false,
+      });
 
       contextService.get.mockImplementation((key) => {
         if (key === 'userId') return mockUserId;
@@ -366,7 +372,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         McpIntegrationDisabledError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -386,13 +392,15 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
         mcpIntegrationIds: [],
       });
 
-      const otherOrgIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Other Org Integration',
-        mockOtherOrgId, // Different organization
-        PredefinedMcpIntegrationSlug.TEST,
-        true,
-      );
+      const otherOrgIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Other Org Integration',
+        orgId: mockOtherOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://test.example.com',
+        auth: new NoAuthMcpIntegrationAuth({}),
+        enabled: true,
+      });
 
       contextService.get.mockImplementation((key) => {
         if (key === 'userId') return mockUserId;
@@ -406,7 +414,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         McpIntegrationWrongOrganizationError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -438,7 +446,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         McpIntegrationAlreadyAssignedError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -535,7 +543,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledTimes(1);
 
       const savedAgent = (agentRepository.update as jest.Mock).mock

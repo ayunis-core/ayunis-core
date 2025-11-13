@@ -6,8 +6,9 @@ import { Agent } from '../../../domain/agent.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { AgentNotFoundError } from '../../agents.errors';
-import { randomUUID, UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 
 describe('DeleteAgentUseCase', () => {
   let useCase: DeleteAgentUseCase;
@@ -27,9 +28,7 @@ describe('DeleteAgentUseCase', () => {
         DeleteAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
         {
-          provide:
-            require('src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case')
-              .ReplaceModelWithUserDefaultUseCase,
+          provide: ReplaceModelWithUserDefaultUseCase,
           useValue: { execute: jest.fn() },
         },
       ],

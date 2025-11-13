@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
 import { ConfigService, ConfigModule } from '@nestjs/config';

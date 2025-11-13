@@ -15,12 +15,12 @@ import {
 } from '../../../application/agents.errors';
 import { UUID } from 'crypto';
 import {
-  McpIntegration,
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 
 describe('ListAgentMcpIntegrationsUseCase', () => {
   let useCase: ListAgentMcpIntegrationsUseCase;
@@ -54,6 +54,7 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
       findAll: jest.fn(),
       findByOrganizationId: jest.fn(),
       findByOrganizationIdAndEnabled: jest.fn(),
+      findByOrgIdAndSlug: jest.fn(),
       delete: jest.fn(),
     } as jest.Mocked<McpIntegrationsRepositoryPort>;
 
@@ -108,7 +109,7 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
     });
   };
 
-  const createMockAgent = (mcpIntegrationIds: string[] = []): Agent => {
+  const createMockAgent = (mcpIntegrationIds: UUID[] = []): Agent => {
     return new Agent({
       id: mockAgentId,
       name: 'Test Agent',
@@ -128,18 +129,17 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
     name: string,
     slug: PredefinedMcpIntegrationSlug,
   ): PredefinedMcpIntegration => {
-    return new PredefinedMcpIntegration(
+    return new PredefinedMcpIntegration({
       id,
       name,
-      mockOrgId,
+      orgId: mockOrgId,
       slug,
-      true,
-      undefined,
-      undefined,
-      undefined,
-      new Date('2024-01-01T00:00:00Z'),
-      new Date('2024-01-01T00:00:00Z'),
-    );
+      serverUrl: 'http://test.example.com',
+      auth: new NoAuthMcpIntegrationAuth({}),
+      enabled: true,
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+      updatedAt: new Date('2024-01-01T00:00:00Z'),
+    });
   };
 
   const createMockCustomIntegration = (
@@ -147,18 +147,16 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
     name: string,
     serverUrl: string,
   ): CustomMcpIntegration => {
-    return new CustomMcpIntegration(
+    return new CustomMcpIntegration({
       id,
       name,
-      mockOrgId,
+      orgId: mockOrgId,
       serverUrl,
-      true,
-      McpAuthMethod.BEARER_TOKEN,
-      'Authorization',
-      'encrypted-credentials',
-      new Date('2024-01-01T00:00:00Z'),
-      new Date('2024-01-01T00:00:00Z'),
-    );
+      auth: new BearerMcpIntegrationAuth({ authToken: 'encrypted-token' }),
+      enabled: true,
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+      updatedAt: new Date('2024-01-01T00:00:00Z'),
+    });
   };
 
   describe('execute', () => {

@@ -35,16 +35,10 @@ describe('DeleteUserUseCase', () => {
 
   it('should delete user successfully', async () => {
     const command = new DeleteUserCommand({
-      userId: '123e4567-e89b-12d3-a456-426614174000',
-      orgId: '123e4567-e89b-12d3-a456-426614174000',
-      requestUserId: '123e4567-e89b-12d3-a456-426614174000',
+      userId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
+      orgId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
     });
 
-    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue({
-      id: command.requestUserId,
-      role: 'admin',
-      orgId: command.orgId,
-    } as any);
     jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
 
     await useCase.execute(command);
@@ -56,15 +50,9 @@ describe('DeleteUserUseCase', () => {
     const command = new DeleteUserCommand({
       userId: 'user-id' as UUID,
       orgId: 'org-id' as UUID,
-      requestUserId: 'request-user-id' as UUID,
     });
     const error = new Error('Repository error');
 
-    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue({
-      id: command.requestUserId,
-      role: 'admin',
-      orgId: command.orgId,
-    } as any);
     jest.spyOn(mockUsersRepository, 'delete').mockRejectedValue(error);
 
     await expect(useCase.execute(command)).rejects.toThrow('Repository error');

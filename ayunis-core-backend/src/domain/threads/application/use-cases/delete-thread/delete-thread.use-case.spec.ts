@@ -9,7 +9,6 @@ import { ContextService } from 'src/common/context/services/context.service';
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
-  let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as any;
@@ -39,7 +38,6 @@ describe('DeleteThreadUseCase', () => {
 
     useCase = module.get<DeleteThreadUseCase>(DeleteThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-    contextService = module.get(ContextService);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();

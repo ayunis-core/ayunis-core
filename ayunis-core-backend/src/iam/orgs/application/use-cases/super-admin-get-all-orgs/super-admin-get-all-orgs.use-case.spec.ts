@@ -32,8 +32,8 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     }).compile();
 
     useCase = module.get(SuperAdminGetAllOrgsUseCase);
-    orgsRepository = module.get(OrgsRepository) as jest.Mocked<OrgsRepository>;
-    contextService = module.get(ContextService) as jest.Mocked<ContextService>;
+    orgsRepository = module.get(OrgsRepository);
+    contextService = module.get(ContextService);
   });
 
   it('should return all orgs when requester is super admin', async () => {

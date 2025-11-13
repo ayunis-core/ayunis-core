@@ -46,7 +46,8 @@ export class LocalOrgsRepository extends OrgsRepository {
         throw error;
       }
 
-      this.logger.error('Error finding organization', { error, id });
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Error finding organization', { error: err, id });
       throw new OrgNotFoundError(id);
     }
   }
@@ -86,10 +87,11 @@ export class LocalOrgsRepository extends OrgsRepository {
 
       return orgRecords.map((record) => OrgMapper.toDomain(record));
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error('Failed to retrieve organizations for super admin', {
-        error,
+        error: err,
       });
-      throw new OrgRetrievalFailedError(error.message);
+      throw new OrgRetrievalFailedError(err.message);
     }
   }
 
@@ -107,14 +109,15 @@ export class LocalOrgsRepository extends OrgsRepository {
 
       return OrgMapper.toDomain(savedOrgEntity);
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error('Error creating organization', {
-        error,
+        error: err,
         id: org.id,
         name: org.name,
       });
 
       throw new OrgCreationFailedError(
-        `Failed to create organization: ${error.message || 'Unknown error'}`,
+        `Failed to create organization: ${err.message}`,
       );
     }
   }
@@ -150,13 +153,14 @@ export class LocalOrgsRepository extends OrgsRepository {
         throw error;
       }
 
+      const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error('Error updating organization', {
-        error,
+        error: err,
         id: org.id,
         name: org.name,
       });
 
-      throw new OrgUpdateFailedError(org.id, error.message || 'Unknown error');
+      throw new OrgUpdateFailedError(org.id, err.message);
     }
   }
 
@@ -184,8 +188,9 @@ export class LocalOrgsRepository extends OrgsRepository {
         throw error;
       }
 
-      this.logger.error('Error deleting organization', { error, id });
-      throw new OrgDeletionFailedError(id, error.message || 'Unknown error');
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Error deleting organization', { error: err, id });
+      throw new OrgDeletionFailedError(id, err.message);
     }
   }
 }

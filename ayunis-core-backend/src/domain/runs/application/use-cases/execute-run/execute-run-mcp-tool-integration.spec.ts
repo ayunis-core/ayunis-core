@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
-import { UUID, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteMcpToolUseCase } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
@@ -79,15 +79,16 @@ describe('ExecuteRunUseCase - MCP Tool Integration', () => {
 
     it('should execute MCP tool successfully and return result', async () => {
       // Arrange
-      const tool = new McpIntegrationTool({
+      const mockMcpTool = {
         name: mockToolName,
         description: 'MCP test tool',
-        parameters: {
+        inputSchema: {
           type: 'object',
           properties: { param1: { type: 'string' } },
         },
         integrationId: mockIntegrationId,
-      });
+      };
+      const tool = new McpIntegrationTool(mockMcpTool as any);
       const toolUseContent = new ToolUseMessageContent(
         mockToolId,
         mockToolName,
@@ -141,15 +142,16 @@ describe('ExecuteRunUseCase - MCP Tool Integration', () => {
 
     it('should return error to LLM when MCP tool execution fails', async () => {
       // Arrange
-      const tool = new McpIntegrationTool({
+      const mockMcpTool = {
         name: mockToolName,
         description: 'MCP test tool',
-        parameters: {
+        inputSchema: {
           type: 'object',
           properties: { param1: { type: 'string' } },
         },
         integrationId: mockIntegrationId,
-      });
+      };
+      const tool = new McpIntegrationTool(mockMcpTool as any);
       const toolUseContent = new ToolUseMessageContent(
         mockToolId,
         mockToolName,
@@ -199,15 +201,16 @@ describe('ExecuteRunUseCase - MCP Tool Integration', () => {
 
     it('should return error to LLM when MCP tool times out', async () => {
       // Arrange
-      const tool = new McpIntegrationTool({
+      const mockMcpTool = {
         name: mockToolName,
         description: 'MCP test tool',
-        parameters: {
+        inputSchema: {
           type: 'object',
           properties: { param1: { type: 'string' } },
         },
         integrationId: mockIntegrationId,
-      });
+      };
+      const tool = new McpIntegrationTool(mockMcpTool as any);
       const toolUseContent = new ToolUseMessageContent(
         mockToolId,
         mockToolName,
@@ -281,15 +284,16 @@ describe('ExecuteRunUseCase - MCP Tool Integration', () => {
 
     it('should log MCP tool executions with correct metadata', async () => {
       // Arrange
-      const tool = new McpIntegrationTool({
+      const mockMcpTool = {
         name: mockToolName,
         description: 'MCP test tool',
-        parameters: {
+        inputSchema: {
           type: 'object',
           properties: { param1: { type: 'string' } },
         },
         integrationId: mockIntegrationId,
-      });
+      };
+      const tool = new McpIntegrationTool(mockMcpTool as any);
       const toolUseContent = new ToolUseMessageContent(
         mockToolId,
         mockToolName,
@@ -326,15 +330,16 @@ describe('ExecuteRunUseCase - MCP Tool Integration', () => {
     it('should extract integration ID from tool metadata correctly', async () => {
       // Arrange
       const customIntegrationId = randomUUID();
-      const tool = new McpIntegrationTool({
+      const mockMcpTool = {
         name: mockToolName,
         description: 'MCP test tool',
-        parameters: {
+        inputSchema: {
           type: 'object',
           properties: { param1: { type: 'string' } },
         },
         integrationId: customIntegrationId,
-      });
+      };
+      const tool = new McpIntegrationTool(mockMcpTool as any);
       const toolUseContent = new ToolUseMessageContent(
         mockToolId,
         mockToolName,

@@ -1,7 +1,7 @@
 import { PermittedProvidersRepository } from 'src/domain/models/application/ports/permitted-providers.repository';
 import { GetAllPermittedProvidersQuery } from './get-all-permitted-providers.query';
 import { Injectable, Logger } from '@nestjs/common';
-import { ModelError, UnexpectedModelError } from '../../models.errors';
+import { UnexpectedModelError } from '../../models.errors';
 import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelProviderLocation } from 'src/domain/models/domain/value-objects/model-provider-locations.enum';

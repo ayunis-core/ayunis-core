@@ -4,6 +4,10 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 
+interface RequestWithUser {
+  user?: ActiveUser;
+}
+
 @Injectable()
 export class SystemRolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -16,7 +20,11 @@ export class SystemRolesGuard implements CanActivate {
     if (!requiredRoles) {
       return true;
     }
-    const user = context.switchToHttp().getRequest().user as ActiveUser;
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const user = request.user;
+    if (!user) {
+      return false;
+    }
     return requiredRoles.some((role) => user.systemRole === role);
   }
 }

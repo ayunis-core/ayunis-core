@@ -4,7 +4,6 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UUID } from 'crypto';
 import { AgentRepository } from '../../ports/agent.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnassignMcpIntegrationFromAgentCommand } from './unassign-mcp-integration-from-agent.command';

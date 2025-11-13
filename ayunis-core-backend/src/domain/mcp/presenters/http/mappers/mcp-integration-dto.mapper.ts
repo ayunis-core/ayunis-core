@@ -27,7 +27,7 @@ export class McpIntegrationDtoMapper {
         : 'custom';
 
     const auth = integration.auth;
-    let hasCredentials = auth.hasCredentials();
+    const hasCredentials = auth.hasCredentials();
 
     const baseDto: McpIntegrationResponseDto = {
       id: integration.id,

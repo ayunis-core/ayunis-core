@@ -28,8 +28,8 @@ describe('Agent Entity', () => {
     it('should create an agent with mcpIntegrationIds parameter', () => {
       // Arrange
       const mcpIntegrationIds = [
-        '123e4567-e89b-12d3-a456-426614174010',
-        '123e4567-e89b-12d3-a456-426614174011',
+        '123e4567-e89b-12d3-a456-426614174010' as UUID,
+        '123e4567-e89b-12d3-a456-426614174011' as UUID,
       ];
 
       // Act
@@ -77,7 +77,9 @@ describe('Agent Entity', () => {
 
     it('should create agent with single mcpIntegrationId', () => {
       // Arrange
-      const mcpIntegrationIds = ['123e4567-e89b-12d3-a456-426614174010'];
+      const mcpIntegrationIds = [
+        '123e4567-e89b-12d3-a456-426614174010' as UUID,
+      ];
 
       // Act
       const agent = new Agent({
@@ -100,7 +102,7 @@ describe('Agent Entity', () => {
         instructions: 'Test instructions',
         model: createMockModel(),
         userId: mockUserId,
-        mcpIntegrationIds: ['123e4567-e89b-12d3-a456-426614174010'],
+        mcpIntegrationIds: ['123e4567-e89b-12d3-a456-426614174010' as UUID],
       });
 
       // Assert

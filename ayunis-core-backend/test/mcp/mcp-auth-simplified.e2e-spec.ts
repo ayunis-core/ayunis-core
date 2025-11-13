@@ -10,7 +10,6 @@ import { PredefinedMcpIntegrationSlug } from '../../src/domain/mcp/domain/value-
 import { McpIntegrationsRepositoryPort } from '../../src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { McpClientPort } from '../../src/domain/mcp/application/ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../../src/domain/mcp/application/ports/mcp-credential-encryption.port';
-import { ConnectionStatus } from '../../src/domain/mcp/domain/connection-status.enum';
 import { SourcesModule } from '../../src/domain/sources/sources.module';
 
 /**
@@ -127,7 +126,7 @@ describe('MCP Auth Simplified (e2e)', () => {
         authMethod: McpAuthMethod.NO_AUTH,
         isEnabled: true,
         isPredefined: true,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -171,7 +170,7 @@ describe('MCP Auth Simplified (e2e)', () => {
         authMethod: McpAuthMethod.NO_AUTH,
         isEnabled: true,
         isPredefined: true,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -204,14 +203,14 @@ describe('MCP Auth Simplified (e2e)', () => {
         authMethod: McpAuthMethod.NO_AUTH,
         isEnabled: true,
         isPredefined: true,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
       };
 
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       // Mock successful MCP connection
@@ -299,7 +298,7 @@ describe('MCP Auth Simplified (e2e)', () => {
         encryptedCredentials: `encrypted_${testToken}`,
         isEnabled: true,
         isPredefined: true,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -354,7 +353,7 @@ describe('MCP Auth Simplified (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       mockMcpClient.connect.mockResolvedValue(undefined);
@@ -412,7 +411,7 @@ describe('MCP Auth Simplified (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.UNHEALTHY,
+        connectionStatus: 'unhealthy',
       });
 
       // Mock connection failure due to invalid token
@@ -434,7 +433,7 @@ describe('MCP Auth Simplified (e2e)', () => {
       // Verify connection status was updated to UNHEALTHY
       expect(mockRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          connectionStatus: ConnectionStatus.UNHEALTHY,
+          connectionStatus: 'unhealthy',
         }),
       );
     });
@@ -494,7 +493,7 @@ describe('MCP Auth Simplified (e2e)', () => {
         encryptedCredentials: `encrypted_${testApiKey}`,
         isEnabled: true,
         isPredefined: false,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -544,7 +543,7 @@ describe('MCP Auth Simplified (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       mockMcpClient.connect.mockResolvedValue(undefined);
@@ -607,14 +606,14 @@ describe('MCP Auth Simplified (e2e)', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authMethod: McpAuthMethod.NO_AUTH,
         isEnabled: true,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
       };
 
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       mockMcpClient.connect.mockResolvedValue(undefined);
@@ -631,7 +630,7 @@ describe('MCP Auth Simplified (e2e)', () => {
 
       expect(mockRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          connectionStatus: ConnectionStatus.HEALTHY,
+          connectionStatus: 'healthy',
         }),
       );
     });
@@ -643,14 +642,14 @@ describe('MCP Auth Simplified (e2e)', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authMethod: McpAuthMethod.NO_AUTH,
         isEnabled: true,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
         orgId: mockOrgId,
       };
 
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.UNHEALTHY,
+        connectionStatus: 'unhealthy',
       });
 
       mockMcpClient.connect.mockRejectedValue(new Error('Connection refused'));
@@ -663,7 +662,7 @@ describe('MCP Auth Simplified (e2e)', () => {
 
       expect(mockRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          connectionStatus: ConnectionStatus.UNHEALTHY,
+          connectionStatus: 'unhealthy',
         }),
       );
     });
@@ -740,7 +739,7 @@ describe('MCP Auth Simplified (e2e)', () => {
         name: 'Locaboo Integration',
         authMethod: McpAuthMethod.BEARER_TOKEN,
         encryptedCredentials: 'encrypted_old_token',
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
         orgId: mockOrgId,
       };
 
@@ -748,7 +747,7 @@ describe('MCP Auth Simplified (e2e)', () => {
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
         encryptedCredentials: 'encrypted_new_token',
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
       });
 
       const updateDto = {

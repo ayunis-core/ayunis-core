@@ -72,4 +72,3 @@ export class BarChartTool extends DisplayableTool {
     return params as BarChartToolParameters;
   }
 }
-

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { randomUUID, UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { RetrieveMcpResourceUseCase } from './retrieve-mcp-resource.use-case';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -24,13 +24,15 @@ describe('RetrieveMcpResourceUseCase', () => {
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  const mockOrgId = randomUUID() as UUID;
-  const mockIntegrationId = randomUUID() as UUID;
+  const mockOrgId = randomUUID();
+  const mockIntegrationId = randomUUID();
   const mockResourceUri = 'dataset://sales-data.csv';
 
-  const buildIntegration = (overrides: Partial<
-    ConstructorParameters<typeof PredefinedMcpIntegration>[0]
-  > = {}) =>
+  const buildIntegration = (
+    overrides: Partial<
+      ConstructorParameters<typeof PredefinedMcpIntegration>[0]
+    > = {},
+  ) =>
     new PredefinedMcpIntegration({
       id: overrides.id ?? mockIntegrationId,
       name: overrides.name ?? 'Test Integration',
@@ -72,11 +74,9 @@ describe('RetrieveMcpResourceUseCase', () => {
     }).compile();
 
     useCase = module.get(RetrieveMcpResourceUseCase);
-    repository = module.get(McpIntegrationsRepositoryPort) as jest.Mocked<
-      McpIntegrationsRepositoryPort
-    >;
-    mcpClientService = module.get(McpClientService) as jest.Mocked<McpClientService>;
-    contextService = module.get(ContextService) as jest.Mocked<ContextService>;
+    repository = module.get(McpIntegrationsRepositoryPort);
+    mcpClientService = module.get(McpClientService);
+    contextService = module.get(ContextService);
 
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();

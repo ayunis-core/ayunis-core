@@ -7,7 +7,6 @@ import { HashTextCommand } from '../../../../hashing/application/use-cases/hash-
 import {
   UserAlreadyExistsError,
   UserInvalidInputError,
-  UserError,
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';

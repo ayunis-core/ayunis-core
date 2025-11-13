@@ -6,6 +6,7 @@ import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repositor
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { AuthTokens } from '../../../domain/auth-tokens.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { SystemRole } from '../../../../users/domain/value-objects/system-role.enum';
 import { UUID } from 'crypto';
 
 describe('LoginUseCase', () => {
@@ -40,6 +41,7 @@ describe('LoginUseCase', () => {
       email: 'test@example.com',
       emailVerified: false,
       role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
       orgId: 'org-id' as UUID,
       name: 'name',
     });

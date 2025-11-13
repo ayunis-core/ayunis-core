@@ -1,5 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { randomUUID, UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { UpdateMcpIntegrationUseCase } from './update-mcp-integration.use-case';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -10,7 +10,7 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 
 describe('UpdateMcpIntegrationUseCase', () => {
-  const orgId = randomUUID() as UUID;
+  const orgId = randomUUID();
   const integrationId = randomUUID();
 
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
@@ -44,7 +44,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
   it('updates name and rotates bearer token credentials', async () => {
     const auth = new BearerMcpIntegrationAuth({ authToken: 'encrypted-old' });
     const integration = new CustomMcpIntegration({
-      id: integrationId as UUID,
+      id: integrationId,
       orgId,
       name: 'Old Name',
       serverUrl: 'https://example.com/mcp',
@@ -76,7 +76,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       headerName: 'X-OLD',
     });
     const integration = new CustomMcpIntegration({
-      id: integrationId as UUID,
+      id: integrationId,
       orgId,
       name: 'With Header',
       serverUrl: 'https://example.com/mcp',

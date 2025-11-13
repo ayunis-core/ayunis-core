@@ -51,7 +51,6 @@ import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/us
 import { CreatePredefinedMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
 import { GetMcpIntegrationQuery } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.query';
-import { ListOrgMcpIntegrationsQuery } from '../../application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.query';
 import { UpdateMcpIntegrationCommand } from '../../application/use-cases/update-mcp-integration/update-mcp-integration.command';
 import { DeleteMcpIntegrationCommand } from '../../application/use-cases/delete-mcp-integration/delete-mcp-integration.command';
 import { EnableMcpIntegrationCommand } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.command';
@@ -174,9 +173,7 @@ export class McpIntegrationsController {
   async list(): Promise<McpIntegrationResponseDto[]> {
     this.logger.log('listOrgMcpIntegrations');
 
-    const integrations = await this.listOrgMcpIntegrationsUseCase.execute(
-      new ListOrgMcpIntegrationsQuery(),
-    );
+    const integrations = await this.listOrgMcpIntegrationsUseCase.execute();
 
     return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
   }

@@ -34,6 +34,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       );
 
       // Convert Buffer to Blob for Mistral API with the correct MIME type
+      // @ts-expect-error - file.fileData is a Buffer
       const fileBlob = new Blob([file.fileData], { type: file.fileType });
 
       const uploaded_pdf = await retryWithBackoff({

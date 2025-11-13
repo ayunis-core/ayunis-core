@@ -10,7 +10,6 @@ import { PredefinedMcpIntegrationSlug } from '../../src/domain/mcp/domain/value-
 import { McpIntegrationsRepositoryPort } from '../../src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { McpClientPort } from '../../src/domain/mcp/application/ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../../src/domain/mcp/application/ports/mcp-credential-encryption.port';
-import { ConnectionStatus } from '../../src/domain/mcp/domain/connection-status.enum';
 import { SourcesModule } from '../../src/domain/sources/sources.module';
 
 /**
@@ -334,7 +333,7 @@ describe('MCP Integration Types (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.UNHEALTHY,
+        connectionStatus: 'unhealthy',
       });
 
       // Simulate timeout
@@ -368,7 +367,7 @@ describe('MCP Integration Types (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       // Server with no capabilities
@@ -407,7 +406,7 @@ describe('MCP Integration Types (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       mockMcpClient.connect.mockResolvedValue(undefined);
@@ -452,7 +451,7 @@ describe('MCP Integration Types (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.UNHEALTHY,
+        connectionStatus: 'unhealthy',
       });
 
       mockMcpClient.connect.mockRejectedValue(
@@ -584,7 +583,7 @@ describe('MCP Integration Types (e2e)', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authMethod: McpAuthMethod.NO_AUTH,
         isEnabled: true,
-        connectionStatus: ConnectionStatus.UNKNOWN,
+        connectionStatus: 'pending',
         orgId: mockOrgId,
       };
 
@@ -607,7 +606,7 @@ describe('MCP Integration Types (e2e)', () => {
       mockRepository.findById.mockResolvedValue(mockIntegration);
       mockRepository.update.mockResolvedValue({
         ...mockIntegration,
-        connectionStatus: ConnectionStatus.HEALTHY,
+        connectionStatus: 'healthy',
       });
 
       mockMcpClient.connect.mockResolvedValue(undefined);

@@ -64,7 +64,7 @@ export class ListAgentMcpIntegrationsUseCase {
       // Fetch full integration entities for all IDs
       const integrations = await Promise.all(
         agent.mcpIntegrationIds.map((id) =>
-          this.mcpIntegrationsRepository.findById(id as any),
+          this.mcpIntegrationsRepository.findById(id),
         ),
       );
 

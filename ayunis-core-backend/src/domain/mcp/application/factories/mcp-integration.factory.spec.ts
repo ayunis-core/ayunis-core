@@ -63,6 +63,7 @@ describe('McpIntegrationFactory', () => {
           name,
           serverUrl,
           auth,
+          slug: undefined as any,
         }),
       ).toThrow('Predefined integrations require a slug');
     });

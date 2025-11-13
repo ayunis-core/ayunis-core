@@ -39,13 +39,14 @@ export class AddMcpIntegrations1762268803661 implements MigrationInterface {
     if (await queryRunner.hasColumn('sources', 'sourceId')) {
       await queryRunner.query(`ALTER TABLE "sources" DROP COLUMN "sourceId"`);
     }
-    const [{ exists: createdByTypeExists }] = await queryRunner.query(
+    const result = (await queryRunner.query(
       `SELECT EXISTS (
         SELECT 1
         FROM pg_type
         WHERE typname = 'sources_createdby_enum'
       ) AS "exists"`,
-    );
+    )) as Array<{ exists: boolean }>;
+    const createdByTypeExists = result[0]?.exists ?? false;
     if (!createdByTypeExists) {
       await queryRunner.query(
         `CREATE TYPE "public"."sources_createdby_enum" AS ENUM('user', 'llm', 'system')`,
@@ -116,13 +117,14 @@ export class AddMcpIntegrations1762268803661 implements MigrationInterface {
       `ALTER TABLE "subscriptions" ADD CONSTRAINT "FK_16519322477ef8b09d68ce04889" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(`ALTER TABLE "sources" DROP COLUMN "createdBy"`);
-    const [{ exists: createdByTypeExistsDown }] = await queryRunner.query(
+    const resultDown = (await queryRunner.query(
       `SELECT EXISTS (
         SELECT 1
         FROM pg_type
         WHERE typname = 'sources_createdby_enum'
       ) AS "exists"`,
-    );
+    )) as Array<{ exists: boolean }>;
+    const createdByTypeExistsDown = resultDown[0]?.exists ?? false;
     if (createdByTypeExistsDown) {
       await queryRunner.query(`DROP TYPE "public"."sources_createdby_enum"`);
     }

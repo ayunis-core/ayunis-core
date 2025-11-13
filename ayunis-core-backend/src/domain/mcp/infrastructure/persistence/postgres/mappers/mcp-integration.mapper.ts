@@ -21,7 +21,6 @@ import {
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
 } from '../schema';
-import { UUID } from 'crypto';
 
 /**
  * Mapper for converting between MCP integration domain entities and database records.
@@ -42,6 +41,9 @@ export class McpIntegrationMapper {
    * @throws Error if the record type is unknown
    */
   toDomain(record: McpIntegrationRecord): McpIntegration {
+    if (!record.auth) {
+      throw new Error('MCP integration record must have auth information');
+    }
     const auth = this.authFromRecord(record.auth);
 
     const baseParams = {
@@ -107,7 +109,7 @@ export class McpIntegrationMapper {
    * @throws Error if the entity type is unknown
    */
   toRecord(entity: McpIntegration): McpIntegrationRecord {
-    const authRecord = this.authToRecord(entity.auth, entity.id);
+    const authRecord = this.authToRecord(entity.auth);
     if (entity instanceof PredefinedMcpIntegration) {
       const record = new PredefinedMcpIntegrationRecord();
       record.id = entity.id;
@@ -206,10 +208,7 @@ export class McpIntegrationMapper {
     );
   }
 
-  private authToRecord(
-    auth: McpIntegrationAuth,
-    integrationId: UUID,
-  ): McpIntegrationAuthRecord {
+  private authToRecord(auth: McpIntegrationAuth): McpIntegrationAuthRecord {
     let record: McpIntegrationAuthRecord;
 
     if (auth instanceof NoAuthMcpIntegrationAuth) {

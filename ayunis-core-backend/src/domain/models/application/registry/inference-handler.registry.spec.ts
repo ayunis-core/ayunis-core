@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { InferenceHandlerRegistry } from './inference-handler.registry';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { InferenceHandler } from '../ports/inference.handler';
@@ -13,6 +14,13 @@ describe('InferenceHandlerRegistry', () => {
   beforeEach(async () => {
     mockMistralHandler = {} as InferenceHandler;
 
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        if (key === 'NODE_ENV') return 'development';
+        return null;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
@@ -20,13 +28,20 @@ describe('InferenceHandlerRegistry', () => {
           useValue: mockMistralHandler,
         },
         {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
+        {
           provide: InferenceHandlerRegistry,
-          useFactory: (mistralHandler: MistralInferenceHandler) => {
-            const registry = new InferenceHandlerRegistry();
+          useFactory: (
+            mistralHandler: MistralInferenceHandler,
+            configService: any,
+          ) => {
+            const registry = new InferenceHandlerRegistry(configService);
             registry.register(ModelProvider.MISTRAL, mistralHandler);
             return registry;
           },
-          inject: [MISTRAL_INFERENCE_HANDLER],
+          inject: [MISTRAL_INFERENCE_HANDLER, ConfigService],
         },
       ],
     }).compile();

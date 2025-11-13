@@ -7,7 +7,9 @@ export class OrgMapper {
     return new Org({
       id: entity.id,
       name: entity.name,
-      users: entity.users ? entity.users.map(UserMapper.toDomain) : [],
+      users: entity.users
+        ? entity.users.map((user) => UserMapper.toDomain(user))
+        : [],
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
@@ -18,7 +20,7 @@ export class OrgMapper {
     entity.id = domain.id;
     entity.name = domain.name;
     if (domain.users) {
-      entity.users = domain.users.map(UserMapper.toEntity);
+      entity.users = domain.users.map((user) => UserMapper.toEntity(user));
     }
     entity.createdAt = domain.createdAt;
     entity.updatedAt = domain.updatedAt;

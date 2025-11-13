@@ -40,7 +40,6 @@ import { CreateSubscriptionRequestDto } from './dto/create-subscription-request.
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
 import { SubscriptionResponseMapper } from './mappers/subscription-response.mapper';
 import { HasActiveSubscriptionUseCase } from '../../application/use-cases/has-active-subscription/has-active-subscription.use-case';
-import { HasActiveSubscriptionQuery } from '../../application/use-cases/has-active-subscription/has-active-subscription.query';
 import { UpdateSeatsCommand } from '../../application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsDto } from './dto/update-seats.dto';
 import { UpdateSeatsUseCase } from '../../application/use-cases/update-seats/update-seats.use-case';

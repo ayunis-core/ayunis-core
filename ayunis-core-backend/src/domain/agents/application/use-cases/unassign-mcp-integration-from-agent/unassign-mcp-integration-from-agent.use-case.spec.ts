@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 
 import { UnassignMcpIntegrationFromAgentUseCase } from './unassign-mcp-integration-from-agent.use-case';
 import { UnassignMcpIntegrationFromAgentCommand } from './unassign-mcp-integration-from-agent.command';
@@ -66,7 +66,7 @@ describe('UnassignMcpIntegrationFromAgentUseCase', () => {
   });
 
   describe('execute', () => {
-    const createMockAgent = (mcpIntegrationIds: string[] = []) => {
+    const createMockAgent = (mcpIntegrationIds: UUID[] = []) => {
       const mockModel = new PermittedLanguageModel({
         id: randomUUID(),
         orgId: randomUUID(),
