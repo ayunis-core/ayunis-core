@@ -95,14 +95,14 @@ run_fe_eslint() {
   print_section "Frontend • ESLint (staged TS)"
   printf "%s\n" "$FE_TS_STAGED" \
     | sed 's#^ayunis-core-frontend/##' \
-    | sed 's#^# - #' 
+    | sed 's#^# - #'
   set +e
   (
     cd ayunis-core-frontend >/dev/null 2>&1
     printf "%s" "$FE_TS_STAGED" \
       | sed 's#^ayunis-core-frontend/##' \
       | tr '\n' '\0' \
-      | xargs -0 npx --yes eslint --format stylish --max-warnings=0 $ESLINT_FIX_ARGS
+      | xargs -0 npx --yes eslint --format stylish --max-warnings=0 --no-warn-ignored $ESLINT_FIX_ARGS
   )
   STATUS=$?
   set -e

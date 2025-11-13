@@ -13,17 +13,17 @@ export interface IsCloudResponseDto {
 /**
  * The provider of the model
  */
-export type ModelWithConfigResponseDtoProvider = typeof ModelWithConfigResponseDtoProvider[keyof typeof ModelWithConfigResponseDtoProvider];
-
+export type ModelWithConfigResponseDtoProvider =
+  (typeof ModelWithConfigResponseDtoProvider)[keyof typeof ModelWithConfigResponseDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelWithConfigResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -62,28 +62,28 @@ export interface CreatePermittedModelDto {
 /**
  * The provider of the model
  */
-export type PermittedLanguageModelResponseDtoProvider = typeof PermittedLanguageModelResponseDtoProvider[keyof typeof PermittedLanguageModelResponseDtoProvider];
-
+export type PermittedLanguageModelResponseDtoProvider =
+  (typeof PermittedLanguageModelResponseDtoProvider)[keyof typeof PermittedLanguageModelResponseDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedLanguageModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 /**
  * The type of the model (always language)
  */
-export type PermittedLanguageModelResponseDtoType = typeof PermittedLanguageModelResponseDtoType[keyof typeof PermittedLanguageModelResponseDtoType];
-
+export type PermittedLanguageModelResponseDtoType =
+  (typeof PermittedLanguageModelResponseDtoType)[keyof typeof PermittedLanguageModelResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedLanguageModelResponseDtoType = {
-  language: 'language',
+  language: "language",
 } as const;
 
 export interface PermittedLanguageModelResponseDto {
@@ -118,32 +118,32 @@ export interface SetOrgDefaultModelDto {
 /**
  * The model provider identifier
  */
-export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoResponseDtoProvider[keyof typeof ModelProviderInfoResponseDtoProvider];
-
+export type ModelProviderInfoResponseDtoProvider =
+  (typeof ModelProviderInfoResponseDtoProvider)[keyof typeof ModelProviderInfoResponseDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelProviderInfoResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 /**
  * The location where the provider hosts their services
  */
-export type ModelProviderInfoResponseDtoHostedIn = typeof ModelProviderInfoResponseDtoHostedIn[keyof typeof ModelProviderInfoResponseDtoHostedIn];
-
+export type ModelProviderInfoResponseDtoHostedIn =
+  (typeof ModelProviderInfoResponseDtoHostedIn)[keyof typeof ModelProviderInfoResponseDtoHostedIn];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelProviderInfoResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
+  DE: "DE",
+  EU: "EU",
+  US: "US",
+  SELF_HOSTED: "SELF_HOSTED",
+  AYUNIS: "AYUNIS",
 } as const;
 
 export interface ModelProviderInfoResponseDto {
@@ -158,17 +158,17 @@ export interface ModelProviderInfoResponseDto {
 /**
  * The model provider to permit
  */
-export type CreatePermittedProviderDtoProvider = typeof CreatePermittedProviderDtoProvider[keyof typeof CreatePermittedProviderDtoProvider];
-
+export type CreatePermittedProviderDtoProvider =
+  (typeof CreatePermittedProviderDtoProvider)[keyof typeof CreatePermittedProviderDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreatePermittedProviderDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -179,32 +179,32 @@ export interface CreatePermittedProviderDto {
 /**
  * The permitted model provider
  */
-export type PermittedProviderResponseDtoProvider = typeof PermittedProviderResponseDtoProvider[keyof typeof PermittedProviderResponseDtoProvider];
-
+export type PermittedProviderResponseDtoProvider =
+  (typeof PermittedProviderResponseDtoProvider)[keyof typeof PermittedProviderResponseDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedProviderResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 /**
  * The location where the provider hosts their services
  */
-export type PermittedProviderResponseDtoHostedIn = typeof PermittedProviderResponseDtoHostedIn[keyof typeof PermittedProviderResponseDtoHostedIn];
-
+export type PermittedProviderResponseDtoHostedIn =
+  (typeof PermittedProviderResponseDtoHostedIn)[keyof typeof PermittedProviderResponseDtoHostedIn];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedProviderResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
+  DE: "DE",
+  EU: "EU",
+  US: "US",
+  SELF_HOSTED: "SELF_HOSTED",
+  AYUNIS: "AYUNIS",
 } as const;
 
 export interface PermittedProviderResponseDto {
@@ -219,17 +219,17 @@ export interface PermittedProviderResponseDto {
 /**
  * The model provider to remove
  */
-export type DeletePermittedProviderDtoProvider = typeof DeletePermittedProviderDtoProvider[keyof typeof DeletePermittedProviderDtoProvider];
-
+export type DeletePermittedProviderDtoProvider =
+  (typeof DeletePermittedProviderDtoProvider)[keyof typeof DeletePermittedProviderDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const DeletePermittedProviderDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -240,32 +240,32 @@ export interface DeletePermittedProviderDto {
 /**
  * The model provider identifier
  */
-export type ModelProviderWithPermittedStatusResponseDtoProvider = typeof ModelProviderWithPermittedStatusResponseDtoProvider[keyof typeof ModelProviderWithPermittedStatusResponseDtoProvider];
-
+export type ModelProviderWithPermittedStatusResponseDtoProvider =
+  (typeof ModelProviderWithPermittedStatusResponseDtoProvider)[keyof typeof ModelProviderWithPermittedStatusResponseDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelProviderWithPermittedStatusResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 /**
  * The location where the provider hosts their services
  */
-export type ModelProviderWithPermittedStatusResponseDtoHostedIn = typeof ModelProviderWithPermittedStatusResponseDtoHostedIn[keyof typeof ModelProviderWithPermittedStatusResponseDtoHostedIn];
-
+export type ModelProviderWithPermittedStatusResponseDtoHostedIn =
+  (typeof ModelProviderWithPermittedStatusResponseDtoHostedIn)[keyof typeof ModelProviderWithPermittedStatusResponseDtoHostedIn];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ModelProviderWithPermittedStatusResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
+  DE: "DE",
+  EU: "EU",
+  US: "US",
+  SELF_HOSTED: "SELF_HOSTED",
+  AYUNIS: "AYUNIS",
 } as const;
 
 export interface ModelProviderWithPermittedStatusResponseDto {
@@ -287,28 +287,28 @@ export interface EmbeddingModelEnabledResponseDto {
 /**
  * The provider of the model
  */
-export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddingModelResponseDtoProvider[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
-
+export type PermittedEmbeddingModelResponseDtoProvider =
+  (typeof PermittedEmbeddingModelResponseDtoProvider)[keyof typeof PermittedEmbeddingModelResponseDtoProvider];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedEmbeddingModelResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
 } as const;
 
 /**
  * The type of the model (always embedding)
  */
-export type PermittedEmbeddingModelResponseDtoType = typeof PermittedEmbeddingModelResponseDtoType[keyof typeof PermittedEmbeddingModelResponseDtoType];
-
+export type PermittedEmbeddingModelResponseDtoType =
+  (typeof PermittedEmbeddingModelResponseDtoType)[keyof typeof PermittedEmbeddingModelResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PermittedEmbeddingModelResponseDtoType = {
-  embedding: 'embedding',
+  embedding: "embedding",
 } as const;
 
 export interface PermittedEmbeddingModelResponseDto {
@@ -329,6 +329,272 @@ export interface PermittedEmbeddingModelResponseDto {
    * @nullable
    */
   dimensions: number | null;
+}
+
+/**
+ * The provider of the model
+ */
+export type CreateLanguageModelRequestDtoProvider =
+  (typeof CreateLanguageModelRequestDtoProvider)[keyof typeof CreateLanguageModelRequestDtoProvider];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateLanguageModelRequestDtoProvider = {
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
+} as const;
+
+export interface CreateLanguageModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: CreateLanguageModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** Whether the model is archived */
+  isArchived: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type UpdateLanguageModelRequestDtoProvider =
+  (typeof UpdateLanguageModelRequestDtoProvider)[keyof typeof UpdateLanguageModelRequestDtoProvider];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateLanguageModelRequestDtoProvider = {
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
+} as const;
+
+export interface UpdateLanguageModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: UpdateLanguageModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** Whether the model is archived */
+  isArchived: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type CreateEmbeddingModelRequestDtoProvider =
+  (typeof CreateEmbeddingModelRequestDtoProvider)[keyof typeof CreateEmbeddingModelRequestDtoProvider];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateEmbeddingModelRequestDtoProvider = {
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type CreateEmbeddingModelRequestDtoDimensions =
+  (typeof CreateEmbeddingModelRequestDtoDimensions)[keyof typeof CreateEmbeddingModelRequestDtoDimensions];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateEmbeddingModelRequestDtoDimensions = {
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface CreateEmbeddingModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: CreateEmbeddingModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The dimensions of the embedding */
+  dimensions: CreateEmbeddingModelRequestDtoDimensions;
+  /** Whether the model is archived */
+  isArchived: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type UpdateEmbeddingModelRequestDtoProvider =
+  (typeof UpdateEmbeddingModelRequestDtoProvider)[keyof typeof UpdateEmbeddingModelRequestDtoProvider];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateEmbeddingModelRequestDtoProvider = {
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type UpdateEmbeddingModelRequestDtoDimensions =
+  (typeof UpdateEmbeddingModelRequestDtoDimensions)[keyof typeof UpdateEmbeddingModelRequestDtoDimensions];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateEmbeddingModelRequestDtoDimensions = {
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface UpdateEmbeddingModelRequestDto {
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: UpdateEmbeddingModelRequestDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The dimensions of the embedding */
+  dimensions: UpdateEmbeddingModelRequestDtoDimensions;
+  /** Whether the model is archived */
+  isArchived: boolean;
+}
+
+/**
+ * The provider of the model
+ */
+export type LanguageModelResponseDtoProvider =
+  (typeof LanguageModelResponseDtoProvider)[keyof typeof LanguageModelResponseDtoProvider];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoProvider = {
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
+} as const;
+
+/**
+ * The type of the model (always language)
+ */
+export type LanguageModelResponseDtoType =
+  (typeof LanguageModelResponseDtoType)[keyof typeof LanguageModelResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const LanguageModelResponseDtoType = {
+  language: "language",
+} as const;
+
+export interface LanguageModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: LanguageModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always language) */
+  type: LanguageModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** Whether the model supports streaming */
+  canStream: boolean;
+  /** Whether the model supports tool use */
+  canUseTools: boolean;
+  /** Whether the model has reasoning capabilities */
+  isReasoning: boolean;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
+}
+
+/**
+ * The provider of the model
+ */
+export type EmbeddingModelResponseDtoProvider =
+  (typeof EmbeddingModelResponseDtoProvider)[keyof typeof EmbeddingModelResponseDtoProvider];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoProvider = {
+  openai: "openai",
+  anthropic: "anthropic",
+  mistral: "mistral",
+  ollama: "ollama",
+  synaforce: "synaforce",
+  ayunis: "ayunis",
+} as const;
+
+/**
+ * The type of the model (always embedding)
+ */
+export type EmbeddingModelResponseDtoType =
+  (typeof EmbeddingModelResponseDtoType)[keyof typeof EmbeddingModelResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoType = {
+  embedding: "embedding",
+} as const;
+
+/**
+ * The dimensions of the embedding
+ */
+export type EmbeddingModelResponseDtoDimensions =
+  (typeof EmbeddingModelResponseDtoDimensions)[keyof typeof EmbeddingModelResponseDtoDimensions];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmbeddingModelResponseDtoDimensions = {
+  DIMENSION_1024: "DIMENSION_1024",
+  DIMENSION_1536: "DIMENSION_1536",
+  DIMENSION_2560: "DIMENSION_2560",
+  NUMBER_1024: 1024,
+  NUMBER_1536: 1536,
+  NUMBER_2560: 2560,
+} as const;
+
+export interface EmbeddingModelResponseDto {
+  /** The unique identifier of the model */
+  id: string;
+  /** The name of the model */
+  name: string;
+  /** The provider of the model */
+  provider: EmbeddingModelResponseDtoProvider;
+  /** The display name of the model */
+  displayName: string;
+  /** The type of the model (always embedding) */
+  type: EmbeddingModelResponseDtoType;
+  /** Whether the model is archived */
+  isArchived: boolean;
+  /** The dimensions of the embedding */
+  dimensions: EmbeddingModelResponseDtoDimensions;
+  /** The date the model was created */
+  createdAt: string;
+  /** The date the model was last updated */
+  updatedAt: string;
 }
 
 export interface CreateOrgRequestDto {
@@ -353,13 +619,13 @@ export interface SuperAdminOrgListResponseDto {
 /**
  * User role
  */
-export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserResponseDtoRole];
-
+export type UserResponseDtoRole =
+  (typeof UserResponseDtoRole)[keyof typeof UserResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 export interface UserResponseDto {
@@ -385,13 +651,13 @@ export interface UsersListResponseDto {
 /**
  * New role for the user
  */
-export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof UpdateUserRoleDtoRole];
-
+export type UpdateUserRoleDtoRole =
+  (typeof UpdateUserRoleDtoRole)[keyof typeof UpdateUserRoleDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateUserRoleDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 export interface UpdateUserRoleDto {
@@ -459,13 +725,13 @@ export interface ResetPasswordDto {
 /**
  * Role for the user
  */
-export type CreateUserDtoRole = typeof CreateUserDtoRole[keyof typeof CreateUserDtoRole];
-
+export type CreateUserDtoRole =
+  (typeof CreateUserDtoRole)[keyof typeof CreateUserDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateUserDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 export interface CreateUserDto {
@@ -482,13 +748,13 @@ export interface CreateUserDto {
 /**
  * Role to assign to the invited user
  */
-export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof CreateInviteDtoRole];
-
+export type CreateInviteDtoRole =
+  (typeof CreateInviteDtoRole)[keyof typeof CreateInviteDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateInviteDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 export interface CreateInviteDto {
@@ -509,26 +775,26 @@ export interface CreateInviteResponseDto {
 /**
  * Role assigned to the invited user
  */
-export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
-
+export type InviteResponseDtoRole =
+  (typeof InviteResponseDtoRole)[keyof typeof InviteResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 /**
  * Current status of the invite
  */
-export type InviteResponseDtoStatus = typeof InviteResponseDtoStatus[keyof typeof InviteResponseDtoStatus];
-
+export type InviteResponseDtoStatus =
+  (typeof InviteResponseDtoStatus)[keyof typeof InviteResponseDtoStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
+  pending: "pending",
+  accepted: "accepted",
+  expired: "expired",
 } as const;
 
 export interface InviteResponseDto {
@@ -551,26 +817,26 @@ export interface InviteResponseDto {
 /**
  * Role assigned to the invited user
  */
-export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[keyof typeof InviteDetailResponseDtoRole];
-
+export type InviteDetailResponseDtoRole =
+  (typeof InviteDetailResponseDtoRole)[keyof typeof InviteDetailResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteDetailResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 /**
  * Current status of the invite
  */
-export type InviteDetailResponseDtoStatus = typeof InviteDetailResponseDtoStatus[keyof typeof InviteDetailResponseDtoStatus];
-
+export type InviteDetailResponseDtoStatus =
+  (typeof InviteDetailResponseDtoStatus)[keyof typeof InviteDetailResponseDtoStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteDetailResponseDtoStatus = {
-  pending: 'pending',
-  accepted: 'accepted',
-  expired: 'expired',
+  pending: "pending",
+  accepted: "accepted",
+  expired: "expired",
 } as const;
 
 export interface InviteDetailResponseDto {
@@ -637,13 +903,13 @@ export type SubscriptionResponseDtoCancelledAt = { [key: string]: unknown };
 /**
  * Renewal cycle of the subscription
  */
-export type SubscriptionResponseDtoRenewalCycle = typeof SubscriptionResponseDtoRenewalCycle[keyof typeof SubscriptionResponseDtoRenewalCycle];
-
+export type SubscriptionResponseDtoRenewalCycle =
+  (typeof SubscriptionResponseDtoRenewalCycle)[keyof typeof SubscriptionResponseDtoRenewalCycle];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SubscriptionResponseDtoRenewalCycle = {
-  monthly: 'monthly',
-  yearly: 'yearly',
+  monthly: "monthly",
+  yearly: "yearly",
 } as const;
 
 export interface SubscriptionResponseDto {
@@ -724,7 +990,9 @@ export interface PriceResponseDto {
   pricePerSeatMonthly: number;
 }
 
-export interface UpdateSeatsDto { [key: string]: unknown }
+export interface UpdateSeatsDto {
+  [key: string]: unknown;
+}
 
 export interface CreateThreadDto {
   /** The id of the model */
@@ -736,12 +1004,12 @@ export interface CreateThreadDto {
 /**
  * Role of the message sender
  */
-export type UserMessageResponseDtoRole = typeof UserMessageResponseDtoRole[keyof typeof UserMessageResponseDtoRole];
-
+export type UserMessageResponseDtoRole =
+  (typeof UserMessageResponseDtoRole)[keyof typeof UserMessageResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserMessageResponseDtoRole = {
-  user: 'user',
+  user: "user",
 } as const;
 
 export interface UserMessageResponseDto {
@@ -760,12 +1028,12 @@ export interface UserMessageResponseDto {
 /**
  * Role of the message sender
  */
-export type SystemMessageResponseDtoRole = typeof SystemMessageResponseDtoRole[keyof typeof SystemMessageResponseDtoRole];
-
+export type SystemMessageResponseDtoRole =
+  (typeof SystemMessageResponseDtoRole)[keyof typeof SystemMessageResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SystemMessageResponseDtoRole = {
-  system: 'system',
+  system: "system",
 } as const;
 
 export interface SystemMessageResponseDto {
@@ -784,15 +1052,18 @@ export interface SystemMessageResponseDto {
 /**
  * Role of the message sender
  */
-export type AssistantMessageResponseDtoRole = typeof AssistantMessageResponseDtoRole[keyof typeof AssistantMessageResponseDtoRole];
-
+export type AssistantMessageResponseDtoRole =
+  (typeof AssistantMessageResponseDtoRole)[keyof typeof AssistantMessageResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AssistantMessageResponseDtoRole = {
-  assistant: 'assistant',
+  assistant: "assistant",
 } as const;
 
-export type AssistantMessageResponseDtoContentItem = TextMessageContentResponseDto | ToolUseMessageContentResponseDto | ThinkingMessageContentResponseDto;
+export type AssistantMessageResponseDtoContentItem =
+  | TextMessageContentResponseDto
+  | ToolUseMessageContentResponseDto
+  | ThinkingMessageContentResponseDto;
 
 export interface AssistantMessageResponseDto {
   /** Unique identifier for the message */
@@ -810,12 +1081,12 @@ export interface AssistantMessageResponseDto {
 /**
  * Role of the message sender
  */
-export type ToolResultMessageResponseDtoRole = typeof ToolResultMessageResponseDtoRole[keyof typeof ToolResultMessageResponseDtoRole];
-
+export type ToolResultMessageResponseDtoRole =
+  (typeof ToolResultMessageResponseDtoRole)[keyof typeof ToolResultMessageResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ToolResultMessageResponseDtoRole = {
-  tool: 'tool',
+  tool: "tool",
 } as const;
 
 export interface ToolResultMessageResponseDto {
@@ -834,15 +1105,15 @@ export interface ToolResultMessageResponseDto {
 /**
  * Type of the message content
  */
-export type TextMessageContentResponseDtoType = typeof TextMessageContentResponseDtoType[keyof typeof TextMessageContentResponseDtoType];
-
+export type TextMessageContentResponseDtoType =
+  (typeof TextMessageContentResponseDtoType)[keyof typeof TextMessageContentResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TextMessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
+  text: "text",
+  tool_use: "tool_use",
+  tool_result: "tool_result",
+  thinking: "thinking",
 } as const;
 
 export interface TextMessageContentResponseDto {
@@ -855,15 +1126,15 @@ export interface TextMessageContentResponseDto {
 /**
  * Type of the message content
  */
-export type ToolUseMessageContentResponseDtoType = typeof ToolUseMessageContentResponseDtoType[keyof typeof ToolUseMessageContentResponseDtoType];
-
+export type ToolUseMessageContentResponseDtoType =
+  (typeof ToolUseMessageContentResponseDtoType)[keyof typeof ToolUseMessageContentResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ToolUseMessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
+  text: "text",
+  tool_use: "tool_use",
+  tool_result: "tool_result",
+  thinking: "thinking",
 } as const;
 
 /**
@@ -885,15 +1156,15 @@ export interface ToolUseMessageContentResponseDto {
 /**
  * Type of the message content
  */
-export type ToolResultMessageContentResponseDtoType = typeof ToolResultMessageContentResponseDtoType[keyof typeof ToolResultMessageContentResponseDtoType];
-
+export type ToolResultMessageContentResponseDtoType =
+  (typeof ToolResultMessageContentResponseDtoType)[keyof typeof ToolResultMessageContentResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ToolResultMessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
+  text: "text",
+  tool_use: "tool_use",
+  tool_result: "tool_result",
+  thinking: "thinking",
 } as const;
 
 export interface ToolResultMessageContentResponseDto {
@@ -910,15 +1181,15 @@ export interface ToolResultMessageContentResponseDto {
 /**
  * Type of the message content
  */
-export type ThinkingMessageContentResponseDtoType = typeof ThinkingMessageContentResponseDtoType[keyof typeof ThinkingMessageContentResponseDtoType];
-
+export type ThinkingMessageContentResponseDtoType =
+  (typeof ThinkingMessageContentResponseDtoType)[keyof typeof ThinkingMessageContentResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ThinkingMessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
+  text: "text",
+  tool_use: "tool_use",
+  tool_result: "tool_result",
+  thinking: "thinking",
 } as const;
 
 export interface ThinkingMessageContentResponseDto {
@@ -942,26 +1213,26 @@ export interface ModelResponseDto {
 /**
  * Type of source
  */
-export type SourceResponseDtoType = typeof SourceResponseDtoType[keyof typeof SourceResponseDtoType];
-
+export type SourceResponseDtoType =
+  (typeof SourceResponseDtoType)[keyof typeof SourceResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SourceResponseDtoType = {
-  text: 'text',
-  data: 'data',
+  text: "text",
+  data: "data",
 } as const;
 
 /**
  * Creator of the source
  */
-export type SourceResponseDtoCreatedBy = typeof SourceResponseDtoCreatedBy[keyof typeof SourceResponseDtoCreatedBy];
-
+export type SourceResponseDtoCreatedBy =
+  (typeof SourceResponseDtoCreatedBy)[keyof typeof SourceResponseDtoCreatedBy];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SourceResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
+  user: "user",
+  llm: "llm",
+  system: "system",
 } as const;
 
 export interface SourceResponseDto {
@@ -984,49 +1255,49 @@ export interface SourceResponseDto {
 /**
  * Type of source
  */
-export type FileSourceResponseDtoType = typeof FileSourceResponseDtoType[keyof typeof FileSourceResponseDtoType];
-
+export type FileSourceResponseDtoType =
+  (typeof FileSourceResponseDtoType)[keyof typeof FileSourceResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoType = {
-  text: 'text',
-  data: 'data',
+  text: "text",
+  data: "data",
 } as const;
 
 /**
  * Creator of the source
  */
-export type FileSourceResponseDtoCreatedBy = typeof FileSourceResponseDtoCreatedBy[keyof typeof FileSourceResponseDtoCreatedBy];
-
+export type FileSourceResponseDtoCreatedBy =
+  (typeof FileSourceResponseDtoCreatedBy)[keyof typeof FileSourceResponseDtoCreatedBy];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
+  user: "user",
+  llm: "llm",
+  system: "system",
 } as const;
 
 /**
  * Type of text
  */
-export type FileSourceResponseDtoTextType = typeof FileSourceResponseDtoTextType[keyof typeof FileSourceResponseDtoTextType];
-
+export type FileSourceResponseDtoTextType =
+  (typeof FileSourceResponseDtoTextType)[keyof typeof FileSourceResponseDtoTextType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoTextType = {
-  file: 'file',
-  web: 'web',
+  file: "file",
+  web: "web",
 } as const;
 
 /**
  * Type of file
  */
-export type FileSourceResponseDtoFileType = typeof FileSourceResponseDtoFileType[keyof typeof FileSourceResponseDtoFileType];
-
+export type FileSourceResponseDtoFileType =
+  (typeof FileSourceResponseDtoFileType)[keyof typeof FileSourceResponseDtoFileType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoFileType = {
-  pdf: 'pdf',
+  pdf: "pdf",
 } as const;
 
 export interface FileSourceResponseDto {
@@ -1053,38 +1324,38 @@ export interface FileSourceResponseDto {
 /**
  * Type of source
  */
-export type UrlSourceResponseDtoType = typeof UrlSourceResponseDtoType[keyof typeof UrlSourceResponseDtoType];
-
+export type UrlSourceResponseDtoType =
+  (typeof UrlSourceResponseDtoType)[keyof typeof UrlSourceResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UrlSourceResponseDtoType = {
-  text: 'text',
-  data: 'data',
+  text: "text",
+  data: "data",
 } as const;
 
 /**
  * Creator of the source
  */
-export type UrlSourceResponseDtoCreatedBy = typeof UrlSourceResponseDtoCreatedBy[keyof typeof UrlSourceResponseDtoCreatedBy];
-
+export type UrlSourceResponseDtoCreatedBy =
+  (typeof UrlSourceResponseDtoCreatedBy)[keyof typeof UrlSourceResponseDtoCreatedBy];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UrlSourceResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
+  user: "user",
+  llm: "llm",
+  system: "system",
 } as const;
 
 /**
  * Type of text
  */
-export type UrlSourceResponseDtoTextType = typeof UrlSourceResponseDtoTextType[keyof typeof UrlSourceResponseDtoTextType];
-
+export type UrlSourceResponseDtoTextType =
+  (typeof UrlSourceResponseDtoTextType)[keyof typeof UrlSourceResponseDtoTextType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UrlSourceResponseDtoTextType = {
-  file: 'file',
-  web: 'web',
+  file: "file",
+  web: "web",
 } as const;
 
 export interface UrlSourceResponseDto {
@@ -1111,37 +1382,37 @@ export interface UrlSourceResponseDto {
 /**
  * Type of source
  */
-export type CSVDataSourceResponseDtoType = typeof CSVDataSourceResponseDtoType[keyof typeof CSVDataSourceResponseDtoType];
-
+export type CSVDataSourceResponseDtoType =
+  (typeof CSVDataSourceResponseDtoType)[keyof typeof CSVDataSourceResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CSVDataSourceResponseDtoType = {
-  text: 'text',
-  data: 'data',
+  text: "text",
+  data: "data",
 } as const;
 
 /**
  * Creator of the source
  */
-export type CSVDataSourceResponseDtoCreatedBy = typeof CSVDataSourceResponseDtoCreatedBy[keyof typeof CSVDataSourceResponseDtoCreatedBy];
-
+export type CSVDataSourceResponseDtoCreatedBy =
+  (typeof CSVDataSourceResponseDtoCreatedBy)[keyof typeof CSVDataSourceResponseDtoCreatedBy];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CSVDataSourceResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
+  user: "user",
+  llm: "llm",
+  system: "system",
 } as const;
 
 /**
  * Type of data
  */
-export type CSVDataSourceResponseDtoDataType = typeof CSVDataSourceResponseDtoDataType[keyof typeof CSVDataSourceResponseDtoDataType];
-
+export type CSVDataSourceResponseDtoDataType =
+  (typeof CSVDataSourceResponseDtoDataType)[keyof typeof CSVDataSourceResponseDtoDataType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CSVDataSourceResponseDtoDataType = {
-  csv: 'csv',
+  csv: "csv",
 } as const;
 
 /**
@@ -1175,7 +1446,11 @@ export interface CSVDataSourceResponseDto {
   data: CSVDataSourceResponseDtoData;
 }
 
-export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
+export type GetThreadResponseDtoMessagesItem =
+  | UserMessageResponseDto
+  | SystemMessageResponseDto
+  | AssistantMessageResponseDto
+  | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
   /** Unique identifier for the thread */
@@ -1222,24 +1497,24 @@ export interface UpdateThreadAgentDto {
 /**
  * The type of tool to assign
  */
-export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
-
+export type ToolAssignmentDtoType =
+  (typeof ToolAssignmentDtoType)[keyof typeof ToolAssignmentDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ToolAssignmentDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
+  http: "http",
+  source_query: "source_query",
+  internet_search: "internet_search",
+  website_content: "website_content",
+  send_email: "send_email",
+  create_calendar_event: "create_calendar_event",
+  code_execution: "code_execution",
+  bar_chart: "bar_chart",
+  line_chart: "line_chart",
+  pie_chart: "pie_chart",
+  mcp_tool: "mcp_tool",
+  mcp_resource: "mcp_resource",
+  mcp_prompt: "mcp_prompt",
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1267,24 +1542,24 @@ export interface CreateAgentDto {
 /**
  * The type of the tool
  */
-export type ToolResponseDtoType = typeof ToolResponseDtoType[keyof typeof ToolResponseDtoType];
-
+export type ToolResponseDtoType =
+  (typeof ToolResponseDtoType)[keyof typeof ToolResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ToolResponseDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
+  http: "http",
+  source_query: "source_query",
+  internet_search: "internet_search",
+  website_content: "website_content",
+  send_email: "send_email",
+  create_calendar_event: "create_calendar_event",
+  code_execution: "code_execution",
+  bar_chart: "bar_chart",
+  line_chart: "line_chart",
+  pie_chart: "pie_chart",
+  mcp_tool: "mcp_tool",
+  mcp_resource: "mcp_resource",
+  mcp_prompt: "mcp_prompt",
 } as const;
 
 export interface ToolResponseDto {
@@ -1295,13 +1570,13 @@ export interface ToolResponseDto {
 /**
  * The type of source
  */
-export type AgentSourceResponseDtoType = typeof AgentSourceResponseDtoType[keyof typeof AgentSourceResponseDtoType];
-
+export type AgentSourceResponseDtoType =
+  (typeof AgentSourceResponseDtoType)[keyof typeof AgentSourceResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AgentSourceResponseDtoType = {
-  file: 'file',
-  url: 'url',
+  file: "file",
+  url: "url",
 } as const;
 
 export interface AgentSourceResponseDto {
@@ -1352,41 +1627,41 @@ export interface UpdateAgentDto {
 /**
  * Type of integration
  */
-export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType[keyof typeof McpIntegrationResponseDtoType];
-
+export type McpIntegrationResponseDtoType =
+  (typeof McpIntegrationResponseDtoType)[keyof typeof McpIntegrationResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const McpIntegrationResponseDtoType = {
-  predefined: 'predefined',
-  custom: 'custom',
+  predefined: "predefined",
+  custom: "custom",
 } as const;
 
 /**
  * Authentication method used
  */
-export type McpIntegrationResponseDtoAuthMethod = typeof McpIntegrationResponseDtoAuthMethod[keyof typeof McpIntegrationResponseDtoAuthMethod];
-
+export type McpIntegrationResponseDtoAuthMethod =
+  (typeof McpIntegrationResponseDtoAuthMethod)[keyof typeof McpIntegrationResponseDtoAuthMethod];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const McpIntegrationResponseDtoAuthMethod = {
-  NO_AUTH: 'NO_AUTH',
-  BEARER_TOKEN: 'BEARER_TOKEN',
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
-  OAUTH: 'OAUTH',
+  NO_AUTH: "NO_AUTH",
+  BEARER_TOKEN: "BEARER_TOKEN",
+  CUSTOM_HEADER: "CUSTOM_HEADER",
+  OAUTH: "OAUTH",
 } as const;
 
 /**
  * Connection status of the integration
  */
-export type McpIntegrationResponseDtoConnectionStatus = typeof McpIntegrationResponseDtoConnectionStatus[keyof typeof McpIntegrationResponseDtoConnectionStatus];
-
+export type McpIntegrationResponseDtoConnectionStatus =
+  (typeof McpIntegrationResponseDtoConnectionStatus)[keyof typeof McpIntegrationResponseDtoConnectionStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const McpIntegrationResponseDtoConnectionStatus = {
-  connected: 'connected',
-  disconnected: 'disconnected',
-  error: 'error',
-  unknown: 'unknown',
+  connected: "connected",
+  disconnected: "disconnected",
+  error: "error",
+  unknown: "unknown",
 } as const;
 
 export interface McpIntegrationResponseDto {
@@ -1425,14 +1700,14 @@ export interface McpIntegrationResponseDto {
 /**
  * The name/type of the credential field
  */
-export type ConfigValueDtoName = typeof ConfigValueDtoName[keyof typeof ConfigValueDtoName];
-
+export type ConfigValueDtoName =
+  (typeof ConfigValueDtoName)[keyof typeof ConfigValueDtoName];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ConfigValueDtoName = {
-  token: 'token',
-  clientId: 'clientId',
-  clientSecret: 'clientSecret',
+  token: "token",
+  clientId: "clientId",
+  clientSecret: "clientSecret",
 } as const;
 
 export interface ConfigValueDto {
@@ -1445,13 +1720,13 @@ export interface ConfigValueDto {
 /**
  * The predefined integration slug
  */
-export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrationDtoSlug[keyof typeof CreatePredefinedIntegrationDtoSlug];
-
+export type CreatePredefinedIntegrationDtoSlug =
+  (typeof CreatePredefinedIntegrationDtoSlug)[keyof typeof CreatePredefinedIntegrationDtoSlug];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreatePredefinedIntegrationDtoSlug = {
-  TEST: 'TEST',
-  LOCABOO: 'LOCABOO',
+  TEST: "TEST",
+  LOCABOO: "LOCABOO",
 } as const;
 
 export interface CreatePredefinedIntegrationDto {
@@ -1465,15 +1740,16 @@ export interface CreatePredefinedIntegrationDto {
  * Authentication method for the MCP server
  * @nullable
  */
-export type CreateCustomIntegrationDtoAuthMethod = typeof CreateCustomIntegrationDtoAuthMethod[keyof typeof CreateCustomIntegrationDtoAuthMethod] | null;
-
+export type CreateCustomIntegrationDtoAuthMethod =
+  | (typeof CreateCustomIntegrationDtoAuthMethod)[keyof typeof CreateCustomIntegrationDtoAuthMethod]
+  | null;
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateCustomIntegrationDtoAuthMethod = {
-  NO_AUTH: 'NO_AUTH',
-  BEARER_TOKEN: 'BEARER_TOKEN',
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
-  OAUTH: 'OAUTH',
+  NO_AUTH: "NO_AUTH",
+  BEARER_TOKEN: "BEARER_TOKEN",
+  CUSTOM_HEADER: "CUSTOM_HEADER",
+  OAUTH: "OAUTH",
 } as const;
 
 export interface CreateCustomIntegrationDto {
@@ -1499,14 +1775,14 @@ export interface CreateCustomIntegrationDto {
 /**
  * Input type (text or password)
  */
-export type CredentialFieldDtoType = typeof CredentialFieldDtoType[keyof typeof CredentialFieldDtoType];
-
+export type CredentialFieldDtoType =
+  (typeof CredentialFieldDtoType)[keyof typeof CredentialFieldDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CredentialFieldDtoType = {
-  token: 'token',
-  clientId: 'clientId',
-  clientSecret: 'clientSecret',
+  token: "token",
+  clientId: "clientId",
+  clientSecret: "clientSecret",
 } as const;
 
 export interface CredentialFieldDto {
@@ -1523,15 +1799,15 @@ export interface CredentialFieldDto {
 /**
  * Authentication method for this integration
  */
-export type PredefinedConfigResponseDtoAuthType = typeof PredefinedConfigResponseDtoAuthType[keyof typeof PredefinedConfigResponseDtoAuthType];
-
+export type PredefinedConfigResponseDtoAuthType =
+  (typeof PredefinedConfigResponseDtoAuthType)[keyof typeof PredefinedConfigResponseDtoAuthType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PredefinedConfigResponseDtoAuthType = {
-  NO_AUTH: 'NO_AUTH',
-  BEARER_TOKEN: 'BEARER_TOKEN',
-  API_KEY: 'API_KEY',
-  OAUTH: 'OAUTH',
+  NO_AUTH: "NO_AUTH",
+  BEARER_TOKEN: "BEARER_TOKEN",
+  API_KEY: "API_KEY",
+  OAUTH: "OAUTH",
 } as const;
 
 export interface PredefinedConfigResponseDto {
@@ -1584,15 +1860,15 @@ export interface RetrieveUrlDto {
 /**
  * Type of the message content
  */
-export type MessageContentResponseDtoType = typeof MessageContentResponseDtoType[keyof typeof MessageContentResponseDtoType];
-
+export type MessageContentResponseDtoType =
+  (typeof MessageContentResponseDtoType)[keyof typeof MessageContentResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MessageContentResponseDtoType = {
-  text: 'text',
-  tool_use: 'tool_use',
-  tool_result: 'tool_result',
-  thinking: 'thinking',
+  text: "text",
+  tool_use: "tool_use",
+  tool_result: "tool_result",
+  thinking: "thinking",
 } as const;
 
 export interface MessageContentResponseDto {
@@ -1603,12 +1879,12 @@ export interface MessageContentResponseDto {
 /**
  * Response type identifier
  */
-export type RunSessionResponseDtoType = typeof RunSessionResponseDtoType[keyof typeof RunSessionResponseDtoType];
-
+export type RunSessionResponseDtoType =
+  (typeof RunSessionResponseDtoType)[keyof typeof RunSessionResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const RunSessionResponseDtoType = {
-  session: 'session',
+  session: "session",
 } as const;
 
 export interface RunSessionResponseDto {
@@ -1627,18 +1903,22 @@ export interface RunSessionResponseDto {
 /**
  * Response type identifier
  */
-export type RunMessageResponseDtoType = typeof RunMessageResponseDtoType[keyof typeof RunMessageResponseDtoType];
-
+export type RunMessageResponseDtoType =
+  (typeof RunMessageResponseDtoType)[keyof typeof RunMessageResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const RunMessageResponseDtoType = {
-  message: 'message',
+  message: "message",
 } as const;
 
 /**
  * The message data
  */
-export type RunMessageResponseDtoMessage = UserMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto | SystemMessageResponseDto;
+export type RunMessageResponseDtoMessage =
+  | UserMessageResponseDto
+  | AssistantMessageResponseDto
+  | ToolResultMessageResponseDto
+  | SystemMessageResponseDto;
 
 export interface RunMessageResponseDto {
   /** Response type identifier */
@@ -1654,12 +1934,12 @@ export interface RunMessageResponseDto {
 /**
  * Response type identifier
  */
-export type RunErrorResponseDtoType = typeof RunErrorResponseDtoType[keyof typeof RunErrorResponseDtoType];
-
+export type RunErrorResponseDtoType =
+  (typeof RunErrorResponseDtoType)[keyof typeof RunErrorResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const RunErrorResponseDtoType = {
-  error: 'error',
+  error: "error",
 } as const;
 
 /**
@@ -1685,23 +1965,23 @@ export interface RunErrorResponseDto {
 /**
  * Response type identifier
  */
-export type RunThreadResponseDtoType = typeof RunThreadResponseDtoType[keyof typeof RunThreadResponseDtoType];
-
+export type RunThreadResponseDtoType =
+  (typeof RunThreadResponseDtoType)[keyof typeof RunThreadResponseDtoType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const RunThreadResponseDtoType = {
-  thread: 'thread',
+  thread: "thread",
 } as const;
 
 /**
  * Type of thread update
  */
-export type RunThreadResponseDtoUpdateType = typeof RunThreadResponseDtoUpdateType[keyof typeof RunThreadResponseDtoUpdateType];
-
+export type RunThreadResponseDtoUpdateType =
+  (typeof RunThreadResponseDtoUpdateType)[keyof typeof RunThreadResponseDtoUpdateType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const RunThreadResponseDtoUpdateType = {
-  title_updated: 'title_updated',
+  title_updated: "title_updated",
 } as const;
 
 export interface RunThreadResponseDto {
@@ -1720,12 +2000,11 @@ export interface RunThreadResponseDto {
 /**
  * The type of input
  */
-export type TextInputType = typeof TextInputType[keyof typeof TextInputType];
-
+export type TextInputType = (typeof TextInputType)[keyof typeof TextInputType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TextInputType = {
-  text: 'text',
+  text: "text",
 } as const;
 
 export interface TextInput {
@@ -1738,12 +2017,12 @@ export interface TextInput {
 /**
  * The type of input
  */
-export type ToolResultInputType = typeof ToolResultInputType[keyof typeof ToolResultInputType];
-
+export type ToolResultInputType =
+  (typeof ToolResultInputType)[keyof typeof ToolResultInputType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ToolResultInputType = {
-  tool_result: 'tool_result',
+  tool_result: "tool_result",
 } as const;
 
 export interface ToolResultInput {
@@ -1841,25 +2120,25 @@ export interface RegisterDto {
 /**
  * User role
  */
-export type MeResponseDtoRole = typeof MeResponseDtoRole[keyof typeof MeResponseDtoRole];
-
+export type MeResponseDtoRole =
+  (typeof MeResponseDtoRole)[keyof typeof MeResponseDtoRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MeResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
+  admin: "admin",
+  user: "user",
 } as const;
 
 /**
  * User system role
  */
-export type MeResponseDtoSystemRole = typeof MeResponseDtoSystemRole[keyof typeof MeResponseDtoSystemRole];
-
+export type MeResponseDtoSystemRole =
+  (typeof MeResponseDtoSystemRole)[keyof typeof MeResponseDtoSystemRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MeResponseDtoSystemRole = {
-  customer: 'customer',
-  super_admin: 'super_admin',
+  customer: "customer",
+  super_admin: "super_admin",
 } as const;
 
 export interface MeResponseDto {
@@ -1873,28 +2152,49 @@ export interface MeResponseDto {
   name: string;
 }
 
-export interface CreateLanguageModelDto { [key: string]: unknown }
+export interface CreateLanguageModelDto {
+  [key: string]: unknown;
+}
 
-export interface CreateEmbeddingModelDto { [key: string]: unknown }
+export interface CreateEmbeddingModelDto {
+  [key: string]: unknown;
+}
 
-export interface UpdateLanguageModelDto { [key: string]: unknown }
+export interface UpdateLanguageModelDto {
+  [key: string]: unknown;
+}
 
-export interface UpdateEmbeddingModelDto { [key: string]: unknown }
+export interface UpdateEmbeddingModelDto {
+  [key: string]: unknown;
+}
 
-export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+export type SuperAdminModelsControllerGetPermittedModels200Item =
+  | PermittedLanguageModelResponseDto
+  | PermittedEmbeddingModelResponseDto;
+
+export type SuperAdminModelsControllerGetAllCatalogModels200Item =
+  | LanguageModelResponseDto
+  | EmbeddingModelResponseDto;
+
+export type SuperAdminModelsControllerGetCatalogModelById200 =
+  | LanguageModelResponseDto
+  | EmbeddingModelResponseDto;
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
-/**
- * Number of organizations to skip before collecting results.
- */
-offset?: number;
-/**
- * Maximum number of organizations to return.
- */
-limit?: number;
+  /**
+   * Number of organizations to skip before collecting results.
+   */
+  offset?: number;
+  /**
+   * Maximum number of organizations to return.
+   */
+  limit?: number;
 };
 
-export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+export type ThreadsControllerGetThreadSources200Item =
+  | FileSourceResponseDto
+  | UrlSourceResponseDto
+  | CSVDataSourceResponseDto;
 
 export type ThreadsControllerAddFileSourceBody = {
   /** The file to upload */
@@ -1910,13 +2210,16 @@ export type AgentsControllerAddFileSourceBody = {
   file: Blob;
 };
 
-export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+export type RunsControllerSendMessage200 =
+  | RunSessionResponseDto
+  | RunMessageResponseDto
+  | RunErrorResponseDto
+  | RunThreadResponseDto;
 
 export type StorageControllerUploadFileBody = {
   file?: Blob;
 };
 
 export type AdminControllerGetModelParams = {
-name: string;
+  name: string;
 };
-

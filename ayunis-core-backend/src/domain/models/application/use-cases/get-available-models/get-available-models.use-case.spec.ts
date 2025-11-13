@@ -2,37 +2,49 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { GetAvailableModelsUseCase } from './get-available-models.use-case';
 import { GetAvailableModelsQuery } from './get-available-models.query';
-import { ModelRegistry } from '../../registry/model.registry';
+import { ModelsRepository } from '../../ports/models.repository';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { UUID } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 
 describe('GetAvailableModelsUseCase', () => {
   let useCase: GetAvailableModelsUseCase;
-  let modelRegistry: jest.Mocked<ModelRegistry>;
+  let modelsRepository: jest.Mocked<ModelsRepository>;
+  let configService: jest.Mocked<ConfigService>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
-    const mockModelRegistry = {
-      getAllAvailableModels: jest.fn(),
-      register: jest.fn(),
-      unregister: jest.fn(),
+    const mockModelsRepository = {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findOneLanguage: jest.fn(),
+      findOneEmbedding: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+    };
+
+    const mockConfigService = {
+      get: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetAvailableModelsUseCase,
-        { provide: ModelRegistry, useValue: mockModelRegistry },
+        { provide: ModelsRepository, useValue: mockModelsRepository },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
     useCase = module.get<GetAvailableModelsUseCase>(GetAvailableModelsUseCase);
-    modelRegistry = module.get(ModelRegistry);
+    modelsRepository = module.get(ModelsRepository);
+    configService = module.get(ConfigService);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -40,7 +52,7 @@ describe('GetAvailableModelsUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should return all available models from registry', () => {
+    it('should return all available models from repository', async () => {
       // Arrange
       const query = new GetAvailableModelsQuery(mockOrgId);
 
@@ -67,32 +79,33 @@ describe('GetAvailableModelsUseCase', () => {
         }),
       ];
 
-      modelRegistry.getAllAvailableModels.mockReturnValue(mockModels);
+      modelsRepository.findAll.mockResolvedValue(mockModels);
+      configService.get.mockReturnValue('fake-key');
 
       // Act
-      const result = useCase.execute(query);
+      const result = await useCase.execute(query);
 
       // Assert
-      expect(modelRegistry.getAllAvailableModels).toHaveBeenCalledTimes(1);
+      expect(modelsRepository.findAll).toHaveBeenCalledTimes(1);
       expect(result).toBe(mockModels);
       expect(result).toHaveLength(2);
     });
 
-    it('should return empty array when no models are available', () => {
+    it('should return empty array when no models are available', async () => {
       // Arrange
       const query = new GetAvailableModelsQuery(mockOrgId);
 
-      modelRegistry.getAllAvailableModels.mockReturnValue([]);
+      modelsRepository.findAll.mockResolvedValue([]);
 
       // Act
-      const result = useCase.execute(query);
+      const result = await useCase.execute(query);
 
       // Assert
-      expect(modelRegistry.getAllAvailableModels).toHaveBeenCalledTimes(1);
+      expect(modelsRepository.findAll).toHaveBeenCalledTimes(1);
       expect(result).toEqual([]);
     });
 
-    it('should log the query details', () => {
+    it('should log the query details', async () => {
       // Arrange
       const query = new GetAvailableModelsQuery(mockOrgId);
 
@@ -109,18 +122,19 @@ describe('GetAvailableModelsUseCase', () => {
         }),
       ];
 
-      modelRegistry.getAllAvailableModels.mockReturnValue(mockModels);
+      modelsRepository.findAll.mockResolvedValue(mockModels);
+      configService.get.mockReturnValue('fake-key');
 
       const logSpy = jest.spyOn(Logger.prototype, 'log');
 
       // Act
-      useCase.execute(query);
+      await useCase.execute(query);
 
       // Assert
       expect(logSpy).toHaveBeenCalledWith('getAvailableModels', query);
     });
 
-    it('should log debug information about all models', () => {
+    it('should log debug information about all models', async () => {
       // Arrange
       const query = new GetAvailableModelsQuery(mockOrgId);
 
@@ -137,17 +151,69 @@ describe('GetAvailableModelsUseCase', () => {
         }),
       ];
 
-      modelRegistry.getAllAvailableModels.mockReturnValue(mockModels);
+      modelsRepository.findAll.mockResolvedValue(mockModels);
+      configService.get.mockReturnValue('fake-key');
 
       const debugSpy = jest.spyOn(Logger.prototype, 'debug');
 
       // Act
-      useCase.execute(query);
+      await useCase.execute(query);
 
       // Assert
       expect(debugSpy).toHaveBeenCalledWith('All available models', {
         allModels: mockModels,
       });
+    });
+
+    it('should filter out archived models and those without provider config', async () => {
+      const query = new GetAvailableModelsQuery(mockOrgId);
+      const activeModel = new LanguageModel({
+        id: '123e4567-e89b-12d3-a456-426614174003' as UUID,
+        name: 'gpt-4o',
+        displayName: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+      });
+      const archivedModel = new LanguageModel({
+        id: '123e4567-e89b-12d3-a456-426614174004' as UUID,
+        name: 'legacy-model',
+        displayName: 'legacy-model',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: true,
+        canUseTools: false,
+      });
+      const missingConfigModel = new LanguageModel({
+        id: '123e4567-e89b-12d3-a456-426614174005' as UUID,
+        name: 'claude-3-opus',
+        displayName: 'claude-3-opus',
+        provider: ModelProvider.ANTHROPIC,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+      });
+
+      modelsRepository.findAll.mockResolvedValue([
+        activeModel,
+        archivedModel,
+        missingConfigModel,
+      ]);
+
+      configService.get.mockImplementation((configKey: string) => {
+        if (configKey === 'models.openai.apiKey') {
+          return 'openai-key';
+        }
+        return undefined;
+      });
+
+      const result = await useCase.execute(query);
+
+      expect(result).toEqual([activeModel]);
     });
   });
 });

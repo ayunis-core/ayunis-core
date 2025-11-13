@@ -17,6 +17,7 @@ import { GetPermittedModelsUseCase } from './application/use-cases/get-permitted
 import { IsModelPermittedUseCase } from './application/use-cases/is-model-permitted/is-model-permitted.use-case';
 import { ModelResponseDtoMapper } from './presenters/http/mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './presenters/http/mappers/model-with-config-response-dto.mapper';
+import { CatalogModelResponseDtoMapper } from './presenters/http/mappers/catalog-model-response-dto.mapper';
 import { LocalPermittedModelsRepositoryModule } from './infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
 import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persistence/local-user-default-models/local-user-default-models-repository.module';
 import { LocalModelsRepositoryModule } from './infrastructure/persistence/local-models/local-models-repository.module';
@@ -38,6 +39,7 @@ import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embe
 import { UpdateLanguageModelUseCase } from './application/use-cases/update-language-model/update-language-model.use-case';
 import { UpdateEmbeddingModelUseCase } from './application/use-cases/update-embedding-model/update-embedding-model.use-case';
 import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
+import { GetModelByIdUseCase } from './application/use-cases/get-model-by-id/get-model-by-id.use-case';
 import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
 import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-model.use-case';
 
@@ -90,6 +92,7 @@ import { ConfigService } from '@nestjs/config';
     ModelProviderInfoRegistry,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
+    CatalogModelResponseDtoMapper,
     ModelProviderInfoResponseDtoMapper,
     PermittedProviderResponseDtoMapper,
     ModelProviderWithPermittedStatusResponseDtoMapper,
@@ -204,6 +207,7 @@ import { ConfigService } from '@nestjs/config';
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
     GetModelUseCase,
+    GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
     // Permitted Provider Use Cases
@@ -244,6 +248,7 @@ import { ConfigService } from '@nestjs/config';
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
     GetModelUseCase,
+    GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
     // TODO: These modules should be part of this module and not separate

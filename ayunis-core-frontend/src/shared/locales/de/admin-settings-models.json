@@ -40,6 +40,17 @@
       "modelProviderNotPermitted": "Der Modell-Provider ist nicht freigeschaltet.",
       "modelNotFound": "Das Modell wurde nicht gefunden.",
       "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
+    },
+    "defaultModel": {
+      "title": "Standardmodell der Organisation",
+      "description": "Wählen Sie, welches freigeschaltete Modell als Standard für Ihre Organisation verwendet werden soll.",
+      "label": "Standardmodell",
+      "helper": "Benutzer starten mit diesem Modell, sofern sie kein anderes auswählen.",
+      "placeholder": "Standardmodell auswählen",
+      "loading": "Freigeschaltete Modelle werden geladen...",
+      "empty": "Aktivieren Sie mindestens ein Modell, um ein Organisations-Standard festzulegen.",
+      "success": "Standardmodell der Organisation aktualisiert.",
+      "error": "Standardmodell der Organisation konnte nicht aktualisiert werden."
     }
   }
 }

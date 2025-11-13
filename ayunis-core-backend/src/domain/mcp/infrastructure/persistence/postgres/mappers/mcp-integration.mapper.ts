@@ -16,11 +16,11 @@ import {
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
   McpIntegrationAuthRecord,
-  McpIntegrationRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
 } from '../schema';
+import { McpIntegrationRecord } from '../schema/mcp-integration.record';
 
 /**
  * Mapper for converting between MCP integration domain entities and database records.

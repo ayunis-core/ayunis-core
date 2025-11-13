@@ -40,6 +40,17 @@
       "modelProviderNotPermitted": "The model provider is not permitted.",
       "modelNotFound": "The model not found.",
       "error": "An error occurred while creating the permitted model."
+    },
+    "defaultModel": {
+      "title": "Organization default model",
+      "description": "Choose which permitted model should be used as the default for your organization.",
+      "label": "Default model",
+      "helper": "Users will start with this model unless they select a different one.",
+      "placeholder": "Select a default model",
+      "loading": "Loading permitted models...",
+      "empty": "Enable at least one model to set an organization default.",
+      "success": "Organization default model updated.",
+      "error": "Unable to update the organization default model."
     }
   }
 }

@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2 } from "lucide-react";
+import { ArrowLeft, Building2, Brain } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -9,12 +9,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/shared/ui/shadcn/sidebar";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+} from '@/shared/ui/shadcn/sidebar';
+import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 export function SuperAdminSettingsSidebar() {
-  const { t } = useTranslation("super-admin-settings-layout");
+  const { t } = useTranslation('super-admin-settings-layout');
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -26,10 +26,10 @@ export function SuperAdminSettingsSidebar() {
                 <ArrowLeft className="size-4" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {t("layout.goBack")}
+                    {t('layout.goBack')}
                   </span>
                   <span className="truncate text-xs">
-                    {t("layout.returnToMainApp")}
+                    {t('layout.returnToMainApp')}
                   </span>
                 </div>
               </Link>
@@ -40,13 +40,21 @@ export function SuperAdminSettingsSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t("layout.settings")}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('layout.settings')}</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link to="/super-admin-settings/orgs">
                   <Building2 />
-                  <span>{t("layout.orgs")}</span>
+                  <span>{t('layout.orgs')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to="/super-admin-settings/models-catalog">
+                  <Brain />
+                  <span>{t('layout.modelsCatalog')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -57,4 +65,3 @@ export function SuperAdminSettingsSidebar() {
     </Sidebar>
   );
 }
-
