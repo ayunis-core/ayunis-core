@@ -24,4 +24,19 @@ export class AppController {
       isCloud: this.isCloudUseCase.execute(),
     };
   }
+
+  @Public()
+  @Get('health')
+  @ApiOperation({
+    summary: 'Check if the deployment is healthy',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Health status',
+  })
+  health(): { status: 'healthy' | 'unhealthy' } {
+    return {
+      status: 'healthy',
+    };
+  }
 }
