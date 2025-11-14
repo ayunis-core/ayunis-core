@@ -84,5 +84,30 @@ export class LocalTrialsRepository extends TrialRepository {
       maxMessages: record.maxMessages,
     });
   }
-}
 
+  async update(trial: Trial): Promise<Trial> {
+    const record = await this.trialRecord.findOne({
+      where: { id: trial.id },
+    });
+
+    if (!record) {
+      // This should not happen if use case validates first, but handle gracefully
+      throw new Error(`Trial with id ${trial.id} not found`);
+    }
+
+    record.updatedAt = new Date();
+    record.messagesSent = trial.messagesSent;
+    record.maxMessages = trial.maxMessages;
+
+    const saved = await this.trialRecord.save(record);
+
+    return new Trial({
+      id: saved.id,
+      createdAt: saved.createdAt,
+      updatedAt: saved.updatedAt,
+      orgId: saved.orgId,
+      messagesSent: saved.messagesSent,
+      maxMessages: saved.maxMessages,
+    });
+  }
+}

@@ -26,4 +26,3 @@ export class Trial {
     this.maxMessages = params.maxMessages;
   }
 }
-

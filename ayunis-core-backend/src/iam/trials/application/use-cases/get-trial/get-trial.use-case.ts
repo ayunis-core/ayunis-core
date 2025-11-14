@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { GetTrialQuery } from './get-trial.query';
-import { UnexpectedTrialError } from '../../trial.errors';
+import { TrialNotFoundError, UnexpectedTrialError } from '../../trial.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class GetTrialUseCase {
 
   constructor(private readonly trialRepository: TrialRepository) {}
 
-  async execute(query: GetTrialQuery): Promise<Trial | null> {
+  async execute(query: GetTrialQuery): Promise<Trial> {
     this.logger.debug('Getting trial for organization', {
       orgId: query.orgId,
     });
@@ -20,18 +20,8 @@ export class GetTrialUseCase {
       this.logger.debug('Finding trial in repository');
       const trial = await this.trialRepository.findByOrgId(query.orgId);
 
-      if (trial) {
-        this.logger.debug('Trial found', {
-          trialId: trial.id,
-          orgId: trial.orgId,
-          messagesSent: trial.messagesSent,
-          maxMessages: trial.maxMessages,
-          remainingMessages: trial.maxMessages - trial.messagesSent,
-        });
-      } else {
-        this.logger.debug('Trial not found', {
-          orgId: query.orgId,
-        });
+      if (!trial) {
+        throw new TrialNotFoundError(query.orgId);
       }
 
       return trial;
@@ -55,4 +45,3 @@ export class GetTrialUseCase {
     }
   }
 }
-

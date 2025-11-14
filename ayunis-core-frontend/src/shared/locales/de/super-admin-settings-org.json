@@ -161,7 +161,22 @@
   "tabs": {
     "org": "Organisation",
     "users": "Benutzer",
-    "subscriptions": "Abonnements",
+    "subscriptions": "Abonnement",
+    "trials": "Trial",
     "models": "Modelle"
+  },
+  "trial": {
+    "title": "Trial-Informationen",
+    "messagesSent": "Gesendete Nachrichten",
+    "maxMessages": "Max. Nachrichten",
+    "remainingMessages": "Verbleibende Nachrichten",
+    "usagePercentage": "Nutzung",
+    "usageProgress": "Nutzungsfortschritt",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Aktualisiert am"
+  },
+  "noTrial": {
+    "title": "Kein Trial gefunden",
+    "description": "Diese Organisation hat keinen aktiven Trial."
   }
 }

@@ -177,4 +177,3 @@ export class UnexpectedTrialError extends TrialError {
     );
   }
 }
-

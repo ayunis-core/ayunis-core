@@ -80,8 +80,12 @@ run_fe_tsc() {
   set +e
   (
     cd ayunis-core-frontend >/dev/null 2>&1
-    printf "%s" "$FE_TS_STAGED" \
-      | sed 's#^ayunis-core-frontend/##' \
+    {
+      printf "%s\n" "$FE_TS_STAGED" \
+        | sed 's#^ayunis-core-frontend/##'
+      printf "%s\n" "src/app/routeTree.gen.ts"
+    } \
+      | sed '/^$/d' \
       | tr '\n' '\0' \
       | xargs -0 npx --yes tsc-files --noEmit -p tsconfig.json
   )

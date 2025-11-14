@@ -549,19 +549,101 @@
             }
           },
           "400": {
-            "description": "Invalid request payload"
-          },
-          "404": {
-            "description": "Permitted model not found"
+            "description": "Invalid model data provided"
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Permitted model not found"
           },
           "500": {
             "description": "Internal server error"
           }
         },
         "summary": "Set or update the organization default model",
+        "tags": ["Super Admin Models"]
+      }
+    },
+    "/super-admin/models/catalog/{id}": {
+      "delete": {
+        "description": "Remove a model (language or embedding) from the master catalog. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_deleteCatalogModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Model ID to delete",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted model"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a model from the catalog",
+        "tags": ["Super Admin Models"]
+      },
+      "get": {
+        "description": "Retrieve a specific model from the master catalog by its ID. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_getCatalogModelById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Model ID to retrieve",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/LanguageModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/EmbeddingModelResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a model by ID from the catalog",
         "tags": ["Super Admin Models"]
       }
     },
@@ -916,88 +998,6 @@
           }
         },
         "summary": "Get all models in the catalog",
-        "tags": ["Super Admin Models"]
-      }
-    },
-    "/super-admin/models/catalog/{id}": {
-      "get": {
-        "description": "Retrieve a specific model from the master catalog by its ID. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_getCatalogModelById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Model ID to retrieve",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/LanguageModelResponseDto"
-                    },
-                    {
-                      "$ref": "#/components/schemas/EmbeddingModelResponseDto"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Model not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get a model by ID from the catalog",
-        "tags": ["Super Admin Models"]
-      },
-      "delete": {
-        "description": "Remove a model (language or embedding) from the master catalog. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_deleteCatalogModel",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Model ID to delete",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted model"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Model not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a model from the catalog",
         "tags": ["Super Admin Models"]
       }
     },
@@ -3831,6 +3831,127 @@
         },
         "summary": "Send a message and receive streaming response",
         "tags": ["runs"]
+      }
+    },
+    "/super-admin/trials": {
+      "post": {
+        "description": "Create a new trial for an organization. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_createTrial",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Trial information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Create a new trial",
+        "tags": ["Super Admin Trials"]
+      }
+    },
+    "/super-admin/trials/{orgId}": {
+      "get": {
+        "description": "Retrieve a trial by its organization ID. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_getTrialByOrgId",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Trial not found for the organization."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Get a trial by organization ID",
+        "tags": ["Super Admin Trials"]
+      },
+      "put": {
+        "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminTrialsController_updateTrial",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "The organization ID of the trial to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Trial update information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated trial for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          }
+        },
+        "summary": "Update a trial",
+        "tags": ["Super Admin Trials"]
       }
     },
     "/storage/upload": {
@@ -7297,6 +7418,90 @@
           }
         },
         "required": ["threadId", "input"]
+      },
+      "CreateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID for which to create the trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 1000,
+            "minimum": 1
+          }
+        },
+        "required": ["orgId", "maxMessages"]
+      },
+      "SuperAdminTrialResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Trial unique identifier",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID associated with this trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages sent in this trial",
+            "example": 150,
+            "minimum": 0
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in this trial",
+            "example": 1000,
+            "minimum": 1
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the trial was last updated",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "orgId",
+          "messagesSent",
+          "maxMessages",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 2000,
+            "minimum": 1
+          },
+          "messagesSent": {
+            "type": "number",
+            "description": "Number of messages already sent (can be used to reset or adjust)",
+            "example": 0,
+            "minimum": 0
+          }
+        }
       },
       "CreatePromptDto": {
         "type": "object",

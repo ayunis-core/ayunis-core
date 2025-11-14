@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import SuperAdminOrgsPage from "@/pages/super-admin-settings/orgs";
+import { createFileRoute } from '@tanstack/react-router';
+import SuperAdminOrgsPage from '@/pages/super-admin-settings/orgs';
 import {
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   superAdminOrgsControllerGetAllOrgs,
-} from "@/shared/api";
+} from '@/shared/api';
 
 export const Route = createFileRoute(
-  "/_authenticated/super-admin-settings/orgs/",
+  '/_authenticated/super-admin-settings/orgs/',
 )({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {

@@ -1,50 +1,57 @@
-import SuperAdminSettingsLayout from "../../super-admin-settings-layout";
+import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import type {
   SuperAdminOrgResponseDto,
   SubscriptionResponseDto,
   UserResponseDto,
-} from "@/shared/api";
-import UsersTable from "./UsersTable";
-import OrgDetails from "./OrgDetails";
-import LicenseSeatsSection from "./LicenseSeatsSection";
-import BillingInfoSection from "./BillingInfoSection";
-import SubscriptionCancellationSection from "./SubscriptionCancellationSection";
-import NoSubscriptionSection from "./NoSubscriptionSection";
-import ModelsSection from "./ModelsSection";
+  SuperAdminTrialResponseDto,
+} from '@/shared/api';
+import UsersTable from './UsersTable';
+import OrgDetails from './OrgDetails';
+import LicenseSeatsSection from './LicenseSeatsSection';
+import BillingInfoSection from './BillingInfoSection';
+import SubscriptionCancellationSection from './SubscriptionCancellationSection';
+import NoSubscriptionSection from './NoSubscriptionSection';
+import ModelsSection from './ModelsSection';
+import TrialSection from './TrialSection';
+import NoTrialSection from './NoTrialSection';
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-} from "@/shared/ui/shadcn/tabs";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import { useCallback } from "react";
+} from '@/shared/ui/shadcn/tabs';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { useCallback } from 'react';
 
 interface SuperAdminSettingsOrgPageProps {
   org: SuperAdminOrgResponseDto;
   users: UserResponseDto[];
   subscription: SubscriptionResponseDto | null;
-  initialTab?: "org" | "users" | "subscriptions" | "models";
+  trial: SuperAdminTrialResponseDto | null;
+  initialTab?: 'org' | 'users' | 'subscriptions' | 'models' | 'trials';
 }
 export default function SuperAdminSettingsOrgPage({
   org,
   users,
   subscription,
-  initialTab = "org",
+  trial,
+  initialTab = 'org',
 }: SuperAdminSettingsOrgPageProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const navigate = useNavigate();
   const { id } = useParams({
-    from: "/_authenticated/super-admin-settings/orgs/$id",
+    from: '/_authenticated/super-admin-settings/orgs/$id',
   });
 
   const handleTabChange = useCallback(
     (value: string) => {
-      navigate({
-        to: "/super-admin-settings/orgs/$id",
+      void navigate({
+        to: '/super-admin-settings/orgs/$id',
         params: { id },
-        search: { tab: value as "org" | "users" | "subscriptions" | "models" },
+        search: {
+          tab: value as 'org' | 'users' | 'subscriptions' | 'models' | 'trials',
+        },
       });
     },
     [navigate, id],
@@ -58,12 +65,13 @@ export default function SuperAdminSettingsOrgPage({
         className="w-full"
       >
         <TabsList>
-          <TabsTrigger value="org">{t("tabs.org")}</TabsTrigger>
-          <TabsTrigger value="users">{t("tabs.users")}</TabsTrigger>
+          <TabsTrigger value="org">{t('tabs.org')}</TabsTrigger>
+          <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
           <TabsTrigger value="subscriptions">
-            {t("tabs.subscriptions")}
+            {t('tabs.subscriptions')}
           </TabsTrigger>
-          <TabsTrigger value="models">{t("tabs.models")}</TabsTrigger>
+          <TabsTrigger value="trials">{t('tabs.trials')}</TabsTrigger>
+          <TabsTrigger value="models">{t('tabs.models')}</TabsTrigger>
         </TabsList>
         <TabsContent value="org" className="mt-4">
           <OrgDetails org={org} />
@@ -84,6 +92,9 @@ export default function SuperAdminSettingsOrgPage({
           ) : (
             <NoSubscriptionSection orgId={org.id} />
           )}
+        </TabsContent>
+        <TabsContent value="trials" className="mt-4">
+          {trial ? <TrialSection trial={trial} /> : <NoTrialSection />}
         </TabsContent>
         <TabsContent value="models" className="mt-4">
           <ModelsSection orgId={org.id} />

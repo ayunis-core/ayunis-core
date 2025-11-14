@@ -2037,6 +2037,50 @@ export interface SendMessageDto {
   streaming?: boolean;
 }
 
+export interface CreateTrialRequestDto {
+  /** Organization ID for which to create the trial */
+  orgId: string;
+  /**
+   * Maximum number of messages allowed in the trial
+   * @minimum 1
+   */
+  maxMessages: number;
+}
+
+export interface SuperAdminTrialResponseDto {
+  /** Trial unique identifier */
+  id: string;
+  /** Organization ID associated with this trial */
+  orgId: string;
+  /**
+   * Number of messages sent in this trial
+   * @minimum 0
+   */
+  messagesSent: number;
+  /**
+   * Maximum number of messages allowed in this trial
+   * @minimum 1
+   */
+  maxMessages: number;
+  /** Date when the trial was created */
+  createdAt: string;
+  /** Date when the trial was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateTrialRequestDto {
+  /**
+   * Maximum number of messages allowed in the trial
+   * @minimum 1
+   */
+  maxMessages?: number;
+  /**
+   * Number of messages already sent (can be used to reset or adjust)
+   * @minimum 0
+   */
+  messagesSent?: number;
+}
+
 export interface CreatePromptDto {
   /**
    * The title of the prompt
@@ -2147,11 +2191,11 @@ export interface UpdateLanguageModelDto { [key: string]: unknown }
 
 export interface UpdateEmbeddingModelDto { [key: string]: unknown }
 
+export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
+
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
 export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
-
-export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**

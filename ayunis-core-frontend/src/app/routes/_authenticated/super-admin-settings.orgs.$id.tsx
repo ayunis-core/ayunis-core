@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
 import {
   superAdminOrgsControllerGetOrgById,
   getSuperAdminOrgsControllerGetOrgByIdQueryKey,
@@ -6,17 +6,19 @@ import {
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
   superAdminUsersControllerGetUsersByOrgId,
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
-} from "@/shared/api";
-import SuperAdminSettingsOrgPage from "@/pages/super-admin-settings/org";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { z } from "zod";
+  superAdminTrialsControllerGetTrialByOrgId,
+  getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
+} from '@/shared/api';
+import SuperAdminSettingsOrgPage from '@/pages/super-admin-settings/org';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { z } from 'zod';
 
 const searchSchema = z.object({
-  tab: z.enum(["org", "users", "subscriptions", "models"]).optional(),
+  tab: z.enum(['org', 'users', 'subscriptions', 'models', 'trials']).optional(),
 });
 
 export const Route = createFileRoute(
-  "/_authenticated/super-admin-settings/orgs/$id",
+  '/_authenticated/super-admin-settings/orgs/$id',
 )({
   validateSearch: searchSchema,
   component: RouteComponent,
@@ -37,7 +39,19 @@ export const Route = createFileRoute(
       })
       .catch((error) => {
         const { code } = extractErrorData(error);
-        if (code === "SUBSCRIPTION_NOT_FOUND") {
+        if (code === 'SUBSCRIPTION_NOT_FOUND') {
+          return null;
+        }
+        throw error;
+      });
+    const trial = await queryClient
+      .fetchQuery({
+        queryKey: getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(id),
+        queryFn: () => superAdminTrialsControllerGetTrialByOrgId(id),
+      })
+      .catch((error) => {
+        const { code } = extractErrorData(error);
+        if (code === 'TRIAL_NOT_FOUND') {
           return null;
         }
         throw error;
@@ -46,18 +60,20 @@ export const Route = createFileRoute(
       org,
       users,
       subscription,
+      trial,
     };
   },
 });
 
 function RouteComponent() {
-  const { org, users, subscription } = Route.useLoaderData();
+  const { org, users, subscription, trial } = Route.useLoaderData();
   const { tab } = Route.useSearch();
   return (
     <SuperAdminSettingsOrgPage
       org={org}
       users={users.users}
       subscription={subscription}
+      trial={trial}
       initialTab={tab}
     />
   );

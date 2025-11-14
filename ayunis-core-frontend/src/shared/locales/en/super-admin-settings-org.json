@@ -162,6 +162,21 @@
     "org": "Organization",
     "users": "Users",
     "subscriptions": "Subscriptions",
+    "trials": "Trials",
     "models": "Models"
+  },
+  "trial": {
+    "title": "Trial Information",
+    "messagesSent": "Messages Sent",
+    "maxMessages": "Max Messages",
+    "remainingMessages": "Remaining Messages",
+    "usagePercentage": "Usage",
+    "usageProgress": "Usage Progress",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At"
+  },
+  "noTrial": {
+    "title": "No trial found",
+    "description": "This organization does not have an active trial."
   }
 }

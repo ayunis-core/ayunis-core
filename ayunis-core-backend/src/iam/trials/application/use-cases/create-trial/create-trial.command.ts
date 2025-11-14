@@ -6,4 +6,3 @@ export class CreateTrialCommand {
     public readonly maxMessages: number,
   ) {}
 }
-
