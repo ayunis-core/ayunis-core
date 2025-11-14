@@ -108,6 +108,27 @@
     "creating": "Wird erstellt...",
     "noOfSeatsDescription": "Sie können die Anzahl der Plätze jederzeit ändern."
   },
+  "trialDialog": {
+    "title": "Trial erstellen",
+    "description": "Definieren Sie die maximale Anzahl an Nachrichten für den Trial dieser Organisation.",
+    "maxMessagesLabel": "Max. Nachrichten",
+    "maxMessagesPlaceholder": "1000",
+    "maxMessagesDescription": "Sie können das Kontingent jederzeit anpassen.",
+    "createTrial": "Trial erstellen",
+    "creating": "Wird erstellt..."
+  },
+  "trialUpdateDialog": {
+    "title": "Trial aktualisieren",
+    "description": "Passen Sie das Trial-Kontingent an oder setzen Sie den Verbrauch zurück.",
+    "maxMessagesLabel": "Max. Nachrichten",
+    "maxMessagesPlaceholder": "2000",
+    "maxMessagesDescription": "Erhöhen oder reduzieren Sie die zulässigen Nachrichten.",
+    "messagesSentLabel": "Gesendete Nachrichten",
+    "messagesSentPlaceholder": "0",
+    "messagesSentDescription": "Nutzen Sie dies, um den aktuellen Verbrauch zurückzusetzen oder zu korrigieren.",
+    "updateTrial": "Trial aktualisieren",
+    "updating": "Wird aktualisiert..."
+  },
   "deleteUser": {
     "success": "Benutzer erfolgreich gelöscht",
     "error": "Benutzer konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
@@ -173,10 +194,23 @@
     "usagePercentage": "Nutzung",
     "usageProgress": "Nutzungsfortschritt",
     "createdAt": "Erstellt am",
-    "updatedAt": "Aktualisiert am"
+    "updatedAt": "Aktualisiert am",
+    "updateAction": "Trial aktualisieren",
+    "createSuccess": "Trial erfolgreich erstellt",
+    "createErrorMaxMessagesRequired": "Maximale Anzahl an Nachrichten ist erforderlich",
+    "createErrorAlreadyExists": "Für diese Organisation existiert bereits ein Trial",
+    "createErrorCapacityExceeded": "Die maximale Nachrichtenanzahl überschreitet das erlaubte Limit",
+    "createErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "updateSuccess": "Trial erfolgreich aktualisiert",
+    "updateErrorMaxMessagesRequired": "Maximale Anzahl an Nachrichten ist erforderlich",
+    "updateErrorMessagesSentRequired": "Gesendete Nachrichten sind erforderlich",
+    "updateErrorCapacityExceeded": "Die maximale Nachrichtenanzahl überschreitet das erlaubte Limit",
+    "updateErrorNotFound": "Trial nicht gefunden",
+    "updateErrorUnexpected": "Ein unerwarteter Fehler ist aufgetreten"
   },
   "noTrial": {
     "title": "Kein Trial gefunden",
-    "description": "Diese Organisation hat keinen aktiven Trial."
+    "description": "Diese Organisation hat keinen aktiven Trial.",
+    "createTrial": "Trial erstellen"
   }
 }

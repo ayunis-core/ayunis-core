@@ -94,7 +94,11 @@ export default function SuperAdminSettingsOrgPage({
           )}
         </TabsContent>
         <TabsContent value="trials" className="mt-4">
-          {trial ? <TrialSection trial={trial} /> : <NoTrialSection />}
+          {trial ? (
+            <TrialSection trial={trial} orgId={org.id} />
+          ) : (
+            <NoTrialSection orgId={org.id} />
+          )}
         </TabsContent>
         <TabsContent value="models" className="mt-4">
           <ModelsSection orgId={org.id} />

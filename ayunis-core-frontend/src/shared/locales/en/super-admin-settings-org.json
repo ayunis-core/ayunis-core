@@ -108,6 +108,27 @@
     "creating": "Creating...",
     "noOfSeatsDescription": "You can change the number of seats at any time."
   },
+  "trialDialog": {
+    "title": "Create Trial",
+    "description": "Define the maximum number of messages available for this organization's trial.",
+    "maxMessagesLabel": "Max messages",
+    "maxMessagesPlaceholder": "1000",
+    "maxMessagesDescription": "You can adjust the allowance at any time.",
+    "createTrial": "Create Trial",
+    "creating": "Creating..."
+  },
+  "trialUpdateDialog": {
+    "title": "Update Trial",
+    "description": "Adjust the trial allowance or reset the current usage.",
+    "maxMessagesLabel": "Max messages",
+    "maxMessagesPlaceholder": "2000",
+    "maxMessagesDescription": "Increase or decrease how many messages the trial can use.",
+    "messagesSentLabel": "Messages sent",
+    "messagesSentPlaceholder": "0",
+    "messagesSentDescription": "Use this to reset or correct the current usage.",
+    "updateTrial": "Update Trial",
+    "updating": "Updating..."
+  },
   "deleteUser": {
     "success": "User deleted successfully",
     "error": "Failed to delete user. Please try again."
@@ -173,10 +194,23 @@
     "usagePercentage": "Usage",
     "usageProgress": "Usage Progress",
     "createdAt": "Created At",
-    "updatedAt": "Updated At"
+    "updatedAt": "Updated At",
+    "updateAction": "Update Trial",
+    "createSuccess": "Trial created successfully",
+    "createErrorMaxMessagesRequired": "Maximum number of messages is required",
+    "createErrorAlreadyExists": "A trial for this organization already exists",
+    "createErrorCapacityExceeded": "Max messages exceed the allowed limit",
+    "createErrorUnexpected": "An unexpected error occurred",
+    "updateSuccess": "Trial updated successfully",
+    "updateErrorMaxMessagesRequired": "Maximum number of messages is required",
+    "updateErrorMessagesSentRequired": "Messages sent is required",
+    "updateErrorCapacityExceeded": "Max messages exceed the allowed limit",
+    "updateErrorNotFound": "Trial not found",
+    "updateErrorUnexpected": "An unexpected error occurred"
   },
   "noTrial": {
     "title": "No trial found",
-    "description": "This organization does not have an active trial."
+    "description": "This organization does not have an active trial.",
+    "createTrial": "Create Trial"
   }
 }

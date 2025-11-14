@@ -1,18 +1,22 @@
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
+import { Button } from '@/shared/ui/shadcn/button';
 import { useTranslation } from 'react-i18next';
 import type { SuperAdminTrialResponseDto } from '@/shared/api';
 import { format } from 'date-fns';
+import UpdateTrialDialog from './UpdateTrialDialog';
 
 interface TrialSectionProps {
   trial: SuperAdminTrialResponseDto;
+  orgId: string;
 }
 
-export default function TrialSection({ trial }: TrialSectionProps) {
+export default function TrialSection({ trial, orgId }: TrialSectionProps) {
   const { t } = useTranslation('super-admin-settings-org');
 
   const remainingMessages = trial.maxMessages - trial.messagesSent;
@@ -22,6 +26,17 @@ export default function TrialSection({ trial }: TrialSectionProps) {
     <Card>
       <CardHeader>
         <CardTitle>{t('trial.title')}</CardTitle>
+        <CardAction>
+          <UpdateTrialDialog
+            trial={trial}
+            orgId={orgId}
+            trigger={
+              <Button variant="outline" size="sm">
+                {t('trial.updateAction')}
+              </Button>
+            }
+          />
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
