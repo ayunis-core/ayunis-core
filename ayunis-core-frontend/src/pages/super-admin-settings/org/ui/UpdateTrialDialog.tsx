@@ -55,7 +55,12 @@ export default function UpdateTrialDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={() => void handleSubmit()} className="space-y-6">
+          <form
+            onSubmit={(event) => {
+              void handleSubmit(event);
+            }}
+            className="space-y-6"
+          >
             <FormField
               control={form.control}
               name="maxMessages"

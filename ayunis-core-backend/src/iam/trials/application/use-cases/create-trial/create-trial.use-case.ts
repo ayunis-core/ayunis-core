@@ -68,10 +68,7 @@ export class CreateTrialUseCase {
 
       return createdTrial;
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        // Already logged and properly typed error, just rethrow
-        throw error;
-      }
+      if (error instanceof ApplicationError) throw error;
 
       this.logger.error('Trial creation failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
