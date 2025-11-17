@@ -82,7 +82,7 @@ import { ConfigService } from '@nestjs/config';
     LegalAcceptancesModule,
     OrgsModule,
     UsersModule,
-    SourcesModule,
+    forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
