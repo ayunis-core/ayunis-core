@@ -1,3 +1,3 @@
-import ModelSettingsPage from "./ui/ModelSettingsPage";
+import ModelSettingsPage from './ui/ModelSettingsPage';
 
 export default ModelSettingsPage;

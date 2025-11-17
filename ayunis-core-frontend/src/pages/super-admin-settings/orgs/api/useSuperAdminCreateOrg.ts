@@ -1,10 +1,10 @@
 import {
   useSuperAdminOrgsControllerCreateOrg,
   type CreateOrgRequestDto,
-} from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
-import { getSuperAdminOrgsControllerGetAllOrgsQueryKey } from "@/shared/api";
+} from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
+import { getSuperAdminOrgsControllerGetAllOrgsQueryKey } from '@/shared/api';
 
 interface UseSuperAdminCreateOrgOptions {
   onSuccessCallback?: () => void;
@@ -19,14 +19,14 @@ export function useSuperAdminCreateOrg(
     mutation: {
       onSuccess: () => {
         // Invalidate the orgs list query
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getSuperAdminOrgsControllerGetAllOrgsQueryKey(),
         });
-        router.invalidate();
+        void router.invalidate();
         options?.onSuccessCallback?.();
       },
       onError: (err) => {
-        console.error("Error creating organization", err);
+        console.error('Error creating organization', err);
       },
     },
   });
@@ -44,4 +44,3 @@ export function useSuperAdminCreateOrg(
     error: createOrgMutation.error,
   };
 }
-

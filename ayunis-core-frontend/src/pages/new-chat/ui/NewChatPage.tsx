@@ -1,13 +1,13 @@
-import NewChatPageLayout from "./NewChatPageLayout";
-import ChatInput from "@/widgets/chat-input";
-import { useInitiateChat } from "../api/useInitiateChat";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { showError } from "@/shared/lib/toast";
-import { generateUUID } from "@/shared/lib/uuid";
-import type { AgentResponseDto } from "@/shared/api";
-import { SourceResponseDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import NewChatPageLayout from './NewChatPageLayout';
+import ChatInput from '@/widgets/chat-input';
+import { useInitiateChat } from '../api/useInitiateChat';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { showError } from '@/shared/lib/toast';
+import { generateUUID } from '@/shared/lib/uuid';
+import type { AgentResponseDto } from '@/shared/api';
+import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -24,7 +24,7 @@ export default function NewChatPage({
   isEmbeddingModelEnabled,
   agents,
 }: NewChatPageProps) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const { initiateChat } = useInitiateChat();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
@@ -39,7 +39,7 @@ export default function NewChatPage({
   const selectedAgent = agents.find((agent) => agent.id === agentId);
 
   function handleFileUpload(file: File) {
-    const isCsvFile = file.name.endsWith(".csv");
+    const isCsvFile = file.name.endsWith('.csv');
     setSources([
       ...sources,
       {
@@ -72,9 +72,9 @@ export default function NewChatPage({
     setModelId(selectedModelId);
   }
 
-  async function handleSend(message: string) {
+  function handleSend(message: string) {
     if (!modelId && !agentId) {
-      showError(t("newChat.noModelOrAgentError"));
+      showError(t('newChat.noModelOrAgentError'));
       return;
     }
 
@@ -83,10 +83,10 @@ export default function NewChatPage({
 
   return (
     <NewChatPageLayout
-      header={<ContentAreaHeader title={t("newChat.newChat")} />}
+      header={<ContentAreaHeader title={t('newChat.newChat')} />}
     >
       <div className="text-center">
-        <h1 className="text-2xl font-bold">{t("newChat.title")}</h1>
+        <h1 className="text-2xl font-bold">{t('newChat.title')}</h1>
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput

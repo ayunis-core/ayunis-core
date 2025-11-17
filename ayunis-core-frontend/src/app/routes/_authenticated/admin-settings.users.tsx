@@ -1,12 +1,12 @@
-import UsersSettingsPage from "@/pages/admin-settings/users-settings";
-import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions } from "@tanstack/react-query";
+import UsersSettingsPage from '@/pages/admin-settings/users-settings';
+import { createFileRoute } from '@tanstack/react-router';
+import { queryOptions } from '@tanstack/react-query';
 import {
   getInvitesControllerGetInvitesQueryKey,
   invitesControllerGetInvites,
   getUserControllerGetUsersInOrganizationQueryKey,
   userControllerGetUsersInOrganization,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 const invitesQueryOptions = () =>
   queryOptions({
@@ -20,7 +20,7 @@ const usersQueryOptions = () =>
     queryFn: () => userControllerGetUsersInOrganization(),
   });
 
-export const Route = createFileRoute("/_authenticated/admin-settings/users")({
+export const Route = createFileRoute('/_authenticated/admin-settings/users')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     const [invites, users] = await Promise.all([

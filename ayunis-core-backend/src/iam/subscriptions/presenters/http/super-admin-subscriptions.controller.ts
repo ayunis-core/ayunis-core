@@ -6,7 +6,6 @@ import {
   Body,
   Logger,
   Put,
-  NotFoundException,
   Param,
   HttpCode,
   HttpStatus,
@@ -20,7 +19,6 @@ import {
   ApiParam,
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import {
@@ -35,7 +33,10 @@ import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-su
 import { CancelSubscriptionCommand } from '../../application/use-cases/cancel-subscription/cancel-subscription.command';
 import { UncancelSubscriptionUseCase } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
 import { UncancelSubscriptionCommand } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.command';
-import { SubscriptionResponseDto } from './dto/subscription-response.dto';
+import {
+  SubscriptionResponseDto,
+  SubscriptionResponseDtoNullable,
+} from './dto/subscription-response.dto';
 import { CreateSubscriptionRequestDto } from './dto/create-subscription-request.dto';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
 import { SubscriptionResponseMapper } from './mappers/subscription-response.mapper';
@@ -48,12 +49,14 @@ import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-bil
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { SubscriptionNotFoundError } from '../../application/subscription.errors';
 
 @ApiTags('Super Admin Subscriptions')
 @Controller('super-admin/subscriptions')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 @ApiExtraModels(
   SubscriptionResponseDto,
+  SubscriptionResponseDtoNullable,
   CreateSubscriptionRequestDto,
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
@@ -89,11 +92,8 @@ export class SuperAdminSubscriptionsController {
     status: HttpStatus.OK,
     description: 'Successfully retrieved subscription details',
     schema: {
-      $ref: getSchemaPath(SubscriptionResponseDto),
+      $ref: getSchemaPath(SubscriptionResponseDtoNullable),
     },
-  })
-  @ApiNotFoundResponse({
-    description: 'No subscription found for the organization',
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
@@ -104,27 +104,30 @@ export class SuperAdminSubscriptionsController {
   async getSubscription(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<SubscriptionResponseDto> {
+  ): Promise<SubscriptionResponseDtoNullable> {
     this.logger.log(
       `Getting subscription for org ${orgId} by super admin ${userId}`,
     );
 
-    const query = new GetActiveSubscriptionQuery({
-      orgId,
-      requestingUserId: userId,
-    });
+    try {
+      const query = new GetActiveSubscriptionQuery({
+        orgId,
+        requestingUserId: userId,
+      });
 
-    const result = await this.getSubscriptionUseCase.execute(query);
+      const result = await this.getSubscriptionUseCase.execute(query);
 
-    if (!result) {
-      this.logger.warn(`No subscription found for org ${orgId}`);
-      throw new NotFoundException('Subscription not found');
+      const responseDto = this.subscriptionResponseMapper.toDto(result);
+      this.logger.log(`Successfully retrieved subscription for org ${orgId}`);
+
+      return { subscription: responseDto };
+    } catch (error) {
+      if (error instanceof SubscriptionNotFoundError) {
+        this.logger.warn(`No subscription found for org ${orgId}`);
+        return { subscription: undefined };
+      }
+      throw error;
     }
-
-    const responseDto = this.subscriptionResponseMapper.toDto(result);
-    this.logger.log(`Successfully retrieved subscription for org ${orgId}`);
-
-    return responseDto;
   }
 
   @Post(':orgId')

@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -15,22 +15,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/shadcn/select";
-import { Checkbox } from "@/shared/ui/shadcn/checkbox";
-import { Label } from "@/shared/ui/shadcn/label";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useSuperAdminCreateUser } from "../api/useSuperAdminCreateUser";
-import { useTranslation } from "react-i18next";
-import type { CreateUserDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+} from '@/shared/ui/shadcn/select';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Label } from '@/shared/ui/shadcn/label';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useSuperAdminCreateUser } from '../api/useSuperAdminCreateUser';
+import { useTranslation } from 'react-i18next';
+import type { CreateUserDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreateUserDialogProps {
   orgId: string;
@@ -39,12 +39,12 @@ interface CreateUserDialogProps {
 interface CreateUserFormData {
   email: string;
   name: string;
-  role: CreateUserDto["role"];
+  role: CreateUserDto['role'];
   sendPasswordResetEmail: boolean;
 }
 
 export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const [isOpen, setIsOpen] = useState(false);
   const { createUser, isLoading } = useSuperAdminCreateUser({
     orgId,
@@ -56,9 +56,9 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
 
   const form = useForm<CreateUserFormData>({
     defaultValues: {
-      email: "",
-      name: "",
-      role: "user",
+      email: '',
+      name: '',
+      role: 'user',
       sendPasswordResetEmail: true,
     },
   });
@@ -82,27 +82,32 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm">{t("createUser.button")}</Button>
+        <Button size="sm">{t('createUser.button')}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t("createUser.title")}</DialogTitle>
-          <DialogDescription>{t("createUser.description")}</DialogDescription>
+          <DialogTitle>{t('createUser.title')}</DialogTitle>
+          <DialogDescription>{t('createUser.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              void form.handleSubmit(onSubmit)(e);
+            }}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
               rules={{
-                required: t("createUser.nameRequired"),
+                required: t('createUser.nameRequired'),
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("createUser.nameLabel")}</FormLabel>
+                  <FormLabel>{t('createUser.nameLabel')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("createUser.namePlaceholder")}
+                      placeholder={t('createUser.namePlaceholder')}
                       {...field}
                       disabled={isLoading}
                     />
@@ -115,19 +120,19 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
               control={form.control}
               name="email"
               rules={{
-                required: t("createUser.emailRequired"),
+                required: t('createUser.emailRequired'),
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: t("createUser.emailInvalid"),
+                  message: t('createUser.emailInvalid'),
                 },
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("createUser.emailLabel")}</FormLabel>
+                  <FormLabel>{t('createUser.emailLabel')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder={t("createUser.emailPlaceholder")}
+                      placeholder={t('createUser.emailPlaceholder')}
                       {...field}
                       disabled={isLoading}
                     />
@@ -140,11 +145,11 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
               control={form.control}
               name="role"
               rules={{
-                required: t("createUser.roleRequired"),
+                required: t('createUser.roleRequired'),
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("createUser.roleLabel")}</FormLabel>
+                  <FormLabel>{t('createUser.roleLabel')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -153,16 +158,16 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={t("createUser.rolePlaceholder")}
+                          placeholder={t('createUser.rolePlaceholder')}
                         />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="user">
-                        {t("createUser.roleUser")}
+                        {t('createUser.roleUser')}
                       </SelectItem>
                       <SelectItem value="admin">
-                        {t("createUser.roleAdmin")}
+                        {t('createUser.roleAdmin')}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -187,7 +192,7 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
                         htmlFor="sendPasswordResetEmail"
                         className="block font-normal leading-5 cursor-pointer"
                       >
-                        {t("createUser.sendPasswordResetEmailLabel")}
+                        {t('createUser.sendPasswordResetEmailLabel')}
                       </Label>
                     </div>
                   </FormControl>
@@ -202,10 +207,10 @@ export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
                 onClick={() => handleOpenChange(false)}
                 disabled={isLoading}
               >
-                {t("createUser.cancel")}
+                {t('createUser.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? t("createUser.creating") : t("createUser.create")}
+                {isLoading ? t('createUser.creating') : t('createUser.create')}
               </Button>
             </DialogFooter>
           </form>

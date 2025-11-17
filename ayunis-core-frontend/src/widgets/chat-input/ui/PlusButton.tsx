@@ -7,14 +7,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Loader2, Plus } from "lucide-react";
-import { Input } from "@/shared/ui/shadcn/input";
-import { useRef } from "react";
-import { usePrompts } from "../api/usePrompts";
-import { useTranslation } from "react-i18next";
-import { showError } from "@/shared/lib/toast";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Loader2, Plus } from 'lucide-react';
+import { Input } from '@/shared/ui/shadcn/input';
+import { useRef } from 'react';
+import { usePrompts } from '../api/usePrompts';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
 
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
@@ -31,7 +31,7 @@ export default function PlusButton({
   onPromptSelect,
 }: PlusButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const {
     prompts,
     isLoading: isLoadingPrompts,
@@ -40,7 +40,7 @@ export default function PlusButton({
 
   const handleFileChange = (file?: File) => {
     if (isFileSourceDisabled) {
-      showError(t("chatInput.noEmbeddingModelEnabled"));
+      showError(t('chatInput.noEmbeddingModelEnabled'));
       return;
     }
     if (file) {
@@ -66,23 +66,23 @@ export default function PlusButton({
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingFile || isCreatingFileSource}
             >
-              {t("chatInput.uploadFile")}
+              {t('chatInput.uploadFile')}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuGroup>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                {t("chatInput.addPrompt")}
+                {t('chatInput.addPrompt')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {isLoadingPrompts ? (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t("common.loading")}
+                    {t('common.loading')}
                   </DropdownMenuItem>
                 ) : promptsError ? (
                   <DropdownMenuItem disabled className="text-destructive">
-                    {t("chatInput.promptsLoadError")}
+                    {t('chatInput.promptsLoadError')}
                   </DropdownMenuItem>
                 ) : (
                   prompts.map((prompt) => (

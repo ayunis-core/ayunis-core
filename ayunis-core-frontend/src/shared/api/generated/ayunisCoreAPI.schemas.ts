@@ -105,6 +105,20 @@ export interface PermittedLanguageModelResponseDto {
   isReasoning: boolean;
 }
 
+/**
+ * The permitted language model
+ * @nullable
+ */
+export type PermittedLanguageModelResponseDtoNullablePermittedLanguageModel = PermittedLanguageModelResponseDto | null;
+
+export interface PermittedLanguageModelResponseDtoNullable {
+  /**
+   * The permitted language model
+   * @nullable
+   */
+  permittedLanguageModel: PermittedLanguageModelResponseDtoNullablePermittedLanguageModel;
+}
+
 export interface SetUserDefaultModelDto {
   /** The ID of the permitted model to set as default */
   permittedModelId: string;
@@ -937,6 +951,11 @@ export interface SubscriptionResponseDto {
   nextRenewalDate: string;
   /** Billing information */
   billingInfo: SubscriptionBillingInfoResponseDto;
+}
+
+export interface SubscriptionResponseDtoNullable {
+  /** Subscription */
+  subscription?: SubscriptionResponseDto;
 }
 
 export interface CreateSubscriptionRequestDto {
@@ -2037,16 +2056,6 @@ export interface SendMessageDto {
   streaming?: boolean;
 }
 
-export interface CreateTrialRequestDto {
-  /** Organization ID for which to create the trial */
-  orgId: string;
-  /**
-   * Maximum number of messages allowed in the trial
-   * @minimum 1
-   */
-  maxMessages: number;
-}
-
 export interface SuperAdminTrialResponseDto {
   /** Trial unique identifier */
   id: string;
@@ -2066,6 +2075,21 @@ export interface SuperAdminTrialResponseDto {
   createdAt: string;
   /** Date when the trial was last updated */
   updatedAt: string;
+}
+
+export interface SuperAdminTrialResponseDtoNullable {
+  /** Trial */
+  trial?: SuperAdminTrialResponseDto;
+}
+
+export interface CreateTrialRequestDto {
+  /** Organization ID for which to create the trial */
+  orgId: string;
+  /**
+   * Maximum number of messages allowed in the trial
+   * @minimum 1
+   */
+  maxMessages: number;
 }
 
 export interface UpdateTrialRequestDto {

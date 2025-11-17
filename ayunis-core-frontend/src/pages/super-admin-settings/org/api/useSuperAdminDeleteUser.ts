@@ -1,11 +1,11 @@
 import {
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
   useSuperAdminUsersControllerDeleteUser,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import { useQueryClient } from "@tanstack/react-query";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import { useQueryClient } from '@tanstack/react-query';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from '@tanstack/react-router';
 
 interface UseSuperAdminDeleteUserOptions {
   orgId: string;
@@ -17,19 +17,19 @@ export function useSuperAdminDeleteUser(
 ) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const deleteUserMutation = useSuperAdminUsersControllerDeleteUser({
     mutation: {
       onSuccess: () => {
-        showSuccess(t("deleteUser.success"));
-        queryClient.invalidateQueries({
+        showSuccess(t('deleteUser.success'));
+        void queryClient.invalidateQueries({
           queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(
             options.orgId,
           ),
         });
-        router.invalidate({
+        void router.invalidate({
           filter: (route) =>
-            route.id === "/_authenticated/super-admin-settings/orgs/$id",
+            route.id === '/_authenticated/super-admin-settings/orgs/$id',
         });
 
         // Call the success callback
@@ -38,8 +38,8 @@ export function useSuperAdminDeleteUser(
         }
       },
       onError: (err) => {
-        console.error("Error deleting user", err);
-        showError(t("deleteUser.error"));
+        console.error('Error deleting user', err);
+        showError(t('deleteUser.error'));
       },
     },
   });

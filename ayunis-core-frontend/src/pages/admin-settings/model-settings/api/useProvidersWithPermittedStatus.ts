@@ -1,5 +1,4 @@
-import { useModelsControllerGetAllModelProviderInfosWithPermittedStatus } from "@/shared/api";
-import type { Provider } from "../model/openapi";
+import { useModelsControllerGetAllModelProviderInfosWithPermittedStatus } from '@/shared/api';
 
 export function useProvidersWithPermittedStatus() {
   const {
@@ -10,7 +9,7 @@ export function useProvidersWithPermittedStatus() {
   } = useModelsControllerGetAllModelProviderInfosWithPermittedStatus();
 
   return {
-    providers: providers as Provider[],
+    providers: providers,
     isLoading,
     isError: !!error,
     error,

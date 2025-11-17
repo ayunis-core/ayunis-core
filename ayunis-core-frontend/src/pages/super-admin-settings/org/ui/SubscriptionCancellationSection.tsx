@@ -4,14 +4,14 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Badge } from "@/shared/ui/shadcn/badge";
-import { useTranslation } from "react-i18next";
-import type { SubscriptionResponseDto } from "@/shared/api";
-import { useConfirmation } from "@/widgets/confirmation-modal";
-import useSuperAdminSubscriptionCancel from "../api/useSuperAdminSubscriptionCancel";
-import useSuperAdminSubscriptionUncancel from "../api/useSuperAdminSubscriptionUncancel";
+} from '@/shared/ui/shadcn/card';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import { useTranslation } from 'react-i18next';
+import type { SubscriptionResponseDto } from '@/shared/api';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import useSuperAdminSubscriptionCancel from '../api/useSuperAdminSubscriptionCancel';
+import useSuperAdminSubscriptionUncancel from '../api/useSuperAdminSubscriptionUncancel';
 
 interface SubscriptionCancellationSectionProps {
   subscription: SubscriptionResponseDto;
@@ -22,7 +22,7 @@ export default function SubscriptionCancellationSection({
   subscription,
   orgId,
 }: SubscriptionCancellationSectionProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const { cancelSubscription } = useSuperAdminSubscriptionCancel(orgId);
   const { uncancelSubscription } = useSuperAdminSubscriptionUncancel(orgId);
   const { confirm: confirmUncancel } = useConfirmation();
@@ -35,8 +35,8 @@ export default function SubscriptionCancellationSection({
       <Card className="border-destructive/20 bg-destructive/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {t("subscription.title")}
-            <Badge variant="destructive">{t("subscription.cancelled")}</Badge>
+            {t('subscription.title')}
+            <Badge variant="destructive">{t('subscription.cancelled')}</Badge>
           </CardTitle>
           <CardAction>
             <Button
@@ -44,26 +44,26 @@ export default function SubscriptionCancellationSection({
               variant="default"
               onClick={() => {
                 confirmUncancel({
-                  title: t("subscription.reactivateSubscription"),
+                  title: t('subscription.reactivateSubscription'),
                   description: t(
-                    "subscription.reactivateSubscriptionDescription",
+                    'subscription.reactivateSubscriptionDescription',
                   ),
-                  confirmText: t("subscription.confirmReactivate"),
-                  cancelText: t("subscription.cancelCancel"),
-                  variant: "default",
+                  confirmText: t('subscription.confirmReactivate'),
+                  cancelText: t('subscription.cancelCancel'),
+                  variant: 'default',
                   onConfirm: () => {
                     uncancelSubscription();
                   },
                 });
               }}
             >
-              {t("subscription.reactivate")}
+              {t('subscription.reactivate')}
             </Button>
           </CardAction>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            {t("subscription.reactivateAnytime")}
+            {t('subscription.reactivateAnytime')}
           </p>
         </CardContent>
       </Card>
@@ -74,8 +74,8 @@ export default function SubscriptionCancellationSection({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {t("subscription.title")}
-          <Badge variant="secondary">{t("subscription.active")}</Badge>
+          {t('subscription.title')}
+          <Badge variant="secondary">{t('subscription.active')}</Badge>
         </CardTitle>
         <CardAction>
           <Button
@@ -83,24 +83,24 @@ export default function SubscriptionCancellationSection({
             variant="outline"
             onClick={() => {
               confirmCancel({
-                title: t("subscription.cancelSubscription"),
-                description: t("subscription.cancelSubscriptionDescription"),
-                confirmText: t("subscription.confirmCancel"),
-                cancelText: t("subscription.cancelCancel"),
-                variant: "destructive",
+                title: t('subscription.cancelSubscription'),
+                description: t('subscription.cancelSubscriptionDescription'),
+                confirmText: t('subscription.confirmCancel'),
+                cancelText: t('subscription.cancelCancel'),
+                variant: 'destructive',
                 onConfirm: () => {
                   cancelSubscription();
                 },
               });
             }}
           >
-            {t("subscription.cancel")}
+            {t('subscription.cancel')}
           </Button>
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          {t("subscription.nextRenewalDate", {
+          {t('subscription.nextRenewalDate', {
             date: new Date(subscription.nextRenewalDate).toLocaleDateString(),
           })}
         </p>
@@ -108,4 +108,3 @@ export default function SubscriptionCancellationSection({
     </Card>
   );
 }
-

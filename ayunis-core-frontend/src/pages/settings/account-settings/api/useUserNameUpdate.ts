@@ -1,20 +1,20 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import {
   getAuthenticationControllerMeQueryKey,
   useUserControllerUpdateUserName,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 import {
   updateUserNameFormSchema,
   type UpdateUserNameFormValues,
-} from "../model/updateUserNameSchema";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
+} from '../model/updateUserNameSchema';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useUserNameUpdate(currentName: string) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation('settings');
   const updateMutation = useUserControllerUpdateUserName();
   const queryClient = useQueryClient();
 
@@ -34,18 +34,18 @@ export function useUserNameUpdate(currentName: string) {
       },
       {
         onSuccess: () => {
-          showSuccess(t("account.nameUpdatedSuccessfully"));
-          queryClient.invalidateQueries({
+          showSuccess(t('account.nameUpdatedSuccessfully'));
+          void queryClient.invalidateQueries({
             queryKey: getAuthenticationControllerMeQueryKey(),
           });
         },
         onError: (error) => {
-          console.error("Username update failed:", error);
+          console.error('Username update failed:', error);
           const { status } = extractErrorData(error);
           if (status === 400) {
-            showError(t("account.error.invalidName"));
+            showError(t('account.error.invalidName'));
           } else {
-            showError(t("account.error.updateFailed"));
+            showError(t('account.error.updateFailed'));
           }
         },
       },

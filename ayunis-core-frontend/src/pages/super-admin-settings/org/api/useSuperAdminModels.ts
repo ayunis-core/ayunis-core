@@ -1,7 +1,7 @@
 import {
   useSuperAdminModelsControllerGetAvailableModels,
   useSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus,
-} from "@/shared/api";
+} from '@/shared/api';
 
 export function useSuperAdminModels(orgId: string) {
   const {

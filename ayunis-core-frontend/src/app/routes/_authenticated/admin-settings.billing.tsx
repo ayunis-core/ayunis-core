@@ -19,15 +19,9 @@ export const Route = createFileRoute('/_authenticated/admin-settings/billing')({
     const queryClient = context.queryClient;
     try {
       const subscriptionPrice = await subscriptionsControllerGetCurrentPrice();
-      const subscription = await queryClient
-        .fetchQuery(subscriptionQueryOptions)
-        .catch((error) => {
-          const { code } = extractErrorData(error);
-          if (code === 'SUBSCRIPTION_NOT_FOUND') {
-            return null;
-          }
-          throw error;
-        });
+      const subscription = await queryClient.fetchQuery(
+        subscriptionQueryOptions,
+      );
       return { subscription, subscriptionPrice };
     } catch (error) {
       const { code } = extractErrorData(error);
@@ -43,7 +37,7 @@ function RouteComponent() {
   const { subscription, subscriptionPrice } = Route.useLoaderData();
   return (
     <BillingSettingsPage
-      subscription={subscription}
+      subscription={subscription.subscription}
       subscriptionPrice={subscriptionPrice}
     />
   );

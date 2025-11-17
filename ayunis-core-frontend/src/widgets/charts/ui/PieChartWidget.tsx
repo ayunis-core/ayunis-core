@@ -1,29 +1,29 @@
 // Types
-import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import type {
   PieDataPoint,
   TransformedPieDataPoint,
-} from "@/widgets/charts/lib/ChartUtils";
+} from '@/widgets/charts/lib/ChartUtils';
 
 // Utils
-import { useMemo } from "react";
+import { useMemo } from 'react';
 import {
   colorVar,
   pieNamesToConfig,
   transformPieChartData,
-} from "@/widgets/charts/lib/ChartUtils";
+} from '@/widgets/charts/lib/ChartUtils';
 
 // UI
-import { PieChart, Pie, Cell } from "recharts";
+import { PieChart, Pie, Cell } from 'recharts';
 import {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-} from "@/shared/ui/shadcn/chart";
-import { ChartCard } from "@/widgets/charts/ui/ChartCard";
-import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
-import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
+} from '@/shared/ui/shadcn/chart';
+import { ChartCard } from '@/widgets/charts/ui/ChartCard';
+import { ChartLoadingState } from '@/widgets/charts/ui/ChartLoadingState';
+import { ChartEmptyState } from '@/widgets/charts/ui/ChartEmptyState';
 
 interface ChartParams {
   chartTitle?: string;

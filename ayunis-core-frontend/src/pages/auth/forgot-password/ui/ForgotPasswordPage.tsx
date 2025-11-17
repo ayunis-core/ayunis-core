@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Form,
   FormControl,
@@ -6,44 +6,49 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import OnboardingLayout from "@/layouts/onboarding-layout";
-import { useForgotPassword } from "../api/useForgotPassword";
-import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import OnboardingLayout from '@/layouts/onboarding-layout';
+import { useForgotPassword } from '../api/useForgotPassword';
+import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 
 export function ForgotPasswordPage() {
   const { form, onSubmit, isLoading } = useForgotPassword();
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
 
   return (
     <OnboardingLayout
-      title={t("forgotPassword.title")}
-      description={t("forgotPassword.description")}
+      title={t('forgotPassword.title')}
+      description={t('forgotPassword.description')}
       footer={
         <>
-          {t("forgotPassword.backToLogin")}{" "}
+          {t('forgotPassword.backToLogin')}{' '}
           <Link
             to="/login"
             className="font-medium text-primary hover:underline"
           >
-            {t("forgotPassword.signIn")}
+            {t('forgotPassword.signIn')}
           </Link>
         </>
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("forgotPassword.email")}</FormLabel>
+                <FormLabel>{t('forgotPassword.email')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("forgotPassword.emailPlaceholder")}
+                    placeholder={t('forgotPassword.emailPlaceholder')}
                     type="email"
                     {...field}
                   />
@@ -54,8 +59,8 @@ export function ForgotPasswordPage() {
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading
-              ? t("forgotPassword.sending")
-              : t("forgotPassword.sendResetLink")}
+              ? t('forgotPassword.sending')
+              : t('forgotPassword.sendResetLink')}
           </Button>
         </form>
       </Form>

@@ -1,5 +1,5 @@
-import { usePromptsControllerDelete } from "@/shared/api/generated/ayunisCoreAPI";
-import { useQueryClient } from "@tanstack/react-query";
+import { usePromptsControllerDelete } from '@/shared/api/generated/ayunisCoreAPI';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useDeletePrompt() {
   const queryClient = useQueryClient();
@@ -8,8 +8,8 @@ export function useDeletePrompt() {
     mutation: {
       onSuccess: () => {
         // Invalidate and refetch prompts list
-        queryClient.invalidateQueries({
-          queryKey: ["prompts"],
+        void queryClient.invalidateQueries({
+          queryKey: ['prompts'],
         });
       },
     },

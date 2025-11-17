@@ -1,7 +1,7 @@
 import {
   useThreadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 export interface SidebarThread {
   id: string;

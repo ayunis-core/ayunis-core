@@ -21,6 +21,19 @@
         "tags": ["app"]
       }
     },
+    "/health": {
+      "get": {
+        "operationId": "AppController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Health status"
+          }
+        },
+        "summary": "Check if the deployment is healthy",
+        "tags": ["app"]
+      }
+    },
     "/models/available": {
       "get": {
         "operationId": "ModelsController_getAvailableModelsWithConfig",
@@ -138,13 +151,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
                 }
               }
             }
           },
-          "404": {
-            "description": "No default model found"
+          "500": {
+            "description": "Internal server error"
           }
         },
         "summary": "Get the effective default model for the user",
@@ -162,13 +175,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
                 }
               }
             }
           },
-          "404": {
-            "description": "No organization default model found"
+          "500": {
+            "description": "Internal server error"
           }
         },
         "summary": "Get the organization default model",
@@ -221,13 +234,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDtoNullable"
                 }
               }
             }
           },
-          "404": {
-            "description": "No user-specific default model found"
+          "500": {
+            "description": "Internal server error"
           }
         },
         "summary": "Get the user-specific default model",
@@ -1990,7 +2003,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionResponseDto"
+                  "$ref": "#/components/schemas/SubscriptionResponseDtoNullable"
                 }
               }
             }
@@ -2236,16 +2249,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionResponseDto"
+                  "$ref": "#/components/schemas/SubscriptionResponseDtoNullable"
                 }
               }
             }
           },
           "401": {
             "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
           },
           "500": {
             "description": "Internal server error"
@@ -3892,7 +3902,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+                  "$ref": "#/components/schemas/SuperAdminTrialResponseDtoNullable"
                 }
               }
             }
@@ -4755,6 +4765,21 @@
           "canStream",
           "isReasoning"
         ]
+      },
+      "PermittedLanguageModelResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "permittedLanguageModel": {
+            "description": "The permitted language model",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["permittedLanguageModel"]
       },
       "SetUserDefaultModelDto": {
         "type": "object",
@@ -5902,6 +5927,19 @@
           "nextRenewalDate",
           "billingInfo"
         ]
+      },
+      "SubscriptionResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "subscription": {
+            "description": "Subscription",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionResponseDto"
+              }
+            ]
+          }
+        }
       },
       "CreateSubscriptionRequestDto": {
         "type": "object",
@@ -7419,24 +7457,6 @@
         },
         "required": ["threadId", "input"]
       },
-      "CreateTrialRequestDto": {
-        "type": "object",
-        "properties": {
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID for which to create the trial",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "maxMessages": {
-            "type": "number",
-            "description": "Maximum number of messages allowed in the trial",
-            "example": 1000,
-            "minimum": 1
-          }
-        },
-        "required": ["orgId", "maxMessages"]
-      },
       "SuperAdminTrialResponseDto": {
         "type": "object",
         "properties": {
@@ -7485,6 +7505,37 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "SuperAdminTrialResponseDtoNullable": {
+        "type": "object",
+        "properties": {
+          "trial": {
+            "description": "Trial",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SuperAdminTrialResponseDto"
+              }
+            ]
+          }
+        }
+      },
+      "CreateTrialRequestDto": {
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID for which to create the trial",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "maxMessages": {
+            "type": "number",
+            "description": "Maximum number of messages allowed in the trial",
+            "example": 1000,
+            "minimum": 1
+          }
+        },
+        "required": ["orgId", "maxMessages"]
       },
       "UpdateTrialRequestDto": {
         "type": "object",

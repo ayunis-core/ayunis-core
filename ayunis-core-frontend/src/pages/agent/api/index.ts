@@ -1,2 +1,2 @@
-export { useDeleteAgent } from "./useDeleteAgent";
-export { useUpdateAgent } from "./useUpdateAgent";
+export { useDeleteAgent } from './useDeleteAgent';
+export { useUpdateAgent } from './useUpdateAgent';

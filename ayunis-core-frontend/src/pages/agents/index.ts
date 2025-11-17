@@ -1,1 +1,1 @@
-export { default as AgentsPage } from "./ui/AgentsPage";
+export { default as AgentsPage } from './ui/AgentsPage';

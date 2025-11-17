@@ -1,17 +1,17 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import {
   agentsControllerDelete,
   getAgentsControllerFindAllQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import { useRouter } from '@tanstack/react-router';
 interface DeleteAgentParams {
   id: string;
 }
 
 export function useDeleteAgent() {
-  const { t } = useTranslation("agents");
+  const { t } = useTranslation('agents');
   const queryClient = useQueryClient();
 
   const router = useRouter();
@@ -20,14 +20,14 @@ export function useDeleteAgent() {
       await agentsControllerDelete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: getAgentsControllerFindAllQueryKey(),
       });
-      router.invalidate();
-      toast.success(t("delete.success"));
+      void router.invalidate();
+      toast.success(t('delete.success'));
     },
     onError: () => {
-      toast.error(t("delete.error"));
+      toast.error(t('delete.error'));
     },
   });
 }

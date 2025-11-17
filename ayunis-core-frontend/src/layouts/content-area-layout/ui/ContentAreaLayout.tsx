@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollArea } from "@/shared/ui/shadcn/scroll-area";
+import React from 'react';
+import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
 
 interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;
@@ -10,7 +10,7 @@ interface ContentAreaLayoutProps {
 export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
   contentHeader,
   contentArea,
-  className = "",
+  className = '',
 }) => {
   return (
     <div className={`flex flex-col absolute inset-0 ${className} px-4 pb-4`}>

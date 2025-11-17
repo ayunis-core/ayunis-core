@@ -1,17 +1,16 @@
-
 // Utils
-import { useMemo } from "react";
-import { cn } from "@/shared/lib/shadcn/utils";
+import { useMemo } from 'react';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 // UI
-import { ChartContainer, type ChartConfig } from "@/shared/ui/shadcn/chart";
+import { ChartContainer, type ChartConfig } from '@/shared/ui/shadcn/chart';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   CardFooter,
-} from "@/shared/ui/shadcn/card";
+} from '@/shared/ui/shadcn/card';
 
 type ChartCardProps = {
   title?: string;
@@ -21,7 +20,7 @@ type ChartCardProps = {
   xCount?: number;
   threshold?: number;
   perPointPx?: number;
-  children: React.ComponentProps<typeof ChartContainer>["children"];
+  children: React.ComponentProps<typeof ChartContainer>['children'];
 };
 
 export function ChartCard({
@@ -43,7 +42,7 @@ export function ChartCard({
   }, [xCount, threshold, perPointPx]);
 
   return (
-    <Card className={cn("my-2", className)}>
+    <Card className={cn('my-2', className)}>
       {title && (
         <CardHeader>
           <CardTitle>{title}</CardTitle>
@@ -68,5 +67,3 @@ export function ChartCard({
     </Card>
   );
 }
-
-

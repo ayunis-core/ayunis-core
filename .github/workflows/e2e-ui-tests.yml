@@ -12,9 +12,16 @@ jobs:
       # Run App Containers
       - name: Start Containers
         run: docker compose -f docker-compose.test.yml up -d
-      # Seed
-      - name: Seed Database
-        run: docker exec ayunis-app-test npm run seed
+      # Wait for database to be ready
+      - name: Wait for Database
+        run: |
+          timeout 60 bash -c 'until docker exec ayunis-postgres-test pg_isready -U postgres; do sleep 2; done'
+      # Run migrations (schema only - no test data)
+      - name: Run Database Migrations
+        run: docker exec ayunis-app-test npm run migration:run:dev
+      # Seed with minimal test data
+      - name: Seed Test Data
+        run: docker exec ayunis-app-test npm run seed:minimal
       # Tests
       - uses: actions/setup-node@v4
         with:

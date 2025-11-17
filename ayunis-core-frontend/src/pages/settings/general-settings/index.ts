@@ -1,1 +1,1 @@
-export { default as GeneralSettingsPage } from "./ui/GeneralSettingsPage";
+export { default as GeneralSettingsPage } from './ui/GeneralSettingsPage';

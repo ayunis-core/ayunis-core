@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Form,
   FormControl,
@@ -6,44 +6,49 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import OnboardingLayout from "@/layouts/onboarding-layout";
-import { useEmailConfirmResend } from "../api/useEmailConfirmResend";
-import { useTranslation } from "react-i18next";
-import { useState } from "react";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import OnboardingLayout from '@/layouts/onboarding-layout';
+import { useEmailConfirmResend } from '../api/useEmailConfirmResend';
+import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 export default function EmailConfirmPage() {
   const { form, onSubmit, isLoading, isSuccess } = useEmailConfirmResend();
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
   const [showResendForm, setShowResendForm] = useState(false);
 
   if (isSuccess) {
     return (
       <OnboardingLayout
-        title={t("emailConfirm.successTitle")}
-        description={t("emailConfirm.successDescription")}
+        title={t('emailConfirm.successTitle')}
+        description={t('emailConfirm.successDescription')}
       />
     );
   }
 
   return (
     <OnboardingLayout
-      title={t("emailConfirm.title")}
-      description={t("emailConfirm.description")}
+      title={t('emailConfirm.title')}
+      description={t('emailConfirm.description')}
     >
       {showResendForm ? (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              void form.handleSubmit(onSubmit)(e);
+            }}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("emailConfirm.email")}</FormLabel>
+                  <FormLabel>{t('emailConfirm.email')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("emailConfirm.emailPlaceholder")}
+                      placeholder={t('emailConfirm.emailPlaceholder')}
                       type="email"
                       {...field}
                     />
@@ -54,8 +59,8 @@ export default function EmailConfirmPage() {
             />
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading
-                ? t("emailConfirm.sendingConfirmation")
-                : t("emailConfirm.sendConfirmationButton")}
+                ? t('emailConfirm.sendingConfirmation')
+                : t('emailConfirm.sendConfirmationButton')}
             </Button>
             <Button
               type="button"
@@ -63,7 +68,7 @@ export default function EmailConfirmPage() {
               className="w-full"
               onClick={() => setShowResendForm(false)}
             >
-              {t("emailConfirm.cancel")}
+              {t('emailConfirm.cancel')}
             </Button>
           </form>
         </Form>
@@ -74,7 +79,7 @@ export default function EmailConfirmPage() {
             onClick={() => setShowResendForm(true)}
             className="text-sm"
           >
-            {t("emailConfirm.noEmailReceived")}
+            {t('emailConfirm.noEmailReceived')}
           </Button>
         </div>
       )}

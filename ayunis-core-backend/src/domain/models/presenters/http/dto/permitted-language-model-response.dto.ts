@@ -54,3 +54,12 @@ export class PermittedLanguageModelResponseDto {
   })
   isReasoning: boolean;
 }
+
+export class PermittedLanguageModelResponseDtoNullable {
+  @ApiProperty({
+    description: 'The permitted language model',
+    type: PermittedLanguageModelResponseDto,
+    nullable: true,
+  })
+  permittedLanguageModel?: PermittedLanguageModelResponseDto;
+}

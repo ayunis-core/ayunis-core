@@ -1,32 +1,32 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Skeleton } from "@/shared/ui/shadcn/skeleton";
-import { Plus, AlertCircle } from "lucide-react";
-import { IntegrationsList } from "./integrations-list";
-import { CreatePredefinedDialog } from "./create-predefined-dialog";
-import { CreateCustomDialog } from "./create-custom-dialog";
-import { EditIntegrationDialog } from "./edit-integration-dialog";
-import { DeleteConfirmationDialog } from "./delete-confirmation-dialog";
-import SettingsLayout from "../../admin-settings-layout";
-import { useMcpIntegrationsQueries } from "../api/useMcpIntegrationsQueries";
-import type { McpIntegration } from "../model/types";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { Plus, AlertCircle } from 'lucide-react';
+import { IntegrationsList } from './integrations-list';
+import { CreatePredefinedDialog } from './create-predefined-dialog';
+import { CreateCustomDialog } from './create-custom-dialog';
+import { EditIntegrationDialog } from './edit-integration-dialog';
+import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
+import SettingsLayout from '../../admin-settings-layout';
+import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
+import type { McpIntegration } from '../model/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
+} from '@/shared/ui/shadcn/dropdown-menu';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemTitle,
-} from "@/shared/ui/shadcn/item";
-import { ComingSoonDialog } from "./coming-soon-dialog";
+} from '@/shared/ui/shadcn/item';
+import { ComingSoonDialog } from './coming-soon-dialog';
 
 export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
 
   // Dialog states
   const [createPredefinedOpen, setCreatePredefinedOpen] = useState(false);
@@ -88,14 +88,14 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
           <div className="text-center">
             <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-600" />
             <h2 className="mb-2 text-2xl font-bold">
-              {t("integrations.page.errorLoadingTitle")}
+              {t('integrations.page.errorLoadingTitle')}
             </h2>
             <p className="mb-4 text-muted-foreground">
-              {(integrationsError as any)?.message ||
-                t("integrations.page.errorLoadingMessage")}
+              {(integrationsError as { message?: string })?.message ||
+                t('integrations.page.errorLoadingMessage')}
             </p>
-            <Button onClick={() => refetchIntegrations()}>
-              {t("integrations.page.retry")}
+            <Button onClick={() => void refetchIntegrations()}>
+              {t('integrations.page.retry')}
             </Button>
           </div>
         </div>
@@ -112,23 +112,23 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
           onClick={handleOpenCreatePredefined}
         >
           <Plus className="h-4 w-4" />
-          {t("integrations.page.add")}
+          {t('integrations.page.add')}
         </Button>
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4" />
-              {t("integrations.page.add")}
+              {t('integrations.page.add')}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleOpenCreatePredefined}>
-              {t("integrations.page.addPredefined")}
+              {t('integrations.page.addPredefined')}
             </DropdownMenuItem>
             {!isCloud && (
               <DropdownMenuItem onClick={() => setCreateCustomOpen(true)}>
-                {t("integrations.page.addCustom")}
+                {t('integrations.page.addCustom')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

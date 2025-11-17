@@ -1,7 +1,7 @@
-import AppLayout from "@/layouts/app-layout/ui/AppLayout";
-import ContentAreaLayout from "@/layouts/content-area-layout/ui/ContentAreaLayout";
-import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { SettingsSidebar } from "@/pages/settings/settings-layout/ui/SettingsSidebar";
+import AppLayout from '@/layouts/app-layout/ui/AppLayout';
+import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
+import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { SettingsSidebar } from '@/pages/settings/settings-layout/ui/SettingsSidebar';
 
 interface SettingsLayoutProps {
   title: string;

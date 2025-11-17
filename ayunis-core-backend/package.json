@@ -37,8 +37,10 @@
     "generate:client": "orval --config ./orval.config.ts",
     "cli:ts": "ts-node -r tsconfig-paths/register -r dotenv/config src/cli/main.ts",
     "cli": "node dist/src/cli/main.js",
-    "seed:ts": "npm run cli:ts -- seed:minimal",
-    "seed": "npm run cli -- seed:minimal"
+    "seed:minimal:ts": "ts-node -r tsconfig-paths/register -r dotenv/config src/db/scripts/seed-minimal.ts",
+    "seed:minimal": "node dist/src/db/scripts/seed-minimal.js",
+    "seed:ts": "npm run seed:minimal:ts",
+    "seed": "npm run seed:minimal"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
@@ -134,13 +136,14 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
+    "setupFiles": ["<rootDir>/../jest.setup.js"],
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
     }

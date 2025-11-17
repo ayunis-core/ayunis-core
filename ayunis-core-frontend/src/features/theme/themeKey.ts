@@ -1,1 +1,1 @@
-export const THEME_KEY = "ayunis-theme";
+export const THEME_KEY = 'ayunis-theme';

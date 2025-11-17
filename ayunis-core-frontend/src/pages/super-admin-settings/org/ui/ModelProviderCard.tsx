@@ -5,29 +5,29 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
-import { Switch } from "@/shared/ui/shadcn/switch";
-import { Label } from "@/shared/ui/shadcn/label";
-import { Separator } from "@/shared/ui/shadcn/separator";
-import { Badge } from "@/shared/ui/shadcn/badge";
+} from '@/shared/ui/shadcn/card';
+import { Switch } from '@/shared/ui/shadcn/switch';
+import { Label } from '@/shared/ui/shadcn/label';
+import { Separator } from '@/shared/ui/shadcn/separator';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import {
   ModelProviderWithPermittedStatusResponseDtoHostedIn,
   type ModelWithConfigResponseDto,
-} from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { useSuperAdminCreatePermittedModel } from "../api/useSuperAdminCreatePermittedModel";
-import { useSuperAdminDeletePermittedModel } from "../api/useSuperAdminDeletePermittedModel";
-import { useSuperAdminCreatePermittedProvider } from "../api/useSuperAdminCreatePermittedProvider";
-import { useSuperAdminDeletePermittedProvider } from "../api/useSuperAdminDeletePermittedProvider";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/shared/ui/shadcn/button";
-import ProviderConfirmationDialog from "./ProviderConfirmationDialog";
-import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useSuperAdminCreatePermittedModel } from '../api/useSuperAdminCreatePermittedModel';
+import { useSuperAdminDeletePermittedModel } from '../api/useSuperAdminDeletePermittedModel';
+import { useSuperAdminCreatePermittedProvider } from '../api/useSuperAdminCreatePermittedProvider';
+import { useSuperAdminDeletePermittedProvider } from '../api/useSuperAdminDeletePermittedProvider';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/ui/shadcn/button';
+import ProviderConfirmationDialog from './ProviderConfirmationDialog';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/shared/ui/shadcn/tooltip";
-import type { ModelProviderWithPermittedStatusResponseDto } from "@/shared/api";
+} from '@/shared/ui/shadcn/tooltip';
+import type { ModelProviderWithPermittedStatusResponseDto } from '@/shared/api';
 
 interface ModelProviderCardProps {
   provider: ModelProviderWithPermittedStatusResponseDto;
@@ -40,7 +40,7 @@ export default function ModelProviderCard({
   models,
   orgId,
 }: ModelProviderCardProps) {
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const { createPermittedModel } = useSuperAdminCreatePermittedModel(orgId);
   const { deletePermittedModel } = useSuperAdminDeletePermittedModel(orgId);
   const { createPermittedProvider } =
@@ -52,11 +52,11 @@ export default function ModelProviderCard({
     ModelProviderWithPermittedStatusResponseDtoHostedIn,
     string
   > = {
-    DE: t("models.hostedIn.de"),
-    US: t("models.hostedIn.us"),
-    EU: t("models.hostedIn.eu"),
-    SELF_HOSTED: t("models.hostedIn.selfHosted"),
-    AYUNIS: t("models.hostedIn.ayunis"),
+    DE: t('models.hostedIn.de'),
+    US: t('models.hostedIn.us'),
+    EU: t('models.hostedIn.eu'),
+    SELF_HOSTED: t('models.hostedIn.selfHosted'),
+    AYUNIS: t('models.hostedIn.ayunis'),
   };
 
   function handleProviderToggle() {
@@ -102,8 +102,8 @@ export default function ModelProviderCard({
             <Button variant="outline" size="sm">
               <span>
                 {provider.isPermitted
-                  ? t("models.disableProvider")
-                  : t("models.enableProvider")}
+                  ? t('models.disableProvider')
+                  : t('models.enableProvider')}
               </span>
             </Button>
           </ProviderConfirmationDialog>
@@ -128,11 +128,11 @@ export default function ModelProviderCard({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="outline" className="text-xs">
-                                  {t("models.streaming")}
+                                  {t('models.streaming')}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t("models.streamingTooltip")}
+                                {t('models.streamingTooltip')}
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -140,11 +140,11 @@ export default function ModelProviderCard({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="outline" className="text-xs">
-                                  {t("models.tools")}
+                                  {t('models.tools')}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t("models.toolsTooltip")}
+                                {t('models.toolsTooltip')}
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -152,11 +152,11 @@ export default function ModelProviderCard({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="outline" className="text-xs">
-                                  {t("models.reasoning")}
+                                  {t('models.reasoning')}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t("models.reasoningTooltip")}
+                                {t('models.reasoningTooltip')}
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -164,11 +164,11 @@ export default function ModelProviderCard({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="outline" className="text-xs">
-                                  {t("models.embedding")}
+                                  {t('models.embedding')}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {t("models.embeddingTooltip")}
+                                {t('models.embeddingTooltip')}
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -180,7 +180,7 @@ export default function ModelProviderCard({
                     </div>
                     <TooltipIf
                       condition={!provider.isPermitted}
-                      tooltip={t("models.providerDisabled")}
+                      tooltip={t('models.providerDisabled')}
                     >
                       <Switch
                         id={modelKey}
@@ -201,4 +201,3 @@ export default function ModelProviderCard({
     </Card>
   );
 }
-

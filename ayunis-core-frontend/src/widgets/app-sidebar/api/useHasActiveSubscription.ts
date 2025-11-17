@@ -1,10 +1,10 @@
-import { useSubscriptionsControllerHasActiveSubscription } from "@/shared/api";
+import { useSubscriptionsControllerHasActiveSubscription } from '@/shared/api';
 
 export function useHasActiveSubscription() {
   const { data, isLoading, error } =
     useSubscriptionsControllerHasActiveSubscription({
       query: {
-        queryKey: ["subscription"],
+        queryKey: ['subscription'],
       },
     });
 

@@ -1,15 +1,7 @@
-import { createContext, useContext, useState } from "react";
-import type { ReactNode } from "react";
-import type { ConfirmationOptions } from "./types";
-
-interface ConfirmationContextType {
-  showConfirmation: (options: ConfirmationOptions) => void;
-  hideConfirmation: () => void;
-  isOpen: boolean;
-  options: ConfirmationOptions | null;
-}
-
-const ConfirmationContext = createContext<ConfirmationContextType | null>(null);
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+import type { ConfirmationOptions } from './types';
+import { ConfirmationContext } from './useConfirmationContext';
 
 interface ConfirmationProviderProps {
   children: ReactNode;
@@ -41,14 +33,4 @@ export function ConfirmationProvider({ children }: ConfirmationProviderProps) {
       {children}
     </ConfirmationContext.Provider>
   );
-}
-
-export function useConfirmationContext() {
-  const context = useContext(ConfirmationContext);
-  if (!context) {
-    throw new Error(
-      "useConfirmationContext must be used within a ConfirmationProvider",
-    );
-  }
-  return context;
 }

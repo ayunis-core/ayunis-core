@@ -3,11 +3,11 @@ import {
   type SourceResponseDto,
   getThreadsControllerGetThreadSourcesQueryKey,
   getThreadsControllerFindOneQueryKey,
-} from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from '@tanstack/react-router';
 
 interface UseDeleteFileSourceProps {
   threadId?: string;
@@ -17,13 +17,13 @@ export function useDeleteFileSource({
   threadId,
 }: UseDeleteFileSourceProps = {}) {
   const queryClient = useQueryClient();
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const router = useRouter();
   const deleteFileSourceMutation = useThreadsControllerRemoveSource({
     mutation: {
       onMutate: async ({ sourceId }) => {
         if (!threadId) {
-          console.warn("Thread ID is required for optimistic update");
+          console.warn('Thread ID is required for optimistic update');
           return;
         }
 
@@ -39,7 +39,7 @@ export function useDeleteFileSource({
         // Optimistically update to remove the source
         queryClient.setQueryData<SourceResponseDto[]>(queryKey, (old) => {
           if (!old) {
-            console.warn("No previous data found for optimistic update");
+            console.warn('No previous data found for optimistic update');
             return old;
           }
 
@@ -51,8 +51,8 @@ export function useDeleteFileSource({
         return { previousData, queryKey };
       },
       onError: (error, _, context) => {
-        console.error("Error deleting file source", error);
-        showError(t("chatInput.fileSourceDeleteError"));
+        console.error('Error deleting file source', error);
+        showError(t('chatInput.fileSourceDeleteError'));
 
         if (context?.previousData && context?.queryKey) {
           queryClient.setQueryData(context.queryKey, context.previousData);
@@ -60,31 +60,31 @@ export function useDeleteFileSource({
       },
       onSettled: () => {
         if (!threadId) return;
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getThreadsControllerFindOneQueryKey(threadId),
         });
-        router.invalidate();
+        void router.invalidate();
       },
     },
   });
 
   const deleteFileSource = (sourceId: string) => {
     console.log(
-      "Deleting file source with sourceId:",
+      'Deleting file source with sourceId:',
       sourceId,
-      "from threadId:",
+      'from threadId:',
       threadId,
     );
     if (!threadId) {
-      console.error("Thread ID is required");
-      showError("Thread ID is required");
+      console.error('Thread ID is required');
+      showError('Thread ID is required');
       return;
     }
 
     console.log(
-      "Deleting file source with sourceId:",
+      'Deleting file source with sourceId:',
       sourceId,
-      "from threadId:",
+      'from threadId:',
       threadId,
     );
     deleteFileSourceMutation.mutate({

@@ -1,11 +1,11 @@
-import AppLayout from "@/layouts/app-layout";
-import type { AgentResponseDto } from "@/shared/api";
-import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import ContentAreaLayout from "@/layouts/content-area-layout/ui/ContentAreaLayout";
-import AgentKnowledgeBaseCard from "./AgentKnowledgeBaseCard";
-import AgentToolsCard from "./AgentToolsCard";
-import AgentPropertiesCard from "./AgentPropertiesCard";
-import AgentMcpIntegrationsCard from "./AgentMcpIntegrationsCard";
+import AppLayout from '@/layouts/app-layout';
+import type { AgentResponseDto } from '@/shared/api';
+import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
+import AgentKnowledgeBaseCard from './AgentKnowledgeBaseCard';
+import AgentToolsCard from './AgentToolsCard';
+import AgentPropertiesCard from './AgentPropertiesCard';
+import AgentMcpIntegrationsCard from './AgentMcpIntegrationsCard';
 
 export function AgentPage({
   agent,

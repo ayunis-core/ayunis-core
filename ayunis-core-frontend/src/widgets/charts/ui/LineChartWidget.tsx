@@ -1,17 +1,28 @@
 // Utils
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 // Types
-import type { ToolUseMessageContent } from "@/pages/chat/model/openapi";
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
 // UI
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/shared/ui/shadcn/chart";
-import { colorVar, seriesLabelsToConfig, slugifyForCssVar, transformChartData, type YAxisSeries } from "@/widgets/charts/lib/ChartUtils";
-import { ChartCard } from "@/widgets/charts/ui/ChartCard";
-import { ChartLoadingState } from "@/widgets/charts/ui/ChartLoadingState";
-import { ChartEmptyState } from "@/widgets/charts/ui/ChartEmptyState";
-import { XAxisTick } from "@/widgets/charts/ui/XAxisTick";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/shared/ui/shadcn/chart';
+import {
+  colorVar,
+  seriesLabelsToConfig,
+  slugifyForCssVar,
+  transformChartData,
+  type YAxisSeries,
+} from '@/widgets/charts/lib/ChartUtils';
+import { ChartCard } from '@/widgets/charts/ui/ChartCard';
+import { ChartLoadingState } from '@/widgets/charts/ui/ChartLoadingState';
+import { ChartEmptyState } from '@/widgets/charts/ui/ChartEmptyState';
+import { XAxisTick } from '@/widgets/charts/ui/XAxisTick';
 
 interface ChartParams {
   chartTitle?: string;
@@ -49,15 +60,13 @@ export default function LineChartWidget({
   }
 
   const yAxisSeries = params.yAxis || [];
-  const xCount = (params.xAxis?.length ?? chartData.length);
+  const xCount = params.xAxis?.length ?? chartData.length;
 
   return (
     <ChartCard
       title={params.chartTitle}
       insight={params.insight}
-      config={seriesLabelsToConfig(
-        yAxisSeries.map((s) => s.label),
-      )}
+      config={seriesLabelsToConfig(yAxisSeries.map((s) => s.label))}
       xCount={xCount}
       threshold={THRESHOLD}
       perPointPx={PER_POINT_PX}
@@ -65,7 +74,15 @@ export default function LineChartWidget({
     >
       <LineChart data={chartData}>
         <CartesianGrid />
-        <XAxis dataKey="name" tick={<XAxisTick maxChars={MAX_TICK_CHARS} doTruncate={xCount > THRESHOLD} />} />
+        <XAxis
+          dataKey="name"
+          tick={
+            <XAxisTick
+              maxChars={MAX_TICK_CHARS}
+              doTruncate={xCount > THRESHOLD}
+            />
+          }
+        />
         <YAxis />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
@@ -88,4 +105,3 @@ export default function LineChartWidget({
     </ChartCard>
   );
 }
-
