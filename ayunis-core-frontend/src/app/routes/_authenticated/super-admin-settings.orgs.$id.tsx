@@ -10,7 +10,6 @@ import {
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
 } from '@/shared/api';
 import SuperAdminSettingsOrgPage from '@/pages/super-admin-settings/org';
-import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
 
 const searchSchema = z.object({
@@ -31,49 +30,32 @@ export const Route = createFileRoute(
       queryKey: getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(id),
       queryFn: () => superAdminUsersControllerGetUsersByOrgId(id),
     });
-    const subscription = await queryClient
-      .fetchQuery({
-        queryKey:
-          getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(id),
-        queryFn: () => superAdminSubscriptionsControllerGetSubscription(id),
-      })
-      .catch((error) => {
-        const { code } = extractErrorData(error);
-        if (code === 'SUBSCRIPTION_NOT_FOUND') {
-          return null;
-        }
-        throw error;
-      });
-    const trial = await queryClient
-      .fetchQuery({
-        queryKey: getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(id),
-        queryFn: () => superAdminTrialsControllerGetTrialByOrgId(id),
-      })
-      .catch((error) => {
-        const { code } = extractErrorData(error);
-        if (code === 'TRIAL_NOT_FOUND') {
-          return null;
-        }
-        throw error;
-      });
+    const subscriptionResult = await queryClient.fetchQuery({
+      queryKey: getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey(id),
+      queryFn: () => superAdminSubscriptionsControllerGetSubscription(id),
+    });
+    const trialResult = await queryClient.fetchQuery({
+      queryKey: getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey(id),
+      queryFn: () => superAdminTrialsControllerGetTrialByOrgId(id),
+    });
     return {
       org,
       users,
-      subscription,
-      trial,
+      subscriptionResult,
+      trialResult,
     };
   },
 });
 
 function RouteComponent() {
-  const { org, users, subscription, trial } = Route.useLoaderData();
+  const data = Route.useLoaderData();
   const { tab } = Route.useSearch();
   return (
     <SuperAdminSettingsOrgPage
-      org={org}
-      users={users.users}
-      subscription={subscription}
-      trial={trial}
+      org={data.org}
+      users={data.users.users}
+      subscription={data.subscriptionResult.subscription ?? null}
+      trial={data.trialResult.trial ?? null}
       initialTab={tab}
     />
   );

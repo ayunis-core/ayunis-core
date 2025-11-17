@@ -4,26 +4,26 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/shared/ui/shadcn/card";
-import { Switch } from "@/shared/ui/shadcn/switch";
-import { Separator } from "@/shared/ui/shadcn/separator";
-import { Skeleton } from "@/shared/ui/shadcn/skeleton";
-import { useTranslation } from "react-i18next";
-import { useParams } from "@tanstack/react-router";
-import { useAgentMcpIntegrationsQueries } from "../api/useAgentMcpIntegrationsQueries";
-import { useAssignMcpIntegration } from "../api/useAssignMcpIntegration";
-import { useUnassignMcpIntegration } from "../api/useUnassignMcpIntegration";
+} from '@/shared/ui/shadcn/card';
+import { Switch } from '@/shared/ui/shadcn/switch';
+import { Separator } from '@/shared/ui/shadcn/separator';
+import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { useTranslation } from 'react-i18next';
+import { useParams } from '@tanstack/react-router';
+import { useAgentMcpIntegrationsQueries } from '../api/useAgentMcpIntegrationsQueries';
+import { useAssignMcpIntegration } from '../api/useAssignMcpIntegration';
+import { useUnassignMcpIntegration } from '../api/useUnassignMcpIntegration';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemTitle,
-} from "@/shared/ui/shadcn/item";
-import { cn } from "@/shared/lib/shadcn/utils";
+} from '@/shared/ui/shadcn/item';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 export default function AgentMcpIntegrationsCard() {
-  const { t } = useTranslation("agent");
-  const { id: agentId } = useParams({ from: "/_authenticated/agents/$id" });
+  const { t } = useTranslation('agent');
+  const { id: agentId } = useParams({ from: '/_authenticated/agents/$id' });
 
   // Fetch available and assigned integrations
   const {
@@ -58,8 +58,8 @@ export default function AgentMcpIntegrationsCard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t("mcpIntegrations.title")}</CardTitle>
-          <CardDescription>{t("mcpIntegrations.description")}</CardDescription>
+          <CardTitle>{t('mcpIntegrations.title')}</CardTitle>
+          <CardDescription>{t('mcpIntegrations.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Skeleton className="h-16 w-full" />
@@ -75,19 +75,19 @@ export default function AgentMcpIntegrationsCard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{t("mcpIntegrations.title")}</CardTitle>
-          <CardDescription>{t("mcpIntegrations.description")}</CardDescription>
+          <CardTitle>{t('mcpIntegrations.title')}</CardTitle>
+          <CardDescription>{t('mcpIntegrations.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <p className="text-sm text-destructive mb-4">
-              {t("mcpIntegrations.errors.failedToLoad")}
+              {t('mcpIntegrations.errors.failedToLoad')}
             </p>
             <button
               onClick={refetch}
               className="text-sm text-primary hover:underline"
             >
-              {t("mcpIntegrations.retryButton")}
+              {t('mcpIntegrations.retryButton')}
             </button>
           </div>
         </CardContent>
@@ -108,8 +108,8 @@ export default function AgentMcpIntegrationsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("mcpIntegrations.title")}</CardTitle>
-        <CardDescription>{t("mcpIntegrations.description")}</CardDescription>
+        <CardTitle>{t('mcpIntegrations.title')}</CardTitle>
+        <CardDescription>{t('mcpIntegrations.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -123,9 +123,9 @@ export default function AgentMcpIntegrationsCard() {
                 {index > 0 && <Separator className="my-4" />}
                 <Item
                   className={cn(
-                    index === 0 && "pt-0",
-                    index === sortedIntegrations.length - 1 && "pb-0",
-                    "px-0",
+                    index === 0 && 'pt-0',
+                    index === sortedIntegrations.length - 1 && 'pb-0',
+                    'px-0',
                   )}
                 >
                   <ItemContent>
@@ -134,9 +134,9 @@ export default function AgentMcpIntegrationsCard() {
                   <ItemActions>
                     <Switch
                       checked={assigned}
-                      onCheckedChange={() => handleToggle(integration.id)}
+                      onCheckedChange={() => void handleToggle(integration.id)}
                       disabled={isPending}
-                      aria-label={t("mcpIntegrations.toggleAriaLabel", {
+                      aria-label={t('mcpIntegrations.toggleAriaLabel', {
                         name: integration.name,
                       })}
                     />

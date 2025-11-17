@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
-import { getTheme, setTheme as setThemeUtil } from ".";
+import { useState, useEffect } from 'react';
+import { getTheme, setTheme as setThemeUtil } from '.';
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<"light" | "dark">(() => getTheme());
+  const [theme, setThemeState] = useState<'light' | 'dark'>(() => getTheme());
 
-  const setTheme = (newTheme: "light" | "dark") => {
+  const setTheme = (newTheme: 'light' | 'dark') => {
     setThemeUtil(newTheme);
     setThemeState(newTheme);
   };
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
+    const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
   };
 
@@ -21,8 +21,8 @@ export function useTheme() {
       setThemeState(currentTheme);
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return {

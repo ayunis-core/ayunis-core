@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, User } from "lucide-react";
+import { ArrowLeft, Settings, User } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -9,12 +9,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/shared/ui/shadcn/sidebar";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+} from '@/shared/ui/shadcn/sidebar';
+import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 export function SettingsSidebar() {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation('settings');
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -26,10 +26,10 @@ export function SettingsSidebar() {
                 <ArrowLeft className="size-4" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {t("layout.goBack")}
+                    {t('layout.goBack')}
                   </span>
                   <span className="truncate text-xs">
-                    {t("layout.returnToMainApp")}
+                    {t('layout.returnToMainApp')}
                   </span>
                 </div>
               </Link>
@@ -40,21 +40,21 @@ export function SettingsSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t("layout.settings")}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('layout.settings')}</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link to={"/settings/general"}>
+                <Link to={'/settings/general'}>
                   <Settings />
-                  <span>{t("layout.general")}</span>
+                  <span>{t('layout.general')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link to={"/settings/account"}>
+                <Link to={'/settings/account'}>
                   <User />
-                  <span>{t("layout.account")}</span>
+                  <span>{t('layout.account')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

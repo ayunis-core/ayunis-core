@@ -4,10 +4,10 @@ import {
   CardHeader,
   CardTitle,
   CardAction,
-} from "@/shared/ui/shadcn/card";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/shared/ui/shadcn/button";
-import CreateSubscriptionDialog from "./CreateSubscriptionDialog";
+} from '@/shared/ui/shadcn/card';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/ui/shadcn/button';
+import CreateSubscriptionDialog from './CreateSubscriptionDialog';
 
 interface NoSubscriptionSectionProps {
   orgId: string;
@@ -16,20 +16,20 @@ interface NoSubscriptionSectionProps {
 export default function NoSubscriptionSection({
   orgId,
 }: NoSubscriptionSectionProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("noSubscription.title")}</CardTitle>
+        <CardTitle>{t('noSubscription.title')}</CardTitle>
         <CardAction>
           <CreateSubscriptionDialog
             orgId={orgId}
-            trigger={<Button>{t("noSubscription.createSubscription")}</Button>}
+            trigger={<Button>{t('noSubscription.createSubscription')}</Button>}
           />
         </CardAction>
       </CardHeader>
-      <CardContent>{t("noSubscription.description")}</CardContent>
+      <CardContent>{t('noSubscription.description')}</CardContent>
     </Card>
   );
 }

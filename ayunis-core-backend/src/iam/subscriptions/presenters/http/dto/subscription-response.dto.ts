@@ -124,3 +124,12 @@ export class SubscriptionResponseDto {
   })
   billingInfo: SubscriptionBillingInfoResponseDto;
 }
+
+export class SubscriptionResponseDtoNullable {
+  @ApiProperty({
+    description: 'Subscription',
+    type: SubscriptionResponseDto,
+    required: false,
+  })
+  subscription?: SubscriptionResponseDto;
+}

@@ -44,3 +44,12 @@ export class SuperAdminTrialResponseDto {
   })
   updatedAt: Date;
 }
+
+export class SuperAdminTrialResponseDtoNullable {
+  @ApiProperty({
+    description: 'Trial',
+    type: SuperAdminTrialResponseDto,
+    required: false,
+  })
+  trial?: SuperAdminTrialResponseDto;
+}

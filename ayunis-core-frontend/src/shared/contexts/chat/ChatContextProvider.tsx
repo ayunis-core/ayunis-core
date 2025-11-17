@@ -1,13 +1,13 @@
-import { useState, useMemo } from "react";
-import { ChatContext } from "./chatContext";
-import type { SourceResponseDtoType } from "@/shared/api";
+import { useState, useMemo } from 'react';
+import { ChatContext } from './chatContext';
+import type { SourceResponseDtoType } from '@/shared/api';
 
 export const ChatContextProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [pendingMessage, setPendingMessage] = useState("");
+  const [pendingMessage, setPendingMessage] = useState('');
   const [sources, setSources] = useState<
     Array<{
       id: string;

@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { AgentsPage } from "@/pages/agents";
+import { createFileRoute } from '@tanstack/react-router';
+import { queryOptions, useQuery } from '@tanstack/react-query';
+import { AgentsPage } from '@/pages/agents';
 import {
   agentsControllerFindAll,
   getAgentsControllerFindAllQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 const agentsQueryOptions = () =>
   queryOptions({
@@ -12,7 +12,7 @@ const agentsQueryOptions = () =>
     queryFn: () => agentsControllerFindAll(),
   });
 
-export const Route = createFileRoute("/_authenticated/agents/")({
+export const Route = createFileRoute('/_authenticated/agents/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     const agents = await queryClient.fetchQuery(agentsQueryOptions());

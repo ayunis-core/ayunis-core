@@ -1,4 +1,4 @@
-import { useAgents } from "../../../features/useAgents";
+import { useAgents } from '../../../features/useAgents';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,16 +7,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Bot, Check } from "lucide-react";
-import { Switch } from "@/shared/ui/shadcn/switch";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Bot, Check } from 'lucide-react';
+import { Switch } from '@/shared/ui/shadcn/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/shared/ui/shadcn/tooltip";
-import { useTranslation } from "react-i18next";
+} from '@/shared/ui/shadcn/tooltip';
+import { useTranslation } from 'react-i18next';
 
 interface AgentButtonProps {
   selectedAgentId: string | undefined;
@@ -28,7 +28,7 @@ export default function AgentButton({
   onAgentChange,
 }: AgentButtonProps) {
   const { agents } = useAgents();
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
 
   function handleChange(value: string) {
     onAgentChange(value);
@@ -44,7 +44,7 @@ export default function AgentButton({
       <DropdownMenuContent align="start">
         {agents.length > 0 && (
           <>
-            <DropdownMenuLabel>{t("chatInput.agents.title")}</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('chatInput.agents.title')}</DropdownMenuLabel>
             <DropdownMenuGroup>
               {agents
                 .sort((a, b) => a.name.localeCompare(b.name))
@@ -54,7 +54,7 @@ export default function AgentButton({
                     className="flex items-center justify-between"
                     onClick={() => handleChange(agent.id)}
                   >
-                    {agent.name}{" "}
+                    {agent.name}{' '}
                     {agent.id === selectedAgentId && (
                       <Check className="h-4 w-4" />
                     )}
@@ -62,10 +62,10 @@ export default function AgentButton({
                 ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>{t("chatInput.tools.title")}</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('chatInput.tools.title')}</DropdownMenuLabel>
             <DropdownMenuGroup>
               <DropdownMenuItem className="flex items-center justify-between">
-                {t("chatInput.tools.internet_search")}
+                {t('chatInput.tools.internet_search')}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div>
@@ -73,12 +73,12 @@ export default function AgentButton({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {t("chatInput.tools.cannot_disable")}
+                    {t('chatInput.tools.cannot_disable')}
                   </TooltipContent>
                 </Tooltip>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex items-center justify-between">
-                {t("chatInput.tools.send_email")}
+                {t('chatInput.tools.send_email')}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div>
@@ -86,7 +86,7 @@ export default function AgentButton({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {t("chatInput.tools.cannot_disable")}
+                    {t('chatInput.tools.cannot_disable')}
                   </TooltipContent>
                 </Tooltip>
               </DropdownMenuItem>

@@ -1,8 +1,8 @@
-import AppLayout from "@/layouts/app-layout/ui/AppLayout";
-import ContentAreaLayout from "@/layouts/content-area-layout/ui/ContentAreaLayout";
-import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { SuperAdminSettingsSidebar } from "./SuperAdminSettingsSidebar";
-import { useTranslation } from "react-i18next";
+import AppLayout from '@/layouts/app-layout/ui/AppLayout';
+import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
+import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { SuperAdminSettingsSidebar } from './SuperAdminSettingsSidebar';
+import { useTranslation } from 'react-i18next';
 
 interface SuperAdminSettingsLayoutProps {
   pageTitle?: string;
@@ -15,9 +15,9 @@ export default function SuperAdminSettingsLayout({
   children,
   action,
 }: SuperAdminSettingsLayoutProps) {
-  const { t } = useTranslation("super-admin-settings-layout");
+  const { t } = useTranslation('super-admin-settings-layout');
   const contentHeader = (
-    <ContentAreaHeader title={pageTitle || t("layout.title")} action={action} />
+    <ContentAreaHeader title={pageTitle || t('layout.title')} action={action} />
   );
 
   return (

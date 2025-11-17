@@ -1,1 +1,1 @@
-export { useInviteAccept } from "./useInviteAccept";
+export { useInviteAccept } from './useInviteAccept';

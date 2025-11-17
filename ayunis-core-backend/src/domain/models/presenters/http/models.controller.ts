@@ -24,7 +24,10 @@ import { CurrentUser } from 'src/iam/authentication/application/decorators/curre
 import { UUID } from 'crypto';
 import { GetDefaultModelQuery } from '../../application/use-cases/get-default-model/get-default-model.query';
 import { GetDefaultModelUseCase } from '../../application/use-cases/get-default-model/get-default-model.use-case';
-import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
+import {
+  PermittedLanguageModelResponseDto,
+  PermittedLanguageModelResponseDtoNullable,
+} from './dto/permitted-language-model-response.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
@@ -74,6 +77,7 @@ import { PermittedProvider } from '../../domain/permitted-model-provider.entity'
 import { IsEmbeddingModelEnabledUseCase } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 import { IsEmbeddingModelEnabledQuery } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.query';
 import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
+import { ModelNotFoundError } from '../../application/models.errors';
 
 @ApiTags('models')
 @Controller('models')
@@ -230,20 +234,36 @@ export class ModelsController {
     status: 200,
     description: 'Successfully retrieved the effective default model',
     schema: {
-      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDtoNullable),
     },
   })
   @ApiResponse({
-    status: 404,
-    description: 'No default model found',
+    status: 500,
+    description: 'Internal server error',
   })
+  @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getEffectiveDefaultModel(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<PermittedLanguageModelResponseDto> {
-    const query = new GetDefaultModelQuery({ orgId, userId });
-    const model = await this.getDefaultModelUseCase.execute(query);
-    return this.modelResponseDtoMapper.toLanguageModelDto(model);
+  ): Promise<PermittedLanguageModelResponseDtoNullable> {
+    try {
+      const query = new GetDefaultModelQuery({ orgId, userId });
+      const model = await this.getDefaultModelUseCase.execute(query);
+      return {
+        permittedLanguageModel:
+          this.modelResponseDtoMapper.toLanguageModelDto(model),
+      };
+    } catch (error) {
+      if (error instanceof ModelNotFoundError) {
+        return { permittedLanguageModel: undefined };
+      }
+      this.logger.error('Failed to get effective default model', {
+        orgId,
+        userId,
+        error: error instanceof Error ? error : new Error('Unknown error'),
+      });
+      throw error;
+    }
   }
 
   @Get('org/default')
@@ -256,22 +276,26 @@ export class ModelsController {
     status: 200,
     description: 'Successfully retrieved the organization default model',
     schema: {
-      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDtoNullable),
     },
   })
   @ApiResponse({
-    status: 404,
-    description: 'No organization default model found',
+    status: 500,
+    description: 'Internal server error',
   })
+  @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getOrgSpecificDefaultModel(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedLanguageModelResponseDto | null> {
+  ): Promise<PermittedLanguageModelResponseDtoNullable> {
     const query = new GetOrgDefaultModelQuery(orgId);
     const model = await this.getOrgDefaultModelUseCase.execute(query);
     if (!model) {
-      return null;
+      return { permittedLanguageModel: undefined };
     }
-    return this.modelResponseDtoMapper.toLanguageModelDto(model);
+    return {
+      permittedLanguageModel:
+        this.modelResponseDtoMapper.toLanguageModelDto(model),
+    };
   }
 
   @Get('user/default')
@@ -284,24 +308,28 @@ export class ModelsController {
     status: 200,
     description: 'Successfully retrieved the user-specific default model',
     schema: {
-      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+      $ref: getSchemaPath(PermittedLanguageModelResponseDtoNullable),
     },
   })
   @ApiResponse({
-    status: 404,
-    description: 'No user-specific default model found',
+    status: 500,
+    description: 'Internal server error',
   })
+  @ApiExtraModels(PermittedLanguageModelResponseDtoNullable)
   async getUserSpecificDefaultModel(
     @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<PermittedLanguageModelResponseDto | null> {
+  ): Promise<PermittedLanguageModelResponseDtoNullable> {
     const query = new GetUserDefaultModelQuery(userId);
     const model = await this.getUserDefaultModelUseCase.execute(query);
 
     if (!model) {
-      return null;
+      return { permittedLanguageModel: undefined };
     }
 
-    return this.modelResponseDtoMapper.toLanguageModelDto(model);
+    return {
+      permittedLanguageModel:
+        this.modelResponseDtoMapper.toLanguageModelDto(model),
+    };
   }
 
   @Put('user/default')

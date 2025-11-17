@@ -4,17 +4,17 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/shared/ui/shadcn/card";
-import { Badge } from "@/shared/ui/shadcn/badge";
-import { FileText, Loader, X } from "lucide-react";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Button } from "@/shared/ui/shadcn/button";
-import { useRef } from "react";
-import type { AgentResponseDto } from "@/shared/api";
-import useAgentSources from "../api/useAgentSources";
-import { useTranslation } from "react-i18next";
-import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
-import { showError } from "@/shared/lib/toast";
+} from '@/shared/ui/shadcn/card';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import { FileText, Loader, X } from 'lucide-react';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Button } from '@/shared/ui/shadcn/button';
+import { useRef } from 'react';
+import type { AgentResponseDto } from '@/shared/api';
+import useAgentSources from '../api/useAgentSources';
+import { useTranslation } from 'react-i18next';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
+import { showError } from '@/shared/lib/toast';
 
 interface AgentKnowledgeBaseCardProps {
   agent: AgentResponseDto;
@@ -25,7 +25,7 @@ export default function AgentKnowledgeBaseCard({
   agent,
   isEnabled,
 }: AgentKnowledgeBaseCardProps) {
-  const { t } = useTranslation("agent");
+  const { t } = useTranslation('agent');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -38,14 +38,14 @@ export default function AgentKnowledgeBaseCard({
   } = useAgentSources({ agent });
 
   function handleFileRemove(sourceAssignmentId: string) {
-    console.log("Removing source", sourceAssignmentId);
+    console.log('Removing source', sourceAssignmentId);
     removeSource(sourceAssignmentId);
   }
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!isEnabled) {
-      showError(t("knowledgeBase.disabledTooltip"));
+      showError(t('knowledgeBase.disabledTooltip'));
       return;
     }
     if (file) {
@@ -59,8 +59,8 @@ export default function AgentKnowledgeBaseCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("knowledgeBase.title")}</CardTitle>
-        <CardDescription>{t("knowledgeBase.description")}</CardDescription>
+        <CardTitle>{t('knowledgeBase.title')}</CardTitle>
+        <CardDescription>{t('knowledgeBase.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -96,7 +96,7 @@ export default function AgentKnowledgeBaseCard({
           />
           <TooltipIf
             condition={!isEnabled}
-            tooltip={t("knowledgeBase.disabledTooltip")}
+            tooltip={t('knowledgeBase.disabledTooltip')}
           >
             <Button
               variant="outline"
@@ -104,8 +104,8 @@ export default function AgentKnowledgeBaseCard({
               disabled={addFileSourcePending || removeSourcePending}
             >
               {addFileSourcePending
-                ? t("knowledgeBase.adding")
-                : t("knowledgeBase.addSource")}
+                ? t('knowledgeBase.adding')
+                : t('knowledgeBase.addSource')}
             </Button>
           </TooltipIf>
         </div>

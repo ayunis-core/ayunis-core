@@ -3,7 +3,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
+} from '@/shared/ui/shadcn/card';
 import {
   Table,
   TableBody,
@@ -11,23 +11,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/shared/ui/shadcn/table";
+} from '@/shared/ui/shadcn/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Button } from "@/shared/ui/shadcn/button";
-import { MoreHorizontal, Edit, Trash2, UserCheck } from "lucide-react";
-import { useUserRoleUpdate } from "../api/useUserRoleUpdate";
-import { useUserDelete } from "../api/useUserDelete";
-import { useUsers } from "../api/useUsers";
-import { useState } from "react";
-import type { User } from "../model/openapi";
-import type { UserResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { useConfirmation } from "@/widgets/confirmation-modal";
-import { useTranslation } from "react-i18next";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Button } from '@/shared/ui/shadcn/button';
+import { MoreHorizontal, Edit, Trash2, UserCheck } from 'lucide-react';
+import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
+import { useUserDelete } from '../api/useUserDelete';
+import { useUsers } from '../api/useUsers';
+import { useState } from 'react';
+import type { User } from '../model/openapi';
+import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { useTranslation } from 'react-i18next';
 
 interface UsersSectionProps {
   users: User[];
@@ -36,7 +36,7 @@ interface UsersSectionProps {
 export default function UsersSection({
   users: usersFromLoader,
 }: UsersSectionProps) {
-  const { t } = useTranslation("admin-settings-users");
+  const { t } = useTranslation('admin-settings-users');
   const { users } = useUsers({ initialData: usersFromLoader });
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({
@@ -48,16 +48,16 @@ export default function UsersSection({
   const { confirm } = useConfirmation();
 
   const handleRoleToggle = (user: User) => {
-    const newRole = user.role === "admin" ? "user" : "admin";
+    const newRole = user.role === 'admin' ? 'user' : 'admin';
     confirm({
-      title: t("confirmations.changeUserRoleTitle"),
-      description: t("confirmations.changeUserRoleDescription", {
+      title: t('confirmations.changeUserRoleTitle'),
+      description: t('confirmations.changeUserRoleDescription', {
         name: user.name,
-        role: newRole === "admin" ? t("users.admin") : t("users.user"),
+        role: newRole === 'admin' ? t('users.admin') : t('users.user'),
       }),
-      confirmText: t("confirmations.changeRoleText"),
-      cancelText: t("confirmations.cancelText"),
-      variant: "default",
+      confirmText: t('confirmations.changeRoleText'),
+      cancelText: t('confirmations.cancelText'),
+      variant: 'default',
       onConfirm: () => {
         setLoadingUserId(user.id);
         updateUserRole({
@@ -70,13 +70,13 @@ export default function UsersSection({
 
   const handleDeleteUser = (user: UserResponseDto) => {
     confirm({
-      title: t("confirmations.deleteUserTitle"),
-      description: t("confirmations.deleteUserDescription", {
+      title: t('confirmations.deleteUserTitle'),
+      description: t('confirmations.deleteUserDescription', {
         name: user.name,
       }),
-      confirmText: t("confirmations.deleteText"),
-      cancelText: t("confirmations.cancelText"),
-      variant: "destructive",
+      confirmText: t('confirmations.deleteText'),
+      cancelText: t('confirmations.cancelText'),
+      variant: 'destructive',
       onConfirm: () => {
         setLoadingUserId(user.id);
         deleteUser(user.id);
@@ -91,17 +91,17 @@ export default function UsersSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("users.users")}</CardTitle>
+        <CardTitle>{t('users.users')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("users.name")}</TableHead>
-              <TableHead>{t("users.email")}</TableHead>
-              <TableHead>{t("users.role")}</TableHead>
-              <TableHead>{t("users.status")}</TableHead>
-              <TableHead>{t("users.joinDate")}</TableHead>
+              <TableHead>{t('users.name')}</TableHead>
+              <TableHead>{t('users.email')}</TableHead>
+              <TableHead>{t('users.role')}</TableHead>
+              <TableHead>{t('users.status')}</TableHead>
+              <TableHead>{t('users.joinDate')}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -113,7 +113,7 @@ export default function UsersSection({
                 <TableCell className="capitalize">{user.role}</TableCell>
                 <TableCell>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {t("users.active")}
+                    {t('users.active')}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -133,18 +133,18 @@ export default function UsersSection({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem disabled>
                         <Edit className="mr-2 h-4 w-4" />
-                        {t("users.edit")}
+                        {t('users.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleRoleToggle(user)}
                         disabled={isUserLoading(user.id)}
                       >
                         <UserCheck className="mr-2 h-4 w-4" />
-                        {t("users.changeRole", {
+                        {t('users.changeRole', {
                           role:
-                            user.role === "admin"
-                              ? t("users.user")
-                              : t("users.admin"),
+                            user.role === 'admin'
+                              ? t('users.user')
+                              : t('users.admin'),
                         })}
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -153,7 +153,7 @@ export default function UsersSection({
                         disabled={isUserLoading(user.id)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        {t("users.delete")}
+                        {t('users.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

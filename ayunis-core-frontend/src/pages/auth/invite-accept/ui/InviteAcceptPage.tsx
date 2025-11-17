@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Form,
   FormControl,
@@ -6,14 +6,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import OnboardingLayout from "@/layouts/onboarding-layout";
-import type { Invite } from "../model/openapi";
-import { useInviteAccept } from "../api";
-import { useTranslation } from "react-i18next";
-import { Label } from "@/shared/ui/shadcn/label";
-import { Checkbox } from "@/shared/ui/shadcn/checkbox";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import OnboardingLayout from '@/layouts/onboarding-layout';
+import type { Invite } from '../model/openapi';
+import { useInviteAccept } from '../api';
+import { useTranslation } from 'react-i18next';
+import { Label } from '@/shared/ui/shadcn/label';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 
 interface InviteAcceptPageProps {
   invite: Invite;
@@ -27,24 +27,29 @@ export default function InviteAcceptPage({
   isCloud,
 }: InviteAcceptPageProps) {
   const { form, onSubmit, isLoading } = useInviteAccept(invite, inviteToken);
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
 
   return (
     <OnboardingLayout
-      title={t("inviteAccept.title")}
-      description={t("inviteAccept.description", { role: invite.role })}
+      title={t('inviteAccept.title')}
+      description={t('inviteAccept.description', { role: invite.role })}
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("inviteAccept.email")}</FormLabel>
+                <FormLabel>{t('inviteAccept.email')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("inviteAccept.emailPlaceholder")}
+                    placeholder={t('inviteAccept.emailPlaceholder')}
                     type="email"
                     disabled
                     {...field}
@@ -59,10 +64,10 @@ export default function InviteAcceptPage({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("inviteAccept.name")}</FormLabel>
+                <FormLabel>{t('inviteAccept.name')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("inviteAccept.namePlaceholder")}
+                    placeholder={t('inviteAccept.namePlaceholder')}
                     {...field}
                   />
                 </FormControl>
@@ -75,10 +80,10 @@ export default function InviteAcceptPage({
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("inviteAccept.password")}</FormLabel>
+                <FormLabel>{t('inviteAccept.password')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("inviteAccept.passwordPlaceholder")}
+                    placeholder={t('inviteAccept.passwordPlaceholder')}
                     type="password"
                     {...field}
                   />
@@ -104,7 +109,7 @@ export default function InviteAcceptPage({
                         htmlFor="hasAcceptedMarketing"
                         className="block font-normal leading-5"
                       >
-                        {t("inviteAccept.marketingAcceptanceDescription")}
+                        {t('inviteAccept.marketingAcceptanceDescription')}
                       </Label>
                     </div>
                   </FormControl>
@@ -114,8 +119,8 @@ export default function InviteAcceptPage({
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading
-              ? t("inviteAccept.acceptingInvitation")
-              : t("inviteAccept.acceptInvitationButton")}
+              ? t('inviteAccept.acceptingInvitation')
+              : t('inviteAccept.acceptInvitationButton')}
           </Button>
         </form>
       </Form>

@@ -1,1 +1,1 @@
-export { default } from "./ui/RootLayout";
+export { default } from './ui/RootLayout';

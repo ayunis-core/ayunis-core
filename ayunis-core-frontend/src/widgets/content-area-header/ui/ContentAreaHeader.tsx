@@ -1,6 +1,6 @@
-import { type ReactNode } from "react";
-import { SidebarTrigger } from "@/shared/ui/shadcn/sidebar";
-import { Separator } from "@/shared/ui/shadcn/separator";
+import { type ReactNode } from 'react';
+import { SidebarTrigger } from '@/shared/ui/shadcn/sidebar';
+import { Separator } from '@/shared/ui/shadcn/separator';
 
 interface ContentAreaHeaderProps {
   title: string | ReactNode;

@@ -6,13 +6,13 @@ import {
   DialogTitle,
   DialogClose,
   DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Checkbox } from "@/shared/ui/shadcn/checkbox";
-import { Label } from "@/shared/ui/shadcn/label";
-import { useState, type ReactNode } from "react";
-import { useTranslation, Trans } from "react-i18next";
-import type { Provider } from "../model/openapi";
+} from '@/shared/ui/shadcn/dialog';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Label } from '@/shared/ui/shadcn/label';
+import { useState, type ReactNode } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
+import type { Provider } from '../model/openapi';
 
 interface ProviderConfirmationDialogProps {
   provider: Provider;
@@ -25,7 +25,7 @@ export default function ProviderConfirmationDialog({
   onConfirm,
   children,
 }: ProviderConfirmationDialogProps) {
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const [isConfirmationChecked, setIsConfirmationChecked] = useState(false);
 
   function handleConfirm() {
@@ -42,22 +42,22 @@ export default function ProviderConfirmationDialog({
         <DialogHeader>
           <DialogTitle>
             {provider.isPermitted
-              ? t("models.providerConfirmation.disableProvider", {
+              ? t('models.providerConfirmation.disableProvider', {
                   provider: provider.displayName,
                 })
-              : t("models.providerConfirmation.enableProvider", {
+              : t('models.providerConfirmation.enableProvider', {
                   provider: provider.displayName,
                 })}
           </DialogTitle>
         </DialogHeader>
         <p>
           {provider.isPermitted
-            ? t("models.providerConfirmation.disableProviderDescription")
-            : t("models.providerConfirmation.enableProviderDescription")}
+            ? t('models.providerConfirmation.disableProviderDescription')
+            : t('models.providerConfirmation.enableProviderDescription')}
         </p>
-        {provider.provider === "mistral" && (
+        {provider.provider === 'mistral' && (
           <p className="text-sm text-destructive-foreground mb-4">
-            {t("models.providerConfirmation.mistralProviderHint")}
+            {t('models.providerConfirmation.mistralProviderHint')}
           </p>
         )}
         {!provider.isPermitted && (
@@ -98,8 +98,8 @@ export default function ProviderConfirmationDialog({
               disabled={!provider.isPermitted && !isConfirmationChecked}
             >
               {provider.isPermitted
-                ? t("models.disableProvider")
-                : t("models.enableProvider")}
+                ? t('models.disableProvider')
+                : t('models.enableProvider')}
             </Button>
           </DialogClose>
         </DialogFooter>

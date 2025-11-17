@@ -1,3 +1,3 @@
-import SettingsLayout from "./ui/AdminSettingsLayout";
+import SettingsLayout from './ui/AdminSettingsLayout';
 
 export default SettingsLayout;

@@ -1,6 +1,6 @@
-import { useState, forwardRef, useImperativeHandle } from "react";
-import TextareaAutosize from "react-textarea-autosize";
-import { Button } from "@/shared/ui/shadcn/button";
+import { useState, forwardRef, useImperativeHandle } from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   ArrowUp,
   Bot,
@@ -9,26 +9,26 @@ import {
   Sparkles,
   Square,
   XIcon,
-} from "lucide-react";
-import { Card, CardContent } from "@/shared/ui/shadcn/card";
-import AgentButton from "./AgentButton";
-import useKeyboardShortcut from "@/features/useKeyboardShortcut";
-import { useTranslation } from "react-i18next";
+} from 'lucide-react';
+import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import AgentButton from './AgentButton';
+import useKeyboardShortcut from '@/features/useKeyboardShortcut';
+import { useTranslation } from 'react-i18next';
 import type {
   SourceResponseDtoCreatedBy,
   SourceResponseDtoType,
-} from "@/shared/api";
-import { Badge } from "@/shared/ui/shadcn/badge";
-import PlusButton from "./PlusButton";
-import ModelSelector from "./ModelSelector";
-import { useAgents } from "../../../features/useAgents";
-import TooltipIf from "@/widgets/tooltip-if/ui/TooltipIf";
+} from '@/shared/api';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import PlusButton from './PlusButton';
+import ModelSelector from './ModelSelector';
+import { useAgents } from '../../../features/useAgents';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/shared/ui/shadcn/tooltip";
-import { cn } from "@/shared/lib/shadcn/utils";
+} from '@/shared/ui/shadcn/tooltip';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -48,7 +48,7 @@ interface ChatInputProps {
   onFileUpload: (file: File) => void;
   onRemoveSource: (sourceId: string) => void;
   onDownloadSource: (sourceId: string) => void;
-  onSend: (message: string) => Promise<void>;
+  onSend: (message: string) => void;
   onSendCancelled: () => void;
   prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
@@ -81,24 +81,32 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
-    const [message, setMessage] = useState(prefilledPrompt ?? "");
-    const { t } = useTranslation("common");
+    const [message, setMessage] = useState(prefilledPrompt ?? '');
+    const { t } = useTranslation('common');
     const { agents } = useAgents();
 
     useImperativeHandle(ref, () => ({
       setMessage,
     }));
 
-    useKeyboardShortcut(["Enter"], () => isFocused && handleSend(), {
-      exclusive: true,
-    });
-
-    async function handleSend() {
+    function handleSend() {
       if (!message.trim() || !(modelId || agentId)) return;
 
-      await onSend(message);
-      setMessage(""); // Clear message after sending
+      onSend(message);
+      setMessage(''); // Clear message after sending
     }
+
+    useKeyboardShortcut(
+      ['Enter'],
+      () => {
+        if (isFocused) {
+          handleSend();
+        }
+      },
+      {
+        exclusive: true,
+      },
+    );
 
     function handlePromptSelect(promptContent: string) {
       // Add the prompt content to the existing message
@@ -114,9 +122,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         return <Sparkles className="h-3 w-3" />;
       }
       switch (source.type) {
-        case "text":
+        case 'text':
           return <FileIcon className="h-3 w-3" />;
-        case "data":
+        case 'data':
           return <DatabaseIcon className="h-3 w-3" />;
         default:
           return null;
@@ -130,22 +138,22 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
               {/* Sources */}
-              {sources.filter((source) => source.createdBy !== "system")
+              {sources.filter((source) => source.createdBy !== 'system')
                 .length > 0 && (
                 <div className="flex flex-wrap gap-2 items-center">
                   {sources
-                    .filter((source) => source.createdBy !== "system")
+                    .filter((source) => source.createdBy !== 'system')
                     .map((source) => (
                       <Badge
                         key={source.id}
                         variant="secondary"
                         className={cn(
-                          "flex items-center gap-1 cursor-pointer",
-                          source.createdBy === "llm" &&
-                            "bg-[#8178C3]/10 text-[#8178C3]",
+                          'flex items-center gap-1 cursor-pointer',
+                          source.createdBy === 'llm' &&
+                            'bg-[#8178C3]/10 text-[#8178C3]',
                         )}
                         onClick={() =>
-                          source.type === "data" && onDownloadSource(source.id)
+                          source.type === 'data' && onDownloadSource(source.id)
                         }
                       >
                         {getSourceIcon(source)}
@@ -172,7 +180,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 onChange={(e) => setMessage(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={t("chatInput.placeholder")}
+                placeholder={t('chatInput.placeholder')}
                 className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
                 data-testid="input"
               />
@@ -209,7 +217,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 <div className="flex-shrink-0 flex space-x-2">
                   <TooltipIf
                     condition={isModelChangeDisabled}
-                    tooltip={t("chatInput.modelChangeDisabledTooltip")}
+                    tooltip={t('chatInput.modelChangeDisabledTooltip')}
                   >
                     <ModelSelector
                       isDisabled={isModelChangeDisabled}
@@ -231,7 +239,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {t("chatInput.cancelTooltip")}
+                        {t('chatInput.cancelTooltip')}
                       </TooltipContent>
                     </Tooltip>
                   ) : (
@@ -243,14 +251,14 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                             className="rounded-full"
                             size="icon"
                             data-testid="send"
-                            onClick={handleSend}
+                            onClick={() => void handleSend()}
                           >
                             <ArrowUp className="h-4 w-4" />
                           </Button>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {t("chatInput.sendTooltip")}
+                        {t('chatInput.sendTooltip')}
                       </TooltipContent>
                     </Tooltip>
                   )}
@@ -264,6 +272,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
   },
 );
 
-ChatInput.displayName = "ChatInput";
+ChatInput.displayName = 'ChatInput';
 
 export default ChatInput;

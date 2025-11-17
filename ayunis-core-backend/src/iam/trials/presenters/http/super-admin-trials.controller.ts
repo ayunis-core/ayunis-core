@@ -18,6 +18,7 @@ import {
   ApiOperation,
   ApiParam,
   ApiTags,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -30,12 +31,22 @@ import { UpdateTrialUseCase } from '../../application/use-cases/update-trial/upd
 import { UpdateTrialCommand } from '../../application/use-cases/update-trial/update-trial.command';
 import { CreateTrialRequestDto } from './dtos/create-trial-request.dto';
 import { UpdateTrialRequestDto } from './dtos/update-trial-request.dto';
-import { SuperAdminTrialResponseDto } from './dtos/super-admin-trial-response.dto';
+import {
+  SuperAdminTrialResponseDto,
+  SuperAdminTrialResponseDtoNullable,
+} from './dtos/super-admin-trial-response.dto';
 import { SuperAdminTrialResponseDtoMapper } from './mappers/super-admin-trial-response-dto.mapper';
+import { TrialNotFoundError } from '../../application/trial.errors';
 
 @ApiTags('Super Admin Trials')
 @Controller('super-admin/trials')
 @SystemRoles(SystemRole.SUPER_ADMIN)
+@ApiExtraModels(
+  SuperAdminTrialResponseDto,
+  SuperAdminTrialResponseDtoNullable,
+  CreateTrialRequestDto,
+  UpdateTrialRequestDto,
+)
 export class SuperAdminTrialsController {
   private readonly logger = new Logger(SuperAdminTrialsController.name);
 
@@ -92,7 +103,7 @@ export class SuperAdminTrialsController {
   })
   @ApiOkResponse({
     description: 'Successfully retrieved trial for the super admin.',
-    type: SuperAdminTrialResponseDto,
+    type: SuperAdminTrialResponseDtoNullable,
   })
   @ApiForbiddenResponse({
     description: 'The requester is not a super admin.',
@@ -108,9 +119,19 @@ export class SuperAdminTrialsController {
   })
   async getTrialByOrgId(
     @Param('orgId') orgId: UUID,
-  ): Promise<SuperAdminTrialResponseDto> {
-    const trial = await this.getTrialUseCase.execute(new GetTrialQuery(orgId));
-    return this.superAdminTrialResponseDtoMapper.toDto(trial);
+  ): Promise<SuperAdminTrialResponseDtoNullable> {
+    try {
+      const trial = await this.getTrialUseCase.execute(
+        new GetTrialQuery(orgId),
+      );
+      return { trial: this.superAdminTrialResponseDtoMapper.toDto(trial) };
+    } catch (error) {
+      if (error instanceof TrialNotFoundError) {
+        return { trial: undefined };
+      } else {
+        throw error;
+      }
+    }
   }
 
   @Put(':orgId')

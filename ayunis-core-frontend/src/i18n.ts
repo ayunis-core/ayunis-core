@@ -1,51 +1,51 @@
-import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
 //import LanguageDetector from "i18next-browser-languagedetector";
 
 // Import translation files directly
-import enAuth from "./shared/locales/en/auth.json";
-import deAuth from "./shared/locales/de/auth.json";
-import enCommon from "./shared/locales/en/common.json";
-import deCommon from "./shared/locales/de/common.json";
-import enAdminSettingsLayout from "./shared/locales/en/admin-settings-layout.json";
-import deAdminSettingsLayout from "./shared/locales/de/admin-settings-layout.json";
-import enAdminSettingsBilling from "./shared/locales/en/admin-settings-billing.json";
-import deAdminSettingsBilling from "./shared/locales/de/admin-settings-billing.json";
-import enAdminSettingsModels from "./shared/locales/en/admin-settings-models.json";
-import deAdminSettingsModels from "./shared/locales/de/admin-settings-models.json";
-import enAdminSettingsUsers from "./shared/locales/en/admin-settings-users.json";
-import deAdminSettingsUsers from "./shared/locales/de/admin-settings-users.json";
-import enAdminSettingsIntegrations from "./shared/locales/en/admin-settings-integrations.json";
-import deAdminSettingsIntegrations from "./shared/locales/de/admin-settings-integrations.json";
-import enSuperAdminSettingsLayout from "./shared/locales/en/super-admin-settings-layout.json";
-import deSuperAdminSettingsLayout from "./shared/locales/de/super-admin-settings-layout.json";
-import enSuperAdminSettingsOrgs from "./shared/locales/en/super-admin-settings-orgs.json";
-import deSuperAdminSettingsOrgs from "./shared/locales/de/super-admin-settings-orgs.json";
-import enSuperAdminSettingsOrg from "./shared/locales/en/super-admin-settings-org.json";
-import deSuperAdminSettingsOrg from "./shared/locales/de/super-admin-settings-org.json";
-import enSettings from "./shared/locales/en/settings.json";
-import deSettings from "./shared/locales/de/settings.json";
-import enChats from "./shared/locales/en/chats.json";
-import deChats from "./shared/locales/de/chats.json";
-import enPrompts from "./shared/locales/en/prompts.json";
-import dePrompts from "./shared/locales/de/prompts.json";
-import enAgents from "./shared/locales/en/agents.json";
-import deAgents from "./shared/locales/de/agents.json";
-import enAgent from "./shared/locales/en/agent.json";
-import deAgent from "./shared/locales/de/agent.json";
+import enAuth from './shared/locales/en/auth.json';
+import deAuth from './shared/locales/de/auth.json';
+import enCommon from './shared/locales/en/common.json';
+import deCommon from './shared/locales/de/common.json';
+import enAdminSettingsLayout from './shared/locales/en/admin-settings-layout.json';
+import deAdminSettingsLayout from './shared/locales/de/admin-settings-layout.json';
+import enAdminSettingsBilling from './shared/locales/en/admin-settings-billing.json';
+import deAdminSettingsBilling from './shared/locales/de/admin-settings-billing.json';
+import enAdminSettingsModels from './shared/locales/en/admin-settings-models.json';
+import deAdminSettingsModels from './shared/locales/de/admin-settings-models.json';
+import enAdminSettingsUsers from './shared/locales/en/admin-settings-users.json';
+import deAdminSettingsUsers from './shared/locales/de/admin-settings-users.json';
+import enAdminSettingsIntegrations from './shared/locales/en/admin-settings-integrations.json';
+import deAdminSettingsIntegrations from './shared/locales/de/admin-settings-integrations.json';
+import enSuperAdminSettingsLayout from './shared/locales/en/super-admin-settings-layout.json';
+import deSuperAdminSettingsLayout from './shared/locales/de/super-admin-settings-layout.json';
+import enSuperAdminSettingsOrgs from './shared/locales/en/super-admin-settings-orgs.json';
+import deSuperAdminSettingsOrgs from './shared/locales/de/super-admin-settings-orgs.json';
+import enSuperAdminSettingsOrg from './shared/locales/en/super-admin-settings-org.json';
+import deSuperAdminSettingsOrg from './shared/locales/de/super-admin-settings-org.json';
+import enSettings from './shared/locales/en/settings.json';
+import deSettings from './shared/locales/de/settings.json';
+import enChats from './shared/locales/en/chats.json';
+import deChats from './shared/locales/de/chats.json';
+import enPrompts from './shared/locales/en/prompts.json';
+import dePrompts from './shared/locales/de/prompts.json';
+import enAgents from './shared/locales/en/agents.json';
+import deAgents from './shared/locales/de/agents.json';
+import enAgent from './shared/locales/en/agent.json';
+import deAgent from './shared/locales/de/agent.json';
 
 const resources = {
   en: {
     auth: enAuth,
     common: enCommon,
-    "admin-settings-layout": enAdminSettingsLayout,
-    "admin-settings-billing": enAdminSettingsBilling,
-    "admin-settings-models": enAdminSettingsModels,
-    "admin-settings-users": enAdminSettingsUsers,
-    "admin-settings-integrations": enAdminSettingsIntegrations,
-    "super-admin-settings-layout": enSuperAdminSettingsLayout,
-    "super-admin-settings-orgs": enSuperAdminSettingsOrgs,
-    "super-admin-settings-org": enSuperAdminSettingsOrg,
+    'admin-settings-layout': enAdminSettingsLayout,
+    'admin-settings-billing': enAdminSettingsBilling,
+    'admin-settings-models': enAdminSettingsModels,
+    'admin-settings-users': enAdminSettingsUsers,
+    'admin-settings-integrations': enAdminSettingsIntegrations,
+    'super-admin-settings-layout': enSuperAdminSettingsLayout,
+    'super-admin-settings-orgs': enSuperAdminSettingsOrgs,
+    'super-admin-settings-org': enSuperAdminSettingsOrg,
     settings: enSettings,
     chats: enChats,
     prompts: enPrompts,
@@ -55,14 +55,14 @@ const resources = {
   de: {
     auth: deAuth,
     common: deCommon,
-    "admin-settings-layout": deAdminSettingsLayout,
-    "admin-settings-billing": deAdminSettingsBilling,
-    "admin-settings-models": deAdminSettingsModels,
-    "admin-settings-users": deAdminSettingsUsers,
-    "admin-settings-integrations": deAdminSettingsIntegrations,
-    "super-admin-settings-layout": deSuperAdminSettingsLayout,
-    "super-admin-settings-orgs": deSuperAdminSettingsOrgs,
-    "super-admin-settings-org": deSuperAdminSettingsOrg,
+    'admin-settings-layout': deAdminSettingsLayout,
+    'admin-settings-billing': deAdminSettingsBilling,
+    'admin-settings-models': deAdminSettingsModels,
+    'admin-settings-users': deAdminSettingsUsers,
+    'admin-settings-integrations': deAdminSettingsIntegrations,
+    'super-admin-settings-layout': deSuperAdminSettingsLayout,
+    'super-admin-settings-orgs': deSuperAdminSettingsOrgs,
+    'super-admin-settings-org': deSuperAdminSettingsOrg,
     settings: deSettings,
     chats: deChats,
     prompts: dePrompts,
@@ -86,7 +86,7 @@ const resources = {
 //   checkWhitelist: true,
 // };
 
-i18n
+void i18n
   // detect user language
   //.use(LanguageDetector)
   // pass the i18n instance to react-i18next.
@@ -95,8 +95,8 @@ i18n
   // for all options read: https://www.i18next.com/overview/configuration-options
   .init({
     resources,
-    fallbackLng: "de",
-    supportedLngs: ["en", "de"],
+    fallbackLng: 'de',
+    supportedLngs: ['en', 'de'],
 
     //detection: detectionOptions,
 

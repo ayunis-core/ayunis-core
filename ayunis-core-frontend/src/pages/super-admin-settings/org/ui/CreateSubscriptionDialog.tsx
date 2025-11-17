@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -16,12 +16,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Button } from "@/shared/ui/shadcn/button";
-import { useTranslation } from "react-i18next";
-import useSuperAdminSubscriptionCreate from "../api/useSuperAdminSubscriptionCreate";
-import { ScrollArea } from "@/shared/ui/shadcn/scroll-area";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Button } from '@/shared/ui/shadcn/button';
+import { useTranslation } from 'react-i18next';
+import useSuperAdminSubscriptionCreate from '../api/useSuperAdminSubscriptionCreate';
+import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
 
 interface CreateSubscriptionDialogProps {
   trigger: React.ReactNode;
@@ -32,7 +32,7 @@ export default function CreateSubscriptionDialog({
   trigger,
   orgId,
 }: CreateSubscriptionDialogProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const { form, handleSubmit } = useSuperAdminSubscriptionCreate({ orgId });
 
   const handleCancel = () => {
@@ -44,23 +44,28 @@ export default function CreateSubscriptionDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t("subscriptionDialog.title")}</DialogTitle>
+          <DialogTitle>{t('subscriptionDialog.title')}</DialogTitle>
           <DialogDescription>
-            {t("subscriptionDialog.description")}
+            {t('subscriptionDialog.description')}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[500px]">
           <Form {...form}>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+              onSubmit={(e) => {
+                void handleSubmit(e);
+              }}
+              className="space-y-6"
+            >
               <FormField
                 control={form.control}
                 name="companyName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.companyNameLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.companyNameLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.companyNamePlaceholder")}
+                        placeholder={t('billingInfo.companyNamePlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -73,10 +78,10 @@ export default function CreateSubscriptionDialog({
                 name="subText"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.subTextLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.subTextLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.subTextPlaceholder")}
+                        placeholder={t('billingInfo.subTextPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -90,10 +95,10 @@ export default function CreateSubscriptionDialog({
                   name="street"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>{t("billingInfo.streetLabel")}</FormLabel>
+                      <FormLabel>{t('billingInfo.streetLabel')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("billingInfo.streetPlaceholder")}
+                          placeholder={t('billingInfo.streetPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -106,10 +111,10 @@ export default function CreateSubscriptionDialog({
                   name="houseNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("billingInfo.houseNumberLabel")}</FormLabel>
+                      <FormLabel>{t('billingInfo.houseNumberLabel')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("billingInfo.houseNumberPlaceholder")}
+                          placeholder={t('billingInfo.houseNumberPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -125,10 +130,10 @@ export default function CreateSubscriptionDialog({
                   name="postalCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("billingInfo.postalCodeLabel")}</FormLabel>
+                      <FormLabel>{t('billingInfo.postalCodeLabel')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("billingInfo.postalCodePlaceholder")}
+                          placeholder={t('billingInfo.postalCodePlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -141,10 +146,10 @@ export default function CreateSubscriptionDialog({
                   name="city"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>{t("billingInfo.cityLabel")}</FormLabel>
+                      <FormLabel>{t('billingInfo.cityLabel')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("billingInfo.cityPlaceholder")}
+                          placeholder={t('billingInfo.cityPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -158,10 +163,10 @@ export default function CreateSubscriptionDialog({
                 name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.countryLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.countryLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.countryPlaceholder")}
+                        placeholder={t('billingInfo.countryPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -175,10 +180,10 @@ export default function CreateSubscriptionDialog({
                 name="vatNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.vatNumberLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.vatNumberLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.vatNumberPlaceholder")}
+                        placeholder={t('billingInfo.vatNumberPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -191,17 +196,17 @@ export default function CreateSubscriptionDialog({
                 name="noOfSeats"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.noOfSeatsLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.noOfSeatsLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.noOfSeatsPlaceholder")}
+                        placeholder={t('billingInfo.noOfSeatsPlaceholder')}
                         type="number"
                         {...field}
                       />
                     </FormControl>
                     <FormMessage />
                     <FormDescription>
-                      {t("subscriptionDialog.noOfSeatsDescription")}
+                      {t('subscriptionDialog.noOfSeatsDescription')}
                     </FormDescription>
                   </FormItem>
                 )}
@@ -214,13 +219,13 @@ export default function CreateSubscriptionDialog({
                     onClick={handleCancel}
                     disabled={form.formState.isSubmitting}
                   >
-                    {t("billingInfo.cancel")}
+                    {t('billingInfo.cancel')}
                   </Button>
                 </DialogClose>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting
-                    ? t("subscriptionDialog.creating")
-                    : t("subscriptionDialog.createSubscription")}
+                    ? t('subscriptionDialog.creating')
+                    : t('subscriptionDialog.createSubscription')}
                 </Button>
               </DialogFooter>
             </form>

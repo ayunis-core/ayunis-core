@@ -1,29 +1,29 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "@tanstack/react-router";
-import { useAuthenticationControllerRegister } from "@/shared/api/generated/ayunisCoreAPI";
-import { showError } from "@/shared/lib/toast";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { useTranslation } from "react-i18next";
-import * as z from "zod";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from '@tanstack/react-router';
+import { useAuthenticationControllerRegister } from '@/shared/api/generated/ayunisCoreAPI';
+import { showError } from '@/shared/lib/toast';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { useTranslation } from 'react-i18next';
+import * as z from 'zod';
 
 export function useRegister() {
   const navigate = useNavigate();
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
   const registerMutation = useAuthenticationControllerRegister();
 
   const registerFormSchema = z.object({
     email: z.string().email({
-      message: t("register.emailInvalid"),
+      message: t('register.emailInvalid'),
     }),
     password: z.string().min(8, {
-      message: t("register.passwordTooShort"),
+      message: t('register.passwordTooShort'),
     }),
     orgName: z.string().min(1, {
-      message: t("register.orgNameRequired"),
+      message: t('register.orgNameRequired'),
     }),
     userName: z.string().min(1, {
-      message: t("register.userNameRequired"),
+      message: t('register.userNameRequired'),
     }),
     legalAcceptance: z.boolean(),
     marketingAcceptance: z.boolean(),
@@ -32,10 +32,10 @@ export function useRegister() {
   const form = useForm<z.infer<typeof registerFormSchema>>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
-      email: "",
-      password: "",
-      orgName: "",
-      userName: "",
+      email: '',
+      password: '',
+      orgName: '',
+      userName: '',
       legalAcceptance: false,
       marketingAcceptance: false,
     },
@@ -54,29 +54,29 @@ export function useRegister() {
       },
       {
         onSuccess: () => {
-          navigate({ to: "/email-confirm" });
+          void navigate({ to: '/email-confirm' });
         },
         onError: (error) => {
-          console.error("Registration failed:", error);
+          console.error('Registration failed:', error);
           const { code } = extractErrorData(error);
           switch (code) {
-            case "USER_ALREADY_EXISTS":
-              showError(t("register.emailAlreadyExists"));
+            case 'USER_ALREADY_EXISTS':
+              showError(t('register.emailAlreadyExists'));
               break;
-            case "INVALID_PASSWORD":
-              showError(t("register.invalidPassword"));
+            case 'INVALID_PASSWORD':
+              showError(t('register.invalidPassword'));
               break;
-            case "USER_EMAIL_PROVIDER_BLACKLISTED":
-              showError(t("register.emailProviderBlacklisted"));
+            case 'USER_EMAIL_PROVIDER_BLACKLISTED':
+              showError(t('register.emailProviderBlacklisted'));
               break;
-            case "REGISTRATION_DISABLED":
-              showError(t("register.registrationDisabled"));
+            case 'REGISTRATION_DISABLED':
+              showError(t('register.registrationDisabled'));
               break;
-            case "MARKETING_ACCEPTANCE_REQUIRED":
-              showError(t("register.marketingAcceptanceRequired"));
+            case 'MARKETING_ACCEPTANCE_REQUIRED':
+              showError(t('register.marketingAcceptanceRequired'));
               break;
             default:
-              showError(t("register.registrationFailed"));
+              showError(t('register.registrationFailed'));
           }
         },
       },

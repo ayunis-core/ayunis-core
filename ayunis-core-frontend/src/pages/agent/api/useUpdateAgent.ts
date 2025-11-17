@@ -1,20 +1,20 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import {
   agentsControllerUpdate,
   getAgentsControllerFindAllQueryKey,
   getAgentsControllerFindOneQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { AgentResponseDto } from "@/shared/api";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { AgentResponseDto } from '@/shared/api';
 
 const updateAgentSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  instructions: z.string().min(1, "Instructions are required"),
-  modelId: z.string().min(1, "Model is required"),
+  name: z.string().min(1, 'Name is required'),
+  instructions: z.string().min(1, 'Instructions are required'),
+  modelId: z.string().min(1, 'Model is required'),
 });
 
 type UpdateAgentData = z.infer<typeof updateAgentSchema>;
@@ -24,7 +24,7 @@ interface UseUpdateAgentProps {
 }
 
 export function useUpdateAgent({ agent }: UseUpdateAgentProps) {
-  const { t } = useTranslation("agents");
+  const { t } = useTranslation('agents');
   const queryClient = useQueryClient();
 
   const form = useForm<UpdateAgentData>({
@@ -41,16 +41,16 @@ export function useUpdateAgent({ agent }: UseUpdateAgentProps) {
       return await agentsControllerUpdate(agent.id, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: [getAgentsControllerFindAllQueryKey()],
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: [getAgentsControllerFindOneQueryKey(agent.id)],
       });
-      toast.success(t("update.success"));
+      toast.success(t('update.success'));
     },
     onError: () => {
-      toast.error(t("update.error"));
+      toast.error(t('update.error'));
     },
   });
 

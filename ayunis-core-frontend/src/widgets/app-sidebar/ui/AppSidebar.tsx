@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   User2,
   BookOpen,
@@ -7,7 +7,7 @@ import {
   LogOut,
   Plus,
   Bot,
-} from "lucide-react";
+} from 'lucide-react';
 
 import {
   Sidebar,
@@ -18,56 +18,56 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/shared/ui/shadcn/sidebar";
+} from '@/shared/ui/shadcn/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { ChatsSidebarGroup } from "./ChatsSidebarGroup";
-import { SubscriptionHintButton } from "./SubscriptionHintButton";
-import { useMe } from "../api/useMe";
-import { useLogout } from "../api/useLogout";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import useKeyboardShortcut from "@/features/useKeyboardShortcut";
-import { useNavigate } from "@tanstack/react-router";
-import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
-import brandFullDark from "@/shared/assets/brand/brand-full-dark.svg";
-import { useTheme } from "@/features/theme";
-import { useSidebar } from "@/shared/ui/shadcn/sidebar";
-import { MeResponseDtoSystemRole } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { ChatsSidebarGroup } from './ChatsSidebarGroup';
+import { SubscriptionHintButton } from './SubscriptionHintButton';
+import { useMe } from '../api/useMe';
+import { useLogout } from '../api/useLogout';
+import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import useKeyboardShortcut from '@/features/useKeyboardShortcut';
+import { useNavigate } from '@tanstack/react-router';
+import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
+import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
+import { useTheme } from '@/features/theme';
+import { useSidebar } from '@/shared/ui/shadcn/sidebar';
+import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
   const { logout } = useLogout();
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
 
-  useKeyboardShortcut(["j", "Meta"], () => {
-    navigate({ to: "/chat" });
+  useKeyboardShortcut(['j', 'Meta'], () => {
+    void navigate({ to: '/chat' });
   });
 
   // Menu items.
   const items = [
     {
-      title: t("sidebar.newChat"),
-      url: "/chat",
+      title: t('sidebar.newChat'),
+      url: '/chat',
       icon: Plus,
-      shortcut: "⌘J",
+      shortcut: '⌘J',
     },
     {
-      title: t("sidebar.prompts"),
-      url: "/prompts",
+      title: t('sidebar.prompts'),
+      url: '/prompts',
       icon: BookOpen,
     },
     {
-      title: t("sidebar.agents"),
-      url: "/agents",
+      title: t('sidebar.agents'),
+      url: '/agents',
       icon: Bot,
     },
   ];
@@ -80,7 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
                 <img
-                  src={theme === "dark" ? brandFullDark : brandFullLight}
+                  src={theme === 'dark' ? brandFullDark : brandFullLight}
                   alt="Ayunis Logo"
                   className="w-full max-w-32"
                 />
@@ -143,14 +143,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuItem asChild>
                   <Link to="/settings/general" onClick={closeMobileWithCleanup}>
                     <User2 />
-                    {t("sidebar.accountSettings")}
+                    {t('sidebar.accountSettings')}
                   </Link>
                 </DropdownMenuItem>
-                {user?.role === "admin" && (
+                {user?.role === 'admin' && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin-settings" onClick={closeMobileWithCleanup}>
                       <Settings2 />
-                      {t("sidebar.adminSettings")}
+                      {t('sidebar.adminSettings')}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -161,13 +161,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       onClick={closeMobileWithCleanup}
                     >
                       <Settings2 />
-                      {t("sidebar.superAdminSettings")}
+                      {t('sidebar.superAdminSettings')}
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={logout}>
                   <LogOut />
-                  {t("sidebar.signOut")}
+                  {t('sidebar.signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

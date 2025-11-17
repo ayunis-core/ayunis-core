@@ -4,12 +4,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Building, MapPin } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import BillingInfoUpdateDialog from "./BillingInfoUpdateDialog";
-import type { SubscriptionResponseDto } from "@/shared/api";
+} from '@/shared/ui/shadcn/card';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Building, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import BillingInfoUpdateDialog from './BillingInfoUpdateDialog';
+import type { SubscriptionResponseDto } from '@/shared/api';
 
 interface BillingInfoSectionProps {
   subscription: SubscriptionResponseDto;
@@ -18,20 +18,20 @@ interface BillingInfoSectionProps {
 export default function BillingInfoSection({
   subscription,
 }: BillingInfoSectionProps) {
-  const { t } = useTranslation("admin-settings-billing");
+  const { t } = useTranslation('admin-settings-billing');
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {t("billingInfo.title")}
+          {t('billingInfo.title')}
         </CardTitle>
         <CardAction>
           <BillingInfoUpdateDialog
             currentBillingInfo={subscription.billingInfo}
             trigger={
               <Button size="sm" variant="outline">
-                {t("billingInfo.update")}
+                {t('billingInfo.update')}
               </Button>
             }
           />
@@ -43,7 +43,7 @@ export default function BillingInfoSection({
             <Building className="h-4 w-4 text-gray-500" />
             <div>
               <div className="text-sm font-medium">
-                {t("billingInfo.companyName")}
+                {t('billingInfo.companyName')}
               </div>
               <div className="text-sm text-gray-600">
                 {subscription.billingInfo.companyName}
@@ -55,13 +55,13 @@ export default function BillingInfoSection({
             <MapPin className="h-4 w-4 text-gray-500" />
             <div>
               <div className="text-sm font-medium">
-                {t("billingInfo.billingAddress")}
+                {t('billingInfo.billingAddress')}
               </div>
               <div className="text-sm text-gray-600">
-                {subscription.billingInfo.street}{" "}
-                {subscription.billingInfo.houseNumber},{" "}
-                {subscription.billingInfo.city}{" "}
-                {subscription.billingInfo.postalCode},{" "}
+                {subscription.billingInfo.street}{' '}
+                {subscription.billingInfo.houseNumber},{' '}
+                {subscription.billingInfo.city}{' '}
+                {subscription.billingInfo.postalCode},{' '}
                 {subscription.billingInfo.country}
               </div>
             </div>
@@ -73,10 +73,10 @@ export default function BillingInfoSection({
             </div>
             <div>
               <div className="text-sm font-medium">
-                {t("billingInfo.vatNumber")}
+                {t('billingInfo.vatNumber')}
               </div>
               <div className="text-sm text-gray-600">
-                {subscription.billingInfo.vatNumber || "-"}
+                {subscription.billingInfo.vatNumber || '-'}
               </div>
             </div>
           </div>

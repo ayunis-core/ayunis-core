@@ -1,8 +1,8 @@
-import { useTranslation } from "react-i18next";
-import type { ThinkingMessageContent } from "../../model/openapi";
-import AgentActivityHint from "@/widgets/agent-activity-hint/ui/AgentActivityHint";
-import { Brain } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import type { ThinkingMessageContent } from '../../model/openapi';
+import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
+import { Brain } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface ThinkingBlockWidgetProps {
   content: ThinkingMessageContent;
@@ -13,7 +13,7 @@ export default function ThinkingBlockWidget({
   content,
   open: initialOpen,
 }: ThinkingBlockWidgetProps) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const [open, setOpen] = useState(initialOpen);
 
   useEffect(() => {

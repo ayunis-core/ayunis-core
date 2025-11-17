@@ -1,7 +1,7 @@
 import {
   getPromptsControllerFindAllQueryKey,
   usePromptsControllerFindAll,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 export function usePrompts() {
   const {

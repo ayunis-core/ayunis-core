@@ -1,10 +1,10 @@
-import type { SuperAdminOrgResponseDto } from "@/shared/api";
+import type { SuperAdminOrgResponseDto } from '@/shared/api';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
+} from '@/shared/ui/shadcn/card';
 
 interface OrgDetailsProps {
   org: SuperAdminOrgResponseDto;

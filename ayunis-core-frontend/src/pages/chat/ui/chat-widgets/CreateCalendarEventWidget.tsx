@@ -1,30 +1,30 @@
 // Types
-import type { ToolUseMessageContent } from "../../model/openapi";
-import type { CalendarEventInput } from "../../api/useGenerateIcs";
-import { cn } from "@/shared/lib/shadcn/utils";
+import type { ToolUseMessageContent } from '../../model/openapi';
+import type { CalendarEventInput } from '../../api/useGenerateIcs';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 // Utils
-import { useMemo, useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { showError } from "@/shared/lib/toast";
+import { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
 
 // API
-import { useGenerateIcs } from "../../api/useGenerateIcs";
+import { useGenerateIcs } from '../../api/useGenerateIcs';
 
 // Shadcn
-import { Label } from "@/shared/ui/shadcn/label";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Textarea } from "@/shared/ui/shadcn/textarea";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Calendar } from "@/shared/ui/shadcn/calendar";
+import { Label } from '@/shared/ui/shadcn/label';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Textarea } from '@/shared/ui/shadcn/textarea';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Calendar } from '@/shared/ui/shadcn/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/shared/ui/shadcn/popover";
+} from '@/shared/ui/shadcn/popover';
 
 // Icons
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon } from 'lucide-react';
 
 export default function CreateCalendarEventWidget({
   content,
@@ -33,66 +33,54 @@ export default function CreateCalendarEventWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const { generate } = useGenerateIcs();
 
   const params = (content.params || {}) as Partial<CalendarEventInput>;
 
-  const [title, setTitle] = useState<string>(params.title || "");
-  const [description, setDescription] = useState<string>(
-    params.description || "",
-  );
-  const [location, setLocation] = useState<string>(params.location || "");
+  // Derive initial values directly from params to avoid setState in useEffect
+  const initialTitle = params.title || '';
+  const initialDescription = params.description || '';
+  const initialLocation = params.location || '';
+  const initialStartDate = params.start ? new Date(params.start) : undefined;
+  const initialEndDate = params.end ? new Date(params.end) : undefined;
+  const initialStartTime = params.start
+    ? new Date(params.start).toISOString().substring(11, 19)
+    : '10:30:00';
+  const initialEndTime = params.end
+    ? new Date(params.end).toISOString().substring(11, 19)
+    : '11:30:00';
+
+  const [title, setTitle] = useState<string>(initialTitle);
+  const [description, setDescription] = useState<string>(initialDescription);
+  const [location, setLocation] = useState<string>(initialLocation);
   const [startDate, setStartDate] = useState<Date | undefined>(
-    params.start ? new Date(params.start) : undefined,
+    initialStartDate,
   );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    params.end ? new Date(params.end) : undefined,
-  );
-  const [startTime, setStartTime] = useState<string>(
-    params.start
-      ? new Date(params.start).toISOString().substring(11, 19)
-      : "10:30:00",
-  );
-  const [endTime, setEndTime] = useState<string>(
-    params.end
-      ? new Date(params.end).toISOString().substring(11, 19)
-      : "11:30:00",
-  );
+  const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
+  const [startTime, setStartTime] = useState<string>(initialStartTime);
+  const [endTime, setEndTime] = useState<string>(initialEndTime);
   const [isStartDatePickerOpen, setIsStartDatePickerOpen] = useState(false);
   const [isEndDatePickerOpen, setIsEndDatePickerOpen] = useState(false);
 
-  // Update state when content changes
+  // Reset state when params change (for new streaming content)
   useEffect(() => {
-    setTitle(params.title || "");
-    setDescription(params.description || "");
-    setLocation(params.location || "");
-    setStartDate(params.start ? new Date(params.start) : undefined);
-    setEndDate(params.end ? new Date(params.end) : undefined);
-    setStartTime(
-      params.start
-        ? new Date(params.start).toISOString().substring(11, 19)
-        : "10:30:00",
-    );
-    setEndTime(
-      params.end
-        ? new Date(params.end).toISOString().substring(11, 19)
-        : "11:30:00",
-    );
-  }, [
-    params.title,
-    params.description,
-    params.location,
-    params.start,
-    params.end,
-  ]);
+    setTitle(initialTitle);
+    setDescription(initialDescription);
+    setLocation(initialLocation);
+    setStartDate(initialStartDate);
+    setEndDate(initialEndDate);
+    setStartTime(initialStartTime);
+    setEndTime(initialEndTime);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content.id]); // Only reset when content changes, not on every param change
 
   function combineDateTime(d?: Date, time?: string): string | undefined {
     if (!d || !time) {
       return undefined;
     }
 
-    const [hh = "00", mm = "00", ss = "00"] = time.split(":");
+    const [hh = '00', mm = '00', ss = '00'] = time.split(':');
     const combined = new Date(d);
     combined.setHours(Number(hh), Number(mm), Number(ss || 0), 0);
     return combined.toISOString();
@@ -125,26 +113,26 @@ export default function CreateCalendarEventWidget({
 
     if (isInvalidRange) {
       showError(
-        t("chat.tools.create_calendar_event.invalidRange", {
-          defaultValue: "End must be after start",
+        t('chat.tools.create_calendar_event.invalidRange', {
+          defaultValue: 'End must be after start',
         }),
       );
       return;
     }
 
     const icsContent = generate(dto);
-    if (!icsContent || typeof icsContent !== "string") {
-      showError(t("chat.errorUnexpected"));
+    if (!icsContent || typeof icsContent !== 'string') {
+      showError(t('chat.errorUnexpected'));
       return;
     }
 
     const blob = new Blob([icsContent], {
-      type: "text/calendar; charset=utf-8",
+      type: 'text/calendar; charset=utf-8',
     });
     const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = objectUrl;
-    a.download = `${title || "event"}.ics`;
+    a.download = `${title || 'event'}.ics`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -159,14 +147,14 @@ export default function CreateCalendarEventWidget({
       <div className="space-y-2 w-full">
         <Label
           htmlFor={`calendar-title-${content.id}`}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.create_calendar_event.title")}
+          {t('chat.tools.create_calendar_event.title')}
         </Label>
         <Input
           id={`calendar-title-${content.id}`}
-          className={cn("w-full", isStreaming && "animate-pulse")}
-          placeholder={t("chat.tools.create_calendar_event.titlePlaceholder")}
+          className={cn('w-full', isStreaming && 'animate-pulse')}
+          placeholder={t('chat.tools.create_calendar_event.titlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -175,15 +163,15 @@ export default function CreateCalendarEventWidget({
       <div className="space-y-2 w-full">
         <Label
           htmlFor={`calendar-description-${content.id}`}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.create_calendar_event.description")}
+          {t('chat.tools.create_calendar_event.description')}
         </Label>
         <Textarea
           id={`calendar-description-${content.id}`}
-          className={cn("h-32", isStreaming && "animate-pulse")}
+          className={cn('h-32', isStreaming && 'animate-pulse')}
           placeholder={t(
-            "chat.tools.create_calendar_event.descriptionPlaceholder",
+            'chat.tools.create_calendar_event.descriptionPlaceholder',
           )}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -193,15 +181,15 @@ export default function CreateCalendarEventWidget({
       <div className="space-y-2 w-full">
         <Label
           htmlFor={`calendar-location-${content.id}`}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.create_calendar_event.location")}
+          {t('chat.tools.create_calendar_event.location')}
         </Label>
         <Input
           id={`calendar-location-${content.id}`}
-          className={cn("w-full", isStreaming && "animate-pulse")}
+          className={cn('w-full', isStreaming && 'animate-pulse')}
           placeholder={t(
-            "chat.tools.create_calendar_event.locationPlaceholder",
+            'chat.tools.create_calendar_event.locationPlaceholder',
           )}
           value={location}
           onChange={(e) => setLocation(e.target.value)}
@@ -210,8 +198,8 @@ export default function CreateCalendarEventWidget({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         <div className="space-y-2">
-          <Label className={cn("px-1", isStreaming && "animate-pulse")}>
-            {t("chat.tools.create_calendar_event.start")}
+          <Label className={cn('px-1', isStreaming && 'animate-pulse')}>
+            {t('chat.tools.create_calendar_event.start')}
           </Label>
 
           <div className="flex gap-4">
@@ -223,14 +211,14 @@ export default function CreateCalendarEventWidget({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-40 justify-between font-normal",
-                    isStreaming && "animate-pulse",
+                    'w-40 justify-between font-normal',
+                    isStreaming && 'animate-pulse',
                   )}
                 >
                   {startDate
                     ? startDate.toLocaleDateString()
-                    : t("chat.tools.create_calendar_event.selectDate", {
-                        defaultValue: "Select date",
+                    : t('chat.tools.create_calendar_event.selectDate', {
+                        defaultValue: 'Select date',
                       })}
                   <ChevronDownIcon />
                 </Button>
@@ -258,15 +246,15 @@ export default function CreateCalendarEventWidget({
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               className={cn(
-                "bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
-                isStreaming && "animate-pulse",
+                'bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
+                isStreaming && 'animate-pulse',
               )}
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label className={cn("px-1", isStreaming && "animate-pulse")}>
-            {t("chat.tools.create_calendar_event.end")}
+          <Label className={cn('px-1', isStreaming && 'animate-pulse')}>
+            {t('chat.tools.create_calendar_event.end')}
           </Label>
 
           <div className="flex gap-4">
@@ -278,14 +266,14 @@ export default function CreateCalendarEventWidget({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-40 justify-between font-normal",
-                    isStreaming && "animate-pulse",
+                    'w-40 justify-between font-normal',
+                    isStreaming && 'animate-pulse',
                   )}
                 >
                   {endDate
                     ? endDate.toLocaleDateString()
-                    : t("chat.tools.create_calendar_event.selectDate", {
-                        defaultValue: "Select date",
+                    : t('chat.tools.create_calendar_event.selectDate', {
+                        defaultValue: 'Select date',
                       })}
                   <ChevronDownIcon />
                 </Button>
@@ -313,8 +301,8 @@ export default function CreateCalendarEventWidget({
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               className={cn(
-                "bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
-                isStreaming && "animate-pulse",
+                'bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
+                isStreaming && 'animate-pulse',
               )}
             />
           </div>
@@ -325,9 +313,9 @@ export default function CreateCalendarEventWidget({
         <Button
           onClick={downloadIcs}
           disabled={!title || !startDate || !endDate || isInvalidRange}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.create_calendar_event.downloadIcs")}
+          {t('chat.tools.create_calendar_event.downloadIcs')}
         </Button>
       </div>
     </div>

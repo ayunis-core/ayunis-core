@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from '@tanstack/react-router';
+import { queryOptions } from '@tanstack/react-query';
 import {
   threadsControllerFindOne,
   getThreadsControllerFindOneQueryKey,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import ChatPage from "@/pages/chat/";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import ChatPage from '@/pages/chat/';
 
 const threadQueryOptions = (threadId: string) =>
   queryOptions({
@@ -19,7 +19,7 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
   queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
 });
 
-export const Route = createFileRoute("/_authenticated/chats/$threadId")({
+export const Route = createFileRoute('/_authenticated/chats/$threadId')({
   component: RouteComponent,
   loader: async ({ params: { threadId }, context: { queryClient } }) => {
     const thread = await queryClient.fetchQuery(threadQueryOptions(threadId));

@@ -68,6 +68,7 @@ import type {
   ModelProviderWithPermittedStatusResponseDto,
   ModelWithConfigResponseDto,
   PermittedLanguageModelResponseDto,
+  PermittedLanguageModelResponseDtoNullable,
   PermittedProviderResponseDto,
   PredefinedConfigResponseDto,
   PriceResponseDto,
@@ -82,6 +83,7 @@ import type {
   SetUserDefaultModelDto,
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
+  SubscriptionResponseDtoNullable,
   SuccessResponseDto,
   SuperAdminModelsControllerGetAllCatalogModels200Item,
   SuperAdminModelsControllerGetCatalogModelById200,
@@ -90,6 +92,7 @@ import type {
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
   SuperAdminTrialResponseDto,
+  SuperAdminTrialResponseDtoNullable,
   ThreadsControllerAddFileSourceBody,
   ThreadsControllerGetThreadSources200Item,
   UpdateAgentDto,
@@ -194,6 +197,94 @@ export function useAppControllerIsCloud<TData = Awaited<ReturnType<typeof appCon
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAppControllerIsCloudQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Check if the deployment is healthy
+ */
+export const appControllerHealth = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/health`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getAppControllerHealthQueryKey = () => {
+    return [`/health`] as const;
+    }
+
+    
+export const getAppControllerHealthQueryOptions = <TData = Awaited<ReturnType<typeof appControllerHealth>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerHealth>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAppControllerHealthQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerHealth>>> = ({ signal }) => appControllerHealth(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appControllerHealth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AppControllerHealthQueryResult = NonNullable<Awaited<ReturnType<typeof appControllerHealth>>>
+export type AppControllerHealthQueryError = unknown
+
+
+export function useAppControllerHealth<TData = Awaited<ReturnType<typeof appControllerHealth>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerHealth>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appControllerHealth>>,
+          TError,
+          Awaited<ReturnType<typeof appControllerHealth>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppControllerHealth<TData = Awaited<ReturnType<typeof appControllerHealth>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerHealth>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appControllerHealth>>,
+          TError,
+          Awaited<ReturnType<typeof appControllerHealth>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppControllerHealth<TData = Awaited<ReturnType<typeof appControllerHealth>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerHealth>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Check if the deployment is healthy
+ */
+
+export function useAppControllerHealth<TData = Awaited<ReturnType<typeof appControllerHealth>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appControllerHealth>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAppControllerHealthQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -518,7 +609,7 @@ export const modelsControllerGetEffectiveDefaultModel = (
 ) => {
       
       
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
       {url: `/models/default`, method: 'GET', signal
     },
       );
@@ -607,7 +698,7 @@ export const modelsControllerGetOrgSpecificDefaultModel = (
 ) => {
       
       
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
       {url: `/models/org/default`, method: 'GET', signal
     },
       );
@@ -761,7 +852,7 @@ export const modelsControllerGetUserSpecificDefaultModel = (
 ) => {
       
       
-      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      return customAxiosInstance<PermittedLanguageModelResponseDtoNullable>(
       {url: `/models/user/default`, method: 'GET', signal
     },
       );
@@ -4163,7 +4254,7 @@ export const subscriptionsControllerGetSubscription = (
 ) => {
       
       
-      return customAxiosInstance<SubscriptionResponseDto>(
+      return customAxiosInstance<SubscriptionResponseDtoNullable>(
       {url: `/subscriptions`, method: 'GET', signal
     },
       );
@@ -4746,7 +4837,7 @@ export const superAdminSubscriptionsControllerGetSubscription = (
 ) => {
       
       
-      return customAxiosInstance<SubscriptionResponseDto>(
+      return customAxiosInstance<SubscriptionResponseDtoNullable>(
       {url: `/super-admin/subscriptions/${orgId}`, method: 'GET', signal
     },
       );
@@ -7774,7 +7865,7 @@ export const superAdminTrialsControllerGetTrialByOrgId = (
 ) => {
       
       
-      return customAxiosInstance<SuperAdminTrialResponseDto>(
+      return customAxiosInstance<SuperAdminTrialResponseDtoNullable>(
       {url: `/super-admin/trials/${orgId}`, method: 'GET', signal
     },
       );

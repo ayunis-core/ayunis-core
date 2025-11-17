@@ -1,31 +1,40 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerEnable,
   useMcpIntegrationsControllerDisable,
   getMcpIntegrationsControllerListQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { McpIntegration } from "../model/types";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { McpIntegration } from '../model/types';
 
 export function useToggleIntegration() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
 
   const enableMutation = useMcpIntegrationsControllerEnable({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t("integrations.toggleIntegration.enableSuccess"));
+        toast.success(t('integrations.toggleIntegration.enableSuccess'));
       },
-      onError: (error: any, variables) => {
+      onError: (error: unknown, variables) => {
+        const errorMessage =
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+          (error as { message?: string })?.message ||
+          'Unknown error';
         toast.error(
-          t("integrations.toggleIntegration.enableError", {
-            message: error.response?.data?.message || error.message,
+          t('integrations.toggleIntegration.enableError', {
+            message: errorMessage,
           }),
         );
         setTogglingIds((prev) => {
@@ -47,15 +56,24 @@ export function useToggleIntegration() {
   const disableMutation = useMcpIntegrationsControllerDisable({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["useMcpIntegrationsControllerList"],
+        void queryClient.invalidateQueries({
+          queryKey: ['useMcpIntegrationsControllerList'],
         });
-        toast.success(t("integrations.toggleIntegration.disableSuccess"));
+        toast.success(t('integrations.toggleIntegration.disableSuccess'));
       },
-      onError: (error: any, variables) => {
+      onError: (error: unknown, variables) => {
+        const errorMessage =
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+          (error as { message?: string })?.message ||
+          'Unknown error';
         toast.error(
-          t("integrations.toggleIntegration.disableError", {
-            message: error.response?.data?.message || error.message,
+          t('integrations.toggleIntegration.disableError', {
+            message: errorMessage,
           }),
         );
         setTogglingIds((prev) => {

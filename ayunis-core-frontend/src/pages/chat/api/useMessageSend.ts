@@ -8,16 +8,16 @@ import {
   type RunMessageResponseDto,
   type RunErrorResponseDto,
   type RunThreadResponseDto,
-} from "@/shared/api";
-import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useCallback, useRef } from "react";
-import config from "@/shared/config";
-import { useQueryClient } from "@tanstack/react-query";
+} from '@/shared/api';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useCallback, useRef } from 'react';
+import config from '@/shared/config';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 interface SendMesageInput {
   text: string;
@@ -40,7 +40,7 @@ interface UseMessageSendParams {
 }
 
 export function useMessageSend(params: UseMessageSendParams) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const queryClient = useQueryClient();
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
@@ -62,33 +62,33 @@ export function useMessageSend(params: UseMessageSendParams) {
         const url = `${config.api.baseUrl}/runs/send-message`;
 
         const response = await fetch(url, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            Accept: "text/event-stream",
-            "Cache-Control": "no-cache",
+            'Content-Type': 'application/json',
+            Accept: 'text/event-stream',
+            'Cache-Control': 'no-cache',
           },
-          credentials: "include",
+          credentials: 'include',
           body: JSON.stringify(sendMessageDto),
           signal,
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("HTTP error:", { status: response.status, errorText });
+          console.error('HTTP error:', { status: response.status, errorText });
           throw new Error(
             `HTTP error! status: ${response.status}, message: ${errorText}`,
           );
         }
 
         if (!response.body) {
-          throw new Error("No response body");
+          throw new Error('No response body');
         }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = "";
-        let eventCount = 0;
+        let buffer = '';
+        let _eventCount = 0;
 
         try {
           while (true) {
@@ -101,64 +101,64 @@ export function useMessageSend(params: UseMessageSendParams) {
             const chunk = decoder.decode(value, { stream: true });
 
             buffer += chunk;
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
 
             for (const line of lines) {
               // Handle SSE comment lines
-              if (line.startsWith(":")) {
+              if (line.startsWith(':')) {
                 continue;
               }
 
               // Handle SSE data lines
-              if (line.startsWith("data: ")) {
+              if (line.startsWith('data: ')) {
                 try {
                   const jsonData = line.slice(6);
-                  const data = JSON.parse(jsonData);
-                  eventCount++;
+                  const data = JSON.parse(jsonData) as { type?: string };
+                  _eventCount++;
 
                   switch (data.type) {
-                    case "session":
+                    case 'session':
                       params.onSessionEvent?.(data as RunSessionResponseDto);
                       break;
-                    case "message":
+                    case 'message':
                       params.onMessageEvent?.(data as RunMessageResponseDto);
-                      console.log("Message", data);
+                      console.log('Message', data);
                       break;
-                    case "thread":
+                    case 'thread':
                       params.onThreadEvent?.(data as RunThreadResponseDto);
                       break;
-                    case "error":
+                    case 'error':
                       params.onErrorEvent?.(data as RunErrorResponseDto);
-                      console.log("Error", data);
+                      console.log('Error', data);
                       break;
                     default:
-                      console.warn("Unknown SSE event type:", data.type);
+                      console.warn('Unknown SSE event type:', data.type);
                   }
                 } catch (parseError) {
-                  console.warn("Failed to parse SSE data:", line, parseError);
+                  console.warn('Failed to parse SSE data:', line, parseError);
                 }
               }
             }
           }
         } catch (readerError) {
-          console.error("Error reading SSE stream:", readerError);
+          console.error('Error reading SSE stream:', readerError);
           throw readerError;
         }
 
         params.onComplete?.();
       } catch (error) {
-        console.error("Error in sendMessage", error);
+        console.error('Error in sendMessage', error);
 
         if (error instanceof Error) {
-          if (error.name === "AbortError") {
+          if (error.name === 'AbortError') {
             wasAbortedRef.current = true;
             return; // Request was cancelled, don't show error
           }
 
           // Handle specific error status codes
-          if (error.message.includes("403")) {
-            showError(t("chat.upgradeToProError"));
+          if (error.message.includes('403')) {
+            showError(t('chat.upgradeToProError'));
           } else {
             params.onError?.(error);
           }
@@ -174,7 +174,7 @@ export function useMessageSend(params: UseMessageSendParams) {
             getThreadsControllerFindOneQueryKey(params.threadId),
             getThreadsControllerFindAllQueryKey(),
           ].forEach((queryKey) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
               queryKey,
             });
           });

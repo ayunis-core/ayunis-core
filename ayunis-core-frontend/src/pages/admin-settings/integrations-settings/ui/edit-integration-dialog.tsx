@@ -1,13 +1,13 @@
-import { useForm } from "react-hook-form";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -16,11 +16,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Button } from "@/shared/ui/shadcn/button";
-import type { McpIntegration, UpdateIntegrationFormData } from "../model/types";
-import { useUpdateIntegration } from "../api/useUpdateIntegration";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Button } from '@/shared/ui/shadcn/button';
+import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
+import { useUpdateIntegration } from '../api/useUpdateIntegration';
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
@@ -33,15 +33,15 @@ export function EditIntegrationDialog({
   open,
   onOpenChange,
 }: EditIntegrationDialogProps) {
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
   const { updateIntegration, isUpdating } = useUpdateIntegration(() => {
     onOpenChange(false);
   });
   const form = useForm<UpdateIntegrationFormData>({
     defaultValues: {
-      name: "",
-      authHeaderName: "",
-      credentials: "",
+      name: '',
+      authHeaderName: '',
+      credentials: '',
     },
   });
 
@@ -49,8 +49,8 @@ export function EditIntegrationDialog({
     if (integration && open) {
       form.reset({
         name: integration.name,
-        authHeaderName: "",
-        credentials: "",
+        authHeaderName: '',
+        credentials: '',
       });
     }
   }, [integration, open, form]);
@@ -69,7 +69,7 @@ export function EditIntegrationDialog({
       payload.credentials = trimmedCredentials;
     }
 
-    if (integration.authMethod === "CUSTOM_HEADER") {
+    if (integration.authMethod === 'CUSTOM_HEADER') {
       const trimmedHeaderName = data.authHeaderName?.trim();
       if (
         trimmedHeaderName &&
@@ -96,17 +96,17 @@ export function EditIntegrationDialog({
 
   if (!integration) return null;
 
-  const authMethod = integration.authMethod ?? "NO_AUTH";
+  const authMethod = integration.authMethod ?? 'NO_AUTH';
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>{t("integrations.editDialog.title")}</DialogTitle>
+          <DialogTitle>{t('integrations.editDialog.title')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
             className="space-y-4"
           >
             <FormField
@@ -114,10 +114,10 @@ export function EditIntegrationDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("integrations.editDialog.name")}</FormLabel>
+                  <FormLabel>{t('integrations.editDialog.name')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("integrations.editDialog.namePlaceholder")}
+                      placeholder={t('integrations.editDialog.namePlaceholder')}
                       {...field}
                       disabled={isUpdating}
                     />
@@ -127,7 +127,7 @@ export function EditIntegrationDialog({
               )}
             />
 
-            {authMethod === "CUSTOM_HEADER" && (
+            {authMethod === 'CUSTOM_HEADER' && (
               <>
                 <FormField
                   control={form.control}
@@ -135,13 +135,13 @@ export function EditIntegrationDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {t("integrations.editDialog.headerName")}
+                        {t('integrations.editDialog.headerName')}
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder={
                             integration.authHeaderName ||
-                            t("integrations.editDialog.headerNamePlaceholder")
+                            t('integrations.editDialog.headerNamePlaceholder')
                           }
                           {...field}
                           disabled={isUpdating}
@@ -158,20 +158,20 @@ export function EditIntegrationDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {t("integrations.editDialog.credentials")}
+                        {t('integrations.editDialog.credentials')}
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="password"
                           placeholder={t(
-                            "integrations.editDialog.credentialsPlaceholder",
+                            'integrations.editDialog.credentialsPlaceholder',
                           )}
                           {...field}
                           disabled={isUpdating}
                         />
                       </FormControl>
                       <FormDescription>
-                        {t("integrations.editDialog.credentialsDescription")}
+                        {t('integrations.editDialog.credentialsDescription')}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -180,20 +180,20 @@ export function EditIntegrationDialog({
               </>
             )}
 
-            {authMethod === "BEARER_TOKEN" && (
+            {authMethod === 'BEARER_TOKEN' && (
               <FormField
                 control={form.control}
                 name="credentials"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t("integrations.editDialog.credentials")}
+                      {t('integrations.editDialog.credentials')}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder={t(
-                          "integrations.editDialog.credentialsPlaceholder",
+                          'integrations.editDialog.credentialsPlaceholder',
                         )}
                         {...field}
                         disabled={isUpdating}
@@ -205,9 +205,9 @@ export function EditIntegrationDialog({
               />
             )}
 
-            {authMethod === "NO_AUTH" && (
+            {authMethod === 'NO_AUTH' && (
               <FormDescription>
-                {t("integrations.editDialog.noCredentialsMessage")}
+                {t('integrations.editDialog.noCredentialsMessage')}
               </FormDescription>
             )}
 
@@ -218,12 +218,12 @@ export function EditIntegrationDialog({
                 onClick={() => handleOpenChange(false)}
                 disabled={isUpdating}
               >
-                {t("integrations.editDialog.cancel")}
+                {t('integrations.editDialog.cancel')}
               </Button>
               <Button type="submit" disabled={isUpdating}>
                 {isUpdating
-                  ? t("integrations.editDialog.updating")
-                  : t("integrations.editDialog.update")}
+                  ? t('integrations.editDialog.updating')
+                  : t('integrations.editDialog.update')}
               </Button>
             </DialogFooter>
           </form>

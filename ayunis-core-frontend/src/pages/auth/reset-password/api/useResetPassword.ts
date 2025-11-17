@@ -1,61 +1,61 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "@tanstack/react-router";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useUserControllerResetPassword } from "@/shared/api";
-import extractErrorData from "@/shared/api/extract-error-data";
-import * as z from "zod";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from '@tanstack/react-router';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useUserControllerResetPassword } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
+import * as z from 'zod';
 
 export function useResetPassword(token: string) {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
   const navigate = useNavigate();
 
   const resetPasswordFormSchema = z
     .object({
       newPassword: z.string().min(8, {
-        message: t("resetPassword.passwordTooShort"),
+        message: t('resetPassword.passwordTooShort'),
       }),
       confirmPassword: z.string().min(8, {
-        message: t("resetPassword.passwordTooShort"),
+        message: t('resetPassword.passwordTooShort'),
       }),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
-      message: t("resetPassword.passwordsDontMatch"),
-      path: ["confirmPassword"],
+      message: t('resetPassword.passwordsDontMatch'),
+      path: ['confirmPassword'],
     });
 
   const form = useForm<z.infer<typeof resetPasswordFormSchema>>({
     resolver: zodResolver(resetPasswordFormSchema),
     defaultValues: {
-      newPassword: "",
-      confirmPassword: "",
+      newPassword: '',
+      confirmPassword: '',
     },
   });
 
   const { mutate: resetPassword, isPending } = useUserControllerResetPassword({
     mutation: {
       onSuccess: () => {
-        showSuccess(t("resetPassword.success"));
-        navigate({ to: "/login" });
+        showSuccess(t('resetPassword.success'));
+        void navigate({ to: '/login' });
       },
       onError: (error) => {
         const { code } = extractErrorData(error);
         switch (code) {
-          case "INVALID_TOKEN":
-            showError(t("resetPassword.invalidToken"));
+          case 'INVALID_TOKEN':
+            showError(t('resetPassword.invalidToken'));
             break;
-          case "INVALID_PASSWORD":
-            showError(t("resetPassword.invalidPassword"));
+          case 'INVALID_PASSWORD':
+            showError(t('resetPassword.invalidPassword'));
             break;
           default:
-            showError(t("resetPassword.error"));
+            showError(t('resetPassword.error'));
         }
       },
     },
   });
 
-  async function onSubmit(values: z.infer<typeof resetPasswordFormSchema>) {
+  function onSubmit(values: z.infer<typeof resetPasswordFormSchema>) {
     resetPassword({
       data: {
         resetToken: token,

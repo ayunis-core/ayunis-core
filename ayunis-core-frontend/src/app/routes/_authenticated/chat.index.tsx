@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { NewChatPage, NewChatPageNoModelError } from "@/pages/new-chat";
+import { createFileRoute } from '@tanstack/react-router';
+import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
 import {
   modelsControllerGetEffectiveDefaultModel,
   promptsControllerFindOne,
@@ -11,9 +11,9 @@ import {
   modelsControllerIsEmbeddingModelEnabled,
   getAgentsControllerFindAllQueryKey,
   agentsControllerFindAll,
-} from "@/shared/api";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { z } from "zod";
+} from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { z } from 'zod';
 
 const queryDefaultModelOptions = () => ({
   queryKey: getModelsControllerGetEffectiveDefaultModelQueryKey(),
@@ -46,7 +46,7 @@ const searchSchema = z.object({
   agentId: z.string().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/chat/")({
+export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({
@@ -60,10 +60,11 @@ export const Route = createFileRoute("/_authenticated/chat/")({
     } else if (agentId) {
       selectedAgentId = agentId;
     } else {
-      const defaultModel = await queryClient.fetchQuery(
+      const defaultModelResponse = await queryClient.fetchQuery(
         queryDefaultModelOptions(),
       );
-      selectedModelId = defaultModel.id;
+      const defaultModel = defaultModelResponse.permittedLanguageModel;
+      selectedModelId = defaultModel?.id;
     }
     const { isEmbeddingModelEnabled } = await queryClient.fetchQuery(
       queryIsEmbeddingModelEnabledOptions(),
@@ -86,7 +87,7 @@ export const Route = createFileRoute("/_authenticated/chat/")({
   },
   errorComponent: ({ error }) => {
     const { code } = extractErrorData(error);
-    if (code === "MODEL_NOT_FOUND") {
+    if (code === 'MODEL_NOT_FOUND') {
       return <NewChatPageNoModelError />;
     }
     return <NewChatPageNoModelError />;

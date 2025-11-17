@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
+} from '@/shared/ui/shadcn/card';
 import {
   Table,
   TableBody,
@@ -12,22 +12,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/shared/ui/shadcn/table";
-import { Button } from "@/shared/ui/shadcn/button";
+} from '@/shared/ui/shadcn/table';
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Trash2, MoreHorizontal, Mail } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import type { UserResponseDto } from "@/shared/api";
-import { formatDate } from "@/shared/lib/format-date";
-import { useSuperAdminDeleteUser } from "../api/useSuperAdminDeleteUser";
-import { useSuperAdminTriggerPasswordReset } from "../api/useSuperAdminTriggerPasswordReset";
-import { useConfirmation } from "@/widgets/confirmation-modal";
-import CreateUserDialog from "./CreateUserDialog";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Trash2, MoreHorizontal, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { UserResponseDto } from '@/shared/api';
+import { formatDate } from '@/shared/lib/format-date';
+import { useSuperAdminDeleteUser } from '../api/useSuperAdminDeleteUser';
+import { useSuperAdminTriggerPasswordReset } from '../api/useSuperAdminTriggerPasswordReset';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import CreateUserDialog from './CreateUserDialog';
 
 interface UsersTableProps {
   users: UserResponseDto[];
@@ -35,7 +35,7 @@ interface UsersTableProps {
 }
 
 export default function UsersTable({ users, orgId }: UsersTableProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const { deleteUser, isLoading: isDeleting } = useSuperAdminDeleteUser({
     orgId,
   });
@@ -45,13 +45,13 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
 
   const handleDeleteUser = (user: UserResponseDto) => {
     confirm({
-      title: t("confirmDelete.title"),
-      description: t("confirmDelete.description", {
+      title: t('confirmDelete.title'),
+      description: t('confirmDelete.description', {
         name: user.name,
       }),
-      confirmText: t("confirmDelete.confirmText"),
-      cancelText: t("confirmDelete.cancelText"),
-      variant: "destructive",
+      confirmText: t('confirmDelete.confirmText'),
+      cancelText: t('confirmDelete.cancelText'),
+      variant: 'destructive',
       onConfirm: () => {
         deleteUser(user.id);
       },
@@ -60,14 +60,14 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
 
   const handleTriggerPasswordReset = (user: UserResponseDto) => {
     confirm({
-      title: t("confirmPasswordReset.title"),
-      description: t("confirmPasswordReset.description", {
+      title: t('confirmPasswordReset.title'),
+      description: t('confirmPasswordReset.description', {
         name: user.name,
         email: user.email,
       }),
-      confirmText: t("confirmPasswordReset.confirmText"),
-      cancelText: t("confirmPasswordReset.cancelText"),
-      variant: "default",
+      confirmText: t('confirmPasswordReset.confirmText'),
+      cancelText: t('confirmPasswordReset.cancelText'),
+      variant: 'default',
       onConfirm: () => {
         triggerPasswordReset(user.id);
       },
@@ -81,8 +81,8 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>{t("header.title")}</CardTitle>
-            <CardDescription>{t("header.description")}</CardDescription>
+            <CardTitle>{t('header.title')}</CardTitle>
+            <CardDescription>{t('header.description')}</CardDescription>
           </div>
           <CreateUserDialog orgId={orgId} />
         </div>
@@ -90,20 +90,20 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
       <CardContent>
         {users.length === 0 ? (
           <div className="flex flex-col items-center justify-center space-y-2 py-10 text-center">
-            <h3 className="text-lg font-semibold">{t("empty.title")}</h3>
+            <h3 className="text-lg font-semibold">{t('empty.title')}</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
-              {t("empty.description")}
+              {t('empty.description')}
             </p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("table.name")}</TableHead>
-                <TableHead>{t("table.createdAt")}</TableHead>
-                <TableHead>{t("table.email")}</TableHead>
+                <TableHead>{t('table.name')}</TableHead>
+                <TableHead>{t('table.createdAt')}</TableHead>
+                <TableHead>{t('table.email')}</TableHead>
                 <TableHead className="w-[100px]">
-                  {t("table.actions")}
+                  {t('table.actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -130,7 +130,7 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
                           disabled={isLoading}
                         >
                           <Mail className="mr-2 h-4 w-4" />
-                          {t("table.sendPasswordReset")}
+                          {t('table.sendPasswordReset')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
@@ -138,7 +138,7 @@ export default function UsersTable({ users, orgId }: UsersTableProps) {
                           disabled={isLoading}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          {t("table.delete")}
+                          {t('table.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

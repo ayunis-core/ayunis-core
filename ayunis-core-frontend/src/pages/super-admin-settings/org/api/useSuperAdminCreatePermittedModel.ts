@@ -3,17 +3,17 @@ import {
   type CreatePermittedModelDto,
   type ModelWithConfigResponseDto,
   getSuperAdminModelsControllerGetAvailableModelsQueryKey,
-} from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from '@tanstack/react-router';
 
 export function useSuperAdminCreatePermittedModel(orgId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const createPermittedModelMutation =
     useSuperAdminModelsControllerCreatePermittedModel({
       mutation: {
@@ -49,40 +49,40 @@ export function useSuperAdminCreatePermittedModel(orgId: string) {
         },
         onSettled: () => {
           // Invalidate queries by partial key until API is regenerated
-          queryClient.invalidateQueries({
+          void queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey;
               return (
                 Array.isArray(key) &&
                 key.length > 0 &&
-                typeof key[0] === "string" &&
-                key[0].includes("superAdminModels") &&
-                key[0].includes("permitted")
+                typeof key[0] === 'string' &&
+                key[0].includes('superAdminModels') &&
+                key[0].includes('permitted')
               );
             },
           });
-          router.invalidate();
+          void router.invalidate();
         },
         onError: (err, _, context) => {
           const { code } = extractErrorData(err);
           switch (code) {
-            case "MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED":
+            case 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED':
               showError(
                 t(
-                  "models.createPermittedModel.multipleEmbeddingModelsNotAllowed",
+                  'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
                 ),
               );
               break;
-            case "MODEL_PROVIDER_NOT_PERMITTED":
+            case 'MODEL_PROVIDER_NOT_PERMITTED':
               showError(
-                t("models.createPermittedModel.modelProviderNotPermitted"),
+                t('models.createPermittedModel.modelProviderNotPermitted'),
               );
               break;
-            case "MODEL_NOT_FOUND":
-              showError(t("models.createPermittedModel.modelNotFound"));
+            case 'MODEL_NOT_FOUND':
+              showError(t('models.createPermittedModel.modelNotFound'));
               break;
             default:
-              showError(t("models.createPermittedModel.error"));
+              showError(t('models.createPermittedModel.error'));
               break;
           }
 

@@ -1,27 +1,31 @@
-import { Card, CardContent } from "@/shared/ui/shadcn/card";
-import { Avatar, AvatarFallback } from "@/shared/ui/shadcn/avatar";
-import { Bot, Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
+import { Bot, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type {
   Message,
   AssistantMessageContent,
   TextMessageContent,
   ToolUseMessageContent,
   ThinkingMessageContent,
-} from "../model/openapi";
-import brandIconLight from "@/shared/assets/brand/brand-icon-round-light.svg";
-import brandIconDark from "@/shared/assets/brand/brand-icon-round-dark.svg";
-import { useTheme } from "@/features/theme";
-import { Markdown } from "@/widgets/markdown";
-import { cn } from "@/shared/lib/shadcn/utils";
-import SendEmailWidget from "./chat-widgets/SendEmailWidget";
-import ExecutableToolWidget from "./chat-widgets/ExecutableToolWidget";
-import ThinkingBlockWidget from "./chat-widgets/ThinkingBlockWidget";
-import CreateCalendarEventWidget from "./chat-widgets/CreateCalendarEventWidget";
-import { BarChartWidget, LineChartWidget, PieChartWidget } from "@/widgets/charts";
-import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import AgentActivityHint from "@/widgets/agent-activity-hint/ui/AgentActivityHint";
-import { Skeleton } from "@/shared/ui/shadcn/skeleton";
+} from '../model/openapi';
+import brandIconLight from '@/shared/assets/brand/brand-icon-round-light.svg';
+import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
+import { useTheme } from '@/features/theme';
+import { Markdown } from '@/widgets/markdown';
+import { cn } from '@/shared/lib/shadcn/utils';
+import SendEmailWidget from './chat-widgets/SendEmailWidget';
+import ExecutableToolWidget from './chat-widgets/ExecutableToolWidget';
+import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
+import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
+import {
+  BarChartWidget,
+  LineChartWidget,
+  PieChartWidget,
+} from '@/widgets/charts';
+import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
+import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 
 interface ChatMessageProps {
   message?: Message;
@@ -36,7 +40,7 @@ export default function ChatMessage({
   isLoading = false,
   isStreaming = false,
 }: ChatMessageProps) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const { theme } = useTheme();
   // Show loading indicator when isLoading is true and no message
   if (isLoading && !message) {
@@ -50,7 +54,7 @@ export default function ChatMessage({
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm text-muted-foreground">
-            {t("chat.aiThinking")}
+            {t('chat.aiThinking')}
           </span>
         </div>
       </div>
@@ -62,8 +66,8 @@ export default function ChatMessage({
     return null;
   }
 
-  const isUserMessage = message.role === "user";
-  const isAssistantMessage = message.role === "assistant";
+  const isUserMessage = message.role === 'user';
+  const isAssistantMessage = message.role === 'assistant';
 
   // User messages
   if (isUserMessage) {
@@ -84,13 +88,13 @@ export default function ChatMessage({
   if (isAssistantMessage) {
     return (
       <div
-        className={cn("flex flex-col items-start gap-2", !hideAvatar && "mt-4")}
+        className={cn('flex flex-col items-start gap-2', !hideAvatar && 'mt-4')}
       >
         {!hideAvatar && (
           <Avatar className="h-8 w-8">
             <AvatarFallback>
               <img
-                src={theme === "dark" ? brandIconDark : brandIconLight}
+                src={theme === 'dark' ? brandIconDark : brandIconLight}
                 alt="Ayunis Logo"
                 className="h-8 w-8 object-contain"
               />
@@ -114,15 +118,15 @@ export default function ChatMessage({
 
 function renderMessageContent(message: Message, isStreaming?: boolean) {
   switch (message.role) {
-    case "user":
-    case "system":
+    case 'user':
+    case 'system':
       return message.content.map((content, index) => (
         <Markdown key={`${content.type}-${index}-${content.text.slice(0, 50)}`}>
           {content.text}
         </Markdown>
       ));
 
-    case "assistant":
+    case 'assistant':
       // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
       if (!message.content || message.content.length === 0) {
         return (
@@ -131,17 +135,17 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
             onOpenChange={() => {}}
             icon={<Loader2 className="h-4 w-4 animate-spin" />}
             hint={<Skeleton className="h-4 w-16" />}
-            input={""}
+            input={''}
           />
         );
       }
 
       return message.content.map((content: AssistantMessageContent, index) => {
-        if (content.type === "thinking") {
+        if (content.type === 'thinking') {
           const thinkingMessageContent = content as ThinkingMessageContent;
-          const hasTextContent = message.content.some((c) => c.type === "text");
+          const hasTextContent = message.content.some((c) => c.type === 'text');
           const hasToolUseContent = message.content.some(
-            (c) => c.type === "tool_use",
+            (c) => c.type === 'tool_use',
           );
           return (
             <ThinkingBlockWidget
@@ -151,7 +155,7 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
             />
           );
         }
-        if (content.type === "text") {
+        if (content.type === 'text') {
           const textMessageContent = content as TextMessageContent;
           return (
             <Markdown
@@ -160,7 +164,7 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
               {textMessageContent.text}
             </Markdown>
           );
-        } else if (content.type === "tool_use") {
+        } else if (content.type === 'tool_use') {
           try {
             const toolUseMessageContent = content as ToolUseMessageContent;
             if (
@@ -232,7 +236,7 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
               <Markdown
                 key={`error-rendering-tool-use-message-${index}-${content.type.slice(0, 50)}`}
               >
-                {"Error rendering tool use message"}
+                {'Error rendering tool use message'}
               </Markdown>
             );
           }

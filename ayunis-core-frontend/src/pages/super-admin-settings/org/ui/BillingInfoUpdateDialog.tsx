@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -15,12 +15,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import { useTranslation } from "react-i18next";
-import useSuperAdminSubscriptionBillingInfoUpdate from "../api/useSuperAdminSubscriptionBillingInfoUpdate";
-import type { UpdateBillingInfoDto } from "@/shared/api";
-import { Loader2 } from "lucide-react";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import { useTranslation } from 'react-i18next';
+import useSuperAdminSubscriptionBillingInfoUpdate from '../api/useSuperAdminSubscriptionBillingInfoUpdate';
+import type { UpdateBillingInfoDto } from '@/shared/api';
+import { Loader2 } from 'lucide-react';
 
 interface BillingManagementModalProps {
   currentBillingInfo: UpdateBillingInfoDto;
@@ -33,7 +33,7 @@ export default function BillingInfoUpdateDialog({
   currentBillingInfo,
   orgId,
 }: BillingManagementModalProps) {
-  const { t } = useTranslation("super-admin-settings-org");
+  const { t } = useTranslation('super-admin-settings-org');
   const { form, updateBillingInfo, isPending } =
     useSuperAdminSubscriptionBillingInfoUpdate({
       currentBillingInfo,
@@ -44,7 +44,7 @@ export default function BillingInfoUpdateDialog({
     form.reset();
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
+  const handleSubmit = form.handleSubmit((data) => {
     updateBillingInfo(data);
   });
 
@@ -53,23 +53,28 @@ export default function BillingInfoUpdateDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t("billingInfo.updateBillingInfo")}</DialogTitle>
+          <DialogTitle>{t('billingInfo.updateBillingInfo')}</DialogTitle>
           <DialogDescription>
-            {t("billingInfo.updateBillingInfoDescription")}
+            {t('billingInfo.updateBillingInfoDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              void handleSubmit(e);
+            }}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="companyName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("billingInfo.companyNameLabel")}</FormLabel>
+                  <FormLabel>{t('billingInfo.companyNameLabel')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("billingInfo.companyNamePlaceholder")}
+                      placeholder={t('billingInfo.companyNamePlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -84,10 +89,10 @@ export default function BillingInfoUpdateDialog({
                 name="street"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>{t("billingInfo.streetLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.streetLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.streetPlaceholder")}
+                        placeholder={t('billingInfo.streetPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -100,10 +105,10 @@ export default function BillingInfoUpdateDialog({
                 name="houseNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.houseNumberLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.houseNumberLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.houseNumberPlaceholder")}
+                        placeholder={t('billingInfo.houseNumberPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -119,10 +124,10 @@ export default function BillingInfoUpdateDialog({
                 name="postalCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("billingInfo.postalCodeLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.postalCodeLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.postalCodePlaceholder")}
+                        placeholder={t('billingInfo.postalCodePlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -135,10 +140,10 @@ export default function BillingInfoUpdateDialog({
                 name="city"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>{t("billingInfo.cityLabel")}</FormLabel>
+                    <FormLabel>{t('billingInfo.cityLabel')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("billingInfo.cityPlaceholder")}
+                        placeholder={t('billingInfo.cityPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -153,10 +158,10 @@ export default function BillingInfoUpdateDialog({
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("billingInfo.countryLabel")}</FormLabel>
+                  <FormLabel>{t('billingInfo.countryLabel')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("billingInfo.countryPlaceholder")}
+                      placeholder={t('billingInfo.countryPlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -170,10 +175,10 @@ export default function BillingInfoUpdateDialog({
               name="vatNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("billingInfo.vatNumberLabel")}</FormLabel>
+                  <FormLabel>{t('billingInfo.vatNumberLabel')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("billingInfo.vatNumberPlaceholder")}
+                      placeholder={t('billingInfo.vatNumberPlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -189,14 +194,14 @@ export default function BillingInfoUpdateDialog({
                 onClick={handleCancel}
                 disabled={form.formState.isSubmitting}
               >
-                {t("billingInfo.cancel")}
+                {t('billingInfo.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={form.formState.isSubmitting || isPending}
               >
                 {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t("billingInfo.save")}
+                {t('billingInfo.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -205,4 +210,3 @@ export default function BillingInfoUpdateDialog({
     </Dialog>
   );
 }
-

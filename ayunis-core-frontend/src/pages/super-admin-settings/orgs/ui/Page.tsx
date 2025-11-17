@@ -1,7 +1,7 @@
-import SuperAdminSettingsLayout from "../../super-admin-settings-layout";
-import CreateOrgDialog from "./CreateOrgDialog";
-import OrgsTable from "./OrgsTable";
-import type { SuperAdminOrgResponseDto } from "@/shared/api";
+import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import CreateOrgDialog from './CreateOrgDialog';
+import OrgsTable from './OrgsTable';
+import type { SuperAdminOrgResponseDto } from '@/shared/api';
 
 export default function SuperAdminOrgsPage({
   orgs,

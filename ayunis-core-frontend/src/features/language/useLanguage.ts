@@ -1,24 +1,22 @@
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
-export type Language = "en" | "de";
+export type Language = 'en' | 'de';
 
 const languages = {
-  en: "English",
-  de: "Deutsch",
+  en: 'English',
+  de: 'Deutsch',
 } as const;
 
 export function useLanguage() {
   const { i18n } = useTranslation();
-  const [language, setLanguageState] = useState<Language>("en");
+  const [language, setLanguageState] = useState<Language>(() => {
+    const currentLang = i18n.language as Language;
+    return currentLang && currentLang in languages ? currentLang : 'en';
+  });
 
   // Sync with react-i18next language
   useEffect(() => {
-    const currentLang = i18n.language as Language;
-    if (currentLang && currentLang in languages) {
-      setLanguageState(currentLang);
-    }
-
     // Listen for language changes
     const handleLanguageChange = (lng: string) => {
       if (lng in languages) {
@@ -26,10 +24,10 @@ export function useLanguage() {
       }
     };
 
-    i18n.on("languageChanged", handleLanguageChange);
+    i18n.on('languageChanged', handleLanguageChange);
 
     return () => {
-      i18n.off("languageChanged", handleLanguageChange);
+      i18n.off('languageChanged', handleLanguageChange);
     };
   }, [i18n]);
 

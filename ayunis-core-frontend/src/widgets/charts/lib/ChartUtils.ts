@@ -1,4 +1,4 @@
-import type { ChartConfig } from "../../../shared/ui/shadcn/chart";
+import type { ChartConfig } from '../../../shared/ui/shadcn/chart';
 
 export interface YAxisSeries {
   label: string;
@@ -17,18 +17,18 @@ export interface TransformedPieDataPoint {
 }
 
 const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
 ];
 
 export function slugifyForCssVar(label: string): string {
   return label
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
 export function colorVar(labelOrSlug: string): string {

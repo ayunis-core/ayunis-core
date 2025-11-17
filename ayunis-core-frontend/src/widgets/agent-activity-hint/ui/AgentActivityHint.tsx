@@ -1,12 +1,12 @@
-import { Badge } from "@/shared/ui/shadcn/badge";
+import { Badge } from '@/shared/ui/shadcn/badge';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/shared/ui/shadcn/collapsible";
-import { ScrollArea } from "@/shared/ui/shadcn/scroll-area";
-import { ChevronsUpDown } from "lucide-react";
-import { useAutoScroll } from "@/features/useAutoScroll";
+} from '@/shared/ui/shadcn/collapsible';
+import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
+import { ChevronsUpDown } from 'lucide-react';
+import { useAutoScroll } from '@/features/useAutoScroll';
 
 interface AgentActivityHintProps {
   open: boolean;
