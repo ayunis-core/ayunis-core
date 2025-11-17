@@ -1307,8 +1307,7 @@ export class ExecuteRunUseCase {
         try {
           if (
             !meta.inputTokens ||
-            !meta.outputTokens ||
-            !meta.totalTokens
+            !meta.outputTokens
           ) {
             this.logger.log(
               'Skipping usage collection - missing required data',
