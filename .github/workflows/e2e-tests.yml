@@ -1,0 +1,180 @@
+name: E2E UI Tests
+
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-backend/**'
+      - 'ayunis-core-frontend/**'
+      - 'ayunis-core-e2e-ui-tests/**'
+      - '.github/workflows/e2e-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ayunis-core-backend/**'
+      - 'ayunis-core-frontend/**'
+      - 'ayunis-core-e2e-ui-tests/**'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ayunis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      minio:
+        image: quay.io/minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: minio123
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9000:9000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      # Backend setup
+      - name: Install backend dependencies
+        working-directory: ayunis-core-backend
+        run: npm ci
+
+      - name: Create backend test environment
+        working-directory: ayunis-core-backend
+        run: |
+          cat > .env << 'EOF'
+          NODE_ENV=test
+          PORT=3000
+
+          # Database
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=ayunis_test
+
+          # JWT
+          JWT_SECRET=test-jwt-secret-for-ci-testing-minimum-32-characters
+          JWT_EXPIRES_IN=1h
+          JWT_REFRESH_EXPIRES_IN=7d
+          JWT_INVITE_EXPIRES_IN=7d
+          JWT_EMAIL_CONFIRMATION_EXPIRES_IN=1d
+          JWT_PASSWORD_RESET_EXPIRES_IN=1h
+
+          # Cookies
+          COOKIE_SECRET=test-cookie-secret-for-ci
+          COOKIE_SECURE=false
+          COOKIE_DOMAIN=localhost
+          COOKIE_SAME_SITE=lax
+
+          # MinIO
+          MINIO_ENDPOINT=localhost
+          MINIO_PORT=9000
+          MINIO_USE_SSL=false
+          MINIO_ROOT_USER=minio
+          MINIO_ROOT_PASSWORD=minio123
+          MINIO_BUCKET=ayunis-test-uploads
+
+          # Admin
+          ADMIN_TOKEN=test-admin-token
+
+          # Disable features for testing
+          DISABLE_REGISTRATION=false
+          DISABLE_EMAIL_CONFIRMATION=true
+
+          # CORS for frontend
+          CORS_ALLOWED_ORIGINS=http://localhost:3001,http://localhost:3000
+          EOF
+
+      - name: Build backend
+        working-directory: ayunis-core-backend
+        run: npm run build
+
+      - name: Run migrations
+        working-directory: ayunis-core-backend
+        run: npm run typeorm migration:run -- -d src/db/datasource.ts
+
+      - name: Seed test data
+        working-directory: ayunis-core-backend
+        run: npm run seed:minimal:ts
+
+      - name: Start backend
+        working-directory: ayunis-core-backend
+        run: |
+          npm start &
+          # Wait for backend to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
+
+      # Frontend setup
+      - name: Install frontend dependencies
+        working-directory: ayunis-core-frontend
+        run: npm ci
+
+      - name: Create frontend environment
+        working-directory: ayunis-core-frontend
+        run: |
+          cat > .env << 'EOF'
+          VITE_API_BASE_URL=http://localhost:3000/api
+          VITE_API_TIMEOUT=10000
+          VITE_APP_VERSION=test
+          EOF
+
+      - name: Build frontend
+        working-directory: ayunis-core-frontend
+        run: npm run build
+
+      - name: Start frontend
+        working-directory: ayunis-core-frontend
+        run: |
+          npm run preview -- --port 3001 &
+          # Wait for frontend to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:3001; do sleep 2; done'
+
+      # E2E Tests
+      - name: Install E2E test dependencies
+        working-directory: ayunis-core-e2e-ui-tests
+        run: npm ci
+
+      - name: Run Cypress E2E tests
+        working-directory: ayunis-core-e2e-ui-tests
+        run: npm test
+        env:
+          CYPRESS_baseUrl: http://localhost:3001
+
+      - name: Upload Cypress videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: ayunis-core-e2e-ui-tests/cypress/videos/
+          retention-days: 7
+
+      - name: Upload Cypress screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: ayunis-core-e2e-ui-tests/cypress/screenshots/
+          retention-days: 7

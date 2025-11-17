@@ -1,69 +1,137 @@
-name: Ayunis Core Backend Tests
+name: Backend Tests
 
 on:
   pull_request:
+    paths:
+      - 'ayunis-core-backend/**'
+      - '.github/workflows/backend-tests.yml'
+      - 'docker-compose.yml'
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'ayunis-core-backend/**'
 
 jobs:
-  backend-tests:
+  test:
     runs-on: ubuntu-latest
+
+    # Service containers to run with this job
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ayunis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      minio:
+        image: quay.io/minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: minio123
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9000:9000
+
+    defaults:
+      run:
+        working-directory: ayunis-core-backend
 
     steps:
       - uses: actions/checkout@v4
 
-      # Start all containers (postgres, minio, app)
-      - name: Start Containers
-        run: docker compose -f docker-compose.test.yml up -d
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-backend/package-lock.json
 
-      # Wait for database to be ready
-      - name: Wait for Database
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create test environment file
         run: |
-          timeout 60 bash -c 'until docker exec ayunis-postgres-test pg_isready -U postgres; do sleep 2; done'
+          cat > .env.test << 'EOF'
+          NODE_ENV=test
+          PORT=3000
 
-      # Check container status
-      - name: Check Container Status
-        run: |
-          docker ps -a
-          echo "=== App Container Logs ==="
-          docker logs ayunis-app-test || true
+          # Database
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=ayunis_test
 
-      # Wait for app to be healthy (migrations run automatically on startup)
-      - name: Wait for Application
-        run: |
-          timeout 120 bash -c 'until curl -f http://localhost:3000/health; do sleep 2; done'
+          # JWT
+          JWT_SECRET=test-jwt-secret-for-ci-testing-minimum-32-characters
+          JWT_EXPIRES_IN=1h
+          JWT_REFRESH_EXPIRES_IN=7d
+          JWT_INVITE_EXPIRES_IN=7d
+          JWT_EMAIL_CONFIRMATION_EXPIRES_IN=1d
+          JWT_PASSWORD_RESET_EXPIRES_IN=1h
 
-      # Run TypeScript type check
-      - name: TypeScript Type Check
-        run: docker exec ayunis-app-test npx tsc --noEmit
+          # Cookies
+          COOKIE_SECRET=test-cookie-secret-for-ci
+          COOKIE_SECURE=false
+          COOKIE_DOMAIN=localhost
+          COOKIE_SAME_SITE=lax
 
-      # Run linting
-      - name: Run ESLint
-        run: docker exec ayunis-app-test npm run lint
+          # MinIO
+          MINIO_ENDPOINT=localhost
+          MINIO_PORT=9000
+          MINIO_USE_SSL=false
+          MINIO_ROOT_USER=minio
+          MINIO_ROOT_PASSWORD=minio123
+          MINIO_BUCKET=ayunis-test-uploads
 
-      # Run unit tests with coverage
-      - name: Run Unit Tests
-        run: docker exec ayunis-app-test npm run test:cov
+          # Admin
+          ADMIN_TOKEN=test-admin-token
 
-      # Run e2e tests
-      - name: Run E2E Tests
-        run: docker exec ayunis-app-test npm run test:e2e
+          # Disable features for testing
+          DISABLE_REGISTRATION=false
+          DISABLE_EMAIL_CONFIRMATION=true
+          EOF
 
-      # Copy coverage reports from container
-      - name: Copy Coverage Reports
-        if: always()
-        run: docker cp ayunis-app-test:/app/coverage ./coverage
+      - name: Build application
+        run: npm run build
 
-      # Upload coverage reports
-      - name: Upload Coverage Reports
+      - name: Run migrations
+        run: npm run typeorm migration:run -- -d src/db/datasource.ts
+        env:
+          NODE_ENV: test
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:cov
+        env:
+          NODE_ENV: test
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-reports
-          path: coverage/
-
-      # Teardown
-      - name: Stop Test Containers
-        if: always()
-        run: docker compose -f docker-compose.test.yml down -v
+          path: ayunis-core-backend/coverage/
+          retention-days: 7
