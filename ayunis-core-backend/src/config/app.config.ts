@@ -16,4 +16,5 @@ export const appConfig = registerAs('app', () => ({
   },
   orgEventsWebhookUrl: process.env.ORG_EVENTS_WEBHOOK_URL,
   isDevelopment: process.env.NODE_ENV === 'development',
+  isProduction: process.env.APP_ENVIRONMENT === 'production',
 }));
