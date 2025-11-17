@@ -35,17 +35,20 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend
 # Build backend
 RUN npm run build
 
-# Stage 3: Production
+# Stage 3: Test Environment
 FROM node:20-alpine
 
-# Install runtime dependencies for bcrypt
-RUN apk add --no-cache python3 make g++ gcc
+# Install runtime and build dependencies
+RUN apk add --no-cache python3 make g++ gcc curl
 
 WORKDIR /app
 
-# Copy package files and install production dependencies
+# Copy package files and install ALL dependencies (including dev)
 COPY ayunis-core-backend/package*.json ./
-RUN npm ci --only=production && npm rebuild bcrypt --build-from-source
+RUN npm ci && npm rebuild bcrypt --build-from-source
+
+# Copy source code (needed for tests)
+COPY ayunis-core-backend/ ./
 
 # Copy built backend from builder stage
 COPY --from=backend-builder /app/dist ./dist
