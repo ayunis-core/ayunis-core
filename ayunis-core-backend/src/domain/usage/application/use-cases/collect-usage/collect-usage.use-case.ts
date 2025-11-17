@@ -1,15 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import { CollectUsageCommand } from './collect-usage.command';
 import { Usage } from '../../../domain/usage.entity';
 import { UsageRepository } from '../../ports/usage.repository';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
-import { ModelsRepository } from '../../../../models/application/ports/models.repository';
 import {
   InvalidUsageDataError,
   UsageCollectionFailedError,
+  UnexpectedUsageError,
 } from '../../usage.errors';
 import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ContextService } from '../../../../../common/context/services/context.service';
+import { Currency } from '../../../../models/domain/value-objects/currency.enum';
 
 @Injectable()
 export class CollectUsageUseCase {
@@ -17,14 +18,27 @@ export class CollectUsageUseCase {
 
   constructor(
     private readonly usageRepository: UsageRepository,
-    private readonly configService: ConfigService,
-    private readonly modelsRepository: ModelsRepository,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CollectUsageCommand): Promise<void> {
+    const userId = this.contextService.get('userId');
+    const organizationId = this.contextService.get('orgId');
+
+    if (!userId || !organizationId) {
+      throw new UsageCollectionFailedError(
+        'User ID or Organization ID not available in context',
+        {
+          userId: userId || undefined,
+          organizationId: organizationId || undefined,
+          modelId: command.modelId,
+        },
+      );
+    }
+
     this.logger.log('CollectUsageUseCase.execute called', {
-      userId: command.userId,
-      organizationId: command.organizationId,
+      userId,
+      organizationId,
       modelId: command.modelId,
       provider: command.provider,
       totalTokens: command.totalTokens,
@@ -36,8 +50,8 @@ export class CollectUsageUseCase {
       const { cost, currency } = await this.calculateCost(command);
 
       const usage = new Usage({
-        userId: command.userId,
-        organizationId: command.organizationId,
+        userId,
+        organizationId,
         modelId: command.modelId,
         provider: command.provider,
         inputTokens: command.inputTokens,
@@ -45,14 +59,14 @@ export class CollectUsageUseCase {
         totalTokens: command.totalTokens,
         cost,
         currency,
-        requestId: command.requestId,
+        requestId: command.requestId || randomUUID(),
       });
 
       await this.usageRepository.save(usage);
 
       this.logger.log('Usage collected successfully', {
-        userId: command.userId,
-        organizationId: command.organizationId,
+        userId,
+        organizationId,
         modelId: command.modelId,
         provider: command.provider,
         totalTokens: command.totalTokens,
@@ -67,13 +81,12 @@ export class CollectUsageUseCase {
         error: error as Error,
         command,
       });
-      throw new UsageCollectionFailedError(
-        error instanceof Error ? error.message : 'Unknown error',
+      throw new UnexpectedUsageError(
+        error instanceof Error ? error : new Error('Unknown error'),
         {
-          userId: command.userId,
-          organizationId: command.organizationId,
+          userId,
+          organizationId,
           modelId: command.modelId,
-          error: error instanceof Error ? error.message : 'Unknown error',
         },
       );
     }
@@ -95,80 +108,42 @@ export class CollectUsageUseCase {
         totalTokens: command.totalTokens,
       });
     }
-
-    // Business rule: total tokens should equal input + output tokens
-    const calculatedTotal = command.inputTokens + command.outputTokens;
-    if (command.totalTokens !== calculatedTotal) {
-      throw new InvalidUsageDataError(
-        `Total tokens (${command.totalTokens}) must equal input tokens (${command.inputTokens}) + output tokens (${command.outputTokens})`,
-        {
-          totalTokens: command.totalTokens,
-          inputTokens: command.inputTokens,
-          outputTokens: command.outputTokens,
-          calculatedTotal,
-        },
-      );
-    }
   }
 
   private async calculateCost(
     command: CollectUsageCommand,
-  ): Promise<{ cost?: number; currency?: string }> {
-    const isSelfHosted = this.configService.get<boolean>('app.isSelfHosted');
+  ): Promise<{ cost?: number; currency?: Currency }> {
+    const model = command.model;
 
-    if (!isSelfHosted) {
+    if (!model.inputTokenCost || !model.outputTokenCost) {
+      this.logger.debug('No cost information available for model', {
+        modelId: model.id,
+        hasInputCost: !!model.inputTokenCost,
+        hasOutputCost: !!model.outputTokenCost,
+      });
+
       return { cost: undefined, currency: undefined };
     }
 
-    try {
-      const model = await this.modelsRepository.findOneLanguage(
-        command.modelId,
-      );
+    const inputCost = (command.inputTokens / 1000) * model.inputTokenCost;
+    const outputCost = (command.outputTokens / 1000) * model.outputTokenCost;
+    const totalCost = inputCost + outputCost;
 
-      if (!model || !model.inputTokenCost || !model.outputTokenCost) {
-        this.logger.debug('No cost information available for model', {
-          modelId: command.modelId,
-          hasModel: !!model,
-          hasInputCost: !!model?.inputTokenCost,
-          hasOutputCost: !!model?.outputTokenCost,
-        });
+    this.logger.debug('Cost calculated for usage', {
+      modelId: model.id,
+      inputTokens: command.inputTokens,
+      outputTokens: command.outputTokens,
+      inputTokenCost: model.inputTokenCost,
+      outputTokenCost: model.outputTokenCost,
+      inputCost,
+      outputCost,
+      totalCost,
+      currency: model.currency,
+    });
 
-        return { cost: undefined, currency: undefined };
-      }
-
-      const inputCost = (command.inputTokens / 1000) * model.inputTokenCost;
-      const outputCost = (command.outputTokens / 1000) * model.outputTokenCost;
-      const totalCost = inputCost + outputCost;
-
-      // Only return cost if it's above the minimum threshold
-      const finalCost =
-        totalCost >= UsageConstants.MIN_COST_THRESHOLD ? totalCost : 0;
-
-      this.logger.debug('Cost calculated for usage', {
-        modelId: command.modelId,
-        inputTokens: command.inputTokens,
-        outputTokens: command.outputTokens,
-        inputTokenCost: model.inputTokenCost,
-        outputTokenCost: model.outputTokenCost,
-        inputCost,
-        outputCost,
-        totalCost,
-        finalCost,
-        currency: model.currency,
-      });
-
-      return {
-        cost: finalCost,
-        currency: model.currency,
-      };
-    } catch (error) {
-      this.logger.error('Failed to calculate cost for usage', {
-        error: error as Error,
-        modelId: command.modelId,
-      });
-
-      // Return no cost information if calculation fails
-      return { cost: undefined, currency: undefined };
-    }
+    return {
+      cost: totalCost,
+      currency: model.currency,
+    };
   }
 }

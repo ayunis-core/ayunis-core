@@ -73,8 +73,8 @@ export class LanguageModelRecord extends ModelRecord {
   outputTokenCost?: number;
 
   @Column({
-    type: 'varchar',
-    length: 3,
+    type: 'enum',
+    enum: Currency,
     nullable: true,
   })
   currency?: Currency;
@@ -112,8 +112,8 @@ export class EmbeddingModelRecord extends ModelRecord {
   outputTokenCost?: number;
 
   @Column({
-    type: 'varchar',
-    length: 3,
+    type: 'enum',
+    enum: Currency,
     nullable: true,
   })
   currency?: Currency;

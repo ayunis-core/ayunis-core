@@ -1,5 +1,5 @@
 export {
-  useAdminUsageControllerGetUsageStats as useUsageStats,
-  type AdminUsageControllerGetUsageStatsParams,
+  useUsageControllerGetUsageStats as useUsageStats,
+  type UsageControllerGetUsageStatsParams,
 } from "@/shared/api";
 

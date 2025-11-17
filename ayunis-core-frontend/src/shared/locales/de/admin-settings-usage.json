@@ -23,7 +23,9 @@
       "title": "Modellverteilung",
       "description": "Verbrauch nach Modell",
       "models": "Modelle",
-      "more": "mehr"
+      "more": "mehr",
+      "others": "Andere",
+      "othersWithCount": "Andere ({{count}} Modelle)"
     },
     "tokenConsumption": {
       "title": "Token Verbrauch",

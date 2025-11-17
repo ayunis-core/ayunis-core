@@ -4,6 +4,7 @@ import { UsageRecord } from './schema/usage.record';
 import { LocalUsageRepository } from './local-usage.repository';
 import { UsageRepository } from '../../../application/ports/usage.repository';
 import { UsageMapper } from './mappers/usage.mapper';
+import { UsageQueryMapper } from './mappers/usage-query.mapper';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Module({
@@ -11,11 +12,12 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
   providers: [
     LocalUsageRepository,
     UsageMapper,
+    UsageQueryMapper,
     {
       provide: UsageRepository,
       useClass: LocalUsageRepository,
     },
   ],
-  exports: [LocalUsageRepository, UsageMapper, UsageRepository],
+  exports: [LocalUsageRepository, UsageMapper, UsageQueryMapper, UsageRepository],
 })
 export class LocalUsageRepositoryModule {}

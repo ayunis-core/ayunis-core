@@ -19,9 +19,6 @@ export class ModelResponseDtoMapper {
       isArchived: permittedModel.model.isArchived,
       canStream: permittedModel.model.canStream,
       isReasoning: permittedModel.model.isReasoning,
-      inputTokenCost: permittedModel.model.inputTokenCost,
-      outputTokenCost: permittedModel.model.outputTokenCost,
-      currency: permittedModel.model.currency,
     };
   }
 
@@ -36,9 +33,6 @@ export class ModelResponseDtoMapper {
       type: ModelType.EMBEDDING,
       isArchived: permittedModel.model.isArchived,
       dimensions: permittedModel.model.dimensions,
-      inputTokenCost: permittedModel.model.inputTokenCost,
-      outputTokenCost: permittedModel.model.outputTokenCost,
-      currency: permittedModel.model.currency,
     };
   }
 }

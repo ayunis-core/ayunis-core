@@ -1,12 +1,12 @@
 import {
-  useAdminUsageControllerGetProviderUsageChart,
-  type AdminUsageControllerGetProviderUsageChartParams,
+  useUsageControllerGetProviderUsageChart,
+  type UsageControllerGetProviderUsageChartParams,
 } from "@/shared/api";
 
 export function useProviderUsageChart(
-  params?: AdminUsageControllerGetProviderUsageChartParams
+  params?: UsageControllerGetProviderUsageChartParams
 ) {
-  return useAdminUsageControllerGetProviderUsageChart(params);
+  return useUsageControllerGetProviderUsageChart(params);
 }
 
 

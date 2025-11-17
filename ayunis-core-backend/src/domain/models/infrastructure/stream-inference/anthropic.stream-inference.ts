@@ -272,12 +272,10 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
           thinkingDelta: null,
           textContentDelta: null,
           toolCallsDelta: [],
-          usage: usage
-            ? {
-                inputTokens: usage.input_tokens ?? 0,
-                outputTokens: usage.output_tokens ?? 0,
-              }
-            : undefined,
+          usage: {
+            inputTokens: usage.input_tokens ?? undefined,
+            outputTokens: usage.output_tokens ?? undefined,
+          },
         });
       }
     }

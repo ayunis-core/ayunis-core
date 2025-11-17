@@ -47,7 +47,7 @@ export function UserUsageTable({ startDate, endDate }: UserUsageTableProps) {
     return <UserUsageTableError error={error} />;
   }
 
-  if (!users || users.length === 0) {
+  if (total === 0) {
     return <UserUsageTableEmpty />;
   }
 

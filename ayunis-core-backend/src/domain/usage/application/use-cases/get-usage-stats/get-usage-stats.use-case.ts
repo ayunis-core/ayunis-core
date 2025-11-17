@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { GetUsageStatsQuery } from './get-usage-stats.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UsageStats } from '../../../domain/usage-stats.entity';
@@ -10,15 +9,9 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 export class GetUsageStatsUseCase {
   constructor(
     private readonly usageRepository: UsageRepository,
-    private readonly configService: ConfigService,
   ) {}
 
   async execute(query: GetUsageStatsQuery): Promise<UsageStats> {
-    const isSelfHosted = this.configService.get<boolean>(
-      'app.isSelfHosted',
-      false,
-    );
-
     if (query.startDate && query.endDate) {
       this.validateDateRange(query.startDate, query.endDate);
     }
@@ -29,7 +22,7 @@ export class GetUsageStatsUseCase {
       endDate: query.endDate,
     });
 
-    return this.processUsageStats(usageStats, isSelfHosted);
+    return this.processUsageStats(usageStats);
   }
 
   private validateDateRange(startDate: Date, endDate: Date): void {
@@ -54,20 +47,15 @@ export class GetUsageStatsUseCase {
     }
   }
 
-  private processUsageStats(
-    stats: UsageStats,
-    isSelfHosted: boolean,
-  ): UsageStats {
-    return new UsageStats(
-      Math.max(0, stats.totalTokens),
-      Math.max(0, stats.totalRequests),
-      isSelfHosted && stats.totalCost !== undefined
-        ? Math.max(0, stats.totalCost)
-        : undefined,
-      stats.currency,
-      Math.min(Math.max(0, stats.activeUsers), Math.max(0, stats.totalUsers)),
-      Math.max(0, stats.totalUsers),
-      stats.topModels || [],
-    );
+  private processUsageStats(stats: UsageStats): UsageStats {
+    return new UsageStats({
+      totalTokens: Math.max(0, stats.totalTokens),
+      totalRequests: Math.max(0, stats.totalRequests),
+      totalCost: stats.totalCost !== undefined ? Math.max(0, stats.totalCost) : undefined,
+      currency: stats.currency,
+      activeUsers: Math.min(Math.max(0, stats.activeUsers), Math.max(0, stats.totalUsers)),
+      totalUsers: Math.max(0, stats.totalUsers),
+      topModels: stats.topModels || [],
+    });
   }
 }

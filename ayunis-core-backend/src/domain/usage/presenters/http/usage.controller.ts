@@ -31,10 +31,13 @@ import {
 } from '../../application/use-cases/get-user-usage/get-user-usage.query';
 import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/get-usage-stats.query';
 import { UsageConstants } from '../../domain/value-objects/usage.constants';
+import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @ApiTags('Admin Usage')
-@Controller('admin/usage')
-export class AdminUsageController {
+@Controller('usage')
+@Roles(UserRole.ADMIN)
+export class UsageController {
   constructor(
     private readonly getProviderUsageUseCase: GetProviderUsageUseCase,
     private readonly getModelDistributionUseCase: GetModelDistributionUseCase,
@@ -108,11 +111,11 @@ export class AdminUsageController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const query = new GetUsageStatsQuery(
-      orgId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
-    );
+    const query = new GetUsageStatsQuery({
+      organizationId: orgId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
     const stats = await this.getUsageStatsUseCase.execute(query);
     const dto = this.usageStatsMapper.toDto(stats);
 
@@ -175,14 +178,14 @@ export class AdminUsageController {
     @Query('provider') provider?: string,
     @Query('modelId') modelId?: string,
   ) {
-    const query = new GetProviderUsageQuery(
-      orgId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
-      includeTimeSeries,
-      provider as ModelProvider | undefined,
-      modelId as UUID | undefined,
-    );
+    const query = new GetProviderUsageQuery({
+      organizationId: orgId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      includeTimeSeriesData: includeTimeSeries,
+      provider: provider as ModelProvider | undefined,
+      modelId: modelId as UUID | undefined,
+    });
     const providerUsage = await this.getProviderUsageUseCase.execute(query);
     const dto = this.providerUsageMapper.toDto(providerUsage);
 
@@ -223,14 +226,14 @@ export class AdminUsageController {
     @Query('provider') provider?: string,
     @Query('modelId') modelId?: string,
   ) {
-    const query = new GetProviderUsageQuery(
-      orgId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
-      true,
-      provider as ModelProvider | undefined,
-      modelId as UUID | undefined,
-    );
+    const query = new GetProviderUsageQuery({
+      organizationId: orgId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      includeTimeSeriesData: true,
+      provider: provider as ModelProvider | undefined,
+      modelId: modelId as UUID | undefined,
+    });
     const providerUsage = await this.getProviderUsageUseCase.execute(query);
     const dto = this.providerUsageChartMapper.toDto(providerUsage);
     return dto;
@@ -240,12 +243,12 @@ export class AdminUsageController {
   @ApiOperation({
     summary: 'Get usage distribution by model',
     description:
-      'Returns usage statistics grouped by individual models with percentage distribution. Models beyond the limit are grouped into "Others" category for better visualization. Dates are optional - if not provided, shows all usage.',
+      'Returns usage statistics grouped by individual models with percentage distribution. Dates are optional - if not provided, shows all usage.',
   })
   @ApiResponse({
     status: 200,
     description:
-      'Model usage distribution retrieved successfully. Less-used models are automatically grouped into "Others" category.',
+      'Model usage distribution retrieved successfully.',
     type: ModelDistributionResponseDto,
   })
   @ApiQuery({
@@ -267,7 +270,7 @@ export class AdminUsageController {
     type: Number,
     required: false,
     description:
-      'Maximum number of individual models to show before grouping into "Others". Defaults to 10.',
+      'Maximum number of models to return. Defaults to 10. Frontend can decide how to handle aggregation if needed.',
     example: 10,
   })
   @ApiQuery({
@@ -282,16 +285,16 @@ export class AdminUsageController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('maxModels')
-    maxModels: number = UsageConstants.MAX_INDIVIDUAL_MODELS_IN_CHART,
+    maxModels: number = UsageConstants.MAX_MODELS,
     @Query('modelId') modelId?: string,
   ) {
-    const query = new GetModelDistributionQuery(
-      orgId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
+    const query = new GetModelDistributionQuery({
+      organizationId: orgId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
       maxModels,
-      modelId as UUID | undefined,
-    );
+      modelId: modelId as UUID | undefined,
+    });
     const modelDistribution =
       await this.getModelDistributionUseCase.execute(query);
     const dto = this.modelDistributionMapper.toDto(modelDistribution);
@@ -379,16 +382,17 @@ export class AdminUsageController {
     @Query('sortOrder') sortOrder: SortOrder = 'desc',
     @Query('includeModelBreakdown') includeModelBreakdown: boolean = true,
   ) {
-    const query = new GetUserUsageQuery(
-      orgId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
-      { limit, offset },
-      search,
+    const query = new GetUserUsageQuery({
+      organizationId: orgId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      limit,
+      offset,
+      searchTerm: search,
       sortBy,
       sortOrder,
       includeModelBreakdown,
-    );
+    });
     const userUsage = await this.getUserUsageUseCase.execute(query);
 
     return this.userUsageMapper.toDto(userUsage);

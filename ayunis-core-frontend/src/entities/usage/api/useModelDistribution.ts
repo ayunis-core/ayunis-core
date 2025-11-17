@@ -1,5 +1,5 @@
 export {
-  useAdminUsageControllerGetModelDistribution as useModelDistribution,
-  type AdminUsageControllerGetModelDistributionParams,
+  useUsageControllerGetModelDistribution as useModelDistribution,
+  type UsageControllerGetModelDistributionParams,
 } from "@/shared/api";
 

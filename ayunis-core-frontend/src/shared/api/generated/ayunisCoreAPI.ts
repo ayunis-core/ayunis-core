@@ -29,11 +29,6 @@ import type {
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
   AdminControllerGetModelParams,
-  AdminUsageControllerGetModelDistributionParams,
-  AdminUsageControllerGetProviderUsageChartParams,
-  AdminUsageControllerGetProviderUsageParams,
-  AdminUsageControllerGetUsageStatsParams,
-  AdminUsageControllerGetUserUsageParams,
   AgentResponseDto,
   AgentSourceResponseDto,
   AgentsControllerAddFileSourceBody,
@@ -99,8 +94,14 @@ import type {
   UpdateUserNameDto,
   UpdateUserRoleDto,
   UsageConfigResponseDto,
+  UsageControllerGetModelDistributionParams,
+  UsageControllerGetProviderUsageChartParams,
+  UsageControllerGetProviderUsageParams,
+  UsageControllerGetUsageStatsParams,
+  UsageControllerGetUserUsageParams,
   UsageStatsResponseDto,
   UserResponseDto,
+  UserUsageResponseDto,
   UsersListResponseDto,
   ValidationResponseDto
 } from './ayunisCoreAPI.schemas';
@@ -5561,80 +5562,80 @@ export const useInvitesControllerDeleteInvite = <TError = void,
  * Returns configuration settings for the usage dashboard, including deployment mode and cost display settings. This endpoint helps the frontend determine which features to show based on the deployment type.
  * @summary Get usage dashboard configuration
  */
-export const adminUsageControllerGetUsageConfig = (
+export const usageControllerGetUsageConfig = (
     
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<UsageConfigResponseDto>(
-      {url: `/admin/usage/config`, method: 'GET', signal
+      {url: `/usage/config`, method: 'GET', signal
     },
       );
     }
   
 
-export const getAdminUsageControllerGetUsageConfigQueryKey = () => {
-    return [`/admin/usage/config`] as const;
+export const getUsageControllerGetUsageConfigQueryKey = () => {
+    return [`/usage/config`] as const;
     }
 
     
-export const getAdminUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError, TData>>, }
+export const getUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsageControllerGetUsageConfigQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUsageConfigQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>> = ({ signal }) => adminUsageControllerGetUsageConfig(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>> = ({ signal }) => usageControllerGetUsageConfig(signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AdminUsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>>
-export type AdminUsageControllerGetUsageConfigQueryError = unknown
+export type UsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>>
+export type UsageControllerGetUsageConfigQueryError = unknown
 
 
-export function useAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>,
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>,
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>
+          Awaited<ReturnType<typeof usageControllerGetUsageConfig>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError, TData>>, }
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get usage dashboard configuration
  */
 
-export function useAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageConfig>>, TError, TData>>, }
+export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageConfig>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminUsageControllerGetUsageConfigQueryOptions(options)
+  const queryOptions = getUsageControllerGetUsageConfigQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5650,81 +5651,81 @@ export function useAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType
  * Returns aggregated usage statistics including total tokens, requests, active users, and cost information (self-hosted only). Dates are optional - if not provided, shows all usage.
  * @summary Get overall usage statistics
  */
-export const adminUsageControllerGetUsageStats = (
-    params?: AdminUsageControllerGetUsageStatsParams,
+export const usageControllerGetUsageStats = (
+    params?: UsageControllerGetUsageStatsParams,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<UsageStatsResponseDto>(
-      {url: `/admin/usage/stats`, method: 'GET',
+      {url: `/usage/stats`, method: 'GET',
         params, signal
     },
       );
     }
   
 
-export const getAdminUsageControllerGetUsageStatsQueryKey = (params?: AdminUsageControllerGetUsageStatsParams,) => {
-    return [`/admin/usage/stats`, ...(params ? [params]: [])] as const;
+export const getUsageControllerGetUsageStatsQueryKey = (params?: UsageControllerGetUsageStatsParams,) => {
+    return [`/usage/stats`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getAdminUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError = unknown>(params?: AdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError, TData>>, }
+export const getUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsageControllerGetUsageStatsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUsageStatsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>> = ({ signal }) => adminUsageControllerGetUsageStats(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUsageStats>>> = ({ signal }) => usageControllerGetUsageStats(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AdminUsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>>
-export type AdminUsageControllerGetUsageStatsQueryError = unknown
+export type UsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUsageStats>>>
+export type UsageControllerGetUsageStatsQueryError = unknown
 
 
-export function useAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError = unknown>(
- params: undefined |  AdminUsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params: undefined |  UsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>,
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError = unknown>(
- params?: AdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>,
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>
+          Awaited<ReturnType<typeof usageControllerGetUsageStats>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError = unknown>(
- params?: AdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError, TData>>, }
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get overall usage statistics
  */
 
-export function useAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError = unknown>(
- params?: AdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUsageStats>>, TError, TData>>, }
+export function useUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError = unknown>(
+ params?: UsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUsageStats>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminUsageControllerGetUsageStatsQueryOptions(params,options)
+  const queryOptions = getUsageControllerGetUsageStatsQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5740,81 +5741,81 @@ export function useAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<
  * Returns usage statistics grouped by model provider (OpenAI, Anthropic, etc.) with optional time series data for trend analysis. Useful for provider comparison charts. Dates are optional - if not provided, shows all usage.
  * @summary Get usage statistics by provider
  */
-export const adminUsageControllerGetProviderUsage = (
-    params?: AdminUsageControllerGetProviderUsageParams,
+export const usageControllerGetProviderUsage = (
+    params?: UsageControllerGetProviderUsageParams,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<ProviderUsageResponseDto>(
-      {url: `/admin/usage/providers`, method: 'GET',
+      {url: `/usage/providers`, method: 'GET',
         params, signal
     },
       );
     }
   
 
-export const getAdminUsageControllerGetProviderUsageQueryKey = (params?: AdminUsageControllerGetProviderUsageParams,) => {
-    return [`/admin/usage/providers`, ...(params ? [params]: [])] as const;
+export const getUsageControllerGetProviderUsageQueryKey = (params?: UsageControllerGetProviderUsageParams,) => {
+    return [`/usage/providers`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getAdminUsageControllerGetProviderUsageQueryOptions = <TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError = unknown>(params?: AdminUsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError, TData>>, }
+export const getUsageControllerGetProviderUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError = unknown>(params?: UsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsageControllerGetProviderUsageQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetProviderUsageQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>> = ({ signal }) => adminUsageControllerGetProviderUsage(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>> = ({ signal }) => usageControllerGetProviderUsage(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AdminUsageControllerGetProviderUsageQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>>
-export type AdminUsageControllerGetProviderUsageQueryError = unknown
+export type UsageControllerGetProviderUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>>
+export type UsageControllerGetProviderUsageQueryError = unknown
 
 
-export function useAdminUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError = unknown>(
- params: undefined |  AdminUsageControllerGetProviderUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError, TData>> & Pick<
+export function useUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError = unknown>(
+ params: undefined |  UsageControllerGetProviderUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>,
+          Awaited<ReturnType<typeof usageControllerGetProviderUsage>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>
+          Awaited<ReturnType<typeof usageControllerGetProviderUsage>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError = unknown>(
- params?: AdminUsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError, TData>> & Pick<
+export function useUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>,
+          Awaited<ReturnType<typeof usageControllerGetProviderUsage>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>
+          Awaited<ReturnType<typeof usageControllerGetProviderUsage>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError = unknown>(
- params?: AdminUsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError, TData>>, }
+export function useUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get usage statistics by provider
  */
 
-export function useAdminUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError = unknown>(
- params?: AdminUsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsage>>, TError, TData>>, }
+export function useUsageControllerGetProviderUsage<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsage>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminUsageControllerGetProviderUsageQueryOptions(params,options)
+  const queryOptions = getUsageControllerGetProviderUsageQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5830,81 +5831,81 @@ export function useAdminUsageControllerGetProviderUsage<TData = Awaited<ReturnTy
  * Returns rows aligned by date with tokens per provider. Shape: { timeSeries: [{ date, values: { [provider]: tokens } }] }
  * @summary Get provider usage time series aligned by date (chart-ready)
  */
-export const adminUsageControllerGetProviderUsageChart = (
-    params?: AdminUsageControllerGetProviderUsageChartParams,
+export const usageControllerGetProviderUsageChart = (
+    params?: UsageControllerGetProviderUsageChartParams,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<ProviderUsageChartResponseDto>(
-      {url: `/admin/usage/providers/chart`, method: 'GET',
+      {url: `/usage/providers/chart`, method: 'GET',
         params, signal
     },
       );
     }
   
 
-export const getAdminUsageControllerGetProviderUsageChartQueryKey = (params?: AdminUsageControllerGetProviderUsageChartParams,) => {
-    return [`/admin/usage/providers/chart`, ...(params ? [params]: [])] as const;
+export const getUsageControllerGetProviderUsageChartQueryKey = (params?: UsageControllerGetProviderUsageChartParams,) => {
+    return [`/usage/providers/chart`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getAdminUsageControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError = unknown>(params?: AdminUsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError, TData>>, }
+export const getUsageControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsageControllerGetProviderUsageChartQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetProviderUsageChartQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>> = ({ signal }) => adminUsageControllerGetProviderUsageChart(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>> = ({ signal }) => usageControllerGetProviderUsageChart(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AdminUsageControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>>
-export type AdminUsageControllerGetProviderUsageChartQueryError = unknown
+export type UsageControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>>
+export type UsageControllerGetProviderUsageChartQueryError = unknown
 
 
-export function useAdminUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError = unknown>(
- params: undefined |  AdminUsageControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params: undefined |  UsageControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>,
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError = unknown>(
- params?: AdminUsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>,
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>
+          Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError = unknown>(
- params?: AdminUsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError, TData>>, }
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get provider usage time series aligned by date (chart-ready)
  */
 
-export function useAdminUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError = unknown>(
- params?: AdminUsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetProviderUsageChart>>, TError, TData>>, }
+export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError = unknown>(
+ params?: UsageControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetProviderUsageChart>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminUsageControllerGetProviderUsageChartQueryOptions(params,options)
+  const queryOptions = getUsageControllerGetProviderUsageChartQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5917,84 +5918,84 @@ export function useAdminUsageControllerGetProviderUsageChart<TData = Awaited<Ret
 
 
 /**
- * Returns usage statistics grouped by individual models with percentage distribution. Models beyond the limit are grouped into "Others" category for better visualization. Dates are optional - if not provided, shows all usage.
+ * Returns usage statistics grouped by individual models with percentage distribution. Dates are optional - if not provided, shows all usage.
  * @summary Get usage distribution by model
  */
-export const adminUsageControllerGetModelDistribution = (
-    params?: AdminUsageControllerGetModelDistributionParams,
+export const usageControllerGetModelDistribution = (
+    params?: UsageControllerGetModelDistributionParams,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<ModelDistributionResponseDto>(
-      {url: `/admin/usage/models`, method: 'GET',
+      {url: `/usage/models`, method: 'GET',
         params, signal
     },
       );
     }
   
 
-export const getAdminUsageControllerGetModelDistributionQueryKey = (params?: AdminUsageControllerGetModelDistributionParams,) => {
-    return [`/admin/usage/models`, ...(params ? [params]: [])] as const;
+export const getUsageControllerGetModelDistributionQueryKey = (params?: UsageControllerGetModelDistributionParams,) => {
+    return [`/usage/models`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getAdminUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError = unknown>(params?: AdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError, TData>>, }
+export const getUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsageControllerGetModelDistributionQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetModelDistributionQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>> = ({ signal }) => adminUsageControllerGetModelDistribution(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>> = ({ signal }) => usageControllerGetModelDistribution(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AdminUsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>>
-export type AdminUsageControllerGetModelDistributionQueryError = unknown
+export type UsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>>
+export type UsageControllerGetModelDistributionQueryError = unknown
 
 
-export function useAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError = unknown>(
- params: undefined |  AdminUsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params: undefined |  UsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>,
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError = unknown>(
- params?: AdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>,
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>
+          Awaited<ReturnType<typeof usageControllerGetModelDistribution>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError = unknown>(
- params?: AdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError, TData>>, }
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get usage distribution by model
  */
 
-export function useAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError = unknown>(
- params?: AdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetModelDistribution>>, TError, TData>>, }
+export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError = unknown>(
+ params?: UsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetModelDistribution>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminUsageControllerGetModelDistributionQueryOptions(params,options)
+  const queryOptions = getUsageControllerGetModelDistributionQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -6010,81 +6011,81 @@ export function useAdminUsageControllerGetModelDistribution<TData = Awaited<Retu
  * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status and optional model breakdown per user. Dates are optional - if not provided, shows all usage.
  * @summary Get usage statistics by user
  */
-export const adminUsageControllerGetUserUsage = (
-    params?: AdminUsageControllerGetUserUsageParams,
+export const usageControllerGetUserUsage = (
+    params?: UsageControllerGetUserUsageParams,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<UserUsageResponseDto>(
-      {url: `/admin/usage/users`, method: 'GET',
+      {url: `/usage/users`, method: 'GET',
         params, signal
     },
       );
     }
   
 
-export const getAdminUsageControllerGetUserUsageQueryKey = (params?: AdminUsageControllerGetUserUsageParams,) => {
-    return [`/admin/usage/users`, ...(params ? [params]: [])] as const;
+export const getUsageControllerGetUserUsageQueryKey = (params?: UsageControllerGetUserUsageParams,) => {
+    return [`/usage/users`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getAdminUsageControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError = unknown>(params?: AdminUsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError, TData>>, }
+export const getUsageControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsageControllerGetUserUsageQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getUsageControllerGetUserUsageQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>> = ({ signal }) => adminUsageControllerGetUserUsage(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usageControllerGetUserUsage>>> = ({ signal }) => usageControllerGetUserUsage(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AdminUsageControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>>
-export type AdminUsageControllerGetUserUsageQueryError = unknown
+export type UsageControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof usageControllerGetUserUsage>>>
+export type UsageControllerGetUserUsageQueryError = unknown
 
 
-export function useAdminUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError = unknown>(
- params: undefined |  AdminUsageControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError, TData>> & Pick<
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params: undefined |  UsageControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>,
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError = unknown>(
- params?: AdminUsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError, TData>> & Pick<
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>,
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>,
           TError,
-          Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>
+          Awaited<ReturnType<typeof usageControllerGetUserUsage>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError = unknown>(
- params?: AdminUsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError, TData>>, }
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get usage statistics by user
  */
 
-export function useAdminUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError = unknown>(
- params?: AdminUsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsageControllerGetUserUsage>>, TError, TData>>, }
+export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError = unknown>(
+ params?: UsageControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usageControllerGetUserUsage>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminUsageControllerGetUserUsageQueryOptions(params,options)
+  const queryOptions = getUsageControllerGetUserUsageQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
