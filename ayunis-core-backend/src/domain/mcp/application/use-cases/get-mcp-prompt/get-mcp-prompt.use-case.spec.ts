@@ -4,7 +4,7 @@ import { UUID } from 'crypto';
 import { GetMcpPromptUseCase } from './get-mcp-prompt.use-case';
 import { GetMcpPromptQuery } from './get-mcp-prompt.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientPort } from '../../ports/mcp-client.port';
+import { McpClientService } from '../../services/mcp-client.service';
 import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
@@ -25,7 +25,7 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 describe('GetMcpPromptUseCase', () => {
   let useCase: GetMcpPromptUseCase;
   let repository: McpIntegrationsRepositoryPort;
-  let mcpClient: McpClientPort;
+  let mcpClientService: McpClientService;
   let registryService: PredefinedMcpIntegrationRegistry;
   let contextService: ContextService;
   let loggerLogSpy: jest.SpyInstance;
@@ -46,7 +46,7 @@ describe('GetMcpPromptUseCase', () => {
           },
         },
         {
-          provide: McpClientPort,
+          provide: McpClientService,
           useValue: {
             getPrompt: jest.fn(),
           },
@@ -70,7 +70,7 @@ describe('GetMcpPromptUseCase', () => {
     repository = module.get<McpIntegrationsRepositoryPort>(
       McpIntegrationsRepositoryPort,
     );
-    mcpClient = module.get<McpClientPort>(McpClientPort);
+    mcpClientService = module.get<McpClientService>(McpClientService);
     registryService = module.get<PredefinedMcpIntegrationRegistry>(
       PredefinedMcpIntegrationRegistry,
     );
@@ -118,7 +118,9 @@ describe('GetMcpPromptUseCase', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authType: McpAuthMethod.NO_AUTH,
       });
-      jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
+      jest
+        .spyOn(mcpClientService, 'getPrompt')
+        .mockResolvedValue(mockPromptResponse);
 
       const query = new GetMcpPromptQuery(
         mockIntegrationId,
@@ -139,10 +141,8 @@ describe('GetMcpPromptUseCase', () => {
       });
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.getPrompt).toHaveBeenCalledWith(
-        {
-          serverUrl: 'http://localhost:3100/mcp',
-        },
+      expect(mcpClientService.getPrompt).toHaveBeenCalledWith(
+        mockIntegration,
         mockPromptName,
         mockArguments,
       );
@@ -176,7 +176,9 @@ describe('GetMcpPromptUseCase', () => {
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
+      jest
+        .spyOn(mcpClientService, 'getPrompt')
+        .mockResolvedValue(mockPromptResponse);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
 
@@ -188,10 +190,8 @@ describe('GetMcpPromptUseCase', () => {
         messages: [{ role: 'user', content: 'Hello' }],
         description: undefined,
       });
-      expect(mcpClient.getPrompt).toHaveBeenCalledWith(
-        {
-          serverUrl: 'http://custom-server.com/mcp',
-        },
+      expect(mcpClientService.getPrompt).toHaveBeenCalledWith(
+        mockIntegration,
         mockPromptName,
         {},
       );
@@ -218,7 +218,9 @@ describe('GetMcpPromptUseCase', () => {
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
-      jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
+      jest
+        .spyOn(mcpClientService, 'getPrompt')
+        .mockResolvedValue(mockPromptResponse);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
 
@@ -226,12 +228,8 @@ describe('GetMcpPromptUseCase', () => {
       await useCase.execute(query);
 
       // Assert
-      expect(mcpClient.getPrompt).toHaveBeenCalledWith(
-        {
-          serverUrl: 'http://custom-server.com/mcp',
-          authHeaderName: 'Authorization',
-          authToken: 'encrypted-token-123',
-        },
+      expect(mcpClientService.getPrompt).toHaveBeenCalledWith(
+        mockIntegration,
         mockPromptName,
         {},
       );
@@ -249,7 +247,7 @@ describe('GetMcpPromptUseCase', () => {
         McpIntegrationNotFoundError,
       );
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.getPrompt).not.toHaveBeenCalled();
+      expect(mcpClientService.getPrompt).not.toHaveBeenCalled();
     });
 
     it('should throw McpIntegrationAccessDeniedError when integration belongs to different organization', async () => {
@@ -277,7 +275,7 @@ describe('GetMcpPromptUseCase', () => {
         McpIntegrationAccessDeniedError,
       );
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.getPrompt).not.toHaveBeenCalled();
+      expect(mcpClientService.getPrompt).not.toHaveBeenCalled();
     });
 
     it('should throw McpIntegrationDisabledError when integration is disabled', async () => {
@@ -304,7 +302,7 @@ describe('GetMcpPromptUseCase', () => {
         McpIntegrationDisabledError,
       );
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(mcpClient.getPrompt).not.toHaveBeenCalled();
+      expect(mcpClientService.getPrompt).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when user is not authenticated', async () => {
@@ -319,7 +317,7 @@ describe('GetMcpPromptUseCase', () => {
       );
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).not.toHaveBeenCalled();
-      expect(mcpClient.getPrompt).not.toHaveBeenCalled();
+      expect(mcpClientService.getPrompt).not.toHaveBeenCalled();
     });
 
     it('should use organizationId from ContextService (not from query)', async () => {
@@ -349,7 +347,9 @@ describe('GetMcpPromptUseCase', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authType: McpAuthMethod.NO_AUTH,
       });
-      jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
+      jest
+        .spyOn(mcpClientService, 'getPrompt')
+        .mockResolvedValue(mockPromptResponse);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
 
@@ -387,7 +387,9 @@ describe('GetMcpPromptUseCase', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authType: McpAuthMethod.NO_AUTH,
       });
-      jest.spyOn(mcpClient, 'getPrompt').mockRejectedValue(unexpectedError);
+      jest
+        .spyOn(mcpClientService, 'getPrompt')
+        .mockRejectedValue(unexpectedError);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
 
@@ -430,7 +432,9 @@ describe('GetMcpPromptUseCase', () => {
         serverUrl: 'http://localhost:3100/mcp',
         authType: McpAuthMethod.NO_AUTH,
       });
-      jest.spyOn(mcpClient, 'getPrompt').mockResolvedValue(mockPromptResponse);
+      jest
+        .spyOn(mcpClientService, 'getPrompt')
+        .mockResolvedValue(mockPromptResponse);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
 

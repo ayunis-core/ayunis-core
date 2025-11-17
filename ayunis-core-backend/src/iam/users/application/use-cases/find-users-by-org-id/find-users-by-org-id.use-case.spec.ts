@@ -5,24 +5,39 @@ import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SystemRole } from '../../../domain/value-objects/system-role.enum';
 
 describe('FindUsersByOrgIdUseCase', () => {
   let useCase: FindUsersByOrgIdUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
+  let mockContextService: any;
 
   beforeEach(async () => {
     mockUsersRepository = {
       findManyByOrgId: jest.fn(),
     };
 
+    mockContextService = {
+      get: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindUsersByOrgIdUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
     useCase = module.get<FindUsersByOrgIdUseCase>(FindUsersByOrgIdUseCase);
+
+    // Configure ContextService mock to return ADMIN role
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      if (key === 'role') return UserRole.ADMIN;
+      return null;
+    });
   });
 
   it('should be defined', () => {

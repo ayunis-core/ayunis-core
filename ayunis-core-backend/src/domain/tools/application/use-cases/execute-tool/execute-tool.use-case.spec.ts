@@ -34,7 +34,7 @@ describe('ExecuteToolUseCase', () => {
   let mockToolHandlerRegistry: Partial<ToolHandlerRegistry>;
   let mockHandler: { execute: jest.Mock };
 
-  const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
+  const mockContext = '123e4567-e89b-12d3-a456-426614174000' as any;
 
   beforeEach(async () => {
     mockHandler = {
@@ -70,7 +70,7 @@ describe('ExecuteToolUseCase', () => {
         required: ['query'],
       });
       const input = { query: 'test query' };
-      const command = new ExecuteToolCommand(mockTool, input, mockOrgId);
+      const command = new ExecuteToolCommand(mockTool, input, mockContext);
       const expectedResult = 'Tool execution result';
 
       mockHandler.execute.mockResolvedValue(expectedResult);
@@ -83,7 +83,7 @@ describe('ExecuteToolUseCase', () => {
       expect(mockHandler.execute).toHaveBeenCalledWith({
         tool: mockTool,
         input,
-        orgId: mockOrgId,
+        context: mockContext,
       });
       expect(result).toBe(expectedResult);
     });
@@ -98,7 +98,11 @@ describe('ExecuteToolUseCase', () => {
         required: ['query'],
       });
       const invalidInput = { wrongProperty: 'test' };
-      const command = new ExecuteToolCommand(mockTool, invalidInput, mockOrgId);
+      const command = new ExecuteToolCommand(
+        mockTool,
+        invalidInput,
+        mockContext,
+      );
 
       // Act & Assert
       // Validation currently disabled in implementation; ensure handler still runs
@@ -116,7 +120,7 @@ describe('ExecuteToolUseCase', () => {
         required: ['query'],
       });
       const input = { query: 'test query' };
-      const command = new ExecuteToolCommand(mockTool, input, mockOrgId);
+      const command = new ExecuteToolCommand(mockTool, input, mockContext);
 
       mockHandler.execute.mockRejectedValue(new Error('Execution failed'));
 
@@ -128,7 +132,7 @@ describe('ExecuteToolUseCase', () => {
       expect(mockHandler.execute).toHaveBeenCalledWith({
         tool: mockTool,
         input,
-        orgId: mockOrgId,
+        context: mockContext,
       });
     });
 
@@ -142,7 +146,7 @@ describe('ExecuteToolUseCase', () => {
         required: ['query'],
       });
       const input = { query: 'test query' };
-      const command = new ExecuteToolCommand(mockTool, input, mockOrgId);
+      const command = new ExecuteToolCommand(mockTool, input, mockContext);
 
       const originalError = new ToolInvalidInputError({
         toolName: 'Test Tool',
@@ -156,7 +160,7 @@ describe('ExecuteToolUseCase', () => {
       expect(mockHandler.execute).toHaveBeenCalledWith({
         tool: mockTool,
         input,
-        orgId: mockOrgId,
+        context: mockContext,
       });
     });
 
@@ -167,7 +171,7 @@ describe('ExecuteToolUseCase', () => {
         properties: {},
       });
       const input = {};
-      const command = new ExecuteToolCommand(mockTool, input, mockOrgId);
+      const command = new ExecuteToolCommand(mockTool, input, mockContext);
       const expectedResult = 'Tool execution result';
 
       mockHandler.execute.mockResolvedValue(expectedResult);
@@ -180,7 +184,7 @@ describe('ExecuteToolUseCase', () => {
       expect(mockHandler.execute).toHaveBeenCalledWith({
         tool: mockTool,
         input,
-        orgId: mockOrgId,
+        context: mockContext,
       });
       expect(result).toBe(expectedResult);
     });
@@ -192,7 +196,7 @@ describe('ExecuteToolUseCase', () => {
         properties: {},
       });
       const input = {};
-      const command = new ExecuteToolCommand(mockTool, input, mockOrgId);
+      const command = new ExecuteToolCommand(mockTool, input, mockContext);
 
       const loggerSpy = jest.spyOn(useCase['logger'], 'log');
       mockHandler.execute.mockResolvedValue('result');
@@ -230,7 +234,7 @@ describe('ExecuteToolUseCase', () => {
         limit: 10,
         options: { includeMetadata: true },
       };
-      const command = new ExecuteToolCommand(mockTool, validInput, mockOrgId);
+      const command = new ExecuteToolCommand(mockTool, validInput, mockContext);
       const expectedResult = 'Tool execution result';
 
       mockHandler.execute.mockResolvedValue(expectedResult);

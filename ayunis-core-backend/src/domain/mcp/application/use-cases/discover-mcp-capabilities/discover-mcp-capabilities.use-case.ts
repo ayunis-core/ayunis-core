@@ -106,7 +106,7 @@ export class DiscoverMcpCapabilitiesUseCase {
         id: query.integrationId,
         name: integration.name,
         tools: mcpTools.length,
-        resources: mcpResources.length,
+        resources: mcpResources.length + mcpResourceTemplates.length,
         prompts: mcpPrompts.length,
       });
 

@@ -13,12 +13,15 @@ import {
   ModelProviderNotPermittedError,
 } from '../../models.errors';
 import { UUID } from 'crypto';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 describe('CreatePermittedModelUseCase', () => {
   let useCase: CreatePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let modelRegistry: jest.Mocked<ModelRegistry>;
   let isProviderPermittedUseCase: jest.Mocked<IsProviderPermittedUseCase>;
+  let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -42,6 +45,10 @@ describe('CreatePermittedModelUseCase', () => {
       execute: jest.fn(),
     };
 
+    mockContextService = {
+      get: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreatePermittedModelUseCase,
@@ -54,6 +61,7 @@ describe('CreatePermittedModelUseCase', () => {
           provide: IsProviderPermittedUseCase,
           useValue: mockIsProviderPermittedUseCase,
         },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -63,6 +71,14 @@ describe('CreatePermittedModelUseCase', () => {
     permittedModelsRepository = module.get(PermittedModelsRepository);
     modelRegistry = module.get(ModelRegistry);
     isProviderPermittedUseCase = module.get(IsProviderPermittedUseCase);
+
+    // Configure ContextService mock
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'role') return UserRole.ADMIN;
+      if (key === 'systemRole') return null;
+      return null;
+    });
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();

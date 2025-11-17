@@ -16,7 +16,7 @@ function createConsoleFormat() {
         const metaStr = Object.keys(meta).length
           ? `\n${JSON.stringify(meta, null, 2)}`
           : '';
-        return `${timestamp} [${level}]: ${message}${metaStr}`;
+        return `${String(timestamp)} [${String(level)}]: ${String(message)}${metaStr}`;
       }),
     );
   } else {

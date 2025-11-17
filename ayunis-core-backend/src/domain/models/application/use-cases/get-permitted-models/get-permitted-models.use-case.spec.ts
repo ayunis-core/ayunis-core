@@ -4,10 +4,12 @@ import { GetPermittedModelsUseCase } from './get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('GetPermittedModelsUseCase', () => {
   let useCase: GetPermittedModelsUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
+  let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
 
@@ -19,6 +21,10 @@ describe('GetPermittedModelsUseCase', () => {
       findByOrgAndModel: jest.fn(),
     };
 
+    mockContextService = {
+      get: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetPermittedModelsUseCase,
@@ -26,11 +32,19 @@ describe('GetPermittedModelsUseCase', () => {
           provide: PermittedModelsRepository,
           useValue: mockPermittedModelsRepository,
         },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
     useCase = module.get<GetPermittedModelsUseCase>(GetPermittedModelsUseCase);
     permittedModelsRepository = module.get(PermittedModelsRepository);
+
+    // Configure ContextService mock
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return 'test-user-id';
+      if (key === 'orgId') return mockOrgId;
+      return null;
+    });
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
