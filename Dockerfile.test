@@ -38,7 +38,7 @@ COPY ayunis-core-backend/nest-cli.json ./
 RUN npm run build
 
 # Verify build output
-RUN ls -la dist/ && ls -la dist/src/ && test -f dist/src/main.js
+RUN ls -la dist/ && test -f dist/main.js
 
 # Copy frontend files from builder stage into dist/frontend
 COPY --from=frontend-builder /app/frontend/dist ./dist/frontend
@@ -58,4 +58,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application
-CMD ["node", "dist/src/main.js"] 
+CMD ["node", "dist/main.js"] 
