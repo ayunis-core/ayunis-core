@@ -37,6 +37,9 @@ COPY ayunis-core-backend/nest-cli.json ./
 # Build backend
 RUN npm run build
 
+# Verify build output
+RUN ls -la dist/ && ls -la dist/src/ && test -f dist/src/main.js
+
 # Copy frontend files from builder stage into dist/frontend
 COPY --from=frontend-builder /app/frontend/dist ./dist/frontend
 
