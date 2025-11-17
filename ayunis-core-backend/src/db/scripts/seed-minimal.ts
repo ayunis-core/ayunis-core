@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { randomUUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { SeedRunner } from './utils/seed-runner';
 import { minimalFixture } from '../fixtures/minimal.fixture';
@@ -61,6 +62,7 @@ async function seedMinimal() {
 
     if (!model) {
       model = modelRepo.create({
+        id: randomUUID(),
         name: minimalFixture.model.name,
         displayName: minimalFixture.model.displayName,
         provider: ModelProvider.OPENAI,
@@ -81,7 +83,10 @@ async function seedMinimal() {
     });
 
     if (!org) {
-      org = orgRepo.create(minimalFixture.org);
+      org = orgRepo.create({
+        id: randomUUID(),
+        ...minimalFixture.org,
+      });
       await orgRepo.save(org);
       console.log(`✅ Created org: ${org.name}`);
     } else {
@@ -98,6 +103,7 @@ async function seedMinimal() {
         minimalFixture.user.password,
       );
       const user = userRepo.create({
+        id: randomUUID(),
         email: minimalFixture.user.email,
         passwordHash,
         orgId: org.id,
@@ -118,8 +124,13 @@ async function seedMinimal() {
     });
 
     if (!existingSubscription) {
-      // Create billing info first
+      // Create subscription with billing info (cascade will save both)
+      const subscriptionId = randomUUID();
+
+      // Create billing info with subscription ID
       const billingInfo = billingInfoRepo.create({
+        id: randomUUID(),
+        subscriptionId,
         companyName: minimalFixture.subscription.billingInfo.companyName,
         street: minimalFixture.subscription.billingInfo.street,
         houseNumber: minimalFixture.subscription.billingInfo.houseNumber,
@@ -127,10 +138,11 @@ async function seedMinimal() {
         city: minimalFixture.subscription.billingInfo.city,
         country: minimalFixture.subscription.billingInfo.country,
       });
-      await billingInfoRepo.save(billingInfo);
+      // Don't save billing info - let cascade handle it
 
-      // Create subscription
+      // Create subscription with billing info attached
       const subscription = subscriptionRepo.create({
+        id: subscriptionId,
         orgId: org.id,
         noOfSeats: minimalFixture.subscription.noOfSeats,
         pricePerSeat: minimalFixture.subscription.pricePerSeat,
@@ -154,6 +166,7 @@ async function seedMinimal() {
 
     if (!existingPermittedProvider) {
       const permittedProvider = permittedProviderRepo.create({
+        id: randomUUID(),
         provider: ModelProvider.OPENAI,
         orgId: org.id,
       });
@@ -172,8 +185,10 @@ async function seedMinimal() {
 
     if (!existingPermittedModel) {
       const permittedModel = permittedModelRepo.create({
+        id: randomUUID(),
         modelId: model.id,
         orgId: org.id,
+        isDefault: true,  // Set as default for the organization
       });
       await permittedModelRepo.save(permittedModel);
       console.log(`✅ Created permitted model: ${model.name}`);
