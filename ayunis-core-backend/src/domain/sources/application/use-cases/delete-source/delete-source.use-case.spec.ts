@@ -1,4 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Mock the Transactional decorator
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { DeleteSourceUseCase } from './delete-source.use-case';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';

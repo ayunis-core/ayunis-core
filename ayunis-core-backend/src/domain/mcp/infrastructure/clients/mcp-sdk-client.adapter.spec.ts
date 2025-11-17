@@ -2,16 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { McpSdkClientAdapter } from './mcp-sdk-client.adapter';
 import { McpConnectionConfig } from '../../application/ports/mcp-client.port';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 // Mock the SDK
 jest.mock('@modelcontextprotocol/sdk/client/index.js');
-jest.mock('@modelcontextprotocol/sdk/client/sse.js');
+jest.mock('@modelcontextprotocol/sdk/client/streamableHttp.js');
 
 describe('McpSdkClientAdapter', () => {
   let adapter: McpSdkClientAdapter;
   let mockClient: jest.Mocked<Client>;
-  let mockTransport: jest.Mocked<SSEClientTransport>;
+  let mockTransport: jest.Mocked<StreamableHTTPClientTransport>;
 
   const mockConfig: McpConnectionConfig = {
     serverUrl: 'https://mcp.example.com/sse',
@@ -40,11 +40,13 @@ describe('McpSdkClientAdapter', () => {
     } as unknown as jest.Mocked<Client>;
 
     // Create mock transport
-    mockTransport = {} as jest.Mocked<SSEClientTransport>;
+    mockTransport = {} as jest.Mocked<StreamableHTTPClientTransport>;
 
-    // Mock SSEClientTransport constructor
+    // Mock StreamableHTTPClientTransport constructor
     (
-      SSEClientTransport as jest.MockedClass<typeof SSEClientTransport>
+      StreamableHTTPClientTransport as jest.MockedClass<
+        typeof StreamableHTTPClientTransport
+      >
     ).mockImplementation(() => mockTransport);
 
     // Mock Client constructor
@@ -84,14 +86,13 @@ describe('McpSdkClientAdapter', () => {
       const result = await adapter.listTools(mockConfig);
 
       // Assert
-      expect(SSEClientTransport).toHaveBeenCalledWith(
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
         new URL(mockConfig.serverUrl),
-        { requestInit: { headers: {} } },
       );
-      expect(Client).toHaveBeenCalledWith(
-        { name: 'ayunis-core', version: '1.0.0' },
-        { capabilities: { tools: {}, resources: {}, prompts: {} } },
-      );
+      expect(Client).toHaveBeenCalledWith({
+        name: 'ayunis-core',
+        version: '1.0.0',
+      });
       expect(mockClient.connect).toHaveBeenCalledWith(mockTransport);
       expect(mockClient.listTools).toHaveBeenCalled();
       expect(mockClient.close).toHaveBeenCalled();
@@ -117,7 +118,7 @@ describe('McpSdkClientAdapter', () => {
       await adapter.listTools(mockConfigWithAuth);
 
       // Assert
-      expect(SSEClientTransport).toHaveBeenCalledWith(
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
         new URL(mockConfigWithAuth.serverUrl),
         {
           requestInit: {
@@ -137,9 +138,8 @@ describe('McpSdkClientAdapter', () => {
       await adapter.listTools(mockConfig);
 
       // Assert
-      expect(SSEClientTransport).toHaveBeenCalledWith(
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
         new URL(mockConfig.serverUrl),
-        { requestInit: { headers: {} } },
       );
     });
 

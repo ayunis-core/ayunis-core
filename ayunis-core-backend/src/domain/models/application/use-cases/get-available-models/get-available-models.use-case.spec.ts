@@ -7,11 +7,14 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { UUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 describe('GetAvailableModelsUseCase', () => {
   let useCase: GetAvailableModelsUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let configService: jest.Mocked<ConfigService>;
+  let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -29,17 +32,31 @@ describe('GetAvailableModelsUseCase', () => {
       get: jest.fn(),
     };
 
+    mockContextService = {
+      get: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetAvailableModelsUseCase,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
     useCase = module.get<GetAvailableModelsUseCase>(GetAvailableModelsUseCase);
     modelsRepository = module.get(ModelsRepository);
     configService = module.get(ConfigService);
+
+    // Configure ContextService mock
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return 'test-user-id';
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'role') return UserRole.ADMIN;
+      if (key === 'systemRole') return null;
+      return null;
+    });
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -87,7 +104,7 @@ describe('GetAvailableModelsUseCase', () => {
 
       // Assert
       expect(modelsRepository.findAll).toHaveBeenCalledTimes(1);
-      expect(result).toBe(mockModels);
+      expect(result).toStrictEqual(mockModels);
       expect(result).toHaveLength(2);
     });
 

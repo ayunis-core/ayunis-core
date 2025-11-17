@@ -21,6 +21,9 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
                 if (key === 'LOCABOO_4_URL') {
                   return 'https://api.locaboo.example.com';
                 }
+                if (key === 'app.isDevelopment') {
+                  return true; // Enable TEST integration
+                }
                 return undefined;
               }),
             },
@@ -58,11 +61,11 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
 
         expect(config).toBeDefined();
         expect(config.slug).toBe(PredefinedMcpIntegrationSlug.LOCABOO);
-        expect(config.displayName).toBe('Locaboo 4');
-        expect(config.description).toContain('Locaboo 4 booking system');
+        expect(config.displayName).toBe('Locaboo');
+        expect(config.description).toContain('Locaboo');
         expect(config.authType).toBe(McpAuthMethod.BEARER_TOKEN);
         expect(config.authHeaderName).toBe('Authorization');
-        expect(config.serverUrl).toBe('https://api.locaboo.example.com/mcp');
+        expect(config.serverUrl).toBe('https://api.locaboo.example.com');
       });
 
       it('should return Locaboo credential fields', () => {
@@ -72,10 +75,10 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
         expect(config.credentialFields).toHaveLength(1);
 
         const tokenField = config.credentialFields![0];
-        expect(tokenField.label).toBe('Locaboo 3 API Token');
+        expect(tokenField.label).toBe('Locaboo API Token');
         expect(tokenField.type).toBe(CredentialFieldType.TOKEN);
         expect(tokenField.required).toBe(true);
-        expect(tokenField.help).toContain('Locaboo 3 API token');
+        expect(tokenField.help).toContain('API Token');
       });
 
       it('should throw error for unknown slug', () => {
@@ -113,7 +116,7 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
           (c) => c.slug === PredefinedMcpIntegrationSlug.LOCABOO,
         );
         expect(locabooConfig).toBeDefined();
-        expect(locabooConfig?.displayName).toBe('Locaboo 4');
+        expect(locabooConfig?.displayName).toBe('Locaboo');
         expect(locabooConfig?.authType).toBe(McpAuthMethod.BEARER_TOKEN);
       });
 
@@ -188,7 +191,10 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
           {
             provide: ConfigService,
             useValue: {
-              get: jest.fn(() => {
+              get: jest.fn((key: string) => {
+                if (key === 'app.isDevelopment') {
+                  return true; // Enable TEST integration
+                }
                 return undefined;
               }),
             },
@@ -236,7 +242,9 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
     it('should throw error when getting Locaboo URL if not configured', () => {
       expect(() =>
         service.getServerUrl(PredefinedMcpIntegrationSlug.LOCABOO),
-      ).toThrow('LOCABOO_4_URL environment variable not configured');
+      ).toThrow(
+        'LOCABOO_4_URL environment variable not configured for Locaboo integration',
+      );
     });
   });
 
