@@ -116,7 +116,7 @@ jobs:
 
       - name: Seed test data
         working-directory: ayunis-core-backend
-        run: npm run seed:minimal:ts
+        run: npm run seed:minimal
 
       - name: Start backend
         working-directory: ayunis-core-backend
