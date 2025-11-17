@@ -26,12 +26,13 @@ WORKDIR /app
 COPY ayunis-core-backend/package*.json ./
 RUN npm ci && npm rebuild bcrypt --build-from-source
 
-# Copy backend source code
+# Copy backend source code and config files
 COPY ayunis-core-backend/src ./src
 COPY ayunis-core-backend/test ./test
 COPY ayunis-core-backend/tsconfig*.json ./
 COPY ayunis-core-backend/jest.setup.js ./
-COPY ayunis-core-backend/.eslintrc.js ./
+COPY ayunis-core-backend/eslint.config.mjs ./
+COPY ayunis-core-backend/nest-cli.json ./
 
 # Build backend
 RUN npm run build
