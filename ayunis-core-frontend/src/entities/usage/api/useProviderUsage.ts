@@ -1,10 +1,10 @@
 import {
-  useAdminUsageControllerGetProviderUsage,
-  type AdminUsageControllerGetProviderUsageParams,
+  useUsageControllerGetProviderUsage,
+  type UsageControllerGetProviderUsageParams,
 } from "@/shared/api";
 
-export function useProviderUsage(params?: AdminUsageControllerGetProviderUsageParams) {
-  return useAdminUsageControllerGetProviderUsage({
+export function useProviderUsage(params?: UsageControllerGetProviderUsageParams) {
+  return useUsageControllerGetProviderUsage({
     ...params,
     includeTimeSeries: params?.includeTimeSeries ?? true,
   });

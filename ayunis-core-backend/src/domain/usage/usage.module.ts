@@ -4,18 +4,17 @@ import { GetProviderUsageUseCase } from './application/use-cases/get-provider-us
 import { GetModelDistributionUseCase } from './application/use-cases/get-model-distribution/get-model-distribution.use-case';
 import { GetUserUsageUseCase } from './application/use-cases/get-user-usage/get-user-usage.use-case';
 import { GetUsageStatsUseCase } from './application/use-cases/get-usage-stats/get-usage-stats.use-case';
-import { AdminUsageController } from './presenters/http/admin-usage.controller';
+import { UsageController } from './presenters/http/usage.controller';
 import { LocalUsageRepositoryModule } from './infrastructure/persistence/local-usage/local-usage-repository.module';
 import { UsageStatsResponseDtoMapper } from './presenters/http/mappers/usage-stats-response-dto.mapper';
 import { ProviderUsageResponseDtoMapper } from './presenters/http/mappers/provider-usage-response-dto.mapper';
 import { ProviderUsageChartResponseDtoMapper } from './presenters/http/mappers/provider-usage-chart-response-dto.mapper';
 import { ModelDistributionResponseDtoMapper } from './presenters/http/mappers/model-distribution-response-dto.mapper';
 import { UserUsageResponseDtoMapper } from './presenters/http/mappers/user-usage-response-dto.mapper';
-import { ModelsModule } from '../models/models.module';
 
 @Module({
-  imports: [LocalUsageRepositoryModule, ModelsModule],
-  controllers: [AdminUsageController],
+  imports: [LocalUsageRepositoryModule],
+  controllers: [UsageController],
   providers: [
     // Use Cases
     CollectUsageUseCase,

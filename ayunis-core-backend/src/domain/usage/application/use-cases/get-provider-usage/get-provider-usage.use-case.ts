@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { ProviderUsage } from '../../../domain/provider-usage.entity';
-import { TimeSeriesPoint } from '../../../domain/time-series-point.entity';
 import { InvalidDateRangeError } from '../../usage.errors';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
@@ -11,15 +9,9 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 export class GetProviderUsageUseCase {
   constructor(
     private readonly usageRepository: UsageRepository,
-    private readonly configService: ConfigService,
   ) {}
 
   async execute(query: GetProviderUsageQuery): Promise<ProviderUsage[]> {
-    const isSelfHosted = this.configService.get<boolean>(
-      'app.isSelfHosted',
-      false,
-    );
-
     if (query.startDate && query.endDate) {
       this.validateDateRange(query.startDate, query.endDate);
     }
@@ -35,35 +27,14 @@ export class GetProviderUsageUseCase {
       const percentage =
         totalTokens > 0 ? (provider.tokens / totalTokens) * 100 : 0;
 
-      if (!isSelfHosted) {
-        const timeSeriesWithoutCost = provider.timeSeriesData.map(
-          (point) =>
-            new TimeSeriesPoint(
-              point.date,
-              point.tokens,
-              point.requests,
-              undefined,
-            ),
-        );
-
-        return new ProviderUsage(
-          provider.provider,
-          provider.tokens,
-          provider.requests,
-          undefined,
-          percentage,
-          timeSeriesWithoutCost,
-        );
-      }
-
-      return new ProviderUsage(
-        provider.provider,
-        provider.tokens,
-        provider.requests,
-        provider.cost,
+      return new ProviderUsage({
+        provider: provider.provider,
+        tokens: provider.tokens,
+        requests: provider.requests,
+        cost: provider.cost,
         percentage,
-        provider.timeSeriesData,
-      );
+        timeSeriesData: provider.timeSeriesData,
+      });
     });
   }
 

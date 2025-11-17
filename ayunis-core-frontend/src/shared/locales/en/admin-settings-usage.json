@@ -23,7 +23,9 @@
       "title": "Model Distribution",
       "description": "Model distribution breakdown",
       "models": "Models",
-      "more": "more"
+      "more": "more",
+      "others": "Others",
+      "othersWithCount": "Others ({{count}} models)"
     },
     "tokenConsumption": {
       "title": "Token Consumption",

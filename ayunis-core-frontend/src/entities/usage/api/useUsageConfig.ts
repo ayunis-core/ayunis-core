@@ -1,6 +1,6 @@
 // Api
-import { useAdminUsageControllerGetUsageConfig } from "@/shared/api";
+import { useUsageControllerGetUsageConfig } from "@/shared/api";
 
 export function useUsageConfig() {
-  return useAdminUsageControllerGetUsageConfig();
+  return useUsageControllerGetUsageConfig();
 }

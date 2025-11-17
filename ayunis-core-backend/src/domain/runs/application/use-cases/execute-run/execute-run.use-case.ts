@@ -48,7 +48,6 @@ import {
   StreamInferenceResponseChunk,
 } from '../../../../models/application/ports/stream-inference.handler';
 import { UUID } from 'crypto';
-import * as crypto from 'crypto';
 import langfuse from 'src/common/evals/langfuse';
 import { LangfuseTraceClient } from 'langfuse';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
@@ -559,7 +558,7 @@ export class ExecuteRunUseCase {
               params.orgId,
               params.model,
               inferenceResponse.meta,
-              assistantMessage.id,
+              assistantMessage.id, // messageId
             );
 
             params.trace.event({
@@ -1290,7 +1289,7 @@ export class ExecuteRunUseCase {
     orgId: UUID,
     model: LanguageModel,
     meta: { inputTokens?: number; outputTokens?: number; totalTokens?: number },
-    requestId?: UUID,
+    messageId?: UUID,
   ): void {
     this.logger.log('collectUsageAsync called', {
       orgId,
@@ -1299,17 +1298,14 @@ export class ExecuteRunUseCase {
       inputTokens: meta.inputTokens,
       outputTokens: meta.outputTokens,
       totalTokens: meta.totalTokens,
-      requestId,
+      messageId,
     });
 
     // Don't block the main flow - run async
     setImmediate(() => {
       void (async () => {
         try {
-          const userId = this.contextService.get('userId');
-
           if (
-            !userId ||
             !meta.inputTokens ||
             !meta.outputTokens ||
             !meta.totalTokens
@@ -1317,7 +1313,6 @@ export class ExecuteRunUseCase {
             this.logger.log(
               'Skipping usage collection - missing required data',
               {
-                userId: !!userId,
                 inputTokens: meta.inputTokens,
                 outputTokens: meta.outputTokens,
                 totalTokens: meta.totalTokens,
@@ -1327,16 +1322,12 @@ export class ExecuteRunUseCase {
           }
 
           await this.collectUsageUseCase.execute(
-            new CollectUsageCommand(
-              userId,
-              orgId,
-              model.id,
-              model.provider,
-              requestId || crypto.randomUUID(),
-              meta.inputTokens,
-              meta.outputTokens,
-              meta.totalTokens,
-            ),
+            new CollectUsageCommand({
+              model,
+              inputTokens: meta.inputTokens,
+              outputTokens: meta.outputTokens,
+              requestId: messageId,
+            }),
           );
         } catch (error) {
           // Already logged in CollectUsageUseCase, just debug log here
@@ -1356,7 +1347,7 @@ export class ExecuteRunUseCase {
     orgId: UUID,
     model: LanguageModel,
     chunks: StreamInferenceResponseChunk[],
-    requestId?: UUID,
+    messageId?: UUID,
   ): void {
     const { totalInputTokens, totalOutputTokens } =
       this.accumulateUsageFromChunks(chunks);
@@ -1380,7 +1371,7 @@ export class ExecuteRunUseCase {
       totalInputTokens,
       totalOutputTokens,
       totalTokens,
-      requestId,
+      messageId,
     });
 
     this.collectUsageAsync(
@@ -1391,7 +1382,7 @@ export class ExecuteRunUseCase {
         outputTokens: totalOutputTokens,
         totalTokens,
       },
-      requestId,
+      messageId,
     );
   }
 

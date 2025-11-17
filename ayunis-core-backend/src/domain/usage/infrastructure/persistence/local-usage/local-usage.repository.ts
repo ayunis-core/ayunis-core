@@ -20,29 +20,20 @@ import { ModelBreakdownItem } from '../../../domain/model-breakdown-item.entity'
 import { UsageRecord } from './schema/usage.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { UsageMapper } from './mappers/usage.mapper';
-import {
-  getProviderStats,
-  getModelStats,
-  getTopModels,
-  getProviderTimeSeries as queryProviderTimeSeries,
-  getUserModelStats,
-  getUserUsageRows,
-  countUsersForUserUsage,
-  findUsageRecordsByOrganization,
-  findUsageRecordsByUser,
-  findUsageRecordsByModel,
-  getUsageAggregateStats,
-  countActiveUsersSince,
-  deleteUsagesOlderThan,
-  countUsagesInRange,
-} from './queries/usage.queries';
-import {
-  mapProviderRow,
-  mapTimeSeriesRows,
-  mapModelStatsToDistribution,
-  mapTopModelRows,
-  mapUserModelStatsToBreakdown,
-} from './mappers/usage-query.mapper';
+import { getProviderStats } from './queries/get-provider-stats.db-query';
+import { getModelStats } from './queries/get-model-stats.db-query';
+import { getTopModels } from './queries/get-top-models.db-query';
+import { getProviderTimeSeries as queryProviderTimeSeries } from './queries/get-provider-time-series.db-query';
+import { getUserModelStats } from './queries/get-user-model-stats.db-query';
+import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
+import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
+import { findUsageRecordsByOrganization } from './queries/find-usage-records-by-organization.db-query';
+import { findUsageRecordsByUser } from './queries/find-usage-records-by-user.db-query';
+import { findUsageRecordsByModel } from './queries/find-usage-records-by-model.db-query';
+import { getUsageAggregateStats } from './queries/get-usage-aggregate-stats.db-query';
+import { countActiveUsersSince } from './queries/count-active-users-since.db-query';
+import { countUsagesInRange } from './queries/count-usages-in-range.db-query';
+import { UsageQueryMapper } from './mappers/usage-query.mapper';
 
 @Injectable()
 export class LocalUsageRepository extends UsageRepository {
@@ -54,6 +45,7 @@ export class LocalUsageRepository extends UsageRepository {
     @InjectRepository(UserRecord)
     private readonly userRepository: Repository<UserRecord>,
     private readonly usageMapper: UsageMapper,
+    private readonly usageQueryMapper: UsageQueryMapper,
   ) {
     super();
   }
@@ -140,8 +132,8 @@ export class LocalUsageRepository extends UsageRepository {
             query.modelId,
           )
         : [];
-      const timeSeries = mapTimeSeriesRows(timeSeriesRows);
-      results.push(mapProviderRow(stat, totalTokens, timeSeries));
+      const timeSeries = this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
+      results.push(this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries));
     }
     return results.sort((a, b) => b.tokens - a.tokens);
   }
@@ -157,7 +149,7 @@ export class LocalUsageRepository extends UsageRepository {
       query.modelId,
     );
 
-    return mapModelStatsToDistribution(modelStats).items;
+    return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
   async getUserUsage(
@@ -249,17 +241,17 @@ export class LocalUsageRepository extends UsageRepository {
       }
 
       users.push(
-        new UserUsageItem(
-          stat.userId as unknown as UUID,
-          stat.userName || '',
-          stat.userEmail || '',
+        new UserUsageItem({
+          userId: stat.userId as unknown as UUID,
+          userName: stat.userName || '',
+          userEmail: stat.userEmail || '',
           tokens,
           requests,
-          requests > 0 ? cost : undefined,
+          cost: requests > 0 ? cost : undefined,
           lastActivity,
-          this.isUserActive(lastActivity),
+          isActive: this.isUserActive(lastActivity),
           modelBreakdown,
-        ),
+        }),
       );
     }
 
@@ -301,21 +293,17 @@ export class LocalUsageRepository extends UsageRepository {
       5,
     );
 
-    const topModels = mapTopModelRows(topModelsResult);
+    const topModels = this.usageQueryMapper.mapTopModelRows(topModelsResult);
 
-    return new UsageStats(
-      (stats.totalTokens ? parseInt(stats.totalTokens) : 0) || 0,
-      parseInt(stats.totalRequests) || 0,
-      stats.totalCost ? parseFloat(stats.totalCost) : undefined,
-      stats.totalCost ? UsageConstants.DEFAULT_CURRENCY : undefined,
+    return new UsageStats({
+      totalTokens: (stats.totalTokens ? parseInt(stats.totalTokens) : 0) || 0,
+      totalRequests: parseInt(stats.totalRequests) || 0,
+      totalCost: stats.totalCost ? parseFloat(stats.totalCost) : undefined,
+      currency: stats.totalCost ? UsageConstants.DEFAULT_CURRENCY : undefined,
       activeUsers,
-      parseInt(stats.totalUsers) || 0,
+      totalUsers: parseInt(stats.totalUsers) || 0,
       topModels,
-    );
-  }
-
-  async deleteOlderThan(date: Date): Promise<number> {
-    return await deleteUsagesOlderThan(this.usageRepository, date);
+    });
   }
 
   async getUsageCount(
@@ -345,7 +333,7 @@ export class LocalUsageRepository extends UsageRepository {
       endDate,
     );
 
-    const breakdown = mapUserModelStatsToBreakdown(modelStats);
+    const breakdown = this.usageQueryMapper.mapUserModelStatsToBreakdown(modelStats);
     return breakdown;
   }
 

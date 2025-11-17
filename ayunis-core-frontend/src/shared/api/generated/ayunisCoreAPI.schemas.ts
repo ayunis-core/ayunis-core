@@ -86,18 +86,6 @@ export const PermittedLanguageModelResponseDtoType = {
   language: 'language',
 } as const;
 
-/**
- * Currency for cost calculation (ISO 4217 code)
- * @nullable
- */
-export type PermittedLanguageModelResponseDtoCurrency = typeof PermittedLanguageModelResponseDtoCurrency[keyof typeof PermittedLanguageModelResponseDtoCurrency] | null;
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedLanguageModelResponseDtoCurrency = {
-  EUR: 'EUR',
-} as const;
-
 export interface PermittedLanguageModelResponseDto {
   /** The id of the permitted model */
   id: string;
@@ -115,21 +103,6 @@ export interface PermittedLanguageModelResponseDto {
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
-  /**
-   * Cost per 1K input tokens
-   * @nullable
-   */
-  inputTokenCost: number | null;
-  /**
-   * Cost per 1K output tokens
-   * @nullable
-   */
-  outputTokenCost: number | null;
-  /**
-   * Currency for cost calculation (ISO 4217 code)
-   * @nullable
-   */
-  currency: PermittedLanguageModelResponseDtoCurrency;
 }
 
 export interface SetUserDefaultModelDto {
@@ -1241,16 +1214,9 @@ export interface UpdateMcpIntegrationDto {
    * @maxLength 255
    */
   name?: string;
-  /**
-   * Authentication credentials (will be encrypted). Provide to rotate the stored secret/token.
-   * @minLength 1
-   */
+  /** Authentication credentials (will be encrypted). Provide to rotate the stored secret/token. */
   credentials?: string;
-  /**
-   * Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.
-   * @minLength 1
-   * @maxLength 255
-   */
+  /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
   authHeaderName?: string;
 }
 
@@ -1887,12 +1853,6 @@ export interface ModelBreakdownDto {
   percentage: number;
 }
 
-/**
- * Last activity date (null if no activity)
- * @nullable
- */
-export type UserUsageDtoLastActivity = { [key: string]: unknown } | null;
-
 export interface UserUsageDto {
   /** User ID */
   userId: string;
@@ -1910,7 +1870,7 @@ export interface UserUsageDto {
    * Last activity date (null if no activity)
    * @nullable
    */
-  lastActivity?: UserUsageDtoLastActivity;
+  lastActivity: string | null;
   /** Whether the user is considered active */
   isActive: boolean;
   /** Model breakdown for this user */
@@ -2047,7 +2007,7 @@ export type AgentsControllerAddFileSourceBody = {
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
 
-export type AdminUsageControllerGetUsageStatsParams = {
+export type UsageControllerGetUsageStatsParams = {
 /**
  * Start date in ISO format. If provided, must be used with endDate.
  */
@@ -2058,7 +2018,7 @@ startDate?: string;
 endDate?: string;
 };
 
-export type AdminUsageControllerGetProviderUsageParams = {
+export type UsageControllerGetProviderUsageParams = {
 /**
  * Start date in ISO format
  */
@@ -2081,7 +2041,7 @@ provider?: string;
 modelId?: string;
 };
 
-export type AdminUsageControllerGetProviderUsageChartParams = {
+export type UsageControllerGetProviderUsageChartParams = {
 startDate?: string;
 endDate?: string;
 /**
@@ -2094,7 +2054,7 @@ provider?: string;
 modelId?: string;
 };
 
-export type AdminUsageControllerGetModelDistributionParams = {
+export type UsageControllerGetModelDistributionParams = {
 /**
  * Start date in ISO format
  */
@@ -2104,7 +2064,7 @@ startDate?: string;
  */
 endDate?: string;
 /**
- * Maximum number of individual models to show before grouping into "Others". Defaults to 10.
+ * Maximum number of models to return. Defaults to 10. Frontend can decide how to handle aggregation if needed.
  */
 maxModels?: number;
 /**
@@ -2113,7 +2073,7 @@ maxModels?: number;
 modelId?: string;
 };
 
-export type AdminUsageControllerGetUserUsageParams = {
+export type UsageControllerGetUserUsageParams = {
 /**
  * Start date in ISO format
  */
@@ -2137,22 +2097,22 @@ search?: string;
 /**
  * Field to sort users by. Defaults to tokens.
  */
-sortBy?: AdminUsageControllerGetUserUsageSortBy;
+sortBy?: UsageControllerGetUserUsageSortBy;
 /**
  * Sort order (ascending or descending). Defaults to desc.
  */
-sortOrder?: AdminUsageControllerGetUserUsageSortOrder;
+sortOrder?: UsageControllerGetUserUsageSortOrder;
 /**
  * Whether to include detailed model usage breakdown for each user. Defaults to true.
  */
 includeModelBreakdown?: boolean;
 };
 
-export type AdminUsageControllerGetUserUsageSortBy = typeof AdminUsageControllerGetUserUsageSortBy[keyof typeof AdminUsageControllerGetUserUsageSortBy];
+export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsageSortBy[keyof typeof UsageControllerGetUserUsageSortBy];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AdminUsageControllerGetUserUsageSortBy = {
+export const UsageControllerGetUserUsageSortBy = {
   tokens: 'tokens',
   requests: 'requests',
   cost: 'cost',
@@ -2160,11 +2120,11 @@ export const AdminUsageControllerGetUserUsageSortBy = {
   userName: 'userName',
 } as const;
 
-export type AdminUsageControllerGetUserUsageSortOrder = typeof AdminUsageControllerGetUserUsageSortOrder[keyof typeof AdminUsageControllerGetUserUsageSortOrder];
+export type UsageControllerGetUserUsageSortOrder = typeof UsageControllerGetUserUsageSortOrder[keyof typeof UsageControllerGetUserUsageSortOrder];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AdminUsageControllerGetUserUsageSortOrder = {
+export const UsageControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;

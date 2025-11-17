@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { ModelDistribution } from '../../../domain/model-distribution.entity';
@@ -10,17 +9,11 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 export class GetModelDistributionUseCase {
   constructor(
     private readonly usageRepository: UsageRepository,
-    private readonly configService: ConfigService,
   ) {}
 
   async execute(
     query: GetModelDistributionQuery,
   ): Promise<ModelDistribution[]> {
-    const isSelfHosted = this.configService.get<boolean>(
-      'app.isSelfHosted',
-      false,
-    );
-
     if (query.startDate && query.endDate) {
       this.validateDateRange(query.startDate, query.endDate);
     }
@@ -37,11 +30,10 @@ export class GetModelDistributionUseCase {
       modelId: query.modelId,
     });
 
-    // Calculate percentages, group less-used models, and apply cost visibility
+    // Calculate percentages and group less-used models
     return this.processModelDistribution(
       modelDistribution,
       query.maxModels,
-      isSelfHosted,
     );
   }
 
@@ -70,7 +62,6 @@ export class GetModelDistributionUseCase {
   private processModelDistribution(
     modelDistribution: ModelDistribution[],
     maxModels: number,
-    isSelfHosted: boolean,
   ): ModelDistribution[] {
     const totalTokens = modelDistribution.reduce(
       (sum, model) => sum + model.tokens,
@@ -81,57 +72,26 @@ export class GetModelDistributionUseCase {
       return [];
     }
 
-    // Sort by token usage (descending)
+    // Sort by token usage (descending) and calculate percentages
     const sortedModels = modelDistribution
       .map(
         (model) =>
-          new ModelDistribution(
-            model.modelId,
-            model.modelName,
-            model.displayName,
-            model.provider,
-            model.tokens,
-            model.requests,
-            isSelfHosted ? model.cost : undefined,
-            (model.tokens / totalTokens) * 100,
-          ),
+          new ModelDistribution({
+            modelId: model.modelId,
+            modelName: model.modelName,
+            displayName: model.displayName,
+            provider: model.provider,
+            tokens: model.tokens,
+            requests: model.requests,
+            cost: model.cost,
+            percentage: (model.tokens / totalTokens) * 100,
+          }),
       )
       .sort((a, b) => b.tokens - a.tokens);
 
-    // If we have fewer models than the limit, return all
-    if (sortedModels.length <= maxModels) {
-      return sortedModels;
-    }
-
-    const topModels = sortedModels.slice(0, maxModels - 1);
-    const otherModels = sortedModels.slice(maxModels - 1);
-
-    // Calculate "Others" aggregation
-    const othersTokens = otherModels.reduce(
-      (sum, model) => sum + model.tokens,
-      0,
-    );
-    const othersRequests = otherModels.reduce(
-      (sum, model) => sum + model.requests,
-      0,
-    );
-    const othersCost = otherModels.reduce(
-      (sum, model) => sum + (model.cost || 0),
-      0,
-    );
-
-    const othersPercentage = (othersTokens / totalTokens) * 100;
-    const othersEntry = new ModelDistribution(
-      UsageConstants.OTHERS_MODEL_ID,
-      'Others',
-      `Others (${otherModels.length} models)`,
-      otherModels[0]?.provider || ('mixed' as unknown as any),
-      othersTokens,
-      othersRequests,
-      isSelfHosted && othersCost > 0 ? othersCost : undefined,
-      othersPercentage,
-    );
-
-    return [...topModels, othersEntry];
+    // Apply limit if specified (frontend can decide how to handle aggregation)
+    return maxModels > 0
+      ? sortedModels.slice(0, maxModels)
+      : sortedModels;
   }
 }

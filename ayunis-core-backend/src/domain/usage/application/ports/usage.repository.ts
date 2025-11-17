@@ -48,7 +48,6 @@ export abstract class UsageRepository {
     query: GetUserUsageQuery,
   ): Promise<Paginated<UserUsageItem>>;
   abstract getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats>;
-  abstract deleteOlderThan(date: Date): Promise<number>;
   abstract getUsageCount(
     organizationId: UUID,
     startDate?: Date,

@@ -1,6 +1,3 @@
-// Types
-import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
-
 // Utils
 import { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination';
@@ -17,19 +14,35 @@ export type UserUsageSortBy =
 export type SortOrder = 'asc' | 'desc';
 
 export class GetUserUsageQuery extends PaginatedQuery {
-  constructor(
-    public readonly organizationId: UUID,
-    public readonly startDate?: Date,
-    public readonly endDate?: Date,
-    pagination?: PaginatedQueryParams,
-    public readonly searchTerm?: string,
-    public readonly sortBy: UserUsageSortBy = 'tokens',
-    public readonly sortOrder: SortOrder = 'desc',
-    public readonly includeModelBreakdown: boolean = true,
-  ) {
+  public readonly organizationId: UUID;
+  public readonly startDate?: Date;
+  public readonly endDate?: Date;
+  public readonly searchTerm?: string;
+  public readonly sortBy: UserUsageSortBy;
+  public readonly sortOrder: SortOrder;
+  public readonly includeModelBreakdown: boolean;
+
+  constructor(params: {
+    organizationId: UUID;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+    searchTerm?: string;
+    sortBy?: UserUsageSortBy;
+    sortOrder?: SortOrder;
+    includeModelBreakdown?: boolean;
+  }) {
     super({
-      limit: pagination?.limit ?? UsageConstants.DEFAULT_USER_USAGE_LIMIT,
-      offset: pagination?.offset ?? 0,
+      limit: params.limit ?? UsageConstants.DEFAULT_USER_USAGE_LIMIT,
+      offset: params.offset ?? 0,
     });
+    this.organizationId = params.organizationId;
+    this.startDate = params.startDate;
+    this.endDate = params.endDate;
+    this.searchTerm = params.searchTerm;
+    this.sortBy = params.sortBy ?? 'tokens';
+    this.sortOrder = params.sortOrder ?? 'desc';
+    this.includeModelBreakdown = params.includeModelBreakdown ?? true;
   }
 }

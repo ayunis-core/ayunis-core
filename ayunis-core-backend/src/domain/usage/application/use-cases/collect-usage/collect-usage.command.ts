@@ -1,15 +1,33 @@
 import { UUID } from 'crypto';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
+import { LanguageModel } from '../../../../models/domain/models/language.model';
 
 export class CollectUsageCommand {
-  constructor(
-    public readonly userId: UUID,
-    public readonly organizationId: UUID,
-    public readonly modelId: UUID,
-    public readonly provider: ModelProvider,
-    public readonly requestId: UUID,
-    public readonly inputTokens: number,
-    public readonly outputTokens: number,
-    public readonly totalTokens: number,
-  ) {}
+  public readonly model: LanguageModel;
+  public readonly inputTokens: number;
+  public readonly outputTokens: number;
+  public readonly requestId?: UUID;
+
+  constructor(params: {
+    model: LanguageModel;
+    inputTokens: number;
+    outputTokens: number;
+    requestId?: UUID;
+  }) {
+    this.model = params.model;
+    this.inputTokens = params.inputTokens;
+    this.outputTokens = params.outputTokens;
+    this.requestId = params.requestId;
+  }
+
+  get totalTokens(): number {
+    return this.inputTokens + this.outputTokens;
+  }
+
+  get modelId(): UUID {
+    return this.model.id;
+  }
+
+  get provider() {
+    return this.model.provider;
+  }
 }

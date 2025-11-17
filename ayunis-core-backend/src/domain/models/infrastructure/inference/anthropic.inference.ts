@@ -276,8 +276,11 @@ export class AnthropicInferenceHandler extends InferenceHandler {
         inputTokens: response.usage.input_tokens,
         outputTokens: response.usage.output_tokens,
         totalTokens:
-          (response.usage.input_tokens || 0) +
-          (response.usage.output_tokens || 0),
+          response.usage.input_tokens !== undefined ||
+          response.usage.output_tokens !== undefined
+            ? (response.usage.input_tokens || 0) +
+              (response.usage.output_tokens || 0)
+            : undefined,
       },
     };
 

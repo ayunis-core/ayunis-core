@@ -1,49 +1,61 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { CollectUsageUseCase } from './collect-usage.use-case';
 import { CollectUsageCommand } from './collect-usage.command';
 import { UsageRepository } from '../../ports/usage.repository';
-import { ModelsRepository } from '../../../../models/application/ports/models.repository';
 import {
   InvalidUsageDataError,
   UsageCollectionFailedError,
+  UnexpectedUsageError,
 } from '../../usage.errors';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import { Currency } from '../../../../models/domain/value-objects/currency.enum';
 import { UUID } from 'crypto';
 import { LanguageModel } from '../../../../models/domain/models/language.model';
 import { Usage } from '../../../domain/usage.entity';
+import { ContextService } from '../../../../../common/context/services/context.service';
 
 describe('CollectUsageUseCase', () => {
   let useCase: CollectUsageUseCase;
   let mockUsageRepository: Partial<UsageRepository>;
-  let mockConfigService: Partial<ConfigService>;
-  let mockModelsRepository: Partial<ModelsRepository>;
+  let mockContextService: Partial<ContextService>;
 
   const userId = 'user-id' as UUID;
   const orgId = 'org-id' as UUID;
   const modelId = 'model-id' as UUID;
   const requestId = 'request-id' as UUID;
 
+  const createMockModel = (overrides?: Partial<LanguageModel>): LanguageModel => {
+    return new LanguageModel({
+      id: modelId,
+      name: 'test-model',
+      provider: ModelProvider.OPENAI,
+      displayName: 'Test Model',
+      canStream: true,
+      canUseTools: true,
+      isReasoning: false,
+      isArchived: false,
+      ...overrides,
+    });
+  };
+
   beforeEach(async () => {
     mockUsageRepository = {
       save: jest.fn().mockResolvedValue(undefined),
     };
 
-    mockConfigService = {
-      get: jest.fn().mockReturnValue(false),
-    };
-
-    mockModelsRepository = {
-      findOneLanguage: jest.fn(),
+    mockContextService = {
+      get: jest.fn((key?: 'userId' | 'orgId') => {
+        if (key === 'userId') return userId;
+        if (key === 'orgId') return orgId;
+        return undefined;
+      }) as any,
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CollectUsageUseCase,
         { provide: UsageRepository, useValue: mockUsageRepository },
-        { provide: ConfigService, useValue: mockConfigService },
-        { provide: ModelsRepository, useValue: mockModelsRepository },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -56,16 +68,13 @@ describe('CollectUsageUseCase', () => {
 
   describe('successful usage collection', () => {
     it('should collect usage successfully in cloud mode', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        150,
-      );
+      });
 
       await useCase.execute(command);
 
@@ -85,37 +94,19 @@ describe('CollectUsageUseCase', () => {
       );
     });
 
-    it('should collect usage with cost in self-hosted mode', async () => {
-      jest.spyOn(mockConfigService, 'get').mockReturnValue(true);
-
-      const mockModel = {
-        id: modelId,
-        name: 'test-model',
-        provider: ModelProvider.OPENAI,
-        displayName: 'Test Model',
-        canStream: true,
-        canUseTools: true,
-        isReasoning: false,
-        isArchived: false,
+    it('should collect usage with cost', async () => {
+      const model = createMockModel({
         inputTokenCost: 0.001,
         outputTokenCost: 0.002,
         currency: Currency.EUR,
-      } as LanguageModel;
+      });
 
-      jest
-        .spyOn(mockModelsRepository, 'findOneLanguage')
-        .mockResolvedValue(mockModel);
-
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 1000,
+        outputTokens: 500,
         requestId,
-        1000,
-        500,
-        1500,
-      );
+      });
 
       await useCase.execute(command);
 
@@ -134,36 +125,18 @@ describe('CollectUsageUseCase', () => {
     });
 
     it('should calculate cost correctly', async () => {
-      jest.spyOn(mockConfigService, 'get').mockReturnValue(true);
-
-      const mockModel = {
-        id: modelId,
-        name: 'test-model',
-        provider: ModelProvider.OPENAI,
-        displayName: 'Test Model',
-        canStream: true,
-        canUseTools: true,
-        isReasoning: false,
-        isArchived: false,
+      const model = createMockModel({
         inputTokenCost: 0.001,
         outputTokenCost: 0.002,
         currency: Currency.EUR,
-      } as LanguageModel;
+      });
 
-      jest
-        .spyOn(mockModelsRepository, 'findOneLanguage')
-        .mockResolvedValue(mockModel);
-
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 2000,
+        outputTokens: 1000,
         requestId,
-        2000,
-        1000,
-        3000,
-      );
+      });
 
       await useCase.execute(command);
 
@@ -182,30 +155,19 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.currency).toBe(Currency.EUR);
     });
 
-    it('should return zero cost if below minimum threshold', async () => {
-      jest.spyOn(mockConfigService, 'get').mockReturnValue(true);
-
-      const mockModel = {
-        id: modelId,
+    it('should calculate and store small costs correctly', async () => {
+      const model = createMockModel({
         inputTokenCost: 0.0000001,
         outputTokenCost: 0.0000001,
         currency: Currency.EUR,
-      } as LanguageModel;
+      });
 
-      jest
-        .spyOn(mockModelsRepository, 'findOneLanguage')
-        .mockResolvedValue(mockModel);
-
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        150,
-      );
+      });
 
       await useCase.execute(command);
 
@@ -217,26 +179,25 @@ describe('CollectUsageUseCase', () => {
       if (!saveCall) {
         throw new Error('save was not called');
       }
-      expect(saveCall.cost).toBe(0);
+      // inputCost = (100/1000) * 0.0000001 = 0.00000001
+      // outputCost = (50/1000) * 0.0000001 = 0.000000005
+      // totalCost = 0.000000015
+      expect(saveCall.cost).toBeCloseTo(0.000000015, 10);
+      expect(saveCall.currency).toBe(Currency.EUR);
     });
 
-    it('should return undefined cost if model not found', async () => {
-      jest.spyOn(mockConfigService, 'get').mockReturnValue(true);
+    it('should return undefined cost if model has no cost info', async () => {
+      const model = createMockModel({
+        inputTokenCost: undefined,
+        outputTokenCost: undefined,
+      });
 
-      jest
-        .spyOn(mockModelsRepository, 'findOneLanguage')
-        .mockResolvedValue(undefined);
-
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        150,
-      );
+      });
 
       await useCase.execute(command);
 
@@ -255,16 +216,13 @@ describe('CollectUsageUseCase', () => {
 
   describe('validation errors', () => {
     it('should throw InvalidUsageDataError for negative input tokens', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: -1,
+        outputTokens: 50,
         requestId,
-        -1,
-        50,
-        150,
-      );
+      });
 
       await expect(useCase.execute(command)).rejects.toThrow(
         InvalidUsageDataError,
@@ -273,16 +231,13 @@ describe('CollectUsageUseCase', () => {
     });
 
     it('should throw InvalidUsageDataError for negative output tokens', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: -1,
         requestId,
-        100,
-        -1,
-        150,
-      );
+      });
 
       await expect(useCase.execute(command)).rejects.toThrow(
         InvalidUsageDataError,
@@ -291,16 +246,13 @@ describe('CollectUsageUseCase', () => {
     });
 
     it('should throw InvalidUsageDataError for negative total tokens', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: -50,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        -1,
-      );
+      });
 
       await expect(useCase.execute(command)).rejects.toThrow(
         InvalidUsageDataError,
@@ -308,37 +260,59 @@ describe('CollectUsageUseCase', () => {
       expect(mockUsageRepository.save).not.toHaveBeenCalled();
     });
 
-    it('should throw InvalidUsageDataError when total tokens does not match sum', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
-        requestId,
-        100,
-        50,
-        200, // Should be 150
-      );
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        InvalidUsageDataError,
-      );
-      expect(mockUsageRepository.save).not.toHaveBeenCalled();
-    });
   });
 
   describe('error handling', () => {
-    it('should wrap repository errors in UsageCollectionFailedError', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+    it('should throw UsageCollectionFailedError when userId is missing from context', async () => {
+      jest.spyOn(mockContextService, 'get').mockImplementation(((key?: 'userId' | 'orgId') => {
+        if (key === 'userId') return undefined;
+        if (key === 'orgId') return orgId;
+        return undefined;
+      }) as any);
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        150,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UsageCollectionFailedError,
       );
+      expect(mockUsageRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should throw UsageCollectionFailedError when orgId is missing from context', async () => {
+      jest.spyOn(mockContextService, 'get').mockImplementation(((key?: 'userId' | 'orgId') => {
+        if (key === 'userId') return userId;
+        if (key === 'orgId') return undefined;
+        return undefined;
+      }) as any);
+
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UsageCollectionFailedError,
+      );
+      expect(mockUsageRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should wrap repository errors in UnexpectedUsageError', async () => {
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
+        requestId,
+      });
 
       const repositoryError = new Error('Database connection failed');
       jest
@@ -346,21 +320,18 @@ describe('CollectUsageUseCase', () => {
         .mockRejectedValue(repositoryError);
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        UsageCollectionFailedError,
+        UnexpectedUsageError,
       );
     });
 
     it('should re-throw ApplicationError instances', async () => {
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const model = createMockModel();
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        150,
-      );
+      });
 
       const appError = new InvalidUsageDataError('Test error');
       jest.spyOn(mockUsageRepository, 'save').mockRejectedValue(appError);
@@ -370,23 +341,18 @@ describe('CollectUsageUseCase', () => {
       );
     });
 
-    it('should handle cost calculation errors gracefully', async () => {
-      jest.spyOn(mockConfigService, 'get').mockReturnValue(true);
+    it('should handle cost calculation gracefully when model has no cost info', async () => {
+      const model = createMockModel({
+        inputTokenCost: undefined,
+        outputTokenCost: undefined,
+      });
 
-      jest
-        .spyOn(mockModelsRepository, 'findOneLanguage')
-        .mockRejectedValue(new Error('Model lookup failed'));
-
-      const command = new CollectUsageCommand(
-        userId,
-        orgId,
-        modelId,
-        ModelProvider.OPENAI,
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 100,
+        outputTokens: 50,
         requestId,
-        100,
-        50,
-        150,
-      );
+      });
 
       await useCase.execute(command);
 

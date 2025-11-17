@@ -14,7 +14,7 @@ This domain implements usage collection, aggregation, and reporting functionalit
 - **Deployment Mode Awareness**: Conditional cost information based on hosting type
 - **Time-based Analysis**: Flexible date range queries and time series data
 - **Pagination & Search**: Efficient handling of large user datasets
-- **Model Distribution**: Smart grouping of less-used models into "Others" category
+- **Model Distribution**: Usage statistics grouped by individual models
 - **User Activity Tracking**: Automatic detection of active vs inactive users
 
 ## Architecture
@@ -32,7 +32,6 @@ This domain implements usage collection, aggregation, and reporting functionalit
 
 #### Value Objects
 - **UsageAggregationType**: Enum for different aggregation strategies (by_provider, by_model, by_user, by_date, by_organization)
-- **UserActivityStatus**: Enum for user activity classification (active, inactive)
 - **UsageConstants**: Configuration constants including thresholds, limits, and defaults
 
 ### Application Layer
@@ -40,7 +39,7 @@ This domain implements usage collection, aggregation, and reporting functionalit
 #### Use Cases
 - **CollectUsageUseCase**: Collects and persists usage data with cost calculation
 - **GetProviderUsageUseCase**: Retrieves provider-level usage statistics with optional time series
-- **GetModelDistributionUseCase**: Retrieves model distribution with "Others" grouping
+- **GetModelDistributionUseCase**: Retrieves model distribution with optional limit
 - **GetUserUsageUseCase**: Retrieves paginated user usage with search and sorting
 - **GetUsageStatsUseCase**: Retrieves overall usage statistics
 
@@ -49,7 +48,7 @@ This domain implements usage collection, aggregation, and reporting functionalit
   - Basic CRUD operations (save, saveBatch)
   - Query methods (findByOrganization, findByUser, findByModel)
   - Analytics queries (getProviderUsage, getModelDistribution, getUserUsage, getUsageStats)
-  - Utility methods (deleteOlderThan, getUsageCount)
+  - Utility methods (getUsageCount)
 
 #### Commands/Queries
 - **CollectUsageCommand**: Command for collecting new usage data
@@ -67,7 +66,7 @@ This domain implements usage collection, aggregation, and reporting functionalit
 
 ### Presentation Layer
 
-- **AdminUsageController**: REST API endpoints for usage analytics
+- **UsageController**: REST API endpoints for usage analytics
 - **DTOs**: Response data transfer objects
   - UsageStatsResponseDto
   - ProviderUsageResponseDto
@@ -108,7 +107,7 @@ All endpoints are prefixed with `/admin/usage` and require admin authentication.
   - Query params: `startDate`, `endDate`, `includeTimeSeries`, `provider`, `modelId` (optional)
 - `GET /admin/usage/providers/chart` - Get chart-ready provider time series aligned by date
   - Query params: `startDate`, `endDate`, `provider`, `modelId` (optional)
-- `GET /admin/usage/models` - Get model distribution with "Others" grouping
+- `GET /admin/usage/models` - Get model distribution
   - Query params: `startDate`, `endDate`, `maxModels`, `modelId` (optional)
 - `GET /admin/usage/users` - Get user usage with pagination and search
   - Query params: `startDate`, `endDate`, `limit`, `offset`, `search`, `sortBy`, `sortOrder`, `includeModelBreakdown` (optional)
@@ -153,11 +152,10 @@ The usage table (`UsageRecord`) includes optimized indexes for common query patt
 ## Constants and Configuration
 
 - **ACTIVE_USER_DAYS_THRESHOLD**: 30 days (determines active vs inactive users)
-- **MAX_INDIVIDUAL_MODELS_IN_CHART**: 10 (models beyond this grouped as "Others")
+- **MAX_MODELS**: 10 (maximum number of models to return, frontend can handle aggregation)
 - **DEFAULT_USER_USAGE_LIMIT**: 50 users per page
 - **MAX_USER_USAGE_LIMIT**: 1000 users per page
 - **MAX_DATE_RANGE_DAYS**: 730 days (2 years, guard against heavy queries)
-- **MIN_COST_THRESHOLD**: 0.000001 (minimum cost value)
 - **DEFAULT_CURRENCY**: EUR
 - **COST_DECIMAL_PLACES**: 6
 

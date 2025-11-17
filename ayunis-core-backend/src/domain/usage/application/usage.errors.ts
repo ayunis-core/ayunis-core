@@ -10,6 +10,7 @@ export enum UsageErrorCode {
   USAGE_COLLECTION_FAILED = 'USAGE_COLLECTION_FAILED',
   INVALID_DATE_RANGE = 'INVALID_DATE_RANGE',
   INVALID_PAGINATION = 'INVALID_PAGINATION',
+  UNEXPECTED_USAGE_ERROR = 'UNEXPECTED_USAGE_ERROR',
 }
 
 export abstract class UsageError extends ApplicationError {
@@ -68,6 +69,17 @@ export class InvalidPaginationError extends UsageError {
       `Invalid pagination: ${message}`,
       UsageErrorCode.INVALID_PAGINATION,
       400,
+      metadata,
+    );
+  }
+}
+
+export class UnexpectedUsageError extends UsageError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      `Unexpected usage error: ${error.message}`,
+      UsageErrorCode.UNEXPECTED_USAGE_ERROR,
+      500,
       metadata,
     );
   }

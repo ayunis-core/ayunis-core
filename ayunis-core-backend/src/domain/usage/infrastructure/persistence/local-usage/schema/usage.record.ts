@@ -1,6 +1,11 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column, Index, ManyToOne } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UUID } from 'crypto';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
+import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
+import { Currency } from '../../../../../models/domain/value-objects/currency.enum';
 
 @Entity('usage')
 @Index(['organizationId', 'createdAt'])
@@ -12,14 +17,26 @@ export class UsageRecord extends BaseRecord {
   @Column('uuid')
   userId: UUID;
 
+  @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
+  user: UserRecord;
+
   @Column('uuid')
   organizationId: UUID;
+
+  @ManyToOne(() => OrgRecord, { nullable: false, onDelete: 'CASCADE' })
+  organization: OrgRecord;
 
   @Column('uuid')
   modelId: UUID;
 
-  @Column('varchar', { length: 50 })
-  provider: string;
+  @ManyToOne(() => ModelRecord, { nullable: false, onDelete: 'NO ACTION' })
+  model: ModelRecord;
+
+  @Column({
+    type: 'enum',
+    enum: ModelProvider,
+  })
+  provider: ModelProvider;
 
   @Column('integer')
   inputTokens: number;
@@ -33,8 +50,12 @@ export class UsageRecord extends BaseRecord {
   @Column('decimal', { precision: 10, scale: 6, nullable: true })
   cost: number | null;
 
-  @Column('varchar', { length: 3, nullable: true })
-  currency: string | null;
+  @Column({
+    type: 'enum',
+    enum: Currency,
+    nullable: true,
+  })
+  currency: Currency | null;
 
   @Column('uuid')
   requestId: UUID;
