@@ -37,6 +37,9 @@ COPY ayunis-core-backend/nest-cli.json ./
 # Build backend
 RUN npm run build
 
+# Compile migrations separately (they're not included in nest build by default)
+RUN npx tsc src/db/migrations/*.ts --outDir dist --esModuleInterop --skipLibCheck
+
 # Verify build output
 RUN ls -la dist/ && test -f dist/main.js
 
