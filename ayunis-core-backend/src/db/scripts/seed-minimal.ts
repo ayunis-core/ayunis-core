@@ -188,7 +188,7 @@ async function seedMinimal() {
         id: randomUUID(),
         modelId: model.id,
         orgId: org.id,
-        isDefault: true,  // Set as default for the organization
+        isDefault: true, // Set as default for the organization
       });
       await permittedModelRepo.save(permittedModel);
       console.log(`✅ Created permitted model: ${model.name}`);

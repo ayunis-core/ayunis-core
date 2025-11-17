@@ -121,7 +121,7 @@ jobs:
       - name: Start backend
         working-directory: ayunis-core-backend
         run: |
-          npm start &
+          NODE_ENV=test npm start &
           # Wait for backend to be ready
           timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
 
