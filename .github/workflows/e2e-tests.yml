@@ -98,6 +98,11 @@ jobs:
           # Admin
           ADMIN_TOKEN=test-admin-token
 
+          # AI Provider API Keys (dummy keys for test mode - not actually used)
+          OPENAI_API_KEY=sk-test-dummy-key-for-ci-testing-not-used
+          ANTHROPIC_API_KEY=sk-ant-test-dummy-key-for-ci-testing-not-used
+          MISTRAL_API_KEY=test-dummy-key-for-ci-testing-not-used
+
           # Disable features for testing
           DISABLE_REGISTRATION=false
           DISABLE_EMAIL_CONFIRMATION=true
