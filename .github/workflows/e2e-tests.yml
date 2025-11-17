@@ -103,6 +103,9 @@ jobs:
           ANTHROPIC_API_KEY=sk-ant-test-dummy-key-for-ci-testing-not-used
           MISTRAL_API_KEY=test-dummy-key-for-ci-testing-not-used
 
+          # MCP Encryption Key (for credential encryption)
+          MCP_ENCRYPTION_KEY=40946b931f88bdc2a82b9e702e5630ddf56b72564381df2a1db2bfd3cac61781
+
           # Disable features for testing
           DISABLE_REGISTRATION=false
           DISABLE_EMAIL_CONFIRMATION=true
