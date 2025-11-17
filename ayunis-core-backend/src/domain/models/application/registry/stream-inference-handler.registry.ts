@@ -34,8 +34,9 @@ export class StreamInferenceHandlerRegistry {
    * @throws ModelProviderNotSupportedError if provider not registered (non-test only)
    */
   getHandler(provider: ModelProvider): StreamInferenceHandler {
-    const isTest = this.configService.get('NODE_ENV') === 'test';
+    const isTest = this.configService.get<boolean>('app.isTest');
     if (isTest) {
+      this.logger.log('Using mock handler for streaming');
       return this.mockHandler;
     }
     const handler = this.handlers.get(provider);
