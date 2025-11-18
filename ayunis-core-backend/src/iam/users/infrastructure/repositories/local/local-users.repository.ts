@@ -46,12 +46,6 @@ export class LocalUsersRepository extends UsersRepository {
     return UserMapper.toDomain(userRecord);
   }
 
-  async findOneByOrgId(orgId: UUID): Promise<User[]> {
-    this.logger.log('findOneByOrgId', { orgId });
-    const userEntities = await this.userRepository.find({ where: { orgId } });
-    return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
-  }
-
   async findManyByOrgId(orgId: UUID): Promise<User[]> {
     this.logger.log('findManyByOrgId', { orgId });
     const userEntities = await this.userRepository.find({

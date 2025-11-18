@@ -14,6 +14,7 @@ import { RetrieverModule } from '../domain/retrievers/retriever.module';
 import { SourcesModule } from '../domain/sources/sources.module';
 import { StorageModule } from '../domain/storage/storage.module';
 import { PromptsModule } from '../domain/prompts/prompts.module';
+import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
 import { IamModule } from '../iam/iam.module';
 import { AdminModule } from '../admin/admin.module';
@@ -110,6 +111,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     SourcesModule,
     StorageModule,
     PromptsModule,
+    SharesModule,
     McpModule,
     IamModule.register({
       authProvider:

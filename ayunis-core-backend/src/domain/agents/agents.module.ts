@@ -25,6 +25,10 @@ import { AssignMcpIntegrationToAgentUseCase } from './application/use-cases/assi
 import { UnassignMcpIntegrationFromAgentUseCase } from './application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.use-case';
 import { ListAgentMcpIntegrationsUseCase } from './application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.use-case';
 import { ListAvailableMcpIntegrationsUseCase } from '../mcp/application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
+
+// Strategies
+import { AgentShareAuthorizationStrategy } from './application/strategies/agent-share-authorization.strategy';
+
 // Presenters
 import { AgentsController } from './presenters/http/agents.controller';
 import { AgentDtoMapper } from './presenters/http/mappers/agent.mapper';
@@ -65,6 +69,10 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     UnassignMcpIntegrationFromAgentUseCase,
     ListAgentMcpIntegrationsUseCase,
     ListAvailableMcpIntegrationsUseCase,
+
+    // Strategies
+    AgentShareAuthorizationStrategy,
+
     // Presenters
     AgentDtoMapper,
     AgentSourceDtoMapper,
@@ -83,6 +91,8 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     RemoveSourceFromAgentUseCase,
     AssignMcpIntegrationToAgentUseCase,
     UnassignMcpIntegrationFromAgentUseCase,
+    // Export strategy for shares module to use
+    AgentShareAuthorizationStrategy,
   ],
 })
 export class AgentsModule {}

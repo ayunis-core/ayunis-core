@@ -4273,6 +4273,133 @@
         "tags": ["prompts"]
       }
     },
+    "/shares": {
+      "post": {
+        "operationId": "SharesController_createShare",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Share creation data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAgentShareDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Share created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "403": {
+            "description": "User cannot create share for this entity"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a share for an agent",
+        "tags": ["shares"]
+      },
+      "get": {
+        "operationId": "SharesController_getShares",
+        "parameters": [
+          {
+            "name": "entityId",
+            "required": true,
+            "in": "query",
+            "description": "ID of the entity to get shares for",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": true,
+            "in": "query",
+            "description": "Type of the entity",
+            "schema": {
+              "enum": ["agent", "prompt"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns shares for the specified entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShareResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "403": {
+            "description": "User cannot view shares for this entity"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get shares for an entity",
+        "tags": ["shares"]
+      }
+    },
+    "/shares/{id}": {
+      "delete": {
+        "operationId": "SharesController_deleteShare",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the share to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The share has been successfully deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Share not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a share",
+        "tags": ["shares"]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -7680,6 +7807,71 @@
           }
         },
         "required": ["title", "content"]
+      },
+      "CreateAgentShareDto": {
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "type": "string",
+            "description": "Type of entity being shared",
+            "enum": ["agent", "prompt"]
+          },
+          "agentId": {
+            "type": "string",
+            "description": "ID of the agent to share",
+            "format": "uuid"
+          }
+        },
+        "required": ["entityType", "agentId"]
+      },
+      "ShareResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the share",
+            "format": "uuid"
+          },
+          "entityType": {
+            "type": "string",
+            "description": "Type of entity being shared",
+            "enum": ["agent", "prompt"]
+          },
+          "entityId": {
+            "type": "string",
+            "description": "ID of the entity being shared",
+            "format": "uuid"
+          },
+          "scopeType": {
+            "type": "string",
+            "description": "Type of share scope (organization or user)",
+            "enum": ["org", "user"]
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "ID of the user who created the share",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the share was created"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "When the share was last updated"
+          }
+        },
+        "required": [
+          "id",
+          "entityType",
+          "entityId",
+          "scopeType",
+          "ownerId",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "LoginDto": {
         "type": "object",

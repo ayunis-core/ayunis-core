@@ -2143,6 +2143,66 @@ export interface UpdatePromptDto {
   content: string;
 }
 
+/**
+ * Type of entity being shared
+ */
+export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType[keyof typeof CreateAgentShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateAgentShareDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+} as const;
+
+export interface CreateAgentShareDto {
+  /** Type of entity being shared */
+  entityType: CreateAgentShareDtoEntityType;
+  /** ID of the agent to share */
+  agentId: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+} as const;
+
+/**
+ * Type of share scope (organization or user)
+ */
+export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoScopeType = {
+  org: 'org',
+  user: 'user',
+} as const;
+
+export interface ShareResponseDto {
+  /** Unique identifier of the share */
+  id: string;
+  /** Type of entity being shared */
+  entityType: ShareResponseDtoEntityType;
+  /** ID of the entity being shared */
+  entityId: string;
+  /** Type of share scope (organization or user) */
+  scopeType: ShareResponseDtoScopeType;
+  /** ID of the user who created the share */
+  ownerId: string;
+  /** When the share was created */
+  createdAt: string;
+  /** When the share was last updated */
+  updatedAt: string;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;
@@ -2265,6 +2325,26 @@ export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageRes
 export type StorageControllerUploadFileBody = {
   file?: Blob;
 };
+
+export type SharesControllerGetSharesParams = {
+/**
+ * ID of the entity to get shares for
+ */
+entityId: string;
+/**
+ * Type of the entity
+ */
+entityType: SharesControllerGetSharesEntityType;
+};
+
+export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SharesControllerGetSharesEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+} as const;
 
 export type AdminControllerGetModelParams = {
 name: string;
