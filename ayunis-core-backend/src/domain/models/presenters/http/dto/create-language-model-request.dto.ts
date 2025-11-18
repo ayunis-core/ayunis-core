@@ -49,6 +49,13 @@ export class CreateLanguageModelRequestDto {
   isReasoning: boolean;
 
   @ApiProperty({
+    description: 'Whether the model supports vision (image processing)',
+    example: false,
+  })
+  @IsBoolean()
+  canVision: boolean;
+
+  @ApiProperty({
     description: 'Whether the model is archived',
     example: false,
   })

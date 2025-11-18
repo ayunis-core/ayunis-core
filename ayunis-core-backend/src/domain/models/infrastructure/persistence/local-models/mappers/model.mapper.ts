@@ -21,6 +21,7 @@ export class ModelMapper {
         canStream: record.canStream,
         canUseTools: record.canUseTools,
         isReasoning: record.isReasoning,
+        canVision: record.canVision,
         isArchived: record.isArchived,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -53,6 +54,7 @@ export class ModelMapper {
       record.canStream = domain.canStream;
       record.canUseTools = domain.canUseTools;
       record.isReasoning = domain.isReasoning;
+      record.canVision = domain.canVision;
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;

@@ -24,6 +24,7 @@ export const minimalFixture = {
     isReasoning: false,
     isArchived: false,
     canUseTools: true,
+    canVision: false,
     type: 'language' as const,
   },
 

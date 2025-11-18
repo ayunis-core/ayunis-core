@@ -46,6 +46,12 @@ export class LanguageModelRecord extends ModelRecord {
     default: false,
   })
   isReasoning: boolean;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  canVision: boolean;
 }
 
 @ChildEntity(ModelType.EMBEDDING)

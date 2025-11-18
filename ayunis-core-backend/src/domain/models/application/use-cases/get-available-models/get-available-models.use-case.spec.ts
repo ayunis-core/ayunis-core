@@ -83,6 +83,7 @@ describe('GetAvailableModelsUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
         new LanguageModel({
           id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
@@ -93,6 +94,7 @@ describe('GetAvailableModelsUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       ];
 
@@ -136,6 +138,7 @@ describe('GetAvailableModelsUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       ];
 
@@ -165,6 +168,7 @@ describe('GetAvailableModelsUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       ];
 
@@ -193,6 +197,7 @@ describe('GetAvailableModelsUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       });
       const archivedModel = new LanguageModel({
         id: '123e4567-e89b-12d3-a456-426614174004' as UUID,
@@ -203,6 +208,7 @@ describe('GetAvailableModelsUseCase', () => {
         isReasoning: false,
         isArchived: true,
         canUseTools: false,
+        canVision: false,
       });
       const missingConfigModel = new LanguageModel({
         id: '123e4567-e89b-12d3-a456-426614174005' as UUID,
@@ -213,6 +219,7 @@ describe('GetAvailableModelsUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       });
 
       modelsRepository.findAll.mockResolvedValue([

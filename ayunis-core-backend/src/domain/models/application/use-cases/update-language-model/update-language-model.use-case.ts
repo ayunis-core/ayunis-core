@@ -31,6 +31,7 @@ export class UpdateLanguageModelUseCase {
         canStream: command.canStream,
         canUseTools: command.canUseTools,
         isReasoning: command.isReasoning,
+        canVision: command.canVision,
       });
       await this.modelsRepository.save(model);
       return model;
