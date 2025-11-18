@@ -7,6 +7,7 @@ export class CreateLanguageModelCommand {
   canStream: boolean;
   canUseTools: boolean;
   isReasoning: boolean;
+  canVision: boolean;
   isArchived: boolean;
 
   constructor(params: {
@@ -16,6 +17,7 @@ export class CreateLanguageModelCommand {
     canStream: boolean;
     canUseTools: boolean;
     isReasoning: boolean;
+    canVision: boolean;
     isArchived: boolean;
   }) {
     this.name = params.name;
@@ -24,6 +26,7 @@ export class CreateLanguageModelCommand {
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
+    this.canVision = params.canVision;
     this.isArchived = params.isArchived;
   }
 }

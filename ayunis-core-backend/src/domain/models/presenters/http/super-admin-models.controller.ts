@@ -877,6 +877,7 @@ export class SuperAdminModelsController {
       canStream: dto.canStream,
       canUseTools: dto.canUseTools,
       isReasoning: dto.isReasoning,
+      canVision: dto.canVision,
       isArchived: dto.isArchived,
     });
 
@@ -936,6 +937,7 @@ export class SuperAdminModelsController {
       canStream: dto.canStream,
       canUseTools: dto.canUseTools,
       isReasoning: dto.isReasoning,
+      canVision: dto.canVision,
       isArchived: dto.isArchived,
     });
 

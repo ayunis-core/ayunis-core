@@ -7,6 +7,7 @@ export class LanguageModel extends Model {
   public readonly canStream: boolean;
   public readonly canUseTools: boolean;
   public readonly isReasoning: boolean;
+  public readonly canVision: boolean;
 
   constructor(params: {
     id?: UUID;
@@ -18,11 +19,13 @@ export class LanguageModel extends Model {
     canStream: boolean;
     canUseTools: boolean;
     isReasoning: boolean;
+    canVision: boolean;
     isArchived: boolean;
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
+    this.canVision = params.canVision;
   }
 }

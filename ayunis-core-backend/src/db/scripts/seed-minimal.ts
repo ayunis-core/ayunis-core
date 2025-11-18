@@ -70,6 +70,7 @@ async function seedMinimal() {
         isReasoning: minimalFixture.model.isReasoning,
         isArchived: minimalFixture.model.isArchived,
         canUseTools: minimalFixture.model.canUseTools,
+        canVision: minimalFixture.model.canVision,
       });
       await modelRepo.save(model);
       console.log(`✅ Created model: ${model.name}`);
