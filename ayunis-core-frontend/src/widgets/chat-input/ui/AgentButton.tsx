@@ -1,4 +1,5 @@
 import { useAgents } from '../../../features/useAgents';
+import { Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from '@tanstack/react-router';
 
 interface AgentButtonProps {
   selectedAgentId: string | undefined;
@@ -29,29 +31,32 @@ export default function AgentButton({
 }: AgentButtonProps) {
   const { agents } = useAgents();
   const { t } = useTranslation('common');
+  const navigate = useNavigate();
 
   function handleChange(value: string) {
     onAgentChange(value);
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Bot className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        {agents.length > 0 && (
-          <>
-            <DropdownMenuLabel>{t('chatInput.agents.title')}</DropdownMenuLabel>
-            <DropdownMenuGroup>
-              {agents
+    <Tooltip>
+      <TooltipContent>{t('chatInput.agentButtonTooltip')}</TooltipContent>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Bot className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>{t('chatInput.agents.title')}</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            {agents.length ? (
+              agents
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((agent) => (
                   <DropdownMenuItem
                     key={agent.id}
-                    className="flex items-center justify-between"
                     onClick={() => handleChange(agent.id)}
                   >
                     {agent.name}{' '}
@@ -59,41 +64,48 @@ export default function AgentButton({
                       <Check className="h-4 w-4" />
                     )}
                   </DropdownMenuItem>
-                ))}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>{t('chatInput.tools.title')}</DropdownMenuLabel>
-            <DropdownMenuGroup>
-              <DropdownMenuItem className="flex items-center justify-between">
-                {t('chatInput.tools.internet_search')}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <Switch checked={true} disabled />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {t('chatInput.tools.cannot_disable')}
-                  </TooltipContent>
-                </Tooltip>
+                ))
+            ) : (
+              <DropdownMenuItem disabled>
+                {t('chatInput.agentsEmptyState')}
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center justify-between">
-                {t('chatInput.tools.send_email')}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <Switch checked={true} disabled />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {t('chatInput.tools.cannot_disable')}
-                  </TooltipContent>
-                </Tooltip>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => void navigate({ to: '/agents' })}>
+              <Plus /> {t('chatInput.createFirstAgent')}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>{t('chatInput.tools.title')}</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="flex items-center justify-between">
+              {t('chatInput.tools.internet_search')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Switch checked={true} disabled />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('chatInput.tools.cannot_disable')}
+                </TooltipContent>
+              </Tooltip>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center justify-between">
+              {t('chatInput.tools.send_email')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Switch checked={true} disabled />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('chatInput.tools.cannot_disable')}
+                </TooltipContent>
+              </Tooltip>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </Tooltip>
   );
 }
