@@ -10,6 +10,7 @@ import {
   Logger,
   UnauthorizedException,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -54,10 +55,13 @@ import { UserRole } from '../../domain/value-objects/role.object';
 import { Public } from 'src/common/guards/public.guard';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { ValidatePasswordResetTokenDto } from './dtos/validate-password-reset-token.dto';
 import { TriggerPasswordResetCommand } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.command';
 import { TriggerPasswordResetUseCase } from '../../application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password/reset-password.use-case';
 import { ResetPasswordCommand } from '../../application/use-cases/reset-password/reset-password.command';
+import { ValidatePasswordResetTokenUseCase } from '../../application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
+import { ValidatePasswordResetTokenQuery } from '../../application/use-cases/validate-password-reset-token/validate-password-reset-token.query';
 import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
 
 @ApiTags('Users')
@@ -76,6 +80,7 @@ export class UserController {
     private readonly userResponseDtoMapper: UserResponseDtoMapper,
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly validatePasswordResetTokenUseCase: ValidatePasswordResetTokenUseCase,
   ) {}
 
   @Get('')
@@ -437,5 +442,42 @@ export class UserController {
     );
 
     return;
+  }
+
+  @Public()
+  @Get('validate-reset-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Validate password reset token',
+    description:
+      'Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Token is valid',
+    schema: {
+      type: 'object',
+      properties: {
+        valid: {
+          type: 'boolean',
+          example: true,
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or expired reset token',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error while processing the request',
+  })
+  validateResetToken(@Query() query: ValidatePasswordResetTokenDto) {
+    this.logger.log('validateResetToken', { hasToken: !!query.token });
+
+    const result = this.validatePasswordResetTokenUseCase.execute(
+      new ValidatePasswordResetTokenQuery(query.token),
+    );
+
+    return { valid: result };
   }
 }

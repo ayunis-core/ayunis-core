@@ -34,6 +34,7 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
 import { SendConfirmationEmailUseCase } from './application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { TriggerPasswordResetUseCase } from './application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password/reset-password.use-case';
+import { ValidatePasswordResetTokenUseCase } from './application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
 import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
@@ -99,6 +100,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     PasswordResetJwtService,
     SendPasswordResetEmailUseCase,
     ResetPasswordUseCase,
+    ValidatePasswordResetTokenUseCase,
     FindUserByEmailUseCase,
     // Services
     EmailConfirmationJwtService,

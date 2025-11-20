@@ -110,6 +110,8 @@ import type {
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
+  UserControllerValidateResetToken200,
+  UserControllerValidateResetTokenParams,
   UserResponseDto,
   UsersListResponseDto,
   ValidationResponseDto
@@ -3589,6 +3591,96 @@ export const useUserControllerResetPassword = <TError = void,
       return useMutation(mutationOptions , queryClient);
     }
     
+/**
+ * Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.
+ * @summary Validate password reset token
+ */
+export const userControllerValidateResetToken = (
+    params: UserControllerValidateResetTokenParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserControllerValidateResetToken200>(
+      {url: `/users/validate-reset-token`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getUserControllerValidateResetTokenQueryKey = (params: UserControllerValidateResetTokenParams,) => {
+    return [`/users/validate-reset-token`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUserControllerValidateResetTokenQueryOptions = <TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUserControllerValidateResetTokenQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerValidateResetToken>>> = ({ signal }) => userControllerValidateResetToken(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UserControllerValidateResetTokenQueryResult = NonNullable<Awaited<ReturnType<typeof userControllerValidateResetToken>>>
+export type UserControllerValidateResetTokenQueryError = void
+
+
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Validate password reset token
+ */
+
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserControllerValidateResetTokenQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
 /**
  * Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.
  * @summary Get users by organization ID

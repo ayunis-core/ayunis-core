@@ -1737,6 +1737,7 @@ export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrat
 export const CreatePredefinedIntegrationDtoSlug = {
   TEST: 'TEST',
   LOCABOO: 'LOCABOO',
+  LEGAL_CODES: 'LEGAL_CODES',
 } as const;
 
 export interface CreatePredefinedIntegrationDto {
@@ -2230,6 +2231,17 @@ offset?: number;
  * Maximum number of organizations to return.
  */
 limit?: number;
+};
+
+export type UserControllerValidateResetTokenParams = {
+/**
+ * Password reset token from email
+ */
+token: string;
+};
+
+export type UserControllerValidateResetToken200 = {
+  valid?: boolean;
 };
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
