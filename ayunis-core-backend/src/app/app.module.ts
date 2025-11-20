@@ -37,6 +37,7 @@ import { SecurityHeadersMiddleware } from '../common/middleware/security-headers
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
+import { mcpConfig } from '../config/mcp.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { ClsModule } from 'nestjs-cls';
 import { ContextModule } from 'src/common/context/context.module';
@@ -61,6 +62,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         subscriptionsConfig,
         emailsConfig,
         internetSearchConfig,
+        mcpConfig,
       ],
     }),
     ClsModule.forRoot({
