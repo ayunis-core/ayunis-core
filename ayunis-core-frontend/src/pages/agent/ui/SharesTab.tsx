@@ -35,7 +35,7 @@ export default function SharesTab({ agentId, shares }: SharesTabProps) {
         title: t('shares.create.title'),
         description: t('shares.create.description'),
         confirmText: t('shares.create.confirm'),
-        cancelText: t('shares.cancel'),
+        cancelText: t('shares.create.cancel'),
         onConfirm: () => {
           createShare();
         },
@@ -47,7 +47,7 @@ export default function SharesTab({ agentId, shares }: SharesTabProps) {
           title: t('shares.delete.title'),
           description: t('shares.delete.description'),
           confirmText: t('shares.delete.confirm'),
-          cancelText: t('shares.cancel'),
+          cancelText: t('shares.delete.cancel'),
           variant: 'destructive',
           onConfirm: () => {
             deleteShare(organizationShare.id);
