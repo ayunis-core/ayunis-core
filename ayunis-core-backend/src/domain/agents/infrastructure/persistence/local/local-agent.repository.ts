@@ -272,6 +272,42 @@ export class LocalAgentRepository implements AgentRepository {
     }
   }
 
+  async findById(id: UUID): Promise<Agent | null> {
+    this.logger.log('findById', { id });
+
+    try {
+      const agentEntity = await this.agentRepository.findOne({
+        where: { id },
+        relations: {
+          agentTools: {
+            toolConfig: true,
+          },
+          model: {
+            model: true,
+          },
+          sourceAssignments: {
+            source: true,
+          },
+          mcpIntegrations: true,
+        },
+      });
+
+      if (!agentEntity) {
+        this.logger.debug('Agent not found', { id });
+        return null;
+      }
+
+      this.logger.debug('Agent found', { id, name: agentEntity.name });
+      return this.agentMapper.toDomain(agentEntity);
+    } catch (error) {
+      this.logger.error('Error finding agent by id', {
+        error: error as Error,
+        id,
+      });
+      throw error;
+    }
+  }
+
   async findMany(ids: UUID[], userId: UUID): Promise<Agent[]> {
     this.logger.log('findMany', { ids, userId });
 
@@ -292,6 +328,33 @@ export class LocalAgentRepository implements AgentRepository {
         error: error as Error,
         ids,
         userId,
+      });
+      throw error;
+    }
+  }
+
+  async findByIds(ids: UUID[]): Promise<Agent[]> {
+    this.logger.log('findByIds', { ids });
+
+    try {
+      if (ids.length === 0) {
+        return [];
+      }
+
+      // Find agents by IDs without userId filter (for shared agents)
+      const agentEntities = await this.agentRepository.find({
+        where: {
+          id: In(ids),
+        },
+        relations: ['agentTools', 'model', 'mcpIntegrations'],
+      });
+
+      this.logger.debug('Agents found by IDs', { count: agentEntities.length });
+      return agentEntities.map((entity) => this.agentMapper.toDomain(entity));
+    } catch (error) {
+      this.logger.error('Error finding agents by IDs', {
+        error: error as Error,
+        ids,
       });
       throw error;
     }

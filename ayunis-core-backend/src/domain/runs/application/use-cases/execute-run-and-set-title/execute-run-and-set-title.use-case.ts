@@ -20,6 +20,9 @@ import {
 } from 'src/domain/runs/domain/run-input.entity';
 import { RunNoModelFoundError } from '../../runs.errors';
 import { Thread } from '../../../../threads/domain/thread.entity';
+import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
+import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
+import { Agent } from 'src/domain/agents/domain/agent.entity';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -28,6 +31,7 @@ export class ExecuteRunAndSetTitleUseCase {
   constructor(
     private readonly executeRunUseCase: ExecuteRunUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
+    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly messageDtoMapper: MessageDtoMapper,
   ) {}
@@ -126,7 +130,17 @@ export class ExecuteRunAndSetTitleUseCase {
         messagePreview: firstUserMessage.substring(0, 50),
       });
 
-      const model = thread.model ?? thread.agent?.model;
+      // Fetch agent if thread has agentId
+      let agent: Agent | undefined;
+      if (thread.agentId) {
+        agent = (
+          await this.findOneAgentUseCase.execute(
+            new FindOneAgentQuery(thread.agentId),
+          )
+        ).agent;
+      }
+
+      const model = thread.model ?? agent?.model;
       if (!model) {
         throw new RunNoModelFoundError({
           threadId: command.threadId,

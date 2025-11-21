@@ -4,13 +4,19 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { UUID } from 'crypto';
 import { ListAgentMcpIntegrationsQuery } from './list-agent-mcp-integrations.query';
 import { AgentRepository } from '../../ports/agent.repository';
-import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { AgentNotFoundError, UnexpectedAgentError } from '../../agents.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
+import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { Agent } from '../../../domain/agent.entity';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
+import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 
 /**
  * Use case for listing all MCP integrations assigned to an agent.
@@ -23,9 +29,9 @@ export class ListAgentMcpIntegrationsUseCase {
   constructor(
     @Inject(AgentRepository)
     private readonly agentsRepository: AgentRepository,
-    @Inject(McpIntegrationsRepositoryPort)
-    private readonly mcpIntegrationsRepository: McpIntegrationsRepositoryPort,
+    private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly contextService: ContextService,
+    private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
   ) {}
 
   /**
@@ -50,8 +56,8 @@ export class ListAgentMcpIntegrationsUseCase {
         throw new UnauthorizedException('User not authenticated');
       }
 
-      // Validate agent exists and user owns it
-      const agent = await this.agentsRepository.findOne(query.agentId, userId);
+      // Find agent (owned or shared)
+      const agent = await this.findAgentOwnedOrShared(query.agentId, userId);
       if (!agent) {
         throw new AgentNotFoundError(query.agentId);
       }
@@ -62,15 +68,8 @@ export class ListAgentMcpIntegrationsUseCase {
       }
 
       // Fetch full integration entities for all IDs
-      const integrations = await Promise.all(
-        agent.mcpIntegrationIds.map((id) =>
-          this.mcpIntegrationsRepository.findById(id),
-        ),
-      );
-
-      // Filter out nulls (in case integrations were deleted)
-      return integrations.filter(
-        (integration): integration is McpIntegration => integration !== null,
+      return this.getMcpIntegrationsByIdsUseCase.execute(
+        new GetMcpIntegrationsByIdsQuery(agent.mcpIntegrationIds),
       );
     } catch (error) {
       // Re-throw application errors and auth errors
@@ -85,9 +84,33 @@ export class ListAgentMcpIntegrationsUseCase {
       this.logger.error('Unexpected error listing agent MCP integrations', {
         error: error as Error,
       });
-      throw new UnexpectedAgentError('Unexpected error occurred', {
-        error: error as Error,
-      });
+      throw new UnexpectedAgentError(error);
     }
+  }
+
+  /**
+   * Finds an agent that is either owned by the user or shared with their organization.
+   */
+  private async findAgentOwnedOrShared(
+    agentId: UUID,
+    userId: UUID,
+  ): Promise<Agent | null> {
+    // 1. Try to find owned agent first
+    const ownedAgent = await this.agentsRepository.findOne(agentId, userId);
+    if (ownedAgent) {
+      return ownedAgent;
+    }
+
+    // 2. Check if agent is shared with user's org
+    const share = await this.findShareByEntityUseCase.execute(
+      new FindShareByEntityQuery(SharedEntityType.AGENT, agentId),
+    );
+
+    if (share) {
+      // 3. Fetch the shared agent by ID (no user filter)
+      return this.agentsRepository.findById(agentId);
+    }
+
+    return null;
   }
 }

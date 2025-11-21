@@ -1,4 +1,11 @@
 {
+  "shared": {
+    "badge": "Geteilt"
+  },
+  "tabs": {
+    "configuration": "Konfiguration",
+    "shares": "Freigaben"
+  },
   "editDialog": {
     "title": "Agent bearbeiten",
     "description": "Nehmen Sie hier Änderungen an Ihrem Agent vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",
@@ -23,11 +30,6 @@
     "addSource": "Quelle hinzufügen",
     "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
   },
-  "tools": {
-    "title": "Tools",
-    "description": "Konfigurieren Sie, welche Tools der Agent verwenden kann",
-    "comingSoon": "Demnächst verfügbar"
-  },
   "sources": {
     "addedSuccessfully": "Quelle erfolgreich hinzugefügt",
     "removedSuccessfully": "Quelle erfolgreich entfernt",
@@ -47,6 +49,39 @@
       "failedToConnect": "Fehler beim Verbinden der Integration. Bitte versuchen Sie es erneut.",
       "failedToDisconnect": "Fehler beim Trennen der Integration. Bitte versuchen Sie es erneut.",
       "failedToLoad": "Fehler beim Laden der Integrationen. Bitte versuchen Sie es erneut."
+    }
+  },
+  "shares": {
+    "org": {
+      "title": "Freigabe für Organisation",
+      "descriptionOn": "Dieser Agent ist für alle Nutzer Ihrer Organisation freigegeben",
+      "descriptionOff": "Dieser Agent ist aktuell nicht für Nutzer Ihrer Organisation freigegeben"
+    },
+    "create": {
+      "button": "Agent teilen",
+      "title": "Agent mit Organisation teilen",
+      "description": "Dadurch wird der Agent für alle Mitglieder Ihrer Organisation verfügbar",
+      "confirm": "Teilen",
+      "cancel": "Abbrechen"
+    },
+    "delete": {
+      "tooltip": "Freigabe entfernen",
+      "title": "Freigabe entfernen",
+      "description": "Der Zugriff für alle Mitglieder Ihrer Organisation wird entfernen",
+      "confirm": "Entfernen",
+      "cancel": "Abbrechen"
+    },
+    "scope": {
+      "org": "Organisation"
+    },
+    "sharedOn": "Geteilt am",
+    "success": {
+      "created": "Agent erfolgreich geteilt",
+      "deleted": "Freigabe erfolgreich entfernt"
+    },
+    "error": {
+      "create": "Fehler beim Teilen des Agenten",
+      "delete": "Fehler beim Entfernen der Freigabe"
     }
   }
 }

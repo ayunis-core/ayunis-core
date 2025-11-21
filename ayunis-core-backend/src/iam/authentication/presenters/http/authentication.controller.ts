@@ -287,7 +287,6 @@ export class AuthenticationController {
     type: SuccessResponseDto,
   })
   logout(@Res() res: Response) {
-    this.logger.log('logout', { res });
     clearCookies(res, this.configService);
     return res.json({ success: true });
   }

@@ -37,7 +37,7 @@ type MessageContentData =
 
 @Entity({ name: 'messages' })
 export class MessageRecord extends BaseRecord {
-  @Column({ type: 'uuid' })
+  @Column()
   @Index()
   threadId: UUID;
 

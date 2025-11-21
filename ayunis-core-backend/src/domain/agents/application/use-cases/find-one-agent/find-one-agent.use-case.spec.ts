@@ -9,7 +9,9 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { AgentNotFoundError, UnexpectedAgentError } from '../../agents.errors';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UUID } from 'crypto';
+import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 
 describe('FindOneAgentUseCase', () => {
   let useCase: FindOneAgentUseCase;
@@ -26,7 +28,9 @@ describe('FindOneAgentUseCase', () => {
       create: jest.fn(),
       delete: jest.fn(),
       findOne: jest.fn(),
+      findById: jest.fn(),
       findMany: jest.fn(),
+      findByIds: jest.fn(),
       findAllByOwner: jest.fn(),
       findAllByModel: jest.fn(),
       update: jest.fn(),
@@ -40,10 +44,18 @@ describe('FindOneAgentUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockFindShareByEntityUseCase = {
+      execute: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindOneAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
+        {
+          provide: FindShareByEntityUseCase,
+          useValue: mockFindShareByEntityUseCase,
+        },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
@@ -103,30 +115,22 @@ describe('FindOneAgentUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(result).toBe(mockAgent);
+      expect(result.agent).toBe(mockAgent);
+      expect(result.isShared).toBe(false);
     });
 
-    it('should throw UnexpectedAgentError when user is not authenticated', async () => {
+    it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
       // Arrange
       const query = new FindOneAgentQuery(mockAgentId);
       contextService.get.mockReturnValue(null); // No userId in context
 
-      const logSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(
-        UnexpectedAgentError,
-      );
-      await expect(useCase.execute(query)).rejects.toThrow(
-        'User not authenticated',
+        UnauthorizedAccessError,
       );
 
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(agentRepository.findOne).not.toHaveBeenCalled();
-      expect(logSpy).toHaveBeenCalledWith('Failed to find agent', {
-        agentId: mockAgentId,
-        error: 'User not authenticated',
-      });
     });
 
     it('should throw AgentNotFoundError when agent does not exist', async () => {
@@ -177,7 +181,7 @@ describe('FindOneAgentUseCase', () => {
         UnexpectedAgentError,
       );
       await expect(useCase.execute(query)).rejects.toThrow(
-        'Database connection failed',
+        'Unexpected error occurred',
       );
 
       expect(contextService.get).toHaveBeenCalledWith('userId');
@@ -205,7 +209,7 @@ describe('FindOneAgentUseCase', () => {
         UnexpectedAgentError,
       );
       await expect(useCase.execute(query)).rejects.toThrow(
-        'Unknown error when finding agent',
+        'Unexpected error occurred',
       );
 
       expect(logSpy).toHaveBeenCalledWith('Failed to find agent', {

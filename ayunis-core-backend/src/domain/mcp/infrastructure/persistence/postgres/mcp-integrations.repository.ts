@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { McpIntegrationsRepositoryPort } from '../../../application/ports/mcp-integrations.repository.port';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
@@ -90,6 +90,20 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     }
 
     return this.mcpIntegrationMapper.toDomain(record);
+  }
+
+  async findByIds(ids: UUID[]): Promise<McpIntegration[]> {
+    this.logger.log('findByIds', { count: ids.length });
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const records = await this.repository.find({
+      where: { id: In(ids) },
+    });
+
+    return records.map((record) => this.mcpIntegrationMapper.toDomain(record));
   }
 
   async findAll(

@@ -28,9 +28,7 @@ export class UserRecord extends BaseRecord {
   @Column({ type: 'enum', enum: SystemRole, default: SystemRole.CUSTOMER })
   systemRole?: SystemRole;
 
-  @Column({
-    type: 'uuid',
-  })
+  @Column()
   orgId: UUID;
 
   @ManyToOne(() => OrgRecord, (org) => org.id, { nullable: false })

@@ -34,6 +34,7 @@ import type {
   AgentsControllerAddFileSourceBody,
   ConfirmEmailDto,
   CreateAgentDto,
+  CreateAgentShareDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelDto,
   CreateEmbeddingModelRequestDto,
@@ -81,6 +82,8 @@ import type {
   SendMessageDto,
   SetOrgDefaultModelDto,
   SetUserDefaultModelDto,
+  ShareResponseDto,
+  SharesControllerGetSharesParams,
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -110,6 +113,8 @@ import type {
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
+  UserControllerValidateResetToken200,
+  UserControllerValidateResetTokenParams,
   UserResponseDto,
   UsersListResponseDto,
   ValidationResponseDto
@@ -3590,6 +3595,96 @@ export const useUserControllerResetPassword = <TError = void,
     }
     
 /**
+ * Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.
+ * @summary Validate password reset token
+ */
+export const userControllerValidateResetToken = (
+    params: UserControllerValidateResetTokenParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserControllerValidateResetToken200>(
+      {url: `/users/validate-reset-token`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getUserControllerValidateResetTokenQueryKey = (params: UserControllerValidateResetTokenParams,) => {
+    return [`/users/validate-reset-token`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUserControllerValidateResetTokenQueryOptions = <TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUserControllerValidateResetTokenQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerValidateResetToken>>> = ({ signal }) => userControllerValidateResetToken(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UserControllerValidateResetTokenQueryResult = NonNullable<Awaited<ReturnType<typeof userControllerValidateResetToken>>>
+export type UserControllerValidateResetTokenQueryError = void
+
+
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Validate password reset token
+ */
+
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserControllerValidateResetTokenQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.
  * @summary Get users by organization ID
  */
@@ -6860,6 +6955,222 @@ export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<Retu
 
 
 
+/**
+ * @summary Create a share for an agent
+ */
+export const sharesControllerCreateShare = (
+    createAgentShareDto: CreateAgentShareDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ShareResponseDto>(
+      {url: `/shares`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAgentShareDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSharesControllerCreateShareMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateShare>>, TError,{data: CreateAgentShareDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateShare>>, TError,{data: CreateAgentShareDto}, TContext> => {
+
+const mutationKey = ['sharesControllerCreateShare'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharesControllerCreateShare>>, {data: CreateAgentShareDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sharesControllerCreateShare(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharesControllerCreateShareMutationResult = NonNullable<Awaited<ReturnType<typeof sharesControllerCreateShare>>>
+    export type SharesControllerCreateShareMutationBody = CreateAgentShareDto
+    export type SharesControllerCreateShareMutationError = void
+
+    /**
+ * @summary Create a share for an agent
+ */
+export const useSharesControllerCreateShare = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateShare>>, TError,{data: CreateAgentShareDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharesControllerCreateShare>>,
+        TError,
+        {data: CreateAgentShareDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSharesControllerCreateShareMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Get shares for an entity
+ */
+export const sharesControllerGetShares = (
+    params: SharesControllerGetSharesParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ShareResponseDto[]>(
+      {url: `/shares`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSharesControllerGetSharesQueryKey = (params: SharesControllerGetSharesParams,) => {
+    return [`/shares`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSharesControllerGetSharesQueryOptions = <TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSharesControllerGetSharesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sharesControllerGetShares>>> = ({ signal }) => sharesControllerGetShares(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SharesControllerGetSharesQueryResult = NonNullable<Awaited<ReturnType<typeof sharesControllerGetShares>>>
+export type SharesControllerGetSharesQueryError = void
+
+
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sharesControllerGetShares>>,
+          TError,
+          Awaited<ReturnType<typeof sharesControllerGetShares>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sharesControllerGetShares>>,
+          TError,
+          Awaited<ReturnType<typeof sharesControllerGetShares>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get shares for an entity
+ */
+
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSharesControllerGetSharesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Delete a share
+ */
+export const sharesControllerDeleteShare = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/shares/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSharesControllerDeleteShareMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['sharesControllerDeleteShare'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sharesControllerDeleteShare(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharesControllerDeleteShareMutationResult = NonNullable<Awaited<ReturnType<typeof sharesControllerDeleteShare>>>
+    
+    export type SharesControllerDeleteShareMutationError = void
+
+    /**
+ * @summary Delete a share
+ */
+export const useSharesControllerDeleteShare = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharesControllerDeleteShare>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSharesControllerDeleteShareMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * @summary Create a new predefined MCP integration
  */

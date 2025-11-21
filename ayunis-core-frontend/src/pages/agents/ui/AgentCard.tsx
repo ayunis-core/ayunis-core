@@ -1,5 +1,6 @@
 import { Button } from '@/shared/ui/shadcn/button';
-import { Edit, MessageCircle, Trash2 } from 'lucide-react';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import { MessageCircle, Trash2 } from 'lucide-react';
 // import EditAgentDialog from "./EditAgentDialog";
 import { useDeleteAgent } from '../api/useDeleteAgent';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -13,6 +14,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
+import { showError } from '@/shared/lib/toast';
 
 interface AgentCardProps {
   agent: Agent;
@@ -24,6 +26,9 @@ export default function AgentCard({ agent }: AgentCardProps) {
   const { confirm } = useConfirmation();
   const router = useRouter();
   function handleDelete() {
+    if (agent.isShared) {
+      showError(t('card.error.deleteShared'));
+    }
     confirm({
       title: t('card.confirmDelete.title'),
       description: t('card.confirmDelete.description', { title: agent.name }),
@@ -45,7 +50,14 @@ export default function AgentCard({ agent }: AgentCardProps) {
       }
     >
       <ItemContent>
-        <ItemTitle>{agent.name}</ItemTitle>
+        <ItemTitle>
+          <span>{agent.name}</span>
+          {agent.isShared && (
+            <Badge variant="outline" className="ml-2 text-xs">
+              {t('badge.shared')}
+            </Badge>
+          )}
+        </ItemTitle>
         <ItemDescription>{agent.instructions}</ItemDescription>
       </ItemContent>
       <ItemActions>
@@ -58,23 +70,15 @@ export default function AgentCard({ agent }: AgentCardProps) {
             <MessageCircle className="h-4 w-4" /> {t('card.startChatButton')}
           </Button>
         </Link>
-        <Link
-          to="/agents/$id"
-          params={{ id: agent.id }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Button variant="ghost" size="icon">
-            <Edit className="h-4 w-4" />
-          </Button>
-        </Link>
         <Button
           variant="ghost"
           size="icon"
           onClick={(e) => {
             e.stopPropagation();
+            if (agent.isShared) return null;
             handleDelete();
           }}
-          disabled={deleteAgent.isPending}
+          disabled={deleteAgent.isPending || agent.isShared}
         >
           <Trash2 className="h-4 w-4" />
         </Button>

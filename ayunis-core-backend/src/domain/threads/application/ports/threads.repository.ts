@@ -5,7 +5,6 @@ import { UUID } from 'crypto';
 export interface ThreadsFindAllOptions {
   withSources?: boolean;
   withMessages?: boolean;
-  withAgent?: boolean;
   withModel?: boolean;
 }
 
@@ -44,6 +43,11 @@ export abstract class ThreadsRepository {
     threadId: UUID;
     userId: UUID;
     sourceAssignments: SourceAssignment[];
+  }): Promise<void>;
+  abstract replaceAgentWithModel(params: {
+    modelId: UUID;
+    agentId: UUID;
+    excludeUserId?: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
 }

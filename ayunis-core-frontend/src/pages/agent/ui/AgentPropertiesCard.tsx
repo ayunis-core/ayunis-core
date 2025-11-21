@@ -30,8 +30,10 @@ import type { AgentResponseDto } from '@/shared/api';
 
 export default function AgentPropertiesCard({
   agent,
+  disabled = false,
 }: {
   agent: AgentResponseDto;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation('agent');
   const { models } = usePermittedModels();
@@ -61,6 +63,7 @@ export default function AgentPropertiesCard({
                     <FormControl>
                       <Input
                         placeholder={t('editDialog.form.namePlaceholder')}
+                        disabled={disabled}
                         {...field}
                       />
                     </FormControl>
@@ -74,7 +77,11 @@ export default function AgentPropertiesCard({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('editDialog.form.modelLabel')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={disabled}
+                    >
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue
@@ -107,6 +114,7 @@ export default function AgentPropertiesCard({
                     <Textarea
                       placeholder={t('editDialog.form.instructionsPlaceholder')}
                       className="min-h-[250px] max-h-[500px]"
+                      disabled={disabled}
                       {...field}
                     />
                   </FormControl>
@@ -114,11 +122,13 @@ export default function AgentPropertiesCard({
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading
-                ? t('editDialog.buttons.saving')
-                : t('editDialog.buttons.save')}
-            </Button>
+            {!disabled && (
+              <Button type="submit" disabled={isLoading}>
+                {isLoading
+                  ? t('editDialog.buttons.saving')
+                  : t('editDialog.buttons.save')}
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>

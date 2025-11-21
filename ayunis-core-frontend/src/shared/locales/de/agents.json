@@ -6,6 +6,9 @@
     "title": "Noch keine Agenten",
     "description": "Beginnen Sie mit der Erstellung Ihres ersten KI-Agenten. Agenten helfen Ihnen dabei, spezialisierte KI-Assistenten für bestimmte Aufgaben und Arbeitsabläufe zu erstellen."
   },
+  "badge": {
+    "shared": "Geteilt"
+  },
   "card": {
     "startChatButton": "Chat starten",
     "editButton": "Bearbeiten",

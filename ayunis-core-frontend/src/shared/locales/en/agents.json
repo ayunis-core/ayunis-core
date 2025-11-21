@@ -6,6 +6,9 @@
     "title": "No agents yet",
     "description": "Get started by creating your first AI agent. Agents help you set up specialized AI assistants for specific tasks and workflows."
   },
+  "badge": {
+    "shared": "Shared"
+  },
   "card": {
     "startChatButton": "Start Chat",
     "editButton": "Edit",

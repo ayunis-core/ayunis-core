@@ -15,6 +15,16 @@ interface AgentsPageProps {
 export default function AgentsPage({ agents }: AgentsPageProps) {
   const { t } = useTranslation('agents');
 
+  // Sort agents: owned first, then shared; alphabetically within each group
+  const sortedAgents = [...agents].sort((a, b) => {
+    // Primary sort: owned agents first (isShared: false < true)
+    if (a.isShared !== b.isShared) {
+      return a.isShared ? 1 : -1;
+    }
+    // Secondary sort: alphabetically by name
+    return a.name.localeCompare(b.name);
+  });
+
   if (agents.length === 0) {
     return (
       <AppLayout>
@@ -45,7 +55,7 @@ export default function AgentsPage({ agents }: AgentsPageProps) {
             <AgentsEmptyState />
           ) : (
             <div className="space-y-3">
-              {agents.map((agent) => {
+              {sortedAgents.map((agent) => {
                 return <AgentCard key={agent.id} agent={agent} />;
               })}
             </div>

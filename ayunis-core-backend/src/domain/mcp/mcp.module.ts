@@ -26,6 +26,7 @@ import { SourcesModule } from '../sources/sources.module';
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
 import { GetMcpIntegrationUseCase } from './application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
+import { GetMcpIntegrationsByIdsUseCase } from './application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { ListOrgMcpIntegrationsUseCase } from './application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
 import { ListAvailableMcpIntegrationsUseCase } from './application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
 import { UpdateMcpIntegrationUseCase } from './application/use-cases/update-mcp-integration/update-mcp-integration.use-case';
@@ -80,6 +81,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     // Use Cases
     CreateMcpIntegrationUseCase,
     GetMcpIntegrationUseCase,
+    GetMcpIntegrationsByIdsUseCase,
     ListOrgMcpIntegrationsUseCase,
     ListAvailableMcpIntegrationsUseCase,
     UpdateMcpIntegrationUseCase,
@@ -105,6 +107,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     DiscoverMcpCapabilitiesUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
+    GetMcpIntegrationsByIdsUseCase,
   ],
 })
 export class McpModule {}

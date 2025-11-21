@@ -18,6 +18,9 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
             provide: ConfigService,
             useValue: {
               get: jest.fn((key: string) => {
+                if (key === 'mcp.locaboo4Url') {
+                  return 'https://api.locaboo.example.com';
+                }
                 if (key === 'LOCABOO_4_URL') {
                   return 'https://api.locaboo.example.com';
                 }
