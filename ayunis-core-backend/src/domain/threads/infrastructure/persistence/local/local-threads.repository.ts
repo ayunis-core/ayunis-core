@@ -268,17 +268,26 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async replaceAgentWithModel(params: {
     modelId: UUID;
     agentId: UUID;
+    excludeUserId?: UUID;
   }): Promise<void> {
     this.logger.log('replaceAgentWithModel', { params });
-    await this.threadRepository
+
+    const queryBuilder = this.threadRepository
       .createQueryBuilder()
       .update(ThreadRecord)
       .set({
         modelId: params.modelId,
         agentId: () => 'NULL',
       })
-      .where('agentId = :agentId', { agentId: params.agentId })
-      .execute();
+      .where('agentId = :agentId', { agentId: params.agentId });
+
+    if (params.excludeUserId) {
+      queryBuilder.andWhere('userId != :excludeUserId', {
+        excludeUserId: params.excludeUserId,
+      });
+    }
+
+    await queryBuilder.execute();
   }
 
   async delete(id: UUID, userId: UUID): Promise<void> {

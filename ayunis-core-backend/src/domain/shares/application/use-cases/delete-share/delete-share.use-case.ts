@@ -36,10 +36,12 @@ export class DeleteShareUseCase {
       }
 
       // Replace agent in threads BEFORE deletion (while share still exists)
+      // Only affect threads NOT owned by the agent owner (current user)
       if (share instanceof AgentShare) {
         await this.replaceAgentWithDefaultModel.execute(
           new ReplaceAgentWithDefaultModelCommand({
             oldAgentId: share.agentId,
+            excludeUserId: userId,
           }),
         );
       }

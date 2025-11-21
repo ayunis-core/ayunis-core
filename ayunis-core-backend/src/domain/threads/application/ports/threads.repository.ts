@@ -47,6 +47,7 @@ export abstract class ThreadsRepository {
   abstract replaceAgentWithModel(params: {
     modelId: UUID;
     agentId: UUID;
+    excludeUserId?: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
 }

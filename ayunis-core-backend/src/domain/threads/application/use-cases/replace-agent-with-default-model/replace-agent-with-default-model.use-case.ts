@@ -33,6 +33,7 @@ export class ReplaceAgentWithDefaultModelUseCase {
     await this.threadsRepository.replaceAgentWithModel({
       modelId: defaultModel.id,
       agentId: command.oldAgentId,
+      excludeUserId: command.excludeUserId,
     });
   }
 }

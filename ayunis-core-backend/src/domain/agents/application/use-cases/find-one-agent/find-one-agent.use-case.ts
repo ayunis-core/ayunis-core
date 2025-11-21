@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AgentRepository } from '../../ports/agent.repository';
 import { FindOneAgentQuery } from './find-one-agent.query';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -8,6 +8,7 @@ import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-case
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { AgentWithShareStatus } from '../find-all-agents/find-all-agents.use-case';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class FindOneAgentUseCase {
@@ -24,7 +25,7 @@ export class FindOneAgentUseCase {
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
+        throw new UnauthorizedAccessError();
       }
 
       // 1. Try to find owned agent first
