@@ -63,18 +63,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       relations: {
         messages: true,
         model: true,
-        agent: {
-          model: {
-            model: true,
-          },
-          agentTools: {
-            toolConfig: true,
-          },
-          sourceAssignments: {
-            source: true,
-          },
-          mcpIntegrations: true,
-        },
         sourceAssignments: {
           source: true,
         },
@@ -156,13 +144,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       sourceAssignments: options?.withSources
         ? {
             source: true,
-          }
-        : false,
-      agent: options?.withAgent
-        ? {
-            model: {
-              model: true,
-            },
           }
         : false,
       model: options?.withModel ? true : false,
@@ -282,6 +263,22 @@ export class LocalThreadsRepository extends ThreadsRepository {
     if (!result.affected || result.affected === 0) {
       throw new ThreadNotFoundError(params.threadId, params.userId);
     }
+  }
+
+  async replaceAgentWithModel(params: {
+    modelId: UUID;
+    agentId: UUID;
+  }): Promise<void> {
+    this.logger.log('replaceAgentWithModel', { params });
+    await this.threadRepository
+      .createQueryBuilder()
+      .update(ThreadRecord)
+      .set({
+        modelId: params.modelId,
+        agentId: () => 'NULL',
+      })
+      .where('agentId = :agentId', { agentId: params.agentId })
+      .execute();
   }
 
   async delete(id: UUID, userId: UUID): Promise<void> {

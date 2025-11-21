@@ -45,6 +45,7 @@ import { ContextModule } from 'src/common/context/context.module';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { SentryModule } from '@sentry/nestjs/setup';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
       },
     }),
     SentryModule.forRoot(),
+    EventEmitterModule.forRoot(),
     ContextModule, // Global
     ModelsModule,
     AgentsModule,

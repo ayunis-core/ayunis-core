@@ -19,11 +19,13 @@ import { showError } from '@/shared/lib/toast';
 interface AgentKnowledgeBaseCardProps {
   agent: AgentResponseDto;
   isEnabled: boolean;
+  disabled?: boolean;
 }
 
 export default function AgentKnowledgeBaseCard({
   agent,
   isEnabled,
+  disabled = false,
 }: AgentKnowledgeBaseCardProps) {
   const { t } = useTranslation('agent');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -76,38 +78,46 @@ export default function AgentKnowledgeBaseCard({
                   key={source.id}
                   variant="secondary"
                   className="flex items-center gap-2 px-3 py-1"
-                  onClick={() => handleFileRemove(source.id)}
+                  onClick={
+                    disabled ? undefined : () => handleFileRemove(source.id)
+                  }
                 >
                   <FileText className="h-4 w-4" />
                   <span className="text-sm">{source.name}</span>
-                  <X className="h-3 w-3 cursor-pointer hover:text-destructive" />
+                  {!disabled && (
+                    <X className="h-3 w-3 cursor-pointer hover:text-destructive" />
+                  )}
                 </Badge>
               ))}
             </div>
           ) : null}
 
           {/* Add Source Button */}
-          <Input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-            accept=".pdf,.txt,.doc,.docx,.md"
-          />
-          <TooltipIf
-            condition={!isEnabled}
-            tooltip={t('knowledgeBase.disabledTooltip')}
-          >
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={addFileSourcePending || removeSourcePending}
-            >
-              {addFileSourcePending
-                ? t('knowledgeBase.adding')
-                : t('knowledgeBase.addSource')}
-            </Button>
-          </TooltipIf>
+          {!disabled && (
+            <>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".pdf,.txt,.doc,.docx,.md"
+              />
+              <TooltipIf
+                condition={!isEnabled}
+                tooltip={t('knowledgeBase.disabledTooltip')}
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={addFileSourcePending || removeSourcePending}
+                >
+                  {addFileSourcePending
+                    ? t('knowledgeBase.adding')
+                    : t('knowledgeBase.addSource')}
+                </Button>
+              </TooltipIf>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -14,6 +14,7 @@ export class ShareScopeMapper {
     if (record instanceof OrgShareScopeRecord) {
       return new OrgShareScope({
         id: record.id,
+        orgId: record.orgId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
@@ -26,6 +27,7 @@ export class ShareScopeMapper {
     if (entity instanceof OrgShareScope) {
       const orgRecord = new OrgShareScopeRecord();
       orgRecord.id = entity.id;
+      orgRecord.orgId = entity.orgId;
       orgRecord.createdAt = entity.createdAt;
       orgRecord.updatedAt = entity.updatedAt;
       return orgRecord;

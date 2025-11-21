@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AssignMcpIntegrationToAgentCommand } from './assign-mcp-integration-to-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
@@ -18,6 +13,7 @@ import {
   UnexpectedAgentError,
 } from '../../agents.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 /**
  * Use case for assigning an MCP integration to an agent.
@@ -59,7 +55,7 @@ export class AssignMcpIntegrationToAgentUseCase {
       const userId = this.contextService.get('userId');
       const orgId = this.contextService.get('orgId');
       if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
+        throw new UnauthorizedAccessError();
       }
 
       // Validate agent exists and user owns it
@@ -110,18 +106,13 @@ export class AssignMcpIntegrationToAgentUseCase {
 
       return await this.agentsRepository.update(updatedAgent);
     } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Unexpected error assigning MCP integration', {
         error: error as Error,
       });
-      throw new UnexpectedAgentError('Unexpected error occurred', {
-        error: error as Error,
-      });
+      throw new UnexpectedAgentError(error);
     }
   }
 }

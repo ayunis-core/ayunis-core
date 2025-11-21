@@ -66,6 +66,9 @@ import { DiscoverMcpCapabilitiesUseCase } from 'src/domain/mcp/application/use-c
 import { DiscoverMcpCapabilitiesQuery } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
+import { Agent } from 'src/domain/agents/domain/agent.entity';
+import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
+import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -84,6 +87,7 @@ export class ExecuteRunUseCase {
     private readonly triggerInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
+    private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly assembleToolsUseCase: AssembleToolUseCase,
     private readonly configService: ConfigService,
@@ -104,13 +108,23 @@ export class ExecuteRunUseCase {
       const thread = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
       );
-      const model = this.pickModel(thread);
+      // Fetch the agent separately to prevent accidental access of not-shared-anymore agents
+      let agent: Agent | undefined;
+      if (thread.agentId) {
+        // This will fail if the agent is no longer accessible (not owned or shared)
+        agent = (
+          await this.findOneAgentUseCase.execute(
+            new FindOneAgentQuery(thread.agentId),
+          )
+        ).agent;
+      }
+      const model = this.pickModel(thread, agent);
 
       // Assemble tools (native + MCP)
       const tools = model.model.canUseTools
-        ? await this.assembleTools(thread)
+        ? await this.assembleTools(thread, agent)
         : [];
-      const instructions = this.assemblySystemPrompt(thread);
+      const instructions = this.assemblySystemPrompt(agent);
 
       const trace = langfuse.trace({
         name: 'execute_run',
@@ -144,16 +158,16 @@ export class ExecuteRunUseCase {
     }
   }
 
-  private async assembleTools(thread: Thread): Promise<Tool[]> {
+  private async assembleTools(thread: Thread, agent?: Agent): Promise<Tool[]> {
     const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
     const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
     const tools: Tool[] = [];
 
-    if (thread.agent) {
+    if (agent) {
       // Discover MCP capabilities if agent has integrations
-      if (thread.agent.mcpIntegrationIds.length > 0) {
+      if (agent.mcpIntegrationIds.length > 0) {
         const mcpCapabilities = await Promise.all(
-          thread.agent.mcpIntegrationIds.map((integrationId) =>
+          agent.mcpIntegrationIds.map((integrationId) =>
             this.discoverMcpCapabilitiesUseCase.execute(
               new DiscoverMcpCapabilitiesQuery(integrationId),
             ),
@@ -174,7 +188,7 @@ export class ExecuteRunUseCase {
 
       // Add native tools from the agent (excluding always-available tools)
       tools.push(
-        ...thread.agent.tools.filter(
+        ...agent.tools.filter(
           (tool) =>
             tool.type !== ToolType.INTERNET_SEARCH &&
             tool.type !== ToolType.BAR_CHART &&
@@ -188,7 +202,7 @@ export class ExecuteRunUseCase {
     const threadSources = thread.sourceAssignments?.map(
       (assignment) => assignment.source,
     );
-    const agentSources = thread.agent?.sourceAssignments?.map(
+    const agentSources = agent?.sourceAssignments?.map(
       (assignment) => assignment.source,
     );
     const codeExecutionSources = [
@@ -283,15 +297,15 @@ export class ExecuteRunUseCase {
       );
     }
     if (
-      thread.agent &&
-      thread.agent.sourceAssignments &&
-      thread.agent.sourceAssignments.length > 0
+      agent &&
+      agent.sourceAssignments &&
+      agent.sourceAssignments.length > 0
     ) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
-            context: thread.agent.sourceAssignments
+            context: agent.sourceAssignments
               .map((assignment) => assignment.source)
               .filter((source) => source instanceof TextSource),
           }),
@@ -302,9 +316,9 @@ export class ExecuteRunUseCase {
     return tools;
   }
 
-  private pickModel(thread: Thread): PermittedLanguageModel {
-    if (thread.agent) {
-      return thread.agent.model;
+  private pickModel(thread: Thread, agent?: Agent): PermittedLanguageModel {
+    if (agent) {
+      return agent.model;
     }
     if (thread.model) {
       return thread.model;
@@ -315,13 +329,13 @@ export class ExecuteRunUseCase {
     });
   }
 
-  private assemblySystemPrompt(thread: Thread): string {
+  private assemblySystemPrompt(agent?: Agent): string {
     const currentTime = new Date().toISOString();
     const systemPrompt = `
     !! IMPORTANT !! ALWAYS ANSWER IN THE SAME LANGUAGE AS THE USER'S MESSAGE !! NOT ANSWERING IN THE SAME LANGUAGE AS THE USER'S MESSAGE IS A CRITICAL ERROR !!
       Current time: ${currentTime}
     `.trim();
-    const agentInstructions = thread.agent?.instructions;
+    const agentInstructions = agent?.instructions;
     if (!agentInstructions) {
       return systemPrompt;
     }

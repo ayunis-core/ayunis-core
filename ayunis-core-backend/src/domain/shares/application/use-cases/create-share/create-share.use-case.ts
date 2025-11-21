@@ -49,7 +49,7 @@ export class CreateShareUseCase {
       // Create org-scoped share
       const share = new AgentShare({
         agentId: command.agentId,
-        scope: new OrgShareScope({}), // Always org-scoped
+        scope: new OrgShareScope({ orgId }), // Always org-scoped
         ownerId: userId,
       });
 

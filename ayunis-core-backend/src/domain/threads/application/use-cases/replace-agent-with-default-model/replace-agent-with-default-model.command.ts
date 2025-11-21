@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 
-export class ReplaceAgentWithUserDefaultCommand {
+export class ReplaceAgentWithDefaultModelCommand {
   oldAgentId: UUID;
 
   constructor(params: { oldAgentId: UUID }) {

@@ -48,7 +48,10 @@ export const Route = createFileRoute('/_authenticated/agents/$id')({
     const isEmbeddingModelEnabled = await queryClient.fetchQuery(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    const shares = await queryClient.fetchQuery(sharesQueryOptions(id));
+    // Only query shares if the user owns the agent (not shared)
+    const shares = agent.isShared
+      ? []
+      : await queryClient.fetchQuery(sharesQueryOptions(id));
     return { agent, isEmbeddingModelEnabled, shares };
   },
 });

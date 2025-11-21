@@ -13,6 +13,8 @@ import { ShareScopeMapper } from './infrastructure/postgres/mappers/share-scope.
 import { CreateShareUseCase } from './application/use-cases/create-share/create-share.use-case';
 import { DeleteShareUseCase } from './application/use-cases/delete-share/delete-share.use-case';
 import { GetSharesUseCase } from './application/use-cases/get-shares/get-shares.use-case';
+import { FindSharesByScopeUseCase } from './application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
+import { FindShareByEntityUseCase } from './application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 
 // Factories
 import { ShareAuthorizationFactory } from './application/factories/share-authorization.factory';
@@ -23,11 +25,13 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 // Presenters
 import { SharesController } from './presenters/http/shares.controller';
 import { AgentsModule } from '../agents/agents.module';
+import { ThreadsModule } from '../threads/threads.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ShareRecord, ShareScopeRecord]),
     forwardRef(() => AgentsModule), // For AgentShareAuthorizationStrategy
+    forwardRef(() => ThreadsModule), // For ReplaceAgentWithDefaultModelUseCase
   ],
   providers: [
     // Repository
@@ -44,6 +48,8 @@ import { AgentsModule } from '../agents/agents.module';
     CreateShareUseCase,
     DeleteShareUseCase,
     GetSharesUseCase,
+    FindSharesByScopeUseCase,
+    FindShareByEntityUseCase,
 
     // Factories
     ShareAuthorizationFactory,
@@ -52,6 +58,11 @@ import { AgentsModule } from '../agents/agents.module';
     ShareDtoMapper,
   ],
   controllers: [SharesController],
-  exports: [CreateShareUseCase, DeleteShareUseCase],
+  exports: [
+    CreateShareUseCase,
+    DeleteShareUseCase,
+    FindSharesByScopeUseCase,
+    FindShareByEntityUseCase,
+  ],
 })
 export class SharesModule {}

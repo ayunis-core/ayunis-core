@@ -21,7 +21,15 @@ export abstract class ShareScope {
 }
 
 export class OrgShareScope extends ShareScope {
-  constructor(params: { id?: UUID; createdAt?: Date; updatedAt?: Date }) {
+  orgId: UUID;
+
+  constructor(params: {
+    id?: UUID;
+    orgId: UUID;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
     super({ ...params, scopeType: ShareScopeType.ORG });
+    this.orgId = params.orgId;
   }
 }

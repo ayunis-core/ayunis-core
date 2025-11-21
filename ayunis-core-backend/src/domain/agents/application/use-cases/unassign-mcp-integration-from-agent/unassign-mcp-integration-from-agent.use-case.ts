@@ -75,9 +75,7 @@ export class UnassignMcpIntegrationFromAgentUseCase {
       this.logger.error('Unexpected error unassigning MCP integration', {
         error: error as Error,
       });
-      throw new UnexpectedAgentError('Unexpected error occurred', {
-        error: error as Error,
-      });
+      throw new UnexpectedAgentError(error);
     }
   }
 }

@@ -1,4 +1,7 @@
 {
+  "shared": {
+    "badge": "Geteilt"
+  },
   "tabs": {
     "configuration": "Konfiguration",
     "shares": "Freigaben"
@@ -26,11 +29,6 @@
     "adding": "Hinzufügen...",
     "addSource": "Quelle hinzufügen",
     "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
-  },
-  "tools": {
-    "title": "Tools",
-    "description": "Konfigurieren Sie, welche Tools der Agent verwenden kann",
-    "comingSoon": "Demnächst verfügbar"
   },
   "sources": {
     "addedSuccessfully": "Quelle erfolgreich hinzugefügt",
@@ -68,7 +66,10 @@
     },
     "delete": {
       "tooltip": "Freigabe entfernen",
-      "confirm": "Entfernen"
+      "title": "Freigabe entfernen",
+      "description": "Der Zugriff für alle Mitglieder Ihrer Organisation wird entfernen",
+      "confirm": "Entfernen",
+      "cancel": "Abbrechen"
     },
     "scope": {
       "org": "Organisation"

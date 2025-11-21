@@ -1,4 +1,7 @@
 {
+  "shared": {
+    "badge": "Shared"
+  },
   "tabs": {
     "configuration": "Configuration",
     "shares": "Share"
@@ -26,11 +29,6 @@
     "adding": "Adding...",
     "addSource": "Add Source",
     "disabledTooltip": "To upload documents, an embedding model must be enabled."
-  },
-  "tools": {
-    "title": "Tools",
-    "description": "Configure which tools the agent can use",
-    "comingSoon": "Coming soon"
   },
   "sources": {
     "addedSuccessfully": "Source added successfully",
@@ -68,7 +66,10 @@
     },
     "delete": {
       "tooltip": "Remove share",
-      "confirm": "Remove"
+      "title": "Remove Share",
+      "description": "This will remove access to the agent for all members of your organization",
+      "confirm": "Remove",
+      "cancel": "Cancel"
     },
     "scope": {
       "org": "Organization"

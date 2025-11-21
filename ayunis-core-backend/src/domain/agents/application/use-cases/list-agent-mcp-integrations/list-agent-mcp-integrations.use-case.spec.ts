@@ -3,7 +3,7 @@ import { Logger, UnauthorizedException } from '@nestjs/common';
 import { ListAgentMcpIntegrationsUseCase } from './list-agent-mcp-integrations.use-case';
 import { ListAgentMcpIntegrationsQuery } from './list-agent-mcp-integrations.query';
 import { AgentRepository } from '../../ports/agent.repository';
-import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { Agent } from '../../../domain/agent.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -21,12 +21,14 @@ import {
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 
 describe('ListAgentMcpIntegrationsUseCase', () => {
   let useCase: ListAgentMcpIntegrationsUseCase;
   let agentsRepository: jest.Mocked<AgentRepository>;
-  let mcpIntegrationsRepository: jest.Mocked<McpIntegrationsRepositoryPort>;
+  let getMcpIntegrationsByIdsUseCase: jest.Mocked<GetMcpIntegrationsByIdsUseCase>;
   let contextService: jest.Mocked<ContextService>;
+  let findShareByEntityUseCase: jest.Mocked<FindShareByEntityUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockAgentId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -40,23 +42,22 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
       create: jest.fn(),
       delete: jest.fn(),
       findOne: jest.fn(),
+      findById: jest.fn(),
       findMany: jest.fn(),
+      findByIds: jest.fn(),
       findAllByOwner: jest.fn(),
       findAllByModel: jest.fn(),
       update: jest.fn(),
       updateModel: jest.fn(),
     } as jest.Mocked<AgentRepository>;
 
-    const mockMcpIntegrationsRepository = {
-      save: jest.fn(),
-      findById: jest.fn(),
-      findByIds: jest.fn(),
-      findAll: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findByOrganizationIdAndEnabled: jest.fn(),
-      findByOrgIdAndSlug: jest.fn(),
-      delete: jest.fn(),
-    } as jest.Mocked<McpIntegrationsRepositoryPort>;
+    const mockFindShareByEntityUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindShareByEntityUseCase>;
+
+    const mockGetMcpIntegrationsByIdsUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetMcpIntegrationsByIdsUseCase>;
 
     const mockContextService = {
       get: jest.fn((key: string) => {
@@ -70,10 +71,14 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
         ListAgentMcpIntegrationsUseCase,
         { provide: AgentRepository, useValue: mockAgentsRepository },
         {
-          provide: McpIntegrationsRepositoryPort,
-          useValue: mockMcpIntegrationsRepository,
+          provide: GetMcpIntegrationsByIdsUseCase,
+          useValue: mockGetMcpIntegrationsByIdsUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: FindShareByEntityUseCase,
+          useValue: mockFindShareByEntityUseCase,
+        },
       ],
     }).compile();
 
@@ -81,8 +86,9 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
       ListAgentMcpIntegrationsUseCase,
     );
     agentsRepository = module.get(AgentRepository);
-    mcpIntegrationsRepository = module.get(McpIntegrationsRepositoryPort);
+    getMcpIntegrationsByIdsUseCase = module.get(GetMcpIntegrationsByIdsUseCase);
     contextService = module.get(ContextService);
+    findShareByEntityUseCase = module.get(FindShareByEntityUseCase);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -179,9 +185,10 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
       );
 
       agentsRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById
-        .mockResolvedValueOnce(mockIntegration1)
-        .mockResolvedValueOnce(mockIntegration2);
+      getMcpIntegrationsByIdsUseCase.execute.mockResolvedValue([
+        mockIntegration1,
+        mockIntegration2,
+      ]);
 
       // Act
       const result = await useCase.execute(query);
@@ -192,12 +199,10 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(mcpIntegrationsRepository.findById).toHaveBeenCalledTimes(2);
-      expect(mcpIntegrationsRepository.findById).toHaveBeenCalledWith(
-        mockIntegration1Id,
-      );
-      expect(mcpIntegrationsRepository.findById).toHaveBeenCalledWith(
-        mockIntegration2Id,
+      expect(getMcpIntegrationsByIdsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          integrationIds: [mockIntegration1Id, mockIntegration2Id],
+        }),
       );
       expect(result).toHaveLength(2);
       expect(result[0]).toBe(mockIntegration1);
@@ -220,7 +225,7 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
+      expect(getMcpIntegrationsByIdsUseCase.execute).not.toHaveBeenCalled();
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
     });
@@ -240,13 +245,14 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
 
       expect(contextService.get).toHaveBeenCalledWith('userId');
       expect(agentsRepository.findOne).not.toHaveBeenCalled();
-      expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
+      expect(getMcpIntegrationsByIdsUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('should throw AgentNotFoundError when agent does not exist', async () => {
       // Arrange
       const query = new ListAgentMcpIntegrationsQuery(mockAgentId);
       agentsRepository.findOne.mockResolvedValue(null);
+      findShareByEntityUseCase.execute.mockResolvedValue(null); // Not shared either
 
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(AgentNotFoundError);
@@ -259,13 +265,14 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(mcpIntegrationsRepository.findById).not.toHaveBeenCalled();
+      expect(getMcpIntegrationsByIdsUseCase.execute).not.toHaveBeenCalled();
     });
 
-    it('should throw AgentNotFoundError when agent exists but user does not own it', async () => {
+    it('should throw AgentNotFoundError when agent exists but user does not own it and it is not shared', async () => {
       // Arrange
       const query = new ListAgentMcpIntegrationsQuery(mockAgentId);
       agentsRepository.findOne.mockResolvedValue(null); // Repository returns null when user doesn't own agent
+      findShareByEntityUseCase.execute.mockResolvedValue(null); // Not shared either
 
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(AgentNotFoundError);
@@ -278,9 +285,10 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
         mockAgentId,
         mockUserId,
       );
+      expect(findShareByEntityUseCase.execute).toHaveBeenCalled();
     });
 
-    it('should filter out null values if integration IDs reference deleted integrations', async () => {
+    it('should return only existing integrations when some IDs reference deleted integrations', async () => {
       // Arrange
       const query = new ListAgentMcpIntegrationsQuery(mockAgentId);
       const mockAgent = createMockAgent([
@@ -294,9 +302,10 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
       );
 
       agentsRepository.findOne.mockResolvedValue(mockAgent);
-      mcpIntegrationsRepository.findById
-        .mockResolvedValueOnce(mockIntegration1)
-        .mockResolvedValueOnce(null); // Second integration was deleted
+      // GetMcpIntegrationsByIdsUseCase handles filtering internally
+      getMcpIntegrationsByIdsUseCase.execute.mockResolvedValue([
+        mockIntegration1,
+      ]);
 
       // Act
       const result = await useCase.execute(query);
@@ -307,7 +316,11 @@ describe('ListAgentMcpIntegrationsUseCase', () => {
         mockAgentId,
         mockUserId,
       );
-      expect(mcpIntegrationsRepository.findById).toHaveBeenCalledTimes(2);
+      expect(getMcpIntegrationsByIdsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          integrationIds: [mockIntegration1Id, mockIntegration2Id],
+        }),
+      );
       expect(result).toHaveLength(1);
       expect(result[0]).toBe(mockIntegration1);
     });

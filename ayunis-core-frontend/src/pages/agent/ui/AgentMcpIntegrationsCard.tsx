@@ -21,7 +21,11 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { cn } from '@/shared/lib/shadcn/utils';
 
-export default function AgentMcpIntegrationsCard() {
+export default function AgentMcpIntegrationsCard({
+  disabled = false,
+}: {
+  disabled?: boolean;
+}) {
   const { t } = useTranslation('agent');
   const { id: agentId } = useParams({ from: '/_authenticated/agents/$id' });
 
@@ -135,7 +139,7 @@ export default function AgentMcpIntegrationsCard() {
                     <Switch
                       checked={assigned}
                       onCheckedChange={() => void handleToggle(integration.id)}
-                      disabled={isPending}
+                      disabled={disabled || isPending}
                       aria-label={t('mcpIntegrations.toggleAriaLabel', {
                         name: integration.name,
                       })}

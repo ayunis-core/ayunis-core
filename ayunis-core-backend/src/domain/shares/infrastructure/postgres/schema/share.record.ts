@@ -28,7 +28,7 @@ export class AgentShareRecord extends ShareRecord {
   @Column({ name: 'agent_id' })
   agentId: UUID;
 
-  @ManyToOne(() => AgentRecord)
+  @ManyToOne(() => AgentRecord, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'agent_id' })
   agent: AgentRecord;
 }

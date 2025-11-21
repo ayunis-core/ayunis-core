@@ -8,11 +8,18 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { AgentNotFoundError } from '../../agents.errors';
 import { randomUUID } from 'crypto';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
+import { ContextService } from 'src/common/context/services/context.service';
+import { ReplaceAgentWithDefaultModelUseCase } from 'src/domain/threads/application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 describe('DeleteAgentUseCase', () => {
   let useCase: DeleteAgentUseCase;
   let mockAgentRepository: Partial<AgentRepository>;
+  let mockContextService: { get: jest.Mock };
+  let mockReplaceAgentWithDefaultModel: { execute: jest.Mock };
+
+  const userId = randomUUID();
+  const orgId = randomUUID();
 
   beforeEach(async () => {
     mockAgentRepository = {
@@ -23,13 +30,26 @@ describe('DeleteAgentUseCase', () => {
       delete: jest.fn(),
     };
 
+    mockContextService = {
+      get: jest.fn((key: string) => {
+        if (key === 'userId') return userId;
+        if (key === 'orgId') return orgId;
+        return undefined;
+      }),
+    };
+
+    mockReplaceAgentWithDefaultModel = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteAgentUseCase,
         { provide: AgentRepository, useValue: mockAgentRepository },
+        { provide: ContextService, useValue: mockContextService },
         {
-          provide: ReplaceModelWithUserDefaultUseCase,
-          useValue: { execute: jest.fn() },
+          provide: ReplaceAgentWithDefaultModelUseCase,
+          useValue: mockReplaceAgentWithDefaultModel,
         },
       ],
     }).compile();
@@ -42,15 +62,10 @@ describe('DeleteAgentUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should delete an agent successfully', async () => {
+    it('should replace agent in threads and then delete the agent successfully', async () => {
       // Arrange
       const agentId = randomUUID();
-      const userId = randomUUID();
-      const command = new DeleteAgentCommand({
-        agentId,
-        userId,
-        orgId: randomUUID(),
-      });
+      const command = new DeleteAgentCommand({ agentId });
 
       const mockModel = new PermittedLanguageModel({
         id: randomUUID(),
@@ -83,18 +98,31 @@ describe('DeleteAgentUseCase', () => {
 
       // Assert
       expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
+      expect(mockReplaceAgentWithDefaultModel.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ oldAgentId: agentId }),
+      );
       expect(mockAgentRepository.delete).toHaveBeenCalledWith(agentId, userId);
+    });
+
+    it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
+      // Arrange
+      const agentId = randomUUID();
+      const command = new DeleteAgentCommand({ agentId });
+      mockContextService.get.mockReturnValue(undefined);
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UnauthorizedAccessError,
+      );
+      expect(mockAgentRepository.findOne).not.toHaveBeenCalled();
+      expect(mockReplaceAgentWithDefaultModel.execute).not.toHaveBeenCalled();
+      expect(mockAgentRepository.delete).not.toHaveBeenCalled();
     });
 
     it('should throw AgentNotFoundError when agent does not exist', async () => {
       // Arrange
       const agentId = randomUUID();
-      const userId = randomUUID();
-      const command = new DeleteAgentCommand({
-        agentId,
-        userId,
-        orgId: randomUUID(),
-      });
+      const command = new DeleteAgentCommand({ agentId });
 
       jest.spyOn(mockAgentRepository, 'findOne').mockResolvedValue(null);
 
@@ -103,39 +131,55 @@ describe('DeleteAgentUseCase', () => {
         AgentNotFoundError,
       );
       expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
+      expect(mockReplaceAgentWithDefaultModel.execute).not.toHaveBeenCalled();
       expect(mockAgentRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('should throw AgentNotFoundError when agent belongs to different user', async () => {
+    it('should not delete agent if replace operation fails', async () => {
       // Arrange
       const agentId = randomUUID();
-      const userId = randomUUID();
-      const command = new DeleteAgentCommand({
-        agentId,
-        userId,
+      const command = new DeleteAgentCommand({ agentId });
+
+      const mockModel = new PermittedLanguageModel({
+        id: randomUUID(),
         orgId: randomUUID(),
+        model: new LanguageModel({
+          name: 'gpt-4',
+          displayName: 'gpt-4',
+          provider: ModelProvider.OPENAI,
+          canStream: true,
+          isReasoning: false,
+          isArchived: false,
+          canUseTools: true,
+        }),
+      });
+      const existingAgent = new Agent({
+        name: 'Test Agent',
+        instructions: 'Test instructions',
+        model: mockModel,
+        toolAssignments: [],
+        userId,
       });
 
-      // Mock repository to return null (agent not found for this user)
-      jest.spyOn(mockAgentRepository, 'findOne').mockResolvedValue(null);
+      const replaceError = new Error('Replace operation failed');
+      jest
+        .spyOn(mockAgentRepository, 'findOne')
+        .mockResolvedValue(existingAgent);
+      mockReplaceAgentWithDefaultModel.execute.mockRejectedValue(replaceError);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        AgentNotFoundError,
+        'Replace operation failed',
       );
       expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
+      expect(mockReplaceAgentWithDefaultModel.execute).toHaveBeenCalled();
       expect(mockAgentRepository.delete).not.toHaveBeenCalled();
     });
 
     it('should handle repository delete errors', async () => {
       // Arrange
       const agentId = randomUUID();
-      const userId = randomUUID();
-      const command = new DeleteAgentCommand({
-        agentId,
-        userId,
-        orgId: randomUUID(),
-      });
+      const command = new DeleteAgentCommand({ agentId });
 
       const mockModel = new PermittedLanguageModel({
         id: randomUUID(),
@@ -169,28 +213,8 @@ describe('DeleteAgentUseCase', () => {
         'Database delete failed',
       );
       expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
+      expect(mockReplaceAgentWithDefaultModel.execute).toHaveBeenCalled();
       expect(mockAgentRepository.delete).toHaveBeenCalledWith(agentId, userId);
-    });
-
-    it('should handle repository findOne errors', async () => {
-      // Arrange
-      const agentId = randomUUID();
-      const userId = randomUUID();
-      const command = new DeleteAgentCommand({
-        agentId,
-        userId,
-        orgId: randomUUID(),
-      });
-
-      const findError = new Error('Database connection failed');
-      jest.spyOn(mockAgentRepository, 'findOne').mockRejectedValue(findError);
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Database connection failed',
-      );
-      expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
-      expect(mockAgentRepository.delete).not.toHaveBeenCalled();
     });
   });
 });

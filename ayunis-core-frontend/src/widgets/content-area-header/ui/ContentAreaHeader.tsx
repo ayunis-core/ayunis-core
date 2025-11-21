@@ -5,11 +5,13 @@ import { Separator } from '@/shared/ui/shadcn/separator';
 interface ContentAreaHeaderProps {
   title: string | ReactNode;
   action?: ReactNode;
+  badge?: ReactNode;
 }
 
 export default function ContentAreaHeader({
   title,
   action,
+  badge,
 }: ContentAreaHeaderProps) {
   return (
     <header className="flex items-center justify-between p-4">
@@ -22,6 +24,7 @@ export default function ContentAreaHeader({
           />
         </div>
         <h1 className="text-xl font-semibold">{title}</h1>
+        {badge}
       </div>
       {action && <div className="flex items-center gap-2">{action}</div>}
     </header>

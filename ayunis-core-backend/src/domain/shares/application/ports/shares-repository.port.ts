@@ -1,6 +1,7 @@
 import { UUID } from 'crypto';
 import { Share } from '../../domain/share.entity';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 
 export abstract class SharesRepository {
   /**
@@ -11,11 +12,17 @@ export abstract class SharesRepository {
   abstract create(share: Share): Promise<void>;
 
   /**
-   * Deletes a specific share
-   * @param id - ID of the share to delete
-   * @param ownerId - ID of the share owner user
+   * Finds a share by its ID
+   * @param id - ID of the share
+   * @returns The share if found, null otherwise
    */
-  abstract delete(id: UUID, ownerId: UUID): Promise<void>;
+  abstract findById(id: UUID): Promise<Share | null>;
+
+  /**
+   * Deletes a specific share
+   * @param share - Share entity to delete
+   */
+  abstract delete(share: Share): Promise<void>;
 
   /**
    * Finds all shares for a specific entity
@@ -27,4 +34,32 @@ export abstract class SharesRepository {
     entityId: UUID,
     entityType: SharedEntityType,
   ): Promise<Share[]>;
+
+  /**
+   * Finds all shares by entity type, scope type, and scope ID
+   * @param entityType - Type of the entity (agent, prompt, etc.)
+   * @param scopeType - Type of the scope (org, user)
+   * @param scopeId - ID of the scope (orgId for org scopes)
+   * @returns Array of shares matching the criteria
+   */
+  abstract findByEntityTypeAndScope(
+    entityType: SharedEntityType,
+    scopeType: ShareScopeType,
+    scopeId: UUID,
+  ): Promise<Share[]>;
+
+  /**
+   * Finds a specific share by entity type, entity ID, scope type, and scope ID
+   * @param entityType - Type of the entity (agent, prompt, etc.)
+   * @param entityId - ID of the specific entity
+   * @param scopeType - Type of the scope (org, user)
+   * @param scopeId - ID of the scope (orgId for org scopes)
+   * @returns The share if found, null otherwise
+   */
+  abstract findByEntityAndScope(
+    entityType: SharedEntityType,
+    entityId: UUID,
+    scopeType: ShareScopeType,
+    scopeId: UUID,
+  ): Promise<Share | null>;
 }
