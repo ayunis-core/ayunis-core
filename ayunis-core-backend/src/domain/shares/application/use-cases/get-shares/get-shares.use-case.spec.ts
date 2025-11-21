@@ -80,6 +80,7 @@ describe('GetSharesUseCase', () => {
 
       const mockScope = new OrgShareScope({
         id: randomUUID(),
+        orgId: randomUUID(),
       });
 
       const mockShares: AgentShare[] = [

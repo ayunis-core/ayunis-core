@@ -1,4 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Mock the Transactional decorator
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { DeleteAgentUseCase } from './delete-agent.use-case';
 import { AgentRepository } from '../../ports/agent.repository';
 import { DeleteAgentCommand } from './delete-agent.command';
@@ -169,7 +177,7 @@ describe('DeleteAgentUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Replace operation failed',
+        'Unexpected error occurred',
       );
       expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
       expect(mockReplaceAgentWithDefaultModel.execute).toHaveBeenCalled();
@@ -210,7 +218,7 @@ describe('DeleteAgentUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Database delete failed',
+        'Unexpected error occurred',
       );
       expect(mockAgentRepository.findOne).toHaveBeenCalledWith(agentId, userId);
       expect(mockReplaceAgentWithDefaultModel.execute).toHaveBeenCalled();

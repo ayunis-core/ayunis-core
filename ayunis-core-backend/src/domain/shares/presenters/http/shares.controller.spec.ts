@@ -24,6 +24,7 @@ describe('SharesController', () => {
   const mockAgentId = randomUUID();
   const mockUserId = randomUUID();
   const mockShareId = randomUUID();
+  const mockOrgId = randomUUID();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -73,7 +74,7 @@ describe('SharesController', () => {
 
       const mockShare = new AgentShare({
         agentId: mockAgentId,
-        scope: new OrgShareScope({}),
+        scope: new OrgShareScope({ orgId: mockOrgId }),
         ownerId: mockUserId,
       });
 
@@ -150,7 +151,7 @@ describe('SharesController', () => {
 
       const mockShare = new AgentShare({
         agentId: mockAgentId,
-        scope: new OrgShareScope({}),
+        scope: new OrgShareScope({ orgId: mockOrgId }),
         ownerId: mockUserId,
       });
 
@@ -190,7 +191,7 @@ describe('SharesController', () => {
       const mockShares = [
         new AgentShare({
           agentId: mockAgentId,
-          scope: new OrgShareScope({}),
+          scope: new OrgShareScope({ orgId: mockOrgId }),
           ownerId: mockUserId,
         }),
       ];

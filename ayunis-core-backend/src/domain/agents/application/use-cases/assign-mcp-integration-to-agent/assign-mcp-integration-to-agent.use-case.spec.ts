@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { AssignMcpIntegrationToAgentUseCase } from './assign-mcp-integration-to-agent.use-case';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { AssignMcpIntegrationToAgentCommand } from './assign-mcp-integration-to-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
@@ -233,7 +234,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
       ]);
     });
 
-    it('should throw UnauthorizedException when user is not authenticated', async () => {
+    it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
       // Arrange
       const command = new AssignMcpIntegrationToAgentCommand(
         mockAgentId,
@@ -244,7 +245,7 @@ describe('AssignMcpIntegrationToAgentUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
+        UnauthorizedAccessError,
       );
 
       expect(contextService.get).toHaveBeenCalledWith('userId');
