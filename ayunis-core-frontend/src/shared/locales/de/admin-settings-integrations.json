@@ -101,6 +101,7 @@
       "credentialsPlaceholder": "Geben Sie Ihre Anmeldedaten ein",
       "credentialsDescriptionApiKey": "Ihr API-Schlüssel",
       "credentialsDescriptionBearerToken": "Ihr Bearer-Token",
+      "noCredentialsRequired": "Für diese Integration sind keine zusätzlichen Anmeldedaten erforderlich.",
       "cancel": "Abbrechen",
       "creating": "Wird erstellt...",
       "create": "Erstellen"

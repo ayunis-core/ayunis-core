@@ -36,8 +36,9 @@ export class PredefinedMcpIntegrationRegistry {
     if (legalMcpUrl) {
       this.configs.set(PredefinedMcpIntegrationSlug.LEGAL_CODES, {
         slug: PredefinedMcpIntegrationSlug.LEGAL_CODES,
-        displayName: 'Legal MCP',
-        description: 'Legal MCP',
+        displayName: 'Deutsche Gesetzestexte',
+        description:
+          'Ermöglicht KI-Agenten den Zugriff auf aktuelle deutsche Gesetzestexte.',
         serverUrl: legalMcpUrl,
         authType: McpAuthMethod.NO_AUTH,
       });
