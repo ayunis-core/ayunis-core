@@ -4,10 +4,9 @@ type Provider = ModelWithConfigResponseDto['provider'];
 
 export function getFlagByProvider(provider: Provider): string {
   switch (provider) {
+    case 'otc':
     case 'ayunis':
-      return `🇩🇪`;
     case 'synaforce':
-      return `🇩🇪`;
     case 'ollama':
       return `🇩🇪`;
     case 'mistral':

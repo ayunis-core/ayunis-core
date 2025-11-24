@@ -24,6 +24,7 @@ export const ModelWithConfigResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -73,6 +74,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -143,6 +145,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -183,6 +186,7 @@ export const CreatePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -204,6 +208,7 @@ export const PermittedProviderResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -244,6 +249,7 @@ export const DeletePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -265,6 +271,7 @@ export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -312,6 +319,7 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -359,6 +367,7 @@ export const CreateLanguageModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -392,6 +401,7 @@ export const UpdateLanguageModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -425,6 +435,7 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -467,6 +478,7 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -509,6 +521,7 @@ export const LanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -561,6 +574,7 @@ export const EmbeddingModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**

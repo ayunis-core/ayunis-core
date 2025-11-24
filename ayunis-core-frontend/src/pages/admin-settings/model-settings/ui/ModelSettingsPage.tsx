@@ -29,6 +29,7 @@ export default function ModelSettingsPage() {
   );
 
   const providerPriority: Array<ModelWithConfigResponseDtoProvider> = [
+    ModelWithConfigResponseDtoProvider.otc,
     ModelWithConfigResponseDtoProvider.ayunis,
     ModelWithConfigResponseDtoProvider.synaforce,
     ModelWithConfigResponseDtoProvider.mistral,

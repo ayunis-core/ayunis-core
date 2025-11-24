@@ -5096,7 +5096,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The provider of the model"
           },
@@ -5175,7 +5176,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The provider of the model"
           },
@@ -5268,7 +5270,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -5309,7 +5312,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "example": "openai"
           }
@@ -5329,7 +5333,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The permitted model provider",
             "example": "openai"
@@ -5370,7 +5375,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "example": "openai"
           }
@@ -5390,7 +5396,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -5457,7 +5464,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The provider of the model"
           },
@@ -5509,7 +5517,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "example": "openai"
           },
@@ -5566,7 +5575,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "example": "openai"
           },
@@ -5623,7 +5633,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "example": "openai"
           },
@@ -5673,7 +5684,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "example": "openai"
           },
@@ -5728,7 +5740,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -5812,7 +5825,8 @@
               "mistral",
               "ollama",
               "synaforce",
-              "ayunis"
+              "ayunis",
+              "otc"
             ],
             "description": "The provider of the model",
             "example": "openai"

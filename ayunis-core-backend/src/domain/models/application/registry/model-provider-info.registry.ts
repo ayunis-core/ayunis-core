@@ -6,6 +6,11 @@ import { Injectable, Logger } from '@nestjs/common';
 
 const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
   {
+    provider: ModelProvider.OTC,
+    displayName: 'Open Telekom Cloud',
+    hostedIn: ModelProviderLocation.DE,
+  },
+  {
     provider: ModelProvider.OPENAI,
     displayName: 'OpenAI',
     hostedIn: ModelProviderLocation.US,
