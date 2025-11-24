@@ -71,6 +71,8 @@ import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
+import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
+import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -110,6 +112,8 @@ import { ConfigService } from '@nestjs/config';
     LocalOllamaInferenceHandler,
     AyunisOllamaStreamInferenceHandler,
     AyunisOllamaInferenceHandler,
+    OtcStreamInferenceHandler,
+    OtcInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
     {
@@ -121,6 +125,7 @@ import { ConfigService } from '@nestjs/config';
         ollamaHandler: LocalOllamaStreamInferenceHandler,
         synaforceHandler: SynaforceStreamInferenceHandler,
         ayunisHandler: AyunisOllamaStreamInferenceHandler,
+        otcHandler: OtcStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -131,6 +136,7 @@ import { ConfigService } from '@nestjs/config';
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
+        registry.register(ModelProvider.OTC, otcHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -141,6 +147,7 @@ import { ConfigService } from '@nestjs/config';
         LocalOllamaStreamInferenceHandler,
         SynaforceStreamInferenceHandler,
         AyunisOllamaStreamInferenceHandler,
+        OtcStreamInferenceHandler,
         MockStreamInferenceHandler,
         ConfigService,
       ],
@@ -154,6 +161,7 @@ import { ConfigService } from '@nestjs/config';
         ollamaHandler: LocalOllamaInferenceHandler,
         synaforceHandler: SynaforceInferenceHandler,
         ayunisHandler: AyunisOllamaInferenceHandler,
+        otcHandler: OtcInferenceHandler,
         mockHandler: MockInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -164,6 +172,7 @@ import { ConfigService } from '@nestjs/config';
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
+        registry.register(ModelProvider.OTC, otcHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -174,6 +183,7 @@ import { ConfigService } from '@nestjs/config';
         LocalOllamaInferenceHandler,
         SynaforceInferenceHandler,
         AyunisOllamaInferenceHandler,
+        OtcInferenceHandler,
         MockInferenceHandler,
         ConfigService,
       ],
