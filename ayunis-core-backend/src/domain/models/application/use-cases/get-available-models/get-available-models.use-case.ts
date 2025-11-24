@@ -48,6 +48,7 @@ export class GetAvailableModelsUseCase {
     }
 
     const providerConfigMap = {
+      [ModelProvider.OTC]: 'models.otc.apiKey',
       [ModelProvider.MISTRAL]: 'models.mistral.apiKey',
       [ModelProvider.OPENAI]: 'models.openai.apiKey',
       [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',

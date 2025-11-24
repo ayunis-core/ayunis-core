@@ -34,6 +34,7 @@ interface CreateLanguageModelDialogProps {
 }
 
 const PROVIDERS = [
+  { value: 'otc', label: 'OTC' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'mistral', label: 'Mistral' },
