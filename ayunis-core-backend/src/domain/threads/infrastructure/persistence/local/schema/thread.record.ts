@@ -23,7 +23,7 @@ export class ThreadRecord extends BaseRecord {
   @Index()
   agentId?: UUID;
 
-  @ManyToOne(() => AgentRecord, { onDelete: 'SET NULL' })
+  @ManyToOne(() => AgentRecord)
   agent?: AgentRecord;
 
   @Column({ nullable: true })
