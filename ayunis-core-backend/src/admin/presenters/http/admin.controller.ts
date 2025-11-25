@@ -74,6 +74,7 @@ export class AdminController {
         canStream: createLanguageModelDto.canStream,
         canUseTools: createLanguageModelDto.canUseTools,
         isReasoning: createLanguageModelDto.isReasoning,
+        canVision: createLanguageModelDto.canVision,
         isArchived: createLanguageModelDto.isArchived,
       }),
     );
@@ -108,6 +109,7 @@ export class AdminController {
         canStream: updateLanguageModelDto.canStream,
         canUseTools: updateLanguageModelDto.canUseTools,
         isReasoning: updateLanguageModelDto.isReasoning,
+        canVision: updateLanguageModelDto.canVision,
         isArchived: updateLanguageModelDto.isArchived,
       }),
     );

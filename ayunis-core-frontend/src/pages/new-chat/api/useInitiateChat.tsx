@@ -41,7 +41,8 @@ export const useInitiateChat = () => {
       file: File;
     }>,
   ) {
-    // Store the message as pending
+    // Store the message and attachments as pending so ChatPage can send them
+    // Note: Images are already stored in context by ChatInput when threadId is not available
     setPendingMessage(message);
     setSources(sources ?? []);
 

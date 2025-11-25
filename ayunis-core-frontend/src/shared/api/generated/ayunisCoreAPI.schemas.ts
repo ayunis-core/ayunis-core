@@ -46,6 +46,8 @@ export interface ModelWithConfigResponseDto {
   isReasoning: boolean;
   /** Whether the model can use tools */
   canUseTools: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** Whether the model is permitted to be used */
   isPermitted: boolean;
   /** Whether the model is the default model */
@@ -374,6 +376,8 @@ export interface CreateLanguageModelRequestDto {
   canUseTools: boolean;
   /** Whether the model has reasoning capabilities */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** Whether the model is archived */
   isArchived: boolean;
 }
@@ -407,6 +411,8 @@ export interface UpdateLanguageModelRequestDto {
   canUseTools: boolean;
   /** Whether the model has reasoning capabilities */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** Whether the model is archived */
   isArchived: boolean;
 }
@@ -541,6 +547,8 @@ export interface LanguageModelResponseDto {
   canUseTools: boolean;
   /** Whether the model has reasoning capabilities */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** The date the model was created */
   createdAt: string;
   /** The date the model was last updated */
@@ -1011,6 +1019,19 @@ export interface PriceResponseDto {
 
 export interface UpdateSeatsDto { [key: string]: unknown }
 
+export interface UploadFileResponseDto {
+  /** Name of the uploaded object */
+  objectName: string;
+  /** Size of the uploaded file in bytes */
+  size: number;
+  /** ETag of the uploaded object */
+  etag: string;
+  /** Content type of the uploaded file */
+  contentType?: string;
+  /** Last modified date of the uploaded object */
+  lastModified?: string;
+}
+
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
@@ -1029,6 +1050,8 @@ export const UserMessageResponseDtoRole = {
   user: 'user',
 } as const;
 
+export type UserMessageResponseDtoContentItem = TextMessageContentResponseDto | ImageMessageContentResponseDto;
+
 export interface UserMessageResponseDto {
   /** Unique identifier for the message */
   id: string;
@@ -1038,8 +1061,8 @@ export interface UserMessageResponseDto {
   createdAt: string;
   /** Role of the message sender */
   role: UserMessageResponseDtoRole;
-  /** Array of text content items for user messages */
-  content: TextMessageContentResponseDto[];
+  /** Array of content items for user messages (text and/or images) */
+  content: UserMessageResponseDtoContentItem[];
 }
 
 /**
@@ -1128,6 +1151,7 @@ export const TextMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface TextMessageContentResponseDto {
@@ -1149,6 +1173,7 @@ export const ToolUseMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 /**
@@ -1179,6 +1204,7 @@ export const ToolResultMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface ToolResultMessageContentResponseDto {
@@ -1204,6 +1230,7 @@ export const ThinkingMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface ThinkingMessageContentResponseDto {
@@ -1211,6 +1238,30 @@ export interface ThinkingMessageContentResponseDto {
   type: ThinkingMessageContentResponseDtoType;
   /** The thinking content of the message */
   thinking: string;
+}
+
+/**
+ * Type of the message content
+ */
+export type ImageMessageContentResponseDtoType = typeof ImageMessageContentResponseDtoType[keyof typeof ImageMessageContentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageMessageContentResponseDtoType = {
+  text: 'text',
+  tool_use: 'tool_use',
+  tool_result: 'tool_result',
+  thinking: 'thinking',
+  image: 'image',
+} as const;
+
+export interface ImageMessageContentResponseDto {
+  /** Type of the message content */
+  type: ImageMessageContentResponseDtoType;
+  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
+  imageUrl: string;
+  /** Optional alternative text for the image */
+  altText?: string;
 }
 
 export interface ModelResponseDto {
@@ -1878,6 +1929,7 @@ export const MessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface MessageContentResponseDto {
@@ -2002,6 +2054,13 @@ export interface RunThreadResponseDto {
   timestamp: string;
 }
 
+export interface MessageImageInputDto {
+  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
+  imageUrl: string;
+  /** Optional alternative text for the image */
+  altText?: string;
+}
+
 /**
  * The type of input
  */
@@ -2018,6 +2077,24 @@ export interface TextInput {
   type: TextInputType;
   /** The text content for the inference */
   text: string;
+}
+
+/**
+ * The type of input
+ */
+export type ImageInputType = typeof ImageInputType[keyof typeof ImageInputType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageInputType = {
+  image: 'image',
+} as const;
+
+export interface ImageInput {
+  /** The type of input */
+  type: ImageInputType;
+  /** Images to send, referenced by storage object name */
+  images: MessageImageInputDto[];
 }
 
 /**
@@ -2045,7 +2122,7 @@ export interface ToolResultInput {
 /**
  * The input to use for the inference
  */
-export type SendMessageDtoInput = TextInput | ToolResultInput;
+export type SendMessageDtoInput = TextInput | ImageInput | ToolResultInput;
 
 export interface SendMessageDto {
   /** The thread to use for the inference. */
@@ -2232,6 +2309,15 @@ offset?: number;
 limit?: number;
 };
 
+export type StorageControllerUploadFileParams = {
+scopeType: string;
+scopeId: string;
+};
+
+export type StorageControllerUploadFileBody = {
+  file?: Blob;
+};
+
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type ThreadsControllerAddFileSourceBody = {
@@ -2249,10 +2335,6 @@ export type AgentsControllerAddFileSourceBody = {
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
-
-export type StorageControllerUploadFileBody = {
-  file?: Blob;
-};
 
 export type AdminControllerGetModelParams = {
 name: string;

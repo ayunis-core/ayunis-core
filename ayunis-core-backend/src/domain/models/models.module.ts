@@ -72,6 +72,8 @@ import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embed
 import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
 import { ConfigService } from '@nestjs/config';
+import { StorageModule } from '../storage/storage.module';
+import { ImageContentService } from './infrastructure/services/image-content.service';
 
 @Module({
   imports: [
@@ -82,12 +84,14 @@ import { ConfigService } from '@nestjs/config';
     LegalAcceptancesModule,
     OrgsModule,
     UsersModule,
+    StorageModule,
     forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
   controllers: [ModelsController, SuperAdminModelsController],
   providers: [
+    ImageContentService,
     ModelRegistry,
     ModelProviderInfoRegistry,
     ModelResponseDtoMapper,

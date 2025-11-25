@@ -25,6 +25,8 @@ import {
   ToolChoiceTool,
 } from '@anthropic-ai/sdk/resources/messages';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageContentService } from '../services/image-content.service';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
@@ -33,7 +35,10 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(AnthropicStreamInferenceHandler.name);
   private readonly client: Anthropic;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly imageContentService: ImageContentService,
+  ) {
     this.client = new Anthropic({
       apiKey: this.configService.get('anthropic.apiKey'),
     });
@@ -54,7 +59,7 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     try {
       const { messages, tools, toolChoice, systemPrompt } = input;
       const anthropicTools = tools?.map(this.convertTool);
-      const anthropicMessages = this.convertMessages(messages);
+      const anthropicMessages = await this.convertMessages(messages);
       const anthropicToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
@@ -100,61 +105,68 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     };
   };
 
-  private convertMessages = (messages: Message[]): Anthropic.MessageParam[] => {
-    const chatMessages = messages.reduce((convertedMessages, message) => {
-      // always push the first message and next loop
-      if (convertedMessages.length === 0) {
-        convertedMessages.push(this.convertMessage(message));
+  private convertMessages = async (
+    messages: Message[],
+  ): Promise<Anthropic.MessageParam[]> => {
+    const chatMessages = await messages.reduce<
+      Promise<Anthropic.MessageParam[]>
+    >(
+      async (accPromise, message) => {
+        const convertedMessages = await accPromise;
+        // always push the first message and next loop
+        if (convertedMessages.length === 0) {
+          convertedMessages.push(await this.convertMessage(message));
+          return convertedMessages;
+        }
+        const lastMessage = convertedMessages.pop();
+        if (!lastMessage) {
+          throw new Error('lastMessage is undefined');
+        }
+        // assistant messages are always separate so
+        // an assistant message is always pushed
+        // and the following message is always pushed
+        if (
+          message.role === MessageRole.ASSISTANT ||
+          lastMessage.role === MessageRole.ASSISTANT
+        ) {
+          convertedMessages.push(lastMessage);
+          convertedMessages.push(await this.convertMessage(message));
+          return convertedMessages;
+        }
+
+        // all other messages are combined as one user message
+        // so assistant and user messages always follow each other
+        // user -> assistant -> user -> assistant
+        const convertedMessage = await this.convertMessage(message);
+
+        const convertedMessageContent =
+          typeof convertedMessage.content === 'string'
+            ? [{ type: 'text' as const, text: convertedMessage.content }]
+            : convertedMessage.content;
+
+        const lastMessageContent =
+          typeof lastMessage.content === 'string'
+            ? [{ type: 'text' as const, text: lastMessage.content }]
+            : lastMessage.content;
+
+        const allContent = [...lastMessageContent, ...convertedMessageContent];
+        convertedMessages.push({ role: 'user', content: allContent });
         return convertedMessages;
-      }
-      const lastMessage = convertedMessages.pop();
-      if (!lastMessage) {
-        throw new Error('lastMessage is undefined');
-      }
-      // assistant messages are always separate so
-      // an assistant message is always pushed
-      // and the following message is always pushed
-      if (
-        message.role === MessageRole.ASSISTANT ||
-        lastMessage.role === MessageRole.ASSISTANT
-      ) {
-        convertedMessages.push(lastMessage);
-        convertedMessages.push(this.convertMessage(message));
-        return convertedMessages;
-      }
-
-      // all other messages are combined as one user message
-      // so assistant and user messages always follow each other
-      // user -> assistant -> user -> assistant
-      const convertedMessage = this.convertMessage(message);
-
-      const convertedMessageContent =
-        typeof convertedMessage.content === 'string'
-          ? [{ type: 'text' as const, text: convertedMessage.content }]
-          : convertedMessage.content;
-
-      const lastMessageContent =
-        typeof lastMessage.content === 'string'
-          ? [{ type: 'text' as const, text: lastMessage.content }]
-          : lastMessage.content;
-
-      const allContent = [...lastMessageContent, ...convertedMessageContent];
-      convertedMessages.push({ role: 'user', content: allContent });
-      return convertedMessages;
-    }, [] as Anthropic.MessageParam[]);
+      },
+      Promise.resolve([] as Anthropic.MessageParam[]),
+    );
     return chatMessages;
   };
 
-  private convertMessage = (message: Message): Anthropic.MessageParam => {
+  private convertMessage = async (
+    message: Message,
+  ): Promise<Anthropic.MessageParam> => {
     if (message instanceof UserMessage) {
       return {
         role: 'user',
-        content: message.content.map((content) => {
-          return {
-            type: 'text',
-            text: content.text,
-          };
-        }),
+        content: await Promise.all(
+          message.content.map((content) => this.convertUserContent(content)),
+        ),
       };
     }
     if (message instanceof AssistantMessage) {
@@ -267,4 +279,37 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     // Return null for other event types we don't need to handle
     return null;
   };
+
+  private async convertUserContent(
+    content: TextMessageContent | ImageMessageContent,
+  ): Promise<Anthropic.ImageBlockParam | Anthropic.TextBlockParam> {
+    if (content instanceof TextMessageContent) {
+      return {
+        type: 'text',
+        text: content.text,
+      };
+    }
+
+    if (!(content instanceof ImageMessageContent)) {
+      throw new Error(`Unsupported user content type for Anthropic`);
+    }
+
+    return this.convertImageContent(content);
+  }
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+  ): Promise<Anthropic.ImageBlockParam> {
+    const imageData =
+      await this.imageContentService.convertImageToBase64(content);
+
+    return {
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: imageData.contentType,
+        data: imageData.base64,
+      },
+    };
+  }
 }

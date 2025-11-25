@@ -66,6 +66,7 @@ import { DiscoverMcpCapabilitiesUseCase } from 'src/domain/mcp/application/use-c
 import { DiscoverMcpCapabilitiesQuery } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.query';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -390,12 +391,34 @@ export class ExecuteRunUseCase {
           yield toolResultMessage;
         }
 
-        // Add text message if we have one and it's the first iteration
+        // Add user message if we have text input and it's the first iteration
         if (isFirstIteration && textInput) {
+          const content: Array<TextMessageContent | ImageMessageContent> = [];
+
+          // Add text content only if text is provided
+          if (textInput.text && textInput.text.trim().length > 0) {
+            content.push(new TextMessageContent(textInput.text));
+          }
+
+          // Add image content if images are provided
+          if (textInput.images && textInput.images.length > 0) {
+            content.push(
+              ...textInput.images.map(
+                (image) =>
+                  new ImageMessageContent(image.imageUrl, image.altText),
+              ),
+            );
+          }
+
+          // Validate that at least one content item exists
+          if (content.length === 0) {
+            throw new RunInvalidInputError(
+              'Message must contain at least one content item (non-empty text or at least one image)',
+            );
+          }
+
           const newTextMessage = await this.createUserMessageUseCase.execute(
-            new CreateUserMessageCommand(params.thread.id, [
-              new TextMessageContent(textInput.text),
-            ]),
+            new CreateUserMessageCommand(params.thread.id, content),
           );
           params.trace.event({
             name: 'new_message',

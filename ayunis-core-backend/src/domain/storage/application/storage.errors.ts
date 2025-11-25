@@ -2,6 +2,12 @@ import {
   ApplicationError,
   ErrorMetadata,
 } from '../../../common/errors/base.error';
+import {
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 export enum StorageErrorCode {
   OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND',
@@ -11,6 +17,11 @@ export enum StorageErrorCode {
   BUCKET_NOT_FOUND = 'BUCKET_NOT_FOUND',
   INVALID_OBJECT_NAME = 'INVALID_OBJECT_NAME',
   PERMISSION_DENIED = 'PERMISSION_DENIED',
+  FILE_NOT_PROVIDED = 'FILE_NOT_PROVIDED',
+  FILE_MIME_TYPE_REQUIRED = 'FILE_MIME_TYPE_REQUIRED',
+  UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
+  FILE_VALIDATION_FAILED = 'FILE_VALIDATION_FAILED',
+  SCOPE_TYPE_REQUIRED = 'SCOPE_TYPE_REQUIRED',
 }
 
 export class StorageError extends ApplicationError {
@@ -22,6 +33,38 @@ export class StorageError extends ApplicationError {
   ) {
     super(message, code, statusCode, metadata);
     this.name = 'StorageError';
+  }
+
+  /**
+   * Convert to a NestJS HTTP exception
+   */
+  toHttpException() {
+    switch (this.statusCode) {
+      case 403:
+        return new ForbiddenException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 404:
+        return new NotFoundException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 500:
+        return new InternalServerErrorException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      default:
+        return new BadRequestException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+    }
   }
 }
 
@@ -132,5 +175,65 @@ export class StoragePermissionDeniedError extends StorageError {
       params.metadata,
     );
     this.name = 'StoragePermissionDeniedError';
+  }
+}
+
+export class FileNotProvidedError extends StorageError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No file uploaded',
+      StorageErrorCode.FILE_NOT_PROVIDED,
+      400,
+      metadata,
+    );
+    this.name = 'FileNotProvidedError';
+  }
+}
+
+export class FileMimeTypeRequiredError extends StorageError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'File MIME type is required',
+      StorageErrorCode.FILE_MIME_TYPE_REQUIRED,
+      400,
+      metadata,
+    );
+    this.name = 'FileMimeTypeRequiredError';
+  }
+}
+
+export class UnsupportedFileTypeError extends StorageError {
+  constructor(params: { mimeType: string; metadata?: ErrorMetadata }) {
+    super(
+      `Unsupported file type: ${params.mimeType}. Supported types: images, documents, data files`,
+      StorageErrorCode.UNSUPPORTED_FILE_TYPE,
+      400,
+      params.metadata,
+    );
+    this.name = 'UnsupportedFileTypeError';
+  }
+}
+
+export class FileValidationFailedError extends StorageError {
+  constructor(params: { message: string; metadata?: ErrorMetadata }) {
+    super(
+      params.message || 'File validation failed',
+      StorageErrorCode.FILE_VALIDATION_FAILED,
+      400,
+      params.metadata,
+    );
+    this.name = 'FileValidationFailedError';
+  }
+}
+
+export class ScopeTypeRequiredError extends StorageError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'scopeType query parameter is required',
+      StorageErrorCode.SCOPE_TYPE_REQUIRED,
+      400,
+      metadata,
+    );
+    this.name = 'ScopeTypeRequiredError';
   }
 }

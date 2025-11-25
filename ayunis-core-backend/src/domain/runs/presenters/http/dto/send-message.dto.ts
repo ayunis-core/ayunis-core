@@ -5,6 +5,8 @@ import {
   IsUUID,
   ValidateNested,
   IsBoolean,
+  IsString,
+  IsArray,
 } from 'class-validator';
 import { ApiProperty, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -14,10 +16,30 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 class Input {
   @ApiProperty({
     description: 'The type of input',
-    enum: ['text', 'tool_result'],
+    enum: ['text', 'image', 'tool_result'],
   })
-  @IsEnum(['text', 'tool_result'])
-  type: 'text' | 'tool_result';
+  @IsEnum(['text', 'image', 'tool_result'])
+  type: 'text' | 'image' | 'tool_result';
+}
+
+export class MessageImageInputDto {
+  @ApiProperty({
+    description:
+      'Internal image reference (e.g. MinIO object name or /storage/:objectName path)',
+    example: '1711365678123-user-upload.png',
+  })
+  @IsNotEmpty()
+  @IsString()
+  imageUrl: string;
+
+  @ApiProperty({
+    description: 'Optional alternative text for the image',
+    example: 'Screenshot of the reported issue',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  altText?: string;
 }
 
 export class TextInput extends Input {
@@ -34,6 +56,26 @@ export class TextInput extends Input {
   })
   @IsNotEmpty()
   text: string;
+}
+
+export class ImageInput extends Input {
+  @ApiProperty({
+    description: 'The type of input',
+    enum: ['image'],
+    example: 'image',
+  })
+  type: 'image' = 'image' as const;
+
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MessageImageInputDto)
+  @ApiProperty({
+    description: 'Images to send, referenced by storage object name',
+    type: 'array',
+    items: { $ref: getSchemaPath(MessageImageInputDto) },
+  })
+  images: MessageImageInputDto[];
 }
 
 export class ToolResultInput extends Input {
@@ -86,7 +128,7 @@ export class ToolConfigDto {
   })
   toolConfigId?: UUID;
 }
-@ApiExtraModels(TextInput, ToolResultInput)
+@ApiExtraModels(MessageImageInputDto, TextInput, ImageInput, ToolResultInput)
 export class SendMessageDto {
   @IsNotEmpty()
   @IsUUID()
@@ -103,6 +145,7 @@ export class SendMessageDto {
       property: 'type',
       subTypes: [
         { value: TextInput, name: 'text' },
+        { value: ImageInput, name: 'image' },
         { value: ToolResultInput, name: 'tool_result' },
       ],
     },
@@ -114,10 +157,11 @@ export class SendMessageDto {
     },
     oneOf: [
       { $ref: getSchemaPath(TextInput) },
+      { $ref: getSchemaPath(ImageInput) },
       { $ref: getSchemaPath(ToolResultInput) },
     ],
   })
-  input: TextInput | ToolResultInput;
+  input: TextInput | ImageInput | ToolResultInput;
 
   @IsOptional()
   @IsBoolean()

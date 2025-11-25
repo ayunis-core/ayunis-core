@@ -10,6 +10,7 @@ import { TextMessageContent } from 'src/domain/messages/domain/message-contents/
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 
 @Injectable()
@@ -49,6 +50,13 @@ export class MessageMapper {
           thinking: content.thinking,
         };
       }
+      if (content instanceof ImageMessageContent) {
+        return {
+          type: MessageContentType.IMAGE,
+          imageUrl: content.imageUrl,
+          altText: content.altText,
+        };
+      }
       throw new Error('Invalid message content');
     });
     return record;
@@ -63,6 +71,9 @@ export class MessageMapper {
           content: messageEntity.content.map((content) => {
             if (content.type === MessageContentType.TEXT) {
               return new TextMessageContent(content.text);
+            }
+            if (content.type === MessageContentType.IMAGE) {
+              return new ImageMessageContent(content.imageUrl, content.altText);
             }
             throw new Error('Invalid message content');
           }),

@@ -75,6 +75,33 @@ export class TextMessageContentRequestDto extends MessageContentRequestDto {
   text: string;
 }
 
+export class ImageMessageContentRequestDto extends MessageContentRequestDto {
+  @ApiProperty({
+    description: 'Type of the message content',
+    example: MessageContentType.IMAGE,
+    enum: [MessageContentType.IMAGE],
+  })
+  type: MessageContentType.IMAGE = MessageContentType.IMAGE;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    description:
+      'Internal image reference (e.g. MinIO object name or /storage/:objectName path)',
+    example: '1711365678123-user-upload.png',
+  })
+  imageUrl: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    description: 'Optional alternative text for the image',
+    example: 'Screenshot of the reported issue',
+    required: false,
+  })
+  altText?: string;
+}
+
 export class ToolUseMessageContentRequestDto extends MessageContentRequestDto {
   @ApiProperty({
     description: 'Type of the message content',
@@ -151,12 +178,27 @@ export class UserMessageRequestDto {
   role: MessageRole.USER = MessageRole.USER;
 
   @ValidateNested({ each: true })
-  @Type(() => TextMessageContentRequestDto)
-  @ApiProperty({
-    description: 'Array of text content items for user messages',
-    type: [TextMessageContentRequestDto],
+  @Type(() => Object, {
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { value: TextMessageContentRequestDto, name: MessageContentType.TEXT },
+        {
+          value: ImageMessageContentRequestDto,
+          name: MessageContentType.IMAGE,
+        },
+      ],
+    },
   })
-  content: TextMessageContentRequestDto[];
+  @ApiProperty({
+    description:
+      'Array of content items for user messages (text and/or images)',
+    oneOf: [
+      { $ref: getSchemaPath(TextMessageContentRequestDto) },
+      { $ref: getSchemaPath(ImageMessageContentRequestDto) },
+    ],
+  })
+  content: Array<TextMessageContentRequestDto | ImageMessageContentRequestDto>;
 }
 
 export class SystemMessageRequestDto {

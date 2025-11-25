@@ -21,6 +21,9 @@ export class CreateLanguageModelDto {
   canUseTools: boolean;
 
   @IsBoolean()
+  canVision: boolean;
+
+  @IsBoolean()
   isReasoning: boolean;
 
   @IsBoolean()

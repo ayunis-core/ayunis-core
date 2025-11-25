@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
+import { Dialog, DialogContent } from '@/shared/ui/shadcn/dialog';
 import { Bot, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -8,7 +10,9 @@ import type {
   TextMessageContent,
   ToolUseMessageContent,
   ThinkingMessageContent,
+  ImageMessageContentResponseDto,
 } from '../model/openapi';
+import config from '@/shared/config';
 import brandIconLight from '@/shared/assets/brand/brand-icon-round-light.svg';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import { useTheme } from '@/features/theme';
@@ -23,7 +27,10 @@ import {
   LineChartWidget,
   PieChartWidget,
 } from '@/widgets/charts';
-import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  ToolAssignmentDtoType,
+  type TextMessageContentResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 
@@ -116,15 +123,73 @@ export default function ChatMessage({
   return null;
 }
 
+function ImageThumbnail({
+  imageContent,
+}: {
+  imageContent: ImageMessageContentResponseDto;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const encodedObjectName = encodeURIComponent(imageContent.imageUrl);
+  const imageUrl = `${config.api.baseUrl}/storage/${encodedObjectName}`;
+
+  return (
+    <>
+      <div
+        className="rounded-lg h-14.5 w-14.5 my-2 overflow-hidden border border-border cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => setIsOpen(true)}
+      >
+        <img
+          src={imageUrl}
+          alt={imageContent.altText}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
+          <img
+            src={imageUrl}
+            alt={imageContent.altText}
+            className="w-full h-full max-h-[90vh] object-contain rounded-lg"
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function renderMessageContent(message: Message, isStreaming?: boolean) {
   switch (message.role) {
     case 'user':
-    case 'system':
-      return message.content.map((content, index) => (
-        <Markdown key={`${content.type}-${index}-${content.text.slice(0, 50)}`}>
-          {content.text}
-        </Markdown>
-      ));
+    case 'system': {
+      const images = message.content.filter(
+        (c) => c.type === 'image',
+      ) as ImageMessageContentResponseDto[];
+      const texts = message.content.filter(
+        (c) => c.type !== 'image',
+      ) as TextMessageContentResponseDto[];
+
+      return (
+        <>
+          {images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {images.map((imageContent, index) => (
+                <ImageThumbnail
+                  key={`image-${index}-${imageContent.imageUrl}`}
+                  imageContent={imageContent}
+                />
+              ))}
+            </div>
+          )}
+
+          {texts.map((textContent, index) => (
+            <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
+              {textContent.text}
+            </Markdown>
+          ))}
+        </>
+      );
+    }
 
     case 'assistant':
       // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder

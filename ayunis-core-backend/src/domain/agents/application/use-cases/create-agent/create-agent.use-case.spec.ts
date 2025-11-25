@@ -102,6 +102,7 @@ describe('CreateAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       });
       const mockTool = {
@@ -169,6 +170,7 @@ describe('CreateAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       });
       const mockTool = {
@@ -233,6 +235,7 @@ describe('CreateAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       });
       const mockTool1 = {
@@ -296,6 +299,7 @@ describe('CreateAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: false,
         }),
       });
       const mockCreatedAgent = new Agent({

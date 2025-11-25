@@ -107,6 +107,7 @@ describe('RemoveSourceFromAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: false,
+          canVision: false,
         }),
       });
 

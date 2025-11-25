@@ -10,6 +10,7 @@ export interface LanguageModelFormData {
   displayName: string;
   canStream: boolean;
   canUseTools: boolean;
+  canVision: boolean;
   isReasoning: boolean;
   isArchived: boolean;
 }

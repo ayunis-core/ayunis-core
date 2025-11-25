@@ -1,7 +1,17 @@
 export class RunInput {}
 
+export class RunImageInput {
+  constructor(
+    public readonly imageUrl: string,
+    public readonly altText?: string,
+  ) {}
+}
+
 export class RunTextInput extends RunInput {
-  constructor(public readonly text: string) {
+  constructor(
+    public readonly text: string,
+    public readonly images: RunImageInput[] = [],
+  ) {
     super();
   }
 }

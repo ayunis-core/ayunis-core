@@ -32,6 +32,7 @@ describe('AgentMapper', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       }),
     });
 

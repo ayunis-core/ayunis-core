@@ -20,6 +20,8 @@ import {
   ToolUseMessageContentRequestDto,
   ToolResultMessageContentRequestDto,
 } from '../dto/inference-request.dto';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageMessageContentRequestDto } from '../dto/inference-request.dto';
 
 @Injectable()
 export class MessageRequestDtoMapper {
@@ -54,7 +56,7 @@ export class MessageRequestDtoMapper {
   ): UserMessage {
     return new UserMessage({
       threadId,
-      content: dto.content.map((content) => this.fromTextContentDto(content)),
+      content: dto.content.map((content) => this.fromUserContentDto(content)),
     });
   }
 
@@ -102,6 +104,18 @@ export class MessageRequestDtoMapper {
     dto: TextMessageContentRequestDto,
   ): TextMessageContent {
     return new TextMessageContent(dto.text);
+  }
+
+  private fromUserContentDto(
+    dto: TextMessageContentRequestDto | ImageMessageContentRequestDto,
+  ): TextMessageContent | ImageMessageContent {
+    if (dto.type === MessageContentType.TEXT) {
+      return this.fromTextContentDto(dto);
+    }
+    if (dto.type === MessageContentType.IMAGE) {
+      return new ImageMessageContent(dto.imageUrl, dto.altText);
+    }
+    throw new Error(`Invalid content type for user message`);
   }
 
   private fromToolUseContentDto(

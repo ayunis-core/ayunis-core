@@ -7,7 +7,13 @@ import {
   getSchemaPath,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { SendMessageDto } from './dto/send-message.dto';
+import {
+  SendMessageDto,
+  MessageImageInputDto,
+  TextInput,
+  ImageInput,
+  ToolResultInput,
+} from './dto/send-message.dto';
 import { UUID } from 'crypto';
 import {
   CurrentUser,
@@ -57,6 +63,10 @@ import { Response } from 'express';
   RunErrorResponseDto,
   RunThreadResponseDto,
   SendMessageDto,
+  MessageImageInputDto,
+  TextInput,
+  ImageInput,
+  ToolResultInput,
 )
 @Controller('runs')
 export class RunsController {

@@ -76,6 +76,7 @@ describe('FindOneAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: false,
+          canVision: false,
         }),
       });
       const mockAgent = new Agent({
@@ -228,6 +229,7 @@ describe('FindOneAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: false,
+          canVision: false,
         }),
       });
       const mockAgent = new Agent({
@@ -264,6 +266,7 @@ describe('FindOneAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: false,
+          canVision: false,
         }),
       });
       const mockAgent = new Agent({

@@ -14,6 +14,7 @@ import { CreateThreadUseCase } from './application/use-cases/create-thread/creat
 import { FindThreadUseCase } from './application/use-cases/find-thread/find-thread.use-case';
 import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/find-all-threads.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
+import { DeleteThreadImagesUseCase } from './application/use-cases/delete-thread-images/delete-thread-images.use-case';
 import { AddMessageToThreadUseCase } from './application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
@@ -29,6 +30,7 @@ import { ReplaceAgentWithUserDefaultUseCase } from './application/use-cases/repl
 import { AgentsModule } from '../agents/agents.module';
 import { UpdateThreadAgentUseCase } from './application/use-cases/update-thread-agent/update-thread-agent.use-case';
 import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-age
     forwardRef(() => AgentsModule),
     MessagesModule,
     OrgsModule,
+    StorageModule,
   ],
   controllers: [ThreadsController],
   providers: [
@@ -50,6 +53,7 @@ import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-age
     FindThreadUseCase,
     FindAllThreadsUseCase,
     DeleteThreadUseCase,
+    DeleteThreadImagesUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
     RemoveSourceFromThreadUseCase,
