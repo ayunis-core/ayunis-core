@@ -1,8 +1,10 @@
 import {
   type SendMessageDto,
-  type TextInput,
   type ToolResultInput,
+  type TextInput,
+  type ImageInput,
   TextInputType,
+  ImageInputType,
   ToolResultInputType,
   type RunSessionResponseDto,
   type RunMessageResponseDto,
@@ -21,6 +23,7 @@ import {
 
 interface SendMesageInput {
   text: string;
+  images?: Array<{ imageUrl: string; altText?: string }>;
 }
 
 interface SendToolResultInput {
@@ -189,14 +192,37 @@ export function useMessageSend(params: UseMessageSendParams) {
 
   const sendTextMessage = useCallback(
     (input: SendMesageInput) => {
-      const textInput: TextInput = {
-        type: TextInputType.text,
-        text: input.text,
-      };
+      // Determine which input type to use based on content
+      let messageInput: TextInput | ImageInput;
+      
+      if (input.images && input.images.length > 0) {
+        // If there are images, use ImageInput
+        // If there's also text, include it in the first image's altText
+        const images = [...input.images];
+        if (input.text.trim() && images.length > 0) {
+          // Include text in first image's altText
+          images[0] = {
+            ...images[0],
+            altText: images[0].altText
+              ? `${input.text.trim()} - ${images[0].altText}`
+              : input.text.trim(),
+          };
+        }
+        messageInput = {
+          type: ImageInputType.image,
+          images,
+        };
+      } else {
+        // Text only - use TextInput
+        messageInput = {
+          type: TextInputType.text,
+          text: input.text || '',
+        };
+      }
 
       const sendMessageDto: SendMessageDto = {
         threadId: params.threadId,
-        input: textInput,
+        input: messageInput,
         streaming: true,
       };
 

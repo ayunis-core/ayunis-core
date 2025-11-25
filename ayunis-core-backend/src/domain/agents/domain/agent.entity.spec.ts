@@ -21,6 +21,7 @@ describe('Agent Entity', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       }),
     });
 

@@ -2,6 +2,11 @@ import { useState, useMemo } from 'react';
 import { ChatContext } from './chatContext';
 import type { SourceResponseDtoType } from '@/shared/api';
 
+type PendingImageFile = {
+  file: File;
+  altText?: string;
+};
+
 export const ChatContextProvider = ({
   children,
 }: {
@@ -16,6 +21,7 @@ export const ChatContextProvider = ({
       file: File;
     }>
   >([]);
+  const [pendingImages, setPendingImages] = useState<PendingImageFile[]>([]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -24,8 +30,10 @@ export const ChatContextProvider = ({
       setPendingMessage,
       sources,
       setSources,
+      pendingImages,
+      setPendingImages,
     }),
-    [pendingMessage, setPendingMessage, sources, setSources],
+    [pendingMessage, sources, pendingImages],
   );
 
   return (

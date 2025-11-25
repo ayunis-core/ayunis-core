@@ -75,6 +75,8 @@ import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-
 import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
 import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
 import { ConfigService } from '@nestjs/config';
+import { StorageModule } from '../storage/storage.module';
+import { ImageContentService } from './infrastructure/services/image-content.service';
 
 @Module({
   imports: [
@@ -85,12 +87,14 @@ import { ConfigService } from '@nestjs/config';
     LegalAcceptancesModule,
     OrgsModule,
     UsersModule,
+    StorageModule,
     forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
   controllers: [ModelsController, SuperAdminModelsController],
   providers: [
+    ImageContentService,
     ModelRegistry,
     ModelProviderInfoRegistry,
     ModelResponseDtoMapper,

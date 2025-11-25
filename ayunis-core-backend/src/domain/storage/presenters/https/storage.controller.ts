@@ -4,6 +4,7 @@ import {
   Get,
   Delete,
   Param,
+  Query,
   UseInterceptors,
   UploadedFile,
   Res,
@@ -13,29 +14,30 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiConsumes, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiConsumes,
+  ApiBody,
+  ApiParam,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { Readable } from 'stream';
-import { UploadObjectUseCase } from '../../application/use-cases/upload-object/upload-object.use-case';
 import { DownloadObjectUseCase } from '../../application/use-cases/download-object/download-object.use-case';
 import { GetObjectInfoUseCase } from '../../application/use-cases/get-object-info/get-object-info.use-case';
 import { DeleteObjectUseCase } from '../../application/use-cases/delete-object/delete-object.use-case';
 import { GetPresignedUrlUseCase } from '../../application/use-cases/get-presigned-url/get-presigned-url.use-case';
-import { UploadObjectCommand } from '../../application/use-cases/upload-object/upload-object.command';
+import { UploadFileUseCase } from '../../application/use-cases/upload-file/upload-file.use-case';
+import { UploadFileCommand } from '../../application/use-cases/upload-file/upload-file.command';
 import { DownloadObjectCommand } from '../../application/use-cases/download-object/download-object.command';
 import { DeleteObjectCommand } from '../../application/use-cases/delete-object/delete-object.command';
 import { GetObjectInfoCommand } from '../../application/use-cases/get-object-info/get-object-info.command';
 import { GetPresignedUrlCommand } from '../../application/use-cases/get-presigned-url/get-presigned-url.command';
-import {
-  BucketNotFoundError,
-  DeleteFailedError,
-  DownloadFailedError,
-  InvalidObjectNameError,
-  ObjectNotFoundError,
-  StorageError,
-  StoragePermissionDeniedError,
-  UploadFailedError,
-} from '../../application/storage.errors';
+import { StorageError } from '../../application/storage.errors';
+import { ScopeType } from '../../domain/value-objects/scope-type.enum';
+import { StorageResponseDtoMapper } from './mappers/storage-response-dto.mapper';
+import { UploadFileResponseDto } from './dto/upload-file-response.dto';
 
 @ApiTags('storage')
 @Controller('storage')
@@ -43,15 +45,17 @@ export class StorageController {
   private readonly logger = new Logger(StorageController.name);
 
   constructor(
-    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly uploadFileUseCase: UploadFileUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly getObjectInfoUseCase: GetObjectInfoUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly getPresignedUrlUseCase: GetPresignedUrlUseCase,
+    private readonly storageResponseDtoMapper: StorageResponseDtoMapper,
   ) {}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a file' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -64,28 +68,25 @@ export class StorageController {
       },
     },
   })
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  @ApiResponse({
+    status: 201,
+    description: 'File uploaded successfully',
+    type: UploadFileResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file or validation failed',
+  })
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('scopeType') scopeType: ScopeType,
+    @Query('scopeId') scopeId?: string,
+  ): Promise<UploadFileResponseDto> {
     try {
-      if (!file) {
-        throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
-      }
+      const command = new UploadFileCommand(file, scopeType, scopeId);
+      const result = await this.uploadFileUseCase.execute(command);
 
-      const objectName = `${Date.now()}-${file.originalname}`;
-
-      const command = new UploadObjectCommand(objectName, file.buffer, {
-        contentType: file.mimetype,
-        originalName: file.originalname,
-      });
-
-      const result = await this.uploadObjectUseCase.execute(command);
-
-      return {
-        objectName: result.objectName,
-        size: result.size,
-        etag: result.etag,
-        contentType: result.contentType,
-        lastModified: result.lastModified,
-      };
+      return this.storageResponseDtoMapper.toUploadFileDto(result);
     } catch (error) {
       this.handleStorageError(error);
     }
@@ -162,38 +163,17 @@ export class StorageController {
   private handleStorageError(error: any): never {
     this.logger.error('Storage operation failed', error);
 
-    if (error instanceof ObjectNotFoundError) {
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-    }
-
-    if (error instanceof BucketNotFoundError) {
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-    }
-
-    if (error instanceof InvalidObjectNameError) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-
-    if (error instanceof StoragePermissionDeniedError) {
-      throw new HttpException(error.message, HttpStatus.FORBIDDEN);
-    }
-
-    if (
-      error instanceof UploadFailedError ||
-      error instanceof DownloadFailedError ||
-      error instanceof DeleteFailedError
-    ) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
+    // Handle domain errors - convert to HTTP exceptions
     if (error instanceof StorageError) {
-      throw new HttpException(error.message, error.statusCode);
+      throw error.toHttpException();
     }
 
+    // Handle NestJS HTTP exceptions as-is
     if (error instanceof HttpException) {
       throw error;
     }
 
+    // Fallback for unexpected errors
     throw new HttpException(
       'An unexpected error occurred during storage operation',
       HttpStatus.INTERNAL_SERVER_ERROR,

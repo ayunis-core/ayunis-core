@@ -16,6 +16,8 @@ import {
   ThinkingMessageContentResponseDto,
 } from '../dto/get-thread-response.dto/message-response.dto';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageMessageContentResponseDto } from '../dto/get-thread-response.dto/message-response.dto';
 
 @Injectable()
 export class MessageDtoMapper {
@@ -37,8 +39,8 @@ export class MessageDtoMapper {
         return {
           ...baseProps,
           role: MessageRole.USER,
-          content: this.mapTextContentArray(
-            message.content as TextMessageContent[],
+          content: this.mapUserContentArray(
+            message.content as Array<TextMessageContent | ImageMessageContent>,
           ),
         };
 
@@ -134,12 +136,38 @@ export class MessageDtoMapper {
     };
   }
 
+  private mapUserContentArray(
+    content: Array<TextMessageContent | ImageMessageContent>,
+  ): Array<TextMessageContentResponseDto | ImageMessageContentResponseDto> {
+    return content.map((contentItem) => {
+      if (contentItem.type === MessageContentType.TEXT) {
+        return this.mapTextContent(contentItem as TextMessageContent);
+      }
+      if (contentItem.type === MessageContentType.IMAGE) {
+        return this.mapImageContent(contentItem as ImageMessageContent);
+      }
+      throw new Error(
+        `Invalid content type for user message: ${contentItem.type}`,
+      );
+    });
+  }
+
   private mapTextContent(
     content: TextMessageContent,
   ): TextMessageContentResponseDto {
     return {
       type: content.type,
       text: content.text,
+    };
+  }
+
+  private mapImageContent(
+    content: ImageMessageContent,
+  ): ImageMessageContentResponseDto {
+    return {
+      type: content.type,
+      imageUrl: content.imageUrl,
+      altText: content.altText,
     };
   }
 

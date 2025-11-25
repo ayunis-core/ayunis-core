@@ -7,6 +7,7 @@ import {
 import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
+import { ImageMessageContent } from '../../../domain/message-contents/image-message-content.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 
@@ -88,7 +89,33 @@ describe('CreateUserMessageUseCase', () => {
     it('should handle empty content array', async () => {
       // Arrange
       const threadId = randomUUID();
-      const content: TextMessageContent[] = [];
+      const content: Array<TextMessageContent> = [];
+      const command = new CreateUserMessageCommand(threadId, content);
+
+      const expectedMessage = new UserMessage({
+        threadId,
+        content,
+      });
+      jest
+        .spyOn(mockMessagesRepository, 'create')
+        .mockResolvedValue(expectedMessage);
+
+      // Act
+      const result = await useCase.execute(command);
+
+      // Assert
+      expect(mockMessagesRepository.create).toHaveBeenCalledWith(
+        expect.any(UserMessage),
+      );
+      expect(result).toBe(expectedMessage);
+    });
+
+    it('should create user message with image content', async () => {
+      // Arrange
+      const threadId = randomUUID();
+      const content = [
+        new ImageMessageContent('1711365678123-user-upload.png', 'alt text'),
+      ];
       const command = new CreateUserMessageCommand(threadId, content);
 
       const expectedMessage = new UserMessage({

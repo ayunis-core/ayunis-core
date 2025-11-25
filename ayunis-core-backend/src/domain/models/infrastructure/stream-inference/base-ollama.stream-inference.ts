@@ -24,6 +24,9 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { randomUUID } from 'crypto';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageContentService } from '../services/image-content.service';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class BaseOllamaStreamInferenceHandler
@@ -32,6 +35,7 @@ export class BaseOllamaStreamInferenceHandler
   private readonly logger = new Logger(BaseOllamaStreamInferenceHandler.name);
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;
+  protected imageContentService?: ImageContentService;
 
   // constructor(private readonly configService: ConfigService) {
   //   this.client = new Ollama({
@@ -60,7 +64,7 @@ export class BaseOllamaStreamInferenceHandler
         ...tool,
         function: { ...tool.function, strict: true },
       }));
-      const ollamaMessages = this.convertMessages(messages);
+      const ollamaMessages = await this.convertMessages(messages);
       const systemPrompt = input.systemPrompt
         ? this.convertSystemPrompt(input.systemPrompt)
         : undefined;
@@ -120,26 +124,53 @@ export class BaseOllamaStreamInferenceHandler
     };
   };
 
-  private convertMessages = (messages: Message[]): OllamaMessage[] => {
+  private convertMessages = async (
+    messages: Message[],
+  ): Promise<OllamaMessage[]> => {
     const convertedMessages: OllamaMessage[] = [];
     for (const message of messages) {
-      convertedMessages.push(...this.convertMessage(message));
+      convertedMessages.push(...(await this.convertMessage(message)));
     }
     return convertedMessages;
   };
 
-  private convertMessage = (message: Message): OllamaMessage[] => {
+  private convertMessage = async (
+    message: Message,
+  ): Promise<OllamaMessage[]> => {
     const convertedMessages: OllamaMessage[] = [];
     // User Message
     if (message.role === MessageRole.USER) {
+      const textParts: string[] = [];
+      const images: string[] = [];
+
       for (const content of message.content) {
         // Text Message Content
         if (content instanceof TextMessageContent) {
-          convertedMessages.push({
-            role: 'user' as const,
-            content: content.text,
-          });
+          textParts.push(content.text);
         }
+        // Image Message Content
+        if (content instanceof ImageMessageContent) {
+          if (!this.imageContentService) {
+            throw new InferenceFailedError(
+              'Image converter not configured for image support',
+              {
+                source: 'ollama',
+              },
+            );
+          }
+          const imageData = await this.convertImageContent(content);
+          images.push(imageData);
+        }
+      }
+
+      // Combine text and images
+      if (textParts.length > 0 || images.length > 0) {
+        const combinedContent = textParts.join('\n');
+        convertedMessages.push({
+          role: 'user' as const,
+          content: combinedContent || '',
+          images: images.length > 0 ? images : undefined,
+        });
       }
     }
 
@@ -239,4 +270,22 @@ export class BaseOllamaStreamInferenceHandler
       finishReason,
     });
   };
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+  ): Promise<string> {
+    if (!this.imageContentService) {
+      throw new InferenceFailedError(
+        'Image converter not configured for image support',
+        {
+          source: 'ollama',
+        },
+      );
+    }
+
+    const imageData =
+      await this.imageContentService.convertImageToBase64(content);
+
+    return imageData.base64;
+  }
 }

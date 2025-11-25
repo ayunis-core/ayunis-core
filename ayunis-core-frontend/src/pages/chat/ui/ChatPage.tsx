@@ -45,6 +45,7 @@ import {
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { useUploadImage } from '../api/useUploadImage';
 
 interface ChatPageProps {
   thread: Thread;
@@ -70,8 +71,14 @@ export default function ChatPage({
   const processedPendingMessageRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
-  const { pendingMessage, setPendingMessage, sources, setSources } =
-    useChatContext();
+  const {
+    pendingMessage,
+    setPendingMessage,
+    sources,
+    setSources,
+    pendingImages,
+    setPendingImages,
+  } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
   );
@@ -106,6 +113,8 @@ export default function ChatPage({
   const { deleteFileSource } = useDeleteFileSource({
     threadId: thread.id,
   });
+
+  const { uploadImage } = useUploadImage(thread.id);
 
   // Combine both loading states - use our local state for bulk operations
   const isTotallyCreatingFileSource =
@@ -192,13 +201,17 @@ export default function ChatPage({
     },
   });
 
-  async function handleSend(message: string) {
+  async function handleSend(
+    message: string,
+    images?: Array<{ imageUrl: string; altText?: string }>,
+  ) {
     try {
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
       await sendTextMessage({
         text: message,
+        images,
       });
     } catch (error) {
       chatInputRef.current?.setMessage(message);
@@ -306,8 +319,32 @@ export default function ChatPage({
             resetCreateFileSourceMutation();
           }
           setSources([]);
+
+          // Upload pending images (File objects) before sending
+          let uploadedImages:
+            | Array<{ imageUrl: string; altText?: string }>
+            | undefined;
+          if (pendingImages.length > 0) {
+            setIsProcessingPendingSources(true);
+            try {
+              const uploadPromises = pendingImages.map(async (img) => {
+                const objectName = await uploadImage(img.file);
+                return {
+                  imageUrl: objectName,
+                  altText: img.altText || img.file.name || 'Pasted image',
+                };
+              });
+              uploadedImages = await Promise.all(uploadPromises);
+            } catch (error) {
+              console.error('Failed to upload pending images:', error);
+              showError(t('chat.errorUploadImage'));
+              throw error;
+            }
+          }
+
           await sendTextMessage({
             text: pendingMessage,
+            images: uploadedImages,
           });
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
@@ -319,6 +356,7 @@ export default function ChatPage({
         } finally {
           setIsProcessingPendingSources(false);
           setPendingMessage('');
+          setPendingImages([]);
         }
       }
     }
@@ -330,9 +368,12 @@ export default function ChatPage({
     sources,
     createFileSourceAsync,
     setSources,
+    pendingImages,
+    setPendingImages,
     chatInputRef,
     t,
     resetCreateFileSourceMutation,
+    uploadImage,
   ]);
 
   // Chat Header
@@ -417,9 +458,10 @@ export default function ChatPage({
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
-      onSend={(m) => void handleSend(m)}
+      onSend={(m, images) => void handleSend(m, images)}
       onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      threadId={thread.id}
     />
   );
 

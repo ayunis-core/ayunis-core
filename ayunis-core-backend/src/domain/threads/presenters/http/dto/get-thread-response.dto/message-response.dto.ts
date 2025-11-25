@@ -68,6 +68,22 @@ export class ThinkingMessageContentResponseDto extends MessageContentResponseDto
   thinking: string;
 }
 
+export class ImageMessageContentResponseDto extends MessageContentResponseDto {
+  @ApiProperty({
+    description:
+      'Internal image reference (e.g. MinIO object name or /storage/:objectName path)',
+    example: '1711365678123-user-upload.png',
+  })
+  imageUrl: string;
+
+  @ApiProperty({
+    description: 'Optional alternative text for the image',
+    example: 'Screenshot of the reported issue',
+    required: false,
+  })
+  altText?: string;
+}
+
 // Base message response class
 abstract class BaseMessageResponseDto {
   @ApiProperty({
@@ -99,13 +115,19 @@ export class UserMessageResponseDto extends BaseMessageResponseDto {
   declare role: MessageRole.USER;
 
   @ApiProperty({
-    description: 'Array of text content items for user messages',
+    description:
+      'Array of content items for user messages (text and/or images)',
     type: 'array',
     items: {
-      $ref: getSchemaPath(TextMessageContentResponseDto),
+      oneOf: [
+        { $ref: getSchemaPath(TextMessageContentResponseDto) },
+        { $ref: getSchemaPath(ImageMessageContentResponseDto) },
+      ],
     },
   })
-  content: TextMessageContentResponseDto[];
+  content: Array<
+    TextMessageContentResponseDto | ImageMessageContentResponseDto
+  >;
 }
 
 export class SystemMessageResponseDto extends BaseMessageResponseDto {

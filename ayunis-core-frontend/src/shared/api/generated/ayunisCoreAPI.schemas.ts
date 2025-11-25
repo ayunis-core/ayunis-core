@@ -8,8 +8,6 @@
 export interface IsCloudResponseDto {
   /** Whether the deployment is running in a cloud environment */
   isCloud: boolean;
-  /** Whether new user registration is disabled */
-  isRegistrationDisabled: boolean;
 }
 
 /**
@@ -26,7 +24,6 @@ export const ModelWithConfigResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -49,29 +46,19 @@ export interface ModelWithConfigResponseDto {
   isReasoning: boolean;
   /** Whether the model can use tools */
   canUseTools: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** Whether the model is permitted to be used */
   isPermitted: boolean;
   /** Whether the model is the default model */
   isDefault: boolean;
   /** Whether the model is an embedding model */
   isEmbedding: boolean;
-  /**
-   * Whether this model enforces anonymous mode. Null if not permitted.
-   * @nullable
-   */
-  anonymousOnly: boolean | null;
 }
 
 export interface CreatePermittedModelDto {
   /** The id of the model */
   modelId: string;
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly?: boolean;
-}
-
-export interface UpdatePermittedModelDto {
-  /** Whether this model should enforce anonymous mode */
-  anonymousOnly: boolean;
 }
 
 /**
@@ -88,7 +75,6 @@ export const PermittedLanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -119,8 +105,6 @@ export interface PermittedLanguageModelResponseDto {
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
-  /** Whether this model enforces anonymous mode */
-  anonymousOnly: boolean;
 }
 
 /**
@@ -161,7 +145,6 @@ export const ModelProviderInfoResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -202,7 +185,6 @@ export const CreatePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -224,7 +206,6 @@ export const PermittedProviderResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -265,7 +246,6 @@ export const DeletePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -287,7 +267,6 @@ export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -335,7 +314,6 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -383,7 +361,6 @@ export const CreateLanguageModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -399,6 +376,8 @@ export interface CreateLanguageModelRequestDto {
   canUseTools: boolean;
   /** Whether the model has reasoning capabilities */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** Whether the model is archived */
   isArchived: boolean;
 }
@@ -417,7 +396,6 @@ export const UpdateLanguageModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -433,6 +411,8 @@ export interface UpdateLanguageModelRequestDto {
   canUseTools: boolean;
   /** Whether the model has reasoning capabilities */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** Whether the model is archived */
   isArchived: boolean;
 }
@@ -451,7 +431,6 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -494,7 +473,6 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -537,7 +515,6 @@ export const LanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -570,6 +547,8 @@ export interface LanguageModelResponseDto {
   canUseTools: boolean;
   /** Whether the model has reasoning capabilities */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
   /** The date the model was created */
   createdAt: string;
   /** The date the model was last updated */
@@ -590,7 +569,6 @@ export const EmbeddingModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
-  otc: 'otc',
 } as const;
 
 /**
@@ -1041,13 +1019,24 @@ export interface PriceResponseDto {
 
 export interface UpdateSeatsDto { [key: string]: unknown }
 
+export interface UploadFileResponseDto {
+  /** Name of the uploaded object */
+  objectName: string;
+  /** Size of the uploaded file in bytes */
+  size: number;
+  /** ETag of the uploaded object */
+  etag: string;
+  /** Content type of the uploaded file */
+  contentType?: string;
+  /** Last modified date of the uploaded object */
+  lastModified?: string;
+}
+
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
   /** The id of the agent */
   agentId?: string;
-  /** Enable anonymous mode for this thread */
-  isAnonymous?: boolean;
 }
 
 /**
@@ -1061,6 +1050,8 @@ export const UserMessageResponseDtoRole = {
   user: 'user',
 } as const;
 
+export type UserMessageResponseDtoContentItem = TextMessageContentResponseDto | ImageMessageContentResponseDto;
+
 export interface UserMessageResponseDto {
   /** Unique identifier for the message */
   id: string;
@@ -1070,8 +1061,8 @@ export interface UserMessageResponseDto {
   createdAt: string;
   /** Role of the message sender */
   role: UserMessageResponseDtoRole;
-  /** Array of text content items for user messages */
-  content: TextMessageContentResponseDto[];
+  /** Array of content items for user messages (text and/or images) */
+  content: UserMessageResponseDtoContentItem[];
 }
 
 /**
@@ -1160,6 +1151,7 @@ export const TextMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface TextMessageContentResponseDto {
@@ -1181,6 +1173,7 @@ export const ToolUseMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 /**
@@ -1211,6 +1204,7 @@ export const ToolResultMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface ToolResultMessageContentResponseDto {
@@ -1236,6 +1230,7 @@ export const ThinkingMessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface ThinkingMessageContentResponseDto {
@@ -1243,6 +1238,30 @@ export interface ThinkingMessageContentResponseDto {
   type: ThinkingMessageContentResponseDtoType;
   /** The thinking content of the message */
   thinking: string;
+}
+
+/**
+ * Type of the message content
+ */
+export type ImageMessageContentResponseDtoType = typeof ImageMessageContentResponseDtoType[keyof typeof ImageMessageContentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageMessageContentResponseDtoType = {
+  text: 'text',
+  tool_use: 'tool_use',
+  tool_result: 'tool_result',
+  thinking: 'thinking',
+  image: 'image',
+} as const;
+
+export interface ImageMessageContentResponseDto {
+  /** Type of the message content */
+  type: ImageMessageContentResponseDtoType;
+  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
+  imageUrl: string;
+  /** Optional alternative text for the image */
+  altText?: string;
 }
 
 export interface ModelResponseDto {
@@ -1254,8 +1273,6 @@ export interface ModelResponseDto {
   provider: string;
   /** The display name of the model */
   displayName: string;
-  /** Whether this model requires anonymous mode (PII redaction) */
-  anonymousOnly: boolean;
 }
 
 /**
@@ -1515,8 +1532,6 @@ export interface GetThreadResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-  /** Whether the thread is in anonymous mode (PII redaction enabled) */
-  isAnonymous: boolean;
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -1528,8 +1543,16 @@ export interface GetThreadsResponseDtoItem {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-  /** Whether the thread is in anonymous mode (PII redaction enabled) */
-  isAnonymous: boolean;
+}
+
+export interface UpdateThreadModelDto {
+  /** The id of the model */
+  modelId: string;
+}
+
+export interface UpdateThreadAgentDto {
+  /** The UUID of the agent to update */
+  agentId: string;
 }
 
 /**
@@ -1553,7 +1576,6 @@ export const ToolAssignmentDtoType = {
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1599,7 +1621,6 @@ export const ToolResponseDtoType = {
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolResponseDto {
@@ -1649,10 +1670,6 @@ export interface AgentResponseDto {
   tools: ToolResponseDto[];
   /** The sources assigned to this agent */
   sources: AgentSourceResponseDto[];
-  /** Whether this agent is shared with the current user (vs. owned by them) */
-  isShared: boolean;
-  /** The unique identifier of the user who owns this agent (same as userId) */
-  ownerId: string;
 }
 
 export interface UpdateAgentDto {
@@ -1739,68 +1756,6 @@ export interface McpIntegrationResponseDto {
   createdAt: string;
   /** Timestamp when the integration was last updated */
   updatedAt: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
-  returnsPii: boolean;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType[keyof typeof CreateAgentShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateAgentShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-} as const;
-
-export interface CreateAgentShareDto {
-  /** Type of entity being shared */
-  entityType: CreateAgentShareDtoEntityType;
-  /** ID of the agent to share */
-  agentId: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-} as const;
-
-/**
- * Type of share scope (organization or user)
- */
-export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ShareResponseDtoScopeType = {
-  org: 'org',
-  user: 'user',
-} as const;
-
-export interface ShareResponseDto {
-  /** Unique identifier of the share */
-  id: string;
-  /** Type of entity being shared */
-  entityType: ShareResponseDtoEntityType;
-  /** ID of the entity being shared */
-  entityId: string;
-  /** Type of share scope (organization or user) */
-  scopeType: ShareResponseDtoScopeType;
-  /** ID of the user who created the share */
-  ownerId: string;
-  /** When the share was created */
-  createdAt: string;
-  /** When the share was last updated */
-  updatedAt: string;
 }
 
 /**
@@ -1833,7 +1788,6 @@ export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrat
 export const CreatePredefinedIntegrationDtoSlug = {
   TEST: 'TEST',
   LOCABOO: 'LOCABOO',
-  LEGAL_CODES: 'LEGAL_CODES',
 } as const;
 
 export interface CreatePredefinedIntegrationDto {
@@ -1841,8 +1795,6 @@ export interface CreatePredefinedIntegrationDto {
   slug: CreatePredefinedIntegrationDtoSlug;
   /** List of config values for credential fields */
   configValues: ConfigValueDto[];
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
-  returnsPii?: boolean;
 }
 
 /**
@@ -1878,8 +1830,6 @@ export interface CreateCustomIntegrationDto {
   authHeaderName?: string;
   /** Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods. */
   credentials?: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
-  returnsPii?: boolean;
 }
 
 /**
@@ -1946,8 +1896,6 @@ export interface UpdateMcpIntegrationDto {
   credentials?: string;
   /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
   authHeaderName?: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
-  returnsPii?: boolean;
 }
 
 /**
@@ -1981,6 +1929,7 @@ export const MessageContentResponseDtoType = {
   tool_use: 'tool_use',
   tool_result: 'tool_result',
   thinking: 'thinking',
+  image: 'image',
 } as const;
 
 export interface MessageContentResponseDto {
@@ -2105,6 +2054,13 @@ export interface RunThreadResponseDto {
   timestamp: string;
 }
 
+export interface MessageImageInputDto {
+  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
+  imageUrl: string;
+  /** Optional alternative text for the image */
+  altText?: string;
+}
+
 /**
  * The type of input
  */
@@ -2121,6 +2077,24 @@ export interface TextInput {
   type: TextInputType;
   /** The text content for the inference */
   text: string;
+}
+
+/**
+ * The type of input
+ */
+export type ImageInputType = typeof ImageInputType[keyof typeof ImageInputType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ImageInputType = {
+  image: 'image',
+} as const;
+
+export interface ImageInput {
+  /** The type of input */
+  type: ImageInputType;
+  /** Images to send, referenced by storage object name */
+  images: MessageImageInputDto[];
 }
 
 /**
@@ -2148,7 +2122,7 @@ export interface ToolResultInput {
 /**
  * The input to use for the inference
  */
-export type SendMessageDtoInput = TextInput | ToolResultInput;
+export type SendMessageDtoInput = TextInput | ImageInput | ToolResultInput;
 
 export interface SendMessageDto {
   /** The thread to use for the inference. */
@@ -2322,8 +2296,6 @@ export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResp
 
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
-export type SuperAdminModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
-
 export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
@@ -2337,15 +2309,13 @@ offset?: number;
 limit?: number;
 };
 
-export type UserControllerValidateResetTokenParams = {
-/**
- * Password reset token from email
- */
-token: string;
+export type StorageControllerUploadFileParams = {
+scopeType: string;
+scopeId: string;
 };
 
-export type UserControllerValidateResetToken200 = {
-  valid?: boolean;
+export type StorageControllerUploadFileBody = {
+  file?: Blob;
 };
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
@@ -2364,31 +2334,7 @@ export type AgentsControllerAddFileSourceBody = {
   file: Blob;
 };
 
-export type SharesControllerGetSharesParams = {
-/**
- * ID of the entity to get shares for
- */
-entityId: string;
-/**
- * Type of the entity
- */
-entityType: SharesControllerGetSharesEntityType;
-};
-
-export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SharesControllerGetSharesEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-} as const;
-
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
-
-export type StorageControllerUploadFileBody = {
-  file?: Blob;
-};
 
 export type AdminControllerGetModelParams = {
 name: string;

@@ -91,6 +91,8 @@ export default function NewChatPage({
       return;
     }
 
+    // Images are already stored in context by ChatInput when threadId is not available
+    // So we don't need to pass them here
     initiateChat(message, modelId, agentId, sources, isAnonymous);
   }
 

@@ -1,6 +1,11 @@
 import type { SourceResponseDtoType } from '@/shared/api';
 import { createContext } from 'react';
 
+type PendingImageFile = {
+  file: File;
+  altText?: string;
+};
+
 type ChatContextType = {
   pendingMessage: string;
   setPendingMessage: (message: string) => void;
@@ -18,6 +23,8 @@ type ChatContextType = {
       file: File;
     }>,
   ) => void;
+  pendingImages: PendingImageFile[];
+  setPendingImages: (images: PendingImageFile[]) => void;
 };
 
 export const ChatContext = createContext<ChatContextType>({
@@ -28,5 +35,9 @@ export const ChatContext = createContext<ChatContextType>({
   sources: [],
   setSources: () => {
     throw new Error('setSources is not implemented');
+  },
+  pendingImages: [],
+  setPendingImages: () => {
+    throw new Error('setPendingImages is not implemented');
   },
 });

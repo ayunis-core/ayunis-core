@@ -2646,6 +2646,126 @@
         "tags": ["Super Admin Subscriptions"]
       }
     },
+    "/storage/upload": {
+      "post": {
+        "operationId": "StorageController_uploadFile",
+        "parameters": [
+          {
+            "name": "scopeType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadFileResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file or validation failed"
+          }
+        },
+        "summary": "Upload a file",
+        "tags": ["storage"]
+      }
+    },
+    "/storage/{objectName}": {
+      "get": {
+        "operationId": "StorageController_getFile",
+        "parameters": [
+          {
+            "name": "objectName",
+            "required": true,
+            "in": "path",
+            "description": "Name of the object to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["storage"]
+      },
+      "delete": {
+        "operationId": "StorageController_deleteFile",
+        "parameters": [
+          {
+            "name": "objectName",
+            "required": true,
+            "in": "path",
+            "description": "Name of the object to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["storage"]
+      }
+    },
+    "/storage/url/{objectName}": {
+      "get": {
+        "operationId": "StorageController_getPresignedUrl",
+        "parameters": [
+          {
+            "name": "objectName",
+            "required": true,
+            "in": "path",
+            "description": "Name of the object to get URL for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["storage"]
+      }
+    },
     "/threads": {
       "post": {
         "operationId": "ThreadsController_create",
@@ -4135,98 +4255,6 @@
         "tags": ["Super Admin Trials"]
       }
     },
-    "/storage/upload": {
-      "post": {
-        "operationId": "StorageController_uploadFile",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": ["storage"]
-      }
-    },
-    "/storage/{objectName}": {
-      "get": {
-        "operationId": "StorageController_getFile",
-        "parameters": [
-          {
-            "name": "objectName",
-            "required": true,
-            "in": "path",
-            "description": "Name of the object to retrieve",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["storage"]
-      },
-      "delete": {
-        "operationId": "StorageController_deleteFile",
-        "parameters": [
-          {
-            "name": "objectName",
-            "required": true,
-            "in": "path",
-            "description": "Name of the object to delete",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["storage"]
-      }
-    },
-    "/storage/url/{objectName}": {
-      "get": {
-        "operationId": "StorageController_getPresignedUrl",
-        "parameters": [
-          {
-            "name": "objectName",
-            "required": true,
-            "in": "path",
-            "description": "Name of the object to get URL for",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["storage"]
-      }
-    },
     "/prompts": {
       "post": {
         "operationId": "PromptsController_create",
@@ -4849,6 +4877,10 @@
             "type": "boolean",
             "description": "Whether the model can use tools"
           },
+          "canVision": {
+            "type": "boolean",
+            "description": "Whether the model supports vision (image processing)"
+          },
           "isPermitted": {
             "type": "boolean",
             "description": "Whether the model is permitted to be used"
@@ -4876,6 +4908,7 @@
           "canStream",
           "isReasoning",
           "canUseTools",
+          "canVision",
           "isPermitted",
           "isDefault",
           "isEmbedding",
@@ -5253,6 +5286,11 @@
             "description": "Whether the model has reasoning capabilities",
             "example": false
           },
+          "canVision": {
+            "type": "boolean",
+            "description": "Whether the model supports vision (image processing)",
+            "example": false
+          },
           "isArchived": {
             "type": "boolean",
             "description": "Whether the model is archived",
@@ -5266,6 +5304,7 @@
           "canStream",
           "canUseTools",
           "isReasoning",
+          "canVision",
           "isArchived"
         ]
       },
@@ -5311,6 +5350,11 @@
             "description": "Whether the model has reasoning capabilities",
             "example": false
           },
+          "canVision": {
+            "type": "boolean",
+            "description": "Whether the model supports vision (image processing)",
+            "example": false
+          },
           "isArchived": {
             "type": "boolean",
             "description": "Whether the model is archived",
@@ -5324,6 +5368,7 @@
           "canStream",
           "canUseTools",
           "isReasoning",
+          "canVision",
           "isArchived"
         ]
       },
@@ -5479,6 +5524,11 @@
             "description": "Whether the model has reasoning capabilities",
             "example": false
           },
+          "canVision": {
+            "type": "boolean",
+            "description": "Whether the model supports vision (image processing)",
+            "example": false
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -5500,6 +5550,7 @@
           "canStream",
           "canUseTools",
           "isReasoning",
+          "canVision",
           "createdAt",
           "updatedAt"
         ]
@@ -6293,6 +6344,38 @@
         "type": "object",
         "properties": {}
       },
+      "UploadFileResponseDto": {
+        "type": "object",
+        "properties": {
+          "objectName": {
+            "type": "string",
+            "description": "Name of the uploaded object",
+            "example": "1711365678123-user-upload.png"
+          },
+          "size": {
+            "type": "number",
+            "description": "Size of the uploaded file in bytes",
+            "example": 1024000
+          },
+          "etag": {
+            "type": "string",
+            "description": "ETag of the uploaded object",
+            "example": "d41d8cd98f00b204e9800998ecf8427e"
+          },
+          "contentType": {
+            "type": "string",
+            "description": "Content type of the uploaded file",
+            "example": "image/png"
+          },
+          "lastModified": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Last modified date of the uploaded object",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": ["objectName", "size", "etag"]
+      },
       "CreateThreadDto": {
         "type": "object",
         "properties": {
@@ -6342,9 +6425,16 @@
           },
           "content": {
             "type": "array",
-            "description": "Array of text content items for user messages",
+            "description": "Array of content items for user messages (text and/or images)",
             "items": {
-              "$ref": "#/components/schemas/TextMessageContentResponseDto"
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TextMessageContentResponseDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ImageMessageContentResponseDto"
+                }
+              ]
             }
           }
         },
@@ -6469,7 +6559,7 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking"]
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
           },
           "text": {
             "type": "string",
@@ -6486,7 +6576,7 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking"]
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
           },
           "id": {
             "type": "string",
@@ -6516,7 +6606,7 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking"]
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
           },
           "toolId": {
             "type": "string",
@@ -6543,7 +6633,7 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking"]
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
           },
           "thinking": {
             "type": "string",
@@ -6552,6 +6642,28 @@
           }
         },
         "required": ["type", "thinking"]
+      },
+      "ImageMessageContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of the message content",
+            "example": "text",
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "Internal image reference (e.g. MinIO object name or /storage/:objectName path)",
+            "example": "1711365678123-user-upload.png"
+          },
+          "altText": {
+            "type": "string",
+            "description": "Optional alternative text for the image",
+            "example": "Screenshot of the reported issue"
+          }
+        },
+        "required": ["type", "imageUrl"]
       },
       "ModelResponseDto": {
         "type": "object",
@@ -7555,7 +7667,7 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking"]
+            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
           }
         },
         "required": ["type"]
@@ -7703,6 +7815,22 @@
         },
         "required": ["type", "threadId", "updateType", "title", "timestamp"]
       },
+      "MessageImageInputDto": {
+        "type": "object",
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "description": "Internal image reference (e.g. MinIO object name or /storage/:objectName path)",
+            "example": "1711365678123-user-upload.png"
+          },
+          "altText": {
+            "type": "string",
+            "description": "Optional alternative text for the image",
+            "example": "Screenshot of the reported issue"
+          }
+        },
+        "required": ["imageUrl"]
+      },
       "TextInput": {
         "type": "object",
         "properties": {
@@ -7719,6 +7847,25 @@
           }
         },
         "required": ["type", "text"]
+      },
+      "ImageInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of input",
+            "enum": ["image"],
+            "example": "image"
+          },
+          "images": {
+            "type": "array",
+            "description": "Images to send, referenced by storage object name",
+            "items": {
+              "$ref": "#/components/schemas/MessageImageInputDto"
+            }
+          }
+        },
+        "required": ["type", "images"]
       },
       "ToolResultInput": {
         "type": "object",
@@ -7763,6 +7910,9 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/TextInput"
+              },
+              {
+                "$ref": "#/components/schemas/ImageInput"
               },
               {
                 "$ref": "#/components/schemas/ToolResultInput"

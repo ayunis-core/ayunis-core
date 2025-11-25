@@ -93,6 +93,7 @@ describe('AddSourceToAgentUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: false,
+        canVision: false,
       }),
     });
   });
