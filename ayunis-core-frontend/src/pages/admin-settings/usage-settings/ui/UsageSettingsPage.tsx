@@ -1,8 +1,8 @@
 import SettingsLayout from "../../admin-settings-layout";
 import { UsageStatsCards } from "./UsageStatsCards";
-import { ProviderConsumption } from "@/widgets/provider-consumption-chart";
-import { ModelDistribution } from "@/widgets/model-distribution-chart";
-import { UserUsageTable } from "@/widgets/user-usage-table";
+import { ProviderConsumption } from "@/pages/admin-settings/usage-settings/ui/provider-consumption-chart";
+import { ModelDistribution } from "@/pages/admin-settings/usage-settings/ui/model-distribution-chart";
+import { UserUsageTable } from "@/pages/admin-settings/usage-settings/ui/user-usage-table";
 import { UsageFilters } from "./UsageFilters";
 import { useState } from "react";
 

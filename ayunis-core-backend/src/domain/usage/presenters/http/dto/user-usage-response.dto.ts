@@ -52,7 +52,7 @@ export class UserUsageDto {
   cost?: number;
 
   @ApiProperty({
-    type: Date,
+    type: String,
     format: 'date-time',
     description: 'Last activity date (null if no activity)',
     nullable: true,

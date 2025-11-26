@@ -1,8 +1,8 @@
 // Utils
 import { useMemo } from "react";
 
-// Entities
-import { useProviderUsageChart } from "@/entities/usage";
+// Features
+import { useProviderUsageChart } from "@/features/usage";
 
 // UI
 import { ProviderConsumptionLoading } from "./ProviderConsumptionLoading";

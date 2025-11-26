@@ -1,6 +1,6 @@
 import { useModelsControllerGetAvailableModelsWithConfig } from "@/shared/api";
 
-export function useAvailableModels() {
+export function useModelsWithConfig() {
   const {
     data: models = [],
     isLoading,

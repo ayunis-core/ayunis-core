@@ -6,7 +6,8 @@ import {
 import ModelProviderCard from "./ModelProviderCard";
 import SettingsLayout from "../../admin-settings-layout";
 import { useTranslation } from "react-i18next";
-import { useModelsWithConfig, useProvidersWithPermittedStatus } from "../api";
+import { useModelsWithConfig } from "@/features/models";
+import { useProvidersWithPermittedStatus } from "@/features/models";
 
 export default function ModelSettingsPage() {
   const { t } = useTranslation("admin-settings-models");

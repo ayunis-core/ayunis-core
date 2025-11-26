@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/shadcn/select";
 
 // Api
-import { useAvailableModels, useAllProviders } from "@/entities/models";
+import { useModelsWithConfig, useProvidersWithPermittedStatus } from "@/features/models";
 
 interface UsageFiltersProps {
   dateRange: { startDate?: Date; endDate?: Date };
@@ -26,8 +26,8 @@ export function UsageFilters({
   onModelChange,
 }: UsageFiltersProps) {
   const { t } = useTranslation("admin-settings-usage");
-  const { providers } = useAllProviders();
-  const { models } = useAvailableModels();
+  const { providers } = useProvidersWithPermittedStatus();
+  const { models } = useModelsWithConfig();
 
   const DAY_IN_MS = 24 * 60 * 60 * 1000;
   const DATE_RANGES = [

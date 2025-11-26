@@ -6,7 +6,7 @@ import { Skeleton } from "@/shared/ui/shadcn/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/shadcn/card";
 
 // Api
-import { useUsageStats, useUsageConfig } from "@/entities/usage";
+import { useUsageStats, useUsageConfig } from "@/features/usage";
 
 interface UsageStatsCardsProps {
   startDate?: Date;

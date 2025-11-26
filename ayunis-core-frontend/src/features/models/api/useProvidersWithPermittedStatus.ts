@@ -1,6 +1,6 @@
 import { useModelsControllerGetAllModelProviderInfosWithPermittedStatus } from "@/shared/api";
 
-export function useAllProviders() {
+export function useProvidersWithPermittedStatus() {
   const {
     data: providers = [],
     isLoading,
