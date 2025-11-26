@@ -2,8 +2,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-// Entities
-import { useModelDistribution } from "@/entities/usage";
+// Features
+import { useModelDistribution } from "@/features/usage";
 
 // UI
 import { ModelDistributionLoading } from "./ModelDistributionLoading";

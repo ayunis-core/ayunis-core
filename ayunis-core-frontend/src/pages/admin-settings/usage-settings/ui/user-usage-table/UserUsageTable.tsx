@@ -1,8 +1,8 @@
 // Utils
 import { useState, useEffect } from "react";
 
-// Entities
-import { useUserUsage } from "@/entities/usage";
+// Features
+import { useUserUsage } from "@/features/usage";
 
 // UI
 import { UserUsageTableLoading } from "./UserUsageTableLoading";

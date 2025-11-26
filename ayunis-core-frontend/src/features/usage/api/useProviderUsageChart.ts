@@ -4,9 +4,7 @@ import {
 } from "@/shared/api";
 
 export function useProviderUsageChart(
-  params?: UsageControllerGetProviderUsageChartParams
+  params?: UsageControllerGetProviderUsageChartParams,
 ) {
   return useUsageControllerGetProviderUsageChart(params);
 }
-
-
