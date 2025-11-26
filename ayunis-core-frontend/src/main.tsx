@@ -1,8 +1,12 @@
+import { applyDomPatch } from '@/shared/lib/dom-patch';
+applyDomPatch(); // Must be called before React renders
+
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RootLayout from './layouts/root-layout';
+import { ErrorBoundary } from '@/shared/ui/error-boundary';
 
 // Import the generated route tree
 import { routeTree } from './app/routeTree.gen.ts';
@@ -55,11 +59,13 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <RootLayout>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
-      </RootLayout>
+      <ErrorBoundary>
+        <RootLayout>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </RootLayout>
+      </ErrorBoundary>
     </StrictMode>,
   );
 }

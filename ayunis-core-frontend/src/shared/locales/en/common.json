@@ -55,5 +55,11 @@
   },
   "common": {
     "loading": "Loading..."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please reload the page to continue.",
+    "reloadPage": "Reload page",
+    "tryAgain": "Try again"
   }
 }

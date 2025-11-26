@@ -55,5 +55,11 @@
   },
   "common": {
     "loading": "Laden..."
+  },
+  "error": {
+    "title": "Ein Fehler ist aufgetreten",
+    "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte laden Sie die Seite neu, um fortzufahren.",
+    "reloadPage": "Seite neu laden",
+    "tryAgain": "Erneut versuchen"
   }
 }
