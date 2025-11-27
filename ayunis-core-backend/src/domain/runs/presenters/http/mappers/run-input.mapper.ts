@@ -1,6 +1,6 @@
 import {
   RunInput,
-  RunTextInput,
+  RunUserInput,
   RunToolResultInput,
   RunImageInput,
 } from 'src/domain/runs/domain/run-input.entity';
@@ -9,14 +9,14 @@ import { SendMessageDto } from '../dto/send-message.dto';
 export class RunInputMapper {
   static toCommand(dto: SendMessageDto['input']): RunInput {
     if (dto.type === 'text') {
-      return new RunTextInput(dto.text, []);
+      return new RunUserInput(dto.text, []);
     }
     if (dto.type === 'image') {
       const runImages: RunImageInput[] = dto.images.map(
         (image) => new RunImageInput(image.imageUrl, image.altText),
       );
-      // ImageInput maps to RunTextInput with empty text and images
-      return new RunTextInput('', runImages);
+      // ImageInput maps to RunUserInput with empty text and images
+      return new RunUserInput('', runImages);
     }
     if (dto.type === 'tool_result') {
       return new RunToolResultInput(dto.toolId, dto.toolName, dto.result);

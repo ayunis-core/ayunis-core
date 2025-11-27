@@ -16,7 +16,7 @@ import {
 } from '../../../presenters/http/dto/run-response.dto';
 import {
   RunInput,
-  RunTextInput,
+  RunUserInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { RunNoModelFoundError } from '../../runs.errors';
 import { Thread } from '../../../../threads/domain/thread.entity';
@@ -184,7 +184,7 @@ export class ExecuteRunAndSetTitleUseCase {
   }
 
   private extractUserMessage(input: RunInput): string | undefined {
-    if (input instanceof RunTextInput) {
+    if (input instanceof RunUserInput) {
       return input.text;
     }
     return undefined;

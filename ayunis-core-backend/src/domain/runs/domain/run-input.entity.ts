@@ -7,7 +7,7 @@ export class RunImageInput {
   ) {}
 }
 
-export class RunTextInput extends RunInput {
+export class RunUserInput extends RunInput {
   constructor(
     public readonly text: string,
     public readonly images: RunImageInput[] = [],
