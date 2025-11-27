@@ -20,14 +20,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
-import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import {
   usePendingImages,
   type PendingImage,
   MAX_IMAGES,
 } from '../hooks/usePendingImages';
 import { useImagePaste } from '../hooks/useImagePaste';
-import { useAutoUploadImages } from '../hooks/useAutoUploadImages';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
@@ -52,7 +50,7 @@ interface ChatInputProps {
   onDownloadSource: (sourceId: string) => void;
   onSend: (
     message: string,
-    images?: Array<{ imageUrl: string; altText?: string }>,
+    imageFiles?: Array<{ file: File; altText?: string }>,
   ) => void;
   onSendCancelled: () => void;
   prefilledPrompt?: string;
@@ -91,19 +89,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const [message, setMessage] = useState(prefilledPrompt ?? '');
     const { t } = useTranslation('common');
     const { agents } = useAgents();
-    const { setPendingImages: setContextPendingImages } = useChatContext();
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const {
-      pendingImages,
-      addImages,
-      removeImage,
-      setImageObjectName,
-      clearImages,
-      getImagesForContext,
-      getUploadedImages,
-      hasUnuploadedImages,
-    } = usePendingImages();
+    const { pendingImages, addImages, removeImage, clearImages } =
+      usePendingImages();
 
     // Handle paste events for images
     const handleImagesPasted = (files: File[]) => {
@@ -119,13 +108,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onImagesPasted: handleImagesPasted,
     });
 
-    // Auto-upload images when threadId is available
-    useAutoUploadImages({
-      pendingImages,
-      threadId,
-      onImageUploaded: setImageObjectName,
-    });
-
     useImperativeHandle(ref, () => ({
       setMessage,
     }));
@@ -138,23 +120,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         return;
       }
 
-      // If there's no threadId, store images in context for later upload
-      if (!threadId) {
-        setContextPendingImages(getImagesForContext());
-        onSend(message, undefined);
-        setMessage('');
-        clearImages();
-        return;
-      }
+      // Pass File objects to parent - upload happens in ChatPage/NewChatPage
+      const imageFiles = pendingImages.map((img) => ({
+        file: img.file,
+        altText: img.file.name || 'Pasted image',
+      }));
 
-      // Wait for all images to finish uploading
-      if (hasUnuploadedImages()) {
-        console.warn('Cannot send: images still uploading');
-        return;
-      }
-
-      const images = getUploadedImages();
-      onSend(message, images.length > 0 ? images : undefined);
+      onSend(message, imageFiles.length > 0 ? imageFiles : undefined);
       setMessage('');
       clearImages();
     };
@@ -190,9 +162,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     const selectedAgent = agents.find((agent) => agent.id === agentId);
     const canSend =
-      (message.trim() || pendingImages.length > 0) &&
-      (modelId || agentId) &&
-      (!threadId || !hasUnuploadedImages());
+      (message.trim() || pendingImages.length > 0) && (modelId || agentId);
 
     return (
       <div
