@@ -32,7 +32,7 @@ import {
   RunToolExecutionFailedError,
 } from '../../runs.errors';
 import {
-  RunTextInput,
+  RunUserInput,
   RunToolResultInput,
 } from '../../../domain/run-input.entity';
 import { ApplicationError } from '../../../../../common/errors/base.error';
@@ -129,7 +129,7 @@ export class ExecuteRunUseCase {
         thread,
         tools,
         model: model.model,
-        input: command.input as RunTextInput | RunToolResultInput,
+        input: command.input as RunUserInput | RunToolResultInput,
         instructions,
         streaming: command.streaming,
         trace,
@@ -333,7 +333,7 @@ export class ExecuteRunUseCase {
     thread: Thread;
     tools: Tool[];
     model: LanguageModel;
-    input: RunTextInput | RunToolResultInput;
+    input: RunUserInput | RunToolResultInput;
     instructions?: string;
     streaming?: boolean;
     trace: LangfuseTraceClient;
@@ -355,11 +355,11 @@ export class ExecuteRunUseCase {
         this.logger.debug('iteration', i);
         const isFirstIteration = i === 0;
         const isLastIteration = i === iterations - 1;
-        const textInput =
-          params.input instanceof RunTextInput ? params.input : null;
+        const userInput =
+          params.input instanceof RunUserInput ? params.input : null;
         const toolResultInput =
           params.input instanceof RunToolResultInput ? params.input : null;
-        if (!textInput && !toolResultInput) {
+        if (!userInput && !toolResultInput) {
           throw new RunInvalidInputError('Invalid input');
         }
 
@@ -391,19 +391,19 @@ export class ExecuteRunUseCase {
           yield toolResultMessage;
         }
 
-        // Add user message if we have text input and it's the first iteration
-        if (isFirstIteration && textInput) {
+        // Add user message if we have user input and it's the first iteration
+        if (isFirstIteration && userInput) {
           const content: Array<TextMessageContent | ImageMessageContent> = [];
 
           // Add text content only if text is provided
-          if (textInput.text && textInput.text.trim().length > 0) {
-            content.push(new TextMessageContent(textInput.text));
+          if (userInput.text && userInput.text.trim().length > 0) {
+            content.push(new TextMessageContent(userInput.text));
           }
 
           // Add image content if images are provided
-          if (textInput.images && textInput.images.length > 0) {
+          if (userInput.images && userInput.images.length > 0) {
             content.push(
-              ...textInput.images.map(
+              ...userInput.images.map(
                 (image) =>
                   new ImageMessageContent(image.imageUrl, image.altText),
               ),
@@ -417,17 +417,17 @@ export class ExecuteRunUseCase {
             );
           }
 
-          const newTextMessage = await this.createUserMessageUseCase.execute(
+          const newUserMessage = await this.createUserMessageUseCase.execute(
             new CreateUserMessageCommand(params.thread.id, content),
           );
           params.trace.event({
             name: 'new_message',
-            input: newTextMessage,
+            input: newUserMessage,
           });
           this.addMessageToThreadUseCase.execute(
-            new AddMessageCommand(params.thread, newTextMessage),
+            new AddMessageCommand(params.thread, newUserMessage),
           );
-          yield newTextMessage;
+          yield newUserMessage;
         }
 
         let assistantMessage: AssistantMessage;
