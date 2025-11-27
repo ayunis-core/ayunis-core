@@ -203,15 +203,30 @@ export default function ChatPage({
 
   async function handleSend(
     message: string,
-    images?: Array<{ imageUrl: string; altText?: string }>,
+    imageFiles?: Array<{ file: File; altText?: string }>,
   ) {
     try {
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
+      // Upload images at send time
+      let uploadedImages:
+        | Array<{ imageUrl: string; altText?: string }>
+        | undefined;
+      if (imageFiles && imageFiles.length > 0) {
+        const uploadPromises = imageFiles.map(async (img) => {
+          const objectName = await uploadImage(img.file);
+          return {
+            imageUrl: objectName,
+            altText: img.altText || 'Pasted image',
+          };
+        });
+        uploadedImages = await Promise.all(uploadPromises);
+      }
+
       await sendTextMessage({
         text: message,
-        images,
+        images: uploadedImages,
       });
     } catch (error) {
       chatInputRef.current?.setMessage(message);
@@ -458,7 +473,7 @@ export default function ChatPage({
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
-      onSend={(m, images) => void handleSend(m, images)}
+      onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
       onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       threadId={thread.id}

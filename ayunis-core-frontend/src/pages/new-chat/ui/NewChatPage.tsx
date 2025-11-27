@@ -11,6 +11,7 @@ import type { AgentResponseDto } from '@/shared/api';
 import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
+import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -32,6 +33,7 @@ export default function NewChatPage({
   const { models } = usePermittedModels();
   const chatInputRef = useRef<ChatInputRef>(null);
   const greeting = useTimeBasedGreeting();
+  const { setPendingImages } = useChatContext();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -85,14 +87,20 @@ export default function NewChatPage({
     setModelId(selectedModelId);
   }
 
-  function handleSend(message: string) {
+  function handleSend(
+    message: string,
+    imageFiles?: Array<{ file: File; altText?: string }>,
+  ) {
     if (!modelId && !agentId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
     }
 
-    // Images are already stored in context by ChatInput when threadId is not available
-    // So we don't need to pass them here
+    // Store images in context for ChatPage to upload after thread creation
+    if (imageFiles && imageFiles.length > 0) {
+      setPendingImages(imageFiles);
+    }
+
     initiateChat(message, modelId, agentId, sources, isAnonymous);
   }
 
