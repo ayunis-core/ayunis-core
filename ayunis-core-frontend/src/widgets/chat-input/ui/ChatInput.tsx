@@ -97,7 +97,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       sendMessage: (text: string) => {
         if (!text.trim() || !(modelId || agentId)) return;
         onSend(text);
-        setMessage(''); // Clear message after sending
       },
     }));
 
