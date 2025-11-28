@@ -22,4 +22,7 @@ export class PermittedModelRecord extends BaseRecord {
   // default for organization
   @Column({ nullable: false })
   isDefault: boolean;
+
+  @Column({ nullable: false, default: false })
+  anonymousOnly: boolean;
 }

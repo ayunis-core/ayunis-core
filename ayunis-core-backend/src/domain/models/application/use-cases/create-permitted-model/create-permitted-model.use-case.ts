@@ -46,6 +46,7 @@ export class CreatePermittedModelUseCase {
       const permittedModel = new PermittedModel({
         model: model,
         orgId: command.orgId,
+        anonymousOnly: command.anonymousOnly,
       });
       const created =
         await this.permittedModelsRepository.create(permittedModel);

@@ -4,5 +4,6 @@ export class CreatePermittedModelCommand {
   constructor(
     public readonly modelId: UUID,
     public readonly orgId: UUID,
+    public readonly anonymousOnly?: boolean,
   ) {}
 }

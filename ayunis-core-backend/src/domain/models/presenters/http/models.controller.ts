@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Put,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -38,6 +39,9 @@ import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { CreatePermittedModelUseCase } from '../../application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
 import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
+import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
+import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-permitted-model/update-permitted-model.use-case';
+import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { ManageUserDefaultModelUseCase } from '../../application/use-cases/manage-user-default-model/manage-user-default-model.use-case';
 import { DeleteUserDefaultModelUseCase } from '../../application/use-cases/delete-user-default-model/delete-user-default-model.use-case';
 import { ManageUserDefaultModelCommand } from '../../application/use-cases/manage-user-default-model/manage-user-default-model.command';
@@ -78,6 +82,11 @@ import { IsEmbeddingModelEnabledUseCase } from '../../application/use-cases/is-e
 import { IsEmbeddingModelEnabledQuery } from '../../application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.query';
 import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
 import { ModelNotFoundError } from '../../application/models.errors';
+import {
+  PermittedEmbeddingModel,
+  PermittedLanguageModel,
+} from '../../domain/permitted-model.entity';
+import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
 
 @ApiTags('models')
 @Controller('models')
@@ -90,6 +99,7 @@ export class ModelsController {
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
+    private readonly updatePermittedModelUseCase: UpdatePermittedModelUseCase,
     private readonly manageUserDefaultModelUseCase: ManageUserDefaultModelUseCase,
     private readonly deleteUserDefaultModelUseCase: DeleteUserDefaultModelUseCase,
     private readonly getUserDefaultModelUseCase: GetUserDefaultModelUseCase,
@@ -171,6 +181,7 @@ export class ModelsController {
     const command = new CreatePermittedModelCommand(
       createPermittedModelDto.modelId,
       orgId,
+      createPermittedModelDto.anonymousOnly,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
@@ -195,6 +206,47 @@ export class ModelsController {
       permittedModelId: id,
     });
     await this.deletePermittedModelUseCase.execute(command);
+  }
+
+  @Patch('permitted/:id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update a permitted model' })
+  @ApiBody({ type: UpdatePermittedModelDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully updated a permitted model',
+    schema: {
+      $ref: getSchemaPath(PermittedLanguageModelResponseDto),
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Permitted model not found',
+  })
+  @ApiExtraModels(UpdatePermittedModelDto)
+  async updatePermittedModel(
+    @Param('id') id: UUID,
+    @Body() updatePermittedModelDto: UpdatePermittedModelDto,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<
+    PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto
+  > {
+    const command = new UpdatePermittedModelCommand({
+      permittedModelId: id,
+      orgId,
+      anonymousOnly: updatePermittedModelDto.anonymousOnly,
+    });
+    const model = await this.updatePermittedModelUseCase.execute(command);
+    if (model instanceof PermittedLanguageModel) {
+      return this.modelResponseDtoMapper.toLanguageModelDto(model);
+    } else if (model instanceof PermittedEmbeddingModel) {
+      return this.modelResponseDtoMapper.toEmbeddingModelDto(model);
+    }
+    throw new Error(`Unknown model type: ${model.constructor.name}`);
   }
 
   @Get('permitted/language-models')

@@ -268,4 +268,30 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       },
     );
   }
+
+  async update(permittedModel: PermittedModel): Promise<PermittedModel> {
+    this.logger.log('update', {
+      id: permittedModel.id,
+      orgId: permittedModel.orgId,
+      anonymousOnly: permittedModel.anonymousOnly,
+    });
+
+    const updateResult = await this.permittedModelRepository.update(
+      { id: permittedModel.id, orgId: permittedModel.orgId },
+      { anonymousOnly: permittedModel.anonymousOnly },
+    );
+
+    if (updateResult.affected === 0) {
+      throw new Error(
+        `Permitted model with id ${permittedModel.id} and orgId ${permittedModel.orgId} not found`,
+      );
+    }
+
+    const updatedModel = await this.permittedModelRepository.findOneOrFail({
+      where: { id: permittedModel.id },
+      relations: { model: true },
+    });
+
+    return this.permittedModelMapper.toDomain(updatedModel);
+  }
 }

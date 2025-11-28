@@ -16,6 +16,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useCreatePermittedModel } from '../api/useCreatePermittedModel';
 import { useDeletePermittedModel } from '../api/useDeletePermittedModel';
+import { useUpdatePermittedModel } from '../api/useUpdatePermittedModel';
 import { useCreatePermittedProvider } from '../api/useCreatePermittedProvider';
 import { useDeletePermittedProvider } from '../api/useDeletePermittedProvider';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +29,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/shared/ui/shadcn/item';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface ModelProviderCardProps {
   provider: Provider;
@@ -41,6 +50,7 @@ export default function ModelProviderCard({
   const { t } = useTranslation('admin-settings-models');
   const { createPermittedModel } = useCreatePermittedModel();
   const { deletePermittedModel } = useDeletePermittedModel();
+  const { updatePermittedModel } = useUpdatePermittedModel();
   const { createPermittedProvider } = useCreatePermittedProvider();
   const { deletePermittedProvider } = useDeletePermittedProvider();
 
@@ -84,6 +94,17 @@ export default function ModelProviderCard({
       return;
     }
   }
+
+  function handleAnonymousOnlyToggle(
+    model: ModelWithConfigResponseDto,
+    anonymousOnly: boolean,
+  ) {
+    if (!model.permittedModelId) return;
+    updatePermittedModel({
+      permittedModelId: model.permittedModelId,
+      anonymousOnly,
+    });
+  }
   return (
     <Card>
       <CardHeader>
@@ -107,88 +128,119 @@ export default function ModelProviderCard({
         </CardAction>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {models
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((model, index) => {
               const modelKey = `model-${provider.provider}:${model.name}`;
               return (
-                <div key={modelKey} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
+                <div key={index}>
+                  <Item
+                    key={modelKey}
+                    className={cn(
+                      index === 0 && 'pt-0',
+                      index === models.length - 1 && 'pb-0',
+                      'px-0',
+                    )}
+                  >
+                    <ItemContent>
+                      <ItemTitle>
+                        {model.displayName || model.name}
+                        {model.canStream && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t('models.streaming')}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t('models.streamingTooltip')}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {model.canUseTools && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t('models.tools')}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t('models.toolsTooltip')}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {model.isReasoning && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t('models.reasoning')}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t('models.reasoningTooltip')}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {model.isEmbedding && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {t('models.embedding')}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t('models.embeddingTooltip')}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </ItemTitle>
+                      <ItemDescription>{model.name}</ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                      {model.isPermitted && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <Label
+                              htmlFor={`${modelKey}-anonymous`}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {t('models.anonymousOnly')}
+                            </Label>
+
+                            <Switch
+                              id={`${modelKey}-anonymous`}
+                              checked={model.anonymousOnly ?? false}
+                              onCheckedChange={(anonymousOnly) =>
+                                handleAnonymousOnlyToggle(model, anonymousOnly)
+                              }
+                            />
+                          </div>
+                        </>
+                      )}
                       <div className="flex items-center gap-2">
-                        <Label htmlFor={modelKey} className="font-medium">
-                          {model.displayName || model.name}
+                        <Label
+                          htmlFor={modelKey}
+                          className="text-sm text-muted-foreground"
+                        >
+                          {t('models.permitted')}
                         </Label>
-                        <div className="flex gap-1">
-                          {model.canStream && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="text-xs">
-                                  {t('models.streaming')}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('models.streamingTooltip')}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          {model.canUseTools && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="text-xs">
-                                  {t('models.tools')}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('models.toolsTooltip')}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          {model.isReasoning && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="text-xs">
-                                  {t('models.reasoning')}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('models.reasoningTooltip')}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          {model.isEmbedding && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="text-xs">
-                                  {t('models.embedding')}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('models.embeddingTooltip')}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
+                        <TooltipIf
+                          condition={!provider.isPermitted}
+                          tooltip={t('models.providerDisabled')}
+                        >
+                          <Switch
+                            id={modelKey}
+                            disabled={!provider.isPermitted}
+                            checked={model.isPermitted}
+                            onCheckedChange={(isPermitted) =>
+                              handleModelToggle(model, isPermitted)
+                            }
+                          />
+                        </TooltipIf>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {model.name}
-                      </p>
-                    </div>
-                    <TooltipIf
-                      condition={!provider.isPermitted}
-                      tooltip={t('models.providerDisabled')}
-                    >
-                      <Switch
-                        id={modelKey}
-                        disabled={!provider.isPermitted}
-                        checked={model.isPermitted}
-                        onCheckedChange={(isPermitted) =>
-                          handleModelToggle(model, isPermitted)
-                        }
-                      />
-                    </TooltipIf>
-                  </div>
+                    </ItemActions>
+                  </Item>
                   {index < models.length - 1 && <Separator />}
                 </div>
               );

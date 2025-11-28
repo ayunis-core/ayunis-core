@@ -122,6 +122,8 @@ export class ExecuteRunUseCase {
         ).agent;
       }
       const model = this.pickModel(thread, agent);
+      // Effective anonymous mode: enabled if thread is anonymous OR model enforces it
+      const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;
 
       // Assemble tools (native + MCP)
       const tools = model.model.canUseTools
@@ -150,6 +152,7 @@ export class ExecuteRunUseCase {
         streaming: command.streaming,
         trace,
         orgId,
+        isAnonymous: effectiveIsAnonymous,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
@@ -357,6 +360,7 @@ export class ExecuteRunUseCase {
     streaming?: boolean;
     trace: LangfuseTraceClient;
     orgId: UUID;
+    isAnonymous: boolean;
   }): AsyncGenerator<Message, void, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
 
@@ -389,6 +393,7 @@ export class ExecuteRunUseCase {
           input: toolResultInput,
           trace: params.trace,
           orgId: params.orgId,
+          isAnonymous: params.isAnonymous,
         });
 
         // Add tool result messages to traces and thread if there were any
@@ -412,8 +417,8 @@ export class ExecuteRunUseCase {
 
         // Add text message if we have one and it's the first iteration
         if (isFirstIteration && textInput) {
-          // Anonymize user message text if thread is in anonymous mode
-          const messageText = params.thread.isAnonymous
+          // Anonymize user message text if in anonymous mode (thread setting or model enforced)
+          const messageText = params.isAnonymous
             ? await this.anonymizeText(textInput.text)
             : textInput.text;
           const newTextMessage = await this.createUserMessageUseCase.execute(
@@ -558,9 +563,10 @@ export class ExecuteRunUseCase {
     input: RunToolResultInput | null;
     trace: LangfuseTraceClient;
     orgId: UUID;
+    isAnonymous: boolean;
   }): Promise<ToolResultMessageContent[]> {
     this.logger.debug('collectToolResults');
-    const { thread, tools, input, orgId } = params;
+    const { thread, tools, input, orgId, isAnonymous } = params;
 
     const lastMessage = thread.getLastMessage();
     const toolUseMessageContent = lastMessage
@@ -654,8 +660,8 @@ export class ExecuteRunUseCase {
             result = `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
           }
 
-          // Anonymize tool result if thread is in anonymous mode and tool may return PII
-          if (thread.isAnonymous && tool.returnsPii) {
+          // Anonymize tool result if in anonymous mode and tool may return PII
+          if (isAnonymous && tool.returnsPii) {
             result = await this.anonymizeText(result);
           }
 

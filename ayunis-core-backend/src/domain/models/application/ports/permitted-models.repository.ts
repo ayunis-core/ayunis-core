@@ -40,4 +40,5 @@ export abstract class PermittedModelsRepository {
     id: UUID;
     orgId: UUID;
   }): Promise<PermittedLanguageModel>;
+  abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
 }

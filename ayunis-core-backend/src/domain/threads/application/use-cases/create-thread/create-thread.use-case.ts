@@ -15,6 +15,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
 import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import { UUID } from 'crypto';
+import { Agent } from 'src/domain/agents/domain/agent.entity';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -35,6 +36,7 @@ export class CreateThreadUseCase {
         throw new UnauthorizedException('User not authenticated');
       }
       let model: PermittedLanguageModel | undefined;
+      let agent: Agent | undefined;
       let agentId: UUID | undefined;
 
       if (command.modelId) {
@@ -46,10 +48,11 @@ export class CreateThreadUseCase {
       }
 
       if (command.agentId) {
-        // Validate that the agent exists and is accessible (owned or shared)
-        await this.findOneAgentUseCase.execute(
+        // Get the agent (validates it exists and is accessible)
+        const result = await this.findOneAgentUseCase.execute(
           new FindOneAgentQuery(command.agentId),
         );
+        agent = result.agent;
         agentId = command.agentId;
       }
 
@@ -57,12 +60,18 @@ export class CreateThreadUseCase {
         throw new NoModelOrAgentProvidedError(userId);
       }
 
+      // Determine if anonymous mode should be enforced by the effective model
+      const effectiveAnonymousOnly =
+        agent?.model?.anonymousOnly ?? model?.anonymousOnly ?? false;
+      const isAnonymous =
+        effectiveAnonymousOnly || (command.isAnonymous ?? false);
+
       try {
         const thread = new Thread({
           userId,
           model: model,
           agentId: agentId,
-          isAnonymous: command.isAnonymous,
+          isAnonymous,
           messages: [],
         });
         const createdThread = await this.threadsRepository.create(thread);

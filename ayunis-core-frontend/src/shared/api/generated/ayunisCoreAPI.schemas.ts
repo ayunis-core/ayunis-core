@@ -53,11 +53,23 @@ export interface ModelWithConfigResponseDto {
   isDefault: boolean;
   /** Whether the model is an embedding model */
   isEmbedding: boolean;
+  /**
+   * Whether this model enforces anonymous mode. Null if not permitted.
+   * @nullable
+   */
+  anonymousOnly: boolean | null;
 }
 
 export interface CreatePermittedModelDto {
   /** The id of the model */
   modelId: string;
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly?: boolean;
+}
+
+export interface UpdatePermittedModelDto {
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly: boolean;
 }
 
 /**
@@ -105,6 +117,8 @@ export interface PermittedLanguageModelResponseDto {
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
 }
 
 /**
@@ -1238,6 +1252,8 @@ export interface ModelResponseDto {
   provider: string;
   /** The display name of the model */
   displayName: string;
+  /** Whether this model requires anonymous mode (PII redaction) */
+  anonymousOnly: boolean;
 }
 
 /**
@@ -2301,6 +2317,8 @@ export interface UpdateEmbeddingModelDto { [key: string]: unknown }
 export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+
+export type SuperAdminModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
 export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
 

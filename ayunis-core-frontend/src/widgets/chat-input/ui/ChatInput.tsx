@@ -51,6 +51,8 @@ interface ChatInputProps {
   isAnonymous: boolean;
   /** Callback when anonymous mode is toggled. If not provided, toggle is hidden. */
   onAnonymousChange?: (isAnonymous: boolean) => void;
+  /** Whether anonymous mode is enforced by the selected model. */
+  isAnonymousEnforced?: boolean;
 }
 
 export interface ChatInputRef {
@@ -80,6 +82,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       isEmbeddingModelEnabled,
       isAnonymous,
       onAnonymousChange,
+      isAnonymousEnforced,
     },
     ref,
   ) => {
@@ -172,6 +175,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     isAnonymous={isAnonymous}
                     onAnonymousChange={onAnonymousChange}
                     isDisabled={isAnonymousChangeDisabled}
+                    isEnforced={isAnonymousEnforced}
                   />
                   {agentId && (
                     <AgentBadge

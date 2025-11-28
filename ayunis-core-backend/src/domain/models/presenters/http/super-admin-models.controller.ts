@@ -35,6 +35,8 @@ import { CreatePermittedModelUseCase } from '../../application/use-cases/create-
 import { CreatePermittedModelCommand } from '../../application/use-cases/create-permitted-model/create-permitted-model.command';
 import { DeletePermittedModelUseCase } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from '../../application/use-cases/delete-permitted-model/delete-permitted-model.command';
+import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-permitted-model/update-permitted-model.use-case';
+import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
 import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
 import { CreatePermittedProviderUseCase } from '../../application/use-cases/create-permitted-provider/create-permitted-provider.use-case';
@@ -48,6 +50,7 @@ import { GetAllModelProviderInfosWithPermittedStatusQuery } from '../../applicat
 import { GetAvailableModelsUseCase } from '../../application/use-cases/get-available-models/get-available-models.use-case';
 import { GetAvailableModelsQuery } from '../../application/use-cases/get-available-models/get-available-models.query';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
+import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { CreatePermittedProviderDto } from './dto/create-permitted-provider.dto';
 import { DeletePermittedProviderDto } from './dto/delete-permitted-provider.dto';
 import { PermittedProviderResponseDto } from './dto/permitted-provider-response.dto';
@@ -133,6 +136,7 @@ export class SuperAdminModelsController {
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
     private readonly deleteModelUseCase: DeleteModelUseCase,
     private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
+    private readonly updatePermittedModelUseCase: UpdatePermittedModelUseCase,
   ) {}
 
   @Get(':orgId/available')
@@ -393,6 +397,7 @@ export class SuperAdminModelsController {
     const command = new CreatePermittedModelCommand(
       createPermittedModelDto.modelId,
       orgId,
+      createPermittedModelDto.anonymousOnly,
     );
 
     await this.createPermittedModelUseCase.execute(command);
@@ -455,6 +460,82 @@ export class SuperAdminModelsController {
     this.logger.log(
       `Successfully deleted permitted model ${id} for org ${orgId}`,
     );
+  }
+
+  @Patch(':orgId/permitted-models/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update a permitted model for a specific organization',
+    description:
+      'Update the settings of a permitted model for the specified organization. This endpoint is only accessible to super admins.',
+  })
+  @ApiParam({
+    name: 'orgId',
+    description: 'Organization ID to update permitted model for',
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Permitted model ID to update',
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({ type: UpdatePermittedModelDto })
+  @ApiOkResponse({
+    description: 'Successfully updated permitted model',
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+        { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Permitted model not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid update data provided',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated or not authorized as super admin',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async updatePermittedModel(
+    @Param('orgId') orgId: UUID,
+    @Param('id') id: UUID,
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() updatePermittedModelDto: UpdatePermittedModelDto,
+  ): Promise<
+    PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto
+  > {
+    this.logger.log(
+      `Updating permitted model ${id} for org ${orgId} by super admin ${userId}`,
+    );
+
+    const command = new UpdatePermittedModelCommand({
+      permittedModelId: id,
+      orgId,
+      anonymousOnly: updatePermittedModelDto.anonymousOnly,
+    });
+
+    const updatedModel =
+      await this.updatePermittedModelUseCase.execute(command);
+
+    this.logger.log(
+      `Successfully updated permitted model ${id} for org ${orgId}`,
+    );
+
+    if (updatedModel instanceof PermittedLanguageModel) {
+      return this.modelResponseDtoMapper.toLanguageModelDto(updatedModel);
+    } else if (updatedModel instanceof PermittedEmbeddingModel) {
+      return this.modelResponseDtoMapper.toEmbeddingModelDto(updatedModel);
+    }
+    throw new Error(`Unknown model type: ${updatedModel.constructor.name}`);
   }
 
   @Get(':orgId/permitted-providers')

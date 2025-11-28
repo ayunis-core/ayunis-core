@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 
 export class CreatePermittedModelDto {
   @ApiProperty({
@@ -9,4 +9,14 @@ export class CreatePermittedModelDto {
   })
   @IsUUID()
   modelId: UUID;
+
+  @ApiProperty({
+    description: 'Whether this model should enforce anonymous mode',
+    example: false,
+    required: false,
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  anonymousOnly?: boolean;
 }
