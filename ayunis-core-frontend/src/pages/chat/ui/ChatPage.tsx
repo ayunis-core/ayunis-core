@@ -45,7 +45,7 @@ import {
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useUploadImage } from '../api/useUploadImage';
+import type { PendingImage } from '../api/useMessageSend';
 
 interface ChatPageProps {
   thread: Thread;
@@ -113,8 +113,6 @@ export default function ChatPage({
   const { deleteFileSource } = useDeleteFileSource({
     threadId: thread.id,
   });
-
-  const { uploadImage } = useUploadImage(thread.id);
 
   // Combine both loading states - use our local state for bulk operations
   const isTotallyCreatingFileSource =
@@ -209,24 +207,18 @@ export default function ChatPage({
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
-      // Upload images at send time
-      let uploadedImages:
-        | Array<{ imageUrl: string; altText?: string }>
-        | undefined;
-      if (imageFiles && imageFiles.length > 0) {
-        const uploadPromises = imageFiles.map(async (img) => {
-          const objectName = await uploadImage(img.file);
-          return {
-            imageUrl: objectName,
-            altText: img.altText || 'Pasted image',
-          };
-        });
-        uploadedImages = await Promise.all(uploadPromises);
-      }
+      // Pass files directly - they'll be uploaded as part of the multipart request
+      const images: PendingImage[] | undefined =
+        imageFiles && imageFiles.length > 0
+          ? imageFiles.map((img) => ({
+              file: img.file,
+              altText: img.altText || 'Pasted image',
+            }))
+          : undefined;
 
       await sendTextMessage({
         text: message,
-        images: uploadedImages,
+        images,
       });
     } catch (error) {
       chatInputRef.current?.setMessage(message);
@@ -335,31 +327,18 @@ export default function ChatPage({
           }
           setSources([]);
 
-          // Upload pending images (File objects) before sending
-          let uploadedImages:
-            | Array<{ imageUrl: string; altText?: string }>
-            | undefined;
-          if (pendingImages.length > 0) {
-            setIsProcessingPendingSources(true);
-            try {
-              const uploadPromises = pendingImages.map(async (img) => {
-                const objectName = await uploadImage(img.file);
-                return {
-                  imageUrl: objectName,
+          // Pass pending images directly - they'll be uploaded as part of the multipart request
+          const images: PendingImage[] | undefined =
+            pendingImages.length > 0
+              ? pendingImages.map((img) => ({
+                  file: img.file,
                   altText: img.altText || img.file.name || 'Pasted image',
-                };
-              });
-              uploadedImages = await Promise.all(uploadPromises);
-            } catch (error) {
-              console.error('Failed to upload pending images:', error);
-              showError(t('chat.errorUploadImage'));
-              throw error;
-            }
-          }
+                }))
+              : undefined;
 
           await sendTextMessage({
             text: pendingMessage,
-            images: uploadedImages,
+            images,
           });
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
@@ -388,7 +367,6 @@ export default function ChatPage({
     chatInputRef,
     t,
     resetCreateFileSourceMutation,
-    uploadImage,
   ]);
 
   // Chat Header

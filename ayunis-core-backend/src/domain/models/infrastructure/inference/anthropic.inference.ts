@@ -47,9 +47,9 @@ export class AnthropicInferenceHandler extends InferenceHandler {
   async answer(input: InferenceInput): Promise<InferenceResponse> {
     this.logger.log('answer', input);
     try {
-      const { messages, tools, toolChoice, systemPrompt } = input;
+      const { messages, tools, toolChoice, systemPrompt, orgId } = input;
       const anthropicTools = tools?.map(this.convertTool);
-      const anthropicMessages = await this.convertMessages(messages);
+      const anthropicMessages = await this.convertMessages(messages, orgId);
       const anthropicToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
@@ -99,6 +99,7 @@ export class AnthropicInferenceHandler extends InferenceHandler {
 
   private convertMessages = async (
     messages: Message[],
+    orgId: string,
   ): Promise<Anthropic.MessageParam[]> => {
     const chatMessages = await messages.reduce<
       Promise<Anthropic.MessageParam[]>
@@ -107,7 +108,7 @@ export class AnthropicInferenceHandler extends InferenceHandler {
         const convertedMessages = await accPromise;
         // always push the first message and next loop
         if (convertedMessages.length === 0) {
-          convertedMessages.push(await this.convertMessage(message));
+          convertedMessages.push(await this.convertMessage(message, orgId));
           return convertedMessages;
         }
         const lastMessage = convertedMessages.pop();
@@ -122,14 +123,14 @@ export class AnthropicInferenceHandler extends InferenceHandler {
           lastMessage.role === MessageRole.ASSISTANT
         ) {
           convertedMessages.push(lastMessage);
-          convertedMessages.push(await this.convertMessage(message));
+          convertedMessages.push(await this.convertMessage(message, orgId));
           return convertedMessages;
         }
 
         // all other messages are combined as one user message
         // so assistant and user messages always follow each other
         // user -> assistant -> user -> assistant
-        const convertedMessage = await this.convertMessage(message);
+        const convertedMessage = await this.convertMessage(message, orgId);
 
         const convertedMessageContent =
           typeof convertedMessage.content === 'string'
@@ -153,12 +154,19 @@ export class AnthropicInferenceHandler extends InferenceHandler {
   // Map messages to Anthropic.MessageParam
   private convertMessage = async (
     message: Message,
+    orgId: string,
   ): Promise<Anthropic.MessageParam> => {
     if (message instanceof UserMessage) {
       return {
         role: 'user',
         content: await Promise.all(
-          message.content.map((content) => this.convertUserContent(content)),
+          message.content.map((content) =>
+            this.convertUserContent(content, {
+              orgId,
+              threadId: message.threadId,
+              messageId: message.id,
+            }),
+          ),
         ),
       };
     }
@@ -279,6 +287,7 @@ export class AnthropicInferenceHandler extends InferenceHandler {
 
   private async convertUserContent(
     content: TextMessageContent | ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
   ): Promise<Anthropic.ImageBlockParam | Anthropic.TextBlockParam> {
     if (content instanceof TextMessageContent) {
       return {
@@ -296,14 +305,17 @@ export class AnthropicInferenceHandler extends InferenceHandler {
       );
     }
 
-    return this.convertImageContent(content);
+    return this.convertImageContent(content, context);
   }
 
   private async convertImageContent(
     content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
   ): Promise<Anthropic.ImageBlockParam> {
-    const imageData =
-      await this.imageContentService.convertImageToBase64(content);
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
 
     return {
       type: 'image',

@@ -46,9 +46,9 @@ export class MistralInferenceHandler extends InferenceHandler {
 
   async answer(input: HandlerInferenceInput): Promise<InferenceResponse> {
     this.logger.log('answer', input);
-    const { model, messages, tools, toolChoice } = input;
+    const { model, messages, tools, toolChoice, orgId } = input;
     const mistralTools = tools?.map(this.convertTool);
-    const mistralMessages = await this.convertMessages(messages);
+    const mistralMessages = await this.convertMessages(messages, orgId);
     const systemPrompt = input.systemPrompt
       ? this.convertSystemPrompt(input.systemPrompt)
       : undefined;
@@ -97,16 +97,18 @@ export class MistralInferenceHandler extends InferenceHandler {
 
   private convertMessages = async (
     messages: Message[],
+    orgId: string,
   ): Promise<MistralMessages[]> => {
     const convertedMessages: MistralMessages[] = [];
     for (const message of messages) {
-      convertedMessages.push(...(await this.convertMessage(message)));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
     return convertedMessages;
   };
 
   private convertMessage = async (
     message: Message,
+    orgId: string,
   ): Promise<MistralMessages[]> => {
     const convertedMessages: MistralMessages[] = [];
     // User Message
@@ -126,7 +128,11 @@ export class MistralInferenceHandler extends InferenceHandler {
         }
         // Image Message Content
         if (content instanceof ImageMessageContent) {
-          const imageUrl = await this.convertImageContent(content);
+          const imageUrl = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
           contentItems.push({
             type: 'image_url' as const,
             imageUrl: { url: imageUrl },
@@ -290,9 +296,12 @@ export class MistralInferenceHandler extends InferenceHandler {
 
   private async convertImageContent(
     content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
   ): Promise<string> {
-    const imageData =
-      await this.imageContentService.convertImageToBase64(content);
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
 
     return `data:${imageData.contentType};base64,${imageData.base64}`;
   }

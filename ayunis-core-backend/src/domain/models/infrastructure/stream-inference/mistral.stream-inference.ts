@@ -57,9 +57,9 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     subscriber: Subscriber<StreamInferenceResponseChunk>,
   ): Promise<void> {
     try {
-      const { messages, tools, toolChoice, systemPrompt } = input;
+      const { messages, tools, toolChoice, systemPrompt, orgId } = input;
       const mistralTools = tools?.map(this.convertTool);
-      const mistralMessages = await this.convertMessages(messages);
+      const mistralMessages = await this.convertMessages(messages, orgId);
       const mistralToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
@@ -118,6 +118,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
 
   private convertMessages = async (
     messages: Message[],
+    orgId: string,
     systemPrompt?: string,
   ): Promise<MistralMessages[]> => {
     const convertedMessages: MistralMessages[] = [];
@@ -131,7 +132,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     for (const message of messages) {
-      convertedMessages.push(...(await this.convertMessage(message)));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
 
     return convertedMessages;
@@ -139,6 +140,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
 
   private convertMessage = async (
     message: Message,
+    orgId: string,
   ): Promise<MistralMessages[]> => {
     const convertedMessages: MistralMessages[] = [];
 
@@ -158,7 +160,11 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
         }
         // Image Message Content
         if (content instanceof ImageMessageContent) {
-          const imageUrl = await this.convertImageContent(content);
+          const imageUrl = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
           contentItems.push({
             type: 'image_url' as const,
             imageUrl: { url: imageUrl },
@@ -308,9 +314,12 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
 
   private async convertImageContent(
     content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
   ): Promise<string> {
-    const imageData =
-      await this.imageContentService.convertImageToBase64(content);
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
 
     return `data:${imageData.contentType};base64,${imageData.base64}`;
   }

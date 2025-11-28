@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MESSAGES_REPOSITORY } from './application/ports/messages.repository';
 import { LocalMessagesRepository } from './infrastructure/persistence/local/local-messages.repository';
 import { LocalMessagesRepositoryModule } from './infrastructure/persistence/local/local-messages-repository.module';
+import { StorageModule } from '../storage/storage.module';
 
 // Use Cases
 import { CreateUserMessageUseCase } from './application/use-cases/create-user-message/create-user-message.use-case';
@@ -12,7 +13,7 @@ import { CreateToolResultMessageUseCase } from './application/use-cases/create-t
 import { DeleteMessageUseCase } from './application/use-cases/delete-message/delete-message.use-case';
 
 @Module({
-  imports: [LocalMessagesRepositoryModule],
+  imports: [LocalMessagesRepositoryModule, StorageModule],
   providers: [
     {
       provide: MESSAGES_REPOSITORY,

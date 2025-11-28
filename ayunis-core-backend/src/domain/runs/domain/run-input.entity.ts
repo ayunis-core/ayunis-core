@@ -1,16 +1,11 @@
-export class RunInput {}
+import { PendingImageUpload } from 'src/domain/messages/domain/value-objects/pending-image-upload.value-object';
 
-export class RunImageInput {
-  constructor(
-    public readonly imageUrl: string,
-    public readonly altText?: string,
-  ) {}
-}
+export class RunInput {}
 
 export class RunUserInput extends RunInput {
   constructor(
     public readonly text: string,
-    public readonly images: RunImageInput[] = [],
+    public readonly pendingImages: PendingImageUpload[] = [],
   ) {
     super();
   }

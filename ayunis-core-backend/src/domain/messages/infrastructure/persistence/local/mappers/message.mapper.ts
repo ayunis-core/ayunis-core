@@ -53,7 +53,8 @@ export class MessageMapper {
       if (content instanceof ImageMessageContent) {
         return {
           type: MessageContentType.IMAGE,
-          imageUrl: content.imageUrl,
+          index: content.index,
+          contentType: content.contentType,
           altText: content.altText,
         };
       }
@@ -73,7 +74,11 @@ export class MessageMapper {
               return new TextMessageContent(content.text);
             }
             if (content.type === MessageContentType.IMAGE) {
-              return new ImageMessageContent(content.imageUrl, content.altText);
+              return new ImageMessageContent(
+                content.index,
+                content.contentType,
+                content.altText,
+              );
             }
             throw new Error('Invalid message content');
           }),

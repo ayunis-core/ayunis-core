@@ -2,27 +2,36 @@ import {
   RunInput,
   RunUserInput,
   RunToolResultInput,
-  RunImageInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { SendMessageDto } from '../dto/send-message.dto';
+import { PendingImageUpload } from 'src/domain/messages/domain/value-objects/pending-image-upload.value-object';
 
 export class RunInputMapper {
-  static toCommand(dto: SendMessageDto['input']): RunInput {
-    if (dto.type === 'text') {
-      return new RunUserInput(dto.text, []);
-    }
-    if (dto.type === 'image') {
-      const runImages: RunImageInput[] = dto.images.map(
-        (image) => new RunImageInput(image.imageUrl, image.altText),
+  /**
+   * Converts DTO + uploaded files to RunInput.
+   *
+   * @param dto - The SendMessageDto from the request body
+   * @param files - Array of uploaded files (from @UploadedFiles())
+   */
+  static toCommand(
+    dto: SendMessageDto,
+    files: Express.Multer.File[] = [],
+  ): RunInput {
+    // Handle tool result input
+    if (dto.toolResult) {
+      return new RunToolResultInput(
+        dto.toolResult.toolId,
+        dto.toolResult.toolName,
+        dto.toolResult.result,
       );
-      // ImageInput maps to RunUserInput with empty text and images
-      return new RunUserInput('', runImages);
     }
-    if (dto.type === 'tool_result') {
-      return new RunToolResultInput(dto.toolId, dto.toolName, dto.result);
-    }
-    // This should never happen, but TypeScript needs it for exhaustiveness
-    const invalidType = dto as { type?: string };
-    throw new Error(`Invalid input type: ${String(invalidType.type)}`);
+
+    // Handle user input (text and/or images)
+    const pendingImages = files.map((file, index) => {
+      const altText = dto.imageAltTexts?.[index];
+      return new PendingImageUpload(file.buffer, file.mimetype, altText);
+    });
+
+    return new RunUserInput(dto.text ?? '', pendingImages);
   }
 }

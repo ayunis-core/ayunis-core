@@ -428,36 +428,28 @@ export class ExecuteRunUseCase {
 
         // Add user message if we have user input and it's the first iteration
         if (isFirstIteration && userInput) {
-          const content: Array<TextMessageContent | ImageMessageContent> = [];
+          // Validate that at least text or images are provided
+          const hasText = userInput.text && userInput.text.trim().length > 0;
+          const hasImages = userInput.pendingImages.length > 0;
 
-          // Add text content only if text is provided
-          if (userInput.text && userInput.text.trim().length > 0) {
-            // Anonymize user message text if in anonymous mode (thread setting or model enforced)
-            const messageText = params.isAnonymous
-              ? await this.anonymizeText(userInput.text)
-              : userInput.text;
-            content.push(new TextMessageContent(messageText));
-          }
-
-          // Add image content if images are provided
-          if (userInput.images && userInput.images.length > 0) {
-            content.push(
-              ...userInput.images.map(
-                (image) =>
-                  new ImageMessageContent(image.imageUrl, image.altText),
-              ),
-            );
-          }
-
-          // Validate that at least one content item exists
-          if (content.length === 0) {
+          if (!hasText && !hasImages) {
             throw new RunInvalidInputError(
               'Message must contain at least one content item (non-empty text or at least one image)',
             );
           }
 
+          // Anonymize user message text if in anonymous mode (thread setting or model enforced)
+          const messageText =
+            hasText && params.isAnonymous
+              ? await this.anonymizeText(userInput.text)
+              : userInput.text;
+
           const newUserMessage = await this.createUserMessageUseCase.execute(
-            new CreateUserMessageCommand(params.thread.id, content),
+            new CreateUserMessageCommand(
+              params.thread.id,
+              messageText,
+              userInput.pendingImages,
+            ),
           );
           params.trace.event({
             name: 'new_message',
@@ -487,6 +479,7 @@ export class ExecuteRunUseCase {
               tools: params.tools,
               instructions: params.instructions,
               threadId: params.thread.id,
+              orgId: params.orgId,
             })) {
               finalMessage = partialMessage; // Keep track of the last message
               yield partialMessage;
@@ -765,8 +758,9 @@ export class ExecuteRunUseCase {
     tools: Tool[];
     instructions?: string;
     threadId: UUID;
+    orgId: UUID;
   }): AsyncGenerator<AssistantMessage, void, unknown> {
-    const { model, messages, tools, instructions, threadId } = params;
+    const { model, messages, tools, instructions, threadId, orgId } = params;
 
     // Create streaming inference input
     const streamInput = new StreamInferenceInput({
@@ -775,6 +769,7 @@ export class ExecuteRunUseCase {
       systemPrompt: instructions || '',
       tools,
       toolChoice: ModelToolChoice.AUTO,
+      orgId,
     });
 
     // Start streaming

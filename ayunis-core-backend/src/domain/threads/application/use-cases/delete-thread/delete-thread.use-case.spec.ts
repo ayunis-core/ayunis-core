@@ -5,6 +5,7 @@ import { DeleteThreadCommand } from './delete-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
+import { DeleteThreadImagesUseCase } from '../delete-thread-images/delete-thread-images.use-case';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
@@ -28,11 +29,19 @@ describe('DeleteThreadUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockDeleteThreadImagesUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteThreadUseCase,
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: DeleteThreadImagesUseCase,
+          useValue: mockDeleteThreadImagesUseCase,
+        },
       ],
     }).compile();
 

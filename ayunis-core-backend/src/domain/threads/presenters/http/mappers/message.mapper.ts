@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -18,9 +18,12 @@ import {
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageMessageContentResponseDto } from '../dto/get-thread-response.dto/message-response.dto';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class MessageDtoMapper {
+  constructor(private readonly contextService: ContextService) {}
+
   toDto(
     message: Message,
   ):
@@ -41,6 +44,8 @@ export class MessageDtoMapper {
           role: MessageRole.USER,
           content: this.mapUserContentArray(
             message.content as Array<TextMessageContent | ImageMessageContent>,
+            message.threadId,
+            message.id,
           ),
         };
 
@@ -138,13 +143,19 @@ export class MessageDtoMapper {
 
   private mapUserContentArray(
     content: Array<TextMessageContent | ImageMessageContent>,
+    threadId: string,
+    messageId: string,
   ): Array<TextMessageContentResponseDto | ImageMessageContentResponseDto> {
     return content.map((contentItem) => {
       if (contentItem.type === MessageContentType.TEXT) {
         return this.mapTextContent(contentItem as TextMessageContent);
       }
       if (contentItem.type === MessageContentType.IMAGE) {
-        return this.mapImageContent(contentItem as ImageMessageContent);
+        return this.mapImageContent(
+          contentItem as ImageMessageContent,
+          threadId,
+          messageId,
+        );
       }
       throw new Error(
         `Invalid content type for user message: ${contentItem.type}`,
@@ -163,10 +174,20 @@ export class MessageDtoMapper {
 
   private mapImageContent(
     content: ImageMessageContent,
+    threadId: string,
+    messageId: string,
   ): ImageMessageContentResponseDto {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('Organization context required');
+    }
+
+    // Compute the storage path and return it as imageUrl for frontend to fetch
+    const storagePath = content.getStoragePath(orgId, threadId, messageId);
+
     return {
       type: content.type,
-      imageUrl: content.imageUrl,
+      imageUrl: storagePath,
       altText: content.altText,
     };
   }
