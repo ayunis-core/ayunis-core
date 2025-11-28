@@ -5,7 +5,6 @@ import { UsageRepository } from '../../ports/usage.repository';
 import { InvalidDateRangeError } from '../../usage.errors';
 import { ModelDistribution } from '../../../domain/model-distribution.entity';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 import { UUID } from 'crypto';
 
 describe('GetModelDistributionUseCase', () => {

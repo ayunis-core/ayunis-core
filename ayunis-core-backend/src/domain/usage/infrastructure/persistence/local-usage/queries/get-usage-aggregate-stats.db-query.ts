@@ -28,4 +28,3 @@ export async function getUsageAggregateStats(
 
   return res ?? null;
 }
-

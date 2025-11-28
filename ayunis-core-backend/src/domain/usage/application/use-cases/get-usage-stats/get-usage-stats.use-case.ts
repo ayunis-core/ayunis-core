@@ -7,9 +7,7 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 @Injectable()
 export class GetUsageStatsUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-  ) {}
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(query: GetUsageStatsQuery): Promise<UsageStats> {
     if (query.startDate && query.endDate) {
@@ -51,9 +49,15 @@ export class GetUsageStatsUseCase {
     return new UsageStats({
       totalTokens: Math.max(0, stats.totalTokens),
       totalRequests: Math.max(0, stats.totalRequests),
-      totalCost: stats.totalCost !== undefined ? Math.max(0, stats.totalCost) : undefined,
+      totalCost:
+        stats.totalCost !== undefined
+          ? Math.max(0, stats.totalCost)
+          : undefined,
       currency: stats.currency,
-      activeUsers: Math.min(Math.max(0, stats.activeUsers), Math.max(0, stats.totalUsers)),
+      activeUsers: Math.min(
+        Math.max(0, stats.activeUsers),
+        Math.max(0, stats.totalUsers),
+      ),
       totalUsers: Math.max(0, stats.totalUsers),
       topModels: stats.topModels || [],
     });

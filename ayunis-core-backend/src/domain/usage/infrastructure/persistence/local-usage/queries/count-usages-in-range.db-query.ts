@@ -21,4 +21,3 @@ export async function countUsagesInRange(
 
   return await qb.getCount();
 }
-

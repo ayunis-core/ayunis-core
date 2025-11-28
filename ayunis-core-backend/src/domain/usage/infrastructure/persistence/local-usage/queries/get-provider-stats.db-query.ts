@@ -34,4 +34,3 @@ export async function getProviderStats(
 
   return await qb.groupBy('usage.provider').getRawMany<ProviderStatsRow>();
 }
-

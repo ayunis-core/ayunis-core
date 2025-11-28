@@ -35,4 +35,3 @@ export async function getProviderTimeSeries(
     .orderBy('DATE(usage.createdAt)', 'ASC')
     .getRawMany<TimeSeriesRow>();
 }
-

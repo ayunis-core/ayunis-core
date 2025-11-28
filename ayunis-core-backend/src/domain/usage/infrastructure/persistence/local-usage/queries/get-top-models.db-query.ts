@@ -36,4 +36,3 @@ export async function getTopModels(
     .limit(limit)
     .getRawMany<TopModelRow>();
 }
-

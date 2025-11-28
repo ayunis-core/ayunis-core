@@ -16,4 +16,3 @@ export async function countActiveUsersSince(
 
   return parseInt(result.activeUsers) || 0;
 }
-

@@ -117,4 +117,3 @@ export async function getUserUsageRows(
     .limit(params.limit)
     .getRawMany<UserUsageRow>();
 }
-

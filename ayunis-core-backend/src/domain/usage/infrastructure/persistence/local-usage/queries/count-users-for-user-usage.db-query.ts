@@ -1,4 +1,3 @@
-import { UUID } from 'crypto';
 import { UsageRecord } from '../schema/usage.record';
 import { GetUserUsageQueryParams } from './usage-query.types';
 
@@ -61,4 +60,3 @@ export async function countUsersForUserUsage(
 
   return totalRows.length;
 }
-

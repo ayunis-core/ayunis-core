@@ -247,8 +247,7 @@ export class UsageController {
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Model usage distribution retrieved successfully.',
+    description: 'Model usage distribution retrieved successfully.',
     type: ModelDistributionResponseDto,
   })
   @ApiQuery({

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Usage } from '../../../../domain/usage.entity';
 import { UsageRecord } from '../schema/usage.record';
-import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
 
 @Injectable()
 export class UsageMapper {
@@ -28,7 +27,7 @@ export class UsageMapper {
       userId: record.userId,
       organizationId: record.organizationId,
       modelId: record.modelId,
-      provider: record.provider as ModelProvider,
+      provider: record.provider,
       inputTokens: record.inputTokens,
       outputTokens: record.outputTokens,
       totalTokens: record.totalTokens,

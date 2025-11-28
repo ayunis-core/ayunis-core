@@ -24,7 +24,9 @@ describe('CollectUsageUseCase', () => {
   const modelId = 'model-id' as UUID;
   const requestId = 'request-id' as UUID;
 
-  const createMockModel = (overrides?: Partial<LanguageModel>): LanguageModel => {
+  const createMockModel = (
+    overrides?: Partial<LanguageModel>,
+  ): LanguageModel => {
     return new LanguageModel({
       id: modelId,
       name: 'test-model',
@@ -259,12 +261,13 @@ describe('CollectUsageUseCase', () => {
       );
       expect(mockUsageRepository.save).not.toHaveBeenCalled();
     });
-
   });
 
   describe('error handling', () => {
     it('should throw UsageCollectionFailedError when userId is missing from context', async () => {
-      jest.spyOn(mockContextService, 'get').mockImplementation(((key?: 'userId' | 'orgId') => {
+      jest.spyOn(mockContextService, 'get').mockImplementation(((
+        key?: 'userId' | 'orgId',
+      ) => {
         if (key === 'userId') return undefined;
         if (key === 'orgId') return orgId;
         return undefined;
@@ -285,7 +288,9 @@ describe('CollectUsageUseCase', () => {
     });
 
     it('should throw UsageCollectionFailedError when orgId is missing from context', async () => {
-      jest.spyOn(mockContextService, 'get').mockImplementation(((key?: 'userId' | 'orgId') => {
+      jest.spyOn(mockContextService, 'get').mockImplementation(((
+        key?: 'userId' | 'orgId',
+      ) => {
         if (key === 'userId') return userId;
         if (key === 'orgId') return undefined;
         return undefined;
