@@ -33,6 +33,8 @@ import enAgents from './shared/locales/en/agents.json';
 import deAgents from './shared/locales/de/agents.json';
 import enAgent from './shared/locales/en/agent.json';
 import deAgent from './shared/locales/de/agent.json';
+import enQuickActions from './shared/locales/en/quickActions.json';
+import deQuickActions from './shared/locales/de/quickActions.json';
 
 const resources = {
   en: {
@@ -51,6 +53,7 @@ const resources = {
     prompts: enPrompts,
     agents: enAgents,
     agent: enAgent,
+    quickActions: enQuickActions,
   },
   de: {
     auth: deAuth,
@@ -68,6 +71,7 @@ const resources = {
     prompts: dePrompts,
     agents: deAgents,
     agent: deAgent,
+    quickActions: deQuickActions,
   },
 };
 

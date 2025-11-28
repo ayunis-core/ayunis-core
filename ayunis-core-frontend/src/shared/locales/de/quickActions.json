@@ -1,0 +1,34 @@
+{
+  "categories": {
+    "writing": "Schreiben",
+    "research": "Recherche",
+    "summarize": "Zusammenfassen",
+    "analyze": "Analysieren"
+  },
+  "prompts": {
+    "writing": {
+      "draftDocument": "Offizielles Schreiben verfassen",
+      "createDraft": "Entwurf erstellen",
+      "formulateResponse": "Antwort formulieren",
+      "writeText": "Text schreiben"
+    },
+    "research": {
+      "explainBasics": "Grundlagen erklären",
+      "whatToConsider": "Was muss ich beachten?",
+      "findInformation": "Informationen finden",
+      "helpFind": "Bei der Suche helfen"
+    },
+    "summarize": {
+      "summarizeText": "Text zusammenfassen",
+      "extractKeyPoints": "Wichtigste Punkte extrahieren",
+      "createOverview": "Kurzübersicht erstellen",
+      "coreStatements": "Kernaussagen identifizieren"
+    },
+    "analyze": {
+      "checkText": "Text prüfen",
+      "analyzeDocument": "Dokument analysieren",
+      "evaluateProposal": "Vorschlag bewerten",
+      "strengthsWeaknesses": "Stärken und Schwächen"
+    }
+  }
+}

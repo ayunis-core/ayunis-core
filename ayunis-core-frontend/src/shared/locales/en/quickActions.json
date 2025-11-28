@@ -1,0 +1,34 @@
+{
+  "categories": {
+    "writing": "Write",
+    "research": "Research",
+    "summarize": "Summarize",
+    "analyze": "Analyze"
+  },
+  "prompts": {
+    "writing": {
+      "draftDocument": "Draft official document",
+      "createDraft": "Create a draft",
+      "formulateResponse": "Formulate a response",
+      "writeText": "Write text"
+    },
+    "research": {
+      "explainBasics": "Explain the basics",
+      "whatToConsider": "What should I consider?",
+      "findInformation": "Find information",
+      "helpFind": "Help me find"
+    },
+    "summarize": {
+      "summarizeText": "Summarize text",
+      "extractKeyPoints": "Extract key points",
+      "createOverview": "Create overview",
+      "coreStatements": "Identify core statements"
+    },
+    "analyze": {
+      "checkText": "Check text",
+      "analyzeDocument": "Analyze document",
+      "evaluateProposal": "Evaluate proposal",
+      "strengthsWeaknesses": "Strengths and weaknesses"
+    }
+  }
+}
