@@ -57,6 +57,7 @@ interface ChatInputProps {
 
 export interface ChatInputRef {
   setMessage: (message: string) => void;
+  sendMessage: (message: string) => void;
 }
 
 const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
@@ -93,6 +94,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     useImperativeHandle(ref, () => ({
       setMessage,
+      sendMessage: (text: string) => {
+        if (!text.trim() || !(modelId || agentId)) return;
+        onSend(text);
+      },
     }));
 
     function handleSend() {

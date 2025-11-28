@@ -124,7 +124,7 @@ export default function NewChatPage({
           isAnonymousEnforced={isAnonymousEnforced}
         />
         <QuickActions
-          onPromptSelect={(text) => chatInputRef.current?.setMessage(text)}
+          onPromptSelect={(text) => chatInputRef.current?.sendMessage(text)}
         />
       </div>
     </NewChatPageLayout>
