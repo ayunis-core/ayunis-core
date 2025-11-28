@@ -19,6 +19,9 @@ import { ThreadsModule } from '../threads/threads.module';
 import { McpModule } from '../mcp/mcp.module';
 import { McpIntegrationToolHandler } from './application/handlers/mcp-integration-tool.handler';
 import { McpIntegrationResourceHandler } from './application/handlers/mcp-integration-resource.handler';
+import { ProductKnowledgeToolHandler } from './application/handlers/product-knowledge-tool.handler';
+import { ProductKnowledgePort } from './application/ports/product-knowledge.port';
+import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/product-knowledge.adapter';
 
 @Module({
   imports: [
@@ -42,6 +45,11 @@ import { McpIntegrationResourceHandler } from './application/handlers/mcp-integr
     CodeExecutionToolHandler,
     McpIntegrationToolHandler,
     McpIntegrationResourceHandler,
+    ProductKnowledgeToolHandler,
+    {
+      provide: ProductKnowledgePort,
+      useClass: ProductKnowledgeAdapter,
+    },
     // Repositories and factories
     {
       provide: ToolConfigRepository,
