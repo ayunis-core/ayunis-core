@@ -84,13 +84,19 @@ export class ImageMessageContentRequestDto extends MessageContentRequestDto {
   type: MessageContentType.IMAGE = MessageContentType.IMAGE;
 
   @IsNotEmpty()
+  @ApiProperty({
+    description: 'Index of the image in the message (0-based)',
+    example: 0,
+  })
+  index: number;
+
+  @IsNotEmpty()
   @IsString()
   @ApiProperty({
-    description:
-      'Internal image reference (e.g. MinIO object name or /storage/:objectName path)',
-    example: '1711365678123-user-upload.png',
+    description: 'MIME type of the image',
+    example: 'image/jpeg',
   })
-  imageUrl: string;
+  contentType: string;
 
   @IsOptional()
   @IsString()

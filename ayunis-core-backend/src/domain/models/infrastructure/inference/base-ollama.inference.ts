@@ -35,12 +35,12 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
   async answer(input: InferenceInput): Promise<InferenceResponse> {
     this.logger.log('answer', input);
     try {
-      const { messages, tools } = input;
+      const { messages, tools, orgId } = input;
       const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
         ...tool,
         function: { ...tool.function, strict: true },
       }));
-      const ollamaMessages = await this.convertMessages(messages);
+      const ollamaMessages = await this.convertMessages(messages, orgId);
       const systemPrompt = input.systemPrompt
         ? this.convertSystemPrompt(input.systemPrompt)
         : undefined;
@@ -99,16 +99,18 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
 
   private convertMessages = async (
     messages: Message[],
+    orgId: string,
   ): Promise<OllamaMessage[]> => {
     const convertedMessages: OllamaMessage[] = [];
     for (const message of messages) {
-      convertedMessages.push(...(await this.convertMessage(message)));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
     return convertedMessages;
   };
 
   private convertMessage = async (
     message: Message,
+    orgId: string,
   ): Promise<OllamaMessage[]> => {
     const convertedMessages: OllamaMessage[] = [];
     // User Message
@@ -131,7 +133,11 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
               },
             );
           }
-          const imageData = await this.convertImageContent(content);
+          const imageData = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
           images.push(imageData);
         }
       }
@@ -279,6 +285,7 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
 
   private async convertImageContent(
     content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
   ): Promise<string> {
     if (!this.imageContentService) {
       throw new InferenceFailedError(
@@ -289,8 +296,10 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
       );
     }
 
-    const imageData =
-      await this.imageContentService.convertImageToBase64(content);
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
 
     return imageData.base64;
   }

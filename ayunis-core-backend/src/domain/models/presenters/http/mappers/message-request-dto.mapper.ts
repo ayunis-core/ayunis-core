@@ -113,7 +113,7 @@ export class MessageRequestDtoMapper {
       return this.fromTextContentDto(dto);
     }
     if (dto.type === MessageContentType.IMAGE) {
-      return new ImageMessageContent(dto.imageUrl, dto.altText);
+      return new ImageMessageContent(dto.index, dto.contentType, dto.altText);
     }
     throw new Error(`Invalid content type for user message`);
   }

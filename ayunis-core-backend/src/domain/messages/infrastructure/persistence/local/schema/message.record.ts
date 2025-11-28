@@ -31,7 +31,8 @@ interface ThinkingMessageContentData {
 
 interface ImageMessageContentData {
   type: MessageContentType.IMAGE;
-  imageUrl: string;
+  index: number;
+  contentType: string;
   altText?: string;
 }
 

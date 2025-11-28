@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { GetInferenceCommand } from './get-inference.command';
 import { InferenceHandlerRegistry } from '../../registry/inference-handler.registry';
 import {
@@ -7,6 +7,7 @@ import {
 } from '../../ports/inference.handler';
 import { InferenceFailedError, ModelError } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class GetInferenceUseCase {
@@ -14,10 +15,16 @@ export class GetInferenceUseCase {
 
   constructor(
     private readonly inferenceHandlerRegistry: InferenceHandlerRegistry,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
     this.logger.log('triggerInference', command);
+
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('Organization context required');
+    }
 
     try {
       // Get the appropriate handler for the model provider
@@ -33,6 +40,7 @@ export class GetInferenceUseCase {
             messages: command.messages,
             tools: command.tools,
             toolChoice: command.toolChoice,
+            orgId,
           }),
         )
         .catch((error) => {

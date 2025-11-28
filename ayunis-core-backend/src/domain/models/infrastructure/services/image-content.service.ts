@@ -18,6 +18,12 @@ export interface ValidatedImageData {
   contentType: AllowedImageContentType;
 }
 
+export interface ImageContext {
+  orgId: string;
+  threadId: string;
+  messageId: string;
+}
+
 @Injectable()
 export class ImageContentService {
   private readonly logger = new Logger(ImageContentService.name);
@@ -29,23 +35,27 @@ export class ImageContentService {
     private readonly objectStorage: ObjectStoragePort,
   ) {}
 
+  /**
+   * Convert an image message content to base64 for inference APIs.
+   *
+   * @param content - The ImageMessageContent entity
+   * @param context - Context needed to compute the storage path (orgId, threadId, messageId)
+   */
   async convertImageToBase64(
     content: ImageMessageContent,
+    context: ImageContext,
   ): Promise<ValidatedImageData> {
-    const storageUrl = new StorageUrl(content.imageUrl, '');
-    const objectInfo = await this.objectStorage.getObjectInfo(storageUrl);
-    const contentType = objectInfo.contentType;
-
-    if (!contentType || !contentType.startsWith('image/')) {
-      throw new InferenceFailedError(
-        `Stored object for image content is not an image (content-type: ${contentType})`,
-      );
-    }
-
-    const normalizedContentType = this.normalizeContentType(contentType);
-    const validatedContentType = this.validateContentType(
-      normalizedContentType,
+    // Compute storage path from context
+    const storagePath = content.getStoragePath(
+      context.orgId,
+      context.threadId,
+      context.messageId,
     );
+    const storageUrl = new StorageUrl(storagePath, '');
+
+    // Use the content type stored in the entity (validated at upload time)
+    const contentType = content.contentType;
+    const validatedContentType = this.validateContentType(contentType);
 
     const buffer = await this.downloadImageBuffer(storageUrl);
     this.validateImageSize(buffer);

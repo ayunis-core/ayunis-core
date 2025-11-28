@@ -10,6 +10,7 @@ export class StreamInferenceInput {
   public readonly systemPrompt: string;
   public readonly tools: Tool[];
   public readonly toolChoice?: ModelToolChoice;
+  public readonly orgId: string;
 
   constructor(params: {
     model: Model;
@@ -17,6 +18,7 @@ export class StreamInferenceInput {
     systemPrompt: string;
     tools?: Tool[];
     toolChoice?: ModelToolChoice;
+    orgId: string;
   }) {
     this.model = params.model;
     this.messages = params.messages;
@@ -25,6 +27,7 @@ export class StreamInferenceInput {
     // only set toolChoice if tools are provided
     this.toolChoice =
       params.tools && params.tools.length > 0 ? params.toolChoice : undefined;
+    this.orgId = params.orgId;
   }
 }
 

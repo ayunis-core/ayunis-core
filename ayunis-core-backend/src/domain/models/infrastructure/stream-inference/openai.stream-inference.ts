@@ -49,9 +49,9 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     subscriber: Subscriber<StreamInferenceResponseChunk>,
   ): Promise<void> {
     try {
-      const { messages, tools, toolChoice } = input;
+      const { messages, tools, toolChoice, orgId } = input;
       const openAiTools = tools?.map(this.convertTool);
-      const openAiMessages = await this.convertMessages(messages);
+      const openAiMessages = await this.convertMessages(messages, orgId);
       const isGpt5 = input.model.name.startsWith('gpt-5');
 
       const completionOptions: OpenAI.Responses.ResponseCreateParamsStreaming =
@@ -105,16 +105,18 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
 
   private convertMessages = async (
     messages: Message[],
+    orgId: string,
   ): Promise<OpenAI.Responses.ResponseInput> => {
     const convertedMessages: OpenAI.Responses.ResponseInputItem[] = [];
     for (const message of messages) {
-      convertedMessages.push(...(await this.convertMessage(message)));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
     return convertedMessages;
   };
 
   private convertMessage = async (
     message: Message,
+    orgId: string,
   ): Promise<OpenAI.Responses.ResponseInputItem[]> => {
     /** Assistant messages in Ayunis Core contain both text and tool call,
      *  so one assistant message is converted to multiple OpenAI messages.
@@ -135,7 +137,11 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
         }
         // Image Message Content
         if (content instanceof ImageMessageContent) {
-          const imageContent = await this.convertImageContent(content);
+          const imageContent = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
           convertedMessage.content.push(imageContent);
         }
       }
@@ -277,9 +283,12 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
 
   private async convertImageContent(
     content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
   ): Promise<OpenAI.Responses.ResponseInputImage> {
-    const imageData =
-      await this.imageContentService.convertImageToBase64(content);
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
 
     const imageUrl = `data:${imageData.contentType};base64,${imageData.base64}`;
 
