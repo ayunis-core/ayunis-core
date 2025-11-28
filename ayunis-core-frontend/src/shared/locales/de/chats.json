@@ -1,6 +1,8 @@
 {
   "chat": {
     "untitled": "Ohne Titel",
+    "anonymousMode": "Anonym",
+    "anonymousModeTooltip": "Dieser Chat ist im anonymen Modus. Personenbezogene Daten werden automatisch entfernt.",
     "deleteThread": "Thread löschen",
     "deleteThreadTitle": "Thread löschen",
     "deleteThreadDescription": "Sind Sie sicher, dass Sie diesen Thread löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

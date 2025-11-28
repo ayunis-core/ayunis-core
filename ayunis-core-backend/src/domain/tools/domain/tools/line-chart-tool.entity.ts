@@ -71,4 +71,8 @@ export class LineChartTool extends DisplayableTool {
     }
     return params as LineChartToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

@@ -18,6 +18,7 @@ export class CustomMcpIntegration extends McpIntegration {
     connectionStatus?: string;
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
+    returnsPii?: boolean;
   }) {
     super({
       id: params.id,
@@ -29,6 +30,7 @@ export class CustomMcpIntegration extends McpIntegration {
       connectionStatus: params.connectionStatus,
       lastConnectionError: params.lastConnectionError,
       lastConnectionCheck: params.lastConnectionCheck,
+      returnsPii: params.returnsPii,
       auth: params.auth,
     });
 

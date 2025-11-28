@@ -126,6 +126,7 @@ export class ThreadsController {
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
         agentId: createThreadDto.agentId,
+        isAnonymous: createThreadDto.isAnonymous,
       }),
     );
     return this.getThreadDtoMapper.toDto(thread);

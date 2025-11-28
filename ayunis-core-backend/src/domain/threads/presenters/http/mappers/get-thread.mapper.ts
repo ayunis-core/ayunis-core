@@ -25,6 +25,7 @@ export class GetThreadDtoMapper {
       messages: this.messageDtoMapper.toDtoArray(thread.messages),
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),
+      isAnonymous: thread.isAnonymous,
     };
   }
 

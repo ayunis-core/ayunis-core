@@ -144,6 +144,7 @@ export class CreateMcpIntegrationUseCase {
         name: config.displayName,
         serverUrl: config.serverUrl,
         auth: integrationAuth,
+        returnsPii: command.returnsPii,
       });
 
       // Save integration first to get ID
@@ -222,6 +223,7 @@ export class CreateMcpIntegrationUseCase {
           name: command.name,
           serverUrl: command.serverUrl,
           auth,
+          returnsPii: command.returnsPii,
         });
       } else if (authType === McpAuthMethod.CUSTOM_HEADER) {
         if (!command.credentials) {
@@ -249,6 +251,7 @@ export class CreateMcpIntegrationUseCase {
           name: command.name,
           serverUrl: command.serverUrl,
           auth,
+          returnsPii: command.returnsPii,
         });
       } else {
         // NO_AUTH doesn't need any credentials
@@ -261,6 +264,7 @@ export class CreateMcpIntegrationUseCase {
           name: command.name,
           serverUrl: command.serverUrl,
           auth,
+          returnsPii: command.returnsPii,
         });
       }
 

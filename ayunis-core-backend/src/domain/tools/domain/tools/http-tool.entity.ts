@@ -72,4 +72,8 @@ export class HttpTool extends ConfigurableTool<HttpToolConfig> {
     }
     return params as HttpToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

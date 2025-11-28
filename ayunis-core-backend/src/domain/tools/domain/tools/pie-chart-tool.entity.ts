@@ -60,4 +60,8 @@ export class PieChartTool extends DisplayableTool {
     }
     return params as PieChartToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 import { UUID } from 'crypto';
 
 export class CreateThreadDto {
@@ -22,4 +22,14 @@ export class CreateThreadDto {
   @IsUUID()
   @IsOptional()
   agentId?: UUID;
+
+  @ApiPropertyOptional({
+    description: 'Enable anonymous mode for this thread',
+    example: false,
+    default: false,
+    type: 'boolean',
+  })
+  @IsBoolean()
+  @IsOptional()
+  isAnonymous?: boolean;
 }

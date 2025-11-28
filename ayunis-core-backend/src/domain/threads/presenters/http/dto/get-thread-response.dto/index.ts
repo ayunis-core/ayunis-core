@@ -102,4 +102,11 @@ export class GetThreadResponseDto {
     example: '2024-01-01T12:30:00.000Z',
   })
   updatedAt: string;
+
+  @ApiProperty({
+    description:
+      'Whether the thread is in anonymous mode (PII redaction enabled)',
+    example: false,
+  })
+  isAnonymous: boolean;
 }

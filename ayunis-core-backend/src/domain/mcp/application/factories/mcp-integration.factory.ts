@@ -22,6 +22,7 @@ export class McpIntegrationFactory {
     connectionStatus?: string;
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
+    returnsPii?: boolean;
   }): CustomMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind.PREDEFINED;
@@ -37,6 +38,7 @@ export class McpIntegrationFactory {
     connectionStatus?: string;
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
+    returnsPii?: boolean;
   }): PredefinedMcpIntegration;
   createIntegration(params: {
     kind: McpIntegrationKind;
@@ -52,6 +54,7 @@ export class McpIntegrationFactory {
     connectionStatus?: string;
     lastConnectionError?: string;
     lastConnectionCheck?: Date;
+    returnsPii?: boolean;
   }): McpIntegration {
     const base = {
       id: params.id,
@@ -65,6 +68,7 @@ export class McpIntegrationFactory {
       connectionStatus: params.connectionStatus,
       lastConnectionError: params.lastConnectionError,
       lastConnectionCheck: params.lastConnectionCheck,
+      returnsPii: params.returnsPii,
     } as const;
 
     switch (params.kind) {

@@ -10,6 +10,7 @@ export class GetThreadsDtoMapper {
       title: thread.title,
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),
+      isAnonymous: thread.isAnonymous,
     };
   }
 

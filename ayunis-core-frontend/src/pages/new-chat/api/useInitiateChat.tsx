@@ -40,6 +40,7 @@ export const useInitiateChat = () => {
       type: SourceResponseDtoType;
       file: File;
     }>,
+    isAnonymous?: boolean,
   ) {
     // Store the message as pending
     setPendingMessage(message);
@@ -49,6 +50,7 @@ export const useInitiateChat = () => {
     const createThreadData: CreateThreadData = {
       modelId,
       agentId,
+      isAnonymous,
     };
 
     // Create the new thread

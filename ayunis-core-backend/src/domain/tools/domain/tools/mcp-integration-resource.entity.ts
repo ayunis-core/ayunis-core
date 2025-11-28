@@ -26,7 +26,9 @@ function getDescription(mcpResource: McpResource): string {
  */
 export class McpIntegrationResource extends Tool {
   public readonly integrationId: UUID;
-  constructor(mcpResource: McpResource) {
+  private readonly _returnsPii: boolean;
+
+  constructor(mcpResource: McpResource, returnsPii: boolean) {
     super({
       name: mcpResource.name,
       description: getDescription(mcpResource),
@@ -34,6 +36,7 @@ export class McpIntegrationResource extends Tool {
       type: ToolType.MCP_RESOURCE,
     });
     this.integrationId = mcpResource.integrationId;
+    this._returnsPii = returnsPii;
   }
 
   validateParams(params: Record<string, any>): McpResourceToolParameters {
@@ -44,5 +47,9 @@ export class McpIntegrationResource extends Tool {
       throw new Error(JSON.stringify(validate.errors));
     }
     return params as McpResourceToolParameters;
+  }
+
+  get returnsPii(): boolean {
+    return this._returnsPii;
   }
 }

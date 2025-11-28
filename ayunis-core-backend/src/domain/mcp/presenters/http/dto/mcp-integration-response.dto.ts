@@ -108,4 +108,11 @@ export class McpIntegrationResponseDto {
     example: '2025-10-28T12:30:00.000Z',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description:
+      'Whether tools from this integration may return PII data that should be anonymized in anonymous mode',
+    example: true,
+  })
+  returnsPii: boolean;
 }

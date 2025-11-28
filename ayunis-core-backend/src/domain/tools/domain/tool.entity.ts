@@ -22,4 +22,10 @@ export abstract class Tool {
   abstract validateParams(
     params: Record<string, any>,
   ): FromSchema<typeof this.parameters>;
+
+  /**
+   * Indicates whether this tool may return PII in its results.
+   * Used to determine if anonymization is needed for tool outputs in anonymous mode.
+   */
+  abstract get returnsPii(): boolean;
 }

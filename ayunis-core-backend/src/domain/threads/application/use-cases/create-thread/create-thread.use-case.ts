@@ -62,6 +62,7 @@ export class CreateThreadUseCase {
           userId,
           model: model,
           agentId: agentId,
+          isAnonymous: command.isAnonymous,
           messages: [],
         });
         const createdThread = await this.threadsRepository.create(thread);

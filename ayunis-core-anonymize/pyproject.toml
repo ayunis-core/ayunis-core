@@ -1,0 +1,19 @@
+[project]
+name = "ms-presidio"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "de-core-news-lg",
+    "en-core-web-lg",
+    "fastapi>=0.121.3",
+    "presidio-analyzer>=2.2.360",
+    "pydantic>=2.12.4",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.38.0",
+]
+
+[tool.uv.sources]
+en-core-web-lg = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl" }
+de-core-news-lg = { url = "https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.8.0/de_core_news_lg-3.8.0-py3-none-any.whl" }

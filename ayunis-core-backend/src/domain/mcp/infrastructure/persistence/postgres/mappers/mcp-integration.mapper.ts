@@ -58,6 +58,7 @@ export class McpIntegrationMapper {
       connectionStatus: record.connectionStatus,
       lastConnectionError: record.lastConnectionError,
       lastConnectionCheck: record.lastConnectionCheck,
+      returnsPii: record.returnsPii,
     } as const;
 
     if (record instanceof PredefinedMcpIntegrationRecord) {
@@ -75,6 +76,7 @@ export class McpIntegrationMapper {
         connectionStatus: baseParams.connectionStatus,
         lastConnectionError: baseParams.lastConnectionError,
         lastConnectionCheck: baseParams.lastConnectionCheck,
+        returnsPii: baseParams.returnsPii,
       });
     }
 
@@ -92,6 +94,7 @@ export class McpIntegrationMapper {
         connectionStatus: baseParams.connectionStatus,
         lastConnectionError: baseParams.lastConnectionError,
         lastConnectionCheck: baseParams.lastConnectionCheck,
+        returnsPii: baseParams.returnsPii,
       });
     }
 
@@ -122,6 +125,7 @@ export class McpIntegrationMapper {
       record.connectionStatus = entity.connectionStatus;
       record.lastConnectionError = entity.lastConnectionError;
       record.lastConnectionCheck = entity.lastConnectionCheck;
+      record.returnsPii = entity.returnsPii;
       record.predefinedSlug = entity.slug;
       record.auth = authRecord;
       authRecord.integration = record;
@@ -139,6 +143,7 @@ export class McpIntegrationMapper {
       record.connectionStatus = entity.connectionStatus;
       record.lastConnectionError = entity.lastConnectionError;
       record.lastConnectionCheck = entity.lastConnectionCheck;
+      record.returnsPii = entity.returnsPii;
       record.auth = authRecord;
       authRecord.integration = record;
       return record;

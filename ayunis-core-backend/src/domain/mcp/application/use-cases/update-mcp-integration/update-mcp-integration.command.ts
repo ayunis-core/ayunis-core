@@ -4,5 +4,6 @@ export class UpdateMcpIntegrationCommand {
     public readonly name?: string,
     public readonly credentials?: string,
     public readonly authHeaderName?: string,
+    public readonly returnsPii?: boolean,
   ) {}
 }
