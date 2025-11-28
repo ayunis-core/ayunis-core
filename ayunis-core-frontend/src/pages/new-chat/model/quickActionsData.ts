@@ -20,19 +20,23 @@ export const QUICK_ACTIONS: QuickActionCategory[] = [
     prompts: [
       {
         labelKey: 'prompts.writing.draftDocument',
-        content: 'Hilf mir, ein offizielles Schreiben zu verfassen',
+        content:
+          'Könntest du mir helfen, ein offizielles Schreiben zu verfassen? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Wenn du meinst, dass ich Dokumente hochladen sollte, die dir bei der Aufgabe helfen würden, lass es mich wissen.',
       },
       {
         labelKey: 'prompts.writing.createDraft',
-        content: 'Erstelle einen Entwurf für...',
+        content:
+          'Ich brauche einen Entwurf für ein Dokument. Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Bitte führe die Aufgabe so bald wie möglich aus.',
       },
       {
         labelKey: 'prompts.writing.formulateResponse',
-        content: 'Formuliere eine Antwort auf...',
+        content:
+          'Könntest du mir helfen, eine Antwort zu formulieren? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Wenn du meinst, dass ich Dokumente hochladen sollte (z.B. die ursprüngliche Nachricht), lass es mich wissen.',
       },
       {
         labelKey: 'prompts.writing.writeText',
-        content: 'Schreibe einen Text über...',
+        content:
+          'Ich möchte einen Text schreiben. Falls du weitere Informationen von mir brauchst (Thema, Zielgruppe, Länge), stelle mir direkt 1-2 wichtige Fragen. Bitte führe die Aufgabe so bald wie möglich aus.',
       },
     ],
   },
@@ -43,19 +47,23 @@ export const QUICK_ACTIONS: QuickActionCategory[] = [
     prompts: [
       {
         labelKey: 'prompts.research.explainBasics',
-        content: 'Erkläre mir die Grundlagen zu...',
+        content:
+          'Könntest du mir die Grundlagen zu einem Thema erklären? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Eine visuelle oder strukturierte Darstellung wäre toll, falls es sinnvoll ist.',
       },
       {
         labelKey: 'prompts.research.whatToConsider',
-        content: 'Was muss ich beachten bei...?',
+        content:
+          'Ich möchte wissen, was ich bei einem bestimmten Thema beachten muss. Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Überlege bei der Erstellung einer Darstellung, welche Art (Checkliste, Übersicht usw.) für diese Aufgabe am hilfreichsten sein könnte.',
       },
       {
         labelKey: 'prompts.research.findInformation',
-        content: 'Welche Informationen gibt es zu...?',
+        content:
+          'Ich suche Informationen zu einem bestimmten Thema. Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Bitte führe die Aufgabe so bald wie möglich aus.',
       },
       {
         labelKey: 'prompts.research.helpFind',
-        content: 'Hilf mir, Informationen zu finden über...',
+        content:
+          'Könntest du mir helfen, Informationen zu finden? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Eine strukturierte Zusammenfassung wäre toll, falls es sinnvoll ist.',
       },
     ],
   },
@@ -66,19 +74,23 @@ export const QUICK_ACTIONS: QuickActionCategory[] = [
     prompts: [
       {
         labelKey: 'prompts.summarize.summarizeText',
-        content: 'Fasse den folgenden Text zusammen',
+        content:
+          'Könntest du einen Text für mich zusammenfassen? Wenn du meinst, dass ich Dokumente hochladen sollte, die dir bei der Aufgabe helfen würden, lass es mich wissen. Eine strukturierte Zusammenfassung mit Kernpunkten wäre ideal.',
       },
       {
         labelKey: 'prompts.summarize.extractKeyPoints',
-        content: 'Extrahiere die wichtigsten Punkte',
+        content:
+          'Könntest du die wichtigsten Punkte aus einem Text extrahieren? Wenn du meinst, dass ich Dokumente hochladen sollte, lass es mich wissen. Eine Aufzählung der Kernaussagen wäre ideal.',
       },
       {
         labelKey: 'prompts.summarize.createOverview',
-        content: 'Erstelle eine Kurzübersicht',
+        content:
+          'Ich brauche eine Kurzübersicht zu einem Thema oder Dokument. Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Überlege, welche Darstellungsform (Tabelle, Liste, Absätze) am hilfreichsten wäre.',
       },
       {
         labelKey: 'prompts.summarize.coreStatements',
-        content: 'Was sind die Kernaussagen?',
+        content:
+          'Könntest du die Kernaussagen eines Textes herausarbeiten? Wenn du meinst, dass ich Dokumente hochladen sollte, lass es mich wissen. Eine klare, strukturierte Aufbereitung wäre toll.',
       },
     ],
   },
@@ -89,19 +101,23 @@ export const QUICK_ACTIONS: QuickActionCategory[] = [
     prompts: [
       {
         labelKey: 'prompts.analyze.checkText',
-        content: 'Prüfe den folgenden Text',
+        content:
+          'Könntest du einen Text für mich prüfen? Falls du weitere Informationen von mir brauchst (z.B. worauf ich besonders achten sollte), stelle mir direkt 1-2 wichtige Fragen. Wenn du meinst, dass ich Dokumente hochladen sollte, lass es mich wissen.',
       },
       {
         labelKey: 'prompts.analyze.analyzeDocument',
-        content: 'Analysiere dieses Dokument',
+        content:
+          'Könntest du ein Dokument für mich analysieren? Wenn du meinst, dass ich Dokumente hochladen sollte, lass es mich wissen. Eine strukturierte Analyse mit den wichtigsten Erkenntnissen wäre ideal.',
       },
       {
         labelKey: 'prompts.analyze.evaluateProposal',
-        content: 'Bewerte den folgenden Vorschlag',
+        content:
+          'Könntest du einen Vorschlag für mich bewerten? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Eine Darstellung mit Pro und Contra wäre hilfreich.',
       },
       {
         labelKey: 'prompts.analyze.strengthsWeaknesses',
-        content: 'Welche Stärken und Schwächen siehst du?',
+        content:
+          'Könntest du die Stärken und Schwächen von etwas analysieren? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Eine tabellarische oder strukturierte Gegenüberstellung wäre ideal.',
       },
     ],
   },
