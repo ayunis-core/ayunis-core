@@ -1,6 +1,8 @@
 {
   "chat": {
     "untitled": "Untitled",
+    "anonymousMode": "Anonymous",
+    "anonymousModeTooltip": "This chat is in anonymous mode. Personal data is automatically redacted.",
     "deleteThread": "Delete thread",
     "deleteThreadTitle": "Delete Thread",
     "deleteThreadDescription": "Are you sure you want to delete this thread? This action cannot be undone.",

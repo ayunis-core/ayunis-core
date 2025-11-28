@@ -56,4 +56,8 @@ export class CreateCalendarEventTool extends DisplayableTool {
 
     return params as CreateCalendarEventParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

@@ -1,10 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
   IsUrl,
   IsEnum,
   IsOptional,
+  IsBoolean,
   Length,
   MinLength,
 } from 'class-validator';
@@ -77,4 +78,14 @@ export class CreateCustomIntegrationDto {
   @IsString()
   @MinLength(1)
   credentials?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.',
+    example: true,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  returnsPii?: boolean;
 }

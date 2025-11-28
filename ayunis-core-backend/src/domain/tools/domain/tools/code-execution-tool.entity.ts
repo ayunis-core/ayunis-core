@@ -57,4 +57,8 @@ export class CodeExecutionTool extends Tool {
     }
     return params as CodeExecutionToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return true;
+  }
 }

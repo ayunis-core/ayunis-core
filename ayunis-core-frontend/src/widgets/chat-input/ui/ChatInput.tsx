@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { cn } from '@/shared/lib/shadcn/utils';
+import { AnonymousButton } from './AnonymousButton';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -52,6 +53,10 @@ interface ChatInputProps {
   onSendCancelled: () => void;
   prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
+  /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
+  isAnonymous: boolean;
+  /** Callback when anonymous mode is toggled. If not provided, toggle is hidden. */
+  onAnonymousChange?: (isAnonymous: boolean) => void;
 }
 
 export interface ChatInputRef {
@@ -77,6 +82,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onSendCancelled,
       prefilledPrompt,
       isEmbeddingModelEnabled,
+      isAnonymous,
+      onAnonymousChange,
     },
     ref,
   ) => {
@@ -188,7 +195,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               {/* Bottom row */}
               <div className="flex items-center justify-between">
                 {/* Left side */}
-
                 <div className="flex-shrink-0 flex space-x-2">
                   <PlusButton
                     onFileUpload={onFileUpload}
@@ -199,6 +205,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   <AgentButton
                     selectedAgentId={agentId}
                     onAgentChange={onAgentChange}
+                  />
+                  <AnonymousButton
+                    isAnonymous={isAnonymous}
+                    onAnonymousChange={onAnonymousChange}
                   />
                   {agentId && (
                     <Badge

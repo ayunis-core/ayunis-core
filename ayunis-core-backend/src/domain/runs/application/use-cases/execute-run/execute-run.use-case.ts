@@ -69,6 +69,8 @@ import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integr
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
+import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -93,6 +95,7 @@ export class ExecuteRunUseCase {
     private readonly configService: ConfigService,
     private readonly contextService: ContextService,
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
+    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
 
   async execute(
@@ -176,11 +179,14 @@ export class ExecuteRunUseCase {
         // Add MCP tools and resources
         tools.push(
           ...mcpCapabilities.flatMap((capability) =>
-            capability.tools.map((tool) => new McpIntegrationTool(tool)),
+            capability.tools.map(
+              (tool) => new McpIntegrationTool(tool, capability.returnsPii),
+            ),
           ),
           ...mcpCapabilities.flatMap((capability) =>
             capability.resources.map(
-              (resource) => new McpIntegrationResource(resource),
+              (resource) =>
+                new McpIntegrationResource(resource, capability.returnsPii),
             ),
           ),
         );
@@ -406,9 +412,13 @@ export class ExecuteRunUseCase {
 
         // Add text message if we have one and it's the first iteration
         if (isFirstIteration && textInput) {
+          // Anonymize user message text if thread is in anonymous mode
+          const messageText = params.thread.isAnonymous
+            ? await this.anonymizeText(textInput.text)
+            : textInput.text;
           const newTextMessage = await this.createUserMessageUseCase.execute(
             new CreateUserMessageCommand(params.thread.id, [
-              new TextMessageContent(textInput.text),
+              new TextMessageContent(messageText),
             ]),
           );
           params.trace.event({
@@ -642,6 +652,11 @@ export class ExecuteRunUseCase {
 
           if (result.length > MAX_TOOL_RESULT_LENGTH) {
             result = `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
+          }
+
+          // Anonymize tool result if thread is in anonymous mode and tool may return PII
+          if (thread.isAnonymous && tool.returnsPii) {
+            result = await this.anonymizeText(result);
           }
 
           toolResultMessageContent.push(
@@ -1169,5 +1184,31 @@ export class ExecuteRunUseCase {
       threadId,
       deletedCount: messages.length,
     });
+  }
+
+  /**
+   * Anonymizes text by removing PII if the thread is in anonymous mode.
+   * Uses German language for anonymization (default for German public administration).
+   */
+  private async anonymizeText(text: string): Promise<string> {
+    try {
+      const result = await this.anonymizeTextUseCase.execute(
+        new AnonymizeTextCommand(text, 'de'),
+      );
+      if (result.replacements.length > 0) {
+        this.logger.log('Anonymized text', {
+          originalLength: text.length,
+          anonymizedLength: result.anonymizedText.length,
+          replacementsCount: result.replacements.length,
+        });
+      }
+      return result.anonymizedText;
+    } catch (error) {
+      this.logger.error('Failed to anonymize text, returning original', {
+        error: error as Error,
+      });
+      // Return original text on anonymization failure to not block the conversation
+      return text;
+    }
   }
 }

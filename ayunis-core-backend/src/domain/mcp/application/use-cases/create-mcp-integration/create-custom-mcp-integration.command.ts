@@ -7,5 +7,6 @@ export class CreateCustomMcpIntegrationCommand {
     public readonly authMethod?: McpAuthMethod,
     public readonly authHeaderName?: string,
     public readonly credentials?: string,
+    public readonly returnsPii?: boolean,
   ) {}
 }

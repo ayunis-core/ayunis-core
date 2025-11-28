@@ -29,6 +29,9 @@ export class ThreadRecord extends BaseRecord {
   @Column({ nullable: true })
   title?: string;
 
+  @Column({ default: false })
+  isAnonymous: boolean;
+
   @OneToMany(() => MessageRecord, (message) => message.thread)
   messages: MessageRecord[];
 

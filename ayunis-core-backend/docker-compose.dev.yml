@@ -116,6 +116,21 @@ services:
       retries: 3
       start_period: 10s
 
+  anonymize:
+    build:
+      context: ../ayunis-core-anonymize
+      dockerfile: Dockerfile
+    container_name: ayunis-anonymize-dev
+    restart: unless-stopped
+    ports:
+      - '8001:8000' # Expose on 8001 to avoid conflicts
+    healthcheck:
+      test: ['CMD-SHELL', "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s # Longer start period for model loading
+
   api:
     build:
       context: .
@@ -136,6 +151,8 @@ services:
         condition: service_healthy
       code-execution:
         condition: service_healthy
+      anonymize:
+        condition: service_healthy
     environment:
       NODE_ENV: development
       PORT: ${PORT:-3000}
@@ -152,6 +169,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio123}
       MINIO_BUCKET: ${MINIO_BUCKET:-ayunis}
       CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
+      ANONYMIZE_SERVICE_URL: http://anonymize:8000
       MCP_ENCRYPTION_KEY: ${MCP_ENCRYPTION_KEY}
     restart: unless-stopped
 

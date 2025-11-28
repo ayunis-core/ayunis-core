@@ -24,6 +24,7 @@ export class ThreadMapper {
       : undefined;
     record.agentId = thread.agentId;
     record.title = thread.title;
+    record.isAnonymous = thread.isAnonymous;
     record.messages = thread.messages?.map((message) =>
       this.messageMapper.toRecord(message),
     );
@@ -51,6 +52,7 @@ export class ThreadMapper {
           this.sourceAssignmentMapper.toDomain(assignment),
         ) || [],
       title: threadEntity.title,
+      isAnonymous: threadEntity.isAnonymous,
       messages:
         threadEntity.messages?.map((message) =>
           this.messageMapper.toDomain(message),

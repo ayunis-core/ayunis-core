@@ -55,6 +55,7 @@ const mockIntegration1: McpIntegrationResponseDto = {
   hasCredentials: true,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
+  returnsPii: true,
 };
 
 const mockIntegration2: McpIntegrationResponseDto = {
@@ -67,6 +68,7 @@ const mockIntegration2: McpIntegrationResponseDto = {
   hasCredentials: false,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
+  returnsPii: false,
 };
 
 describe('AgentMcpIntegrationsCard', () => {

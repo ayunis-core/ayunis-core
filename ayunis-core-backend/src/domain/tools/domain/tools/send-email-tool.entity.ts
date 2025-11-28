@@ -46,4 +46,8 @@ export class SendEmailTool extends DisplayableTool {
     }
     return params as SendEmailToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

@@ -19,6 +19,10 @@ class MockTool extends Tool {
   validateParams(params: Record<string, any>): any {
     return params;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }
 
 describe('CheckToolCapabilitiesUseCase', () => {

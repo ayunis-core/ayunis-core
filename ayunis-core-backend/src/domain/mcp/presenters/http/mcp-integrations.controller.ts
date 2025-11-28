@@ -118,6 +118,7 @@ export class McpIntegrationsController {
     const command = new CreatePredefinedMcpIntegrationCommand(
       dto.slug,
       credentialFields,
+      dto.returnsPii,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -156,6 +157,7 @@ export class McpIntegrationsController {
       dto.authMethod,
       dto.authHeaderName,
       dto.credentials,
+      dto.returnsPii,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
@@ -259,6 +261,7 @@ export class McpIntegrationsController {
       dto.name,
       dto.credentials,
       dto.authHeaderName,
+      dto.returnsPii,
     );
 
     const integration = await this.updateMcpIntegrationUseCase.execute(command);

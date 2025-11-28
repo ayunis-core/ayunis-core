@@ -6693,6 +6693,12 @@
             "description": "The id of the agent",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
+          },
+          "isAnonymous": {
+            "type": "boolean",
+            "description": "Enable anonymous mode for this thread",
+            "example": false,
+            "default": false
           }
         }
       },
@@ -7365,6 +7371,11 @@
             "type": "string",
             "description": "Last update timestamp",
             "example": "2024-01-01T12:30:00.000Z"
+          },
+          "isAnonymous": {
+            "type": "boolean",
+            "description": "Whether the thread is in anonymous mode (PII redaction enabled)",
+            "example": false
           }
         },
         "required": [
@@ -7375,7 +7386,8 @@
           "messages",
           "sources",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "isAnonymous"
         ]
       },
       "GetThreadsResponseDtoItem": {
@@ -7400,12 +7412,18 @@
             "type": "string",
             "description": "Last update timestamp",
             "example": "2024-01-01T12:30:00.000Z"
+          },
+          "isAnonymous": {
+            "type": "boolean",
+            "description": "Whether the thread is in anonymous mode (PII redaction enabled)",
+            "example": false
           }
         },
         "required": [
           "id",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "isAnonymous"
         ]
       },
       "UpdateThreadModelDto": {
@@ -7783,6 +7801,11 @@
             "type": "string",
             "description": "Timestamp when the integration was last updated",
             "example": "2025-10-28T12:30:00.000Z"
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
+            "example": true
           }
         },
         "required": [
@@ -7793,7 +7816,8 @@
           "organizationId",
           "hasCredentials",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "returnsPii"
         ]
       },
       "CreateAgentShareDto": {
@@ -7922,6 +7946,12 @@
             "items": {
               "$ref": "#/components/schemas/ConfigValueDto"
             }
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.",
+            "example": true,
+            "default": true
           }
         },
         "required": [
@@ -7965,6 +7995,12 @@
             "type": "string",
             "description": "Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods.",
             "example": "my-secret-value-12345"
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.",
+            "example": true,
+            "default": true
           }
         },
         "required": [
@@ -8075,6 +8111,11 @@
             "type": "string",
             "description": "Custom auth header name. Only used in combination with CUSTOM_HEADER integrations.",
             "example": "X-API-Key"
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode.",
+            "example": true
           }
         }
       },

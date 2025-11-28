@@ -49,4 +49,8 @@ export class McpPromptTool extends Tool {
     }
     return params as FromSchema<typeof this.parameters>;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

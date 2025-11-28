@@ -1,9 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
   IsEnum,
   IsArray,
+  IsOptional,
+  IsBoolean,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -60,4 +62,14 @@ export class CreatePredefinedIntegrationDto {
   @ValidateNested({ each: true })
   @Type(() => ConfigValueDto)
   configValues!: ConfigValueDto[];
+
+  @ApiPropertyOptional({
+    description:
+      'Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.',
+    example: true,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  returnsPii?: boolean;
 }

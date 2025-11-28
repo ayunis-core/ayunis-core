@@ -1030,6 +1030,8 @@ export interface CreateThreadDto {
   modelId?: string;
   /** The id of the agent */
   agentId?: string;
+  /** Enable anonymous mode for this thread */
+  isAnonymous?: boolean;
 }
 
 /**
@@ -1495,6 +1497,8 @@ export interface GetThreadResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
+  /** Whether the thread is in anonymous mode (PII redaction enabled) */
+  isAnonymous: boolean;
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -1506,6 +1510,8 @@ export interface GetThreadsResponseDtoItem {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
+  /** Whether the thread is in anonymous mode (PII redaction enabled) */
+  isAnonymous: boolean;
 }
 
 export interface UpdateThreadModelDto {
@@ -1723,6 +1729,8 @@ export interface McpIntegrationResponseDto {
   createdAt: string;
   /** Timestamp when the integration was last updated */
   updatedAt: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
+  returnsPii: boolean;
 }
 
 /**
@@ -1823,6 +1831,8 @@ export interface CreatePredefinedIntegrationDto {
   slug: CreatePredefinedIntegrationDtoSlug;
   /** List of config values for credential fields */
   configValues: ConfigValueDto[];
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
+  returnsPii?: boolean;
 }
 
 /**
@@ -1858,6 +1868,8 @@ export interface CreateCustomIntegrationDto {
   authHeaderName?: string;
   /** Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods. */
   credentials?: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
+  returnsPii?: boolean;
 }
 
 /**
@@ -1924,6 +1936,8 @@ export interface UpdateMcpIntegrationDto {
   credentials?: string;
   /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
   authHeaderName?: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
+  returnsPii?: boolean;
 }
 
 /**

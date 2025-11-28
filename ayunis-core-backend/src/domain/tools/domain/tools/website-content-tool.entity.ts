@@ -35,4 +35,8 @@ export class WebsiteContentTool extends Tool {
     }
     return params as WebsiteContentToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

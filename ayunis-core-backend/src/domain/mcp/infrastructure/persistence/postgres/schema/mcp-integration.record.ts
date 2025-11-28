@@ -27,6 +27,9 @@ export abstract class McpIntegrationRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   lastConnectionCheck?: Date;
 
+  @Column({ default: true })
+  returnsPii: boolean;
+
   @OneToOne(() => McpIntegrationAuthRecord, (auth) => auth.integration, {
     cascade: ['insert', 'update'],
     eager: true,

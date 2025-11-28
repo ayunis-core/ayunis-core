@@ -36,4 +36,8 @@ export class InternetSearchTool extends Tool {
     }
     return params as InternetSearchToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

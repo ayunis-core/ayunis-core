@@ -71,4 +71,8 @@ export class BarChartTool extends DisplayableTool {
     }
     return params as BarChartToolParameters;
   }
+
+  get returnsPii(): boolean {
+    return false;
+  }
 }

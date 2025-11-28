@@ -6,7 +6,7 @@ import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
 import { useUpdateThreadModel } from '../api/useUpdateThreadModel';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical, ShieldCheck, Trash2 } from 'lucide-react';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
@@ -17,6 +17,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useNavigate } from '@tanstack/react-router';
@@ -340,8 +346,19 @@ export default function ChatPage({
   const chatHeader = (
     <ContentAreaHeader
       title={
-        <span className="inline-flex items-center gap-1" data-testid="header">
+        <span className="inline-flex items-center gap-2" data-testid="header">
           {threadTitle || t('chat.untitled')}
+          {thread.isAnonymous && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="secondary">
+                  <ShieldCheck className="h-3 w-3" />
+                  {t('chat.anonymousMode')}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>{t('chat.anonymousModeTooltip')}</TooltipContent>
+            </Tooltip>
+          )}
         </span>
       }
       action={
@@ -396,6 +413,7 @@ export default function ChatPage({
       isModelChangeDisabled={!!thread.agentId}
       agentId={thread.agentId}
       sources={thread.sources}
+      isAnonymous={thread.isAnonymous}
       isStreaming={isStreaming}
       isCreatingFileSource={isTotallyCreatingFileSource}
       onModelChange={updateModel}

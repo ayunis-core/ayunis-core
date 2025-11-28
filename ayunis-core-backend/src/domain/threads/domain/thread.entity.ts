@@ -11,6 +11,7 @@ export class Thread {
   sourceAssignments?: SourceAssignment[];
   title?: string;
   messages: Message[];
+  isAnonymous: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -22,6 +23,7 @@ export class Thread {
     sourceAssignments?: SourceAssignment[];
     title?: string;
     messages: Message[];
+    isAnonymous?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -32,6 +34,7 @@ export class Thread {
     this.sourceAssignments = params.sourceAssignments;
     this.title = params.title;
     this.messages = params.messages;
+    this.isAnonymous = params.isAnonymous ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

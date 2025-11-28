@@ -1,5 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, Length, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  Length,
+  MinLength,
+} from 'class-validator';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -47,4 +53,13 @@ export class UpdateMcpIntegrationDto {
   @IsString()
   @Length(1, 255)
   authHeaderName?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether tools from this integration may return PII data that should be anonymized in anonymous mode.',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  returnsPii?: boolean;
 }

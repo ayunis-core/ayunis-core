@@ -43,6 +43,7 @@ export class McpIntegrationDtoMapper {
       lastConnectionCheck: integration.lastConnectionCheck,
       createdAt: integration.createdAt,
       updatedAt: integration.updatedAt,
+      returnsPii: integration.returnsPii,
     };
 
     // Add type-specific fields

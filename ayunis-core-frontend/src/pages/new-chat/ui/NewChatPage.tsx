@@ -28,6 +28,7 @@ export default function NewChatPage({
   const { initiateChat } = useInitiateChat();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [sources, setSources] = useState<
     Array<{
       id: string;
@@ -78,7 +79,7 @@ export default function NewChatPage({
       return;
     }
 
-    initiateChat(message, modelId, agentId, sources);
+    initiateChat(message, modelId, agentId, sources, isAnonymous);
   }
 
   return (
@@ -107,6 +108,8 @@ export default function NewChatPage({
           onRemoveSource={handleRemoveSource}
           onDownloadSource={() => null}
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+          isAnonymous={isAnonymous}
+          onAnonymousChange={setIsAnonymous}
         />
       </div>
     </NewChatPageLayout>

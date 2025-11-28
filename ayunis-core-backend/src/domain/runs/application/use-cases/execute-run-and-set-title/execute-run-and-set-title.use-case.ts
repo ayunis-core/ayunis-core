@@ -23,6 +23,8 @@ import { Thread } from '../../../../threads/domain/thread.entity';
 import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
+import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
+import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -34,6 +36,7 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly messageDtoMapper: MessageDtoMapper,
+    private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
 
   async *execute(
@@ -125,9 +128,14 @@ export class ExecuteRunAndSetTitleUseCase {
         return null;
       }
 
+      // Anonymize the message if thread is in privacy mode
+      const messageForTitle = thread.isAnonymous
+        ? await this.anonymizeText(firstUserMessage)
+        : firstUserMessage;
+
       this.logger.log('Generating thread title', {
         threadId: command.threadId,
-        messagePreview: firstUserMessage.substring(0, 50),
+        isAnonymous: thread.isAnonymous,
       });
 
       // Fetch agent if thread has agentId
@@ -151,7 +159,7 @@ export class ExecuteRunAndSetTitleUseCase {
         new GenerateAndSetThreadTitleCommand({
           thread,
           model: model.model,
-          message: firstUserMessage,
+          message: messageForTitle,
         }),
       );
 
@@ -180,5 +188,26 @@ export class ExecuteRunAndSetTitleUseCase {
       return input.text;
     }
     return undefined;
+  }
+
+  private async anonymizeText(text: string): Promise<string> {
+    try {
+      const result = await this.anonymizeTextUseCase.execute(
+        new AnonymizeTextCommand(text, 'de'),
+      );
+      if (result.replacements.length > 0) {
+        this.logger.log('Anonymized text for title generation', {
+          originalLength: text.length,
+          anonymizedLength: result.anonymizedText.length,
+          replacementsCount: result.replacements.length,
+        });
+      }
+      return result.anonymizedText;
+    } catch (error) {
+      this.logger.error('Failed to anonymize text, returning original', {
+        error: error as Error,
+      });
+      return text;
+    }
   }
 }

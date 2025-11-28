@@ -30,6 +30,7 @@ export interface CapabilitiesResult {
   tools: McpTool[];
   resources: McpResource[];
   prompts: McpPrompt[];
+  returnsPii: boolean;
 }
 
 /**
@@ -114,6 +115,7 @@ export class DiscoverMcpCapabilitiesUseCase {
         tools: mcpTools,
         resources: mcpResources.concat(mcpResourceTemplates),
         prompts: mcpPrompts,
+        returnsPii: integration.returnsPii,
       };
     } catch (error) {
       // Re-throw expected errors

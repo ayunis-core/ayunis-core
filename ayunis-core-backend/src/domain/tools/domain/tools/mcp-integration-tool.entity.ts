@@ -12,8 +12,9 @@ import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
  */
 export class McpIntegrationTool extends Tool {
   public readonly integrationId: UUID;
+  private readonly _returnsPii: boolean;
 
-  constructor(mcpTool: McpTool) {
+  constructor(mcpTool: McpTool, returnsPii: boolean) {
     super({
       name: mcpTool.name,
       description: mcpTool.description ?? '',
@@ -21,6 +22,7 @@ export class McpIntegrationTool extends Tool {
       type: ToolType.MCP_TOOL,
     });
     this.integrationId = mcpTool.integrationId;
+    this._returnsPii = returnsPii;
   }
 
   validateParams(
@@ -33,5 +35,9 @@ export class McpIntegrationTool extends Tool {
       throw new Error(JSON.stringify(validate.errors));
     }
     return params as FromSchema<typeof this.parameters>;
+  }
+
+  get returnsPii(): boolean {
+    return this._returnsPii;
   }
 }

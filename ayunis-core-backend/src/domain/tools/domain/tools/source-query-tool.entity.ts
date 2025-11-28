@@ -46,4 +46,8 @@ export class SourceQueryTool extends Tool {
     }
     return true;
   }
+
+  get returnsPii(): boolean {
+    return true;
+  }
 }

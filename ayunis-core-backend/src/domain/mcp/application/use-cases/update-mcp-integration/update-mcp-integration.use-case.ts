@@ -51,6 +51,10 @@ export class UpdateMcpIntegrationUseCase {
         integration.updateName(command.name);
       }
 
+      if (command.returnsPii !== undefined) {
+        integration.updateReturnsPii(command.returnsPii);
+      }
+
       if (
         command.credentials !== undefined ||
         command.authHeaderName !== undefined
