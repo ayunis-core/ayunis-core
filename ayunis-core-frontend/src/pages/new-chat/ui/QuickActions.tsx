@@ -34,7 +34,7 @@ export function QuickActions({ onPromptSelect }: QuickActionsProps) {
           <QuickActionPanel
             category={category}
             onSelect={(prompt) => {
-              onPromptSelect(prompt.content);
+              onPromptSelect(t(prompt.contentKey));
               setActiveCategory(null);
             }}
             onClose={() => setActiveCategory(null)}
