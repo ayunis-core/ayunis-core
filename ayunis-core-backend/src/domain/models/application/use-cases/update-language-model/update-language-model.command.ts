@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class UpdateLanguageModelCommand {
   id: UUID;
@@ -10,6 +11,9 @@ export class UpdateLanguageModelCommand {
   canStream: boolean;
   canUseTools: boolean;
   isReasoning: boolean;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: Currency;
 
   constructor(params: {
     id: UUID;
@@ -20,6 +24,9 @@ export class UpdateLanguageModelCommand {
     canStream: boolean;
     canUseTools: boolean;
     isReasoning: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: Currency;
   }) {
     this.id = params.id;
     this.name = params.name;
@@ -29,5 +36,8 @@ export class UpdateLanguageModelCommand {
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }

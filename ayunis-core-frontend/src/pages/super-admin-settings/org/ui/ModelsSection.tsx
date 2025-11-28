@@ -56,21 +56,21 @@ export default function ModelsSection({ orgId }: ModelsSectionProps) {
     ModelWithConfigResponseDtoProvider.openai,
   ];
 
-  const modelProviderCards = providerPriority.map((provider) =>
-    groupedModels[provider] ? (
+  const modelProviderCards = providerPriority.map((provider) => {
+    const providerData = providers.find(
+      (p: { provider: ModelWithConfigResponseDtoProvider }) =>
+        p.provider === provider,
+    );
+
+    return groupedModels[provider] && providerData ? (
       <ModelProviderCard
         key={provider}
-        provider={
-          providers.find(
-            (p: { provider: ModelWithConfigResponseDtoProvider }) =>
-              p.provider === provider,
-          )!
-        }
+        provider={providerData}
         models={groupedModels[provider]}
         orgId={orgId}
       />
-    ) : null,
-  );
+    ) : null;
+  });
 
   return (
     <div className="space-y-4">

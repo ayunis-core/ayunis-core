@@ -6,7 +6,7 @@ export function initSentry() {
   if (import.meta.env.PROD && dsn) {
     Sentry.init({
       dsn,
-      environment: import.meta.env.MODE as string,
+      environment: import.meta.env.MODE,
       integrations: [Sentry.browserTracingIntegration()],
       tracesSampleRate: 0.1, // 10% of transactions
     });

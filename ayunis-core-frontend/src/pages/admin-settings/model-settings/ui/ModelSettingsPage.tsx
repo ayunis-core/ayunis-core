@@ -4,10 +4,13 @@ import {
   type ModelWithConfigResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ModelProviderCard from './ModelProviderCard';
-import { OrgDefaultModelCard } from './OrgDefaultModelCard';
 import SettingsLayout from '../../admin-settings-layout';
 import { useTranslation } from 'react-i18next';
-import { useModelsWithConfig, useProvidersWithPermittedStatus } from '../api';
+import {
+  useModelsWithConfig,
+  useProvidersWithPermittedStatus,
+} from '@/features/models';
+import { OrgDefaultModelCard } from './OrgDefaultModelCard';
 
 export default function ModelSettingsPage() {
   const { t } = useTranslation('admin-settings-models');

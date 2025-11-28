@@ -17,12 +17,8 @@ import enAdminSettingsUsers from './shared/locales/en/admin-settings-users.json'
 import deAdminSettingsUsers from './shared/locales/de/admin-settings-users.json';
 import enAdminSettingsIntegrations from './shared/locales/en/admin-settings-integrations.json';
 import deAdminSettingsIntegrations from './shared/locales/de/admin-settings-integrations.json';
-import enSuperAdminSettingsLayout from './shared/locales/en/super-admin-settings-layout.json';
-import deSuperAdminSettingsLayout from './shared/locales/de/super-admin-settings-layout.json';
-import enSuperAdminSettingsOrgs from './shared/locales/en/super-admin-settings-orgs.json';
-import deSuperAdminSettingsOrgs from './shared/locales/de/super-admin-settings-orgs.json';
-import enSuperAdminSettingsOrg from './shared/locales/en/super-admin-settings-org.json';
-import deSuperAdminSettingsOrg from './shared/locales/de/super-admin-settings-org.json';
+import enAdminSettingsUsage from './shared/locales/en/admin-settings-usage.json';
+import deAdminSettingsUsage from './shared/locales/de/admin-settings-usage.json';
 import enSettings from './shared/locales/en/settings.json';
 import deSettings from './shared/locales/de/settings.json';
 import enChats from './shared/locales/en/chats.json';
@@ -33,6 +29,12 @@ import enAgents from './shared/locales/en/agents.json';
 import deAgents from './shared/locales/de/agents.json';
 import enAgent from './shared/locales/en/agent.json';
 import deAgent from './shared/locales/de/agent.json';
+import enSuperAdminSettingsLayout from './shared/locales/en/super-admin-settings-layout.json';
+import deSuperAdminSettingsLayout from './shared/locales/de/super-admin-settings-layout.json';
+import enSuperAdminSettingsOrgs from './shared/locales/en/super-admin-settings-orgs.json';
+import deSuperAdminSettingsOrgs from './shared/locales/de/super-admin-settings-orgs.json';
+import enSuperAdminSettingsOrg from './shared/locales/en/super-admin-settings-org.json';
+import deSuperAdminSettingsOrg from './shared/locales/de/super-admin-settings-org.json';
 
 const resources = {
   en: {
@@ -43,6 +45,7 @@ const resources = {
     'admin-settings-models': enAdminSettingsModels,
     'admin-settings-users': enAdminSettingsUsers,
     'admin-settings-integrations': enAdminSettingsIntegrations,
+    'admin-settings-usage': enAdminSettingsUsage,
     'super-admin-settings-layout': enSuperAdminSettingsLayout,
     'super-admin-settings-orgs': enSuperAdminSettingsOrgs,
     'super-admin-settings-org': enSuperAdminSettingsOrg,
@@ -60,6 +63,7 @@ const resources = {
     'admin-settings-models': deAdminSettingsModels,
     'admin-settings-users': deAdminSettingsUsers,
     'admin-settings-integrations': deAdminSettingsIntegrations,
+    'admin-settings-usage': deAdminSettingsUsage,
     'super-admin-settings-layout': deSuperAdminSettingsLayout,
     'super-admin-settings-orgs': deSuperAdminSettingsOrgs,
     'super-admin-settings-org': deSuperAdminSettingsOrg,

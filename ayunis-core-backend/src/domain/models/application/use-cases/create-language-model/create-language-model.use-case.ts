@@ -32,6 +32,9 @@ export class CreateLanguageModelUseCase {
         canUseTools: command.canUseTools,
         isReasoning: command.isReasoning,
         isArchived: command.isArchived,
+        inputTokenCost: command.inputTokenCost,
+        outputTokenCost: command.outputTokenCost,
+        currency: command.currency,
       });
       await this.modelsRepository.save(model);
       return model;

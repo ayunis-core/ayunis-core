@@ -9,7 +9,7 @@ export function useProvidersWithPermittedStatus() {
   } = useModelsControllerGetAllModelProviderInfosWithPermittedStatus();
 
   return {
-    providers: providers,
+    providers,
     isLoading,
     isError: !!error,
     error,

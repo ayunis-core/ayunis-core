@@ -11,6 +11,7 @@ import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module'
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SourcesModule } from 'src/domain/sources/sources.module';
     TrialsModule,
     McpModule,
     SourcesModule,
+    UsageModule,
   ],
   controllers: [RunsController],
   providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],

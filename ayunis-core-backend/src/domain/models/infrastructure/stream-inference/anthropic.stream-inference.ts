@@ -264,6 +264,22 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
       }
     }
 
+    if (chunk.type === 'message_delta') {
+      const usage = chunk.usage;
+
+      if (usage && (usage.input_tokens || usage.output_tokens)) {
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: null,
+          textContentDelta: null,
+          toolCallsDelta: [],
+          usage: {
+            inputTokens: usage.input_tokens ?? undefined,
+            outputTokens: usage.output_tokens ?? undefined,
+          },
+        });
+      }
+    }
+
     // Return null for other event types we don't need to handle
     return null;
   };
