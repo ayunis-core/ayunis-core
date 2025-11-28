@@ -60,7 +60,6 @@ export class BaseOllamaStreamInferenceHandler
         ...tool,
         function: { ...tool.function, strict: true },
       }));
-      console.log('ollamaTools', ollamaTools);
       const ollamaMessages = this.convertMessages(messages);
       const systemPrompt = input.systemPrompt
         ? this.convertSystemPrompt(input.systemPrompt)
@@ -86,7 +85,6 @@ export class BaseOllamaStreamInferenceHandler
       });
 
       for await (const chunk of response) {
-        this.logger.debug('chunk', chunk);
         const delta = this.convertChunk(chunk);
         if (
           delta.textContentDelta ||

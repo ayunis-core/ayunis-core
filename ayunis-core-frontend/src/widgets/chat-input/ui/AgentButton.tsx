@@ -23,11 +23,13 @@ import { useNavigate } from '@tanstack/react-router';
 interface AgentButtonProps {
   selectedAgentId: string | undefined;
   onAgentChange: (value: string) => void;
+  isDisabled?: boolean;
 }
 
 export default function AgentButton({
   selectedAgentId,
   onAgentChange,
+  isDisabled,
 }: AgentButtonProps) {
   const { agents } = useAgents();
   const { t } = useTranslation('common');
@@ -41,9 +43,9 @@ export default function AgentButton({
     <Tooltip>
       <TooltipContent>{t('chatInput.agentButtonTooltip')}</TooltipContent>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger asChild disabled={isDisabled}>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" disabled={isDisabled}>
               <Bot className="h-4 w-4" />
             </Button>
           </TooltipTrigger>

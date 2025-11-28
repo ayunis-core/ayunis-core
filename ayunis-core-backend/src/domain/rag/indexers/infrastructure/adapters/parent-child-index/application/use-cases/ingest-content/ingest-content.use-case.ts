@@ -45,15 +45,13 @@ export class IngestContentUseCase {
       }),
     );
     const parentId = randomUUID();
-    const childChunks = childChunkEmbeddings.map((embedding) => {
-      this.logger.debug('child chunk', {
-        vectorLength: embedding.vector.length,
-      });
-      return new ChildChunk({
-        embedding: embedding.vector,
-        parentId,
-      });
-    });
+    const childChunks = childChunkEmbeddings.map(
+      (embedding) =>
+        new ChildChunk({
+          embedding: embedding.vector,
+          parentId,
+        }),
+    );
     const parentChunk = new ParentChunk({
       id: parentId,
       relatedDocumentId: command.indexEntry.relatedDocumentId,

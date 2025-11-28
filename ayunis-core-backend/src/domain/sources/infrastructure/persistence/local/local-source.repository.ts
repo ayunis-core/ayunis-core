@@ -75,7 +75,7 @@ export class LocalSourceRepository extends SourceRepository {
   async save(source: DataSource): Promise<DataSource>;
   async save(source: Source): Promise<Source>;
   async save(source: Source): Promise<Source> {
-    this.logger.log('create', { source });
+    this.logger.log('save', { sourceId: source.id });
     if (source instanceof TextSource) {
       const {
         source: sourceRecord,
@@ -83,9 +83,8 @@ export class LocalSourceRepository extends SourceRepository {
         contentChunks,
       } = this.mapper.toRecord(source);
       this.logger.debug('Saving source record', {
-        sourceRecord,
-        details,
-        contentChunks,
+        sourceId: sourceRecord.id,
+        chunksCount: contentChunks.length,
       });
       const savedSource = await this.sourceRepository.save(sourceRecord);
       this.logger.debug('Saved source record with id', { id: savedSource.id });
@@ -109,7 +108,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async delete(source: Source): Promise<void> {
-    this.logger.log('delete', { source });
+    this.logger.log('delete', { sourceId: source.id });
     const { source: record } = this.mapper.toRecord(source);
     await this.sourceRepository.remove(record);
   }

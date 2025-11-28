@@ -19,7 +19,6 @@ import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-
 import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from './application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { UpdateThreadTitleUseCase } from './application/use-cases/update-thread-title/update-thread-title.use-case';
-import { UpdateThreadModelUseCase } from './application/use-cases/update-thread-model/update-thread-model.use-case';
 import { GenerateAndSetThreadTitleUseCase } from './application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import { LocalThreadsRepository } from './infrastructure/persistence/local/local-threads.repository';
 import { GetThreadsDtoMapper } from './presenters/http/mappers/get-threads.mapper';
@@ -27,8 +26,6 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceAgentWithDefaultModelUseCase } from './application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
 import { AgentsModule } from '../agents/agents.module';
-import { UpdateThreadAgentUseCase } from './application/use-cases/update-thread-agent/update-thread-agent.use-case';
-import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
 
 @Module({
   imports: [
@@ -55,12 +52,9 @@ import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-age
     RemoveSourceFromThreadUseCase,
     GetThreadSourcesUseCase,
     UpdateThreadTitleUseCase,
-    UpdateThreadModelUseCase,
-    UpdateThreadAgentUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
     ReplaceAgentWithDefaultModelUseCase,
-    RemoveAgentFromThreadUseCase,
     // Mappers
     SourceDtoMapper,
     GetThreadDtoMapper,

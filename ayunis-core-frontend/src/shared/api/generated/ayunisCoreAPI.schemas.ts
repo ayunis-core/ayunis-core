@@ -1514,16 +1514,6 @@ export interface GetThreadsResponseDtoItem {
   isAnonymous: boolean;
 }
 
-export interface UpdateThreadModelDto {
-  /** The id of the model */
-  modelId: string;
-}
-
-export interface UpdateThreadAgentDto {
-  /** The UUID of the agent to update */
-  agentId: string;
-}
-
 /**
  * The type of tool to assign
  */

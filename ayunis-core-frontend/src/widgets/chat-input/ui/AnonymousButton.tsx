@@ -10,11 +10,13 @@ import { useTranslation } from 'react-i18next';
 interface AnonymousButtonProps {
   isAnonymous: boolean;
   onAnonymousChange?: (isAnonymous: boolean) => void;
+  isDisabled?: boolean;
 }
 
 export function AnonymousButton({
   isAnonymous,
   onAnonymousChange,
+  isDisabled,
 }: AnonymousButtonProps) {
   const { t } = useTranslation('common');
 
@@ -24,7 +26,7 @@ export function AnonymousButton({
         <Button
           variant={isAnonymous ? 'default' : 'outline'}
           size="icon"
-          disabled={!onAnonymousChange}
+          disabled={isDisabled || !onAnonymousChange}
           onClick={() => onAnonymousChange?.(!isAnonymous)}
         >
           <ShieldCheck className="h-4 w-4" />
