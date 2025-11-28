@@ -3,7 +3,8 @@
     "writing": "Schreiben",
     "research": "Recherche",
     "summarize": "Zusammenfassen",
-    "analyze": "Analysieren"
+    "analyze": "Analysieren",
+    "help": "Hilfe"
   },
   "prompts": {
     "writing": {
@@ -45,6 +46,20 @@
       "evaluateProposalContent": "Könntest du einen Vorschlag für mich bewerten? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Eine Darstellung mit Pro und Contra wäre hilfreich.",
       "strengthsWeaknesses": "Stärken und Schwächen",
       "strengthsWeaknessesContent": "Könntest du die Stärken und Schwächen von etwas analysieren? Falls du weitere Informationen von mir brauchst, stelle mir direkt 1-2 wichtige Fragen. Eine tabellarische oder strukturierte Gegenüberstellung wäre ideal."
+    },
+    "help": {
+      "gettingStarted": "Wie fange ich mit Ayunis an?",
+      "gettingStartedContent": "Wie fange ich mit Ayunis an? Bitte nutze das Produktwissen-Tool, um mir einen kurzen Überblick über die wichtigsten Funktionen und wie ich sie nutzen kann zu geben.",
+      "createAgent": "Wie erstelle ich einen KI-Agenten?",
+      "createAgentContent": "Wie erstelle ich einen KI-Agenten? Bitte nutze das Produktwissen-Tool, um mir die Schritte und Konfigurationsmöglichkeiten zu erklären.",
+      "availableTools": "Welche Tools können meine Agenten nutzen?",
+      "availableToolsContent": "Welche Tools stehen meinen KI-Agenten zur Verfügung? Bitte nutze das Produktwissen-Tool, um mir zu erklären, was jedes Tool macht und wann ich es einsetzen sollte.",
+      "uploadSources": "Wie füge ich Quellen für RAG hinzu?",
+      "uploadSourcesContent": "Wie lade ich Dokumente hoch und füge Quellen für meine Agenten hinzu? Bitte nutze das Produktwissen-Tool, um mir zu erklären, welche Dateiformate unterstützt werden.",
+      "savePrompts": "Wie speichere und nutze ich Prompts wieder?",
+      "savePromptsContent": "Wie erstelle und speichere ich Prompt-Vorlagen zur Wiederverwendung? Bitte nutze das Produktwissen-Tool, um mir zu erklären, wie die Prompt-Bibliothek funktioniert.",
+      "chooseModel": "Welches KI-Modell soll ich verwenden?",
+      "chooseModelContent": "Welches KI-Modell soll ich wählen? Bitte nutze das Produktwissen-Tool, um mir die verschiedenen Anbieter und Modelle zu erklären und wofür sie am besten geeignet sind."
     }
   }
 }

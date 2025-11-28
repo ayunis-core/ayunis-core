@@ -1,4 +1,4 @@
-import { Pencil, Search, FileText, Eye, type LucideIcon } from 'lucide-react';
+import { Pencil, Search, FileText, Eye, HelpCircle, type LucideIcon } from 'lucide-react';
 
 export interface QuickActionPrompt {
   labelKey: string;
@@ -102,6 +102,37 @@ export const QUICK_ACTIONS: QuickActionCategory[] = [
       {
         labelKey: 'prompts.analyze.strengthsWeaknesses',
         contentKey: 'prompts.analyze.strengthsWeaknessesContent',
+      },
+    ],
+  },
+  {
+    id: 'help',
+    labelKey: 'categories.help',
+    icon: HelpCircle,
+    prompts: [
+      {
+        labelKey: 'prompts.help.gettingStarted',
+        contentKey: 'prompts.help.gettingStartedContent',
+      },
+      {
+        labelKey: 'prompts.help.createAgent',
+        contentKey: 'prompts.help.createAgentContent',
+      },
+      {
+        labelKey: 'prompts.help.availableTools',
+        contentKey: 'prompts.help.availableToolsContent',
+      },
+      {
+        labelKey: 'prompts.help.uploadSources',
+        contentKey: 'prompts.help.uploadSourcesContent',
+      },
+      {
+        labelKey: 'prompts.help.savePrompts',
+        contentKey: 'prompts.help.savePromptsContent',
+      },
+      {
+        labelKey: 'prompts.help.chooseModel',
+        contentKey: 'prompts.help.chooseModelContent',
       },
     ],
   },

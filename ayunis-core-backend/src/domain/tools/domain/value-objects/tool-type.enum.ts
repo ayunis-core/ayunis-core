@@ -13,4 +13,5 @@ export enum ToolType {
   MCP_TOOL = 'mcp_tool',
   MCP_RESOURCE = 'mcp_resource',
   MCP_PROMPT = 'mcp_prompt',
+  PRODUCT_KNOWLEDGE = 'product_knowledge',
 }

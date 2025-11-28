@@ -22,6 +22,7 @@ import { BarChartTool } from '../domain/tools/bar-chart-tool.entity';
 import { LineChartTool } from '../domain/tools/line-chart-tool.entity';
 import { PieChartTool } from '../domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
 
 @Injectable()
 export class ToolFactory {
@@ -85,6 +86,8 @@ export class ToolFactory {
             contextType: params.context?.constructor.name || 'null',
           },
         });
+      case ToolType.PRODUCT_KNOWLEDGE:
+        return new ProductKnowledgeTool();
       default:
         throw new ToolInvalidTypeError({
           toolType: params.type,

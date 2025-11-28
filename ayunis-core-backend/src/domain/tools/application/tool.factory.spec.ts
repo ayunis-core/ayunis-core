@@ -89,8 +89,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.BAR_CHART);
       expect(types).toContain(ToolType.LINE_CHART);
       expect(types).toContain(ToolType.PIE_CHART);
+      expect(types).toContain(ToolType.PRODUCT_KNOWLEDGE);
 
-      expect(types.length).toBe(13);
+      expect(types.length).toBe(14);
     });
   });
 });

@@ -3,7 +3,8 @@
     "writing": "Write",
     "research": "Research",
     "summarize": "Summarize",
-    "analyze": "Analyze"
+    "analyze": "Analyze",
+    "help": "Help"
   },
   "prompts": {
     "writing": {
@@ -45,6 +46,20 @@
       "evaluateProposalContent": "Could you evaluate a proposal for me? If you need more information from me, please ask 1-2 key questions directly. A presentation with pros and cons would be helpful.",
       "strengthsWeaknesses": "Strengths and weaknesses",
       "strengthsWeaknessesContent": "Could you analyze the strengths and weaknesses of something? If you need more information from me, please ask 1-2 key questions directly. A tabular or structured comparison would be ideal."
+    },
+    "help": {
+      "gettingStarted": "How do I get started with Ayunis?",
+      "gettingStartedContent": "How do I get started with Ayunis? Please use the product knowledge tool to give me a quick overview of the key features and how to use them.",
+      "createAgent": "How do I create an AI agent?",
+      "createAgentContent": "How do I create an AI agent? Please use the product knowledge tool to explain the steps and what options I have for configuring it.",
+      "availableTools": "What tools can my agents use?",
+      "availableToolsContent": "What tools are available for my AI agents? Please use the product knowledge tool to explain what each tool does and when to use it.",
+      "uploadSources": "How do I add sources for RAG?",
+      "uploadSourcesContent": "How do I upload documents and add sources for my agents to use? Please use the product knowledge tool to explain what file types are supported.",
+      "savePrompts": "How do I save and reuse prompts?",
+      "savePromptsContent": "How do I create and save prompt templates for reuse? Please use the product knowledge tool to explain how the prompt library works.",
+      "chooseModel": "Which AI model should I use?",
+      "chooseModelContent": "Which AI model should I choose? Please use the product knowledge tool to explain the different providers and models available and what they're best for."
     }
   }
 }
