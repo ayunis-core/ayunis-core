@@ -1,15 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/shared/ui/shadcn/button';
-import {
-  ArrowUp,
-  Bot,
-  DatabaseIcon,
-  FileIcon,
-  Sparkles,
-  Square,
-  XIcon,
-} from 'lucide-react';
+import { ArrowUp, Square } from 'lucide-react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import AgentButton from './AgentButton';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
@@ -18,7 +10,6 @@ import type {
   SourceResponseDtoCreatedBy,
   SourceResponseDtoType,
 } from '@/shared/api';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import PlusButton from './PlusButton';
 import ModelSelector from './ModelSelector';
 import { useAgents } from '../../../features/useAgents';
@@ -28,8 +19,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
-import { cn } from '@/shared/lib/shadcn/utils';
 import { AnonymousButton } from './AnonymousButton';
+import { AgentBadge } from './AgentBadge';
+import { SourceBadge } from './SourceBadge';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -43,6 +35,8 @@ interface ChatInputProps {
   isStreaming?: boolean;
   isCreatingFileSource?: boolean;
   isModelChangeDisabled: boolean;
+  isAgentChangeDisabled?: boolean;
+  isAnonymousChangeDisabled?: boolean;
   onModelChange: (modelId: string) => void;
   onAgentChange: (agentId: string) => void;
   onAgentRemove: (agentId: string) => void;
@@ -57,6 +51,8 @@ interface ChatInputProps {
   isAnonymous: boolean;
   /** Callback when anonymous mode is toggled. If not provided, toggle is hidden. */
   onAnonymousChange?: (isAnonymous: boolean) => void;
+  /** Whether anonymous mode is enforced by the selected model. */
+  isAnonymousEnforced?: boolean;
 }
 
 export interface ChatInputRef {
@@ -72,6 +68,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       isStreaming,
       isCreatingFileSource,
       isModelChangeDisabled,
+      isAgentChangeDisabled,
+      isAnonymousChangeDisabled,
       onModelChange,
       onAgentChange,
       onAgentRemove,
@@ -84,6 +82,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       isEmbeddingModelEnabled,
       isAnonymous,
       onAnonymousChange,
+      isAnonymousEnforced,
     },
     ref,
   ) => {
@@ -121,23 +120,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
     }
 
-    function getSourceIcon(source: {
-      type: SourceResponseDtoType;
-      createdByLLM?: boolean;
-    }) {
-      if (source.createdByLLM) {
-        return <Sparkles className="h-3 w-3" />;
-      }
-      switch (source.type) {
-        case 'text':
-          return <FileIcon className="h-3 w-3" />;
-        case 'data':
-          return <DatabaseIcon className="h-3 w-3" />;
-        default:
-          return null;
-      }
-    }
-
     return (
       <div className="w-full space-y-2" data-testid="chat-input">
         {/* Main input section */}
@@ -151,30 +133,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   {sources
                     .filter((source) => source.createdBy !== 'system')
                     .map((source) => (
-                      <Badge
+                      <SourceBadge
                         key={source.id}
-                        variant="secondary"
-                        className={cn(
-                          'flex items-center gap-1 cursor-pointer',
-                          source.createdBy === 'llm' &&
-                            'bg-[#8178C3]/10 text-[#8178C3]',
-                        )}
-                        onClick={() =>
-                          source.type === 'data' && onDownloadSource(source.id)
-                        }
-                      >
-                        {getSourceIcon(source)}
-                        {source.name}
-                        <div
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemoveSource(source.id);
-                          }}
-                        >
-                          <XIcon className="h-3 w-3" />
-                        </div>
-                      </Badge>
+                        source={source}
+                        onRemove={onRemoveSource}
+                        onDownload={onDownloadSource}
+                      />
                     ))}
                 </div>
               )}
@@ -205,21 +169,21 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   <AgentButton
                     selectedAgentId={agentId}
                     onAgentChange={onAgentChange}
+                    isDisabled={isAgentChangeDisabled}
                   />
                   <AnonymousButton
                     isAnonymous={isAnonymous}
                     onAnonymousChange={onAnonymousChange}
+                    isDisabled={isAnonymousChangeDisabled}
+                    isEnforced={isAnonymousEnforced}
                   />
                   {agentId && (
-                    <Badge
-                      variant="outline"
-                      className="flex items-center gap-1 rounded-full border-none"
-                      onClick={() => onAgentRemove(agentId)}
-                    >
-                      <Bot className="h-3 w-3" />
-                      {agents.find((a) => a.id === agentId)?.name}
-                      <XIcon className="h-3 w-3 cursor-pointer" />
-                    </Badge>
+                    <AgentBadge
+                      agentId={agentId}
+                      agent={agents.find((a) => a.id === agentId)}
+                      isDisabled={isAgentChangeDisabled ?? false}
+                      onRemove={onAgentRemove}
+                    />
                   )}
                 </div>
 

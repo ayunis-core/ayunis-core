@@ -53,6 +53,12 @@ export class PermittedLanguageModelResponseDto {
     description: 'Whether the model can reason',
   })
   isReasoning: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Whether this model enforces anonymous mode',
+  })
+  anonymousOnly: boolean;
 }
 
 export class PermittedLanguageModelResponseDtoNullable {

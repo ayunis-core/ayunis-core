@@ -41,6 +41,12 @@
       "modelNotFound": "The model not found.",
       "error": "An error occurred while creating the permitted model."
     },
+    "updatePermittedModel": {
+      "notFound": "The permitted model was not found.",
+      "error": "An error occurred while updating the permitted model."
+    },
+    "anonymousOnly": "Anonymous mode",
+    "permitted": "Permitted",
     "defaultModel": {
       "title": "Organization default model",
       "description": "Choose which permitted model should be used as the default for your organization.",

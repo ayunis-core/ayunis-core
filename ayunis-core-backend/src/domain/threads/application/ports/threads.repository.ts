@@ -29,11 +29,6 @@ export abstract class ThreadsRepository {
     userId: UUID;
     permittedModelId: UUID;
   }): Promise<void>;
-  abstract updateAgent(params: {
-    threadId: UUID;
-    userId: UUID;
-    agentId: UUID;
-  }): Promise<void>;
   abstract updateTitle(params: {
     threadId: UUID;
     userId: UUID;

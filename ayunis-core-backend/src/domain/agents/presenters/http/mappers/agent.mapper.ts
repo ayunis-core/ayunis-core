@@ -20,6 +20,7 @@ export class AgentDtoMapper {
         name: agent.model.model.name,
         provider: agent.model.model.provider,
         displayName: agent.model.model.displayName,
+        anonymousOnly: agent.model.anonymousOnly,
       },
       tools: agent.tools.map((tool) => ({
         type: tool.type,

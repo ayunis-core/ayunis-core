@@ -4,7 +4,6 @@ import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import ChatInput from '@/widgets/chat-input';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
-import { useUpdateThreadModel } from '../api/useUpdateThreadModel';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { MoreVertical, ShieldCheck, Trash2 } from 'lucide-react';
 import type { Thread, Message } from '../model/openapi';
@@ -27,7 +26,6 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useUpdateThreadAgent } from '../api/useUpdateThreadAgent';
 import type {
   RunErrorResponseDto,
   RunMessageResponseDtoMessage,
@@ -39,7 +37,6 @@ import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
-import { useRemoveThreadAgent } from '../api/useRemoveThreadAgent';
 import { useAgents } from '@/features/useAgents';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
@@ -97,10 +94,6 @@ export default function ChatPage({
       showError(t('chat.errorDeleteThread'));
     },
   });
-
-  const { updateModel } = useUpdateThreadModel({ threadId: thread.id });
-  const { updateAgent } = useUpdateThreadAgent({ threadId: thread.id });
-  const { removeAgent } = useRemoveThreadAgent({ threadId: thread.id });
 
   const {
     createFileSource,
@@ -401,24 +394,26 @@ export default function ChatPage({
   );
 
   // Chat Input
+  // Agent, model, and anonymous mode controls are always disabled on ChatPage
+  // because the thread already has messages (ChatPage is only shown after first message)
   const chatInput = (
     <ChatInput
       ref={chatInputRef}
       modelId={
-        // If the thread has an agent, use the agent's model,
-        // but disable the model selection
-        // to only show the model that the agent uses
+        // If the thread has an agent, use the agent's model
         thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
       }
-      isModelChangeDisabled={!!thread.agentId}
+      isModelChangeDisabled={true}
+      isAgentChangeDisabled={true}
+      isAnonymousChangeDisabled={true}
       agentId={thread.agentId}
       sources={thread.sources}
       isAnonymous={thread.isAnonymous}
       isStreaming={isStreaming}
       isCreatingFileSource={isTotallyCreatingFileSource}
-      onModelChange={updateModel}
-      onAgentChange={updateAgent}
-      onAgentRemove={removeAgent}
+      onModelChange={() => {}}
+      onAgentChange={() => {}}
+      onAgentRemove={() => {}}
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}

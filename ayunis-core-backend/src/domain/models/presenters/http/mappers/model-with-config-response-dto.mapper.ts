@@ -30,6 +30,7 @@ export class ModelWithConfigResponseDtoMapper {
         isPermitted,
         isDefault,
         isEmbedding: model instanceof EmbeddingModel ? true : false,
+        anonymousOnly: permittedModel?.anonymousOnly,
       };
     });
   }

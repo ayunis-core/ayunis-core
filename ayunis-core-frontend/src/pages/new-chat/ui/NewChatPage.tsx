@@ -8,6 +8,7 @@ import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import type { AgentResponseDto } from '@/shared/api';
 import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { usePermittedModels } from '@/features/usePermittedModels';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -26,6 +27,7 @@ export default function NewChatPage({
 }: NewChatPageProps) {
   const { t } = useTranslation('chats');
   const { initiateChat } = useInitiateChat();
+  const { models } = usePermittedModels();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -38,6 +40,12 @@ export default function NewChatPage({
     }>
   >([]);
   const selectedAgent = agents.find((agent) => agent.id === agentId);
+  const selectedModel = models.find((m) => m.id === modelId);
+
+  // Determine if anonymous mode is enforced by the selected model
+  const isAnonymousEnforced = agentId
+    ? (selectedAgent?.model.anonymousOnly ?? false)
+    : (selectedModel?.anonymousOnly ?? false);
 
   function handleFileUpload(file: File) {
     const isCsvFile = file.name.endsWith('.csv');
@@ -110,6 +118,7 @@ export default function NewChatPage({
           isEmbeddingModelEnabled={isEmbeddingModelEnabled}
           isAnonymous={isAnonymous}
           onAnonymousChange={setIsAnonymous}
+          isAnonymousEnforced={isAnonymousEnforced}
         />
       </div>
     </NewChatPageLayout>

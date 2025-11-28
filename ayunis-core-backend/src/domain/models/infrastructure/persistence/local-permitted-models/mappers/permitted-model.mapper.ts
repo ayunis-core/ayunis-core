@@ -24,6 +24,7 @@ export class PermittedModelMapper {
         model: this.modelMapper.toDomain(record.model) as LanguageModel,
         orgId: record.orgId,
         isDefault: record.isDefault,
+        anonymousOnly: record.anonymousOnly,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
@@ -34,6 +35,7 @@ export class PermittedModelMapper {
         model: this.modelMapper.toDomain(record.model) as EmbeddingModel,
         orgId: record.orgId,
         isDefault: record.isDefault,
+        anonymousOnly: record.anonymousOnly,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
@@ -48,6 +50,7 @@ export class PermittedModelMapper {
     record.model = this.modelMapper.toRecord(domain.model);
     record.orgId = domain.orgId;
     record.isDefault = domain.isDefault;
+    record.anonymousOnly = domain.anonymousOnly;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

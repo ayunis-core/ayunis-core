@@ -41,6 +41,12 @@
       "modelNotFound": "Das Modell wurde nicht gefunden.",
       "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
     },
+    "updatePermittedModel": {
+      "notFound": "Das freigeschaltete Modell wurde nicht gefunden.",
+      "error": "Ein Fehler ist aufgetreten, während das Modell aktualisiert wurde."
+    },
+    "anonymousOnly": "Anonymer Modus",
+    "permitted": "Freigeschaltet",
     "defaultModel": {
       "title": "Standardmodell der Organisation",
       "description": "Wählen Sie, welches freigeschaltete Modell als Standard für Ihre Organisation verwendet werden soll.",

@@ -11,7 +11,6 @@ import {
   UploadedFile,
   HttpCode,
   HttpStatus,
-  Patch,
   Res,
   StreamableFile,
 } from '@nestjs/common';
@@ -44,7 +43,6 @@ import { DeleteThreadUseCase } from '../../application/use-cases/delete-thread/d
 import { AddSourceToThreadUseCase } from '../../application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
-import { UpdateThreadModelUseCase } from '../../application/use-cases/update-thread-model/update-thread-model.use-case';
 import { CreateThreadCommand } from '../../application/use-cases/create-thread/create-thread.command';
 import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
 import { FindAllThreadsQuery } from '../../application/use-cases/find-all-threads/find-all-threads.query';
@@ -52,7 +50,6 @@ import { DeleteThreadCommand } from '../../application/use-cases/delete-thread/d
 import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
 import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
 import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
-import { UpdateThreadModelCommand } from '../../application/use-cases/update-thread-model/update-thread-model.command';
 import { CreateFileSourceCommand } from '../../../sources/application/use-cases/create-text-source/create-text-source.command';
 import { CreateTextSourceUseCase } from '../../../sources/application/use-cases/create-text-source/create-text-source.use-case';
 import { AddFileSourceToThreadDto } from './dto/add-source-to-thread.dto';
@@ -62,18 +59,12 @@ import {
   CSVDataSourceResponseDto,
 } from './dto/get-thread-response.dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
-import { UpdateThreadModelDto } from './dto/update-thread-model.dto';
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
-import { UpdateThreadAgentCommand } from '../../application/use-cases/update-thread-agent/update-thread-agent.command';
-import { UpdateThreadAgentUseCase } from '../../application/use-cases/update-thread-agent/update-thread-agent.use-case';
-import { UpdateThreadAgentDto } from './dto/update-thread-agent.dto';
 import * as fs from 'fs';
-import { RemoveAgentFromThreadCommand } from '../../application/use-cases/remove-agent-from-thread/remove-agent-from-thread.command';
-import { RemoveAgentFromThreadUseCase } from '../../application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
@@ -95,15 +86,12 @@ export class ThreadsController {
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly updateThreadModelUseCase: UpdateThreadModelUseCase,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
-    private readonly updateThreadAgentUseCase: UpdateThreadAgentUseCase,
-    private readonly removeAgentFromThreadUseCase: RemoveAgentFromThreadUseCase,
   ) {}
 
   @Post()
@@ -179,96 +167,6 @@ export class ThreadsController {
       new FindThreadQuery(id),
     );
     return this.getThreadDtoMapper.toDto(thread);
-  }
-
-  @Patch(':id/model')
-  @ApiOperation({ summary: 'Update thread model' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread to update',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiBody({ type: UpdateThreadModelDto })
-  @ApiResponse({
-    status: 200,
-    description: 'The thread model has been successfully updated',
-  })
-  @ApiResponse({ status: 404, description: 'Thread not found' })
-  @ApiResponse({ status: 400, description: 'Invalid model data' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  async updateModel(
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Body() updateModelDto: UpdateThreadModelDto,
-  ): Promise<void> {
-    this.logger.log('updateModel', {
-      threadId,
-      modelId: updateModelDto.modelId,
-    });
-
-    const command = new UpdateThreadModelCommand({
-      threadId,
-      modelId: updateModelDto.modelId,
-    });
-
-    await this.updateThreadModelUseCase.execute(command);
-  }
-
-  @Patch(':id/agent')
-  @ApiOperation({ summary: 'Update thread agent' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread to update',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiBody({ type: UpdateThreadAgentDto })
-  @ApiResponse({
-    status: 200,
-    description: 'The thread agent has been successfully updated',
-  })
-  @ApiResponse({ status: 404, description: 'Thread not found' })
-  @ApiResponse({ status: 400, description: 'Invalid agent data' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  async updateAgent(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Param('id', ParseUUIDPipe) threadId: UUID,
-    @Body() updateAgentDto: UpdateThreadAgentDto,
-  ): Promise<void> {
-    this.logger.log('updateAgent', {
-      threadId,
-      agentId: updateAgentDto.agentId,
-    });
-
-    const command = new UpdateThreadAgentCommand({
-      threadId,
-      agentId: updateAgentDto.agentId,
-      userId,
-    });
-
-    await this.updateThreadAgentUseCase.execute(command);
-  }
-
-  @Delete(':id/agent')
-  @ApiOperation({ summary: 'Remove agent from thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread to remove the agent from',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'The agent has been successfully removed from the thread',
-  })
-  @ApiResponse({ status: 404, description: 'Thread not found' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async removeAgent(@Param('id', ParseUUIDPipe) threadId: UUID): Promise<void> {
-    this.logger.log('removeAgent', { threadId });
-    await this.removeAgentFromThreadUseCase.execute(
-      new RemoveAgentFromThreadCommand({ threadId }),
-    );
   }
 
   @Delete(':id')

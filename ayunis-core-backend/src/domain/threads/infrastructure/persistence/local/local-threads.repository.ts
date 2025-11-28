@@ -242,29 +242,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
     }
   }
 
-  async updateAgent(params: {
-    threadId: UUID;
-    userId: UUID;
-    agentId: UUID;
-  }): Promise<void> {
-    this.logger.log('updateAgent', { params });
-    const result = await this.threadRepository
-      .createQueryBuilder()
-      .update(ThreadRecord)
-      .set({
-        agentId: params.agentId,
-        modelId: () => 'NULL',
-      })
-      .where('id = :threadId AND userId = :userId', {
-        threadId: params.threadId,
-        userId: params.userId,
-      })
-      .execute();
-    if (!result.affected || result.affected === 0) {
-      throw new ThreadNotFoundError(params.threadId, params.userId);
-    }
-  }
-
   async replaceAgentWithModel(params: {
     modelId: UUID;
     agentId: UUID;

@@ -122,6 +122,51 @@
         "tags": [
           "models"
         ]
+      },
+      "patch": {
+        "operationId": "ModelsController_updatePermittedModel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePermittedModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated a permitted model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          }
+        },
+        "summary": "Update a permitted model",
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/permitted/language-models": {
@@ -849,6 +894,79 @@
           }
         },
         "summary": "Delete a permitted model for a specific organization",
+        "tags": [
+          "Super Admin Models"
+        ]
+      },
+      "patch": {
+        "description": "Update the settings of a permitted model for the specified organization. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminModelsController_updatePermittedModel",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID to update permitted model for",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Permitted model ID to update",
+            "schema": {
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePermittedModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated permitted model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PermittedLanguageModelResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PermittedEmbeddingModelResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid update data provided"
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "404": {
+            "description": "Permitted model not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a permitted model for a specific organization",
         "tags": [
           "Super Admin Models"
         ]
@@ -2800,126 +2918,6 @@
           }
         },
         "summary": "Delete a thread",
-        "tags": [
-          "threads"
-        ]
-      }
-    },
-    "/threads/{id}/model": {
-      "patch": {
-        "operationId": "ThreadsController_updateModel",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread to update",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateThreadModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The thread model has been successfully updated"
-          },
-          "400": {
-            "description": "Invalid model data"
-          },
-          "404": {
-            "description": "Thread not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update thread model",
-        "tags": [
-          "threads"
-        ]
-      }
-    },
-    "/threads/{id}/agent": {
-      "patch": {
-        "operationId": "ThreadsController_updateAgent",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread to update",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateThreadAgentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The thread agent has been successfully updated"
-          },
-          "400": {
-            "description": "Invalid agent data"
-          },
-          "404": {
-            "description": "Thread not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update thread agent",
-        "tags": [
-          "threads"
-        ]
-      },
-      "delete": {
-        "operationId": "ThreadsController_removeAgent",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread to remove the agent from",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The agent has been successfully removed from the thread"
-          },
-          "404": {
-            "description": "Thread not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Remove agent from thread",
         "tags": [
           "threads"
         ]
@@ -5128,6 +5126,11 @@
           "isEmbedding": {
             "type": "boolean",
             "description": "Whether the model is an embedding model"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model enforces anonymous mode. Null if not permitted.",
+            "nullable": true
           }
         },
         "required": [
@@ -5141,7 +5144,8 @@
           "canUseTools",
           "isPermitted",
           "isDefault",
-          "isEmbedding"
+          "isEmbedding",
+          "anonymousOnly"
         ]
       },
       "CreatePermittedModelDto": {
@@ -5151,10 +5155,29 @@
             "type": "string",
             "description": "The id of the model",
             "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model should enforce anonymous mode",
+            "example": false,
+            "default": false
           }
         },
         "required": [
           "modelId"
+        ]
+      },
+      "UpdatePermittedModelDto": {
+        "type": "object",
+        "properties": {
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model should enforce anonymous mode",
+            "example": true
+          }
+        },
+        "required": [
+          "anonymousOnly"
         ]
       },
       "PermittedLanguageModelResponseDto": {
@@ -5203,6 +5226,10 @@
           "isReasoning": {
             "type": "boolean",
             "description": "Whether the model can reason"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model enforces anonymous mode"
           }
         },
         "required": [
@@ -5213,7 +5240,8 @@
           "type",
           "isArchived",
           "canStream",
-          "isReasoning"
+          "isReasoning",
+          "anonymousOnly"
         ]
       },
       "PermittedLanguageModelResponseDtoNullable": {
@@ -7030,13 +7058,19 @@
             "type": "string",
             "description": "The display name of the model",
             "example": "GPT-4"
+          },
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model requires anonymous mode (PII redaction)",
+            "example": false
           }
         },
         "required": [
           "id",
           "name",
           "provider",
-          "displayName"
+          "displayName",
+          "anonymousOnly"
         ]
       },
       "SourceResponseDto": {
@@ -7424,32 +7458,6 @@
           "createdAt",
           "updatedAt",
           "isAnonymous"
-        ]
-      },
-      "UpdateThreadModelDto": {
-        "type": "object",
-        "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "The id of the model",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
-        },
-        "required": [
-          "modelId"
-        ]
-      },
-      "UpdateThreadAgentDto": {
-        "type": "object",
-        "properties": {
-          "agentId": {
-            "type": "string",
-            "description": "The UUID of the agent to update",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "agentId"
         ]
       },
       "ToolAssignmentDto": {

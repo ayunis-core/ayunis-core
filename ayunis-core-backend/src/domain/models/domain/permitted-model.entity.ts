@@ -8,6 +8,7 @@ export class PermittedModel {
   public readonly model: Model;
   public readonly orgId: UUID;
   public readonly isDefault: boolean;
+  public readonly anonymousOnly: boolean;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
@@ -16,6 +17,7 @@ export class PermittedModel {
     model: Model;
     orgId: UUID;
     isDefault?: boolean;
+    anonymousOnly?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -23,6 +25,7 @@ export class PermittedModel {
     this.model = params.model;
     this.orgId = params.orgId;
     this.isDefault = params.isDefault ?? false;
+    this.anonymousOnly = params.anonymousOnly ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
@@ -35,6 +38,7 @@ export class PermittedLanguageModel extends PermittedModel {
     model: LanguageModel;
     orgId: UUID;
     isDefault?: boolean;
+    anonymousOnly?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -50,6 +54,7 @@ export class PermittedEmbeddingModel extends PermittedModel {
     model: EmbeddingModel;
     orgId: UUID;
     isDefault?: boolean;
+    anonymousOnly?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

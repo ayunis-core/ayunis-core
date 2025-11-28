@@ -46,7 +46,7 @@ export class CreateTextSourceUseCase {
   async execute(command: CreateFileSourceCommand): Promise<FileSource>;
   async execute(command: CreateUrlSourceCommand): Promise<UrlSource>;
   async execute(command: CreateTextSourceCommand): Promise<TextSource> {
-    this.logger.debug('Creating text source', { command });
+    this.logger.debug('Creating text source');
     const orgId = this.contextService.get('orgId');
     try {
       if (!orgId) {
@@ -60,7 +60,7 @@ export class CreateTextSourceUseCase {
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      this.logger.debug('Saving source', { source });
+      this.logger.debug('Saving source', { sourceId: source.id });
       await this.sourceRepository.save(source);
       await this.indexSourceContentChunks({ source, orgId });
       return source;

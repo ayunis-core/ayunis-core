@@ -23,6 +23,7 @@ import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persist
 import { LocalModelsRepositoryModule } from './infrastructure/persistence/local-models/local-models-repository.module';
 import { CreatePermittedModelUseCase } from './application/use-cases/create-permitted-model/create-permitted-model.use-case';
 import { DeletePermittedModelUseCase } from './application/use-cases/delete-permitted-model/delete-permitted-model.use-case';
+import { UpdatePermittedModelUseCase } from './application/use-cases/update-permitted-model/update-permitted-model.use-case';
 import { StreamInferenceUseCase } from './application/use-cases/stream-inference/stream-inference.use-case';
 import { StreamInferenceHandlerRegistry } from './application/registry/stream-inference-handler.registry';
 import { AnthropicStreamInferenceHandler } from './infrastructure/stream-inference/anthropic.stream-inference';
@@ -191,6 +192,7 @@ import { ConfigService } from '@nestjs/config';
     // Use Cases
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
+    UpdatePermittedModelUseCase,
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
@@ -232,6 +234,7 @@ import { ConfigService } from '@nestjs/config';
     ModelRegistry,
     CreatePermittedModelUseCase,
     DeletePermittedModelUseCase,
+    UpdatePermittedModelUseCase,
     GetPermittedModelUseCase,
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,

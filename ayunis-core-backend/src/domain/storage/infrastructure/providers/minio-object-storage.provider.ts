@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
 import { Readable } from 'stream';
@@ -15,6 +15,7 @@ export class MinioObjectStorageProvider
   extends ObjectStoragePort
   implements OnModuleInit
 {
+  private readonly logger = new Logger(MinioObjectStorageProvider.name);
   private client: Minio.Client;
   private defaultBucket: string;
 
@@ -38,7 +39,7 @@ export class MinioObjectStorageProvider
       // Add retry logic for MinIO connection
       await this.connectWithRetry();
     } catch (error) {
-      console.error('Failed to initialize MinIO after retries:', error);
+      this.logger.error('Failed to initialize MinIO after retries', error);
       // Don't throw - let the application start and handle MinIO errors per request
     }
   }
@@ -46,22 +47,19 @@ export class MinioObjectStorageProvider
   private async connectWithRetry(maxRetries = 10, delay = 2000): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(
-          `Attempting to connect to MinIO (attempt ${attempt}/${maxRetries})...`,
+        this.logger.log(
+          `Connecting to MinIO (attempt ${attempt}/${maxRetries})`,
         );
         const bucketExists = await this.client.bucketExists(this.defaultBucket);
         if (!bucketExists) {
           await this.client.makeBucket(this.defaultBucket, 'eu-central-1');
-          console.log(`Created MinIO bucket: ${this.defaultBucket}`);
-        } else {
-          console.log(`MinIO bucket exists: ${this.defaultBucket}`);
+          this.logger.log(`Created MinIO bucket: ${this.defaultBucket}`);
         }
-        console.log('MinIO connection successful!');
+        this.logger.log('MinIO connection successful');
         return;
       } catch (error) {
-        console.warn(
-          `MinIO connection attempt ${attempt} failed:`,
-          error instanceof Error ? error.message : 'Unknown error',
+        this.logger.warn(
+          `MinIO connection attempt ${attempt} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
         if (attempt === maxRetries) {
           throw error;

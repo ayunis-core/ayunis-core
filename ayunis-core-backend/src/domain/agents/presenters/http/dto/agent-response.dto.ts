@@ -29,6 +29,12 @@ export class ModelResponseDto {
     example: 'GPT-4',
   })
   displayName: string;
+
+  @ApiProperty({
+    description: 'Whether this model requires anonymous mode (PII redaction)',
+    example: false,
+  })
+  anonymousOnly: boolean;
 }
 
 export class ToolResponseDto {
