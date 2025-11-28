@@ -61,4 +61,3 @@ export interface GetUserUsageQueryParams {
   offset: number;
   limit: number;
 }
-

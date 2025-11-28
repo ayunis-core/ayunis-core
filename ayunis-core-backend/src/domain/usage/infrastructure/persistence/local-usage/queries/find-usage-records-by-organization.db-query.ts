@@ -21,4 +21,3 @@ export async function findUsageRecordsByOrganization(
 
   return await qb.orderBy('usage.createdAt', 'DESC').getMany();
 }
-

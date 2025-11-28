@@ -47,7 +47,7 @@ export class CollectUsageUseCase {
     try {
       this.validateCommand(command);
 
-      const { cost, currency } = await this.calculateCost(command);
+      const { cost, currency } = this.calculateCost(command);
 
       const usage = new Usage({
         userId,
@@ -110,12 +110,16 @@ export class CollectUsageUseCase {
     }
   }
 
-  private async calculateCost(
-    command: CollectUsageCommand,
-  ): Promise<{ cost?: number; currency?: Currency }> {
+  private calculateCost(command: CollectUsageCommand): {
+    cost?: number;
+    currency?: Currency;
+  } {
     const model = command.model;
 
-    if (model.inputTokenCost === undefined || model.outputTokenCost === undefined) {
+    if (
+      model.inputTokenCost === undefined ||
+      model.outputTokenCost === undefined
+    ) {
       this.logger.debug('No cost information available for model', {
         modelId: model.id,
         hasInputCost: model.inputTokenCost !== undefined,

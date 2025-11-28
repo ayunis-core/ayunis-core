@@ -7,9 +7,7 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 @Injectable()
 export class GetProviderUsageUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-  ) {}
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(query: GetProviderUsageQuery): Promise<ProviderUsage[]> {
     if (query.startDate && query.endDate) {

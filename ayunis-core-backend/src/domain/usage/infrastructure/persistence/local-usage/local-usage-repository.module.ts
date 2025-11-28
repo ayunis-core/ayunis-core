@@ -18,6 +18,11 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
       useClass: LocalUsageRepository,
     },
   ],
-  exports: [LocalUsageRepository, UsageMapper, UsageQueryMapper, UsageRepository],
+  exports: [
+    LocalUsageRepository,
+    UsageMapper,
+    UsageQueryMapper,
+    UsageRepository,
+  ],
 })
 export class LocalUsageRepositoryModule {}

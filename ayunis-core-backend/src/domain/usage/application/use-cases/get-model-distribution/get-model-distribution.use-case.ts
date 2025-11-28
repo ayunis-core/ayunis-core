@@ -7,9 +7,7 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 @Injectable()
 export class GetModelDistributionUseCase {
-  constructor(
-    private readonly usageRepository: UsageRepository,
-  ) {}
+  constructor(private readonly usageRepository: UsageRepository) {}
 
   async execute(
     query: GetModelDistributionQuery,
@@ -31,10 +29,7 @@ export class GetModelDistributionUseCase {
     });
 
     // Calculate percentages and group less-used models
-    return this.processModelDistribution(
-      modelDistribution,
-      query.maxModels,
-    );
+    return this.processModelDistribution(modelDistribution, query.maxModels);
   }
 
   private validateDateRange(startDate: Date, endDate: Date): void {
@@ -90,8 +85,6 @@ export class GetModelDistributionUseCase {
       .sort((a, b) => b.tokens - a.tokens);
 
     // Apply limit if specified (frontend can decide how to handle aggregation)
-    return maxModels > 0
-      ? sortedModels.slice(0, maxModels)
-      : sortedModels;
+    return maxModels > 0 ? sortedModels.slice(0, maxModels) : sortedModels;
   }
 }

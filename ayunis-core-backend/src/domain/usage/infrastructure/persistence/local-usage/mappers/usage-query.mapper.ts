@@ -69,9 +69,7 @@ export class UsageQueryMapper {
     return { totalTokens, items };
   }
 
-  mapUserModelStatsToBreakdown(
-    rows: ModelStatsRow[],
-  ): ModelBreakdownItem[] {
+  mapUserModelStatsToBreakdown(rows: ModelStatsRow[]): ModelBreakdownItem[] {
     return rows.map(
       (r) =>
         new ModelBreakdownItem({

@@ -42,4 +42,3 @@ export async function getModelStats(
     .orderBy('SUM(usage.totalTokens)', 'DESC')
     .getRawMany<ModelStatsRow>();
 }
-

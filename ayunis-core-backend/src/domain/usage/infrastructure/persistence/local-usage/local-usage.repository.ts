@@ -132,8 +132,11 @@ export class LocalUsageRepository extends UsageRepository {
             query.modelId,
           )
         : [];
-      const timeSeries = this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
-      results.push(this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries));
+      const timeSeries =
+        this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
+      results.push(
+        this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries),
+      );
     }
     return results.sort((a, b) => b.tokens - a.tokens);
   }
@@ -333,7 +336,8 @@ export class LocalUsageRepository extends UsageRepository {
       endDate,
     );
 
-    const breakdown = this.usageQueryMapper.mapUserModelStatsToBreakdown(modelStats);
+    const breakdown =
+      this.usageQueryMapper.mapUserModelStatsToBreakdown(modelStats);
     return breakdown;
   }
 

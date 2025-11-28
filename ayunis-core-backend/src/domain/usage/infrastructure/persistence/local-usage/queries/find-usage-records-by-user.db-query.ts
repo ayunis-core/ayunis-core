@@ -21,4 +21,3 @@ export async function findUsageRecordsByUser(
 
   return await qb.orderBy('usage.createdAt', 'DESC').getMany();
 }
-
