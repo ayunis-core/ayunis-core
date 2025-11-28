@@ -102,6 +102,25 @@ services:
       start_period: 10s
     # Now running with restricted Docker access through proxy
 
+  anonymize:
+    build:
+      context: ./ayunis-core-anonymize
+      dockerfile: Dockerfile
+    container_name: ayunis-anonymize-prod
+    restart: unless-stopped
+    networks:
+      - ayunis-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")' || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s # Longer start period for model loading
+
   app:
     build:
       context: .
@@ -118,11 +137,14 @@ services:
         condition: service_healthy
       code-execution:
         condition: service_healthy
+      anonymize:
+        condition: service_healthy
     env_file:
       - ./ayunis-core-backend/.env
       - ./ayunis-core-frontend/.env
     environment:
       CODE_EXECUTION_SERVICE_URL: http://code-execution:8080
+      ANONYMIZE_SERVICE_URL: http://anonymize:8000
     volumes:
       - app-uploads:/app/uploads
     networks:
