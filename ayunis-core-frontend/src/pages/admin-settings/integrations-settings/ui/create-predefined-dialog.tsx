@@ -1,13 +1,13 @@
-import { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -16,22 +16,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
+} from '@/shared/ui/shadcn/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/shadcn/select";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Button } from "@/shared/ui/shadcn/button";
+} from '@/shared/ui/shadcn/select';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Button } from '@/shared/ui/shadcn/button';
 import type {
   PredefinedConfig,
   CreatePredefinedIntegrationFormData,
-} from "../model/types";
-import { useCreatePredefinedIntegration } from "../api/useCreatePredefinedIntegration";
-import type { ConfigValueDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+} from '../model/types';
+import { useCreatePredefinedIntegration } from '../api/useCreatePredefinedIntegration';
+import type { ConfigValueDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreatePredefinedDialogProps {
   open: boolean;
@@ -46,44 +46,50 @@ export function CreatePredefinedDialog({
   predefinedConfigs,
   isCloud,
 }: CreatePredefinedDialogProps) {
-  const { t } = useTranslation("admin-settings-integrations");
-  const { createPredefinedIntegration, isCreating } =
-    useCreatePredefinedIntegration(() => {
-      onOpenChange(false);
-      form.reset();
-    });
+  const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreatePredefinedIntegrationFormData>({
     defaultValues: {
       slug: undefined,
       configValues: [],
     },
   });
+  const { createPredefinedIntegration, isCreating } =
+    useCreatePredefinedIntegration(() => {
+      onOpenChange(false);
+      form.reset();
+    });
 
-  const selectedSlug = form.watch("slug");
+  const selectedSlug = useWatch({
+    control: form.control,
+    name: 'slug',
+  });
   const selectedConfig = useMemo(
     () => predefinedConfigs.find((c) => c.slug === selectedSlug),
     [predefinedConfigs, selectedSlug],
   );
-  const credentialFields = selectedConfig?.credentialFields ?? [];
+  const credentialFields = useMemo(
+    () => selectedConfig?.credentialFields ?? [],
+    [selectedConfig],
+  );
 
   useEffect(() => {
     if (!selectedConfig) {
-      form.setValue("configValues", []);
+      form.setValue('configValues', []);
       return;
     }
 
     const values = credentialFields.map<ConfigValueDto>((field) => {
       const existing = form
-        .getValues("configValues")
+        .getValues('configValues')
         .find((value) => value.name === field.type);
 
       return {
         name: field.type,
-        value: existing?.value ?? "",
+        value: existing?.value ?? '',
       };
     });
 
-    form.setValue("configValues", values);
+    form.setValue('configValues', values);
   }, [credentialFields, form, selectedConfig]);
 
   const handleSubmit = (data: CreatePredefinedIntegrationFormData) => {
@@ -111,13 +117,13 @@ export function CreatePredefinedDialog({
         <DialogHeader>
           <DialogTitle>
             {isCloud
-              ? t("integrations.createPredefinedDialog.titleCloud")
-              : t("integrations.createPredefinedDialog.title")}
+              ? t('integrations.createPredefinedDialog.titleCloud')
+              : t('integrations.createPredefinedDialog.title')}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
             className="space-y-4"
           >
             <FormField
@@ -126,18 +132,18 @@ export function CreatePredefinedDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {t("integrations.createPredefinedDialog.integrationType")}
+                    {t('integrations.createPredefinedDialog.integrationType')}
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value ?? ""}
+                    value={field.value ?? ''}
                     disabled={isCreating}
                   >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
                           placeholder={t(
-                            "integrations.createPredefinedDialog.integrationTypePlaceholder",
+                            'integrations.createPredefinedDialog.integrationTypePlaceholder',
                           )}
                         />
                       </SelectTrigger>
@@ -169,10 +175,10 @@ export function CreatePredefinedDialog({
                     name={`configValues.${index}.value`}
                     render={({ field: valueField }) => {
                       const inputType =
-                        credentialField.type === "token" ||
-                        credentialField.type === "clientSecret"
-                          ? "password"
-                          : "text";
+                        credentialField.type === 'token' ||
+                        credentialField.type === 'clientSecret'
+                          ? 'password'
+                          : 'text';
                       const {
                         value,
                         onChange,
@@ -192,7 +198,7 @@ export function CreatePredefinedDialog({
                               onBlur={onBlur}
                               onChange={onChange}
                               ref={fieldRef}
-                              value={value ?? ""}
+                              value={value ?? ''}
                             />
                           </FormControl>
                           {credentialField.help && (
@@ -203,7 +209,7 @@ export function CreatePredefinedDialog({
                           {!credentialField.required && (
                             <FormDescription>
                               {t(
-                                "integrations.createPredefinedDialog.optionalField",
+                                'integrations.createPredefinedDialog.optionalField',
                               )}
                             </FormDescription>
                           )}
@@ -218,7 +224,7 @@ export function CreatePredefinedDialog({
 
             {selectedConfig && credentialFields.length === 0 && (
               <FormDescription>
-                {t("integrations.createPredefinedDialog.noCredentialsRequired")}
+                {t('integrations.createPredefinedDialog.noCredentialsRequired')}
               </FormDescription>
             )}
 
@@ -229,12 +235,12 @@ export function CreatePredefinedDialog({
                 onClick={() => handleOpenChange(false)}
                 disabled={isCreating}
               >
-                {t("integrations.createPredefinedDialog.cancel")}
+                {t('integrations.createPredefinedDialog.cancel')}
               </Button>
               <Button type="submit" disabled={isCreating}>
                 {isCreating
-                  ? t("integrations.createPredefinedDialog.creating")
-                  : t("integrations.createPredefinedDialog.create")}
+                  ? t('integrations.createPredefinedDialog.creating')
+                  : t('integrations.createPredefinedDialog.create')}
               </Button>
             </DialogFooter>
           </form>

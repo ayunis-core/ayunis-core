@@ -9,8 +9,8 @@ import { Request } from 'express';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.query';
-import { GetTrialUseCase } from 'src/iam/subscriptions/application/use-cases/get-trial/get-trial.use-case';
-import { GetTrialQuery } from 'src/iam/subscriptions/application/use-cases/get-trial/get-trial.query';
+import { GetTrialUseCase } from 'src/iam/trials/application/use-cases/get-trial/get-trial.use-case';
+import { GetTrialQuery } from 'src/iam/trials/application/use-cases/get-trial/get-trial.query';
 import { REQUIRE_SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
 
 export interface SubscriptionContext {

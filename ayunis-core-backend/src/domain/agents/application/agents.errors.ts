@@ -146,8 +146,13 @@ export class SourceAlreadyAssignedError extends AgentError {
  * Error thrown when an unexpected error occurs
  */
 export class UnexpectedAgentError extends AgentError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, AgentErrorCode.UNEXPECTED_AGENT_ERROR, 500, metadata);
+  constructor(error: unknown) {
+    super(
+      'Unexpected error occurred',
+      AgentErrorCode.UNEXPECTED_AGENT_ERROR,
+      500,
+      { error },
+    );
   }
 }
 

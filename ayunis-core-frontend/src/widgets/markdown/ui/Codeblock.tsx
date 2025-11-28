@@ -1,9 +1,9 @@
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import {
   oneDark,
   oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useTheme } from "@/features/theme";
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from '@/features/theme';
 
 interface CodeBlockProps {
   language?: string;
@@ -16,7 +16,7 @@ export default function CodeBlock({
   language,
   children,
   inline = false,
-  className = "",
+  className = '',
 }: CodeBlockProps) {
   const { theme } = useTheme();
 
@@ -33,17 +33,17 @@ export default function CodeBlock({
   return (
     <div className="overflow-x-auto my-4 max-w-full">
       <SyntaxHighlighter
-        style={theme === "dark" ? oneDark : oneLight}
-        language={language || "text"}
+        style={theme === 'dark' ? oneDark : oneLight}
+        language={language || 'text'}
         PreTag="div"
         customStyle={{
-          margin: "0",
-          borderRadius: "0.375rem",
-          fontSize: "0.875rem",
-          overflow: "auto",
+          margin: '0',
+          borderRadius: '0.375rem',
+          fontSize: '0.875rem',
+          overflow: 'auto',
         }}
       >
-        {children.replace(/\n$/, "")}
+        {children.replace(/\n$/, '')}
       </SyntaxHighlighter>
     </div>
   );

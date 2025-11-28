@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsController } from './presenters/http/models.controller';
+import { SuperAdminModelsController } from './presenters/http/super-admin-models.controller';
 import { MistralInferenceHandler } from './infrastructure/inference/mistral.inference';
 import { InferenceHandlerRegistry } from './application/registry/inference-handler.registry';
 import { ModelRegistry } from './application/registry/model.registry';
@@ -16,6 +17,7 @@ import { GetPermittedModelsUseCase } from './application/use-cases/get-permitted
 import { IsModelPermittedUseCase } from './application/use-cases/is-model-permitted/is-model-permitted.use-case';
 import { ModelResponseDtoMapper } from './presenters/http/mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './presenters/http/mappers/model-with-config-response-dto.mapper';
+import { CatalogModelResponseDtoMapper } from './presenters/http/mappers/catalog-model-response-dto.mapper';
 import { LocalPermittedModelsRepositoryModule } from './infrastructure/persistence/local-permitted-models/local-permitted-models-repository.module';
 import { LocalUserDefaultModelsRepositoryModule } from './infrastructure/persistence/local-user-default-models/local-user-default-models-repository.module';
 import { LocalModelsRepositoryModule } from './infrastructure/persistence/local-models/local-models-repository.module';
@@ -37,6 +39,7 @@ import { CreateEmbeddingModelUseCase } from './application/use-cases/create-embe
 import { UpdateLanguageModelUseCase } from './application/use-cases/update-language-model/update-language-model.use-case';
 import { UpdateEmbeddingModelUseCase } from './application/use-cases/update-embedding-model/update-embedding-model.use-case';
 import { GetModelUseCase } from './application/use-cases/get-model/get-model.use-case';
+import { GetModelByIdUseCase } from './application/use-cases/get-model-by-id/get-model-by-id.use-case';
 import { GetAllModelsUseCase } from './application/use-cases/get-all-models/get-all-models.use-case';
 import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-model.use-case';
 
@@ -68,6 +71,8 @@ import { SourcesModule } from '../sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
+import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
+import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -79,16 +84,17 @@ import { ConfigService } from '@nestjs/config';
     LegalAcceptancesModule,
     OrgsModule,
     UsersModule,
-    SourcesModule,
+    forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
-  controllers: [ModelsController],
+  controllers: [ModelsController, SuperAdminModelsController],
   providers: [
     ModelRegistry,
     ModelProviderInfoRegistry,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
+    CatalogModelResponseDtoMapper,
     ModelProviderInfoResponseDtoMapper,
     PermittedProviderResponseDtoMapper,
     ModelProviderWithPermittedStatusResponseDtoMapper,
@@ -106,6 +112,8 @@ import { ConfigService } from '@nestjs/config';
     LocalOllamaInferenceHandler,
     AyunisOllamaStreamInferenceHandler,
     AyunisOllamaInferenceHandler,
+    OtcStreamInferenceHandler,
+    OtcInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
     {
@@ -117,6 +125,7 @@ import { ConfigService } from '@nestjs/config';
         ollamaHandler: LocalOllamaStreamInferenceHandler,
         synaforceHandler: SynaforceStreamInferenceHandler,
         ayunisHandler: AyunisOllamaStreamInferenceHandler,
+        otcHandler: OtcStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -127,6 +136,7 @@ import { ConfigService } from '@nestjs/config';
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
+        registry.register(ModelProvider.OTC, otcHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -137,6 +147,7 @@ import { ConfigService } from '@nestjs/config';
         LocalOllamaStreamInferenceHandler,
         SynaforceStreamInferenceHandler,
         AyunisOllamaStreamInferenceHandler,
+        OtcStreamInferenceHandler,
         MockStreamInferenceHandler,
         ConfigService,
       ],
@@ -150,6 +161,7 @@ import { ConfigService } from '@nestjs/config';
         ollamaHandler: LocalOllamaInferenceHandler,
         synaforceHandler: SynaforceInferenceHandler,
         ayunisHandler: AyunisOllamaInferenceHandler,
+        otcHandler: OtcInferenceHandler,
         mockHandler: MockInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -160,6 +172,7 @@ import { ConfigService } from '@nestjs/config';
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
+        registry.register(ModelProvider.OTC, otcHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -170,6 +183,7 @@ import { ConfigService } from '@nestjs/config';
         LocalOllamaInferenceHandler,
         SynaforceInferenceHandler,
         AyunisOllamaInferenceHandler,
+        OtcInferenceHandler,
         MockInferenceHandler,
         ConfigService,
       ],
@@ -203,6 +217,7 @@ import { ConfigService } from '@nestjs/config';
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
     GetModelUseCase,
+    GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
     // Permitted Provider Use Cases
@@ -243,6 +258,7 @@ import { ConfigService } from '@nestjs/config';
     UpdateLanguageModelUseCase,
     UpdateEmbeddingModelUseCase,
     GetModelUseCase,
+    GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
     // TODO: These modules should be part of this module and not separate

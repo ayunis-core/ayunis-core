@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { showSuccess } from "@/shared/lib/toast";
+import { useEffect, useState } from 'react';
+import { showSuccess } from '@/shared/lib/toast';
 
 interface UseRedirectNotificationProps {
   show: boolean;
@@ -12,9 +12,13 @@ export function useRedirectNotification({
 }: UseRedirectNotificationProps) {
   const [isComponentReady, setIsComponentReady] = useState(false);
 
-  // otherwise the toast is not shown
+  // Wait for next tick to ensure component is mounted
   useEffect(() => {
-    setIsComponentReady(true);
+    const timer = setTimeout(() => {
+      setIsComponentReady(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

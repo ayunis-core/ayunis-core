@@ -1,1 +1,1 @@
-export { default as PromptsPage } from "./ui/PromptsPage";
+export { default as PromptsPage } from './ui/PromptsPage';

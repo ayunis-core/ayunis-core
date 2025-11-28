@@ -3,7 +3,6 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadRecord } from '../schema/thread.record';
 import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/local/mappers/message.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
-import { AgentMapper } from 'src/domain/agents/infrastructure/persistence/local/mappers/agent.mapper';
 import { ThreadSourceAssignmentMapper } from './thread-source-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
@@ -12,7 +11,6 @@ export class ThreadMapper {
   constructor(
     private readonly messageMapper: MessageMapper,
     private readonly permittedModelMapper: PermittedModelMapper,
-    private readonly agentMapper: AgentMapper,
     private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
   ) {}
 
@@ -24,10 +22,7 @@ export class ThreadMapper {
     record.model = thread.model
       ? this.permittedModelMapper.toRecord(thread.model)
       : undefined;
-    record.agentId = thread.agent?.id;
-    record.agent = thread.agent
-      ? this.agentMapper.toRecord(thread.agent)
-      : undefined;
+    record.agentId = thread.agentId;
     record.title = thread.title;
     record.messages = thread.messages?.map((message) =>
       this.messageMapper.toRecord(message),
@@ -50,10 +45,7 @@ export class ThreadMapper {
               threadEntity.model,
             ) as PermittedLanguageModel)
           : undefined,
-      agent:
-        threadEntity.agentId && threadEntity.agent
-          ? this.agentMapper.toDomain(threadEntity.agent)
-          : undefined,
+      agentId: threadEntity.agentId,
       sourceAssignments:
         threadEntity.sourceAssignments?.map((assignment) =>
           this.sourceAssignmentMapper.toDomain(assignment),

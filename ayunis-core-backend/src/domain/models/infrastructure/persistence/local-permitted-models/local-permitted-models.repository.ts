@@ -14,7 +14,6 @@ import { PermittedModelRecord } from './schema/permitted-model.record';
 import { UUID } from 'crypto';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import {
   EmbeddingModelRecord,
   LanguageModelRecord,
@@ -60,11 +59,19 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     this.logger.log('findDefault', {
       orgId,
     });
-    const permittedModel = await this.permittedModelRepository.findOneBy({
-      orgId,
-      isDefault: true,
+    const permittedModel = await this.permittedModelRepository.findOne({
+      where: {
+        orgId,
+        isDefault: true,
+      },
+      relations: {
+        model: true,
+      },
     });
-    if (!permittedModel || !(permittedModel.model instanceof LanguageModel)) {
+    if (
+      !permittedModel ||
+      !(permittedModel.model instanceof LanguageModelRecord)
+    ) {
       return null;
     }
     this.logger.debug('Default model found', {
@@ -78,8 +85,8 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOne(params: FindOneParams): Promise<PermittedModel | null> {
     const where =
       'id' in params
-        ? { id: params.id, orgId: params.orgId }
-        : { name: params.name, provider: params.provider, orgId: params.orgId };
+        ? { id: params.id }
+        : { name: params.name, provider: params.provider };
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
     });
@@ -94,8 +101,8 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   ): Promise<PermittedLanguageModel | null> {
     const where =
       'id' in params
-        ? { id: params.id, orgId: params.orgId }
-        : { name: params.name, provider: params.provider, orgId: params.orgId };
+        ? { id: params.id }
+        : { name: params.name, provider: params.provider };
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
       relations: {

@@ -1,5 +1,5 @@
-import React from "react";
-import { useAutoScroll } from "@/features/useAutoScroll";
+import React from 'react';
+import { useAutoScroll } from '@/features/useAutoScroll';
 
 interface ChatInterfaceLayoutProps {
   chatHeader: React.ReactNode;
@@ -12,7 +12,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   chatHeader,
   chatContent,
   chatInput,
-  className = "",
+  className = '',
 }) => {
   const { scrollRef, handleScroll } = useAutoScroll(chatContent);
   return (

@@ -21,8 +21,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { SendConfirmationEmailCommand } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.command';
-import { CreateTrialUseCase } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.use-case';
-import { CreateTrialCommand } from 'src/iam/subscriptions/application/use-cases/create-trial/create-trial.command';
+import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
+import { CreateTrialCommand } from 'src/iam/trials/application/use-cases/create-trial/create-trial.command';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UserAlreadyExistsError } from 'src/iam/users/application/users.errors';
@@ -147,6 +147,7 @@ export class RegisterUserUseCase {
         email: user.email,
         emailVerified: user.emailVerified,
         role: user.role,
+        systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
       });

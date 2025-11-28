@@ -6,7 +6,7 @@ export class Invite {
   public readonly email: string;
   public readonly orgId: UUID;
   public readonly role: UserRole;
-  public readonly inviterId: UUID;
+  public readonly inviterId?: UUID;
   public readonly createdAt: Date;
   public acceptedAt?: Date;
   public readonly expiresAt: Date;
@@ -16,7 +16,7 @@ export class Invite {
     email: string;
     orgId: UUID;
     role: UserRole;
-    inviterId: UUID;
+    inviterId?: UUID;
     createdAt?: Date;
     acceptedAt?: Date;
     expiresAt: Date;

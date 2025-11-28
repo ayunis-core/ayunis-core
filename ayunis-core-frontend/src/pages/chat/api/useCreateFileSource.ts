@@ -1,12 +1,12 @@
 import {
   getThreadsControllerFindOneQueryKey,
   threadsControllerAddFileSource,
-} from "@/shared/api";
-import type { ThreadsControllerAddFileSourceBody } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api';
+import type { ThreadsControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 
 interface UseFileSourceProps {
   threadId?: string;
@@ -19,7 +19,7 @@ interface UploadFileParams {
 }
 
 export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
   const router = useRouter();
   const queryClient = useQueryClient();
   const createFileSourceMutation = useMutation({
@@ -50,22 +50,22 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       }
     },
     onError: (error: unknown) => {
-      console.error("Failed to create file source:", error);
-      showError(t("chatInput.fileSourceUploadError"));
+      console.error('Failed to create file source:', error);
+      showError(t('chatInput.fileSourceUploadError'));
     },
     onSettled: () => {
       if (!threadId) return;
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindOneQueryKey(threadId),
       });
-      router.invalidate();
+      void router.invalidate();
     },
   });
 
   function createFileSource({ file, name, description }: UploadFileParams) {
     if (!threadId) {
-      console.error("Thread ID is required");
-      showError("Thread ID is required");
+      console.error('Thread ID is required');
+      showError('Thread ID is required');
       return;
     }
 
@@ -84,8 +84,8 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     description,
   }: UploadFileParams) {
     if (!threadId) {
-      console.error("Thread ID is required");
-      showError("Thread ID is required");
+      console.error('Thread ID is required');
+      showError('Thread ID is required');
       return;
     }
 

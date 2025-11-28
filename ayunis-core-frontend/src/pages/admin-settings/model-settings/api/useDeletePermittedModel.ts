@@ -6,13 +6,13 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getAgentsControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
-} from "@/shared/api";
-import { useConfirmation } from "@/widgets/confirmation-modal";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+} from '@/shared/api';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export function useDeletePermittedModel() {
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const queryClient = useQueryClient();
   const { confirm } = useConfirmation();
   const deletePermittedModelMutation = useModelsControllerDeletePermittedModel({
@@ -33,7 +33,7 @@ export function useDeletePermittedModel() {
           queryKey,
           (old) => {
             if (!old) {
-              console.warn("No previous data found for optimistic update");
+              console.warn('No previous data found for optimistic update');
               return old;
             }
 
@@ -41,7 +41,7 @@ export function useDeletePermittedModel() {
               // Match by permittedModelId since that's what the delete endpoint expects
               if (item.permittedModelId === id) {
                 console.log(
-                  "Found matching model, updating isPermitted to false",
+                  'Found matching model, updating isPermitted to false',
                 );
                 return { ...item, isPermitted: false };
               }
@@ -53,7 +53,7 @@ export function useDeletePermittedModel() {
         return { previousData, queryKey };
       },
       onError: (error, _, context) => {
-        console.error("Error deleting permitted model", error);
+        console.error('Error deleting permitted model', error);
         if (context?.previousData && context?.queryKey) {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }
@@ -67,7 +67,7 @@ export function useDeletePermittedModel() {
           getThreadsControllerFindAllQueryKey(),
         ];
         queryKeys.forEach((queryKey) => {
-          queryClient.invalidateQueries({
+          void queryClient.invalidateQueries({
             queryKey,
           });
         });
@@ -77,11 +77,11 @@ export function useDeletePermittedModel() {
 
   function deletePermittedModel(id: string) {
     confirm({
-      title: t("models.deletePermittedModel.title"),
-      description: t("models.deletePermittedModel.description"),
-      confirmText: t("models.deletePermittedModel.confirmText"),
-      cancelText: t("models.deletePermittedModel.cancelText"),
-      variant: "destructive",
+      title: t('models.deletePermittedModel.title'),
+      description: t('models.deletePermittedModel.description'),
+      confirmText: t('models.deletePermittedModel.confirmText'),
+      cancelText: t('models.deletePermittedModel.cancelText'),
+      variant: 'destructive',
       onConfirm: () => {
         deletePermittedModelMutation.mutate({ id });
       },

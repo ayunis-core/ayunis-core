@@ -1,17 +1,17 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   useAgentsControllerUnassignMcpIntegration,
   getAgentsControllerListAgentMcpIntegrationsQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { McpIntegrationResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { showSuccess, showError } from "@/shared/lib/toast";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { showSuccess, showError } from '@/shared/lib/toast';
 
 /**
  * Hook to unassign an MCP integration from an agent with optimistic updates
  */
 export function useUnassignMcpIntegration() {
-  const { t } = useTranslation("agent");
+  const { t } = useTranslation('agent');
   const queryClient = useQueryClient();
 
   return useAgentsControllerUnassignMcpIntegration({
@@ -50,14 +50,14 @@ export function useUnassignMcpIntegration() {
             context.previousAssignments,
           );
         }
-        showError(t("mcpIntegrations.errors.failedToDisconnect"));
+        showError(t('mcpIntegrations.errors.failedToDisconnect'));
       },
       onSuccess: () => {
-        showSuccess(t("mcpIntegrations.success.disconnected"));
+        showSuccess(t('mcpIntegrations.success.disconnected'));
       },
       onSettled: (_data, _error, variables) => {
         // Always refetch after mutation
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getAgentsControllerListAgentMcpIntegrationsQueryKey(
             variables.agentId,
           ),

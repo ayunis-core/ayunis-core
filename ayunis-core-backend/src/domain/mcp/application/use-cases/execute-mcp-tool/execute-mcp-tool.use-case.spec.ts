@@ -178,7 +178,10 @@ describe('ExecuteMcpToolUseCase', () => {
     const integration = buildCustom();
     repository.findById.mockResolvedValue(integration);
     contextService.get.mockReturnValue(mockOrgId);
-    mcpClientService.callTool.mockResolvedValue({ isError: false, content: {} });
+    mcpClientService.callTool.mockResolvedValue({
+      isError: false,
+      content: {},
+    });
 
     await useCase.execute(buildCommand());
 

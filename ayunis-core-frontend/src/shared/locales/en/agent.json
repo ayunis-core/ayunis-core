@@ -1,4 +1,11 @@
 {
+  "shared": {
+    "badge": "Shared"
+  },
+  "tabs": {
+    "configuration": "Configuration",
+    "shares": "Share"
+  },
   "editDialog": {
     "title": "Edit agent",
     "description": "Make changes to your agent here. Click save when you're done.",
@@ -23,11 +30,6 @@
     "addSource": "Add Source",
     "disabledTooltip": "To upload documents, an embedding model must be enabled."
   },
-  "tools": {
-    "title": "Tools",
-    "description": "Configure which tools the agent can use",
-    "comingSoon": "Coming soon"
-  },
   "sources": {
     "addedSuccessfully": "Source added successfully",
     "removedSuccessfully": "Source removed successfully",
@@ -47,6 +49,39 @@
       "failedToConnect": "Failed to connect integration. Please try again.",
       "failedToDisconnect": "Failed to disconnect integration. Please try again.",
       "failedToLoad": "Failed to load integrations. Please try again."
+    }
+  },
+  "shares": {
+    "org": {
+      "title": "Share with organisation",
+      "descriptionOn": "This agent is shared with all users of your organisation",
+      "descriptionOff": "This agent is shared not with all users of your organisation"
+    },
+    "create": {
+      "button": "Share Agent",
+      "title": "Share Agent with Organization",
+      "description": "This will make the agent available to all members of your organization",
+      "confirm": "Share",
+      "cancel": "Cancel"
+    },
+    "delete": {
+      "tooltip": "Remove share",
+      "title": "Remove Share",
+      "description": "This will remove access to the agent for all members of your organization",
+      "confirm": "Remove",
+      "cancel": "Cancel"
+    },
+    "scope": {
+      "org": "Organization"
+    },
+    "sharedOn": "Shared on",
+    "success": {
+      "created": "Agent shared successfully",
+      "deleted": "Share removed successfully"
+    },
+    "error": {
+      "create": "Failed to share agent",
+      "delete": "Failed to remove share"
     }
   }
 }

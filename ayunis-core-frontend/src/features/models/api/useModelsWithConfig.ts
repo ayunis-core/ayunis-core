@@ -1,4 +1,4 @@
-import { useModelsControllerGetAvailableModelsWithConfig } from "@/shared/api";
+import { useModelsControllerGetAvailableModelsWithConfig } from '@/shared/api';
 
 export function useModelsWithConfig() {
   const {

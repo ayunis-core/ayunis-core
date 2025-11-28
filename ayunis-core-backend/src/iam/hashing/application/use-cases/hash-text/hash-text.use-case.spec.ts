@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HashTextUseCase } from './hash-text.use-case';
 import { HashTextCommand } from './hash-text.command';
 import { HashingHandler } from '../../ports/hashing.handler';
-import { HASHING_HANDLER } from '../../tokens/hashing-handler.token';
 import { HashingFailedError } from '../../hashing.errors';
 
 describe('HashTextUseCase', () => {
@@ -18,7 +17,7 @@ describe('HashTextUseCase', () => {
       providers: [
         HashTextUseCase,
         {
-          provide: HASHING_HANDLER,
+          provide: HashingHandler,
           useValue: mockHashingHandler,
         },
       ],

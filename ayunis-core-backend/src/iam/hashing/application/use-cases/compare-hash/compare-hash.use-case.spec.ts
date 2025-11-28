@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CompareHashUseCase } from './compare-hash.use-case';
 import { CompareHashCommand } from './compare-hash.command';
 import { HashingHandler } from '../../ports/hashing.handler';
-import { HASHING_HANDLER } from '../../tokens/hashing-handler.token';
 import { ComparisonFailedError } from '../../hashing.errors';
 
 describe('CompareHashUseCase', () => {
@@ -18,7 +17,7 @@ describe('CompareHashUseCase', () => {
       providers: [
         CompareHashUseCase,
         {
-          provide: HASHING_HANDLER,
+          provide: HashingHandler,
           useValue: mockHashingHandler,
         },
       ],

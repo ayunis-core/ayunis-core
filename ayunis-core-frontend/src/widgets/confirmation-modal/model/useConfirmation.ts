@@ -1,5 +1,5 @@
-import { useConfirmationContext } from "./ConfirmationProvider";
-import type { ConfirmationOptions } from "./types";
+import { useConfirmationContext } from './useConfirmationContext';
+import type { ConfirmationOptions } from './types';
 
 export function useConfirmation() {
   const { showConfirmation } = useConfirmationContext();

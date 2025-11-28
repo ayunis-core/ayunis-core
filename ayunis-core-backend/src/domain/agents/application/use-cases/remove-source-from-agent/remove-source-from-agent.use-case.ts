@@ -70,9 +70,7 @@ export class RemoveSourceFromAgentUseCase {
       this.logger.error('Error removing source from agent', {
         error: error as Error,
       });
-      throw new UnexpectedAgentError('Error removing source from agent', {
-        error: error as Error,
-      });
+      throw new UnexpectedAgentError(error);
     }
   }
 }

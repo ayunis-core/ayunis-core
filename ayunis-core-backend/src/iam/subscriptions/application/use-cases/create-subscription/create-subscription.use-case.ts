@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { IsFromOrgUseCase } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.use-case';
-import { IsFromOrgQuery } from 'src/iam/users/application/use-cases/is-from-org/is-from-org.query';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { ConfigService } from '@nestjs/config';
 import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
@@ -24,6 +22,9 @@ import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/fin
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SubscriptionCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/subscription-created.webhook-events';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 @Injectable()
 export class CreateSubscriptionUseCase {
@@ -31,41 +32,33 @@ export class CreateSubscriptionUseCase {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly isFromOrgUseCase: IsFromOrgUseCase,
     private readonly configService: ConfigService,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CreateSubscriptionCommand): Promise<Subscription> {
-    this.logger.log('Creating subscription', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-      renewalCycle: RenewalCycle.YEARLY,
-      noOfSeats: command.noOfSeats,
-    });
-
     try {
-      this.logger.debug('Checking if user is from organization');
-      const isFromOrg = await this.isFromOrgUseCase.execute(
-        new IsFromOrgQuery({
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        }),
-      );
-      if (!isFromOrg) {
-        this.logger.warn('Unauthorized subscription access attempt', {
-          userId: command.requestingUserId,
-          orgId: command.orgId,
-        });
+      const systemRole = this.contextService.get('systemRole');
+      const orgRole = this.contextService.get('role');
+      const orgId = this.contextService.get('orgId');
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
+      if (!isSuperAdmin && !isOrgAdmin) {
         throw new UnauthorizedSubscriptionAccessError(
           command.requestingUserId,
           command.orgId,
         );
       }
-
+      this.logger.log('Creating subscription', {
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        renewalCycle: RenewalCycle.YEARLY,
+        noOfSeats: command.noOfSeats,
+      });
       this.logger.debug('Checking if subscription already exists');
       const hasActiveSubscription =
         await this.hasActiveSubscriptionUseCase.execute(

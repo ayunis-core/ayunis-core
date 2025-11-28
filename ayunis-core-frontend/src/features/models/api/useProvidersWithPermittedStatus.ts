@@ -1,4 +1,4 @@
-import { useModelsControllerGetAllModelProviderInfosWithPermittedStatus } from "@/shared/api";
+import { useModelsControllerGetAllModelProviderInfosWithPermittedStatus } from '@/shared/api';
 
 export function useProvidersWithPermittedStatus() {
   const {

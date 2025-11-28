@@ -3,6 +3,7 @@ import { BaseRecord } from '../../../../../../common/db/base-record';
 import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRole } from '../../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { SystemRole } from '../../../../domain/value-objects/system-role.enum';
 
 @Entity({ name: 'users' })
 export class UserRecord extends BaseRecord {
@@ -24,9 +25,10 @@ export class UserRecord extends BaseRecord {
   })
   role: UserRole;
 
-  @Column({
-    type: 'uuid',
-  })
+  @Column({ type: 'enum', enum: SystemRole, default: SystemRole.CUSTOMER })
+  systemRole?: SystemRole;
+
+  @Column()
   orgId: UUID;
 
   @ManyToOne(() => OrgRecord, (org) => org.id, { nullable: false })

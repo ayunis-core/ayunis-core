@@ -1,0 +1,40 @@
+{
+  "header": {
+    "title": "Organizations",
+    "description": "Manage organizations across the platform."
+  },
+  "actions": {
+    "createOrg": "Create organization",
+    "viewDetails": "View details",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "edit": "Edit"
+  },
+  "dialog": {
+    "title": "Create organization",
+    "description": "Provide the basic information to set up a new organization.",
+    "nameLabel": "Organization name",
+    "namePlaceholder": "Acme Inc.",
+    "slugLabel": "Slug",
+    "slugDescription": "Used in URLs. Only lowercase letters, numbers and hyphens are allowed.",
+    "slugPlaceholder": "acme-inc",
+    "cancel": "Cancel",
+    "create": "Create organization"
+  },
+  "table": {
+    "name": "Name",
+    "slug": "Slug",
+    "status": "Status",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "actions": "Actions"
+  },
+  "statuses": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "empty": {
+    "title": "No organizations yet",
+    "description": "Organizations you create will show up here."
+  }
+}

@@ -9,7 +9,8 @@ import type {
 export type McpIntegration = McpIntegrationResponseDto;
 export type PredefinedConfig = PredefinedConfigResponseDto;
 
-export type CreatePredefinedIntegrationFormData = CreatePredefinedIntegrationDto;
+export type CreatePredefinedIntegrationFormData =
+  CreatePredefinedIntegrationDto;
 export type CreateCustomIntegrationFormData = CreateCustomIntegrationDto;
 export type UpdateIntegrationFormData = UpdateMcpIntegrationDto;
 

@@ -16,7 +16,7 @@ export class GetThreadDtoMapper {
       id: thread.id,
       userId: thread.userId,
       permittedModelId: thread.model?.id,
-      agentId: thread.agent?.id,
+      agentId: thread.agentId,
       title: thread.title,
       sources:
         thread.sourceAssignments?.map((sourceAssignment) =>

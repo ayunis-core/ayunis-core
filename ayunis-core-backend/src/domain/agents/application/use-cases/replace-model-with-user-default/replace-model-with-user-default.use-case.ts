@@ -48,6 +48,7 @@ export class ReplaceModelWithUserDefaultUseCase {
           new GetDefaultModelQuery({
             orgId: agent.model.orgId,
             userId: agent.userId,
+            blacklistedModelIds: [command.oldPermittedModelId],
           }),
         );
 

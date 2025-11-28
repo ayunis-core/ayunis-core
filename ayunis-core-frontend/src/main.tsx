@@ -1,15 +1,22 @@
-import { StrictMode } from "react";
-import ReactDOM from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import RootLayout from "./layouts/root-layout";
+import { applyDomPatch } from '@/shared/lib/dom-patch';
+applyDomPatch(); // Must be called before React renders
+
+import { initSentry } from '@/shared/lib/sentry';
+initSentry();
+
+import { StrictMode } from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import RootLayout from './layouts/root-layout';
+import { ErrorBoundary } from '@/shared/ui/error-boundary';
 
 // Import the generated route tree
-import { routeTree } from "./app/routeTree.gen.ts";
+import { routeTree } from './app/routeTree.gen.ts';
 
-import "./styles.css";
-import "./i18n.ts";
-import reportWebVitals from "./reportWebVitals.ts";
+import './styles.css';
+import './i18n.ts';
+import reportWebVitals from './reportWebVitals.ts';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -17,9 +24,10 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: unknown) => {
         // Don't retry on 4xx errors (client errors)
-        if (error?.status >= 400 && error?.status < 500) {
+        const status = (error as { status?: number })?.status;
+        if (status && status >= 400 && status < 500) {
           return false;
         }
         return failureCount < 3;
@@ -35,30 +43,32 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient, user: null },
-  defaultPreload: "intent",
+  defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
 });
 
 // Register the router instance for type safety
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }
 }
 
 // Render the app
-const rootElement = document.getElementById("app");
+const rootElement = document.getElementById('app');
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <RootLayout>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
-      </RootLayout>
+      <ErrorBoundary>
+        <RootLayout>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </RootLayout>
+      </ErrorBoundary>
     </StrictMode>,
   );
 }

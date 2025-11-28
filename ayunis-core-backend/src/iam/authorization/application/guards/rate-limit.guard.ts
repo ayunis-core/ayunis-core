@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 import {
   RATE_LIMIT_KEY,
   RateLimitOptions,
@@ -22,10 +23,17 @@ export class RateLimitGuard implements CanActivate {
   private readonly logger = new Logger(RateLimitGuard.name);
   private readonly store = new Map<string, RateLimitRecord>();
 
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly configService: ConfigService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     this.logger.debug('Rate limit guard canActivate');
+    const isProduction = this.configService.get<boolean>('app.isProduction');
+    if (!isProduction) {
+      return true;
+    }
 
     const rateLimitOptions = this.reflector.getAllAndOverride<RateLimitOptions>(
       RATE_LIMIT_KEY,

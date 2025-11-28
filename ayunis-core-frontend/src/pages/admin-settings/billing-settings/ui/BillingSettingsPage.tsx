@@ -1,17 +1,17 @@
-import SettingsLayout from "../../admin-settings-layout";
-import LicenseSeatsSection from "./LicenseSeatsSection";
-import BillingInfoSection from "./BillingInfoSection";
-import SubscriptionCancellationSection from "./SubscriptionCancellationSection";
-import SubscriptionGetStartedSection from "./SubscriptionGetStartedSection";
-import type { PriceResponseDto, SubscriptionResponseDto } from "@/shared/api";
+import SettingsLayout from '../../admin-settings-layout';
+import LicenseSeatsSection from './LicenseSeatsSection';
+import BillingInfoSection from './BillingInfoSection';
+import SubscriptionCancellationSection from './SubscriptionCancellationSection';
+import SubscriptionGetStartedSection from './SubscriptionGetStartedSection';
+import type { PriceResponseDto, SubscriptionResponseDto } from '@/shared/api';
 
 interface BillingSettingsPageProps {
-  subscription: SubscriptionResponseDto | null;
+  subscription?: SubscriptionResponseDto | null;
   subscriptionPrice: PriceResponseDto;
 }
 
 export default function BillingSettingsPage({
-  subscription,
+  subscription = null,
   subscriptionPrice,
 }: BillingSettingsPageProps) {
   const pageContentNoSubscription = (

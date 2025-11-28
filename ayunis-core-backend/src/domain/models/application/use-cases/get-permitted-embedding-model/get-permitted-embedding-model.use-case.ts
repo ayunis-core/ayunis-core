@@ -7,6 +7,9 @@ import {
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Injectable()
 export class GetPermittedEmbeddingModelUseCase {
@@ -14,6 +17,7 @@ export class GetPermittedEmbeddingModelUseCase {
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
@@ -24,6 +28,13 @@ export class GetPermittedEmbeddingModelUseCase {
     });
 
     try {
+      const orgId = this.contextService.get('orgId');
+      const systemRole = this.contextService.get('systemRole');
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      const isFromOrg = orgId === query.orgId;
+      if (!isFromOrg && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
       const model = await this.permittedModelsRepository.findOneEmbedding(
         query.orgId,
       );

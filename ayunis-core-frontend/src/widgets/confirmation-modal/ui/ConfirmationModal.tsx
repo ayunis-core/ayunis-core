@@ -5,10 +5,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/shadcn/dialog";
-import { Button } from "@/shared/ui/shadcn/button";
-import { useConfirmationContext } from "../model/ConfirmationProvider";
-import { useState } from "react";
+} from '@/shared/ui/shadcn/dialog';
+import { Button } from '@/shared/ui/shadcn/button';
+import { useConfirmationContext } from '../model/useConfirmationContext';
+import { useState } from 'react';
 
 export default function ConfirmationModal() {
   const { isOpen, options, hideConfirmation } = useConfirmationContext();
@@ -21,7 +21,7 @@ export default function ConfirmationModal() {
       await options.onConfirm();
       hideConfirmation();
     } catch (error) {
-      console.error("Error in confirmation callback:", error);
+      console.error('Error in confirmation callback:', error);
     } finally {
       setIsLoading(false);
     }
@@ -31,7 +31,7 @@ export default function ConfirmationModal() {
     hideConfirmation();
   };
 
-  const isDangerous = options.variant === "destructive";
+  const isDangerous = options.variant === 'destructive';
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -41,14 +41,14 @@ export default function ConfirmationModal() {
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
-            {options.cancelText || "Cancel"}
+            {options.cancelText || 'Cancel'}
           </Button>
           <Button
-            variant={isDangerous ? "destructive" : "default"}
-            onClick={handleConfirm}
+            variant={isDangerous ? 'destructive' : 'default'}
+            onClick={() => void handleConfirm()}
             disabled={isLoading}
           >
-            {isLoading ? "Loading..." : options.confirmText || "Confirm"}
+            {isLoading ? 'Loading...' : options.confirmText || 'Confirm'}
           </Button>
         </DialogFooter>
       </DialogContent>

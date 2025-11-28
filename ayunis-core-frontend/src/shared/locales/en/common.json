@@ -8,12 +8,13 @@
     "upgrade": "Upgrade",
     "accountSettings": "Account Settings",
     "adminSettings": "Admin Settings",
+    "superAdminSettings": "Super Admin Settings",
     "signOut": "Sign out",
     "chats": "Chats",
     "loadingChats": "Loading chats...",
     "failedToLoadChats": "Failed to load chats",
     "emptyChatsTitle": "Your chats will be displayed here.",
-    "emptyChatsDescription": "Interact with AyunisCore and ask any questions.",
+    "emptyChatsDescription": "Interact with Ayunis Core and ask any questions.",
     "untitled": "Untitled",
     "more": "More",
     "deleteChat": "Delete Chat",
@@ -26,7 +27,13 @@
     "placeholder": "Ask a question in Ayunis Core...",
     "selectPrompt": "Add a prompt from your library",
     "promptsLoadError": "Error loading prompts",
+    "promptsEmptyState": "No prompts created yet",
+    "createFirstPrompts": "Create prompt",
     "noPromptsAvailable": "No prompts available",
+    "createFirstAgent": "Create agent",
+    "addButtonTooltip": "Add",
+    "agentButtonTooltip": "Agents",
+    "agentsEmptyState": "No agent created yet",
     "fileSourceUploadError": "Error uploading file",
     "fileSourceDeleteError": "Error deleting file",
     "uploadFile": "Upload file",
@@ -52,5 +59,11 @@
       "previous": "Previous",
       "next": "Next"
     }
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please reload the page to continue.",
+    "reloadPage": "Reload page",
+    "tryAgain": "Try again"
   }
 }

@@ -4,12 +4,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Badge } from "@/shared/ui/shadcn/badge";
-import { useTranslation } from "react-i18next";
-import type { SubscriptionResponseDto } from "@/shared/api";
-import LicenseSeatsUpdateDialog from "./LicenseSeatsUpdateDialog";
+} from '@/shared/ui/shadcn/card';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import { useTranslation } from 'react-i18next';
+import type { SubscriptionResponseDto } from '@/shared/api';
+import LicenseSeatsUpdateDialog from './LicenseSeatsUpdateDialog';
 
 interface LicenseSeatsSectionProps {
   subscription: SubscriptionResponseDto;
@@ -18,20 +18,20 @@ interface LicenseSeatsSectionProps {
 export default function LicenseSeatsSection({
   subscription,
 }: LicenseSeatsSectionProps) {
-  const { t } = useTranslation("admin-settings-billing");
+  const { t } = useTranslation('admin-settings-billing');
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {t("licenseSeats.title")}
+          {t('licenseSeats.title')}
         </CardTitle>
         <CardAction>
           <LicenseSeatsUpdateDialog
             subscription={subscription}
             trigger={
               <Button size="sm" variant="outline">
-                {t("licenseSeats.manage")}
+                {t('licenseSeats.manage')}
               </Button>
             }
           />
@@ -42,7 +42,7 @@ export default function LicenseSeatsSection({
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">
-                {t("licenseSeats.usedSeats")}
+                {t('licenseSeats.usedSeats')}
               </span>
             </div>
             <Badge variant="outline">
@@ -53,7 +53,7 @@ export default function LicenseSeatsSection({
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">
-                {t("licenseSeats.availableSeats")}
+                {t('licenseSeats.availableSeats')}
               </span>
             </div>
             <Badge variant="outline">{subscription.availableSeats}</Badge>

@@ -19,7 +19,6 @@ describe('CreateAgentUseCase', () => {
   let agentRepository: jest.Mocked<AgentRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
   let assembleToolUseCase: jest.Mocked<AssembleToolUseCase>;
-  let contextService: jest.Mocked<ContextService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -68,7 +67,6 @@ describe('CreateAgentUseCase', () => {
       GetPermittedLanguageModelUseCase,
     );
     assembleToolUseCase = module.get(AssembleToolUseCase);
-    contextService = module.get(ContextService);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();

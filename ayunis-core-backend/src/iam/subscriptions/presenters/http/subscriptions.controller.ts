@@ -6,7 +6,6 @@ import {
   Body,
   Logger,
   Put,
-  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,7 +27,10 @@ import { CancelSubscriptionUseCase } from '../../application/use-cases/cancel-su
 import { CancelSubscriptionCommand } from '../../application/use-cases/cancel-subscription/cancel-subscription.command';
 import { UncancelSubscriptionUseCase } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.use-case';
 import { UncancelSubscriptionCommand } from '../../application/use-cases/uncancel-subscription/uncancel-subscription.command';
-import { SubscriptionResponseDto } from './dto/subscription-response.dto';
+import {
+  SubscriptionResponseDto,
+  SubscriptionResponseDtoNullable,
+} from './dto/subscription-response.dto';
 import { CreateSubscriptionRequestDto } from './dto/create-subscription-request.dto';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
 import { SubscriptionResponseMapper } from './mappers/subscription-response.mapper';
@@ -44,11 +46,13 @@ import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-bil
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
 import { GetCurrentPriceUseCase } from '../../application/use-cases/get-current-price/get-current-price.use-case';
 import { PriceResponseDto } from './dto/price-response.dto';
+import { SubscriptionNotFoundError } from '../../application/subscription.errors';
 
 @ApiTags('subscriptions')
 @Controller('subscriptions')
 @ApiExtraModels(
   SubscriptionResponseDto,
+  SubscriptionResponseDtoNullable,
   CreateSubscriptionRequestDto,
   ActiveSubscriptionResponseDto,
   UpdateBillingInfoDto,
@@ -78,7 +82,7 @@ export class SubscriptionsController {
     status: 200,
     description: 'Successfully retrieved subscription details',
     schema: {
-      $ref: getSchemaPath(SubscriptionResponseDto),
+      $ref: getSchemaPath(SubscriptionResponseDtoNullable),
     },
   })
   @ApiResponse({
@@ -97,27 +101,27 @@ export class SubscriptionsController {
   async getSubscription(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<SubscriptionResponseDto> {
+  ): Promise<SubscriptionResponseDtoNullable> {
     this.logger.log(`Getting subscription for org ${orgId} by user ${userId}`);
 
-    const query = new GetActiveSubscriptionQuery({
-      orgId,
-      requestingUserId: userId,
-    });
+    try {
+      const query = new GetActiveSubscriptionQuery({
+        orgId,
+        requestingUserId: userId,
+      });
 
-    const result = await this.getSubscriptionUseCase.execute(query);
+      const result = await this.getSubscriptionUseCase.execute(query);
 
-    if (!result) {
-      this.logger.warn(
-        `No subscription found for org ${orgId} or user ${userId} is not authorized`,
-      );
-      throw new NotFoundException('Subscription not found or access denied');
+      const responseDto = this.subscriptionResponseMapper.toDto(result);
+      this.logger.log(`Successfully retrieved subscription for org ${orgId}`);
+
+      return { subscription: responseDto };
+    } catch (error) {
+      if (error instanceof SubscriptionNotFoundError) {
+        return { subscription: undefined };
+      }
+      throw error;
     }
-
-    const responseDto = this.subscriptionResponseMapper.toDto(result);
-    this.logger.log(`Successfully retrieved subscription for org ${orgId}`);
-
-    return responseDto;
   }
 
   @Get('active')

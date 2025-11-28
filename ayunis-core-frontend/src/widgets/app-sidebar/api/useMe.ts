@@ -1,4 +1,4 @@
-import { useAuthenticationControllerMe } from "@/shared/api";
+import { useAuthenticationControllerMe } from '@/shared/api';
 
 export const useMe = () => {
   const { data, isLoading, error } = useAuthenticationControllerMe();

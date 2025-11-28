@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
 
@@ -8,8 +8,8 @@ html,
 body {
   @apply m-0 h-full overflow-hidden;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -20,7 +20,7 @@ body {
 
 code {
   font-family:
-    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 :root {
@@ -38,6 +38,7 @@ code {
   --muted-foreground: oklch(0.552 0.016 285.938);
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
+  --brand: #8178c3;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
   --border: oklch(0.92 0.004 286.32);
@@ -213,7 +214,7 @@ code {
 }
 
 .prose ol > li::before {
-  content: counter(list-counter) ".";
+  content: counter(list-counter) '.';
   position: absolute;
   font-weight: 400;
   color: hsl(var(--muted-foreground));
@@ -230,7 +231,7 @@ code {
 }
 
 .prose ul > li::before {
-  content: "•";
+  content: '•';
   position: absolute;
   color: hsl(var(--muted-foreground));
   font-weight: bold;
@@ -248,7 +249,7 @@ code {
   color: hsl(var(--foreground));
   border-left-width: 0.25rem;
   border-left-color: hsl(var(--border));
-  quotes: "\201C" "\201D" "\2018" "\2019";
+  quotes: '\201C' '\201D' '\2018' '\2019';
   margin-top: 1.6rem;
   margin-bottom: 1.6rem;
   padding-left: 1rem;

@@ -24,7 +24,6 @@ import { ValidateUserUseCase } from './application/use-cases/validate-user/valid
 import { IsValidPasswordUseCase } from './application/use-cases/is-valid-password/is-valid-password.use-case';
 import { UpdateUserNameUseCase } from './application/use-cases/update-user-name/update-user-name.use-case';
 import { UpdatePasswordUseCase } from './application/use-cases/update-password/update-password.use-case';
-import { IsFromOrgUseCase } from './application/use-cases/is-from-org/is-from-org.use-case';
 import { ConfirmEmailUseCase } from './application/use-cases/confirm-email/confirm-email.use-case';
 import { ResendEmailConfirmationUseCase } from './application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
 import { EmailConfirmationJwtService } from './application/services/email-confirmation-jwt.service';
@@ -35,14 +34,18 @@ import { UserResponseDtoMapper } from './presenters/http/mappers/user-response-d
 import { SendConfirmationEmailUseCase } from './application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { TriggerPasswordResetUseCase } from './application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password/reset-password.use-case';
+import { ValidatePasswordResetTokenUseCase } from './application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
 import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { InvitesModule } from '../invites/invites.module';
+import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserRecord]),
+    InvitesModule,
     HashingModule,
     EmailsModule,
     EmailTemplatesModule,
@@ -64,7 +67,7 @@ import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
       }),
     }),
   ],
-  controllers: [UserController],
+  controllers: [UserController, SuperAdminUsersController],
   providers: [
     {
       provide: UsersRepository,
@@ -90,7 +93,6 @@ import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
     UpdatePasswordUseCase,
-    IsFromOrgUseCase,
     ConfirmEmailUseCase,
     ResendEmailConfirmationUseCase,
     SendConfirmationEmailUseCase,
@@ -98,6 +100,7 @@ import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
     PasswordResetJwtService,
     SendPasswordResetEmailUseCase,
     ResetPasswordUseCase,
+    ValidatePasswordResetTokenUseCase,
     FindUserByEmailUseCase,
     // Services
     EmailConfirmationJwtService,
@@ -112,7 +115,6 @@ import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
     FindUserByIdUseCase,
     FindUsersByOrgIdUseCase,
     IsValidPasswordUseCase,
-    IsFromOrgUseCase,
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
     UsersRepository, // Export repository for seeding

@@ -49,8 +49,10 @@
         "downloadIcs": "Download .ics",
         "invalidRange": "End must be after start",
         "selectDate": "Select date"
-      },
-      "tool_use": "Generate answer"
+      }
+    },
+    "charts": {
+      "emptyState": "No chart data available"
     }
   },
   "newChat": {

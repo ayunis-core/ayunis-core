@@ -1,14 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import LoginPage from "@/pages/auth/login";
-import z from "zod";
+import { createFileRoute } from '@tanstack/react-router';
+import LoginPage from '@/pages/auth/login';
+import z from 'zod';
 
-export const Route = createFileRoute("/(onboarding)/login")({
+export const Route = createFileRoute('/(onboarding)/login')({
   validateSearch: z.object({
     emailVerified: z.boolean().optional(),
     redirect: z.string().optional(),
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { emailVerified, redirect } }) => {
+  loader: ({ deps: { emailVerified, redirect } }) => {
     return { emailVerified, redirect };
   },
   component: RouteComponent,

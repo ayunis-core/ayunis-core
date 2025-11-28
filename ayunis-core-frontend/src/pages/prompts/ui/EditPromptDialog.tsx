@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -14,14 +14,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Textarea } from "@/shared/ui/shadcn/textarea";
-import { Button } from "@/shared/ui/shadcn/button";
-import { useState, useEffect } from "react";
-import type { Prompt } from "../model/openapi";
-import { useEditPrompt } from "../api/useEditPrompt";
-import { useTranslation } from "react-i18next";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Textarea } from '@/shared/ui/shadcn/textarea';
+import { Button } from '@/shared/ui/shadcn/button';
+import { useState, useEffect } from 'react';
+import type { Prompt } from '../model/openapi';
+import { useEditPrompt } from '../api/useEditPrompt';
+import { useTranslation } from 'react-i18next';
 
 interface EditPromptDialogProps {
   trigger: React.ReactNode;
@@ -32,7 +32,7 @@ export default function EditPromptDialog({
   trigger,
   selectedPrompt,
 }: EditPromptDialogProps) {
-  const { t } = useTranslation("prompts");
+  const { t } = useTranslation('prompts');
   const [isOpen, setIsOpen] = useState(false);
   const { form, onSubmit, isLoading } = useEditPrompt({
     onSuccessCallback: () => {
@@ -60,21 +60,26 @@ export default function EditPromptDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>{t("editDialog.title")}</DialogTitle>
-          <DialogDescription>{t("editDialog.description")}</DialogDescription>
+          <DialogTitle>{t('editDialog.title')}</DialogTitle>
+          <DialogDescription>{t('editDialog.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <input type="hidden" {...form.register("id")} />
+          <form
+            onSubmit={(e) => {
+              void form.handleSubmit(onSubmit)(e);
+            }}
+            className="space-y-6"
+          >
+            <input type="hidden" {...form.register('id')} />
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("editDialog.form.titleLabel")}</FormLabel>
+                  <FormLabel>{t('editDialog.form.titleLabel')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("editDialog.form.titlePlaceholder")}
+                      placeholder={t('editDialog.form.titlePlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -87,10 +92,10 @@ export default function EditPromptDialog({
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("editDialog.form.contentLabel")}</FormLabel>
+                  <FormLabel>{t('editDialog.form.contentLabel')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={t("editDialog.form.contentPlaceholder")}
+                      placeholder={t('editDialog.form.contentPlaceholder')}
                       className="min-h-[300px] resize-none"
                       {...field}
                     />
@@ -106,12 +111,12 @@ export default function EditPromptDialog({
                 onClick={handleCancel}
                 disabled={isLoading}
               >
-                {t("editDialog.buttons.cancel")}
+                {t('editDialog.buttons.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading
-                  ? t("editDialog.buttons.saving")
-                  : t("editDialog.buttons.save")}
+                  ? t('editDialog.buttons.saving')
+                  : t('editDialog.buttons.save')}
               </Button>
             </DialogFooter>
           </form>

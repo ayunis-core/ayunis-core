@@ -7,7 +7,6 @@ import { HashTextCommand } from '../../../../hashing/application/use-cases/hash-
 import {
   UserAlreadyExistsError,
   UserInvalidInputError,
-  UserError,
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import { HashingError } from '../../../../hashing/application/hashing.errors';
@@ -15,6 +14,7 @@ import { UserCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-even
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ConfigService } from '@nestjs/config';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -102,8 +102,7 @@ export class CreateUserUseCase {
 
       return createdUser;
     } catch (error) {
-      if (error instanceof UserError || error instanceof HashingError) {
-        // Already logged and properly typed error, just rethrow
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('User creation failed', {

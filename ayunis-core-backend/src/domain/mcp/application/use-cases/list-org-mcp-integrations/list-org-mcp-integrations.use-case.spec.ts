@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { ListOrgMcpIntegrationsUseCase } from './list-org-mcp-integrations.use-case';
-import { ListOrgMcpIntegrationsQuery } from './list-org-mcp-integrations.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
@@ -12,7 +10,8 @@ import {
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { UUID, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('ListOrgMcpIntegrationsUseCase', () => {
   let useCase: ListOrgMcpIntegrationsUseCase;
@@ -72,38 +71,33 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       // Arrange
       const now = new Date();
       const mockIntegrations: McpIntegration[] = [
-        new PredefinedMcpIntegration(
-          mockIntegrationId1,
-          'Test MCP 1',
-          mockOrgId,
-          PredefinedMcpIntegrationSlug.TEST,
-          true,
-          undefined,
-          undefined,
-          undefined,
-          now,
-          now,
-        ),
-        new CustomMcpIntegration(
-          mockIntegrationId2,
-          'Custom MCP',
-          mockOrgId,
-          'http://localhost:3101/mcp',
-          true,
-          undefined,
-          undefined,
-          undefined,
-          now,
-          now,
-        ),
+        new PredefinedMcpIntegration({
+          id: mockIntegrationId1,
+          name: 'Test MCP 1',
+          orgId: mockOrgId,
+          slug: PredefinedMcpIntegrationSlug.TEST,
+          serverUrl: 'http://localhost:3100/mcp',
+          auth: new NoAuthMcpIntegrationAuth(),
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        }),
+        new CustomMcpIntegration({
+          id: mockIntegrationId2,
+          name: 'Custom MCP',
+          orgId: mockOrgId,
+          serverUrl: 'http://localhost:3101/mcp',
+          auth: new NoAuthMcpIntegrationAuth(),
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        }),
       ];
 
       jest.spyOn(repository, 'findAll').mockResolvedValue(mockIntegrations);
 
-      const query = new ListOrgMcpIntegrationsQuery();
-
       // Act
-      const result = await useCase.execute(query);
+      const result = await useCase.execute();
 
       // Assert
       expect(result).toEqual(mockIntegrations);
@@ -117,10 +111,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       // Arrange
       jest.spyOn(repository, 'findAll').mockResolvedValue([]);
 
-      const query = new ListOrgMcpIntegrationsQuery();
-
       // Act
-      const result = await useCase.execute(query);
+      const result = await useCase.execute();
 
       // Assert
       expect(result).toEqual([]);
@@ -134,15 +126,9 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       // Arrange
       jest.spyOn(contextService, 'get').mockReturnValue(undefined);
 
-      const query = new ListOrgMcpIntegrationsQuery();
-
       // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(useCase.execute(query)).rejects.toThrow(
-        'User not authenticated',
-      );
+      await expect(useCase.execute()).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute()).rejects.toThrow('User not authenticated');
       expect(repository.findAll).not.toHaveBeenCalled();
     });
 
@@ -150,10 +136,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       // Arrange
       jest.spyOn(repository, 'findAll').mockResolvedValue([]);
 
-      const query = new ListOrgMcpIntegrationsQuery();
-
       // Act
-      await useCase.execute(query);
+      await useCase.execute();
 
       // Assert
       expect(contextService.get).toHaveBeenCalledWith('orgId');
@@ -165,10 +149,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       const unexpectedError = new Error('Database connection failed');
       jest.spyOn(repository, 'findAll').mockRejectedValue(unexpectedError);
 
-      const query = new ListOrgMcpIntegrationsQuery();
-
       // Act & Assert
-      await expect(useCase.execute(query)).rejects.toThrow(UnexpectedMcpError);
+      await expect(useCase.execute()).rejects.toThrow(UnexpectedMcpError);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         'Unexpected error listing integrations',
         { error: unexpectedError },
@@ -179,10 +161,8 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       // Arrange
       jest.spyOn(repository, 'findAll').mockResolvedValue([]);
 
-      const query = new ListOrgMcpIntegrationsQuery();
-
       // Act
-      await useCase.execute(query);
+      await useCase.execute();
 
       // Assert
       expect(loggerLogSpy).toHaveBeenCalledWith('listOrgMcpIntegrations');

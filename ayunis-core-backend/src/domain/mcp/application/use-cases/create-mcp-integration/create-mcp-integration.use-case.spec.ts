@@ -68,7 +68,7 @@ describe('CreateMcpIntegrationUseCase', () => {
     repository = {
       save: jest.fn(async (integration) => {
         savedIntegrations.push(integration as McpIntegration);
-        return integration as any;
+        return integration;
       }),
       findById: jest.fn(),
       findAll: jest.fn(),
@@ -91,7 +91,26 @@ describe('CreateMcpIntegrationUseCase', () => {
     factorySpy = jest.spyOn(factory, 'createIntegration');
 
     authFactory = new McpIntegrationAuthFactory();
-    authSpy = jest.spyOn(authFactory, 'createAuth');
+    authSpy = jest
+      .spyOn(authFactory, 'createAuth')
+      .mockImplementation((params: any): any => {
+        // Mock implementation that returns appropriate auth objects
+        switch (params.method) {
+          case McpAuthMethod.NO_AUTH:
+            return new NoAuthMcpIntegrationAuth();
+          case McpAuthMethod.BEARER_TOKEN:
+            return new BearerMcpIntegrationAuth({
+              authToken: params.authToken || 'mock-token',
+            });
+          case McpAuthMethod.CUSTOM_HEADER:
+            return new CustomHeaderMcpIntegrationAuth({
+              secret: params.secret,
+              headerName: params.headerName,
+            });
+          default:
+            throw new Error(`Unhandled auth method in mock: ${params.method}`);
+        }
+      });
 
     encryption = {
       encrypt: jest.fn(),
@@ -108,18 +127,14 @@ describe('CreateMcpIntegrationUseCase', () => {
         { provide: McpIntegrationsRepositoryPort, useValue: repository },
         { provide: PredefinedMcpIntegrationRegistry, useValue: registry },
         { provide: ContextService, useValue: context },
-        McpIntegrationFactory,
-        McpIntegrationAuthFactory,
+        { provide: McpIntegrationFactory, useValue: factory },
+        { provide: McpIntegrationAuthFactory, useValue: authFactory },
         { provide: McpCredentialEncryptionPort, useValue: encryption },
         { provide: ValidateMcpIntegrationUseCase, useValue: validateUseCase },
       ],
     }).compile();
 
     useCase = module.get(CreateMcpIntegrationUseCase);
-    factory = module.get(McpIntegrationFactory);
-    authFactory = module.get(McpIntegrationAuthFactory);
-    factorySpy = jest.spyOn(factory, 'createIntegration');
-    authSpy = jest.spyOn(authFactory, 'createAuth');
   });
 
   describe('predefined integrations', () => {
@@ -148,12 +163,14 @@ describe('CreateMcpIntegrationUseCase', () => {
       registry.isValidSlug.mockReturnValue(true);
       registry.getConfig.mockReturnValue(config);
       repository.findByOrgIdAndSlug.mockResolvedValue(null);
+      encryption.encrypt.mockResolvedValue('encrypted-token');
 
       const result = await useCase.execute(command);
 
+      expect(encryption.encrypt).toHaveBeenCalledWith('plaintext-token');
       expect(authSpy).toHaveBeenCalledWith({
         method: McpAuthMethod.BEARER_TOKEN,
-        authToken: 'plaintext-token',
+        authToken: 'encrypted-token',
       });
       expect(factorySpy).toHaveBeenCalledWith({
         kind: McpIntegrationKind.PREDEFINED,

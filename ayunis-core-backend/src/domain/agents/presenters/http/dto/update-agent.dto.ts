@@ -1,14 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  Length,
-  IsUUID,
-  ValidateNested,
-  IsArray,
-} from 'class-validator';
+import { IsString, IsNotEmpty, Length, IsUUID } from 'class-validator';
 import { UUID } from 'crypto';
-import { Type } from 'class-transformer';
 
 export class UpdateAgentDto {
   @ApiProperty({

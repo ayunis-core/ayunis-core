@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreateThreadUseCase } from './create-thread.use-case';
@@ -113,7 +112,7 @@ describe('CreateThreadUseCase', () => {
       const mockCreatedThread = new Thread({
         userId: mockUserId,
         model: mockModel,
-        agent: undefined,
+        agentId: undefined,
         messages: [],
         createdAt: now,
         updatedAt: now,
@@ -142,7 +141,7 @@ describe('CreateThreadUseCase', () => {
         expect.objectContaining({
           userId: mockUserId,
           model: mockModel,
-          agent: undefined,
+          agentId: undefined,
         }),
       );
       expect(contextService.get).toHaveBeenCalledWith('userId');
@@ -192,7 +191,7 @@ describe('CreateThreadUseCase', () => {
       const mockCreatedThread = new Thread({
         userId: mockUserId,
         model: mockModel,
-        agent: undefined,
+        agentId: undefined,
         messages: [],
         createdAt: now,
         updatedAt: now,

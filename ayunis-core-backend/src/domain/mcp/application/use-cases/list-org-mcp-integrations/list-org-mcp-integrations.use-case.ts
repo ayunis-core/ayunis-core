@@ -1,7 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ListOrgMcpIntegrationsQuery } from './list-org-mcp-integrations.query';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
@@ -21,12 +20,11 @@ export class ListOrgMcpIntegrationsUseCase {
 
   /**
    * Executes the use case to list all integrations for the organization.
-   * @param query The query (no parameters needed)
    * @returns Array of MCP integrations (empty array if none)
    * @throws UnauthorizedException if user is not authenticated
    * @throws UnexpectedMcpError if an unexpected error occurs
    */
-  async execute(query: ListOrgMcpIntegrationsQuery): Promise<McpIntegration[]> {
+  async execute(): Promise<McpIntegration[]> {
     this.logger.log('listOrgMcpIntegrations');
 
     try {

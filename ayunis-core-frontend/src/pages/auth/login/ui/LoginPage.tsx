@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Form,
   FormControl,
@@ -7,13 +7,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import OnboardingLayout from "@/layouts/onboarding-layout";
-import { useLogin } from "../api/useLogin";
-import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
-import { useRedirectNotification } from "@/features/useRedirectNotification";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import OnboardingLayout from '@/layouts/onboarding-layout';
+import { useLogin } from '../api/useLogin';
+import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
+import { useRedirectNotification } from '@/features/useRedirectNotification';
 
 export function LoginPage({
   redirect,
@@ -23,42 +23,47 @@ export function LoginPage({
   emailVerified?: boolean;
 }) {
   const { form, onSubmit, isLoading } = useLogin({ redirect });
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
 
   useRedirectNotification({
     show: emailVerified ?? false,
-    text: t("login.emailVerified"),
+    text: t('login.emailVerified'),
   });
 
   useRedirectNotification({
     show: !!redirect,
-    text: t("login.redirect"),
+    text: t('login.redirect'),
   });
 
   return (
     <OnboardingLayout
-      title={t("login.title")}
-      description={t("login.description")}
+      title={t('login.title')}
+      description={t('login.description')}
       footer={
         <>
-          {t("login.noAccount")}{" "}
+          {t('login.noAccount')}{' '}
           <Link to="/register" className="font-medium text-primary underline">
-            {t("login.createAccount")}
+            {t('login.createAccount')}
           </Link>
         </>
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("login.email")}</FormLabel>
+                <FormLabel>{t('login.email')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("login.emailPlaceholder")}
+                    placeholder={t('login.emailPlaceholder')}
                     type="email"
                     data-testid="email"
                     {...field}
@@ -73,10 +78,10 @@ export function LoginPage({
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("login.password")}</FormLabel>
+                <FormLabel>{t('login.password')}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("login.passwordPlaceholder")}
+                    placeholder={t('login.passwordPlaceholder')}
                     type="password"
                     data-testid="password"
                     {...field}
@@ -87,7 +92,7 @@ export function LoginPage({
                     to="/password/forgot"
                     className="text-sm text-muted-foreground"
                   >
-                    {t("login.forgotPassword")}
+                    {t('login.forgotPassword')}
                   </Link>
                 </FormDescription>
                 <FormMessage />
@@ -98,8 +103,9 @@ export function LoginPage({
             type="submit"
             className="w-full"
             disabled={isLoading}
-            data-testid="submit">
-            {isLoading ? t("login.signingIn") : t("login.signInButton")}
+            data-testid="submit"
+          >
+            {isLoading ? t('login.signingIn') : t('login.signInButton')}
           </Button>
         </form>
       </Form>

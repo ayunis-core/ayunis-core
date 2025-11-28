@@ -3,6 +3,9 @@ import { ManageOrgDefaultModelCommand } from './manage-org-default-model.command
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class ManageOrgDefaultModelUseCase {
@@ -10,6 +13,7 @@ export class ManageOrgDefaultModelUseCase {
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
@@ -24,8 +28,16 @@ export class ManageOrgDefaultModelUseCase {
       // First, verify that the permitted model exists and belongs to the organization
       const permittedModel = await this.permittedModelsRepository.findOne({
         id: command.permittedModelId,
-        orgId: command.orgId,
       });
+
+      // Check if the user is authorized to manage the organization default model
+      const orgId = this.contextService.get('orgId');
+      const systemRole = this.contextService.get('systemRole');
+      const isFromOrg = orgId === permittedModel?.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isFromOrg && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
+      }
 
       if (!permittedModel) {
         this.logger.error('Permitted model not found', {

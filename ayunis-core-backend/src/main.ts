@@ -1,10 +1,14 @@
+// Load environment variables first
+import 'dotenv/config';
+// Sentry - !! Initialize Sentry before any other imports
+import './common/sentry/instrument';
 // Utils
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-// import { WinstonModule } from 'nest-winston';
-// import { logger } from './common/logger/logger';
+import { WinstonModule } from 'nest-winston';
+import { logger } from './common/logger/logger';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
@@ -16,7 +20,7 @@ class Bootstrap {
 
   public static async start() {
     const app = await NestFactory.create(AppModule, {
-      // logger: WinstonModule.createLogger({ instance: logger }),
+      logger: WinstonModule.createLogger({ instance: logger }),
     });
 
     this.configureApp(app);

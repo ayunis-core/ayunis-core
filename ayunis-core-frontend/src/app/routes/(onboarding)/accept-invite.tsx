@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import InviteAcceptPage, { InviteErrorPage } from "@/pages/auth/invite-accept";
-import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute } from '@tanstack/react-router';
+import InviteAcceptPage, { InviteErrorPage } from '@/pages/auth/invite-accept';
+import { queryOptions } from '@tanstack/react-query';
 import {
   getInvitesControllerGetInviteByTokenQueryKey,
   invitesControllerGetInviteByToken,
   appControllerIsCloud,
-} from "@/shared/api";
-import { z } from "zod";
+} from '@/shared/api';
+import { z } from 'zod';
 
 const inviteQueryOptions = (inviteToken: string) =>
   queryOptions({
@@ -18,7 +18,7 @@ const searchSchema = z.object({
   token: z.string(),
 });
 
-export const Route = createFileRoute("/(onboarding)/accept-invite")({
+export const Route = createFileRoute('/(onboarding)/accept-invite')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { token }, context: { queryClient } }) => {

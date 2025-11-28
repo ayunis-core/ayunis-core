@@ -1,2 +1,2 @@
-import { ForgotPasswordPage } from "./ui/ForgotPasswordPage";
+import { ForgotPasswordPage } from './ui/ForgotPasswordPage';
 export default ForgotPasswordPage;

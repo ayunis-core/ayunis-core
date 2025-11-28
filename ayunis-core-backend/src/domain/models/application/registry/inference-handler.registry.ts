@@ -34,9 +34,9 @@ export class InferenceHandlerRegistry {
    * @throws ModelProviderNotSupportedError if provider not registered (non-test only)
    */
   getHandler(provider: ModelProvider): InferenceHandler {
-    this.logger.log('getHandler', provider);
-    const isTest = this.configService.get('NODE_ENV') === 'test';
+    const isTest = this.configService.get<boolean>('app.isTest');
     if (isTest) {
+      this.logger.log('Using mock handler for non-streaming');
       return this.mockHandler;
     }
     const handler = this.handlers.get(provider);

@@ -1,7 +1,7 @@
-import { EmailConfirmPage } from "@/pages/auth/email-confirm";
-import { createFileRoute } from "@tanstack/react-router";
+import { EmailConfirmPage } from '@/pages/auth/email-confirm';
+import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/(onboarding)/email-confirm")({
+export const Route = createFileRoute('/(onboarding)/email-confirm')({
   component: RouteComponent,
 });
 

@@ -1,2 +1,2 @@
-import { ResetPasswordPage } from "./ui/ResetPasswordPage";
+import { ResetPasswordPage } from './ui/ResetPasswordPage';
 export default ResetPasswordPage;

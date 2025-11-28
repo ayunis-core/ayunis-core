@@ -25,7 +25,7 @@ import { LocalThreadsRepository } from './infrastructure/persistence/local/local
 import { GetThreadsDtoMapper } from './presenters/http/mappers/get-threads.mapper';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { ReplaceAgentWithUserDefaultUseCase } from './application/use-cases/replace-agent-with-user-default/replace-agent-with-user-default.use-case';
+import { ReplaceAgentWithDefaultModelUseCase } from './application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
 import { AgentsModule } from '../agents/agents.module';
 import { UpdateThreadAgentUseCase } from './application/use-cases/update-thread-agent/update-thread-agent.use-case';
 import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-agent-from-thread/remove-agent-from-thread.use-case';
@@ -59,7 +59,7 @@ import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-age
     UpdateThreadAgentUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
-    ReplaceAgentWithUserDefaultUseCase,
+    ReplaceAgentWithDefaultModelUseCase,
     RemoveAgentFromThreadUseCase,
     // Mappers
     SourceDtoMapper,
@@ -69,19 +69,16 @@ import { RemoveAgentFromThreadUseCase } from './application/use-cases/remove-age
   ],
   exports: [
     // Export use cases
-    CreateThreadUseCase,
     FindThreadUseCase,
     FindAllThreadsUseCase,
-    DeleteThreadUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
     RemoveSourceFromThreadUseCase,
     GetThreadSourcesUseCase,
     UpdateThreadTitleUseCase,
-    UpdateThreadModelUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
-    ReplaceAgentWithUserDefaultUseCase,
+    ReplaceAgentWithDefaultModelUseCase,
     // Export mappers
     GetThreadDtoMapper,
     GetThreadsDtoMapper,

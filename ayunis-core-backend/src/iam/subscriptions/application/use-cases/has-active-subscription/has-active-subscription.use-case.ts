@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { SubscriptionError } from '../../subscription.errors';
 import { ConfigService } from '@nestjs/config';
 import { isActive } from '../../util/is-active';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class HasActiveSubscriptionUseCase {
@@ -47,8 +47,7 @@ export class HasActiveSubscriptionUseCase {
 
       return false;
     } catch (error) {
-      if (error instanceof SubscriptionError) {
-        // Already logged and properly typed error, just rethrow
+      if (error instanceof ApplicationError) {
         throw error;
       }
       this.logger.error('Checking active subscription failed', {

@@ -1,12 +1,12 @@
-import { useMemo, useState, useEffect } from "react";
-import type { ToolUseMessageContent } from "../../model/openapi";
-import { useTranslation } from "react-i18next";
-import { Label } from "@/shared/ui/shadcn/label";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Textarea } from "@/shared/ui/shadcn/textarea";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Mail } from "lucide-react";
-import { cn } from "@/shared/lib/shadcn/utils";
+import { useMemo, useState, useEffect } from 'react';
+import type { ToolUseMessageContent } from '../../model/openapi';
+import { useTranslation } from 'react-i18next';
+import { Label } from '@/shared/ui/shadcn/label';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Textarea } from '@/shared/ui/shadcn/textarea';
+import { Button } from '@/shared/ui/shadcn/button';
+import { Mail } from 'lucide-react';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 export default function SendEmailWidget({
   content,
@@ -15,41 +15,48 @@ export default function SendEmailWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const params = (content.params || {}) as {
     subject?: string;
     body?: string;
     to?: string;
   };
 
-  const [subject, setSubject] = useState<string>(params.subject || "");
-  const [body, setBody] = useState<string>(params.body || "");
-  const [to, setTo] = useState<string>(params.to || "");
+  // Derive initial values directly from params to avoid setState in useEffect
+  const initialSubject = params.subject || '';
+  const initialBody = params.body || '';
+  const initialTo = params.to || '';
+
+  const [subject, setSubject] = useState<string>(initialSubject);
+  const [body, setBody] = useState<string>(initialBody);
+  const [to, setTo] = useState<string>(initialTo);
   const [copied, setCopied] = useState<boolean>(false);
 
+  // Reset state when content changes (for new streaming content)
   useEffect(() => {
-    setSubject(params.subject || "");
-    setBody(params.body || "");
-    setTo(params.to || "");
-  }, [params.subject, params.body, params.to]);
+    setSubject(initialSubject);
+    setBody(initialBody);
+    setTo(initialTo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content.id]); // Only reset when content changes, not on every param change
 
   const mailtoHref = useMemo(() => {
-    const mailtoPath = to ? encodeURIComponent(to) : "";
+    const mailtoPath = to ? encodeURIComponent(to) : '';
 
     // Normalize line breaks, then force CRLF in the percent-encoded output for maximum client compatibility
-    const normalizedBody = (body || "").replace(/\r\n|\r|\n/g, "\n");
+    const normalizedBody = (body || '').replace(/\r\n|\r|\n/g, '\n');
     const encodedBodyWithCrlf = encodeURIComponent(normalizedBody).replace(
       /%0A/g,
-      "%0D%0A",
+      '%0D%0A',
     );
     const queryParams: string[] = [];
-    if ((subject || "").length > 0) {
+    if ((subject || '').length > 0) {
       queryParams.push(`subject=${encodeURIComponent(subject)}`);
     }
     if (normalizedBody.length > 0) {
       queryParams.push(`body=${encodedBodyWithCrlf}`);
     }
-    const query = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+    const query = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
     return `mailto:${mailtoPath}${query}`;
   }, [subject, body, to]);
 
@@ -61,14 +68,14 @@ export default function SendEmailWidget({
       <div className="space-y-2 w-full">
         <Label
           htmlFor={`send-email-to-${content.id}`}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.send_email.to")}
+          {t('chat.tools.send_email.to')}
         </Label>
         <Input
-          className={cn("w-full", isStreaming && "animate-pulse")}
+          className={cn('w-full', isStreaming && 'animate-pulse')}
           id={`send-email-to-${content.id}`}
-          placeholder={t("chat.tools.send_email.toPlaceholder")}
+          placeholder={t('chat.tools.send_email.toPlaceholder')}
           value={to}
           onChange={(e) => setTo(e.target.value)}
         />
@@ -76,14 +83,14 @@ export default function SendEmailWidget({
       <div className="space-y-2 w-full">
         <Label
           htmlFor={`send-email-subject-${content.id}`}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.send_email.subject")}
+          {t('chat.tools.send_email.subject')}
         </Label>
         <Input
-          className={cn("w-full", isStreaming && "animate-pulse")}
+          className={cn('w-full', isStreaming && 'animate-pulse')}
           id={`send-email-subject-${content.id}`}
-          placeholder={t("chat.tools.send_email.subjectPlaceholder")}
+          placeholder={t('chat.tools.send_email.subjectPlaceholder')}
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
         />
@@ -91,41 +98,43 @@ export default function SendEmailWidget({
       <div className="space-y-2 w-full">
         <Label
           htmlFor={`send-email-body-${content.id}`}
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
         >
-          {t("chat.tools.send_email.body")}
+          {t('chat.tools.send_email.body')}
         </Label>
         <Textarea
           id={`send-email-body-${content.id}`}
-          placeholder={t("chat.tools.send_email.bodyPlaceholder")}
+          placeholder={t('chat.tools.send_email.bodyPlaceholder')}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          className={cn("h-40", isStreaming && "animate-pulse")}
+          className={cn('h-40', isStreaming && 'animate-pulse')}
         />
       </div>
       <div className="w-full flex gap-2">
-        <Button asChild className={cn(isStreaming && "animate-pulse")}>
+        <Button asChild className={cn(isStreaming && 'animate-pulse')}>
           <a href={mailtoHref} target="_blank" rel="noopener noreferrer">
-            <Mail className="h-4 w-4" /> {t("chat.tools.send_email.open")}
+            <Mail className="h-4 w-4" /> {t('chat.tools.send_email.open')}
           </a>
         </Button>
         <Button
-          className={cn(isStreaming && "animate-pulse")}
+          className={cn(isStreaming && 'animate-pulse')}
           type="button"
           variant="secondary"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(body);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1200);
-            } catch (e) {
-              // noop
-            }
+          onClick={() => {
+            void (async () => {
+              try {
+                await navigator.clipboard.writeText(body);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1200);
+              } catch {
+                // noop
+              }
+            })();
           }}
         >
           {copied
-            ? t("chat.tools.send_email.copied")
-            : t("chat.tools.send_email.copyBody")}
+            ? t('chat.tools.send_email.copied')
+            : t('chat.tools.send_email.copyBody')}
         </Button>
       </div>
     </div>

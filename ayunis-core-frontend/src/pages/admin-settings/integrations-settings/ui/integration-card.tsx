@@ -1,22 +1,22 @@
-import { useTranslation } from "react-i18next";
-import { Button } from "@/shared/ui/shadcn/button";
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Switch } from "@/shared/ui/shadcn/switch";
-import { MoreVertical, Loader2 } from "lucide-react";
-import type { McpIntegration } from "../model/types";
-import { getIntegrationTypeLabel } from "../lib/helpers";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Switch } from '@/shared/ui/shadcn/switch';
+import { MoreVertical, Loader2 } from 'lucide-react';
+import type { McpIntegration } from '../model/types';
+import { getIntegrationTypeLabel } from '../lib/helpers';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from "@/shared/ui/shadcn/item";
+} from '@/shared/ui/shadcn/item';
 
 interface IntegrationCardProps {
   integration: McpIntegration;
@@ -37,7 +37,7 @@ export function IntegrationCard({
   isTogglingEnabled = false,
   isValidating = false,
 }: IntegrationCardProps) {
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
   const typeLabel = getIntegrationTypeLabel(integration.type);
   const integrationKey = `integration-${integration.id}`;
 
@@ -46,7 +46,7 @@ export function IntegrationCard({
       <ItemContent>
         <ItemTitle>{integration.name}</ItemTitle>
         <ItemDescription>
-          {integration.type === "predefined"
+          {integration.type === 'predefined'
             ? ``
             : `${typeLabel} - ${integration.serverUrl}`}
         </ItemDescription>
@@ -66,25 +66,25 @@ export function IntegrationCard({
         >
           {isValidating && <Loader2 className="h-4 w-4 animate-spin" />}
           {isValidating
-            ? t("integrations.card.testing")
-            : t("integrations.card.testConnection")}
+            ? t('integrations.card.testing')
+            : t('integrations.card.testConnection')}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
               <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">{t("integrations.card.openMenu")}</span>
+              <span className="sr-only">{t('integrations.card.openMenu')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(integration)}>
-              {t("integrations.card.edit")}
+              {t('integrations.card.edit')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(integration)}
               className="text-red-600"
             >
-              {t("integrations.card.delete")}
+              {t('integrations.card.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

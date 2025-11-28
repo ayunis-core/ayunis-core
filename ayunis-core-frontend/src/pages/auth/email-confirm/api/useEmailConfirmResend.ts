@@ -1,17 +1,17 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useUserControllerResendEmailConfirmation } from "@/shared/api/generated/ayunisCoreAPI";
-import * as z from "zod";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useUserControllerResendEmailConfirmation } from '@/shared/api/generated/ayunisCoreAPI';
+import * as z from 'zod';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
 
 export function useEmailConfirmResend() {
   const resendEmailMutation = useUserControllerResendEmailConfirmation();
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
   const emailConfirmFormSchema = z.object({
     email: z.string().email({
-      message: t("emailConfirm.emailPlaceholder"),
+      message: t('emailConfirm.emailPlaceholder'),
     }),
   });
   type EmailConfirmFormValues = z.infer<typeof emailConfirmFormSchema>;
@@ -19,7 +19,7 @@ export function useEmailConfirmResend() {
   const form = useForm<EmailConfirmFormValues>({
     resolver: zodResolver(emailConfirmFormSchema),
     defaultValues: {
-      email: "",
+      email: '',
     },
   });
 
@@ -37,11 +37,11 @@ export function useEmailConfirmResend() {
         onError: (error) => {
           const { code } = extractErrorData(error);
           switch (code) {
-            case "RATE_LIMIT_EXCEEDED":
-              showError(t("emailConfirm.rateLimitExceeded"));
+            case 'RATE_LIMIT_EXCEEDED':
+              showError(t('emailConfirm.rateLimitExceeded'));
               break;
             default:
-              showError(t("emailConfirm.error"));
+              showError(t('emailConfirm.error'));
               break;
           }
         },

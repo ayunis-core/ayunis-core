@@ -7,14 +7,20 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Button } from "@/shared/ui/shadcn/button";
-import { Loader2, Plus } from "lucide-react";
-import { Input } from "@/shared/ui/shadcn/input";
-import { useRef } from "react";
-import { usePrompts } from "../api/usePrompts";
-import { useTranslation } from "react-i18next";
-import { showError } from "@/shared/lib/toast";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/shared/ui/shadcn/tooltip';
+import { Loader2, Plus } from 'lucide-react';
+import { Input } from '@/shared/ui/shadcn/input';
+import { useRef } from 'react';
+import { usePrompts } from '../api/usePrompts';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
+import { useNavigate } from '@tanstack/react-router';
 
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
@@ -31,7 +37,8 @@ export default function PlusButton({
   onPromptSelect,
 }: PlusButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation("common");
+  const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const {
     prompts,
     isLoading: isLoadingPrompts,
@@ -40,7 +47,7 @@ export default function PlusButton({
 
   const handleFileChange = (file?: File) => {
     if (isFileSourceDisabled) {
-      showError(t("chatInput.noEmbeddingModelEnabled"));
+      showError(t('chatInput.noEmbeddingModelEnabled'));
       return;
     }
     if (file) {
@@ -49,16 +56,19 @@ export default function PlusButton({
   };
 
   return (
-    <>
+    <Tooltip>
+      <TooltipContent>{t('chatInput.addButtonTooltip')}</TooltipContent>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="outline">
-            {isUploadingFile || isCreatingFileSource ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-          </Button>
+          <TooltipTrigger asChild>
+            <Button size="icon" variant="outline">
+              {isUploadingFile || isCreatingFileSource ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
@@ -66,23 +76,27 @@ export default function PlusButton({
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingFile || isCreatingFileSource}
             >
-              {t("chatInput.uploadFile")}
+              {t('chatInput.uploadFile')}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuGroup>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                {t("chatInput.addPrompt")}
+                {t('chatInput.addPrompt')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {isLoadingPrompts ? (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t("common.loading")}
+                    {t('common.loading')}
                   </DropdownMenuItem>
                 ) : promptsError ? (
                   <DropdownMenuItem disabled className="text-destructive">
-                    {t("chatInput.promptsLoadError")}
+                    {t('chatInput.promptsLoadError')}
+                  </DropdownMenuItem>
+                ) : prompts.length === 0 ? (
+                  <DropdownMenuItem disabled>
+                    {t('chatInput.promptsEmptyState')}
                   </DropdownMenuItem>
                 ) : (
                   prompts.map((prompt) => (
@@ -94,6 +108,11 @@ export default function PlusButton({
                     </DropdownMenuItem>
                   ))
                 )}
+                <DropdownMenuItem
+                  onClick={() => void navigate({ to: '/prompts' })}
+                >
+                  <Plus /> {t('chatInput.createFirstPrompt')}
+                </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           </DropdownMenuGroup>
@@ -106,6 +125,6 @@ export default function PlusButton({
         onChange={(e) => handleFileChange(e.target.files?.[0])}
         ref={fileInputRef}
       />
-    </>
+    </Tooltip>
   );
 }

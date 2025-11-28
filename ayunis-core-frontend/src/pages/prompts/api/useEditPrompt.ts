@@ -1,12 +1,12 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { usePromptsControllerUpdate } from "@/shared/api/generated/ayunisCoreAPI";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { usePromptsControllerUpdate } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   editPromptFormSchema,
   type EditPromptFormValues,
-} from "../model/editPromptSchema";
-import { useQueryClient } from "@tanstack/react-query";
-import { showError, showSuccess } from "@/shared/lib/toast";
+} from '../model/editPromptSchema';
+import { useQueryClient } from '@tanstack/react-query';
+import { showError, showSuccess } from '@/shared/lib/toast';
 
 interface UseEditPromptOptions {
   onSuccessCallback?: () => void;
@@ -19,9 +19,9 @@ export function useEditPrompt(options?: UseEditPromptOptions) {
   const form = useForm<EditPromptFormValues>({
     resolver: zodResolver(editPromptFormSchema),
     defaultValues: {
-      id: "",
-      title: "",
-      content: "",
+      id: '',
+      title: '',
+      content: '',
     },
   });
 
@@ -34,15 +34,15 @@ export function useEditPrompt(options?: UseEditPromptOptions) {
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["prompts"] });
-          showSuccess("Prompt updated");
+          void queryClient.invalidateQueries({ queryKey: ['prompts'] });
+          showSuccess('Prompt updated');
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();
           }
         },
         onError: (error) => {
-          console.error("Update prompt failed:", error);
-          showError("Update prompt failed");
+          console.error('Update prompt failed:', error);
+          showError('Update prompt failed');
         },
       },
     );

@@ -1,20 +1,20 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import {
   agentsControllerCreate,
   getAgentsControllerFindAllQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useRouter } from '@tanstack/react-router';
 
 const createAgentSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  instructions: z.string().min(1, "Instructions are required"),
-  modelId: z.string().min(1, "Model is required"),
+  name: z.string().min(1, 'Name is required'),
+  instructions: z.string().min(1, 'Instructions are required'),
+  modelId: z.string().min(1, 'Model is required'),
   toolAssignments: z.array(
     z.object({
       type: z.enum([
@@ -31,16 +31,16 @@ const createAgentSchema = z.object({
 export type CreateAgentData = z.infer<typeof createAgentSchema>;
 
 export function useCreateAgent() {
-  const { t } = useTranslation("agents");
+  const { t } = useTranslation('agents');
   const queryClient = useQueryClient();
   const router = useRouter();
 
   const form = useForm<CreateAgentData>({
     resolver: zodResolver(createAgentSchema),
     defaultValues: {
-      name: "",
-      instructions: "",
-      modelId: "",
+      name: '',
+      instructions: '',
+      modelId: '',
       toolAssignments: [],
     },
   });
@@ -50,24 +50,24 @@ export function useCreateAgent() {
       return await agentsControllerCreate(data);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: getAgentsControllerFindAllQueryKey(),
       });
       if (data && data.id) {
-        router.navigate({
-          to: "/agents/$id",
+        void router.navigate({
+          to: '/agents/$id',
           params: { id: data.id },
         });
       }
     },
     onError: () => {
-      toast.error(t("create.error"));
+      toast.error(t('create.error'));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: getAgentsControllerFindAllQueryKey(),
       });
-      router.invalidate();
+      void router.invalidate();
     },
   });
 

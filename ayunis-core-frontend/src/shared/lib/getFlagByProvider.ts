@@ -1,22 +1,21 @@
-import type { ModelWithConfigResponseDto } from "../api";
+import type { ModelWithConfigResponseDto } from '../api';
 
-type Provider = ModelWithConfigResponseDto["provider"];
+type Provider = ModelWithConfigResponseDto['provider'];
 
 export function getFlagByProvider(provider: Provider): string {
   switch (provider) {
-    case "ayunis":
+    case 'otc':
+    case 'ayunis':
+    case 'synaforce':
+    case 'ollama':
       return `🇩🇪`;
-    case "synaforce":
-      return `🇩🇪`;
-    case "ollama":
-      return `🇩🇪`;
-    case "mistral":
+    case 'mistral':
       return `🇪🇺`;
-    case "openai":
+    case 'openai':
       return `🇺🇸`;
-    case "anthropic":
+    case 'anthropic':
       return `🇺🇸`;
     default:
-      return "";
+      return '';
   }
 }

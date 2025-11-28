@@ -1,8 +1,8 @@
-import { Loader2, Wrench } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import type { ToolUseMessageContent } from "../../model/openapi";
-import AgentActivityHint from "@/widgets/agent-activity-hint/ui/AgentActivityHint";
-import { useState } from "react";
+import { Loader2, Wrench } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { ToolUseMessageContent } from '../../model/openapi';
+import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
+import { useState } from 'react';
 
 /**
  * Formats a tool name for display when no translation exists.
@@ -14,16 +14,16 @@ import { useState } from "react";
  */
 function formatToolName(toolName: string): string {
   // Remove mcp_ prefix if present (e.g., "mcp_obsidian-mcp-tools_fetch")
-  let formatted = toolName.replace(/^mcp_[^_]+_/, "");
+  let formatted = toolName.replace(/^mcp_[^_]+_/, '');
 
   // Replace underscores and hyphens with spaces
-  formatted = formatted.replace(/[_-]/g, " ");
+  formatted = formatted.replace(/[_-]/g, ' ');
 
   // Capitalize each word
   formatted = formatted
-    .split(" ")
+    .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .join(' ');
 
   return formatted;
 }
@@ -35,7 +35,7 @@ export default function ExecutableToolWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const [open, setOpen] = useState(false);
 
   // Check if params are empty or incomplete (streaming in progress)
@@ -45,9 +45,9 @@ export default function ExecutableToolWidget({
   // Try to get translation, fallback to formatted tool name if not found
   // When a key doesn't exist, i18next returns the key itself (with namespace prefix)
   const translationKey = `chat.tools.${content.name}`;
-  const translation = t(translationKey, { defaultValue: "" });
+  const translation = t(translationKey, { defaultValue: '' });
   const toolHint =
-    translation && typeof translation === "string" && translation !== ""
+    translation && typeof translation === 'string' && translation !== ''
       ? translation
       : formatToolName(content.name);
 
@@ -63,7 +63,7 @@ export default function ExecutableToolWidget({
         )
       }
       hint={toolHint}
-      input={isLoadingParams ? "" : JSON.stringify(content.params, null, 2)}
+      input={isLoadingParams ? '' : JSON.stringify(content.params, null, 2)}
     />
   );
 }

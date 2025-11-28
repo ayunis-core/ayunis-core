@@ -9,7 +9,7 @@ import {
   UserAuthenticationFailedError,
   UserError,
 } from '../../users.errors';
-import { HashingError } from '../../../../hashing/application/hashing.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class ValidateUserUseCase {
@@ -49,7 +49,7 @@ export class ValidateUserUseCase {
         this.logger.debug('User validated successfully', { userId: user.id });
         return user;
       } catch (error) {
-        if (error instanceof UserError || error instanceof HashingError) {
+        if (error instanceof ApplicationError) {
           throw error;
         }
         this.logger.error('Password validation failed', {

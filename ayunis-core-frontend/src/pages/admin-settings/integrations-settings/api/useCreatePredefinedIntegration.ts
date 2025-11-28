@@ -1,29 +1,38 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerCreatePredefined,
   getMcpIntegrationsControllerListQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { CreatePredefinedIntegrationFormData } from "../model/types";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { CreatePredefinedIntegrationFormData } from '../model/types';
 
 export function useCreatePredefinedIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
 
   const mutation = useMcpIntegrationsControllerCreatePredefined({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t("integrations.createPredefinedIntegration.success"));
+        toast.success(t('integrations.createPredefinedIntegration.success'));
         onSuccess?.();
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
+        const errorMessage =
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+          (error as { message?: string })?.message ||
+          'Unknown error';
         toast.error(
-          t("integrations.createPredefinedIntegration.error", {
-            message: error.response?.data?.message || error.message,
+          t('integrations.createPredefinedIntegration.error', {
+            message: errorMessage,
           }),
         );
       },
@@ -37,7 +46,7 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
       slug: data.slug,
       configValues: (data.configValues ?? []).map((value) => ({
         name: value.name,
-        value: value.value?.trim() ?? "",
+        value: value.value?.trim() ?? '',
       })),
     };
 

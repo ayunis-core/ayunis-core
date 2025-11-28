@@ -14,6 +14,7 @@ import { RetrieverModule } from '../domain/retrievers/retriever.module';
 import { SourcesModule } from '../domain/sources/sources.module';
 import { StorageModule } from '../domain/storage/storage.module';
 import { PromptsModule } from '../domain/prompts/prompts.module';
+import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { IamModule } from '../iam/iam.module';
@@ -38,11 +39,14 @@ import { SecurityHeadersMiddleware } from '../common/middleware/security-headers
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
+import { mcpConfig } from '../config/mcp.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { ClsModule } from 'nestjs-cls';
 import { ContextModule } from 'src/common/context/context.module';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
+import { SentryModule } from '@sentry/nestjs/setup';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -61,6 +65,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
         subscriptionsConfig,
         emailsConfig,
         internetSearchConfig,
+        mcpConfig,
       ],
     }),
     ClsModule.forRoot({
@@ -94,6 +99,8 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
         return dataSource;
       },
     }),
+    SentryModule.forRoot(),
+    EventEmitterModule.forRoot(),
     ContextModule, // Global
     ModelsModule,
     AgentsModule,
@@ -107,6 +114,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
     SourcesModule,
     StorageModule,
     PromptsModule,
+    SharesModule,
     McpModule,
     UsageModule,
     IamModule.register({

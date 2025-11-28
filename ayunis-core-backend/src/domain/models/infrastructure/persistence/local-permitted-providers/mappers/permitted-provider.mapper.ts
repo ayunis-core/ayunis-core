@@ -10,8 +10,11 @@ export class PermittedProviderMapper {
 
   toRecord(entity: PermittedProvider): PermittedProviderRecord {
     const record = new PermittedProviderRecord();
+    record.id = entity.id;
     record.provider = entity.provider;
     record.orgId = entity.orgId;
+    record.createdAt = entity.createdAt;
+    record.updatedAt = entity.updatedAt;
     return record;
   }
 }

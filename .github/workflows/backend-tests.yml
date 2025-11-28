@@ -1,0 +1,130 @@
+name: Backend Tests
+
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-backend/**'
+      - '.github/workflows/backend-tests.yml'
+      - 'docker-compose.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ayunis-core-backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Service containers to run with this job
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ayunis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    defaults:
+      run:
+        working-directory: ayunis-core-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minio \
+            -e MINIO_ROOT_PASSWORD=minio123 \
+            quay.io/minio/minio:latest server /data
+          # Wait for MinIO to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create test environment file
+        run: |
+          cat > .env << 'EOF'
+          NODE_ENV=test
+          PORT=3000
+
+          # Database
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=ayunis_test
+
+          # JWT
+          JWT_SECRET=test-jwt-secret-for-ci-testing-minimum-32-characters
+          JWT_EXPIRES_IN=1h
+          JWT_REFRESH_EXPIRES_IN=7d
+          JWT_INVITE_EXPIRES_IN=7d
+          JWT_EMAIL_CONFIRMATION_EXPIRES_IN=1d
+          JWT_PASSWORD_RESET_EXPIRES_IN=1h
+
+          # Cookies
+          COOKIE_SECRET=test-cookie-secret-for-ci
+          COOKIE_SECURE=false
+          COOKIE_DOMAIN=localhost
+          COOKIE_SAME_SITE=lax
+
+          # MinIO
+          MINIO_ENDPOINT=localhost
+          MINIO_PORT=9000
+          MINIO_USE_SSL=false
+          MINIO_ROOT_USER=minio
+          MINIO_ROOT_PASSWORD=minio123
+          MINIO_BUCKET=ayunis-test-uploads
+
+          # Admin
+          ADMIN_TOKEN=test-admin-token
+
+          # Disable features for testing
+          DISABLE_REGISTRATION=false
+          DISABLE_EMAIL_CONFIRMATION=true
+          EOF
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run migrations
+        run: npm run typeorm migration:run -- -d src/db/datasource.ts
+        env:
+          NODE_ENV: test
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:cov
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: ayunis-core-backend/coverage/
+          retention-days: 7

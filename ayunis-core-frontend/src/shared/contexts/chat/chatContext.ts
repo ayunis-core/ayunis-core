@@ -1,5 +1,5 @@
-import type { SourceResponseDtoType } from "@/shared/api";
-import { createContext } from "react";
+import type { SourceResponseDtoType } from '@/shared/api';
+import { createContext } from 'react';
 
 type ChatContextType = {
   pendingMessage: string;
@@ -21,12 +21,12 @@ type ChatContextType = {
 };
 
 export const ChatContext = createContext<ChatContextType>({
-  pendingMessage: "",
+  pendingMessage: '',
   setPendingMessage: () => {
-    throw new Error("setPendingMessage is not implemented");
+    throw new Error('setPendingMessage is not implemented');
   },
   sources: [],
   setSources: () => {
-    throw new Error("setSources is not implemented");
+    throw new Error('setSources is not implemented');
   },
 });

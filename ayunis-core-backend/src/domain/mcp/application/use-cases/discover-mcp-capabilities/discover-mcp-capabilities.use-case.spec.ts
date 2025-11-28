@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { randomUUID, UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -27,8 +27,8 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   let loggerWarnSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  const mockOrgId = randomUUID() as UUID;
-  const mockIntegrationId = randomUUID() as UUID;
+  const mockOrgId = randomUUID();
+  const mockIntegrationId = randomUUID();
 
   const buildPredefinedIntegration = (
     overrides: Partial<
@@ -100,13 +100,9 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     }).compile();
 
     useCase = module.get(DiscoverMcpCapabilitiesUseCase);
-    repository = module.get(
-      McpIntegrationsRepositoryPort,
-    ) as jest.Mocked<McpIntegrationsRepositoryPort>;
-    mcpClientService = module.get(
-      McpClientService,
-    ) as jest.Mocked<McpClientService>;
-    contextService = module.get(ContextService) as jest.Mocked<ContextService>;
+    repository = module.get(McpIntegrationsRepositoryPort);
+    mcpClientService = module.get(McpClientService);
+    contextService = module.get(ContextService);
 
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();

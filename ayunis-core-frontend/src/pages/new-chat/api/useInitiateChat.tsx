@@ -1,10 +1,10 @@
-import { getThreadsControllerFindAllQueryKey } from "@/shared/api";
-import { useChatContext } from "@/shared/contexts/chat/useChatContext";
-import { useNavigate } from "@tanstack/react-router";
-import { useThreadsControllerCreate } from "@/shared/api/generated/ayunisCoreAPI";
-import type { CreateThreadData } from "../model/openapi";
-import type { SourceResponseDtoType } from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
+import { getThreadsControllerFindAllQueryKey } from '@/shared/api';
+import { useChatContext } from '@/shared/contexts/chat/useChatContext';
+import { useNavigate } from '@tanstack/react-router';
+import { useThreadsControllerCreate } from '@/shared/api/generated/ayunisCoreAPI';
+import type { CreateThreadData } from '../model/openapi';
+import type { SourceResponseDtoType } from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useInitiateChat = () => {
   const { setPendingMessage, setSources } = useChatContext();
@@ -13,19 +13,19 @@ export const useInitiateChat = () => {
   const createThreadMutation = useThreadsControllerCreate({
     mutation: {
       onSuccess: (threadResponse) => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getThreadsControllerFindAllQueryKey(),
         });
         // Navigate to the new thread
-        navigate({
-          to: "/chats/$threadId",
+        void navigate({
+          to: '/chats/$threadId',
           params: { threadId: threadResponse.id },
         });
       },
       onError: (error) => {
-        console.error("Failed to create thread:", error);
+        console.error('Failed to create thread:', error);
         // Clear pending message on error
-        setPendingMessage("");
+        setPendingMessage('');
       },
     },
   });

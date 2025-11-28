@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/shadcn/button";
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Form,
   FormControl,
@@ -6,59 +6,66 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
-import { Input } from "@/shared/ui/shadcn/input";
-import OnboardingLayout from "@/layouts/onboarding-layout";
-import { useRegister } from "../api";
-import { useTranslation, Trans } from "react-i18next";
-import { Link } from "@tanstack/react-router";
-import { Checkbox } from "@/shared/ui/shadcn/checkbox";
-import { Label } from "@/shared/ui/shadcn/label";
-import { useGtm } from "@/features/useGtm";
-import config from "@/shared/config";
+} from '@/shared/ui/shadcn/form';
+import { Input } from '@/shared/ui/shadcn/input';
+import OnboardingLayout from '@/layouts/onboarding-layout';
+import { useRegister } from '../api';
+import { useTranslation, Trans } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
+import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Label } from '@/shared/ui/shadcn/label';
+import { useGtm } from '@/features/useGtm';
+import config from '@/shared/config';
 
 export function RegisterPage({ isCloud }: { isCloud: boolean }) {
   const { form, onSubmit, isLoading } = useRegister();
-  const { t } = useTranslation("auth");
-  const agbHref = "https://www.ayunis.com/agb-software-%c3%bcberlassung";
-  const privacyPolicyRef = "www.ayunis.com/datenschutz-core";
+  const { t } = useTranslation('auth');
+  const agbHref = 'https://www.ayunis.com/agb-software-%c3%bcberlassung';
+  const privacyPolicyRef = 'www.ayunis.com/datenschutz-core';
+  const gtmContainerId = config.analytics.gtmContainerId ?? '';
+  const usercentricsSettingsId = config.analytics.usercentricsSettingsId ?? '';
   const gtmEnabled =
     isCloud &&
     import.meta.env.PROD &&
-    config.analytics.gtmContainerId &&
-    config.analytics.usercentricsSettingsId;
+    gtmContainerId !== '' &&
+    usercentricsSettingsId !== '';
 
   useGtm({
-    containerId: config.analytics.gtmContainerId || "",
+    containerId: gtmContainerId,
     enabled: gtmEnabled,
-    ucSettingsId: config.analytics.usercentricsSettingsId,
+    ucSettingsId: usercentricsSettingsId,
   });
 
   return (
     <OnboardingLayout
-      title={t("register.title")}
-      description={t("register.description")}
+      title={t('register.title')}
+      description={t('register.description')}
       footer={
         <>
-          {t("register.or")} {""}
+          {t('register.or')} {''}
           <Link to="/login" className="font-medium text-primary underline">
-            {t("register.signInExisting")}
+            {t('register.signInExisting')}
           </Link>
         </>
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("register.email")}</FormLabel>
+                <FormLabel>{t('register.email')}</FormLabel>
                 <FormControl>
                   <Input
                     required
-                    placeholder={t("register.emailPlaceholder")}
+                    placeholder={t('register.emailPlaceholder')}
                     type="email"
                     {...field}
                   />
@@ -72,11 +79,11 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
             name="userName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("register.userName")}</FormLabel>
+                <FormLabel>{t('register.userName')}</FormLabel>
                 <FormControl>
                   <Input
                     required
-                    placeholder={t("register.userNamePlaceholder")}
+                    placeholder={t('register.userNamePlaceholder')}
                     {...field}
                   />
                 </FormControl>
@@ -89,11 +96,11 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
             name="orgName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("register.orgName")}</FormLabel>
+                <FormLabel>{t('register.orgName')}</FormLabel>
                 <FormControl>
                   <Input
                     required
-                    placeholder={t("register.orgNamePlaceholder")}
+                    placeholder={t('register.orgNamePlaceholder')}
                     {...field}
                   />
                 </FormControl>
@@ -106,11 +113,11 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("register.password")}</FormLabel>
+                <FormLabel>{t('register.password')}</FormLabel>
                 <FormControl>
                   <Input
                     required
-                    placeholder={t("register.passwordPlaceholder")}
+                    placeholder={t('register.passwordPlaceholder')}
                     type="password"
                     {...field}
                   />
@@ -136,7 +143,7 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
                         htmlFor="marketingAcceptance"
                         className="block font-normal leading-5"
                       >
-                        {t("register.marketingAcceptanceDescription")}
+                        {t('register.marketingAcceptanceDescription')}
                       </Label>
                     </div>
                   </FormControl>
@@ -194,8 +201,8 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading
-              ? t("register.creatingAccount")
-              : t("register.createAccountButton")}
+              ? t('register.creatingAccount')
+              : t('register.createAccountButton')}
           </Button>
         </form>
       </Form>

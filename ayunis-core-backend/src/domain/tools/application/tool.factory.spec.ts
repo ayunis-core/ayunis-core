@@ -86,8 +86,11 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.MCP_TOOL);
       expect(types).toContain(ToolType.MCP_RESOURCE);
       expect(types).toContain(ToolType.MCP_PROMPT);
+      expect(types).toContain(ToolType.BAR_CHART);
+      expect(types).toContain(ToolType.LINE_CHART);
+      expect(types).toContain(ToolType.PIE_CHART);
 
-      expect(types.length).toBe(10);
+      expect(types.length).toBe(13);
     });
   });
 });

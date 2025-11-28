@@ -6,6 +6,8 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 
 /**
@@ -17,6 +19,8 @@ export enum OrgErrorCode {
   ORG_CREATION_FAILED = 'ORG_CREATION_FAILED',
   ORG_UPDATE_FAILED = 'ORG_UPDATE_FAILED',
   ORG_DELETION_FAILED = 'ORG_DELETION_FAILED',
+  ORG_RETRIEVAL_FAILED = 'ORG_RETRIEVAL_FAILED',
+  ORG_UNAUTHORIZED = 'ORG_UNAUTHORIZED',
 }
 
 /**
@@ -45,6 +49,18 @@ export abstract class OrgError extends ApplicationError {
         });
       case 409:
         return new ConflictException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 403:
+        return new ForbiddenException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 500:
+        return new InternalServerErrorException({
           code: this.code,
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),
@@ -124,6 +140,34 @@ export class OrgDeletionFailedError extends OrgError {
       `Failed to delete organization with ID '${orgId}': ${reason}`,
       OrgErrorCode.ORG_DELETION_FAILED,
       400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when retrieving organizations fails
+ */
+export class OrgRetrievalFailedError extends OrgError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Failed to retrieve organizations: ${reason}`,
+      OrgErrorCode.ORG_RETRIEVAL_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an unauthorized org action is attempted
+ */
+export class OrgUnauthorizedError extends OrgError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Unauthorized: ${reason}`,
+      OrgErrorCode.ORG_UNAUTHORIZED,
+      403,
       metadata,
     );
   }

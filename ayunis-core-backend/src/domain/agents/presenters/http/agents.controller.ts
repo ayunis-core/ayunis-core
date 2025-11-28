@@ -33,7 +33,7 @@ import { CreateAgentUseCase } from '../../application/use-cases/create-agent/cre
 import { UpdateAgentUseCase } from '../../application/use-cases/update-agent/update-agent.use-case';
 import { DeleteAgentUseCase } from '../../application/use-cases/delete-agent/delete-agent.use-case';
 import { FindOneAgentUseCase } from '../../application/use-cases/find-one-agent/find-one-agent.use-case';
-import { FindAllAgentsByOwnerUseCase } from '../../application/use-cases/find-all-agents-by-owner/find-all-agents-by-owner.use-case';
+import { FindAllAgentsUseCase } from '../../application/use-cases/find-all-agents/find-all-agents.use-case';
 import { AddSourceToAgentUseCase } from '../../application/use-cases/add-source-to-agent/add-source-to-agent.use-case';
 import { RemoveSourceFromAgentUseCase } from '../../application/use-cases/remove-source-from-agent/remove-source-from-agent.use-case';
 import { AssignMcpIntegrationToAgentUseCase } from '../../application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.use-case';
@@ -43,7 +43,7 @@ import { CreateAgentCommand } from '../../application/use-cases/create-agent/cre
 import { UpdateAgentCommand } from '../../application/use-cases/update-agent/update-agent.command';
 import { DeleteAgentCommand } from '../../application/use-cases/delete-agent/delete-agent.command';
 import { FindOneAgentQuery } from '../../application/use-cases/find-one-agent/find-one-agent.query';
-import { FindAllAgentsByOwnerQuery } from '../../application/use-cases/find-all-agents-by-owner/find-all-agents-by-owner.query';
+import { FindAllAgentsQuery } from '../../application/use-cases/find-all-agents/find-all-agents.query';
 import { AddSourceToAgentCommand } from '../../application/use-cases/add-source-to-agent/add-source-to-agent.command';
 import { RemoveSourceFromAgentCommand } from '../../application/use-cases/remove-source-from-agent/remove-source-from-agent.command';
 import { AssignMcpIntegrationToAgentCommand } from '../../application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.command';
@@ -85,7 +85,7 @@ export class AgentsController {
     private readonly updateAgentUseCase: UpdateAgentUseCase,
     private readonly deleteAgentUseCase: DeleteAgentUseCase,
     private readonly findOneAgentUseCase: FindOneAgentUseCase,
-    private readonly findAllAgentsByOwnerUseCase: FindAllAgentsByOwnerUseCase,
+    private readonly findAllAgentsUseCase: FindAllAgentsUseCase,
     private readonly addSourceToAgentUseCase: AddSourceToAgentUseCase,
     private readonly removeSourceFromAgentUseCase: RemoveSourceFromAgentUseCase,
     private readonly assignMcpIntegrationToAgentUseCase: AssignMcpIntegrationToAgentUseCase,
@@ -149,11 +149,13 @@ export class AgentsController {
   ): Promise<AgentResponseDto[]> {
     this.logger.log('findAll', { userId });
 
-    const agents = await this.findAllAgentsByOwnerUseCase.execute(
-      new FindAllAgentsByOwnerQuery(userId),
+    const results = await this.findAllAgentsUseCase.execute(
+      new FindAllAgentsQuery(),
     );
 
-    return this.agentDtoMapper.toDtoArray(agents);
+    return results.map((result) =>
+      this.agentDtoMapper.toDto(result.agent, result.isShared),
+    );
   }
 
   @Get(':id')
@@ -177,11 +179,11 @@ export class AgentsController {
   ): Promise<AgentResponseDto> {
     this.logger.log('findOne', { id, userId });
 
-    const agent = await this.findOneAgentUseCase.execute(
+    const result = await this.findOneAgentUseCase.execute(
       new FindOneAgentQuery(id),
     );
 
-    return this.agentDtoMapper.toDto(agent);
+    return this.agentDtoMapper.toDto(result.agent, result.isShared);
   }
 
   @Put(':id')
@@ -241,15 +243,11 @@ export class AgentsController {
   @ApiResponse({ status: 404, description: 'Agent not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-    @Param('id', ParseUUIDPipe) id: UUID,
-  ): Promise<void> {
-    this.logger.log('delete', { id, userId });
+  async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log('delete', { id });
 
     await this.deleteAgentUseCase.execute(
-      new DeleteAgentCommand({ agentId: id, userId, orgId }),
+      new DeleteAgentCommand({ agentId: id }),
     );
   }
 
@@ -276,11 +274,13 @@ export class AgentsController {
   ): Promise<AgentSourceResponseDto[]> {
     this.logger.log('getAgentSources', { agentId, userId });
 
-    const agent = await this.findOneAgentUseCase.execute(
+    const result = await this.findOneAgentUseCase.execute(
       new FindOneAgentQuery(agentId),
     );
 
-    return this.agentSourceDtoMapper.toDtoArray(agent.sourceAssignments || []);
+    return this.agentSourceDtoMapper.toDtoArray(
+      result.agent.sourceAssignments || [],
+    );
   }
 
   @Post(':id/sources/file')

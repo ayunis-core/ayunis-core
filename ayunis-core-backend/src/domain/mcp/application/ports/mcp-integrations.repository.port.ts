@@ -22,6 +22,13 @@ export abstract class McpIntegrationsRepositoryPort {
   abstract findById(id: UUID): Promise<McpIntegration | null>;
 
   /**
+   * Finds multiple MCP integrations by their IDs in a single query.
+   * @param ids The integration IDs
+   * @returns Array of integrations (missing IDs are omitted from result)
+   */
+  abstract findByIds(ids: UUID[]): Promise<McpIntegration[]>;
+
+  /**
    * Finds all MCP integrations for an organization.
    * @param orgId The organization ID
    * @param filter Optional filter to apply to the query

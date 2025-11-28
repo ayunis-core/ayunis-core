@@ -1,7 +1,7 @@
 import {
   getAgentsControllerFindAllQueryKey,
   useAgentsControllerFindAll,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 export function useAgents() {
   const {

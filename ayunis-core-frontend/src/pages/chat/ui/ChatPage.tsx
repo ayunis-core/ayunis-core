@@ -1,47 +1,47 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import ChatInterfaceLayout from "@/layouts/chat-interface-layout/ui/ChatInterfaceLayout";
-import ChatMessage from "@/pages/chat/ui/ChatMessage";
-import ChatInput from "@/widgets/chat-input";
-import { useChatContext } from "@/shared/contexts/chat/useChatContext";
-import { useMessageSend } from "../api/useMessageSend";
-import { useUpdateThreadModel } from "../api/useUpdateThreadModel";
-import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import { MoreVertical, Trash2 } from "lucide-react";
-import type { Thread, Message } from "../model/openapi";
-import { showError } from "@/shared/lib/toast";
-import config from "@/shared/config";
-import { Button } from "@/shared/ui/shadcn/button";
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
+import ChatMessage from '@/pages/chat/ui/ChatMessage';
+import ChatInput from '@/widgets/chat-input';
+import { useChatContext } from '@/shared/contexts/chat/useChatContext';
+import { useMessageSend } from '../api/useMessageSend';
+import { useUpdateThreadModel } from '../api/useUpdateThreadModel';
+import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { MoreVertical, Trash2 } from 'lucide-react';
+import type { Thread, Message } from '../model/openapi';
+import { showError } from '@/shared/lib/toast';
+import config from '@/shared/config';
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { useConfirmation } from "@/widgets/confirmation-modal";
-import { useDeleteThread } from "@/features/useDeleteThread";
-import { useNavigate } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { useUpdateThreadAgent } from "../api/useUpdateThreadAgent";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { useDeleteThread } from '@/features/useDeleteThread';
+import { useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import { useUpdateThreadAgent } from '../api/useUpdateThreadAgent';
 import type {
   RunErrorResponseDto,
   RunMessageResponseDtoMessage,
   RunSessionResponseDto,
   RunThreadResponseDto,
-} from "@/shared/api";
-import AppLayout from "@/layouts/app-layout";
-import { AxiosError } from "axios";
-import type { ChatInputRef } from "@/widgets/chat-input/ui/ChatInput";
-import { useCreateFileSource } from "@/pages/chat/api/useCreateFileSource";
-import { useDeleteFileSource } from "../api/useDeleteFileSource";
-import { useRemoveThreadAgent } from "../api/useRemoveThreadAgent";
-import { useAgents } from "@/features/useAgents";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+} from '@/shared/api';
+import AppLayout from '@/layouts/app-layout';
+import { AxiosError } from 'axios';
+import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
+import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
+import { useDeleteFileSource } from '../api/useDeleteFileSource';
+import { useRemoveThreadAgent } from '../api/useRemoveThreadAgent';
+import { useAgents } from '@/features/useAgents';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
   threadsControllerFindOne,
   threadsControllerDownloadSource,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 interface ChatPageProps {
   thread: Thread;
@@ -52,7 +52,7 @@ export default function ChatPage({
   thread: initialThread,
   isEmbeddingModelEnabled,
 }: ChatPageProps) {
-  const { t } = useTranslation("chats");
+  const { t } = useTranslation('chats');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const { agents } = useAgents();
@@ -64,15 +64,15 @@ export default function ChatPage({
 
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
   const queryClient = useQueryClient();
-  const processedPendingMessageRef = useRef<String | null>(null);
+  const processedPendingMessageRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
   const { pendingMessage, setPendingMessage, sources, setSources } =
     useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
-    thread!.title,
+    thread.title,
   );
-  const [messages, setMessages] = useState<Message[]>(thread!.messages);
+  const [messages, setMessages] = useState<Message[]>(thread.messages);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isProcessingPendingSources, setIsProcessingPendingSources] =
     useState(false);
@@ -84,11 +84,11 @@ export default function ChatPage({
 
   const { deleteChat } = useDeleteThread({
     onSuccess: () => {
-      navigate({ to: "/chat" });
+      void navigate({ to: '/chat' });
     },
     onError: (error) => {
-      console.error("Failed to delete thread", error);
-      showError(t("chat.errorDeleteThread"));
+      console.error('Failed to delete thread', error);
+      showError(t('chat.errorDeleteThread'));
     },
   });
 
@@ -134,38 +134,48 @@ export default function ChatPage({
     [createFileSource],
   );
 
-  const handleError = useCallback((error: RunErrorResponseDto) => {
-    switch (error.code) {
-      case "EXECUTION_ERROR":
-        showError(t("chat.errorExecutionError"));
-        break;
-      case "RUN_NO_MODEL_FOUND":
-        showError(t("chat.errorNoModelFound"));
-        break;
-      case "RUN_MAX_ITERATIONS_REACHED":
-        showError(t("chat.errorMaxIterationsReached"));
-        break;
-      case "RUN_TOOL_NOT_FOUND":
-        showError(t("chat.errorToolNotFound"));
-        break;
-      default:
-        showError(t("chat.errorUnexpected"));
-    }
-  }, []);
+  const handleError = useCallback(
+    (error: RunErrorResponseDto) => {
+      switch (error.code) {
+        case 'EXECUTION_ERROR':
+          showError(t('chat.errorExecutionError'));
+          break;
+        case 'RUN_NO_MODEL_FOUND':
+          showError(t('chat.errorNoModelFound'));
+          break;
+        case 'RUN_MAX_ITERATIONS_REACHED':
+          showError(t('chat.errorMaxIterationsReached'));
+          break;
+        case 'RUN_TOOL_NOT_FOUND':
+          showError(t('chat.errorToolNotFound'));
+          break;
+        default:
+          showError(t('chat.errorUnexpected'));
+      }
+    },
+    [t],
+  );
 
   const handleSession = useCallback((session: RunSessionResponseDto) => {
-    config.env === "development" && console.log("session", session);
+    if (config.env === 'development') {
+      console.log('session', session);
+    }
     if (session.streaming === true) setIsStreaming(true);
     if (session.streaming === false) setIsStreaming(false);
   }, []);
 
-  const handleThread = useCallback((thread: RunThreadResponseDto) => {
-    config.env === "development" && console.log("Thread", thread);
-    setThreadTitle(thread.title);
-    queryClient.invalidateQueries({
-      queryKey: getThreadsControllerFindAllQueryKey(),
-    });
-  }, []);
+  const handleThread = useCallback(
+    (thread: RunThreadResponseDto) => {
+      if (config.env === 'development') {
+        console.log('Thread', thread);
+      }
+      setThreadTitle(thread.title);
+      void queryClient.invalidateQueries({
+        queryKey: getThreadsControllerFindAllQueryKey(),
+      });
+    },
+    [queryClient],
+  );
 
   const { sendTextMessage, abort } = useMessageSend({
     threadId: thread.id,
@@ -174,11 +184,11 @@ export default function ChatPage({
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
     onError: (error) => {
-      console.error("Error in useMessageSend:", error);
-      showError(t("chat.errorSendMessage"));
+      console.error('Error in useMessageSend:', error);
+      showError(t('chat.errorSendMessage'));
     },
     onComplete: () => {
-      console.log("Message sending completed");
+      console.log('Message sending completed');
       setIsStreaming(false);
     },
   });
@@ -186,7 +196,7 @@ export default function ChatPage({
   async function handleSend(message: string) {
     try {
       setIsStreaming(true);
-      chatInputRef.current?.setMessage("");
+      chatInputRef.current?.setMessage('');
 
       await sendTextMessage({
         text: message,
@@ -195,9 +205,9 @@ export default function ChatPage({
       chatInputRef.current?.setMessage(message);
       setIsStreaming(false);
       if (error instanceof AxiosError && error.response?.status === 403) {
-        showError(t("chat.upgradeToProError"));
+        showError(t('chat.upgradeToProError'));
       } else {
-        showError(t("chat.errorSendMessage"));
+        showError(t('chat.errorSendMessage'));
       }
       throw error; // rethrow the error to preserve the message
     }
@@ -211,10 +221,10 @@ export default function ChatPage({
     // This provides instant feedback matching what the backend will save
     setMessages((prev) => {
       const lastMessage = prev[prev.length - 1];
-      if (lastMessage && lastMessage.role === "assistant") {
+      if (lastMessage && lastMessage.role === 'assistant') {
         // Filter out tool_use content, keeping only text and thinking
         const cleanedContent = lastMessage.content.filter(
-          (c) => c.type === "text" || c.type === "thinking",
+          (c) => c.type === 'text' || c.type === 'thinking',
         );
 
         // If there's content left after filtering, update the message
@@ -232,11 +242,11 @@ export default function ChatPage({
 
   function handleDeleteThread() {
     confirm({
-      title: t("chat.deleteThreadTitle"),
-      description: t("chat.deleteThreadDescription"),
-      confirmText: t("chat.deleteText"),
-      cancelText: t("chat.cancelText"),
-      variant: "destructive",
+      title: t('chat.deleteThreadTitle'),
+      description: t('chat.deleteThreadDescription'),
+      confirmText: t('chat.deleteText'),
+      cancelText: t('chat.cancelText'),
+      variant: 'destructive',
       onConfirm: () => deleteChat(thread.id),
     });
   }
@@ -248,12 +258,12 @@ export default function ChatPage({
 
       // Create a download link
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
 
       // Find the source to get its name
       const source = thread.sources.find((s) => s.id === sourceId);
-      link.download = source?.name || "download.csv";
+      link.download = source?.name || 'download.csv';
 
       // Trigger download
       document.body.appendChild(link);
@@ -263,8 +273,8 @@ export default function ChatPage({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Failed to download source", error);
-      showError(t("chat.errorDownloadSource"));
+      console.error('Failed to download source', error);
+      showError(t('chat.errorDownloadSource'));
     }
   }
 
@@ -285,15 +295,14 @@ export default function ChatPage({
         try {
           if (sources.length > 0) {
             setIsProcessingPendingSources(true);
-            await Promise.all(
-              sources.map((source) =>
-                createFileSourceAsync({
-                  file: source.file,
-                  name: source.name,
-                  description: `File source: ${source.name}`,
-                }),
-              ),
+            const promises = sources.map((source) =>
+              createFileSourceAsync({
+                file: source.file,
+                name: source.name,
+                description: `File source: ${source.name}`,
+              }),
             );
+            await Promise.all(promises as Promise<unknown>[]);
             // Reset the mutation state to ensure isPending goes to false
             resetCreateFileSourceMutation();
           }
@@ -303,18 +312,18 @@ export default function ChatPage({
           });
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
-            showError(t("chat.upgradeToProError"));
+            showError(t('chat.upgradeToProError'));
           } else {
-            showError(t("chat.errorSendMessage"));
+            showError(t('chat.errorSendMessage'));
           }
           chatInputRef.current?.setMessage(pendingMessage);
         } finally {
           setIsProcessingPendingSources(false);
-          setPendingMessage("");
+          setPendingMessage('');
         }
       }
     }
-    sendPendingMessage();
+    void sendPendingMessage();
   }, [
     pendingMessage,
     sendTextMessage,
@@ -332,7 +341,7 @@ export default function ChatPage({
     <ContentAreaHeader
       title={
         <span className="inline-flex items-center gap-1" data-testid="header">
-          {threadTitle || t("chat.untitled")}
+          {threadTitle || t('chat.untitled')}
         </span>
       }
       action={
@@ -348,7 +357,7 @@ export default function ChatPage({
               variant="destructive"
             >
               <Trash2 className="h-4 w-4" />
-              <span>{t("chat.deleteThread")}</span>
+              <span>{t('chat.deleteThread')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -363,11 +372,11 @@ export default function ChatPage({
         <ChatMessage
           key={message.id}
           message={message}
-          hideAvatar={i > 0 && sortedMessages[i - 1].role !== "user"}
+          hideAvatar={i > 0 && sortedMessages[i - 1].role !== 'user'}
           isStreaming={
             isStreaming &&
             i === sortedMessages.length - 1 &&
-            message.role === "assistant"
+            message.role === 'assistant'
           }
         />
       ))}
@@ -394,8 +403,8 @@ export default function ChatPage({
       onAgentRemove={removeAgent}
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
-      onDownloadSource={handleDownloadSource}
-      onSend={handleSend}
+      onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
+      onSend={(m) => void handleSend(m)}
       onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />

@@ -3,7 +3,7 @@ import { EmailTemplateType } from './value-objects/email-template-type.enum';
 export abstract class EmailTemplate {
   constructor(
     public readonly templateType: EmailTemplateType,
-    public readonly templateContent: Record<string, string>,
+    public readonly templateContent: Record<string, string | null>,
   ) {}
 }
 
@@ -20,7 +20,7 @@ export interface InvitationTemplateContent {
   invitingCompanyName: string;
   productName: string;
   currentYear: string;
-  adminName?: string;
+  adminName: string | null;
 }
 
 export interface PasswordResetTemplateContent {
@@ -51,7 +51,7 @@ export class InvitationTemplate extends EmailTemplate {
       invitingCompanyName: content.invitingCompanyName,
       productName: content.productName,
       currentYear: content.currentYear,
-      adminName: content.adminName || '',
+      adminName: content.adminName,
     });
   }
 }

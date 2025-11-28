@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from './list-predefined-mcp-integration-configs.use-case';
-import { ListPredefinedMcpIntegrationConfigsQuery } from './list-predefined-mcp-integration-configs.query';
 import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -62,7 +61,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
 
       // Assert
       expect(result).toEqual(mockConfigs);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(registryService.getAllConfigs).toHaveBeenCalledTimes(1);
       expect(loggerLogSpy).toHaveBeenCalledWith(
         'listPredefinedMcpIntegrationConfigs',
@@ -78,7 +77,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
 
       // Assert
       expect(result).toEqual([]);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(registryService.getAllConfigs).toHaveBeenCalledTimes(1);
       expect(loggerLogSpy).toHaveBeenCalledWith(
         'listPredefinedMcpIntegrationConfigs',
@@ -116,7 +115,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
     it('should NOT require authentication (no ContextService)', () => {
       // This test verifies that the use case does not inject ContextService
       // by checking the constructor parameters
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       const constructorParams: unknown[] =
         Reflect.getMetadata(
           'design:paramtypes',

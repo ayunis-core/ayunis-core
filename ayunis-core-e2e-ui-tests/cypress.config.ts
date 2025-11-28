@@ -2,7 +2,7 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
 	e2e: {
-		baseUrl: process.env['CYPRESS_BASE_URL'] || 'http://localhost:3000',
+		baseUrl: process.env['CYPRESS_BASE_URL'] || 'http://localhost:3001',
 		setupNodeEvents(on) {
 			on('before:run', async () => {
 				// ENV Sanity Check

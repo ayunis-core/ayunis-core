@@ -1,16 +1,16 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import {
   usePromptsControllerCreate,
   getPromptsControllerFindAllQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 import {
   createPromptFormSchema,
   type CreatePromptFormValues,
-} from "../model/createPromptSchema";
-import { useQueryClient } from "@tanstack/react-query";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useRouter } from "@tanstack/react-router";
+} from '../model/createPromptSchema';
+import { useQueryClient } from '@tanstack/react-query';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useRouter } from '@tanstack/react-router';
 
 interface UseAddPromptOptions {
   onSuccessCallback?: () => void;
@@ -23,8 +23,8 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
   const form = useForm<CreatePromptFormValues>({
     resolver: zodResolver(createPromptFormSchema),
     defaultValues: {
-      title: "",
-      content: "",
+      title: '',
+      content: '',
     },
   });
 
@@ -38,18 +38,18 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({
+          void queryClient.invalidateQueries({
             queryKey: getPromptsControllerFindAllQueryKey(),
           });
-          router.invalidate();
-          showSuccess("Prompt created");
+          void router.invalidate();
+          showSuccess('Prompt created');
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();
           }
         },
         onError: (error) => {
-          console.error("Create prompt failed:", error);
-          showError("Create prompt failed");
+          console.error('Create prompt failed:', error);
+          showError('Create prompt failed');
         },
       },
     );

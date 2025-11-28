@@ -1,20 +1,20 @@
-import { useState } from "react";
-import { Button } from "@/shared/ui/shadcn/button";
+import { useState } from 'react';
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/shadcn/dropdown-menu";
-import { Switch } from "@/shared/ui/shadcn/switch";
-import { Label } from "@/shared/ui/shadcn/label";
-import { Wrench } from "lucide-react";
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Switch } from '@/shared/ui/shadcn/switch';
+import { Label } from '@/shared/ui/shadcn/label';
+import { Wrench } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/shadcn/tooltip";
+} from '@/shared/ui/shadcn/tooltip';
 
 interface ToolsButtonProps {
   internetSearch?: boolean;

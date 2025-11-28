@@ -1,19 +1,19 @@
-import AppLayout from "@/layouts/app-layout";
-import ContentAreaLayout from "@/layouts/content-area-layout/ui/ContentAreaLayout";
-import ContentAreaHeader from "@/widgets/content-area-header/ui/ContentAreaHeader";
-import CreatePromptDialog from "./CreatePromptDialog";
-import PromptCard from "./PromptCard";
-import type { Prompt } from "../model/openapi";
-import PromptsEmptyState from "./PromptsEmptyState";
-import FullScreenMessageLayout from "@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout";
-import { useTranslation } from "react-i18next";
+import AppLayout from '@/layouts/app-layout';
+import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
+import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import CreatePromptDialog from './CreatePromptDialog';
+import PromptCard from './PromptCard';
+import type { Prompt } from '../model/openapi';
+import PromptsEmptyState from './PromptsEmptyState';
+import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
+import { useTranslation } from 'react-i18next';
 
 interface PromptsPageProps {
   prompts: Prompt[];
 }
 
 export default function PromptsPage({ prompts }: PromptsPageProps) {
-  const { t } = useTranslation("prompts");
+  const { t } = useTranslation('prompts');
 
   if (prompts.length === 0) {
     return (
@@ -21,7 +21,7 @@ export default function PromptsPage({ prompts }: PromptsPageProps) {
         <FullScreenMessageLayout
           header={
             <ContentAreaHeader
-              title={t("page.title")}
+              title={t('page.title')}
               action={<CreatePromptDialog />}
             />
           }
@@ -36,7 +36,7 @@ export default function PromptsPage({ prompts }: PromptsPageProps) {
       <ContentAreaLayout
         contentHeader={
           <ContentAreaHeader
-            title={t("page.title")}
+            title={t('page.title')}
             action={<CreatePromptDialog />}
           />
         }

@@ -23,4 +23,8 @@ export const modelsConfig = registerAs('models', () => ({
     baseURL: process.env.AYUNIS_BASE_URL,
     authToken: process.env.AYUNIS_AUTH_TOKEN,
   },
+  otc: {
+    apiKey: process.env.OTC_API_KEY,
+    baseURL: 'https://llm-server.llmhub.t-systems.net/v2',
+  },
 }));

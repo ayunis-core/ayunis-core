@@ -1,1 +1,1 @@
-export { default as EmailConfirmPage } from "./ui/EmailConfirmPage";
+export { default as EmailConfirmPage } from './ui/EmailConfirmPage';

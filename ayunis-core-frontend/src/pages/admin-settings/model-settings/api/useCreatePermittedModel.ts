@@ -4,16 +4,16 @@ import {
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
-} from "@/shared/api";
-import { type Model } from "../model/openapi";
-import { useQueryClient } from "@tanstack/react-query";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { showError } from "@/shared/lib/toast";
-import { useTranslation } from "react-i18next";
+} from '@/shared/api';
+import { type Model } from '../model/openapi';
+import { useQueryClient } from '@tanstack/react-query';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
 
 export function useCreatePermittedModel() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation("admin-settings-models");
+  const { t } = useTranslation('admin-settings-models');
   const createPermittedModelMutation = useModelsControllerCreatePermittedModel({
     mutation: {
       onMutate: async ({ data }) => {
@@ -49,23 +49,23 @@ export function useCreatePermittedModel() {
       onError: (err, _, context) => {
         const { code } = extractErrorData(err);
         switch (code) {
-          case "MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED":
+          case 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED':
             showError(
               t(
-                "models.createPermittedModel.multipleEmbeddingModelsNotAllowed",
+                'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
               ),
             );
             break;
-          case "MODEL_PROVIDER_NOT_PERMITTED":
+          case 'MODEL_PROVIDER_NOT_PERMITTED':
             showError(
-              t("models.createPermittedModel.modelProviderNotPermitted"),
+              t('models.createPermittedModel.modelProviderNotPermitted'),
             );
             break;
-          case "MODEL_NOT_FOUND":
-            showError(t("models.createPermittedModel.modelNotFound"));
+          case 'MODEL_NOT_FOUND':
+            showError(t('models.createPermittedModel.modelNotFound'));
             break;
           default:
-            showError(t("models.createPermittedModel.error"));
+            showError(t('models.createPermittedModel.error'));
             break;
         }
 
@@ -73,17 +73,17 @@ export function useCreatePermittedModel() {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }
       },
-      onSettled: () => {
+      onSettled: async () => {
         const queryKeys = [
           getModelsControllerGetAvailableModelsWithConfigQueryKey(),
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
           getModelsControllerGetUserSpecificDefaultModelQueryKey(),
         ];
-        queryKeys.forEach((queryKey) => {
-          queryClient.invalidateQueries({
-            queryKey,
-          });
-        });
+        await Promise.all(
+          queryKeys.map((queryKey) =>
+            queryClient.invalidateQueries({ queryKey }),
+          ),
+        );
       },
     },
   });

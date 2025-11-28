@@ -8,6 +8,7 @@ import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
@@ -20,6 +21,7 @@ import { UsageModule } from 'src/domain/usage/usage.module';
     ToolsModule,
     AgentsModule,
     SubscriptionsModule,
+    TrialsModule,
     McpModule,
     SourcesModule,
     UsageModule,

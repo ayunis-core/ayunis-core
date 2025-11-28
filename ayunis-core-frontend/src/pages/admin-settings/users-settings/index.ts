@@ -1,3 +1,3 @@
-import UsersSettingsPage from "./ui/UsersSettingsPage";
+import UsersSettingsPage from './ui/UsersSettingsPage';
 
 export default UsersSettingsPage;

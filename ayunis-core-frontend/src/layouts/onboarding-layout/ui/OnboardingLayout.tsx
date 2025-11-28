@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -6,9 +6,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
-import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
-import gradientBg from "@/shared/assets/brand/gradient.png";
+} from '@/shared/ui/shadcn/card';
+import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
+import gradientBg from '@/shared/assets/brand/gradient.png';
 
 interface OnboardingLayoutProps {
   children?: React.ReactNode;
@@ -85,8 +85,8 @@ export default function OnboardingLayout({
           className="h-full w-full rounded-xl"
           style={{
             backgroundImage: `url(${gradientBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         />
 

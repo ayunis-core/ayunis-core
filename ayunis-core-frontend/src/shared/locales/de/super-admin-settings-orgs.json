@@ -1,0 +1,40 @@
+{
+  "header": {
+    "title": "Organisationen",
+    "description": "Verwalte Plattform-Organisationen."
+  },
+  "actions": {
+    "createOrg": "Organisation erstellen",
+    "viewDetails": "Details ansehen",
+    "deactivate": "Deaktivieren",
+    "activate": "Aktivieren",
+    "edit": "Bearbeiten"
+  },
+  "dialog": {
+    "title": "Organisation erstellen",
+    "description": "Gib die grundlegenden Informationen für eine neue Organisation an.",
+    "nameLabel": "Organisationsname",
+    "namePlaceholder": "Acme GmbH",
+    "slugLabel": "Slug",
+    "slugDescription": "Wird in URLs verwendet. Nur Kleinbuchstaben, Zahlen und Bindestriche sind erlaubt.",
+    "slugPlaceholder": "acme-gmbh",
+    "cancel": "Abbrechen",
+    "create": "Organisation erstellen"
+  },
+  "table": {
+    "name": "Name",
+    "slug": "Slug",
+    "status": "Status",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Aktualisiert am",
+    "actions": "Aktionen"
+  },
+  "statuses": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  },
+  "empty": {
+    "title": "Noch keine Organisationen",
+    "description": "Neue Organisationen erscheinen hier."
+  }
+}

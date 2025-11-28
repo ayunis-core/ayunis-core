@@ -30,6 +30,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         email: user.email,
         emailVerified: user.emailVerified,
         role: user.role,
+        systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
       });

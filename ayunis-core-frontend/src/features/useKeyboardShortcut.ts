@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 type Key = string;
 
@@ -13,11 +13,11 @@ export default function useKeyboardShortcut(
       const pressedKeys = new Set<Key>();
 
       if (event.ctrlKey || event.metaKey) {
-        pressedKeys.add("Control");
-        pressedKeys.add("Meta");
+        pressedKeys.add('Control');
+        pressedKeys.add('Meta');
       }
-      if (event.shiftKey) pressedKeys.add("Shift");
-      if (event.altKey) pressedKeys.add("Alt");
+      if (event.shiftKey) pressedKeys.add('Shift');
+      if (event.altKey) pressedKeys.add('Alt');
       pressedKeys.add(event.key);
 
       // Convert targetKeys to a set and compare
@@ -34,10 +34,10 @@ export default function useKeyboardShortcut(
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [targetKeys, callback, options]);
 }

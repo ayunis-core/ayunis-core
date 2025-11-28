@@ -3,7 +3,7 @@ import {
   useMcpIntegrationsControllerListPredefinedConfigs,
   getMcpIntegrationsControllerListQueryKey,
   getMcpIntegrationsControllerListPredefinedConfigsQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 export function useMcpIntegrationsQueries() {
   const {

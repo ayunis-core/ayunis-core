@@ -6,8 +6,8 @@ import {
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
-} from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
+} from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useCreatePermittedProvider() {
   const queryClient = useQueryClient();
@@ -31,7 +31,7 @@ export function useCreatePermittedProvider() {
           return { previousData, queryKey };
         },
         onError: (err, _, context) => {
-          console.error("Error creating permitted provider", err);
+          console.error('Error creating permitted provider', err);
           if (context?.previousData && context?.queryKey) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }
@@ -45,7 +45,7 @@ export function useCreatePermittedProvider() {
           ];
 
           queryKeys.forEach((queryKey) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
               queryKey,
             });
           });

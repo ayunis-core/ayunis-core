@@ -5,6 +5,7 @@ import { SourceAdditionError } from '../../threads.errors';
 import { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import { SourceAlreadyAssignedError } from '../../threads.errors';
 
 @Injectable()
 export class AddSourceToThreadUseCase {
@@ -35,19 +36,18 @@ export class AddSourceToThreadUseCase {
         (assignment) => assignment.source.id === command.source.id,
       );
 
-      if (!sourceExists) {
-        const sourceAssignment = new SourceAssignment({
-          source: command.source,
-        });
-        command.thread.sourceAssignments.push(sourceAssignment);
-        return await this.threadsRepository.updateSourceAssignments({
-          threadId: command.thread.id,
-          userId,
-          sourceAssignments: command.thread.sourceAssignments,
-        });
+      if (sourceExists) {
+        throw new SourceAlreadyAssignedError(command.source.id);
       }
-
-      return;
+      const sourceAssignment = new SourceAssignment({
+        source: command.source,
+      });
+      command.thread.sourceAssignments.push(sourceAssignment);
+      return await this.threadsRepository.updateSourceAssignments({
+        threadId: command.thread.id,
+        userId,
+        sourceAssignments: command.thread.sourceAssignments,
+      });
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

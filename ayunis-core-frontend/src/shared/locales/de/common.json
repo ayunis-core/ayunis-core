@@ -8,12 +8,13 @@
     "upgrade": "Upgrade",
     "accountSettings": "Konto-Einstellungen",
     "adminSettings": "Admin-Einstellungen",
+    "superAdminSettings": "Super Admin-Einstellungen",
     "signOut": "Abmelden",
     "chats": "Chats",
     "loadingChats": "Chats werden geladen...",
     "failedToLoadChats": "Chats konnten nicht geladen werden",
     "emptyChatsTitle": "Ihre Chats werden hier angezeigt.",
-    "emptyChatsDescription": "Interagieren Sie mit AyunisCore und stellen Sie Fragen.",
+    "emptyChatsDescription": "Interagieren Sie mit Ayunis Core und stellen Sie Fragen.",
     "untitled": "Ohne Titel",
     "more": "Mehr",
     "deleteChat": "Chat löschen",
@@ -26,7 +27,13 @@
     "placeholder": "Stellen Sie eine Frage in Ayunis Core...",
     "selectPrompt": "Fügen Sie einen Prompt aus Ihrer Bibliothek hinzu",
     "promptsLoadError": "Fehler beim Laden der Prompts",
+    "promptsEmptyState": "Noch kein Prompt erstellt",
+    "createFirstPrompt": "Prompt erstellen",
     "noPromptsAvailable": "Keine Prompts verfügbar",
+    "addButtonTooltip": "Hinzufügen",
+    "createFirstAgent": "Agent erstellen",
+    "agentButtonTooltip": "Agenten",
+    "agentsEmptyState": "Noch kein Agent erstellt",
     "fileSourceUploadError": "Fehler beim Hochladen der Datei",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "uploadFile": "Datei hochladen",
@@ -52,5 +59,11 @@
       "previous": "Zurück",
       "next": "Weiter"
     }
+  },
+  "error": {
+    "title": "Ein Fehler ist aufgetreten",
+    "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte laden Sie die Seite neu, um fortzufahren.",
+    "reloadPage": "Seite neu laden",
+    "tryAgain": "Erneut versuchen"
   }
 }

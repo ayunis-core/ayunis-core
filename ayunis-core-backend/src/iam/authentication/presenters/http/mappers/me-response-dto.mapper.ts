@@ -8,6 +8,7 @@ export class MeResponseDtoMapper {
     return {
       email: user.email,
       role: user.role,
+      systemRole: user.systemRole,
       name: user.name,
     };
   }

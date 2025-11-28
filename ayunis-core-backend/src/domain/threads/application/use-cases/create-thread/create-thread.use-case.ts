@@ -11,10 +11,10 @@ import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/
 import { ModelError } from 'src/domain/models/application/models.errors';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
 import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -35,7 +35,7 @@ export class CreateThreadUseCase {
         throw new UnauthorizedException('User not authenticated');
       }
       let model: PermittedLanguageModel | undefined;
-      let agent: Agent | undefined;
+      let agentId: UUID | undefined;
 
       if (command.modelId) {
         model = await this.getPermittedLanguageModelUseCase.execute(
@@ -46,11 +46,14 @@ export class CreateThreadUseCase {
       }
 
       if (command.agentId) {
-        agent = await this.findOneAgentUseCase.execute(
+        // Validate that the agent exists and is accessible (owned or shared)
+        await this.findOneAgentUseCase.execute(
           new FindOneAgentQuery(command.agentId),
         );
+        agentId = command.agentId;
       }
-      if (!model && !agent) {
+
+      if (!model && !agentId) {
         throw new NoModelOrAgentProvidedError(userId);
       }
 
@@ -58,7 +61,7 @@ export class CreateThreadUseCase {
         const thread = new Thread({
           userId,
           model: model,
-          agent: agent,
+          agentId: agentId,
           messages: [],
         });
         const createdThread = await this.threadsRepository.create(thread);

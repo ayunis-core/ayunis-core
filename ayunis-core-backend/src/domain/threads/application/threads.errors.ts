@@ -8,6 +8,7 @@ export enum ThreadErrorCode {
   THREAD_NOT_FOUND = 'THREAD_NOT_FOUND',
   THREAD_CREATION_FAILED = 'THREAD_CREATION_FAILED',
   MESSAGE_ADDITION_FAILED = 'MESSAGE_ADDITION_FAILED',
+  SOURCE_ALREADY_ASSIGNED = 'SOURCE_ALREADY_ASSIGNED',
   SOURCE_ADDITION_FAILED = 'SOURCE_ADDITION_FAILED',
   SOURCE_REMOVAL_FAILED = 'SOURCE_REMOVAL_FAILED',
   SOURCE_NOT_FOUND = 'SOURCE_NOT_FOUND',
@@ -72,6 +73,17 @@ export class MessageAdditionError extends ThreadError {
         originalError: error.message,
         ...metadata,
       },
+    );
+  }
+}
+
+export class SourceAlreadyAssignedError extends ThreadError {
+  constructor(sourceId: string, metadata?: ErrorMetadata) {
+    super(
+      `Source with ID ${sourceId} is already assigned to a thread`,
+      ThreadErrorCode.SOURCE_ALREADY_ASSIGNED,
+      409,
+      metadata,
     );
   }
 }

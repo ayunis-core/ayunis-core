@@ -3,8 +3,8 @@ import { LegalAcceptanceType } from './value-objects/legal-acceptance-type.enum'
 
 export abstract class LegalAcceptance {
   id: UUID;
-  userId: string;
-  orgId: string;
+  userId: UUID;
+  orgId: UUID;
   version: string;
   type: LegalAcceptanceType;
   createdAt: Date;
@@ -12,8 +12,8 @@ export abstract class LegalAcceptance {
 
   constructor(params: {
     id?: UUID;
-    userId: string;
-    orgId: string;
+    userId: UUID;
+    orgId: UUID;
     version: string;
     type: LegalAcceptanceType;
     createdAt?: Date;

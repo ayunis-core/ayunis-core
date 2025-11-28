@@ -7,7 +7,6 @@ import { InvalidTokenError } from '../../authentication.errors';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
-import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 
 describe('GetCurrentUserUseCase', () => {
   let useCase: GetCurrentUserUseCase;

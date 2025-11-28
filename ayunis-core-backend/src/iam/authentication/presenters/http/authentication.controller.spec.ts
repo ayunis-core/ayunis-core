@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import { Request, Response } from 'express';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
+import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
 import { ActiveUser } from '../../domain/active-user.entity';
 import { AuthTokens } from '../../domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
@@ -88,6 +89,7 @@ describe('AuthenticationController', () => {
         email: 'test@example.com',
         emailVerified: false,
         role: UserRole.USER,
+        systemRole: SystemRole.CUSTOMER,
         orgId: 'org-id' as UUID,
         name: 'name',
       });
@@ -127,6 +129,7 @@ describe('AuthenticationController', () => {
         email: 'test@example.com',
         emailVerified: false,
         role: UserRole.ADMIN,
+        systemRole: SystemRole.CUSTOMER,
         orgId: 'org-id' as UUID,
         name: 'name',
       });

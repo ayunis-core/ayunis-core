@@ -2,15 +2,15 @@ import {
   getSubscriptionsControllerGetSubscriptionQueryKey,
   useSubscriptionsControllerUpdateBillingInfo,
   type UpdateBillingInfoDto,
-} from "@/shared/api";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useRouter } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+} from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 interface BillingInfoUpdateFormData {
   currentBillingInfo: UpdateBillingInfoDto;
@@ -19,7 +19,7 @@ interface BillingInfoUpdateFormData {
 export default function useBillingInfoUpdate({
   currentBillingInfo,
 }: BillingInfoUpdateFormData) {
-  const { t } = useTranslation("admin-settings-billing");
+  const { t } = useTranslation('admin-settings-billing');
   const queryClient = useQueryClient();
   const router = useRouter();
   const form = useForm({
@@ -27,16 +27,16 @@ export default function useBillingInfoUpdate({
       z.object({
         companyName: z
           .string()
-          .min(1, t("billingInfo.createErrorCompanyNameRequired")),
-        street: z.string().min(1, t("billingInfo.createErrorStreetRequired")),
+          .min(1, t('billingInfo.createErrorCompanyNameRequired')),
+        street: z.string().min(1, t('billingInfo.createErrorStreetRequired')),
         houseNumber: z
           .string()
-          .min(1, t("billingInfo.createErrorHouseNumberRequired")),
+          .min(1, t('billingInfo.createErrorHouseNumberRequired')),
         postalCode: z
           .string()
-          .min(1, t("billingInfo.createErrorPostalCodeRequired")),
-        city: z.string().min(1, t("billingInfo.createErrorCityRequired")),
-        country: z.string().min(1, t("billingInfo.createErrorCountryRequired")),
+          .min(1, t('billingInfo.createErrorPostalCodeRequired')),
+        city: z.string().min(1, t('billingInfo.createErrorCityRequired')),
+        country: z.string().min(1, t('billingInfo.createErrorCountryRequired')),
         vatNumber: z.string().optional(),
       }),
     ),
@@ -54,21 +54,21 @@ export default function useBillingInfoUpdate({
   const { mutate, isPending } = useSubscriptionsControllerUpdateBillingInfo({
     mutation: {
       onSuccess: () => {
-        showSuccess(t("billingInfo.updateSuccess"));
+        showSuccess(t('billingInfo.updateSuccess'));
       },
       onError: (error) => {
         const { code } = extractErrorData(error);
-        if (code === "SUBSCRIPTION_NOT_FOUND") {
-          showError(t("billingInfo.updateErrorSubscriptionNotFound"));
+        if (code === 'SUBSCRIPTION_NOT_FOUND') {
+          showError(t('billingInfo.updateErrorSubscriptionNotFound'));
         } else {
-          showError(t("billingInfo.updateErrorUnexpected"));
+          showError(t('billingInfo.updateErrorUnexpected'));
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
-        router.invalidate();
+        void router.invalidate();
       },
     },
   });

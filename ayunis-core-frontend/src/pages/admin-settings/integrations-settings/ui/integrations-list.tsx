@@ -1,10 +1,10 @@
-import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/shared/ui/shadcn/card";
-import { FileQuestion } from "lucide-react";
-import type { McpIntegration } from "../model/types";
-import { IntegrationCard } from "./integration-card";
-import { useToggleIntegration } from "../api/useToggleIntegration";
-import { useValidateIntegration } from "../api/useValidateIntegration";
+import { useTranslation } from 'react-i18next';
+import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { FileQuestion } from 'lucide-react';
+import type { McpIntegration } from '../model/types';
+import { IntegrationCard } from './integration-card';
+import { useToggleIntegration } from '../api/useToggleIntegration';
+import { useValidateIntegration } from '../api/useValidateIntegration';
 
 interface IntegrationsListProps {
   integrations: McpIntegration[];
@@ -17,7 +17,7 @@ export function IntegrationsList({
   onEdit,
   onDelete,
 }: IntegrationsListProps) {
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
   const { toggleIntegration, togglingIds } = useToggleIntegration();
   const { validateIntegration, validatingIds } = useValidateIntegration();
 
@@ -28,10 +28,10 @@ export function IntegrationsList({
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <FileQuestion className="mb-4 h-16 w-16 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-semibold">
-              {t("integrations.list.noIntegrationsTitle")}
+              {t('integrations.list.noIntegrationsTitle')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t("integrations.list.noIntegrationsMessage")}
+              {t('integrations.list.noIntegrationsMessage')}
             </p>
           </div>
         </CardContent>

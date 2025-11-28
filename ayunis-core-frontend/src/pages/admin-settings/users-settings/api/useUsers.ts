@@ -1,8 +1,8 @@
 import {
   getUserControllerGetUsersInOrganizationQueryKey,
   useUserControllerGetUsersInOrganization,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { User } from "../model/openapi";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { User } from '../model/openapi';
 
 interface UseUsersOptions {
   initialData?: User[];

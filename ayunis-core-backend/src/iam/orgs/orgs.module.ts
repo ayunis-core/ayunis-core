@@ -11,11 +11,14 @@ import { FindOrgByIdUseCase } from './application/use-cases/find-org-by-id/find-
 import { CreateOrgUseCase } from './application/use-cases/create-org/create-org.use-case';
 import { UpdateOrgUseCase } from './application/use-cases/update-org/update-org.use-case';
 import { DeleteOrgUseCase } from './application/use-cases/delete-org/delete-org.use-case';
-import { FindOrgByUserIdUseCase } from './application/use-cases/find-org-by-user-id/find-org-by-user-id.use-case';
 import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
+import { SuperAdminGetAllOrgsUseCase } from './application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
+import { SuperAdminOrgsController } from './presenters/http/super-admin-orgs.controller';
+import { SuperAdminOrgResponseDtoMapper } from './presenters/http/mappers/super-admin-org-response-dto.mapper';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OrgRecord])],
+  controllers: [SuperAdminOrgsController],
   providers: [
     {
       provide: OrgsRepository,
@@ -26,19 +29,21 @@ import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/f
     },
     // Use cases
     FindOrgByIdUseCase,
-    FindOrgByUserIdUseCase,
     CreateOrgUseCase,
     UpdateOrgUseCase,
     DeleteOrgUseCase,
     FindAllOrgIdsUseCase,
+    SuperAdminGetAllOrgsUseCase,
+    // Mappers
+    SuperAdminOrgResponseDtoMapper,
   ],
   exports: [
     FindOrgByIdUseCase,
-    FindOrgByUserIdUseCase,
     CreateOrgUseCase,
     UpdateOrgUseCase,
     DeleteOrgUseCase,
     FindAllOrgIdsUseCase,
+    SuperAdminGetAllOrgsUseCase,
     OrgsRepository, // Export repository for seeding
   ],
 })

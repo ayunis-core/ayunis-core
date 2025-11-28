@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/shared/ui/shadcn/dialog";
+} from '@/shared/ui/shadcn/dialog';
 import {
   Form,
   FormControl,
@@ -14,30 +14,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/shared/ui/shadcn/form";
+} from '@/shared/ui/shadcn/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/shadcn/select";
-import { Input } from "@/shared/ui/shadcn/input";
-import { Textarea } from "@/shared/ui/shadcn/textarea";
-import { Button } from "@/shared/ui/shadcn/button";
+} from '@/shared/ui/shadcn/select';
+import { Input } from '@/shared/ui/shadcn/input';
+import { Textarea } from '@/shared/ui/shadcn/textarea';
+import { Button } from '@/shared/ui/shadcn/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/shadcn/tooltip";
-import { useState } from "react";
-import { Info } from "lucide-react";
-import { useUpdateAgent } from "../api/useUpdateAgent";
-import { useTranslation } from "react-i18next";
-import type { Agent } from "../model/openapi";
-import { usePermittedModels } from "@/features/usePermittedModels";
-import { ToolAssignmentDtoType } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+} from '@/shared/ui/shadcn/tooltip';
+import { useState } from 'react';
+import { Info } from 'lucide-react';
+import { useUpdateAgent } from '../api/useUpdateAgent';
+import { useTranslation } from 'react-i18next';
+import type { Agent } from '../model/openapi';
+import { usePermittedModels } from '@/features/usePermittedModels';
+import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface EditAgentDialogProps {
   selectedAgent: Agent;
@@ -48,7 +48,7 @@ export default function EditAgentDialog({
   selectedAgent,
   trigger,
 }: EditAgentDialogProps) {
-  const { t } = useTranslation("agents");
+  const { t } = useTranslation('agents');
   const [isOpen, setIsOpen] = useState(false);
   // TODO: This is still here to keep the pattern of the create agent dialog
   // And should be extended as soon as there are agent tools
@@ -89,7 +89,8 @@ export default function EditAgentDialog({
     if (open) {
       // Check if agent has internet search tool
       const hasInternetSearch = selectedAgent.tools?.some(
-        (tool: any) => tool.type === ToolAssignmentDtoType.internet_search,
+        (tool) =>
+          'type' in tool && tool.type === ToolAssignmentDtoType.internet_search,
       );
       setInternetSearchEnabled(hasInternetSearch || false);
 
@@ -97,7 +98,10 @@ export default function EditAgentDialog({
       form.reset({
         name: selectedAgent.name,
         instructions: selectedAgent.instructions,
-        modelId: (selectedAgent.model as any)?.id || "",
+        modelId:
+          selectedAgent.model && 'id' in selectedAgent.model
+            ? selectedAgent.model.id
+            : '',
         toolAssignments: [],
       });
     }
@@ -108,12 +112,12 @@ export default function EditAgentDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>{t("editDialog.title")}</DialogTitle>
-          <DialogDescription>{t("editDialog.description")}</DialogDescription>
+          <DialogTitle>{t('editDialog.title')}</DialogTitle>
+          <DialogDescription>{t('editDialog.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
             className="space-y-6"
           >
             <FormField
@@ -121,10 +125,10 @@ export default function EditAgentDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("editDialog.form.nameLabel")}</FormLabel>
+                  <FormLabel>{t('editDialog.form.nameLabel')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("editDialog.form.namePlaceholder")}
+                      placeholder={t('editDialog.form.namePlaceholder')}
                       {...field}
                     />
                   </FormControl>
@@ -138,11 +142,11 @@ export default function EditAgentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    {t("editDialog.form.instructionsLabel")}
+                    {t('editDialog.form.instructionsLabel')}
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={t("editDialog.form.instructionsPlaceholder")}
+                      placeholder={t('editDialog.form.instructionsPlaceholder')}
                       className="min-h-[150px] max-h-[200px]"
                       {...field}
                     />
@@ -156,12 +160,12 @@ export default function EditAgentDialog({
               name="modelId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("editDialog.form.modelLabel")}</FormLabel>
+                  <FormLabel>{t('editDialog.form.modelLabel')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={t("editDialog.form.modelPlaceholder")}
+                          placeholder={t('editDialog.form.modelPlaceholder')}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -180,7 +184,7 @@ export default function EditAgentDialog({
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <FormLabel className="text-sm font-medium">
-                  {t("editDialog.form.capabilitiesLabel")}
+                  {t('editDialog.form.capabilitiesLabel')}
                 </FormLabel>
                 <TooltipProvider>
                   <Tooltip>
@@ -188,7 +192,7 @@ export default function EditAgentDialog({
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{t("editDialog.form.capabilitiesTooltip")}</p>
+                      <p>{t('editDialog.form.capabilitiesTooltip')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -201,12 +205,12 @@ export default function EditAgentDialog({
                 onClick={handleCancel}
                 disabled={isLoading}
               >
-                {t("editDialog.buttons.cancel")}
+                {t('editDialog.buttons.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading
-                  ? t("editDialog.buttons.saving")
-                  : t("editDialog.buttons.save")}
+                  ? t('editDialog.buttons.saving')
+                  : t('editDialog.buttons.save')}
               </Button>
             </DialogFooter>
           </form>

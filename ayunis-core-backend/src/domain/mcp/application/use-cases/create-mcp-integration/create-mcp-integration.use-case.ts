@@ -99,7 +99,7 @@ export class CreateMcpIntegrationUseCase {
             method: McpAuthMethod.NO_AUTH,
           });
           break;
-        case McpAuthMethod.BEARER_TOKEN:
+        case McpAuthMethod.BEARER_TOKEN: {
           const tokenField = command.credentialFields.find(
             (field) => field.name === CredentialFieldType.TOKEN,
           );
@@ -119,6 +119,7 @@ export class CreateMcpIntegrationUseCase {
             authToken: await this.credentialEncryption.encrypt(rawToken),
           });
           break;
+        }
         case McpAuthMethod.OAUTH:
           integrationAuth = this.authFactory.createAuth({
             method: McpAuthMethod.OAUTH,

@@ -7,7 +7,7 @@ import { AgentSourceDtoMapper } from './agent-source.mapper';
 export class AgentDtoMapper {
   constructor(private readonly agentSourceDtoMapper: AgentSourceDtoMapper) {}
 
-  toDto(agent: Agent): AgentResponseDto {
+  toDto(agent: Agent, isShared: boolean = false): AgentResponseDto {
     return {
       id: agent.id,
       name: agent.name,
@@ -28,6 +28,8 @@ export class AgentDtoMapper {
       sources: this.agentSourceDtoMapper.toDtoArray(
         agent.sourceAssignments || [],
       ),
+      isShared,
+      ownerId: agent.userId,
     };
   }
 

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { AddSourceToAgentUseCase } from './add-source-to-agent.use-case';
 import { AddSourceToAgentCommand } from './add-source-to-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
@@ -9,6 +9,7 @@ import {
   SourceAlreadyAssignedError,
   UnexpectedAgentError,
 } from '../../agents.errors';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Agent } from '../../../domain/agent.entity';
 import { AgentSourceAssignment } from '../../../domain/agent-source-assignment.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';
@@ -131,12 +132,12 @@ describe('AddSourceToAgentUseCase', () => {
 
       // Assert
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockAgentId,
@@ -201,9 +202,9 @@ describe('AddSourceToAgentUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({
           sourceAssignments: expect.arrayContaining([
@@ -218,7 +219,7 @@ describe('AddSourceToAgentUseCase', () => {
       expect(result.source).toBe(mockSource);
     });
 
-    it('should throw UnauthorizedException when user is not authenticated', async () => {
+    it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
       // Arrange
       const command = new AddSourceToAgentCommand({
         agentId: mockAgentId,
@@ -229,11 +230,11 @@ describe('AddSourceToAgentUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
+        UnauthorizedAccessError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(contextService.get).toHaveBeenCalledWith('userId');
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).not.toHaveBeenCalled();
     });
 
@@ -251,12 +252,12 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         AgentNotFoundError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.findOne).toHaveBeenCalledWith(
         mockAgentId,
         mockUserId,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 
@@ -287,7 +288,7 @@ describe('AddSourceToAgentUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SourceAlreadyAssignedError,
       );
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(agentRepository.update).not.toHaveBeenCalled();
     });
 

@@ -46,6 +46,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
           sub: user.id,
           orgId: user.orgId,
           role: user.role,
+          systemRole: user.systemRole,
           name: user.name,
         },
         {

@@ -4,6 +4,8 @@ import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { ModelError, PermittedModelNotFoundError } from '../../models.errors';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class ManageUserDefaultModelUseCase {
@@ -12,6 +14,7 @@ export class ManageUserDefaultModelUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
@@ -25,10 +28,13 @@ export class ManageUserDefaultModelUseCase {
 
     try {
       // First, verify that the permitted model exists and belongs to the organization
+      const userId = this.contextService.get('userId');
+      if (userId !== command.userId) {
+        throw new UnauthorizedAccessError();
+      }
       const permittedModel =
         await this.permittedModelsRepository.findOneLanguage({
           id: command.permittedModelId,
-          orgId: command.orgId,
         });
 
       if (!permittedModel) {

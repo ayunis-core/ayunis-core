@@ -1,3 +1,3 @@
-import ChatInput from "./ui/ChatInput";
+import ChatInput from './ui/ChatInput';
 
 export default ChatInput;

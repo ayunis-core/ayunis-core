@@ -7,8 +7,8 @@ import {
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getAgentsControllerFindAllQueryKey,
-} from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
+} from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useDeletePermittedProvider() {
   const queryClient = useQueryClient();
@@ -33,7 +33,7 @@ export function useDeletePermittedProvider() {
           return { previousData, queryKey };
         },
         onError: (err, _, context) => {
-          console.error("Error deleting permitted provider", err);
+          console.error('Error deleting permitted provider', err);
           if (context?.previousData && context?.queryKey) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }
@@ -47,7 +47,7 @@ export function useDeletePermittedProvider() {
             getAgentsControllerFindAllQueryKey(),
           ];
           queryKeys.forEach((queryKey) => {
-            queryClient.invalidateQueries({
+            void queryClient.invalidateQueries({
               queryKey,
             });
           });
@@ -56,7 +56,7 @@ export function useDeletePermittedProvider() {
     });
 
   function deletePermittedProvider(provider: DeletePermittedProviderDto) {
-    console.log("Deleting permitted provider", provider);
+    console.log('Deleting permitted provider', provider);
     deletePermittedProviderMutation.mutate(
       {
         data: provider,

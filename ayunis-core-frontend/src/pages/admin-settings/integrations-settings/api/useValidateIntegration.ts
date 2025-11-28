@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
-import { useMcpIntegrationsControllerValidate } from "@/shared/api/generated/ayunisCoreAPI";
-import type { McpIntegration } from "../model/types";
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { useMcpIntegrationsControllerValidate } from '@/shared/api/generated/ayunisCoreAPI';
+import type { McpIntegration } from '../model/types';
 
 export function useValidateIntegration() {
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
   const [validatingIds, setValidatingIds] = useState<Set<string>>(new Set());
 
   const mutation = useMcpIntegrationsControllerValidate({
@@ -13,7 +13,7 @@ export function useValidateIntegration() {
       onSuccess: (data) => {
         if (!data.valid) {
           toast.error(
-            t("integrations.validateIntegration.error", {
+            t('integrations.validateIntegration.error', {
               message: data.error,
             }),
           );
@@ -25,17 +25,26 @@ export function useValidateIntegration() {
           tools: 0,
         };
         toast.success(
-          t("integrations.validateIntegration.success", {
+          t('integrations.validateIntegration.success', {
             prompts: capabilities.prompts,
             resources: capabilities.resources,
             tools: capabilities.tools,
           }),
         );
       },
-      onError: (error: any, variables) => {
+      onError: (error: unknown, variables) => {
+        const errorMessage =
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+          (error as { message?: string })?.message ||
+          'Unknown error';
         toast.error(
-          t("integrations.validateIntegration.error", {
-            message: error.response?.data?.message || error.message,
+          t('integrations.validateIntegration.error', {
+            message: errorMessage,
           }),
         );
         setValidatingIds((prev) => {

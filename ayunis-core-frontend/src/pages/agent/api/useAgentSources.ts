@@ -3,17 +3,17 @@ import {
   useAgentsControllerGetAgentSources,
   useAgentsControllerRemoveSource,
   type AgentResponseDto,
-} from "@/shared/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
+} from '@/shared/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function useAgentSources({
   agent,
 }: {
   agent: AgentResponseDto;
 }) {
-  const { t } = useTranslation("agent");
+  const { t } = useTranslation('agent');
   const queryClient = useQueryClient();
 
   // Fetch existing sources
@@ -24,13 +24,13 @@ export default function useAgentSources({
   const addFileSourceMutation = useAgentsControllerAddFileSource({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: [`/agents/${agent.id}/sources`],
         });
-        toast.success(t("sources.addedSuccessfully"));
+        toast.success(t('sources.addedSuccessfully'));
       },
       onError: () => {
-        toast.error("Failed to add source");
+        toast.error('Failed to add source');
       },
     },
   });
@@ -39,13 +39,13 @@ export default function useAgentSources({
   const removeSourceMutation = useAgentsControllerRemoveSource({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: [`/agents/${agent.id}/sources`],
         });
-        toast.success(t("sources.removedSuccessfully"));
+        toast.success(t('sources.removedSuccessfully'));
       },
       onError: () => {
-        toast.error(t("sources.failedToRemove"));
+        toast.error(t('sources.failedToRemove'));
       },
     },
   });

@@ -1,1 +1,1 @@
-export { default as SettingsLayout } from "./ui/SettingsLayout";
+export { default as SettingsLayout } from './ui/SettingsLayout';

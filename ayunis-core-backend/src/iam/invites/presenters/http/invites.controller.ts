@@ -263,13 +263,10 @@ export class InvitesController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteInvite(
-    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteInvite', { userId, inviteId });
+    this.logger.log('deleteInvite', { inviteId });
 
-    await this.deleteInviteUseCase.execute(
-      new DeleteInviteCommand(inviteId, userId),
-    );
+    await this.deleteInviteUseCase.execute(new DeleteInviteCommand(inviteId));
   }
 }

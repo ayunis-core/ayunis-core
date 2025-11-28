@@ -1,32 +1,32 @@
 import {
   getThreadsControllerFindOneQueryKey,
   useThreadsControllerUpdateModel,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { UpdateThreadModelDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { showError } from "@/shared/lib/toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { UpdateThreadModelDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { showError } from '@/shared/lib/toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 export function useUpdateThreadModel({ threadId }: { threadId: string }) {
-  const { t } = useTranslation("chat");
+  const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useThreadsControllerUpdateModel({
     mutation: {
       onError: () => {
-        showError(t("chat.errorUpdateModel"));
+        showError(t('chat.errorUpdateModel'));
       },
       onSettled: (_, __, { id: threadId }) => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getThreadsControllerFindOneQueryKey(threadId),
         });
-        router.invalidate();
+        void router.invalidate();
       },
     },
   });
 
-  async function updateModel(modelId: string): Promise<void> {
+  function updateModel(modelId: string): void {
     const data: UpdateThreadModelDto = {
       modelId,
     };

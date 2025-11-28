@@ -4,7 +4,6 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UUID } from 'crypto';
 import { AgentRepository } from '../../ports/agent.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnassignMcpIntegrationFromAgentCommand } from './unassign-mcp-integration-from-agent.command';
@@ -76,9 +75,7 @@ export class UnassignMcpIntegrationFromAgentUseCase {
       this.logger.error('Unexpected error unassigning MCP integration', {
         error: error as Error,
       });
-      throw new UnexpectedAgentError('Unexpected error occurred', {
-        error: error as Error,
-      });
+      throw new UnexpectedAgentError(error);
     }
   }
 }

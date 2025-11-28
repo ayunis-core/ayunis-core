@@ -1,5 +1,5 @@
-import axios, { type AxiosRequestConfig } from "axios";
-import config from "../config";
+import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+import config from '../config';
 
 const axiosInstance = axios.create({
   baseURL: config.api.baseUrl,
@@ -13,8 +13,10 @@ axiosInstance.interceptors.request.use(
     // The browser will automatically send cookies
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
+  (error: AxiosError) => {
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error)),
+    );
   },
 );
 
@@ -23,9 +25,11 @@ axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  (error: AxiosError) => {
     // Handle common errors here
-    return Promise.reject(error);
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error)),
+    );
   },
 );
 
@@ -34,7 +38,7 @@ export async function customAxiosInstance<T>(
   config: AxiosRequestConfig,
 ): Promise<T> {
   const response = await axiosInstance(config);
-  return response.data;
+  return response.data as T;
 }
 
 export { axiosInstance };

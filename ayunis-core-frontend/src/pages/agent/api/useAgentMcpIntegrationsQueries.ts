@@ -1,7 +1,7 @@
 import {
   useMcpIntegrationsControllerListAvailable,
   useAgentsControllerListAgentMcpIntegrations,
-} from "@/shared/api/generated/ayunisCoreAPI";
+} from '@/shared/api/generated/ayunisCoreAPI';
 
 /**
  * Hook to fetch both available and assigned MCP integrations for an agent
@@ -27,8 +27,8 @@ export function useAgentMcpIntegrationsQueries(agentId: string) {
     isLoading: loadingAvailable || loadingAssigned,
     isError: errorAvailable || errorAssigned,
     refetch: () => {
-      refetchAvailable();
-      refetchAssigned();
+      void refetchAvailable();
+      void refetchAssigned();
     },
   };
 }

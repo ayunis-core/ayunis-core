@@ -10,6 +10,7 @@ import {
   ManyToOne,
   TableInheritance,
 } from 'typeorm';
+import { UUID } from 'crypto';
 
 @Entity({ name: 'legal_acceptances' })
 @TableInheritance({
@@ -23,13 +24,13 @@ export abstract class LegalAcceptanceRecord extends BaseRecord {
   version: string;
 
   @Column()
-  userId: string;
+  userId: UUID;
 
-  @ManyToOne(() => UserRecord, { onDelete: 'NO ACTION' })
+  @ManyToOne(() => UserRecord, { onDelete: 'CASCADE' })
   user: UserRecord;
 
   @Column()
-  orgId: string;
+  orgId: UUID;
 
   @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;

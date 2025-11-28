@@ -14,8 +14,6 @@ import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
-  McpIntegrationAuthRecord,
-  McpIntegrationRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
@@ -55,7 +53,7 @@ describe('McpIntegrationMapper', () => {
       expect(record).toBeInstanceOf(CustomMcpIntegrationRecord);
       expect(record.orgId).toBe(baseParams.orgId);
       expect(record.auth).toBeInstanceOf(NoAuthMcpIntegrationAuthRecord);
-      const authRecord = record.auth as McpIntegrationAuthRecord;
+      const authRecord = record.auth;
       expect(authRecord.integration).toBe(record);
       expect(authRecord.integrationId).toBeUndefined();
     });

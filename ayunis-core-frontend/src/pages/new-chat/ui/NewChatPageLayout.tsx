@@ -1,4 +1,4 @@
-import AppLayout from "@/layouts/app-layout";
+import AppLayout from '@/layouts/app-layout';
 
 interface NewChatPageLayoutProps {
   header: React.ReactNode;

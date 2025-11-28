@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { randomUUID, UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { DeleteMcpIntegrationUseCase } from './delete-mcp-integration.use-case';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -21,8 +21,8 @@ describe('DeleteMcpIntegrationUseCase', () => {
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  const mockOrgId = randomUUID() as UUID;
-  const mockIntegrationId = randomUUID() as UUID;
+  const mockOrgId = randomUUID();
+  const mockIntegrationId = randomUUID();
 
   const buildIntegration = (
     overrides: Partial<
@@ -121,7 +121,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
 
     it('should throw McpIntegrationAccessDeniedError when integration belongs to different organization', async () => {
       // Arrange
-      const differentOrgId = randomUUID() as UUID;
+      const differentOrgId = randomUUID();
       const mockIntegration = buildIntegration({ orgId: differentOrgId });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
@@ -207,7 +207,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
       // Arrange
-      const mockIntegration = buildIntegration({ orgId: randomUUID() as UUID });
+      const mockIntegration = buildIntegration({ orgId: randomUUID() });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);

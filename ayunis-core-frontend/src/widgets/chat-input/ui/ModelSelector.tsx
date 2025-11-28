@@ -4,9 +4,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/shadcn/select";
-import { usePermittedModels } from "@/features/usePermittedModels";
-import { getFlagByProvider } from "@/shared/lib/getFlagByProvider";
+} from '@/shared/ui/shadcn/select';
+import { usePermittedModels } from '@/features/usePermittedModels';
+import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
 
 interface ModelSelectorProps {
   isDisabled: boolean;
@@ -26,9 +26,9 @@ export default function ModelSelector({
   } = usePermittedModels();
   const sortedModels = [...models].sort((a, b) => {
     const flagPriority: Record<string, number> = {
-      "🇩🇪": 0,
-      "🇪🇺": 1,
-      "🇺🇸": 2,
+      '🇩🇪': 0,
+      '🇪🇺': 1,
+      '🇺🇸': 2,
     };
 
     const flagA = getFlagByProvider(a.provider);

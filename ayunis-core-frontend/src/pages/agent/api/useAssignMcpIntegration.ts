@@ -1,11 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   useAgentsControllerAssignMcpIntegration,
   getAgentsControllerListAgentMcpIntegrationsQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { McpIntegrationResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { showSuccess, showError } from "@/shared/lib/toast";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { showSuccess, showError } from '@/shared/lib/toast';
 
 /**
  * Hook to assign an MCP integration to an agent with optimistic updates
@@ -13,7 +13,7 @@ import { showSuccess, showError } from "@/shared/lib/toast";
 export function useAssignMcpIntegration(
   availableIntegrations?: McpIntegrationResponseDto[],
 ) {
-  const { t } = useTranslation("agent");
+  const { t } = useTranslation('agent');
   const queryClient = useQueryClient();
 
   return useAgentsControllerAssignMcpIntegration({
@@ -56,14 +56,14 @@ export function useAssignMcpIntegration(
             context.previousAssignments,
           );
         }
-        showError(t("mcpIntegrations.errors.failedToConnect"));
+        showError(t('mcpIntegrations.errors.failedToConnect'));
       },
       onSuccess: () => {
-        showSuccess(t("mcpIntegrations.success.connected"));
+        showSuccess(t('mcpIntegrations.success.connected'));
       },
       onSettled: (_data, _error, variables) => {
         // Always refetch after mutation
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getAgentsControllerListAgentMcpIntegrationsQueryKey(
             variables.agentId,
           ),

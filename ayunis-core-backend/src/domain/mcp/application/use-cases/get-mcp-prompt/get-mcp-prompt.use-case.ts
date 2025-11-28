@@ -21,6 +21,16 @@ export interface PromptResult {
   description?: string;
 }
 
+interface McpPromptMessage {
+  role: string;
+  content: string | { text?: string; [key: string]: unknown };
+}
+
+interface McpPromptResponse {
+  messages: McpPromptMessage[];
+  description?: string;
+}
+
 @Injectable()
 export class GetMcpPromptUseCase {
   private readonly logger = new Logger(GetMcpPromptUseCase.name);
@@ -70,15 +80,16 @@ export class GetMcpPromptUseCase {
       });
 
       // Map to PromptResult
+      const response = promptResponse as McpPromptResponse;
       return {
-        messages: promptResponse.messages.map((msg: any) => ({
+        messages: response.messages.map((msg) => ({
           role: msg.role,
           content:
             typeof msg.content === 'string'
               ? msg.content
-              : msg.content.text || String(msg.content),
+              : (msg.content.text ?? JSON.stringify(msg.content)),
         })),
-        description: (promptResponse as any).description,
+        description: response.description,
       };
     } catch (error) {
       if (

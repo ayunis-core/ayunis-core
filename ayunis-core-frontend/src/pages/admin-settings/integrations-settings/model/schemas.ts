@@ -1,11 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Validation schema for creating a predefined MCP integration
  * Matches CreatePredefinedIntegrationDto from the API
  */
 export const createPredefinedIntegrationSchema = z.object({
-  slug: z.string().min(1, "Predefined integration type is required"),
+  slug: z.string().min(1, 'Predefined integration type is required'),
   configValues: z
     .array(
       z.object({
@@ -26,16 +26,16 @@ export const createPredefinedIntegrationSchema = z.object({
 export const createCustomIntegrationSchema = z.object({
   name: z
     .string()
-    .min(1, "Name is required")
-    .max(255, "Name must be 255 characters or less"),
-  serverUrl: z.string().url("Server URL must be a valid URL"),
-  authMethod: z.enum(["NO_AUTH", "CUSTOM_HEADER", "BEARER_TOKEN"]).optional(),
+    .min(1, 'Name is required')
+    .max(255, 'Name must be 255 characters or less'),
+  serverUrl: z.string().url('Server URL must be a valid URL'),
+  authMethod: z.enum(['NO_AUTH', 'CUSTOM_HEADER', 'BEARER_TOKEN']).optional(),
   authHeaderName: z.string().optional(),
   credentials: z.string().optional(),
 }) satisfies z.ZodType<{
   name: string;
   serverUrl: string;
-  authMethod?: "NO_AUTH" | "CUSTOM_HEADER" | "BEARER_TOKEN";
+  authMethod?: 'NO_AUTH' | 'CUSTOM_HEADER' | 'BEARER_TOKEN';
   authHeaderName?: string;
   credentials?: string;
 }>;
@@ -47,8 +47,8 @@ export const createCustomIntegrationSchema = z.object({
 export const updateIntegrationSchema = z.object({
   name: z
     .string()
-    .min(1, "Name is required")
-    .max(255, "Name must be 255 characters or less")
+    .min(1, 'Name is required')
+    .max(255, 'Name must be 255 characters or less')
     .optional(),
   credentials: z.string().optional(),
   authHeaderName: z.string().optional(),

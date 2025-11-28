@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { McpIntegrationsRepositoryPort } from '../../../application/ports/mcp-integrations.repository.port';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
@@ -33,7 +33,11 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   async save(integration: McpIntegration): Promise<McpIntegration> {
     this.logger.log('save', { integrationId: integration.id });
 
-    const record = this.mcpIntegrationMapper.toRecord(integration);
+    const recordResult = this.mcpIntegrationMapper.toRecord(integration);
+    if (recordResult instanceof Error) {
+      throw recordResult;
+    }
+    const record: McpIntegrationRecord = recordResult;
     const authRecord = record.auth;
 
     if (!authRecord) {
@@ -86,6 +90,20 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     }
 
     return this.mcpIntegrationMapper.toDomain(record);
+  }
+
+  async findByIds(ids: UUID[]): Promise<McpIntegration[]> {
+    this.logger.log('findByIds', { count: ids.length });
+
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const records = await this.repository.find({
+      where: { id: In(ids) },
+    });
+
+    return records.map((record) => this.mcpIntegrationMapper.toDomain(record));
   }
 
   async findAll(

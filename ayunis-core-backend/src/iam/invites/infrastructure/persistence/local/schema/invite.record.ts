@@ -10,9 +10,7 @@ export class InviteRecord extends BaseRecord {
   @Column({ unique: true })
   email: string;
 
-  @Column({
-    type: 'uuid',
-  })
+  @Column()
   @Index()
   orgId: UUID;
 
@@ -26,12 +24,12 @@ export class InviteRecord extends BaseRecord {
   role: UserRole;
 
   @Column({
-    type: 'uuid',
+    nullable: true,
   })
-  inviterId: UUID;
+  inviterId?: UUID;
 
-  @ManyToOne(() => UserRecord, { nullable: false })
-  inviter: UserRecord;
+  @ManyToOne(() => UserRecord, { onDelete: 'SET NULL', nullable: true })
+  inviter?: UserRecord;
 
   @Column({ nullable: true })
   acceptedAt?: Date;

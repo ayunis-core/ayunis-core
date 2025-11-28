@@ -1,6 +1,6 @@
-import React from "react";
-import { SidebarProvider, SidebarInset } from "@/shared/ui/shadcn/sidebar";
-import AppSidebar from "@/widgets/app-sidebar";
+import React from 'react';
+import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
+import AppSidebar from '@/widgets/app-sidebar';
 
 interface AppLayoutProps {
   children: React.ReactNode;

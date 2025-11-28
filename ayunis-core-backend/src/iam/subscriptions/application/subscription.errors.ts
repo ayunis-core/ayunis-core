@@ -23,13 +23,6 @@ export enum SubscriptionErrorCode {
   INVALID_SUBSCRIPTION_DATA = 'INVALID_SUBSCRIPTION_DATA',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   PRICE_NOT_FOUND = 'PRICE_NOT_FOUND',
-
-  // Trial-related errors
-  TRIAL_NOT_FOUND = 'TRIAL_NOT_FOUND',
-  TRIAL_ALREADY_EXISTS = 'TRIAL_ALREADY_EXISTS',
-  TRIAL_CAPACITY_EXCEEDED = 'TRIAL_CAPACITY_EXCEEDED',
-  TRIAL_CREATION_FAILED = 'TRIAL_CREATION_FAILED',
-  TRIAL_UPDATE_FAILED = 'TRIAL_UPDATE_FAILED',
 }
 
 /**
@@ -276,121 +269,6 @@ export class PriceNotFoundError extends SubscriptionError {
       SubscriptionErrorCode.PRICE_NOT_FOUND,
       500,
       metadata,
-    );
-  }
-}
-
-// Trial-related errors
-
-/**
- * Error thrown when a trial is not found
- */
-export class TrialNotFoundError extends SubscriptionError {
-  constructor(orgId: UUID, metadata?: ErrorMetadata) {
-    super(
-      `Trial for organization '${orgId}' not found`,
-      SubscriptionErrorCode.TRIAL_NOT_FOUND,
-      404,
-      {
-        orgId,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when a trial already exists for an organization
- */
-export class TrialAlreadyExistsError extends SubscriptionError {
-  constructor(orgId: UUID, metadata?: ErrorMetadata) {
-    super(
-      `Trial for organization '${orgId}' already exists`,
-      SubscriptionErrorCode.TRIAL_ALREADY_EXISTS,
-      409,
-      {
-        orgId,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when trial capacity is exceeded
- */
-export class TrialCapacityExceededError extends SubscriptionError {
-  constructor(
-    orgId: UUID,
-    messagesSent: number,
-    maxMessages: number,
-    metadata?: ErrorMetadata,
-  ) {
-    super(
-      `Trial capacity exceeded for organization '${orgId}': ${messagesSent}/${maxMessages} messages used`,
-      SubscriptionErrorCode.TRIAL_CAPACITY_EXCEEDED,
-      403,
-      {
-        orgId,
-        messagesSent,
-        maxMessages,
-        remainingMessages: maxMessages - messagesSent,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when trial creation fails
- */
-export class TrialCreationFailedError extends SubscriptionError {
-  constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
-    super(
-      `Trial creation failed for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
-      SubscriptionErrorCode.TRIAL_CREATION_FAILED,
-      500,
-      {
-        orgId,
-        reason,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when trial update fails
- */
-export class TrialUpdateFailedError extends SubscriptionError {
-  constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
-    super(
-      `Trial update failed for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
-      SubscriptionErrorCode.TRIAL_UPDATE_FAILED,
-      500,
-      {
-        orgId,
-        reason,
-        ...metadata,
-      },
-    );
-  }
-}
-
-/**
- * Error thrown when an unexpected error occurs during trial operations
- */
-export class UnexpectedTrialError extends SubscriptionError {
-  constructor(orgId: UUID, reason?: string, metadata?: ErrorMetadata) {
-    super(
-      `Unexpected trial error for organization '${orgId}'${reason ? `: ${reason}` : ''}`,
-      SubscriptionErrorCode.UNEXPECTED_ERROR,
-      500,
-      {
-        orgId,
-        reason,
-        ...metadata,
-      },
     );
   }
 }

@@ -4,11 +4,14 @@ import {
   useModelsControllerDeleteUserDefaultModel,
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetEffectiveDefaultModelQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { SetUserDefaultModelDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import { useQueryClient } from "@tanstack/react-query";
-import type { UserDefaultModel } from "../model/openapi";
-import { useRouter } from "@tanstack/react-router";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type {
+  PermittedLanguageModelResponseDtoNullable,
+  SetUserDefaultModelDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useQueryClient } from '@tanstack/react-query';
+import type { UserDefaultModel } from '../model/openapi';
+import { useRouter } from '@tanstack/react-router';
 interface UseUserDefaultModelOptions {
   allModels: UserDefaultModel[];
 }
@@ -23,7 +26,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
 
   // Get user default model
   const {
-    data: userDefaultModel,
+    data: userDefaultModelResponse,
     error,
     refetch,
   } = useModelsControllerGetUserSpecificDefaultModel();
@@ -33,14 +36,15 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
     useModelsControllerManageUserDefaultModel({
       mutation: {
         onMutate: async ({ data }: { data: SetUserDefaultModelDto }) => {
-          for (const queryKey of queryKeys) {
-            await queryClient.cancelQueries({
-              queryKey,
-            });
-          }
-          const previousData = queryClient.getQueryData(
-            getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+          await Promise.all(
+            queryKeys.map((queryKey) =>
+              queryClient.cancelQueries({ queryKey }),
+            ),
           );
+          const previousData =
+            queryClient.getQueryData<PermittedLanguageModelResponseDtoNullable>(
+              getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+            );
 
           // Find the actual model from the provided models
           const selectedModel = allModels.find(
@@ -50,22 +54,30 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
           if (selectedModel) {
             queryClient.setQueryData(
               getModelsControllerGetUserSpecificDefaultModelQueryKey(),
-              selectedModel,
+              {
+                permittedLanguageModel: selectedModel,
+              },
             );
           }
 
           return { previousData };
         },
-        onSettled: () => {
-          for (const queryKey of queryKeys) {
-            queryClient.invalidateQueries({
-              queryKey,
-            });
-          }
-          router.invalidate();
+        onSettled: async () => {
+          await Promise.all(
+            queryKeys.map((queryKey) =>
+              queryClient.invalidateQueries({ queryKey }),
+            ),
+          );
+          await router.invalidate();
         },
-        onError: (err: any, _: any, context: any) => {
-          console.error("Error managing user default model", err);
+        onError: (
+          err: unknown,
+          _: unknown,
+          context:
+            | { previousData?: PermittedLanguageModelResponseDtoNullable }
+            | undefined,
+        ) => {
+          console.error('Error managing user default model', err);
           queryClient.setQueryData(
             getModelsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
@@ -79,32 +91,39 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
     useModelsControllerDeleteUserDefaultModel({
       mutation: {
         onMutate: async () => {
-          console.log("Deleting user default model");
-          for (const queryKey of queryKeys) {
-            await queryClient.cancelQueries({
-              queryKey,
-            });
-          }
-          const previousData = queryClient.getQueryData(
-            getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+          await Promise.all(
+            queryKeys.map((queryKey) =>
+              queryClient.cancelQueries({ queryKey }),
+            ),
           );
+          const previousData =
+            queryClient.getQueryData<PermittedLanguageModelResponseDtoNullable>(
+              getModelsControllerGetUserSpecificDefaultModelQueryKey(),
+            );
 
           // Optimistically set to null (no default model)
           queryClient.setQueryData(
             getModelsControllerGetUserSpecificDefaultModelQueryKey(),
-            null,
+            { permittedLanguageModel: null },
           );
           return { previousData };
         },
-        onSuccess: () => {
-          for (const queryKey of queryKeys) {
-            queryClient.invalidateQueries({
-              queryKey,
-            });
-          }
+        onSuccess: async () => {
+          await Promise.all(
+            queryKeys.map((queryKey) =>
+              queryClient.invalidateQueries({ queryKey }),
+            ),
+          );
+          await router.invalidate();
         },
-        onError: (err: any, _: any, context: any) => {
-          console.error("Error deleting user default model", err);
+        onError: (
+          err: unknown,
+          _: unknown,
+          context:
+            | { previousData?: PermittedLanguageModelResponseDtoNullable }
+            | undefined,
+        ) => {
+          console.error('Error deleting user default model', err);
           queryClient.setQueryData(
             getModelsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
@@ -124,10 +143,10 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   }
 
   return {
-    userDefaultModel: userDefaultModel || null,
+    userDefaultModel: userDefaultModelResponse?.permittedLanguageModel || null,
     error,
-    manageError: manageUserDefaultModelMutation.error,
-    deleteError: deleteUserDefaultModelMutation.error,
+    manageError: manageUserDefaultModelMutation.error as Error | null,
+    deleteError: deleteUserDefaultModelMutation.error as Error | null,
     manageUserDefaultModel, // Handles both create and update
     deleteUserDefaultModel,
     refetch,

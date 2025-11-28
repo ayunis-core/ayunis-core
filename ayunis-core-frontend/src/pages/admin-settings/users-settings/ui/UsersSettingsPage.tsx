@@ -1,9 +1,9 @@
-import SettingsLayout from "../../admin-settings-layout";
-import InviteUserDialog from "./InviteUserDialog";
-import InvitesSection from "./InvitesSection";
-import UsersSection from "./UsersSection";
-import type { Invite } from "../model/openapi";
-import type { UserResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
+import SettingsLayout from '../../admin-settings-layout';
+import InviteUserDialog from './InviteUserDialog';
+import InvitesSection from './InvitesSection';
+import UsersSection from './UsersSection';
+import type { Invite } from '../model/openapi';
+import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface UsersSettingsPageProps {
   invites: Invite[];

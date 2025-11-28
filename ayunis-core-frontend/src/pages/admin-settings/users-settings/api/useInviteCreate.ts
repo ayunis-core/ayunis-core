@@ -2,48 +2,48 @@ import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerCreate,
   getSubscriptionsControllerGetSubscriptionQueryKey,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { CreateInviteResponseDto } from "@/shared/api/generated/ayunisCoreAPI.schemas";
-import type { InviteCreateData } from "../model/openapi";
-import { useQueryClient } from "@tanstack/react-query";
-import { showError, showSuccess } from "@/shared/lib/toast";
-import { useRouter } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import extractErrorData from "@/shared/api/extract-error-data";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { InviteCreateData } from '../model/openapi';
+import { useQueryClient } from '@tanstack/react-query';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useInviteCreate(
   onInviteCreated?: (response: CreateInviteResponseDto) => void,
 ) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { t } = useTranslation("admin-settings-users");
+  const { t } = useTranslation('admin-settings-users');
   const createInviteMutation = useInvitesControllerCreate({
     mutation: {
       onSuccess: (response: CreateInviteResponseDto) => {
-        showSuccess(t("inviteCreate.success"));
+        showSuccess(t('inviteCreate.success'));
         onInviteCreated?.(response);
       },
       onError: (error) => {
         const { code } = extractErrorData(error);
         switch (code) {
-          case "EMAIL_NOT_AVAILABLE":
-            showError(t("inviteCreate.emailNotAvailable"));
+          case 'EMAIL_NOT_AVAILABLE':
+            showError(t('inviteCreate.emailNotAvailable'));
             break;
-          case "USER_EMAIL_PROVIDER_BLACKLISTED":
-            showError(t("inviteCreate.emailProviderBlacklisted"));
+          case 'USER_EMAIL_PROVIDER_BLACKLISTED':
+            showError(t('inviteCreate.emailProviderBlacklisted'));
             break;
           default:
-            showError(t("inviteCreate.error"));
+            showError(t('inviteCreate.error'));
         }
       },
       onSettled: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getInvitesControllerGetInvitesQueryKey(),
         });
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
-        router.invalidate();
+        void router.invalidate();
       },
     },
   });

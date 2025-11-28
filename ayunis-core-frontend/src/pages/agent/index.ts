@@ -1,3 +1,3 @@
-import { AgentPage } from "./ui/AgentPage";
+import { AgentPage } from './ui/AgentPage';
 
 export { AgentPage };

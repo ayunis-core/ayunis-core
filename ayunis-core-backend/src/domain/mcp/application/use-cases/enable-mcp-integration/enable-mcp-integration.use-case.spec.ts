@@ -12,6 +12,7 @@ import {
 } from '../../mcp.errors';
 import { PredefinedMcpIntegration } from '../../../domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('EnableMcpIntegrationUseCase', () => {
   let useCase: EnableMcpIntegrationUseCase;
@@ -63,31 +64,29 @@ describe('EnableMcpIntegrationUseCase', () => {
   describe('execute', () => {
     it('should successfully enable integration when user has access', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        false, // Initially disabled
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
-      const enabledIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true, // Now enabled
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const enabledIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -111,18 +110,17 @@ describe('EnableMcpIntegrationUseCase', () => {
 
     it('should be idempotent - enabling already-enabled integration succeeds', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        true, // Already enabled
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -156,19 +154,18 @@ describe('EnableMcpIntegrationUseCase', () => {
 
     it('should throw McpIntegrationAccessDeniedError when integration belongs to different organization', async () => {
       // Arrange
-      const differentOrgId = 'different-org-789';
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        differentOrgId, // Different org
-        PredefinedMcpIntegrationSlug.TEST,
-        false,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const differentOrgId = 'different-org-789' as UUID;
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: differentOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -200,18 +197,17 @@ describe('EnableMcpIntegrationUseCase', () => {
 
     it('should use organizationId from ContextService (not from command)', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        false,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -264,18 +260,17 @@ describe('EnableMcpIntegrationUseCase', () => {
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        'different-org',
-        PredefinedMcpIntegrationSlug.TEST,
-        false,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: 'different-org' as UUID,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
@@ -292,18 +287,17 @@ describe('EnableMcpIntegrationUseCase', () => {
 
     it('should log operation start with integration id', async () => {
       // Arrange
-      const mockIntegration = new PredefinedMcpIntegration(
-        mockIntegrationId,
-        'Test Integration',
-        mockOrgId,
-        PredefinedMcpIntegrationSlug.TEST,
-        false,
-        undefined,
-        undefined,
-        undefined,
-        new Date(),
-        new Date(),
-      );
+      const mockIntegration = new PredefinedMcpIntegration({
+        id: mockIntegrationId,
+        name: 'Test Integration',
+        orgId: mockOrgId,
+        slug: PredefinedMcpIntegrationSlug.TEST,
+        serverUrl: 'http://localhost:3100/mcp',
+        auth: new NoAuthMcpIntegrationAuth(),
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);

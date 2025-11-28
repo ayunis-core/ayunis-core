@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 export class SuccessResponseDto {
   @ApiProperty({
@@ -22,6 +23,13 @@ export class MeResponseDto {
     example: UserRole.USER,
   })
   role: UserRole;
+
+  @ApiProperty({
+    description: 'User system role',
+    enum: SystemRole,
+    example: SystemRole.SUPER_ADMIN,
+  })
+  systemRole: SystemRole;
 
   @ApiProperty({
     description: 'User name',

@@ -2,18 +2,18 @@ import {
   getInvitesControllerGetInvitesQueryKey,
   getSubscriptionsControllerGetSubscriptionQueryKey,
   useInvitesControllerDeleteInvite,
-} from "@/shared/api/generated/ayunisCoreAPI";
-import type { Invite } from "../model/openapi";
-import { useQueryClient } from "@tanstack/react-query";
-import { showError } from "@/shared/lib/toast";
-import { useRouter } from "@tanstack/react-router";
-import extractErrorData from "@/shared/api/extract-error-data";
-import { useTranslation } from "react-i18next";
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { Invite } from '../model/openapi';
+import { useQueryClient } from '@tanstack/react-query';
+import { showError } from '@/shared/lib/toast';
+import { useRouter } from '@tanstack/react-router';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { useTranslation } from 'react-i18next';
 
 export function useInviteDelete() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { t } = useTranslation("admin-settings-users");
+  const { t } = useTranslation('admin-settings-users');
   const deleteInviteMutation = useInvitesControllerDeleteInvite({
     mutation: {
       onMutate: async ({ id }) => {
@@ -36,11 +36,11 @@ export function useInviteDelete() {
         console.log(error);
         const { code } = extractErrorData(error);
         switch (code) {
-          case "INVITE_NOT_FOUND":
-            showError(t("inviteDelete.error.inviteNotFound"));
+          case 'INVITE_NOT_FOUND':
+            showError(t('inviteDelete.error.inviteNotFound'));
             break;
           default:
-            showError(t("inviteDelete.error.unexpectedError"));
+            showError(t('inviteDelete.error.unexpectedError'));
         }
         queryClient.setQueryData(
           getInvitesControllerGetInvitesQueryKey(),
@@ -48,13 +48,13 @@ export function useInviteDelete() {
         );
       },
       onSettled: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getInvitesControllerGetInvitesQueryKey(),
         });
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
-        router.invalidate();
+        void router.invalidate();
       },
     },
   });

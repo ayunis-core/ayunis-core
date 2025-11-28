@@ -107,4 +107,20 @@ export class AgentResponseDto {
     type: [AgentSourceResponseDto],
   })
   sources: AgentSourceResponseDto[];
+
+  @ApiProperty({
+    description:
+      'Whether this agent is shared with the current user (vs. owned by them)',
+    example: false,
+  })
+  isShared: boolean;
+
+  @ApiProperty({
+    description:
+      'The unique identifier of the user who owns this agent (same as userId)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid',
+  })
+  ownerId: UUID;
 }

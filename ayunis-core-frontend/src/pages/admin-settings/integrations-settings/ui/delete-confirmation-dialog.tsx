@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/shadcn/dialog";
-import { Button } from "@/shared/ui/shadcn/button";
-import type { McpIntegration } from "../model/types";
-import { useDeleteIntegration } from "../api/useDeleteIntegration";
+} from '@/shared/ui/shadcn/dialog';
+import { Button } from '@/shared/ui/shadcn/button';
+import type { McpIntegration } from '../model/types';
+import { useDeleteIntegration } from '../api/useDeleteIntegration';
 
 interface DeleteConfirmationDialogProps {
   integration: McpIntegration | null;
@@ -22,7 +22,7 @@ export function DeleteConfirmationDialog({
   open,
   onOpenChange,
 }: DeleteConfirmationDialogProps) {
-  const { t } = useTranslation("admin-settings-integrations");
+  const { t } = useTranslation('admin-settings-integrations');
   const { deleteIntegration, isDeleting } = useDeleteIntegration(() => {
     onOpenChange(false);
   });
@@ -37,9 +37,9 @@ export function DeleteConfirmationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("integrations.deleteDialog.title")}</DialogTitle>
+          <DialogTitle>{t('integrations.deleteDialog.title')}</DialogTitle>
           <DialogDescription>
-            {t("integrations.deleteDialog.description", {
+            {t('integrations.deleteDialog.description', {
               name: integration.name,
             })}
           </DialogDescription>
@@ -50,7 +50,7 @@ export function DeleteConfirmationDialog({
             onClick={() => onOpenChange(false)}
             disabled={isDeleting}
           >
-            {t("integrations.deleteDialog.cancel")}
+            {t('integrations.deleteDialog.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -58,8 +58,8 @@ export function DeleteConfirmationDialog({
             disabled={isDeleting}
           >
             {isDeleting
-              ? t("integrations.deleteDialog.deleting")
-              : t("integrations.deleteDialog.delete")}
+              ? t('integrations.deleteDialog.deleting')
+              : t('integrations.deleteDialog.delete')}
           </Button>
         </DialogFooter>
       </DialogContent>
