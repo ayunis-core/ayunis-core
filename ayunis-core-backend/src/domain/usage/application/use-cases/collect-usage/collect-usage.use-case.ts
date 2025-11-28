@@ -115,11 +115,11 @@ export class CollectUsageUseCase {
   ): Promise<{ cost?: number; currency?: Currency }> {
     const model = command.model;
 
-    if (!model.inputTokenCost || !model.outputTokenCost) {
+    if (model.inputTokenCost === undefined || model.outputTokenCost === undefined) {
       this.logger.debug('No cost information available for model', {
         modelId: model.id,
-        hasInputCost: !!model.inputTokenCost,
-        hasOutputCost: !!model.outputTokenCost,
+        hasInputCost: model.inputTokenCost !== undefined,
+        hasOutputCost: model.outputTokenCost !== undefined,
       });
 
       return { cost: undefined, currency: undefined };
