@@ -1,8 +1,9 @@
 import NewChatPageLayout from './NewChatPageLayout';
-import ChatInput from '@/widgets/chat-input';
+import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import { useInitiateChat } from '../api/useInitiateChat';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { QuickActions } from './QuickActions';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
@@ -28,6 +29,7 @@ export default function NewChatPage({
   const { t } = useTranslation('chats');
   const { initiateChat } = useInitiateChat();
   const { models } = usePermittedModels();
+  const chatInputRef = useRef<ChatInputRef>(null);
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -99,6 +101,7 @@ export default function NewChatPage({
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
+          ref={chatInputRef}
           // If an agent is selected, use the agent's model,
           // but disable the model selection
           // to only show the model that the agent uses
@@ -119,6 +122,9 @@ export default function NewChatPage({
           isAnonymous={isAnonymous}
           onAnonymousChange={setIsAnonymous}
           isAnonymousEnforced={isAnonymousEnforced}
+        />
+        <QuickActions
+          onPromptSelect={(text) => chatInputRef.current?.sendMessage(text)}
         />
       </div>
     </NewChatPageLayout>
