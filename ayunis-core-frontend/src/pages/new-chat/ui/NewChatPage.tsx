@@ -10,6 +10,7 @@ import { generateUUID } from '@/shared/lib/uuid';
 import type { AgentResponseDto } from '@/shared/api';
 import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -30,6 +31,7 @@ export default function NewChatPage({
   const { initiateChat } = useInitiateChat();
   const { models } = usePermittedModels();
   const chatInputRef = useRef<ChatInputRef>(null);
+  const greeting = useTimeBasedGreeting();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -97,7 +99,7 @@ export default function NewChatPage({
       header={<ContentAreaHeader title={t('newChat.newChat')} />}
     >
       <div className="text-center">
-        <h1 className="text-2xl font-bold">{t('newChat.title')}</h1>
+        <h1 className="text-2xl font-bold">{greeting}</h1>
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput
