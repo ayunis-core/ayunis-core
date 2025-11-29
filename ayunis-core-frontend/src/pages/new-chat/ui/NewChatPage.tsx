@@ -99,8 +99,7 @@ export default function NewChatPage({
       header={<ContentAreaHeader title={t('newChat.newChat')} />}
     >
       <div className="text-center">
-        <h1 className="text-2xl font-bold">{greeting.de}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{greeting.en}</p>
+        <h1 className="text-2xl font-bold">{greeting}</h1>
       </div>
       <div className="w-full flex flex-col gap-4 mt-2">
         <ChatInput

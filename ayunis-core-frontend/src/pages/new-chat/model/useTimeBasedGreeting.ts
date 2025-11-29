@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Greeting {
   de: string;
@@ -517,15 +518,21 @@ function getRandomGreeting(period: keyof typeof greetings): Greeting {
  * The greeting changes based on the current time of day and is randomly
  * selected from a list of greetings for that time period.
  *
+ * The greeting is returned in the user's current language (German or English).
+ *
  * The greeting is memoized and only recalculated when the component mounts
  * (not on every render), so it stays consistent during the session.
  */
-export function useTimeBasedGreeting(): Greeting {
+export function useTimeBasedGreeting(): string {
+  const { i18n } = useTranslation();
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     const period = getTimePeriod(hour);
     return getRandomGreeting(period);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return greeting;
+  // Return greeting in user's language (default to German if not English)
+  return i18n.language === 'en' ? greeting.en : greeting.de;
 }
