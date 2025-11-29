@@ -47,6 +47,26 @@ const greetings: Record<string, Greeting[]> = {
       de: 'Selbst der Kopierer schläft noch. Was kann ich tun?',
       en: 'Even the copier is still sleeping. How can I help?',
     },
+    {
+      de: 'Um diese Zeit? Sie meinen es ernst mit der Verwaltung.',
+      en: 'At this hour? You take administration seriously.',
+    },
+    {
+      de: 'Die Jalousien sind noch unten. Der Service ist oben.',
+      en: 'The blinds are still down. The service is up.',
+    },
+    {
+      de: 'Bevor die ersten Stempel fallen – was steht an?',
+      en: 'Before the first stamps drop – what can I do?',
+    },
+    {
+      de: 'Der Drucker heizt vor. Ich bin schon warm.',
+      en: "The printer is warming up. I'm already warm.",
+    },
+    {
+      de: 'Ganz früh dran. Die Formulare warten schon.',
+      en: 'Very early. The forms are already waiting.',
+    },
   ],
 
   // 8–10 Uhr (Klassischer Dienstbeginn / Classic Office Start)
@@ -86,6 +106,26 @@ const greetings: Record<string, Greeting[]> = {
     {
       de: 'Zimmer 101 ist besetzt. Zimmer KI ist frei.',
       en: 'Room 101 is occupied. Room AI is available.',
+    },
+    {
+      de: 'Erster Kaffee, erste Anfrage. Passt.',
+      en: 'First coffee, first request. Perfect.',
+    },
+    {
+      de: 'Die Unterschriftenmappe liegt bereit. Was soll rein?',
+      en: "The signature folder is ready. What's going in?",
+    },
+    {
+      de: 'Frisch gestempelt und bereit für Ihre Fragen.',
+      en: 'Freshly stamped and ready for your questions.',
+    },
+    {
+      de: 'Der Postbote war noch nicht da. Ich schon.',
+      en: "The mailman hasn't arrived yet. I have.",
+    },
+    {
+      de: 'Morgens um acht macht die Behörde auf. Und ich mit.',
+      en: 'The office opens at eight. And so do I.',
     },
   ],
 
@@ -127,6 +167,26 @@ const greetings: Record<string, Greeting[]> = {
       de: 'Alle Schalter besetzt. Dieser hier ist immer frei.',
       en: 'All counters occupied. This one is always free.',
     },
+    {
+      de: 'Volle Auslastung im Amt. Null Wartezeit hier.',
+      en: 'Full capacity at the office. Zero wait time here.',
+    },
+    {
+      de: 'Der Kopierer qualmt. Ich nicht.',
+      en: "The copier is smoking. I'm not.",
+    },
+    {
+      de: 'Telefone klingeln überall. Hier ist es ruhig.',
+      en: "Phones ringing everywhere. It's quiet here.",
+    },
+    {
+      de: 'Peak Performance in der Verwaltung. Fragen Sie los.',
+      en: 'Peak performance in administration. Ask away.',
+    },
+    {
+      de: 'Die Stempel sind heiß gelaufen. Meiner nicht.',
+      en: "The stamps are overheating. Mine isn't.",
+    },
   ],
 
   // 12–13 Uhr (Mittagspause / Lunch Break)
@@ -166,6 +226,26 @@ const greetings: Record<string, Greeting[]> = {
     {
       de: 'Die Kollegen sind beim Mensa-Schnitzel. Ich bin hier.',
       en: "The colleagues are at the cafeteria schnitzel. I'm here.",
+    },
+    {
+      de: 'Mittagstisch nebenan. Servicetisch hier.',
+      en: 'Lunch table next door. Service table here.',
+    },
+    {
+      de: 'Die Kaffeekanne ist leer. Mein Wissen nicht.',
+      en: 'The coffee pot is empty. My knowledge is not.',
+    },
+    {
+      de: 'Alle beim Essen. Ich bei der Arbeit.',
+      en: "Everyone's eating. I'm working.",
+    },
+    {
+      de: 'Brotzeit für die Belegschaft. Beratung für Sie.',
+      en: 'Lunch for the staff. Consultation for you.',
+    },
+    {
+      de: 'Der Pausenraum ist voll. Der Chat ist bereit.',
+      en: 'The break room is full. The chat is ready.',
     },
   ],
 
@@ -207,6 +287,26 @@ const greetings: Record<string, Greeting[]> = {
       de: 'Espresso-Zeit für Menschen. Antwort-Zeit für mich.',
       en: 'Espresso time for humans. Answer time for me.',
     },
+    {
+      de: 'Müde Augen am Bildschirm? Meine sind hellwach.',
+      en: 'Tired eyes on the screen? Mine are wide awake.',
+    },
+    {
+      de: 'Die Tastatur klappert langsamer. Meine nicht.',
+      en: "The keyboards are clicking slower. Mine isn't.",
+    },
+    {
+      de: 'Siesta-Stimmung im Großraumbüro. Hier herrscht Betrieb.',
+      en: "Siesta mood in the open office. It's busy here.",
+    },
+    {
+      de: 'Der Nachmittagskaffee dampft. Ich dampfe vor Tatendrang.',
+      en: "The afternoon coffee is steaming. I'm steaming with enthusiasm.",
+    },
+    {
+      de: 'Energietief? Nicht bei mir.',
+      en: 'Energy low? Not with me.',
+    },
   ],
 
   // 15–17 Uhr (Nachmittagsschicht / Afternoon Shift)
@@ -246,6 +346,26 @@ const greetings: Record<string, Greeting[]> = {
     {
       de: 'Der Parkplatz leert sich. Der Service bleibt.',
       en: 'The parking lot is emptying. The service stays.',
+    },
+    {
+      de: 'Bald ist Feierabend. Noch Zeit für eine Frage?',
+      en: 'Closing time soon. Time for one more question?',
+    },
+    {
+      de: 'Die Akten werden zugeklappt. Mein Ohr bleibt offen.',
+      en: 'The files are being closed. My ear stays open.',
+    },
+    {
+      de: 'Countdown zum Dienstschluss. Bei mir läuft keine Uhr.',
+      en: "Countdown to closing. There's no clock running for me.",
+    },
+    {
+      de: 'Die letzten Unterschriften des Tages. Und Ihre Frage?',
+      en: 'The last signatures of the day. And your question?',
+    },
+    {
+      de: 'Kurz vor Torschluss. Aber die Tür steht offen.',
+      en: 'Just before closing. But the door is open.',
     },
   ],
 
@@ -287,6 +407,26 @@ const greetings: Record<string, Greeting[]> = {
       de: 'Abendsprechstunde ohne Termin. Was führt Sie her?',
       en: 'Evening consultation without appointment. What brings you here?',
     },
+    {
+      de: 'Überstunden für Menschen. Normalzeit für mich.',
+      en: 'Overtime for humans. Regular time for me.',
+    },
+    {
+      de: 'Das Bürolicht ist aus. Der Bildschirm leuchtet noch.',
+      en: 'The office light is off. The screen is still glowing.',
+    },
+    {
+      de: 'Nach 17 Uhr? Kein Problem, ich habe Gleitzeit.',
+      en: 'After 5 PM? No problem, I have flexible hours.',
+    },
+    {
+      de: 'Die Reinigungskraft kommt. Der Service geht nicht.',
+      en: "The cleaner is coming. The service isn't leaving.",
+    },
+    {
+      de: 'Feierabendbier für andere. Feierabend-Service für Sie.',
+      en: 'After-work beer for others. After-work service for you.',
+    },
   ],
 
   // 21–6 Uhr (Nachtschicht / Night Shift)
@@ -326,6 +466,30 @@ const greetings: Record<string, Greeting[]> = {
     {
       de: 'Auch Nachteulen verdienen Verwaltung.',
       en: 'Even night owls deserve administration.',
+    },
+    {
+      de: 'Schlaflos in der Behörde? Ich auch – freiwillig.',
+      en: "Sleepless at the office? Me too – voluntarily.",
+    },
+    {
+      de: 'Die Sterne leuchten. Mein Service auch.',
+      en: 'The stars are shining. So is my service.',
+    },
+    {
+      de: 'Mitternachtsbürokratie. Ganz ohne Papierkram.',
+      en: 'Midnight bureaucracy. Without any paperwork.',
+    },
+    {
+      de: 'Wenn die Stadt schläft, wacht der Chatbot.',
+      en: 'When the city sleeps, the chatbot watches.',
+    },
+    {
+      de: 'Zu später Stunde noch Fragen? Immer gerne.',
+      en: 'Questions at this late hour? Always welcome.',
+    },
+    {
+      de: 'Die Nachtschicht hat begonnen. Was kann ich tun?',
+      en: 'The night shift has begun. What can I do?',
     },
   ],
 };
