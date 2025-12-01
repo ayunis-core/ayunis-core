@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { IsCloudUseCase } from 'src/app/application/use-cases/is-cloud/is-cloud.use-case';
+import { IsRegistrationDisabledUseCase } from 'src/app/application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IsCloudResponseDto } from './dto/is-cloud-response.dto';
 import { Public } from 'src/common/guards/public.guard';
@@ -7,7 +8,10 @@ import { Public } from 'src/common/guards/public.guard';
 @ApiTags('app')
 @Controller()
 export class AppController {
-  constructor(private readonly isCloudUseCase: IsCloudUseCase) {}
+  constructor(
+    private readonly isCloudUseCase: IsCloudUseCase,
+    private readonly isRegistrationDisabledUseCase: IsRegistrationDisabledUseCase,
+  ) {}
 
   @Public()
   @Get()
@@ -22,6 +26,7 @@ export class AppController {
   isCloud(): IsCloudResponseDto {
     return {
       isCloud: this.isCloudUseCase.execute(),
+      isRegistrationDisabled: this.isRegistrationDisabledUseCase.execute(),
     };
   }
 

@@ -8,6 +8,8 @@
 export interface IsCloudResponseDto {
   /** Whether the deployment is running in a cloud environment */
   isCloud: boolean;
+  /** Whether new user registration is disabled */
+  isRegistrationDisabled: boolean;
 }
 
 /**
@@ -1551,6 +1553,7 @@ export const ToolAssignmentDtoType = {
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
+  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1596,6 +1599,7 @@ export const ToolResponseDtoType = {
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
+  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolResponseDto {

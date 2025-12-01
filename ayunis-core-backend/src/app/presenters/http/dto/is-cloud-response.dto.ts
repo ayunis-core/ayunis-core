@@ -6,4 +6,10 @@ export class IsCloudResponseDto {
     example: true,
   })
   isCloud: boolean;
+
+  @ApiProperty({
+    description: 'Whether new user registration is disabled',
+    example: false,
+  })
+  isRegistrationDisabled: boolean;
 }
