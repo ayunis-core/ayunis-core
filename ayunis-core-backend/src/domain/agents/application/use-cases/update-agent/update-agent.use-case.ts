@@ -52,6 +52,10 @@ export class UpdateAgentUseCase {
       instructions: command.instructions,
       model,
       userId,
+      // Preserve existing relationships
+      toolAssignments: existingAgent.toolAssignments,
+      sourceAssignments: existingAgent.sourceAssignments,
+      mcpIntegrationIds: existingAgent.mcpIntegrationIds,
       createdAt: existingAgent.createdAt,
       updatedAt: new Date(),
     });
