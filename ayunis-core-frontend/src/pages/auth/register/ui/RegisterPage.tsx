@@ -16,8 +16,17 @@ import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { Label } from '@/shared/ui/shadcn/label';
 import { useGtm } from '@/features/useGtm';
 import config from '@/shared/config';
+import { Card, CardContent } from '@/shared/ui/shadcn/card';
 
-export function RegisterPage({ isCloud }: { isCloud: boolean }) {
+interface RegisterPageProps {
+  isCloud: boolean;
+  isRegistrationDisabled: boolean;
+}
+
+export function RegisterPage({
+  isCloud,
+  isRegistrationDisabled,
+}: RegisterPageProps) {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation('auth');
   const agbHref = 'https://www.ayunis.com/agb-software-%c3%bcberlassung';
@@ -35,6 +44,37 @@ export function RegisterPage({ isCloud }: { isCloud: boolean }) {
     enabled: gtmEnabled,
     ucSettingsId: usercentricsSettingsId,
   });
+
+  // Show registration closed message when cloud AND registration is disabled
+  if (isCloud && isRegistrationDisabled) {
+    return (
+      <OnboardingLayout
+        title={t('register.registrationClosedTitle')}
+        description={t('register.registrationClosedDescription')}
+        footer={
+          <>
+            {t('register.or')}{' '}
+            <Link to="/login" className="font-medium text-primary underline">
+              {t('register.signInExisting')}
+            </Link>
+          </>
+        }
+      >
+        <Card>
+          <CardContent className="text-center">
+            <p className="text-muted-foreground font-medium">
+              <a
+                href={`mailto:${t('register.registrationClosedContact')}`}
+                className="text-primary underline hover:no-underline"
+              >
+                {t('register.registrationClosedContact')}
+              </a>
+            </p>
+          </CardContent>
+        </Card>
+      </OnboardingLayout>
+    );
+  }
 
   return (
     <OnboardingLayout

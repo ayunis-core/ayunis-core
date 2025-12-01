@@ -5,14 +5,20 @@ import { appControllerIsCloud } from '@/shared/api';
 export const Route = createFileRoute('/(onboarding)/register')({
   component: RouteComponent,
   loader: async () => {
-    const { isCloud } = await appControllerIsCloud();
+    const { isCloud, isRegistrationDisabled } = await appControllerIsCloud();
     return {
       isCloud,
+      isRegistrationDisabled,
     };
   },
 });
 
 function RouteComponent() {
-  const { isCloud } = Route.useLoaderData();
-  return <RegisterPage isCloud={isCloud} />;
+  const { isCloud, isRegistrationDisabled } = Route.useLoaderData();
+  return (
+    <RegisterPage
+      isCloud={isCloud}
+      isRegistrationDisabled={isRegistrationDisabled}
+    />
+  );
 }
