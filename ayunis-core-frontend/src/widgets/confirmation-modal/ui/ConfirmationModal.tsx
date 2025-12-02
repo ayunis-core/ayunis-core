@@ -14,8 +14,8 @@ export default function ConfirmationModal() {
   const { isOpen, options, hideConfirmation } = useConfirmationContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!options) return null;
   const handleConfirm = async () => {
+    if (!options) return;
     try {
       setIsLoading(true);
       await options.onConfirm();
@@ -31,27 +31,33 @@ export default function ConfirmationModal() {
     hideConfirmation();
   };
 
-  const isDangerous = options.variant === 'destructive';
+  const isDangerous = options?.variant === 'destructive';
+
+  // Important: Dialog must always be rendered (not conditionally returned) so it receives
+  // the open={false} transition. Without this, Radix UI won't clean up its Portal and
+  // overlay, leaving an invisible layer that blocks all pointer events.
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{options.title}</DialogTitle>
-          <DialogDescription>{options.description}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
-            {options.cancelText || 'Cancel'}
-          </Button>
-          <Button
-            variant={isDangerous ? 'destructive' : 'default'}
-            onClick={() => void handleConfirm()}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : options.confirmText || 'Confirm'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+      {options && (
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{options.title}</DialogTitle>
+            <DialogDescription>{options.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+              {options.cancelText || 'Cancel'}
+            </Button>
+            <Button
+              variant={isDangerous ? 'destructive' : 'default'}
+              onClick={() => void handleConfirm()}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : options.confirmText || 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }
