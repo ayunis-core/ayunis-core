@@ -45,7 +45,11 @@ export default function ConfirmationModal() {
             <DialogDescription>{options.description}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
               {options.cancelText || 'Cancel'}
             </Button>
             <Button
