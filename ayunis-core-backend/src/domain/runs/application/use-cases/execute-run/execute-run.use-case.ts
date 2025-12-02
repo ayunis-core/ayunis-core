@@ -351,6 +351,7 @@ export class ExecuteRunUseCase {
     const currentTime = new Date().toISOString();
     const systemPrompt = `
     !! IMPORTANT !! ALWAYS ANSWER IN THE SAME LANGUAGE AS THE USER'S MESSAGE !! NOT ANSWERING IN THE SAME LANGUAGE AS THE USER'S MESSAGE IS A CRITICAL ERROR !!
+	  IMPORTANT: Always output Markdown format, never HTML!
       Current time: ${currentTime}
     `.trim();
     const agentInstructions = agent?.instructions;
