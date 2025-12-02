@@ -17,6 +17,7 @@ import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from '../../application/models.errors';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
+import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
 
 @Injectable()
 export abstract class BaseOpenAIChatInferenceHandler extends InferenceHandler {
@@ -77,7 +78,9 @@ export abstract class BaseOpenAIChatInferenceHandler extends InferenceHandler {
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.parameters as FunctionParameters | undefined,
+        parameters: normalizeSchemaForOpenAI(
+          tool.parameters as Record<string, unknown> | undefined,
+        ) as FunctionParameters | undefined,
       },
     };
   };
