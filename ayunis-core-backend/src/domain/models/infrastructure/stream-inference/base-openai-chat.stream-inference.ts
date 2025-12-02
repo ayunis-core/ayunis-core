@@ -18,6 +18,7 @@ import { ThinkingMessageContent } from 'src/domain/messages/domain/message-conte
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
+import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
 
 @Injectable()
 export class BaseOpenAIChatStreamInferenceHandler
@@ -101,7 +102,9 @@ export class BaseOpenAIChatStreamInferenceHandler
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.parameters as FunctionParameters | undefined,
+        parameters: normalizeSchemaForOpenAI(
+          tool.parameters as Record<string, unknown> | undefined,
+        ) as FunctionParameters | undefined,
       },
     };
   };
