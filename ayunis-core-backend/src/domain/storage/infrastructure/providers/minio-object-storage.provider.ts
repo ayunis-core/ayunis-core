@@ -194,4 +194,27 @@ export class MinioObjectStorageProvider
   async deleteBucket(name: string): Promise<void> {
     await this.client.removeBucket(name);
   }
+
+  async listObjects(prefix?: string, bucket?: string): Promise<string[]> {
+    const bucketName = bucket || this.defaultBucket;
+    const objectNames: string[] = [];
+
+    return new Promise((resolve, reject) => {
+      const stream = this.client.listObjects(bucketName, prefix, true);
+
+      stream.on('data', (obj) => {
+        if (obj.name) {
+          objectNames.push(obj.name);
+        }
+      });
+
+      stream.on('error', (err) => {
+        reject(err);
+      });
+
+      stream.on('end', () => {
+        resolve(objectNames);
+      });
+    });
+  }
 }

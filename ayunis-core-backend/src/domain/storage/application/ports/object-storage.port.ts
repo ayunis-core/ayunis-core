@@ -86,4 +86,13 @@ export abstract class ObjectStoragePort {
    * @param name Name of the bucket to delete
    */
   abstract deleteBucket(name: string): Promise<void>;
+
+  /**
+   * List objects in the storage with an optional prefix filter
+   *
+   * @param prefix Optional prefix to filter objects (e.g., 'orgId/' or 'orgId/threadId/')
+   * @param bucket Optional bucket name (uses default if not provided)
+   * @returns Array of object names matching the prefix
+   */
+  abstract listObjects(prefix?: string, bucket?: string): Promise<string[]>;
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MESSAGES_REPOSITORY } from './application/ports/messages.repository';
 import { LocalMessagesRepository } from './infrastructure/persistence/local/local-messages.repository';
 import { LocalMessagesRepositoryModule } from './infrastructure/persistence/local/local-messages-repository.module';
@@ -13,7 +13,7 @@ import { CreateToolResultMessageUseCase } from './application/use-cases/create-t
 import { DeleteMessageUseCase } from './application/use-cases/delete-message/delete-message.use-case';
 
 @Module({
-  imports: [LocalMessagesRepositoryModule, StorageModule],
+  imports: [LocalMessagesRepositoryModule, forwardRef(() => StorageModule)],
   providers: [
     {
       provide: MESSAGES_REPOSITORY,

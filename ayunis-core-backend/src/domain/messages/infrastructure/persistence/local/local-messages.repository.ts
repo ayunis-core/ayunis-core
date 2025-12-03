@@ -23,6 +23,11 @@ export class LocalMessagesRepository extends MessagesRepository {
     return this.messageMapper.toDomain(savedMessageEntity);
   }
 
+  async findById(id: UUID): Promise<Message | null> {
+    const messageEntity = await this.repository.findOne({ where: { id } });
+    return messageEntity ? this.messageMapper.toDomain(messageEntity) : null;
+  }
+
   async findManyByThreadId(threadId: UUID): Promise<Message[]> {
     const messageEntities = await this.repository.find({
       where: { threadId },
