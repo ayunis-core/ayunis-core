@@ -121,17 +121,17 @@ describe('GetUsageStatsUseCase', () => {
 
       expect(result.totalTokens).toBe(0);
       expect(result.totalRequests).toBe(0);
-      expect(result.totalCost).toBeUndefined();
+      expect(result.totalCost).toBe(0);
       expect(result.activeUsers).toBe(0);
       expect(result.totalUsers).toBe(0);
     });
 
-    it('should hide cost in cloud mode even if cost exists', async () => {
+    it('should return undefined cost when totalCost is undefined', async () => {
       const mockStats = new UsageStats({
         totalTokens: 10000,
         totalRequests: 100,
-        totalCost: 50.5,
-        currency: 'EUR',
+        totalCost: undefined,
+        currency: undefined,
         activeUsers: 10,
         totalUsers: 20,
         topModels: [],
@@ -145,6 +145,7 @@ describe('GetUsageStatsUseCase', () => {
       const result = await useCase.execute(query);
 
       expect(result.totalCost).toBeUndefined();
+      expect(result.currency).toBeUndefined();
     });
   });
 
