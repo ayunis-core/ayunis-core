@@ -1,8 +1,8 @@
 import { Entity, Column, Index, ManyToOne } from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UUID } from 'crypto';
-import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
-import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
 import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
 import { Currency } from '../../../../../models/domain/value-objects/currency.enum';
