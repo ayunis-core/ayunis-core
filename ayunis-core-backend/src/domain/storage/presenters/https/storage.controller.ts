@@ -4,7 +4,6 @@ import {
   Get,
   Delete,
   Param,
-  Query,
   UseInterceptors,
   UploadedFile,
   Res,
@@ -12,6 +11,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -28,14 +28,13 @@ import { DownloadObjectUseCase } from '../../application/use-cases/download-obje
 import { GetObjectInfoUseCase } from '../../application/use-cases/get-object-info/get-object-info.use-case';
 import { DeleteObjectUseCase } from '../../application/use-cases/delete-object/delete-object.use-case';
 import { GetPresignedUrlUseCase } from '../../application/use-cases/get-presigned-url/get-presigned-url.use-case';
-import { UploadFileUseCase } from '../../application/use-cases/upload-file/upload-file.use-case';
-import { UploadFileCommand } from '../../application/use-cases/upload-file/upload-file.command';
+import { UploadObjectUseCase } from '../../application/use-cases/upload-object/upload-object.use-case';
+import { UploadObjectCommand } from '../../application/use-cases/upload-object/upload-object.command';
 import { DownloadObjectCommand } from '../../application/use-cases/download-object/download-object.command';
 import { DeleteObjectCommand } from '../../application/use-cases/delete-object/delete-object.command';
 import { GetObjectInfoCommand } from '../../application/use-cases/get-object-info/get-object-info.command';
 import { GetPresignedUrlCommand } from '../../application/use-cases/get-presigned-url/get-presigned-url.command';
 import { StorageError } from '../../application/storage.errors';
-import { ScopeType } from '../../domain/value-objects/scope-type.enum';
 import { StorageResponseDtoMapper } from './mappers/storage-response-dto.mapper';
 import { UploadFileResponseDto } from './dto/upload-file-response.dto';
 
@@ -45,7 +44,7 @@ export class StorageController {
   private readonly logger = new Logger(StorageController.name);
 
   constructor(
-    private readonly uploadFileUseCase: UploadFileUseCase,
+    private readonly uploadObjectUseCase: UploadObjectUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly getObjectInfoUseCase: GetObjectInfoUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
@@ -55,15 +54,22 @@ export class StorageController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Upload a file' })
+  @ApiOperation({
+    summary: 'Upload a file to object storage',
+    description:
+      'Generic file upload endpoint. Stores the file with optional metadata. ' +
+      'Validation (file types, sizes) should be handled by consuming modules.',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
+      required: ['file'],
       properties: {
         file: {
           type: 'string',
           format: 'binary',
+          description: 'The file to upload',
         },
       },
     },
@@ -75,16 +81,31 @@ export class StorageController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid file or validation failed',
+    description: 'No file provided or invalid request',
   })
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Query('scopeType') scopeType: ScopeType,
-    @Query('scopeId') scopeId?: string,
   ): Promise<UploadFileResponseDto> {
     try {
-      const command = new UploadFileCommand(file, scopeType, scopeId);
-      const result = await this.uploadFileUseCase.execute(command);
+      if (!file) {
+        throw new BadRequestException('No file provided');
+      }
+
+      // Generate unique object name with timestamp prefix
+      const objectName = `${Date.now()}-${file.originalname}`;
+
+      // Store file metadata
+      const metadata: Record<string, string | undefined> = {
+        contentType: file.mimetype,
+        originalName: file.originalname,
+      };
+
+      const command = new UploadObjectCommand(
+        objectName,
+        file.buffer,
+        metadata,
+      );
+      const result = await this.uploadObjectUseCase.execute(command);
 
       return this.storageResponseDtoMapper.toUploadFileDto(result);
     } catch (error) {

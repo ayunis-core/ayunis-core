@@ -26,7 +26,7 @@ import {
 } from '@anthropic-ai/sdk/resources/messages';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 

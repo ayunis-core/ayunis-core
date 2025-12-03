@@ -20,7 +20,7 @@ import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {

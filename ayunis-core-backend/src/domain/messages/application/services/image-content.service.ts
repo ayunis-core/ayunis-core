@@ -1,8 +1,8 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
-import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
-import { InferenceFailedError } from '../../application/models.errors';
+import { Injectable, Logger } from '@nestjs/common';
+import { ImageMessageContent } from '../../domain/message-contents/image-message-content.entity';
+import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
+import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 
 const ALLOWED_CONTENT_TYPES = [
   'image/jpeg',
@@ -30,10 +30,7 @@ export class ImageContentService {
 
   private readonly MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB - matches upload limit
 
-  constructor(
-    @Inject(ObjectStoragePort)
-    private readonly objectStorage: ObjectStoragePort,
-  ) {}
+  constructor(private readonly downloadObjectUseCase: DownloadObjectUseCase) {}
 
   /**
    * Convert an image message content to base64 for inference APIs.
@@ -51,13 +48,12 @@ export class ImageContentService {
       context.threadId,
       context.messageId,
     );
-    const storageUrl = new StorageUrl(storagePath, '');
 
     // Use the content type stored in the entity (validated at upload time)
     const contentType = content.contentType;
     const validatedContentType = this.validateContentType(contentType);
 
-    const buffer = await this.downloadImageBuffer(storageUrl);
+    const buffer = await this.downloadImageBuffer(storagePath);
     this.validateImageSize(buffer);
 
     const base64Data = buffer.toString('base64');
@@ -84,8 +80,10 @@ export class ImageContentService {
     return contentType as AllowedImageContentType;
   }
 
-  private async downloadImageBuffer(storageUrl: StorageUrl): Promise<Buffer> {
-    const stream = await this.objectStorage.download(storageUrl);
+  private async downloadImageBuffer(storagePath: string): Promise<Buffer> {
+    const stream = await this.downloadObjectUseCase.execute(
+      new DownloadObjectCommand(storagePath),
+    );
 
     const chunks: Buffer[] = [];
     await new Promise<void>((resolve, reject) => {

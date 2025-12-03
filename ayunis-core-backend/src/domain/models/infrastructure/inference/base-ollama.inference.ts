@@ -23,7 +23,7 @@ import { ThinkingMessageContent } from 'src/domain/messages/domain/message-conte
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { InferenceFailedError } from '../../application/models.errors';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export abstract class BaseOllamaInferenceHandler extends InferenceHandler {

@@ -76,7 +76,7 @@ import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
 import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
-import { ImageContentService } from './infrastructure/services/image-content.service';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
@@ -88,13 +88,13 @@ import { ImageContentService } from './infrastructure/services/image-content.ser
     OrgsModule,
     UsersModule,
     StorageModule,
+    forwardRef(() => MessagesModule), // ImageContentService for inference handlers
     forwardRef(() => SourcesModule), // Sources → Retrievers → FileRetrievers → Models (circular)
     forwardRef(() => ThreadsModule), // Threads query models, deleting permitted model updates threads
     forwardRef(() => AgentsModule), // Agents query models, deleting permitted model updates agents
   ],
   controllers: [ModelsController, SuperAdminModelsController],
   providers: [
-    ImageContentService,
     ModelRegistry,
     ModelProviderInfoRegistry,
     ModelResponseDtoMapper,

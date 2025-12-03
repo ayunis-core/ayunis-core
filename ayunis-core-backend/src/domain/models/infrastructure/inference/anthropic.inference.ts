@@ -24,7 +24,7 @@ import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.en
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;

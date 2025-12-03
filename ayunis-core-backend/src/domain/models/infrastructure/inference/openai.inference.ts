@@ -18,7 +18,7 @@ import { InferenceFailedError } from 'src/domain/models/application/models.error
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export class OpenAIInferenceHandler extends InferenceHandler {

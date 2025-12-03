@@ -25,7 +25,7 @@ import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { randomUUID } from 'crypto';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 
 @Injectable()

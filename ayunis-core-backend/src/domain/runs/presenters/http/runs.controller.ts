@@ -334,7 +334,7 @@ export class RunsController {
         threadId: sendMessageDto.threadId,
         input: RunInputMapper.toCommand(sendMessageDto, uploadedFiles),
         userId,
-        streaming: sendMessageDto.streaming,
+        streaming: sendMessageDto.streaming ?? true,
         orgId,
         response,
       });

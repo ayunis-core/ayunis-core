@@ -27,7 +27,7 @@ import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.en
 import { ConfigService } from '@nestjs/config';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export class MistralInferenceHandler extends InferenceHandler {

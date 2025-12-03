@@ -7,7 +7,6 @@ import { StorageController } from './presenters/https/storage.controller';
 import { StorageResponseDtoMapper } from './presenters/https/mappers/storage-response-dto.mapper';
 import { ObjectStoragePort } from './application/ports/object-storage.port';
 import { UploadObjectUseCase } from './application/use-cases/upload-object/upload-object.use-case';
-import { UploadFileUseCase } from './application/use-cases/upload-file/upload-file.use-case';
 import { DownloadObjectUseCase } from './application/use-cases/download-object/download-object.use-case';
 import { GetObjectInfoUseCase } from './application/use-cases/get-object-info/get-object-info.use-case';
 import { DeleteObjectUseCase } from './application/use-cases/delete-object/delete-object.use-case';
@@ -29,7 +28,6 @@ import { MessagesModule } from '../messages/messages.module';
       useClass: MinioObjectStorageProvider,
     },
     UploadObjectUseCase,
-    UploadFileUseCase,
     DownloadObjectUseCase,
     GetObjectInfoUseCase,
     DeleteObjectUseCase,
@@ -41,7 +39,6 @@ import { MessagesModule } from '../messages/messages.module';
   exports: [
     ObjectStoragePort,
     UploadObjectUseCase,
-    UploadFileUseCase,
     DownloadObjectUseCase,
     GetObjectInfoUseCase,
     DeleteObjectUseCase,

@@ -12,6 +12,9 @@ import { SaveAssistantMessageUseCase } from './application/use-cases/save-assist
 import { CreateToolResultMessageUseCase } from './application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/delete-message/delete-message.use-case';
 
+// Services
+import { ImageContentService } from './application/services/image-content.service';
+
 @Module({
   imports: [LocalMessagesRepositoryModule, forwardRef(() => StorageModule)],
   providers: [
@@ -26,6 +29,8 @@ import { DeleteMessageUseCase } from './application/use-cases/delete-message/del
     SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
     DeleteMessageUseCase,
+    // Services
+    ImageContentService,
   ],
   exports: [
     MESSAGES_REPOSITORY,
@@ -36,6 +41,8 @@ import { DeleteMessageUseCase } from './application/use-cases/delete-message/del
     SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
     DeleteMessageUseCase,
+    // Services
+    ImageContentService,
   ],
 })
 export class MessagesModule {}

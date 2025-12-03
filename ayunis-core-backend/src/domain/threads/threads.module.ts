@@ -14,7 +14,6 @@ import { CreateThreadUseCase } from './application/use-cases/create-thread/creat
 import { FindThreadUseCase } from './application/use-cases/find-thread/find-thread.use-case';
 import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/find-all-threads.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
-import { DeleteThreadImagesUseCase } from './application/use-cases/delete-thread-images/delete-thread-images.use-case';
 import { AddMessageToThreadUseCase } from './application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
@@ -50,7 +49,6 @@ import { StorageModule } from '../storage/storage.module';
     FindThreadUseCase,
     FindAllThreadsUseCase,
     DeleteThreadUseCase,
-    DeleteThreadImagesUseCase,
     AddMessageToThreadUseCase,
     AddSourceToThreadUseCase,
     RemoveSourceFromThreadUseCase,

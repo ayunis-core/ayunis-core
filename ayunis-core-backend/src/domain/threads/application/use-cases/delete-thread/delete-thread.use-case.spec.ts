@@ -5,13 +5,15 @@ import { DeleteThreadCommand } from './delete-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { DeleteThreadImagesUseCase } from '../delete-thread-images/delete-thread-images.use-case';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
+  const mockOrgId = '123e4567-e89b-12d3-a456-426614174002' as any;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as any;
 
   beforeEach(async () => {
@@ -25,11 +27,16 @@ describe('DeleteThreadUseCase', () => {
     const mockContextService = {
       get: jest.fn((key: string) => {
         if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
         return undefined;
       }),
     } as unknown as jest.Mocked<ContextService>;
 
-    const mockDeleteThreadImagesUseCase = {
+    const mockMessagesRepository = {
+      findManyByThreadId: jest.fn().mockResolvedValue([]),
+    };
+
+    const mockDeleteObjectUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -38,10 +45,8 @@ describe('DeleteThreadUseCase', () => {
         DeleteThreadUseCase,
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
-        {
-          provide: DeleteThreadImagesUseCase,
-          useValue: mockDeleteThreadImagesUseCase,
-        },
+        { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
+        { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
       ],
     }).compile();
 

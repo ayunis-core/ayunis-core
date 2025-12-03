@@ -2,7 +2,7 @@ import { BaseOllamaInferenceHandler } from './base-ollama.inference';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Ollama } from 'ollama';
-import { ImageContentService } from '../services/image-content.service';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export class AyunisOllamaInferenceHandler extends BaseOllamaInferenceHandler {
