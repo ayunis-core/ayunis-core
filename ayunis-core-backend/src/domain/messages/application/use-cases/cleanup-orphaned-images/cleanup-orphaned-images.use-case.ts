@@ -1,11 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { ObjectStoragePort } from '../../ports/object-storage.port';
+import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 import {
   MessagesRepository,
   MESSAGES_REPOSITORY,
-} from 'src/domain/messages/application/ports/messages.repository';
-import { StorageUrl } from '../../../domain/storage-url.entity';
+} from '../../ports/messages.repository';
 
 /**
  * Image path format: <orgId>/<threadId>/<messageId>/<index>.<ext>

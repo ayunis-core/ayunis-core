@@ -1,11 +1,11 @@
-import { PendingImageUpload } from 'src/domain/messages/domain/value-objects/pending-image-upload.value-object';
+import { ImageUploadData } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 
 export class RunInput {}
 
 export class RunUserInput extends RunInput {
   constructor(
     public readonly text: string,
-    public readonly pendingImages: PendingImageUpload[] = [],
+    public readonly pendingImages: ImageUploadData[] = [],
   ) {
     super();
   }

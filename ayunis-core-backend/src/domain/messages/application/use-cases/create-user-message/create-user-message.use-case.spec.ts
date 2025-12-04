@@ -4,19 +4,23 @@ import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
 } from '../../ports/messages.repository';
-import { CreateUserMessageCommand } from './create-user-message.command';
+import {
+  CreateUserMessageCommand,
+  ImageUploadData,
+} from './create-user-message.command';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
-import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
+import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { PendingImageUpload } from '../../../domain/value-objects/pending-image-upload.value-object';
 import { UnauthorizedException } from '@nestjs/common';
 
 describe('CreateUserMessageUseCase', () => {
   let useCase: CreateUserMessageUseCase;
   let mockMessagesRepository: Partial<MessagesRepository>;
-  let mockObjectStoragePort: Partial<ObjectStoragePort>;
+  let mockUploadObjectUseCase: Partial<UploadObjectUseCase>;
+  let mockDeleteObjectUseCase: Partial<DeleteObjectUseCase>;
   let mockContextService: Partial<ContextService>;
 
   const mockOrgId = randomUUID();
@@ -26,9 +30,12 @@ describe('CreateUserMessageUseCase', () => {
       create: jest.fn(),
     };
 
-    mockObjectStoragePort = {
-      upload: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(undefined),
+    mockUploadObjectUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockDeleteObjectUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
     };
 
     mockContextService = {
@@ -39,7 +46,8 @@ describe('CreateUserMessageUseCase', () => {
       providers: [
         CreateUserMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
-        { provide: ObjectStoragePort, useValue: mockObjectStoragePort },
+        { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
+        { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
@@ -80,11 +88,11 @@ describe('CreateUserMessageUseCase', () => {
       // Arrange
       const threadId = randomUUID();
       const text = 'Check this image';
-      const pendingImage = new PendingImageUpload(
-        Buffer.from('fake-image-data'),
-        'image/jpeg',
-        'alt text',
-      );
+      const pendingImage: ImageUploadData = {
+        buffer: Buffer.from('fake-image-data'),
+        contentType: 'image/jpeg',
+        altText: 'alt text',
+      };
       const command = new CreateUserMessageCommand(threadId, text, [
         pendingImage,
       ]);
@@ -101,7 +109,7 @@ describe('CreateUserMessageUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      expect(mockObjectStoragePort.upload).toHaveBeenCalledTimes(1);
+      expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(UserMessage),
       );
@@ -112,13 +120,16 @@ describe('CreateUserMessageUseCase', () => {
       // Arrange
       const threadId = randomUUID();
       const text = 'Multiple images';
-      const pendingImages = [
-        new PendingImageUpload(Buffer.from('image-1'), 'image/jpeg'),
-        new PendingImageUpload(
-          Buffer.from('image-2'),
-          'image/png',
-          'second image',
-        ),
+      const pendingImages: ImageUploadData[] = [
+        {
+          buffer: Buffer.from('image-1'),
+          contentType: 'image/jpeg',
+        },
+        {
+          buffer: Buffer.from('image-2'),
+          contentType: 'image/png',
+          altText: 'second image',
+        },
       ];
       const command = new CreateUserMessageCommand(
         threadId,
@@ -138,7 +149,7 @@ describe('CreateUserMessageUseCase', () => {
       const result = await useCase.execute(command);
 
       // Assert
-      expect(mockObjectStoragePort.upload).toHaveBeenCalledTimes(2);
+      expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(2);
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(UserMessage),
       );
@@ -161,10 +172,10 @@ describe('CreateUserMessageUseCase', () => {
     it('should cleanup uploaded images on repository error', async () => {
       // Arrange
       const threadId = randomUUID();
-      const pendingImage = new PendingImageUpload(
-        Buffer.from('fake-image'),
-        'image/jpeg',
-      );
+      const pendingImage: ImageUploadData = {
+        buffer: Buffer.from('fake-image'),
+        contentType: 'image/jpeg',
+      };
       const command = new CreateUserMessageCommand(threadId, 'Test', [
         pendingImage,
       ]);
@@ -178,8 +189,8 @@ describe('CreateUserMessageUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         MessageCreationError,
       );
-      expect(mockObjectStoragePort.upload).toHaveBeenCalledTimes(1);
-      expect(mockObjectStoragePort.delete).toHaveBeenCalledTimes(1);
+      expect(mockUploadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(mockDeleteObjectUseCase.execute).toHaveBeenCalledTimes(1);
     });
 
     it('should handle repository errors', async () => {
@@ -250,10 +261,10 @@ describe('CreateUserMessageUseCase', () => {
       // Arrange
       const threadId = randomUUID();
       const text = 'With image';
-      const pendingImage = new PendingImageUpload(
-        Buffer.from('image'),
-        'image/png',
-      );
+      const pendingImage: ImageUploadData = {
+        buffer: Buffer.from('image'),
+        contentType: 'image/png',
+      };
       const command = new CreateUserMessageCommand(threadId, text, [
         pendingImage,
       ]);

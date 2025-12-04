@@ -13,9 +13,10 @@ import {
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
-import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
-import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
 import { ImageMessageContent } from '../../../domain/message-contents/image-message-content.entity';
 import { getImageStoragePath } from '../../../domain/image-storage-path.util';
@@ -27,7 +28,8 @@ export class CreateUserMessageUseCase {
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
-    private readonly objectStoragePort: ObjectStoragePort,
+    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -85,13 +87,11 @@ export class CreateUserMessageUseCase {
           size: pendingImage.buffer.length,
         });
 
-        const uploadObject = new StorageObjectUpload(
-          storagePath,
-          pendingImage.buffer,
-          { contentType: pendingImage.contentType },
+        await this.uploadObjectUseCase.execute(
+          new UploadObjectCommand(storagePath, pendingImage.buffer, {
+            contentType: pendingImage.contentType,
+          }),
         );
-
-        await this.objectStoragePort.upload(uploadObject);
         uploadedPaths.push(storagePath);
       }
 
@@ -129,10 +129,10 @@ export class CreateUserMessageUseCase {
   private async cleanupUploadedImages(paths: string[]): Promise<void> {
     for (const path of paths) {
       try {
-        await this.objectStoragePort.delete(new StorageUrl(path, ''));
+        await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
         this.logger.debug('Cleaned up orphaned image', { path });
       } catch (deleteError) {
-        // Log but don't throw - best effort cleanup
+        // Best-effort cleanup - log but don't throw (ObjectNotFoundError is acceptable)
         this.logger.error('Failed to cleanup orphaned image', {
           path,
           error: deleteError as Error,

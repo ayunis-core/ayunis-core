@@ -4,7 +4,7 @@ import {
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { SendMessageDto } from '../dto/send-message.dto';
-import { PendingImageUpload } from 'src/domain/messages/domain/value-objects/pending-image-upload.value-object';
+import { ImageUploadData } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 
 export class RunInputMapper {
   /**
@@ -27,10 +27,11 @@ export class RunInputMapper {
     }
 
     // Handle user input (text and/or images)
-    const pendingImages = files.map((file, index) => {
-      const altText = dto.imageAltTexts?.[index];
-      return new PendingImageUpload(file.buffer, file.mimetype, altText);
-    });
+    const pendingImages: ImageUploadData[] = files.map((file, index) => ({
+      buffer: file.buffer,
+      contentType: file.mimetype,
+      altText: dto.imageAltTexts?.[index],
+    }));
 
     return new RunUserInput(dto.text ?? '', pendingImages);
   }
