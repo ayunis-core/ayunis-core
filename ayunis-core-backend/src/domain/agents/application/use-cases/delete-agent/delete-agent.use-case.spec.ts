@@ -160,6 +160,7 @@ describe('DeleteAgentUseCase', () => {
           isReasoning: false,
           isArchived: false,
           canUseTools: true,
+          canVision: true,
         }),
       });
       const existingAgent = new Agent({

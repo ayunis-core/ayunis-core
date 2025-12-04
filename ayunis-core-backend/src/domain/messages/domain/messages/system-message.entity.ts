@@ -5,11 +5,13 @@ import { UUID } from 'crypto';
 
 export class SystemMessage extends Message<TextMessageContent> {
   constructor(params: {
+    id?: UUID;
     threadId: UUID;
     createdAt?: Date;
     content: Array<TextMessageContent>;
   }) {
     super({
+      id: params.id,
       threadId: params.threadId,
       role: MessageRole.SYSTEM,
       createdAt: params.createdAt,

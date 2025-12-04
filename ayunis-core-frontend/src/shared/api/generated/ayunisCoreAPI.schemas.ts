@@ -8,6 +8,8 @@
 export interface IsCloudResponseDto {
   /** Whether the deployment is running in a cloud environment */
   isCloud: boolean;
+  /** Whether new user registration is disabled */
+  isRegistrationDisabled: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export const ModelWithConfigResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -54,11 +57,23 @@ export interface ModelWithConfigResponseDto {
   isDefault: boolean;
   /** Whether the model is an embedding model */
   isEmbedding: boolean;
+  /**
+   * Whether this model enforces anonymous mode. Null if not permitted.
+   * @nullable
+   */
+  anonymousOnly: boolean | null;
 }
 
 export interface CreatePermittedModelDto {
   /** The id of the model */
   modelId: string;
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly?: boolean;
+}
+
+export interface UpdatePermittedModelDto {
+  /** Whether this model should enforce anonymous mode */
+  anonymousOnly: boolean;
 }
 
 /**
@@ -75,6 +90,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -105,6 +121,10 @@ export interface PermittedLanguageModelResponseDto {
   canStream: boolean;
   /** Whether the model can reason */
   isReasoning: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
+  /** Whether this model enforces anonymous mode */
+  anonymousOnly: boolean;
 }
 
 /**
@@ -145,6 +165,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -185,6 +206,7 @@ export const CreatePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface CreatePermittedProviderDto {
@@ -206,6 +228,7 @@ export const PermittedProviderResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -246,6 +269,7 @@ export const DeletePermittedProviderDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface DeletePermittedProviderDto {
@@ -267,6 +291,7 @@ export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -314,6 +339,7 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -361,6 +387,7 @@ export const CreateLanguageModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -396,6 +423,7 @@ export const UpdateLanguageModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -431,6 +459,7 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -473,6 +502,7 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -515,6 +545,7 @@ export const LanguageModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -569,6 +600,7 @@ export const EmbeddingModelResponseDtoProvider = {
   ollama: 'ollama',
   synaforce: 'synaforce',
   ayunis: 'ayunis',
+  otc: 'otc',
 } as const;
 
 /**
@@ -1037,6 +1069,8 @@ export interface CreateThreadDto {
   modelId?: string;
   /** The id of the agent */
   agentId?: string;
+  /** Enable anonymous mode for this thread */
+  isAnonymous?: boolean;
 }
 
 /**
@@ -1273,6 +1307,10 @@ export interface ModelResponseDto {
   provider: string;
   /** The display name of the model */
   displayName: string;
+  /** Whether this model requires anonymous mode (PII redaction) */
+  anonymousOnly: boolean;
+  /** Whether the model supports vision (image processing) */
+  canVision: boolean;
 }
 
 /**
@@ -1532,6 +1570,8 @@ export interface GetThreadResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
+  /** Whether the thread is in anonymous mode (PII redaction enabled) */
+  isAnonymous: boolean;
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -1543,16 +1583,8 @@ export interface GetThreadsResponseDtoItem {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-}
-
-export interface UpdateThreadModelDto {
-  /** The id of the model */
-  modelId: string;
-}
-
-export interface UpdateThreadAgentDto {
-  /** The UUID of the agent to update */
-  agentId: string;
+  /** Whether the thread is in anonymous mode (PII redaction enabled) */
+  isAnonymous: boolean;
 }
 
 /**
@@ -1576,6 +1608,7 @@ export const ToolAssignmentDtoType = {
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
+  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1621,6 +1654,7 @@ export const ToolResponseDtoType = {
   mcp_tool: 'mcp_tool',
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
+  product_knowledge: 'product_knowledge',
 } as const;
 
 export interface ToolResponseDto {
@@ -1670,6 +1704,10 @@ export interface AgentResponseDto {
   tools: ToolResponseDto[];
   /** The sources assigned to this agent */
   sources: AgentSourceResponseDto[];
+  /** Whether this agent is shared with the current user (vs. owned by them) */
+  isShared: boolean;
+  /** The unique identifier of the user who owns this agent (same as userId) */
+  ownerId: string;
 }
 
 export interface UpdateAgentDto {
@@ -1756,6 +1794,68 @@ export interface McpIntegrationResponseDto {
   createdAt: string;
   /** Timestamp when the integration was last updated */
   updatedAt: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
+  returnsPii: boolean;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType[keyof typeof CreateAgentShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateAgentShareDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+} as const;
+
+export interface CreateAgentShareDto {
+  /** Type of entity being shared */
+  entityType: CreateAgentShareDtoEntityType;
+  /** ID of the agent to share */
+  agentId: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof typeof ShareResponseDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+} as const;
+
+/**
+ * Type of share scope (organization or user)
+ */
+export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ShareResponseDtoScopeType = {
+  org: 'org',
+  user: 'user',
+} as const;
+
+export interface ShareResponseDto {
+  /** Unique identifier of the share */
+  id: string;
+  /** Type of entity being shared */
+  entityType: ShareResponseDtoEntityType;
+  /** ID of the entity being shared */
+  entityId: string;
+  /** Type of share scope (organization or user) */
+  scopeType: ShareResponseDtoScopeType;
+  /** ID of the user who created the share */
+  ownerId: string;
+  /** When the share was created */
+  createdAt: string;
+  /** When the share was last updated */
+  updatedAt: string;
 }
 
 /**
@@ -1788,6 +1888,7 @@ export type CreatePredefinedIntegrationDtoSlug = typeof CreatePredefinedIntegrat
 export const CreatePredefinedIntegrationDtoSlug = {
   TEST: 'TEST',
   LOCABOO: 'LOCABOO',
+  LEGAL_CODES: 'LEGAL_CODES',
 } as const;
 
 export interface CreatePredefinedIntegrationDto {
@@ -1795,6 +1896,8 @@ export interface CreatePredefinedIntegrationDto {
   slug: CreatePredefinedIntegrationDtoSlug;
   /** List of config values for credential fields */
   configValues: ConfigValueDto[];
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
+  returnsPii?: boolean;
 }
 
 /**
@@ -1830,6 +1933,8 @@ export interface CreateCustomIntegrationDto {
   authHeaderName?: string;
   /** Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods. */
   credentials?: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
+  returnsPii?: boolean;
 }
 
 /**
@@ -1896,6 +2001,8 @@ export interface UpdateMcpIntegrationDto {
   credentials?: string;
   /** Custom auth header name. Only used in combination with CUSTOM_HEADER integrations. */
   authHeaderName?: string;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
+  returnsPii?: boolean;
 }
 
 /**
@@ -2054,13 +2161,6 @@ export interface RunThreadResponseDto {
   timestamp: string;
 }
 
-export interface MessageImageInputDto {
-  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
-  imageUrl: string;
-  /** Optional alternative text for the image */
-  altText?: string;
-}
-
 /**
  * The type of input
  */
@@ -2077,24 +2177,6 @@ export interface TextInput {
   type: TextInputType;
   /** The text content for the inference */
   text: string;
-}
-
-/**
- * The type of input
- */
-export type ImageInputType = typeof ImageInputType[keyof typeof ImageInputType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ImageInputType = {
-  image: 'image',
-} as const;
-
-export interface ImageInput {
-  /** The type of input */
-  type: ImageInputType;
-  /** Images to send, referenced by storage object name */
-  images: MessageImageInputDto[];
 }
 
 /**
@@ -2119,16 +2201,15 @@ export interface ToolResultInput {
   result: string;
 }
 
-/**
- * The input to use for the inference
- */
-export type SendMessageDtoInput = TextInput | ImageInput | ToolResultInput;
-
 export interface SendMessageDto {
   /** The thread to use for the inference. */
   threadId: string;
-  /** The input to use for the inference */
-  input: SendMessageDtoInput;
+  /** Text content of the user message (for user input) */
+  text?: string;
+  /** JSON array of alt texts matching the order of uploaded images */
+  imageAltTexts?: string[];
+  /** Tool result input (for tool_result type only) */
+  toolResult?: ToolResultInput;
   /** Enable streaming mode for real-time response updates */
   streaming?: boolean;
 }
@@ -2296,6 +2377,8 @@ export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResp
 
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
 
+export type SuperAdminModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
+
 export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
@@ -2309,13 +2392,20 @@ offset?: number;
 limit?: number;
 };
 
-export type StorageControllerUploadFileParams = {
-scopeType: string;
-scopeId: string;
+export type UserControllerValidateResetTokenParams = {
+/**
+ * Password reset token from email
+ */
+token: string;
+};
+
+export type UserControllerValidateResetToken200 = {
+  valid?: boolean;
 };
 
 export type StorageControllerUploadFileBody = {
-  file?: Blob;
+  /** The file to upload */
+  file: Blob;
 };
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
@@ -2332,6 +2422,39 @@ export type ThreadsControllerAddFileSourceBody = {
 export type AgentsControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
+};
+
+export type SharesControllerGetSharesParams = {
+/**
+ * ID of the entity to get shares for
+ */
+entityId: string;
+/**
+ * Type of the entity
+ */
+entityType: SharesControllerGetSharesEntityType;
+};
+
+export type SharesControllerGetSharesEntityType = typeof SharesControllerGetSharesEntityType[keyof typeof SharesControllerGetSharesEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SharesControllerGetSharesEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+} as const;
+
+export type RunsControllerSendMessageBody = {
+  threadId: string;
+  /** Message text (optional if images provided) */
+  text?: string;
+  /** Image files to attach (max 10, max 10MB each, 50MB total) */
+  images?: Blob[];
+  /** JSON array of alt texts matching image order */
+  imageAltTexts?: string;
+  /** JSON object for tool result input */
+  toolResult?: string;
+  streaming?: boolean;
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;

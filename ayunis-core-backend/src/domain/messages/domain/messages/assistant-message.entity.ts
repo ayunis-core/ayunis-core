@@ -9,6 +9,7 @@ export class AssistantMessage extends Message<
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
 > {
   constructor(params: {
+    id?: UUID;
     threadId: UUID;
     createdAt?: Date;
     content: Array<
@@ -16,6 +17,7 @@ export class AssistantMessage extends Message<
     >;
   }) {
     super({
+      id: params.id,
       threadId: params.threadId,
       role: MessageRole.ASSISTANT,
       createdAt: params.createdAt,

@@ -67,6 +67,7 @@ export class MessageMapper {
     switch (messageEntity.role) {
       case MessageRole.USER:
         return new UserMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
@@ -85,6 +86,7 @@ export class MessageMapper {
         });
       case MessageRole.ASSISTANT:
         return new AssistantMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
@@ -106,6 +108,7 @@ export class MessageMapper {
         });
       case MessageRole.TOOL:
         return new ToolResultMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
@@ -121,6 +124,7 @@ export class MessageMapper {
         });
       case MessageRole.SYSTEM:
         return new SystemMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {

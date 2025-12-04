@@ -34,6 +34,7 @@ import type {
   AgentsControllerAddFileSourceBody,
   ConfirmEmailDto,
   CreateAgentDto,
+  CreateAgentShareDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelDto,
   CreateEmbeddingModelRequestDto,
@@ -78,17 +79,19 @@ import type {
   ResetPasswordDto,
   RetrieveUrlDto,
   RunsControllerSendMessage200,
-  SendMessageDto,
+  RunsControllerSendMessageBody,
   SetOrgDefaultModelDto,
   SetUserDefaultModelDto,
+  ShareResponseDto,
+  SharesControllerGetSharesParams,
   StorageControllerUploadFileBody,
-  StorageControllerUploadFileParams,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
   SuperAdminModelsControllerGetAllCatalogModels200Item,
   SuperAdminModelsControllerGetCatalogModelById200,
   SuperAdminModelsControllerGetPermittedModels200Item,
+  SuperAdminModelsControllerUpdatePermittedModel200,
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
   SuperAdminOrgsControllerGetAllOrgsParams,
@@ -104,14 +107,15 @@ import type {
   UpdateLanguageModelRequestDto,
   UpdateMcpIntegrationDto,
   UpdatePasswordDto,
+  UpdatePermittedModelDto,
   UpdatePromptDto,
   UpdateSeatsDto,
-  UpdateThreadAgentDto,
-  UpdateThreadModelDto,
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
   UploadFileResponseDto,
+  UserControllerValidateResetToken200,
+  UserControllerValidateResetTokenParams,
   UserResponseDto,
   UsersListResponseDto,
   ValidationResponseDto
@@ -509,6 +513,71 @@ export const useModelsControllerDeletePermittedModel = <TError = void,
       > => {
 
       const mutationOptions = getModelsControllerDeletePermittedModelMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update a permitted model
+ */
+export const modelsControllerUpdatePermittedModel = (
+    id: string,
+    updatePermittedModelDto: UpdatePermittedModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<PermittedLanguageModelResponseDto>(
+      {url: `/models/permitted/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePermittedModelDto
+    },
+      );
+    }
+  
+
+
+export const getModelsControllerUpdatePermittedModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerUpdatePermittedModel>>, TError,{id: string;data: UpdatePermittedModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerUpdatePermittedModel>>, TError,{id: string;data: UpdatePermittedModelDto}, TContext> => {
+
+const mutationKey = ['modelsControllerUpdatePermittedModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerUpdatePermittedModel>>, {id: string;data: UpdatePermittedModelDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  modelsControllerUpdatePermittedModel(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ModelsControllerUpdatePermittedModelMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerUpdatePermittedModel>>>
+    export type ModelsControllerUpdatePermittedModelMutationBody = UpdatePermittedModelDto
+    export type ModelsControllerUpdatePermittedModelMutationError = void
+
+    /**
+ * @summary Update a permitted model
+ */
+export const useModelsControllerUpdatePermittedModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerUpdatePermittedModel>>, TError,{id: string;data: UpdatePermittedModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof modelsControllerUpdatePermittedModel>>,
+        TError,
+        {id: string;data: UpdatePermittedModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getModelsControllerUpdatePermittedModelMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -2071,6 +2140,73 @@ export const useSuperAdminModelsControllerDeletePermittedModel = <TError = void,
     }
     
 /**
+ * Update the settings of a permitted model for the specified organization. This endpoint is only accessible to super admins.
+ * @summary Update a permitted model for a specific organization
+ */
+export const superAdminModelsControllerUpdatePermittedModel = (
+    orgId: string,
+    id: string,
+    updatePermittedModelDto: UpdatePermittedModelDto,
+ ) => {
+      
+      
+      return customAxiosInstance<SuperAdminModelsControllerUpdatePermittedModel200>(
+      {url: `/super-admin/models/${orgId}/permitted-models/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePermittedModelDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminModelsControllerUpdatePermittedModelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerUpdatePermittedModel>>, TError,{orgId: string;id: string;data: UpdatePermittedModelDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerUpdatePermittedModel>>, TError,{orgId: string;id: string;data: UpdatePermittedModelDto}, TContext> => {
+
+const mutationKey = ['superAdminModelsControllerUpdatePermittedModel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminModelsControllerUpdatePermittedModel>>, {orgId: string;id: string;data: UpdatePermittedModelDto}> = (props) => {
+          const {orgId,id,data} = props ?? {};
+
+          return  superAdminModelsControllerUpdatePermittedModel(orgId,id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminModelsControllerUpdatePermittedModelMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminModelsControllerUpdatePermittedModel>>>
+    export type SuperAdminModelsControllerUpdatePermittedModelMutationBody = UpdatePermittedModelDto
+    export type SuperAdminModelsControllerUpdatePermittedModelMutationError = void
+
+    /**
+ * @summary Update a permitted model for a specific organization
+ */
+export const useSuperAdminModelsControllerUpdatePermittedModel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerUpdatePermittedModel>>, TError,{orgId: string;id: string;data: UpdatePermittedModelDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminModelsControllerUpdatePermittedModel>>,
+        TError,
+        {orgId: string;id: string;data: UpdatePermittedModelDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminModelsControllerUpdatePermittedModelMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Retrieve all permitted providers for the specified organization. This endpoint is only accessible to super admins.
  * @summary Get all permitted providers for a specific organization
  */
@@ -3591,6 +3727,96 @@ export const useUserControllerResetPassword = <TError = void,
       return useMutation(mutationOptions , queryClient);
     }
     
+/**
+ * Validate a password reset token without performing the actual password reset. Used to check if a token is valid before showing the reset form.
+ * @summary Validate password reset token
+ */
+export const userControllerValidateResetToken = (
+    params: UserControllerValidateResetTokenParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserControllerValidateResetToken200>(
+      {url: `/users/validate-reset-token`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getUserControllerValidateResetTokenQueryKey = (params: UserControllerValidateResetTokenParams,) => {
+    return [`/users/validate-reset-token`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getUserControllerValidateResetTokenQueryOptions = <TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUserControllerValidateResetTokenQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerValidateResetToken>>> = ({ signal }) => userControllerValidateResetToken(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UserControllerValidateResetTokenQueryResult = NonNullable<Awaited<ReturnType<typeof userControllerValidateResetToken>>>
+export type UserControllerValidateResetTokenQueryError = void
+
+
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerValidateResetToken>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Validate password reset token
+ */
+
+export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError = void>(
+ params: UserControllerValidateResetTokenParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerValidateResetToken>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUserControllerValidateResetTokenQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
 /**
  * Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.
  * @summary Get users by organization ID
@@ -5245,24 +5471,21 @@ export const useSuperAdminSubscriptionsControllerUncancelSubscription = <TError 
     }
     
 /**
- * @summary Upload a file
+ * Generic file upload endpoint. Stores the file with optional metadata. Validation (file types, sizes) should be handled by consuming modules.
+ * @summary Upload a file to object storage
  */
 export const storageControllerUploadFile = (
     storageControllerUploadFileBody: StorageControllerUploadFileBody,
-    params: StorageControllerUploadFileParams,
  signal?: AbortSignal
 ) => {
       
       const formData = new FormData();
-if(storageControllerUploadFileBody.file !== undefined) {
- formData.append(`file`, storageControllerUploadFileBody.file)
- }
+formData.append(`file`, storageControllerUploadFileBody.file)
 
       return customAxiosInstance<UploadFileResponseDto>(
       {url: `/storage/upload`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
-       data: formData,
-        params, signal
+       data: formData, signal
     },
       );
     }
@@ -5270,8 +5493,8 @@ if(storageControllerUploadFileBody.file !== undefined) {
 
 
 export const getStorageControllerUploadFileMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody;params: StorageControllerUploadFileParams}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody;params: StorageControllerUploadFileParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody}, TContext> => {
 
 const mutationKey = ['storageControllerUploadFile'];
 const {mutation: mutationOptions} = options ?
@@ -5283,10 +5506,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storageControllerUploadFile>>, {data: StorageControllerUploadFileBody;params: StorageControllerUploadFileParams}> = (props) => {
-          const {data,params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storageControllerUploadFile>>, {data: StorageControllerUploadFileBody}> = (props) => {
+          const {data} = props ?? {};
 
-          return  storageControllerUploadFile(data,params,)
+          return  storageControllerUploadFile(data,)
         }
 
         
@@ -5299,14 +5522,14 @@ const {mutation: mutationOptions} = options ?
     export type StorageControllerUploadFileMutationError = void
 
     /**
- * @summary Upload a file
+ * @summary Upload a file to object storage
  */
 export const useStorageControllerUploadFile = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody;params: StorageControllerUploadFileParams}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof storageControllerUploadFile>>,
         TError,
-        {data: StorageControllerUploadFileBody;params: StorageControllerUploadFileParams},
+        {data: StorageControllerUploadFileBody},
         TContext
       > => {
 
@@ -5834,198 +6057,6 @@ export const useThreadsControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Update thread model
- */
-export const threadsControllerUpdateModel = (
-    id: string,
-    updateThreadModelDto: UpdateThreadModelDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/model`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateThreadModelDto
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerUpdateModelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext> => {
-
-const mutationKey = ['threadsControllerUpdateModel'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, {id: string;data: UpdateThreadModelDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerUpdateModel(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerUpdateModelMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateModel>>>
-    export type ThreadsControllerUpdateModelMutationBody = UpdateThreadModelDto
-    export type ThreadsControllerUpdateModelMutationError = void
-
-    /**
- * @summary Update thread model
- */
-export const useThreadsControllerUpdateModel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateModel>>, TError,{id: string;data: UpdateThreadModelDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateModel>>,
-        TError,
-        {id: string;data: UpdateThreadModelDto},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerUpdateModelMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Update thread agent
- */
-export const threadsControllerUpdateAgent = (
-    id: string,
-    updateThreadAgentDto: UpdateThreadAgentDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/agent`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateThreadAgentDto
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerUpdateAgentMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, TError,{id: string;data: UpdateThreadAgentDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, TError,{id: string;data: UpdateThreadAgentDto}, TContext> => {
-
-const mutationKey = ['threadsControllerUpdateAgent'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, {id: string;data: UpdateThreadAgentDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  threadsControllerUpdateAgent(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerUpdateAgentMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>>
-    export type ThreadsControllerUpdateAgentMutationBody = UpdateThreadAgentDto
-    export type ThreadsControllerUpdateAgentMutationError = void
-
-    /**
- * @summary Update thread agent
- */
-export const useThreadsControllerUpdateAgent = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateAgent>>, TError,{id: string;data: UpdateThreadAgentDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerUpdateAgent>>,
-        TError,
-        {id: string;data: UpdateThreadAgentDto},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerUpdateAgentMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Remove agent from thread
- */
-export const threadsControllerRemoveAgent = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/threads/${id}/agent`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getThreadsControllerRemoveAgentMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['threadsControllerRemoveAgent'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  threadsControllerRemoveAgent(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ThreadsControllerRemoveAgentMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>>
-    
-    export type ThreadsControllerRemoveAgentMutationError = void
-
-    /**
- * @summary Remove agent from thread
- */
-export const useThreadsControllerRemoveAgent = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerRemoveAgent>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof threadsControllerRemoveAgent>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getThreadsControllerRemoveAgentMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -7154,6 +7185,222 @@ export function useAgentsControllerListAgentMcpIntegrations<TData = Awaited<Retu
 
 
 /**
+ * @summary Create a share for an agent
+ */
+export const sharesControllerCreateShare = (
+    createAgentShareDto: CreateAgentShareDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ShareResponseDto>(
+      {url: `/shares`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createAgentShareDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSharesControllerCreateShareMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateShare>>, TError,{data: CreateAgentShareDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateShare>>, TError,{data: CreateAgentShareDto}, TContext> => {
+
+const mutationKey = ['sharesControllerCreateShare'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharesControllerCreateShare>>, {data: CreateAgentShareDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sharesControllerCreateShare(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharesControllerCreateShareMutationResult = NonNullable<Awaited<ReturnType<typeof sharesControllerCreateShare>>>
+    export type SharesControllerCreateShareMutationBody = CreateAgentShareDto
+    export type SharesControllerCreateShareMutationError = void
+
+    /**
+ * @summary Create a share for an agent
+ */
+export const useSharesControllerCreateShare = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerCreateShare>>, TError,{data: CreateAgentShareDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharesControllerCreateShare>>,
+        TError,
+        {data: CreateAgentShareDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSharesControllerCreateShareMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Get shares for an entity
+ */
+export const sharesControllerGetShares = (
+    params: SharesControllerGetSharesParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ShareResponseDto[]>(
+      {url: `/shares`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSharesControllerGetSharesQueryKey = (params: SharesControllerGetSharesParams,) => {
+    return [`/shares`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSharesControllerGetSharesQueryOptions = <TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSharesControllerGetSharesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sharesControllerGetShares>>> = ({ signal }) => sharesControllerGetShares(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SharesControllerGetSharesQueryResult = NonNullable<Awaited<ReturnType<typeof sharesControllerGetShares>>>
+export type SharesControllerGetSharesQueryError = void
+
+
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sharesControllerGetShares>>,
+          TError,
+          Awaited<ReturnType<typeof sharesControllerGetShares>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sharesControllerGetShares>>,
+          TError,
+          Awaited<ReturnType<typeof sharesControllerGetShares>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get shares for an entity
+ */
+
+export function useSharesControllerGetShares<TData = Awaited<ReturnType<typeof sharesControllerGetShares>>, TError = void>(
+ params: SharesControllerGetSharesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sharesControllerGetShares>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSharesControllerGetSharesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Delete a share
+ */
+export const sharesControllerDeleteShare = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/shares/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSharesControllerDeleteShareMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['sharesControllerDeleteShare'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sharesControllerDeleteShare(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharesControllerDeleteShareMutationResult = NonNullable<Awaited<ReturnType<typeof sharesControllerDeleteShare>>>
+    
+    export type SharesControllerDeleteShareMutationError = void
+
+    /**
+ * @summary Delete a share
+ */
+export const useSharesControllerDeleteShare = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharesControllerDeleteShare>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharesControllerDeleteShare>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSharesControllerDeleteShareMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * @summary Create a new predefined MCP integration
  */
 export const mcpIntegrationsControllerCreatePredefined = (
@@ -8017,19 +8264,36 @@ export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
     }
     
 /**
- * Sends a user message and returns a server-sent events stream with the AI response and any processing events. The stream automatically closes when processing is complete.
- * @summary Send a message and receive streaming response
+ * Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.
+ * @summary Send a message with optional images and receive streaming response
  */
 export const runsControllerSendMessage = (
-    sendMessageDto: SendMessageDto,
+    runsControllerSendMessageBody: RunsControllerSendMessageBody,
  signal?: AbortSignal
 ) => {
       
-      
+      const formData = new FormData();
+formData.append(`threadId`, runsControllerSendMessageBody.threadId)
+if(runsControllerSendMessageBody.text !== undefined) {
+ formData.append(`text`, runsControllerSendMessageBody.text)
+ }
+if(runsControllerSendMessageBody.images !== undefined) {
+ runsControllerSendMessageBody.images.forEach(value => formData.append(`images`, value));
+ }
+if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
+ formData.append(`imageAltTexts`, runsControllerSendMessageBody.imageAltTexts)
+ }
+if(runsControllerSendMessageBody.toolResult !== undefined) {
+ formData.append(`toolResult`, runsControllerSendMessageBody.toolResult)
+ }
+if(runsControllerSendMessageBody.streaming !== undefined) {
+ formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
+ }
+
       return customAxiosInstance<RunsControllerSendMessage200>(
       {url: `/runs/send-message`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: sendMessageDto, signal
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
     },
       );
     }
@@ -8037,8 +8301,8 @@ export const runsControllerSendMessage = (
 
 
 export const getRunsControllerSendMessageMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: SendMessageDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: SendMessageDto}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext> => {
 
 const mutationKey = ['runsControllerSendMessage'];
 const {mutation: mutationOptions} = options ?
@@ -8050,7 +8314,7 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, {data: SendMessageDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runsControllerSendMessage>>, {data: RunsControllerSendMessageBody}> = (props) => {
           const {data} = props ?? {};
 
           return  runsControllerSendMessage(data,)
@@ -8062,18 +8326,18 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type RunsControllerSendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof runsControllerSendMessage>>>
-    export type RunsControllerSendMessageMutationBody = SendMessageDto
+    export type RunsControllerSendMessageMutationBody = RunsControllerSendMessageBody
     export type RunsControllerSendMessageMutationError = void
 
     /**
- * @summary Send a message and receive streaming response
+ * @summary Send a message with optional images and receive streaming response
  */
 export const useRunsControllerSendMessage = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: SendMessageDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runsControllerSendMessage>>, TError,{data: RunsControllerSendMessageBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof runsControllerSendMessage>>,
         TError,
-        {data: SendMessageDto},
+        {data: RunsControllerSendMessageBody},
         TContext
       > => {
 

@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
-import { Dialog, DialogContent } from '@/shared/ui/shadcn/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/shared/ui/shadcn/dialog';
 import { Bot, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -146,7 +150,13 @@ function ImageThumbnail({
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
+        <DialogContent
+          className="max-w-[90vw] max-h-[90vh] p-0"
+          aria-describedby={undefined}
+        >
+          <DialogTitle className="sr-only">
+            {imageContent.altText || 'Image preview'}
+          </DialogTitle>
           <img
             src={imageUrl}
             alt={imageContent.altText}

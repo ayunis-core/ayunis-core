@@ -8,11 +8,13 @@ export class UserMessage extends Message<
   TextMessageContent | ImageMessageContent
 > {
   constructor(params: {
+    id?: UUID;
     threadId: UUID;
     createdAt?: Date;
     content: Array<TextMessageContent | ImageMessageContent>;
   }) {
     super({
+      id: params.id,
       threadId: params.threadId,
       role: MessageRole.USER,
       createdAt: params.createdAt,

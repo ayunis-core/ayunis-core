@@ -45,7 +45,12 @@ export class MistralInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: HandlerInferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', input);
+    this.logger.log('answer', {
+      model: input.model.name,
+      messageCount: input.messages.length,
+      toolCount: input.tools?.length ?? 0,
+      toolChoice: input.toolChoice,
+    });
     const { model, messages, tools, toolChoice, orgId } = input;
     const mistralTools = tools?.map(this.convertTool);
     const mistralMessages = await this.convertMessages(messages, orgId);

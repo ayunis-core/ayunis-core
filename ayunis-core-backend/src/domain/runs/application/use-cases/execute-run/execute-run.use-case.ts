@@ -71,7 +71,6 @@ import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/fin
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
-import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -102,7 +101,11 @@ export class ExecuteRunUseCase {
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<Message, void, void>> {
-    this.logger.log('executeRun', command);
+    this.logger.log('executeRun', {
+      threadId: command.threadId,
+      streaming: command.streaming,
+      inputType: command.input.constructor.name,
+    });
     try {
       const userId = this.contextService.get('userId');
       const orgId = this.contextService.get('orgId');

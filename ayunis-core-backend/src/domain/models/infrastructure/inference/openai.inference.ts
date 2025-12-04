@@ -36,7 +36,12 @@ export class OpenAIInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', input);
+    this.logger.log('answer', {
+      model: input.model.name,
+      messageCount: input.messages.length,
+      toolCount: input.tools?.length ?? 0,
+      toolChoice: input.toolChoice,
+    });
     try {
       const { messages, tools, toolChoice, orgId } = input;
       const openAiTools = tools?.map(this.convertTool);

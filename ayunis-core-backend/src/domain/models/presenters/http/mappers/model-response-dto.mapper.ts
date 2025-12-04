@@ -19,6 +19,7 @@ export class ModelResponseDtoMapper {
       isArchived: permittedModel.model.isArchived,
       canStream: permittedModel.model.canStream,
       isReasoning: permittedModel.model.isReasoning,
+      canVision: permittedModel.model.canVision,
       anonymousOnly: permittedModel.anonymousOnly,
     };
   }

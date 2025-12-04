@@ -53,6 +53,11 @@ export default function NewChatPage({
     ? (selectedAgent?.model.anonymousOnly ?? false)
     : (selectedModel?.anonymousOnly ?? false);
 
+  // Determine if vision is enabled by the selected model
+  const isVisionEnabled = agentId
+    ? (selectedAgent?.model.canVision ?? false)
+    : (selectedModel?.canVision ?? false);
+
   function handleFileUpload(file: File) {
     const isCsvFile = file.name.endsWith('.csv');
     setSources([
@@ -134,6 +139,7 @@ export default function NewChatPage({
           isAnonymous={isAnonymous}
           onAnonymousChange={setIsAnonymous}
           isAnonymousEnforced={isAnonymousEnforced}
+          isVisionEnabled={isVisionEnabled}
         />
         <QuickActions
           onPromptSelect={(text) => chatInputRef.current?.sendMessage(text)}

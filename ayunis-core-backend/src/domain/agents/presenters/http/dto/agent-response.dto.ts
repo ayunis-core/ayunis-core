@@ -35,6 +35,12 @@ export class ModelResponseDto {
     example: false,
   })
   anonymousOnly: boolean;
+
+  @ApiProperty({
+    description: 'Whether the model supports vision (image processing)',
+    example: true,
+  })
+  canVision: boolean;
 }
 
 export class ToolResponseDto {
