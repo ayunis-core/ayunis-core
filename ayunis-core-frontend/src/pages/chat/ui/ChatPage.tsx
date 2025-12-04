@@ -38,6 +38,7 @@ import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
 import { useAgents } from '@/features/useAgents';
+import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
@@ -60,6 +61,7 @@ export default function ChatPage({
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const { agents } = useAgents();
+  const { models } = usePermittedModels();
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -67,6 +69,13 @@ export default function ChatPage({
   });
 
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
+
+  // Determine if vision is enabled by the thread's model
+  const selectedModel = models.find((m) => m.id === thread.permittedModelId);
+  const isVisionEnabled = thread.agentId
+    ? (selectedAgent?.model.canVision ?? false)
+    : (selectedModel?.canVision ?? false);
+
   const queryClient = useQueryClient();
   const processedPendingMessageRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -454,7 +463,7 @@ export default function ChatPage({
       onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
       onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-      threadId={thread.id}
+      isVisionEnabled={isVisionEnabled}
     />
   );
 

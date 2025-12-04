@@ -21,8 +21,6 @@ import { usePrompts } from '../api/usePrompts';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
-import type { PendingImage } from '../hooks/usePendingImages';
-
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
   onImageSelect?: (files: FileList | null) => void;
@@ -30,8 +28,7 @@ interface PlusButtonProps {
   isUploadingFile?: boolean;
   isFileSourceDisabled?: boolean;
   onPromptSelect: (content: string) => void;
-  pendingImages?: PendingImage[];
-  threadId?: string;
+  isImageUploadDisabled?: boolean;
 }
 
 export default function PlusButton({
@@ -41,8 +38,7 @@ export default function PlusButton({
   isUploadingFile,
   isCreatingFileSource,
   onPromptSelect,
-  pendingImages = [],
-  threadId,
+  isImageUploadDisabled = false,
 }: PlusButtonProps) {
   const documentInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -53,11 +49,6 @@ export default function PlusButton({
     isLoading: isLoadingPrompts,
     error: promptsError,
   } = usePrompts();
-
-  // Check if images are uploading (based on whether they have objectName)
-  const isUploadingImages = threadId
-    ? pendingImages.some((img) => !img.objectName)
-    : false;
 
   const handleDocumentChange = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -89,8 +80,7 @@ export default function PlusButton({
     }
   };
 
-  const isLoading =
-    isUploadingFile || isCreatingFileSource || isUploadingImages;
+  const isLoading = isUploadingFile || isCreatingFileSource;
 
   return (
     <Tooltip>
@@ -117,7 +107,7 @@ export default function PlusButton({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => imageInputRef.current?.click()}
-              disabled={isLoading}
+              disabled={isLoading || isImageUploadDisabled}
             >
               {t('chatInput.uploadImage')}
             </DropdownMenuItem>

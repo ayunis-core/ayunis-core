@@ -64,7 +64,8 @@ interface ChatInputProps {
   onAnonymousChange?: (isAnonymous: boolean) => void;
   /** Whether anonymous mode is enforced by the selected model. */
   isAnonymousEnforced?: boolean;
-  threadId?: string;
+  /** Whether the selected model supports vision (image upload) */
+  isVisionEnabled?: boolean;
 }
 
 export interface ChatInputRef {
@@ -96,7 +97,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       isAnonymous,
       onAnonymousChange,
       isAnonymousEnforced,
-      threadId,
+      isVisionEnabled = false,
     },
     ref,
   ) => {
@@ -119,7 +120,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     useImagePaste({
       containerRef,
-      isFocused,
+      isFocused: isFocused && isVisionEnabled,
       onImagesPasted: handleImagesPasted,
     });
 
@@ -230,8 +231,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     isFileSourceDisabled={!isEmbeddingModelEnabled}
                     isCreatingFileSource={isCreatingFileSource}
                     onPromptSelect={handlePromptSelect}
-                    pendingImages={pendingImages}
-                    threadId={threadId}
+                    isImageUploadDisabled={!isVisionEnabled}
                   />
                   <AgentButton
                     selectedAgentId={agentId}
