@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
 import { Bot, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {

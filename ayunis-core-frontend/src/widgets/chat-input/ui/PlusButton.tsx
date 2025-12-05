@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/shared/ui/shadcn/tooltip';
-import { Loader2, Plus } from 'lucide-react';
+import { BookOpen, FileText, Image, Loader2, Plus } from 'lucide-react';
 import { Input } from '@/shared/ui/shadcn/input';
 import { useRef } from 'react';
 import { usePrompts } from '../api/usePrompts';
@@ -103,18 +103,21 @@ export default function PlusButton({
               onClick={() => documentInputRef.current?.click()}
               disabled={isLoading || isFileSourceDisabled}
             >
-              {t('chatInput.uploadDocument')}
+              <FileText className="h-4 w-4" />
+              <span>{t('chatInput.uploadDocument')}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => imageInputRef.current?.click()}
               disabled={isLoading || isImageUploadDisabled}
             >
-              {t('chatInput.uploadImage')}
+              <Image className="h-4 w-4" />
+              <span>{t('chatInput.uploadImage')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuGroup>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
+                <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                 {t('chatInput.addPrompt')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
