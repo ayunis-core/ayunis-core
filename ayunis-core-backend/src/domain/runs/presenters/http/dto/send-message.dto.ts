@@ -121,11 +121,17 @@ export class SendMessageDto {
 
   @IsOptional()
   @IsArray()
-  @Transform(({ value }: { value: unknown }): string[] | undefined =>
-    typeof value === 'string'
-      ? (JSON.parse(value) as string[])
-      : (value as string[] | undefined),
-  )
+  @Transform(({ value }: { value: unknown }): string[] | undefined => {
+    if (typeof value !== 'string') {
+      return value as string[] | undefined;
+    }
+    try {
+      return JSON.parse(value) as string[];
+    } catch {
+      // Return undefined - validation decorators will handle the error
+      return undefined;
+    }
+  })
   @ApiProperty({
     description:
       'JSON array of alt texts matching the order of uploaded images',
@@ -143,11 +149,17 @@ export class SendMessageDto {
       subTypes: [{ value: ToolResultInput, name: 'tool_result' }],
     },
   })
-  @Transform(({ value }: { value: unknown }): ToolResultInput | undefined =>
-    typeof value === 'string'
-      ? (JSON.parse(value) as ToolResultInput)
-      : (value as ToolResultInput | undefined),
-  )
+  @Transform(({ value }: { value: unknown }): ToolResultInput | undefined => {
+    if (typeof value !== 'string') {
+      return value as ToolResultInput | undefined;
+    }
+    try {
+      return JSON.parse(value) as ToolResultInput;
+    } catch {
+      // Return undefined - validation decorators will handle the error
+      return undefined;
+    }
+  })
   @ApiProperty({
     description: 'Tool result input (for tool_result type only)',
     oneOf: [{ $ref: getSchemaPath(ToolResultInput) }],

@@ -4,6 +4,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import {
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   ValidateNested,
@@ -84,6 +85,7 @@ export class ImageMessageContentRequestDto extends MessageContentRequestDto {
   type: MessageContentType.IMAGE = MessageContentType.IMAGE;
 
   @IsNotEmpty()
+  @IsInt()
   @ApiProperty({
     description: 'Index of the image in the message (0-based)',
     example: 0,

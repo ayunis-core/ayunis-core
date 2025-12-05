@@ -69,15 +69,18 @@ export class ImageContentService {
   }
 
   validateContentType(contentType: string): AllowedImageContentType {
+    // Normalize: remove charset/parameters and lowercase
+    const normalized = this.normalizeContentType(contentType).toLowerCase();
+
     if (
-      !ALLOWED_CONTENT_TYPES.includes(contentType as AllowedImageContentType)
+      !ALLOWED_CONTENT_TYPES.includes(normalized as AllowedImageContentType)
     ) {
       throw new InferenceFailedError(
         `Unsupported image content type: ${contentType}`,
       );
     }
 
-    return contentType as AllowedImageContentType;
+    return normalized as AllowedImageContentType;
   }
 
   private async downloadImageBuffer(storagePath: string): Promise<Buffer> {

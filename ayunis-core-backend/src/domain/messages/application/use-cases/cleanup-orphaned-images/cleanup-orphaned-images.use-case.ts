@@ -144,16 +144,42 @@ export class CleanupOrphanedImagesUseCase {
   }
 
   /**
-   * Extracts messageId from storage path.
+   * Extracts messageId from storage path with strict validation.
    * Path format: <orgId>/<threadId>/<messageId>/<index>.<ext>
+   *
+   * Only returns messageId if the path matches the expected image format.
+   * This prevents accidentally processing/deleting non-image files.
    */
   private extractMessageIdFromPath(path: string): string | null {
     const parts = path.split('/');
     // Expected: [orgId, threadId, messageId, filename]
-    if (parts.length >= 4) {
-      return parts[2]; // messageId is the third part
+    if (parts.length !== 4) {
+      this.logger.debug(`Skipping path with unexpected segment count: ${path}`);
+      return null; // Not a valid image path format
     }
-    return null;
+
+    const [orgId, threadId, messageId, filename] = parts;
+
+    // Validate UUID format for orgId, threadId, messageId
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (
+      !uuidRegex.test(orgId) ||
+      !uuidRegex.test(threadId) ||
+      !uuidRegex.test(messageId)
+    ) {
+      this.logger.debug(`Skipping path with invalid UUID format: ${path}`);
+      return null; // Not a valid image path - skip
+    }
+
+    // Validate filename matches image pattern: <index>.<ext>
+    const imageFilePattern = /^\d+\.(jpg|jpeg|png|gif|webp)$/i;
+    if (!imageFilePattern.test(filename)) {
+      this.logger.debug(`Skipping path with non-image filename: ${path}`);
+      return null; // Not a valid image filename - skip
+    }
+
+    return messageId;
   }
 }
 

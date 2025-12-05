@@ -441,6 +441,13 @@ export class ExecuteRunUseCase {
             );
           }
 
+          // Validate that the model supports vision if images are included
+          if (hasImages && !params.model.canVision) {
+            throw new RunInvalidInputError(
+              'The selected model does not support image inputs. Please use a vision-capable model or remove images from your message.',
+            );
+          }
+
           // Anonymize user message text if in anonymous mode (thread setting or model enforced)
           const messageText =
             hasText && params.isAnonymous
