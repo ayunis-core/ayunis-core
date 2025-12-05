@@ -122,6 +122,10 @@ export class StorageController {
     @Param('objectName') objectName: string,
     @Res({ passthrough: true }) res: Response,
   ) {
+    this.logger.log('Storage getFile request', {
+      objectName,
+      objectNameLength: objectName.length,
+    });
     try {
       // Get object info to set appropriate headers
       const infoCommand = new GetObjectInfoCommand(objectName);
