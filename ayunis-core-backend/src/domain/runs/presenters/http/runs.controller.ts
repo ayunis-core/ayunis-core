@@ -1,4 +1,16 @@
-import { Body, Controller, Logger, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Logger,
+  Post,
+  Req,
+  Res,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import {
   ApiOperation,
   ApiBody,
@@ -6,8 +18,13 @@ import {
   ApiResponse,
   getSchemaPath,
   ApiExtraModels,
+  ApiConsumes,
 } from '@nestjs/swagger';
-import { SendMessageDto } from './dto/send-message.dto';
+import {
+  SendMessageDto,
+  TextInput,
+  ToolResultInput,
+} from './dto/send-message.dto';
 import { UUID } from 'crypto';
 import {
   CurrentUser,
@@ -41,6 +58,16 @@ import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { Response } from 'express';
 
+const MAX_IMAGES = 10;
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
+const MAX_TOTAL_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
+
 @ApiTags('runs')
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -57,6 +84,8 @@ import { Response } from 'express';
   RunErrorResponseDto,
   RunThreadResponseDto,
   SendMessageDto,
+  TextInput,
+  ToolResultInput,
 )
 @Controller('runs')
 export class RunsController {
@@ -70,12 +99,57 @@ export class RunsController {
 
   @Post('send-message')
   @RequireSubscription()
+  @UseInterceptors(
+    FilesInterceptor('images', MAX_IMAGES, {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(`Invalid file type: ${file.mimetype}`),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
-    summary: 'Send a message and receive streaming response',
+    summary:
+      'Send a message with optional images and receive streaming response',
     description:
-      'Sends a user message and returns a server-sent events stream with the AI response and any processing events. The stream automatically closes when processing is complete.',
+      'Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.',
   })
-  @ApiBody({ type: SendMessageDto })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['threadId'],
+      properties: {
+        threadId: { type: 'string', format: 'uuid' },
+        text: {
+          type: 'string',
+          description: 'Message text (optional if images provided)',
+        },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+          description:
+            'Image files to attach (max 10, max 10MB each, 50MB total)',
+        },
+        imageAltTexts: {
+          type: 'string',
+          description: 'JSON array of alt texts matching image order',
+        },
+        toolResult: {
+          type: 'string',
+          description: 'JSON object for tool result input',
+        },
+        streaming: { type: 'boolean', default: true },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Server-sent events stream with discriminated response types',
@@ -176,16 +250,41 @@ export class RunsController {
   })
   async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
+    @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Req() request: RequestWithSubscriptionContext,
     @Res() response: Response,
   ): Promise<void> {
+    const uploadedFiles = files ?? [];
+
     this.logger.log('sendMessage', {
       userId,
       threadId: sendMessageDto.threadId,
       streaming: sendMessageDto.streaming,
+      fileCount: uploadedFiles.length,
+      hasText: !!sendMessageDto.text?.trim(),
+      hasToolResult: !!sendMessageDto.toolResult,
     });
+
+    // Validate: at least text, images, or tool result must be provided
+    if (
+      !sendMessageDto.text?.trim() &&
+      uploadedFiles.length === 0 &&
+      !sendMessageDto.toolResult
+    ) {
+      throw new BadRequestException(
+        'Message must contain text, images, or tool result',
+      );
+    }
+
+    // Validate total file size
+    const totalSize = uploadedFiles.reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > MAX_TOTAL_SIZE_BYTES) {
+      throw new BadRequestException(
+        `Total file size (${Math.round(totalSize / (1024 * 1024))}MB) exceeds maximum (${MAX_TOTAL_SIZE_BYTES / (1024 * 1024)}MB)`,
+      );
+    }
 
     // Set SSE headers
     response.setHeader('Content-Type', 'text/event-stream');
@@ -208,7 +307,7 @@ export class RunsController {
         success: true,
         threadId: sendMessageDto.threadId,
         timestamp: new Date().toISOString(),
-        streaming: sendMessageDto.streaming ?? false,
+        streaming: sendMessageDto.streaming ?? true,
       };
 
       this.writeSSEEvent(response, 'session', sessionResponse);
@@ -233,9 +332,9 @@ export class RunsController {
       // Execute run and stream events
       await this.executeRunAndStream({
         threadId: sendMessageDto.threadId,
-        input: RunInputMapper.toCommand(sendMessageDto.input),
+        input: RunInputMapper.toCommand(sendMessageDto, uploadedFiles),
         userId,
-        streaming: sendMessageDto.streaming,
+        streaming: sendMessageDto.streaming ?? true,
         orgId,
         response,
       });

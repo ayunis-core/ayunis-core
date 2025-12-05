@@ -54,6 +54,7 @@ export function CreateLanguageModelDialog({
       displayName: '',
       canStream: false,
       canUseTools: false,
+      canVision: false,
       isReasoning: false,
       isArchived: false,
     },
@@ -186,6 +187,25 @@ export function CreateLanguageModelDialog({
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>Supports Tool Use</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="canVision"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isCreating}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Supports Vision</FormLabel>
                   </div>
                 </FormItem>
               )}

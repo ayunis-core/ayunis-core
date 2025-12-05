@@ -11,31 +11,32 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiConsumes, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiConsumes,
+  ApiBody,
+  ApiParam,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { Readable } from 'stream';
-import { UploadObjectUseCase } from '../../application/use-cases/upload-object/upload-object.use-case';
 import { DownloadObjectUseCase } from '../../application/use-cases/download-object/download-object.use-case';
 import { GetObjectInfoUseCase } from '../../application/use-cases/get-object-info/get-object-info.use-case';
 import { DeleteObjectUseCase } from '../../application/use-cases/delete-object/delete-object.use-case';
 import { GetPresignedUrlUseCase } from '../../application/use-cases/get-presigned-url/get-presigned-url.use-case';
+import { UploadObjectUseCase } from '../../application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from '../../application/use-cases/upload-object/upload-object.command';
 import { DownloadObjectCommand } from '../../application/use-cases/download-object/download-object.command';
 import { DeleteObjectCommand } from '../../application/use-cases/delete-object/delete-object.command';
 import { GetObjectInfoCommand } from '../../application/use-cases/get-object-info/get-object-info.command';
 import { GetPresignedUrlCommand } from '../../application/use-cases/get-presigned-url/get-presigned-url.command';
-import {
-  BucketNotFoundError,
-  DeleteFailedError,
-  DownloadFailedError,
-  InvalidObjectNameError,
-  ObjectNotFoundError,
-  StorageError,
-  StoragePermissionDeniedError,
-  UploadFailedError,
-} from '../../application/storage.errors';
+import { StorageError } from '../../application/storage.errors';
+import { StorageResponseDtoMapper } from './mappers/storage-response-dto.mapper';
+import { UploadFileResponseDto } from './dto/upload-file-response.dto';
 
 @ApiTags('storage')
 @Controller('storage')
@@ -48,44 +49,65 @@ export class StorageController {
     private readonly getObjectInfoUseCase: GetObjectInfoUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly getPresignedUrlUseCase: GetPresignedUrlUseCase,
+    private readonly storageResponseDtoMapper: StorageResponseDtoMapper,
   ) {}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: 'Upload a file to object storage',
+    description:
+      'Generic file upload endpoint. Stores the file with optional metadata. ' +
+      'Validation (file types, sizes) should be handled by consuming modules.',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
+      required: ['file'],
       properties: {
         file: {
           type: 'string',
           format: 'binary',
+          description: 'The file to upload',
         },
       },
     },
   })
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  @ApiResponse({
+    status: 201,
+    description: 'File uploaded successfully',
+    type: UploadFileResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No file provided or invalid request',
+  })
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<UploadFileResponseDto> {
     try {
       if (!file) {
-        throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+        throw new BadRequestException('No file provided');
       }
 
+      // Generate unique object name with timestamp prefix
       const objectName = `${Date.now()}-${file.originalname}`;
 
-      const command = new UploadObjectCommand(objectName, file.buffer, {
+      // Store file metadata
+      const metadata: Record<string, string | undefined> = {
         contentType: file.mimetype,
         originalName: file.originalname,
-      });
+      };
 
+      const command = new UploadObjectCommand(
+        objectName,
+        file.buffer,
+        metadata,
+      );
       const result = await this.uploadObjectUseCase.execute(command);
 
-      return {
-        objectName: result.objectName,
-        size: result.size,
-        etag: result.etag,
-        contentType: result.contentType,
-        lastModified: result.lastModified,
-      };
+      return this.storageResponseDtoMapper.toUploadFileDto(result);
     } catch (error) {
       this.handleStorageError(error);
     }
@@ -162,38 +184,17 @@ export class StorageController {
   private handleStorageError(error: any): never {
     this.logger.error('Storage operation failed', error);
 
-    if (error instanceof ObjectNotFoundError) {
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-    }
-
-    if (error instanceof BucketNotFoundError) {
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-    }
-
-    if (error instanceof InvalidObjectNameError) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-
-    if (error instanceof StoragePermissionDeniedError) {
-      throw new HttpException(error.message, HttpStatus.FORBIDDEN);
-    }
-
-    if (
-      error instanceof UploadFailedError ||
-      error instanceof DownloadFailedError ||
-      error instanceof DeleteFailedError
-    ) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
+    // Handle domain errors - convert to HTTP exceptions
     if (error instanceof StorageError) {
-      throw new HttpException(error.message, error.statusCode);
+      throw error.toHttpException();
     }
 
+    // Handle NestJS HTTP exceptions as-is
     if (error instanceof HttpException) {
       throw error;
     }
 
+    // Fallback for unexpected errors
     throw new HttpException(
       'An unexpected error occurred during storage operation',
       HttpStatus.INTERNAL_SERVER_ERROR,

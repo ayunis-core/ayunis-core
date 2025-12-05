@@ -4,6 +4,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import {
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   ValidateNested,
@@ -73,6 +74,40 @@ export class TextMessageContentRequestDto extends MessageContentRequestDto {
     example: 'Hello, how can I help you today?',
   })
   text: string;
+}
+
+export class ImageMessageContentRequestDto extends MessageContentRequestDto {
+  @ApiProperty({
+    description: 'Type of the message content',
+    example: MessageContentType.IMAGE,
+    enum: [MessageContentType.IMAGE],
+  })
+  type: MessageContentType.IMAGE = MessageContentType.IMAGE;
+
+  @IsNotEmpty()
+  @IsInt()
+  @ApiProperty({
+    description: 'Index of the image in the message (0-based)',
+    example: 0,
+  })
+  index: number;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    description: 'MIME type of the image',
+    example: 'image/jpeg',
+  })
+  contentType: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    description: 'Optional alternative text for the image',
+    example: 'Screenshot of the reported issue',
+    required: false,
+  })
+  altText?: string;
 }
 
 export class ToolUseMessageContentRequestDto extends MessageContentRequestDto {
@@ -151,12 +186,27 @@ export class UserMessageRequestDto {
   role: MessageRole.USER = MessageRole.USER;
 
   @ValidateNested({ each: true })
-  @Type(() => TextMessageContentRequestDto)
-  @ApiProperty({
-    description: 'Array of text content items for user messages',
-    type: [TextMessageContentRequestDto],
+  @Type(() => Object, {
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { value: TextMessageContentRequestDto, name: MessageContentType.TEXT },
+        {
+          value: ImageMessageContentRequestDto,
+          name: MessageContentType.IMAGE,
+        },
+      ],
+    },
   })
-  content: TextMessageContentRequestDto[];
+  @ApiProperty({
+    description:
+      'Array of content items for user messages (text and/or images)',
+    oneOf: [
+      { $ref: getSchemaPath(TextMessageContentRequestDto) },
+      { $ref: getSchemaPath(ImageMessageContentRequestDto) },
+    ],
+  })
+  content: Array<TextMessageContentRequestDto | ImageMessageContentRequestDto>;
 }
 
 export class SystemMessageRequestDto {

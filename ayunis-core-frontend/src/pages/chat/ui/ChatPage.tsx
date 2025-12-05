@@ -38,6 +38,7 @@ import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
 import { useAgents } from '@/features/useAgents';
+import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
@@ -45,6 +46,7 @@ import {
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { PendingImage } from '../api/useMessageSend';
 
 interface ChatPageProps {
   thread: Thread;
@@ -59,6 +61,7 @@ export default function ChatPage({
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const { agents } = useAgents();
+  const { models } = usePermittedModels();
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -66,12 +69,25 @@ export default function ChatPage({
   });
 
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
+
+  // Determine if vision is enabled by the thread's model
+  const selectedModel = models.find((m) => m.id === thread.permittedModelId);
+  const isVisionEnabled = thread.agentId
+    ? (selectedAgent?.model.canVision ?? false)
+    : (selectedModel?.canVision ?? false);
+
   const queryClient = useQueryClient();
   const processedPendingMessageRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
-  const { pendingMessage, setPendingMessage, sources, setSources } =
-    useChatContext();
+  const {
+    pendingMessage,
+    setPendingMessage,
+    sources,
+    setSources,
+    pendingImages,
+    setPendingImages,
+  } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
   );
@@ -192,13 +208,26 @@ export default function ChatPage({
     },
   });
 
-  async function handleSend(message: string) {
+  async function handleSend(
+    message: string,
+    imageFiles?: Array<{ file: File; altText?: string }>,
+  ) {
     try {
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
+      // Pass files directly - they'll be uploaded as part of the multipart request
+      const images: PendingImage[] | undefined =
+        imageFiles && imageFiles.length > 0
+          ? imageFiles.map((img) => ({
+              file: img.file,
+              altText: img.altText || 'Pasted image',
+            }))
+          : undefined;
+
       await sendTextMessage({
         text: message,
+        images,
       });
     } catch (error) {
       chatInputRef.current?.setMessage(message);
@@ -306,8 +335,19 @@ export default function ChatPage({
             resetCreateFileSourceMutation();
           }
           setSources([]);
+
+          // Pass pending images directly - they'll be uploaded as part of the multipart request
+          const images: PendingImage[] | undefined =
+            pendingImages.length > 0
+              ? pendingImages.map((img) => ({
+                  file: img.file,
+                  altText: img.altText || img.file.name || 'Pasted image',
+                }))
+              : undefined;
+
           await sendTextMessage({
             text: pendingMessage,
+            images,
           });
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
@@ -319,6 +359,7 @@ export default function ChatPage({
         } finally {
           setIsProcessingPendingSources(false);
           setPendingMessage('');
+          setPendingImages([]);
         }
       }
     }
@@ -330,6 +371,8 @@ export default function ChatPage({
     sources,
     createFileSourceAsync,
     setSources,
+    pendingImages,
+    setPendingImages,
     chatInputRef,
     t,
     resetCreateFileSourceMutation,
@@ -417,9 +460,10 @@ export default function ChatPage({
       onFileUpload={handleFileUpload}
       onRemoveSource={deleteFileSource}
       onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
-      onSend={(m) => void handleSend(m)}
+      onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
       onSendCancelled={handleSendCancelled}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      isVisionEnabled={isVisionEnabled}
     />
   );
 

@@ -18,6 +18,8 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import {
   ToolCall as MistralToolCall,
   Tool as MistralTool,
@@ -33,7 +35,10 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(MistralStreamInferenceHandler.name);
   private readonly client: Mistral;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly imageContentService: ImageContentService,
+  ) {
     this.client = new Mistral({
       apiKey: this.configService.get('mistral.apiKey'),
     });
@@ -52,9 +57,9 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     subscriber: Subscriber<StreamInferenceResponseChunk>,
   ): Promise<void> {
     try {
-      const { messages, tools, toolChoice, systemPrompt } = input;
+      const { messages, tools, toolChoice, systemPrompt, orgId } = input;
       const mistralTools = tools?.map(this.convertTool);
-      const mistralMessages = this.convertMessages(messages);
+      const mistralMessages = await this.convertMessages(messages, orgId);
       const mistralToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
@@ -111,10 +116,11 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     };
   };
 
-  private convertMessages = (
+  private convertMessages = async (
     messages: Message[],
+    orgId: string,
     systemPrompt?: string,
-  ): MistralMessages[] => {
+  ): Promise<MistralMessages[]> => {
     const convertedMessages: MistralMessages[] = [];
 
     // Add system message if provided
@@ -126,29 +132,51 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     for (const message of messages) {
-      convertedMessages.push(...this.convertMessage(message));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
 
     return convertedMessages;
   };
 
-  private convertMessage = (message: Message): MistralMessages[] => {
+  private convertMessage = async (
+    message: Message,
+    orgId: string,
+  ): Promise<MistralMessages[]> => {
     const convertedMessages: MistralMessages[] = [];
 
     // User Message
     if (message instanceof UserMessage) {
+      const contentItems: Array<
+        | { type: 'text'; text: string }
+        | { type: 'image_url'; imageUrl: { url: string } }
+      > = [];
+
       for (const content of message.content) {
         if (content instanceof TextMessageContent) {
-          convertedMessages.push({
-            role: 'user' as const,
-            content: [
-              {
-                type: 'text' as const,
-                text: content.text,
-              },
-            ],
+          contentItems.push({
+            type: 'text' as const,
+            text: content.text,
           });
         }
+        // Image Message Content
+        if (content instanceof ImageMessageContent) {
+          const imageUrl = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
+          contentItems.push({
+            type: 'image_url' as const,
+            imageUrl: { url: imageUrl },
+          });
+        }
+      }
+
+      if (contentItems.length > 0) {
+        convertedMessages.push({
+          role: 'user' as const,
+          content: contentItems,
+        });
       }
     }
 
@@ -283,4 +311,16 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
       toolCallsDelta,
     });
   };
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
+  ): Promise<string> {
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
+
+    return `data:${imageData.contentType};base64,${imageData.base64}`;
+  }
 }

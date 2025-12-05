@@ -1,6 +1,7 @@
 import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from '../domain/models/models.module';
 import { AgentsModule } from '../domain/agents/agents.module';
@@ -83,6 +84,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         }),
       ],
     }),
+    ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'frontend'),
     }),

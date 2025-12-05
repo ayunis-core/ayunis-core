@@ -11,6 +11,7 @@ import type { AgentResponseDto } from '@/shared/api';
 import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
+import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -32,6 +33,7 @@ export default function NewChatPage({
   const { models } = usePermittedModels();
   const chatInputRef = useRef<ChatInputRef>(null);
   const greeting = useTimeBasedGreeting();
+  const { setPendingImages } = useChatContext();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -50,6 +52,11 @@ export default function NewChatPage({
   const isAnonymousEnforced = agentId
     ? (selectedAgent?.model.anonymousOnly ?? false)
     : (selectedModel?.anonymousOnly ?? false);
+
+  // Determine if vision is enabled by the selected model
+  const isVisionEnabled = agentId
+    ? (selectedAgent?.model.canVision ?? false)
+    : (selectedModel?.canVision ?? false);
 
   function handleFileUpload(file: File) {
     const isCsvFile = file.name.endsWith('.csv');
@@ -85,10 +92,18 @@ export default function NewChatPage({
     setModelId(selectedModelId);
   }
 
-  function handleSend(message: string) {
+  function handleSend(
+    message: string,
+    imageFiles?: Array<{ file: File; altText?: string }>,
+  ) {
     if (!modelId && !agentId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
+    }
+
+    // Store images in context for ChatPage to upload after thread creation
+    if (imageFiles && imageFiles.length > 0) {
+      setPendingImages(imageFiles);
     }
 
     initiateChat(message, modelId, agentId, sources, isAnonymous);
@@ -124,6 +139,7 @@ export default function NewChatPage({
           isAnonymous={isAnonymous}
           onAnonymousChange={setIsAnonymous}
           isAnonymousEnforced={isAnonymousEnforced}
+          isVisionEnabled={isVisionEnabled}
         />
         <QuickActions
           onPromptSelect={(text) => chatInputRef.current?.sendMessage(text)}

@@ -10,6 +10,7 @@ import { TextMessageContent } from 'src/domain/messages/domain/message-contents/
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 
 @Injectable()
@@ -49,6 +50,14 @@ export class MessageMapper {
           thinking: content.thinking,
         };
       }
+      if (content instanceof ImageMessageContent) {
+        return {
+          type: MessageContentType.IMAGE,
+          index: content.index,
+          contentType: content.contentType,
+          altText: content.altText,
+        };
+      }
       throw new Error('Invalid message content');
     });
     return record;
@@ -58,17 +67,26 @@ export class MessageMapper {
     switch (messageEntity.role) {
       case MessageRole.USER:
         return new UserMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
             if (content.type === MessageContentType.TEXT) {
               return new TextMessageContent(content.text);
             }
+            if (content.type === MessageContentType.IMAGE) {
+              return new ImageMessageContent(
+                content.index,
+                content.contentType,
+                content.altText,
+              );
+            }
             throw new Error('Invalid message content');
           }),
         });
       case MessageRole.ASSISTANT:
         return new AssistantMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
@@ -90,6 +108,7 @@ export class MessageMapper {
         });
       case MessageRole.TOOL:
         return new ToolResultMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
@@ -105,6 +124,7 @@ export class MessageMapper {
         });
       case MessageRole.SYSTEM:
         return new SystemMessage({
+          id: messageEntity.id,
           threadId: messageEntity.threadId,
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {

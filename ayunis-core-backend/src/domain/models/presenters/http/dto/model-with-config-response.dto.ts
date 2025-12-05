@@ -55,6 +55,12 @@ export class ModelWithConfigResponseDto {
 
   @ApiProperty({
     type: 'boolean',
+    description: 'Whether the model supports vision (image processing)',
+  })
+  canVision: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
     description: 'Whether the model is permitted to be used',
   })
   isPermitted: boolean;

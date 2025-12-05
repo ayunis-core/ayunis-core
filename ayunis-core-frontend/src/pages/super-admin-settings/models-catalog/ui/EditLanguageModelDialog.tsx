@@ -63,6 +63,7 @@ export function EditLanguageModelDialog({
       displayName: '',
       canStream: false,
       canUseTools: false,
+      canVision: false,
       isReasoning: false,
       isArchived: false,
     },
@@ -77,6 +78,7 @@ export function EditLanguageModelDialog({
         displayName: model.displayName,
         canStream: model.canStream,
         canUseTools: model.canUseTools,
+        canVision: model.canVision,
         isReasoning: model.isReasoning,
         isArchived: model.isArchived,
       });
@@ -208,6 +210,25 @@ export function EditLanguageModelDialog({
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>Supports Tool Use</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="canVision"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isUpdating}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Supports Vision</FormLabel>
                   </div>
                 </FormItem>
               )}

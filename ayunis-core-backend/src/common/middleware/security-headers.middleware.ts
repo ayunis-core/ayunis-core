@@ -7,6 +7,11 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
   private readonly logger = new Logger(SecurityHeadersMiddleware.name);
   private helmetMiddleware = helmet({
     crossOriginEmbedderPolicy: false,
+    ...(process.env.NODE_ENV !== 'production' && {
+      crossOriginResourcePolicy: {
+        policy: 'cross-origin',
+      },
+    }),
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),

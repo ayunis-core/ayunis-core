@@ -1,4 +1,9 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Inject,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import {
@@ -7,6 +12,14 @@ import {
 } from '../../ports/messages.repository';
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
+import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
+import { ImageMessageContent } from '../../../domain/message-contents/image-message-content.entity';
+import { getImageStoragePath } from '../../../domain/image-storage-path.util';
 
 @Injectable()
 export class CreateUserMessageUseCase {
@@ -15,29 +28,116 @@ export class CreateUserMessageUseCase {
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
+    private readonly uploadObjectUseCase: UploadObjectUseCase,
+    private readonly deleteObjectUseCase: DeleteObjectUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CreateUserMessageCommand): Promise<UserMessage> {
-    this.logger.log('Creating user message', { threadId: command.threadId });
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('Organization context required');
+    }
 
-    const userMessage = new UserMessage({
+    this.logger.log('Creating user message', {
       threadId: command.threadId,
-      content: command.content,
+      hasText: !!command.text?.trim(),
+      imageCount: command.pendingImages.length,
     });
 
+    // Track uploaded images for potential rollback
+    const uploadedPaths: string[] = [];
+
     try {
-      return (await this.messagesRepository.create(userMessage)) as UserMessage;
+      // Build content array
+      const content: (TextMessageContent | ImageMessageContent)[] = [];
+
+      // Add text content if provided
+      if (command.text?.trim()) {
+        content.push(new TextMessageContent(command.text));
+      }
+
+      // Create ImageMessageContent objects with index and contentType
+      const imageContents = command.pendingImages.map(
+        (img, index) =>
+          new ImageMessageContent(index, img.contentType, img.altText),
+      );
+      content.push(...imageContents);
+
+      // Create the message to get its ID (UUID generated in constructor)
+      const userMessage = new UserMessage({
+        threadId: command.threadId,
+        content,
+      });
+
+      // Upload images to MinIO with deterministic paths
+      for (let i = 0; i < command.pendingImages.length; i++) {
+        const pendingImage = command.pendingImages[i];
+        const storagePath = getImageStoragePath({
+          orgId,
+          threadId: command.threadId,
+          messageId: userMessage.id,
+          index: i,
+          contentType: pendingImage.contentType,
+        });
+
+        this.logger.debug('Uploading image to storage', {
+          storagePath,
+          contentType: pendingImage.contentType,
+          size: pendingImage.buffer.length,
+        });
+
+        await this.uploadObjectUseCase.execute(
+          new UploadObjectCommand(storagePath, pendingImage.buffer, {
+            contentType: pendingImage.contentType,
+          }),
+        );
+        uploadedPaths.push(storagePath);
+      }
+
+      // Save message to database
+      const savedMessage = (await this.messagesRepository.create(
+        userMessage,
+      )) as UserMessage;
+
+      this.logger.log('User message created successfully', {
+        messageId: savedMessage.id,
+        threadId: command.threadId,
+        imageCount: uploadedPaths.length,
+      });
+
+      return savedMessage;
     } catch (error) {
       this.logger.error('Failed to create user message', {
         threadId: command.threadId,
+        uploadedImageCount: uploadedPaths.length,
         error: error as Error,
       });
+
+      // Compensating action: cleanup uploaded images
+      await this.cleanupUploadedImages(uploadedPaths);
+
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.USER.toLowerCase(), error)
         : new MessageCreationError(
             MessageRole.USER.toLowerCase(),
             new Error('Unknown error'),
           );
+    }
+  }
+
+  private async cleanupUploadedImages(paths: string[]): Promise<void> {
+    for (const path of paths) {
+      try {
+        await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
+        this.logger.debug('Cleaned up orphaned image', { path });
+      } catch (deleteError) {
+        // Best-effort cleanup - log but don't throw (ObjectNotFoundError is acceptable)
+        this.logger.error('Failed to cleanup orphaned image', {
+          path,
+          error: deleteError as Error,
+        });
+      }
     }
   }
 }

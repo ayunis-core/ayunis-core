@@ -56,6 +56,12 @@ export class PermittedLanguageModelResponseDto {
 
   @ApiProperty({
     type: 'boolean',
+    description: 'Whether the model supports vision (image processing)',
+  })
+  canVision: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
     description: 'Whether this model enforces anonymous mode',
   })
   anonymousOnly: boolean;

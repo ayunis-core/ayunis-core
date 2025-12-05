@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { BaseOllamaStreamInferenceHandler } from './base-ollama.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { Ollama } from 'ollama';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export class AyunisOllamaStreamInferenceHandler extends BaseOllamaStreamInferenceHandler {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    imageContentService: ImageContentService,
+  ) {
     super();
     this.client = new Ollama({
       host: configService.get('models.ayunis.baseURL'),
@@ -13,5 +17,6 @@ export class AyunisOllamaStreamInferenceHandler extends BaseOllamaStreamInferenc
         Authorization: `Bearer ${configService.get('models.ayunis.authToken')}`,
       },
     });
+    this.imageContentService = imageContentService;
   }
 }

@@ -11,12 +11,13 @@ export abstract class Message<T extends MessageContent = MessageContent> {
   createdAt: Date;
 
   constructor(params: {
+    id?: UUID;
     threadId: UUID;
     role: MessageRole;
     content: T[];
     createdAt?: Date;
   }) {
-    this.id = randomUUID();
+    this.id = params.id ?? randomUUID();
     this.threadId = params.threadId;
     this.role = params.role;
     this.content = params.content;

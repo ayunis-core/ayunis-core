@@ -29,11 +29,19 @@ interface ThinkingMessageContentData {
   thinking: string;
 }
 
+interface ImageMessageContentData {
+  type: MessageContentType.IMAGE;
+  index: number;
+  contentType: string;
+  altText?: string;
+}
+
 type MessageContentData =
   | TextMessageContentData
   | ToolUseMessageContentData
   | ToolResultMessageContentData
-  | ThinkingMessageContentData;
+  | ThinkingMessageContentData
+  | ImageMessageContentData;
 
 @Entity({ name: 'messages' })
 export class MessageRecord extends BaseRecord {

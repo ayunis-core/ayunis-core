@@ -22,22 +22,29 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
 import { InferenceFailedError } from '../../application/models.errors';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(BaseOllamaInferenceHandler.name);
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: Ollama;
+  protected imageContentService?: ImageContentService;
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', input);
+    this.logger.log('answer', {
+      model: input.model.name,
+      messageCount: input.messages.length,
+      toolCount: input.tools?.length ?? 0,
+    });
     try {
-      const { messages, tools } = input;
+      const { messages, tools, orgId } = input;
       const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
         ...tool,
         function: { ...tool.function, strict: true },
       }));
-      const ollamaMessages = this.convertMessages(messages);
+      const ollamaMessages = await this.convertMessages(messages, orgId);
       const systemPrompt = input.systemPrompt
         ? this.convertSystemPrompt(input.systemPrompt)
         : undefined;
@@ -94,26 +101,59 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
     };
   };
 
-  private convertMessages = (messages: Message[]): OllamaMessage[] => {
+  private convertMessages = async (
+    messages: Message[],
+    orgId: string,
+  ): Promise<OllamaMessage[]> => {
     const convertedMessages: OllamaMessage[] = [];
     for (const message of messages) {
-      convertedMessages.push(...this.convertMessage(message));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
     return convertedMessages;
   };
 
-  private convertMessage = (message: Message): OllamaMessage[] => {
+  private convertMessage = async (
+    message: Message,
+    orgId: string,
+  ): Promise<OllamaMessage[]> => {
     const convertedMessages: OllamaMessage[] = [];
     // User Message
     if (message.role === MessageRole.USER) {
+      const textParts: string[] = [];
+      const images: string[] = [];
+
       for (const content of message.content) {
         // Text Message Content
         if (content instanceof TextMessageContent) {
-          convertedMessages.push({
-            role: 'user' as const,
-            content: content.text,
-          });
+          textParts.push(content.text);
         }
+        // Image Message Content
+        if (content instanceof ImageMessageContent) {
+          if (!this.imageContentService) {
+            throw new InferenceFailedError(
+              'Image converter not configured for image support',
+              {
+                source: 'ollama',
+              },
+            );
+          }
+          const imageData = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
+          images.push(imageData);
+        }
+      }
+
+      // Combine text and images
+      if (textParts.length > 0 || images.length > 0) {
+        const combinedContent = textParts.join('\n');
+        convertedMessages.push({
+          role: 'user' as const,
+          content: combinedContent || '',
+          images: images.length > 0 ? images : undefined,
+        });
       }
     }
 
@@ -245,5 +285,26 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
     }
 
     return new ToolUseMessageContent(id, name, parameters);
+  }
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
+  ): Promise<string> {
+    if (!this.imageContentService) {
+      throw new InferenceFailedError(
+        'Image converter not configured for image support',
+        {
+          source: 'ollama',
+        },
+      );
+    }
+
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
+
+    return imageData.base64;
   }
 }

@@ -20,6 +20,7 @@ export class CatalogModelResponseDtoMapper {
       canStream: model.canStream,
       canUseTools: model.canUseTools,
       isReasoning: model.isReasoning,
+      canVision: model.canVision,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     };

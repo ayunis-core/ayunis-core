@@ -32,7 +32,7 @@ import {
   RunToolExecutionFailedError,
 } from '../../runs.errors';
 import {
-  RunTextInput,
+  RunUserInput,
   RunToolResultInput,
 } from '../../../domain/run-input.entity';
 import { ApplicationError } from '../../../../../common/errors/base.error';
@@ -101,7 +101,11 @@ export class ExecuteRunUseCase {
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<Message, void, void>> {
-    this.logger.log('executeRun', command);
+    this.logger.log('executeRun', {
+      threadId: command.threadId,
+      streaming: command.streaming,
+      inputType: command.input.constructor.name,
+    });
     try {
       const userId = this.contextService.get('userId');
       const orgId = this.contextService.get('orgId');
@@ -147,7 +151,7 @@ export class ExecuteRunUseCase {
         thread,
         tools,
         model: model.model,
-        input: command.input as RunTextInput | RunToolResultInput,
+        input: command.input as RunUserInput | RunToolResultInput,
         instructions,
         streaming: command.streaming,
         trace,
@@ -365,7 +369,7 @@ export class ExecuteRunUseCase {
     thread: Thread;
     tools: Tool[];
     model: LanguageModel;
-    input: RunTextInput | RunToolResultInput;
+    input: RunUserInput | RunToolResultInput;
     instructions?: string;
     streaming?: boolean;
     trace: LangfuseTraceClient;
@@ -388,11 +392,11 @@ export class ExecuteRunUseCase {
         this.logger.debug('iteration', i);
         const isFirstIteration = i === 0;
         const isLastIteration = i === iterations - 1;
-        const textInput =
-          params.input instanceof RunTextInput ? params.input : null;
+        const userInput =
+          params.input instanceof RunUserInput ? params.input : null;
         const toolResultInput =
           params.input instanceof RunToolResultInput ? params.input : null;
-        if (!textInput && !toolResultInput) {
+        if (!userInput && !toolResultInput) {
           throw new RunInvalidInputError('Invalid input');
         }
 
@@ -425,25 +429,46 @@ export class ExecuteRunUseCase {
           yield toolResultMessage;
         }
 
-        // Add text message if we have one and it's the first iteration
-        if (isFirstIteration && textInput) {
+        // Add user message if we have user input and it's the first iteration
+        if (isFirstIteration && userInput) {
+          // Validate that at least text or images are provided
+          const hasText = userInput.text && userInput.text.trim().length > 0;
+          const hasImages = userInput.pendingImages.length > 0;
+
+          if (!hasText && !hasImages) {
+            throw new RunInvalidInputError(
+              'Message must contain at least one content item (non-empty text or at least one image)',
+            );
+          }
+
+          // Validate that the model supports vision if images are included
+          if (hasImages && !params.model.canVision) {
+            throw new RunInvalidInputError(
+              'The selected model does not support image inputs. Please use a vision-capable model or remove images from your message.',
+            );
+          }
+
           // Anonymize user message text if in anonymous mode (thread setting or model enforced)
-          const messageText = params.isAnonymous
-            ? await this.anonymizeText(textInput.text)
-            : textInput.text;
-          const newTextMessage = await this.createUserMessageUseCase.execute(
-            new CreateUserMessageCommand(params.thread.id, [
-              new TextMessageContent(messageText),
-            ]),
+          const messageText =
+            hasText && params.isAnonymous
+              ? await this.anonymizeText(userInput.text)
+              : userInput.text;
+
+          const newUserMessage = await this.createUserMessageUseCase.execute(
+            new CreateUserMessageCommand(
+              params.thread.id,
+              messageText,
+              userInput.pendingImages,
+            ),
           );
           params.trace.event({
             name: 'new_message',
-            input: newTextMessage,
+            input: newUserMessage,
           });
           this.addMessageToThreadUseCase.execute(
-            new AddMessageCommand(params.thread, newTextMessage),
+            new AddMessageCommand(params.thread, newUserMessage),
           );
-          yield newTextMessage;
+          yield newUserMessage;
         }
 
         let assistantMessage: AssistantMessage;
@@ -464,6 +489,7 @@ export class ExecuteRunUseCase {
               tools: params.tools,
               instructions: params.instructions,
               threadId: params.thread.id,
+              orgId: params.orgId,
             })) {
               finalMessage = partialMessage; // Keep track of the last message
               yield partialMessage;
@@ -742,8 +768,9 @@ export class ExecuteRunUseCase {
     tools: Tool[];
     instructions?: string;
     threadId: UUID;
+    orgId: UUID;
   }): AsyncGenerator<AssistantMessage, void, unknown> {
-    const { model, messages, tools, instructions, threadId } = params;
+    const { model, messages, tools, instructions, threadId, orgId } = params;
 
     // Create streaming inference input
     const streamInput = new StreamInferenceInput({
@@ -752,6 +779,7 @@ export class ExecuteRunUseCase {
       systemPrompt: instructions || '',
       tools,
       toolChoice: ModelToolChoice.AUTO,
+      orgId,
     });
 
     // Start streaming

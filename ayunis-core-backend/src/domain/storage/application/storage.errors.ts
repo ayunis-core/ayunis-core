@@ -2,6 +2,12 @@ import {
   ApplicationError,
   ErrorMetadata,
 } from '../../../common/errors/base.error';
+import {
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 export enum StorageErrorCode {
   OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND',
@@ -22,6 +28,38 @@ export class StorageError extends ApplicationError {
   ) {
     super(message, code, statusCode, metadata);
     this.name = 'StorageError';
+  }
+
+  /**
+   * Convert to a NestJS HTTP exception
+   */
+  toHttpException() {
+    switch (this.statusCode) {
+      case 403:
+        return new ForbiddenException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 404:
+        return new NotFoundException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 500:
+        return new InternalServerErrorException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      default:
+        return new BadRequestException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+    }
   }
 }
 

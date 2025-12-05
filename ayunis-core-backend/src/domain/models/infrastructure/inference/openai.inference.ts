@@ -17,13 +17,18 @@ import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 
 @Injectable()
 export class OpenAIInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(OpenAIInferenceHandler.name);
   private readonly client: OpenAI;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly imageContentService: ImageContentService,
+  ) {
     super();
     this.client = new OpenAI({
       apiKey: this.configService.get('openai.apiKey'),
@@ -31,11 +36,16 @@ export class OpenAIInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', input);
+    this.logger.log('answer', {
+      model: input.model.name,
+      messageCount: input.messages.length,
+      toolCount: input.tools?.length ?? 0,
+      toolChoice: input.toolChoice,
+    });
     try {
-      const { messages, tools, toolChoice } = input;
+      const { messages, tools, toolChoice, orgId } = input;
       const openAiTools = tools?.map(this.convertTool);
-      const openAiMessages = this.convertMessages(messages);
+      const openAiMessages = await this.convertMessages(messages, orgId);
       const isGpt5 = input.model.name.startsWith('gpt-5');
 
       const completionOptions: OpenAI.Responses.ResponseCreateParamsNonStreaming =
@@ -86,19 +96,21 @@ export class OpenAIInferenceHandler extends InferenceHandler {
     };
   };
 
-  private convertMessages = (
+  private convertMessages = async (
     messages: Message[],
-  ): OpenAI.Responses.ResponseInput => {
+    orgId: string,
+  ): Promise<OpenAI.Responses.ResponseInput> => {
     const convertedMessages: OpenAI.Responses.ResponseInputItem[] = [];
     for (const message of messages) {
-      convertedMessages.push(...this.convertMessage(message));
+      convertedMessages.push(...(await this.convertMessage(message, orgId)));
     }
     return convertedMessages;
   };
 
-  private convertMessage = (
+  private convertMessage = async (
     message: Message,
-  ): OpenAI.Responses.ResponseInputItem[] => {
+    orgId: string,
+  ): Promise<OpenAI.Responses.ResponseInputItem[]> => {
     /** Assistant messages in Ayunis Core contain both text and tool call,
      *  so one assistant message is converted to multiple OpenAI messages.
      */
@@ -116,7 +128,15 @@ export class OpenAIInferenceHandler extends InferenceHandler {
             text: content.text,
           });
         }
-        // TODO: Add other input types, such as images
+        // Image Message Content
+        if (content instanceof ImageMessageContent) {
+          const imageContent = await this.convertImageContent(content, {
+            orgId,
+            threadId: message.threadId,
+            messageId: message.id,
+          });
+          convertedMessage.content.push(imageContent);
+        }
       }
       return [convertedMessage];
     }
@@ -259,5 +279,23 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       unknown
     >;
     return new ToolUseMessageContent(id, name, parameters);
+  }
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
+  ): Promise<OpenAI.Responses.ResponseInputImage> {
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
+
+    const imageUrl = `data:${imageData.contentType};base64,${imageData.base64}`;
+
+    return {
+      type: 'input_image',
+      image_url: imageUrl,
+      detail: 'auto',
+    };
   }
 }

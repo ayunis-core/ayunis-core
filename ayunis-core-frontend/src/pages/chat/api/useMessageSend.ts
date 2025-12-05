@@ -1,9 +1,4 @@
 import {
-  type SendMessageDto,
-  type TextInput,
-  type ToolResultInput,
-  TextInputType,
-  ToolResultInputType,
   type RunSessionResponseDto,
   type RunMessageResponseDto,
   type RunErrorResponseDto,
@@ -19,8 +14,14 @@ import {
   getThreadsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
-interface SendMesageInput {
+export interface PendingImage {
+  file: File;
+  altText?: string;
+}
+
+export interface SendMessageInput {
   text: string;
+  images?: PendingImage[];
 }
 
 interface SendToolResultInput {
@@ -39,6 +40,15 @@ interface UseMessageSendParams {
   onComplete?: () => void;
 }
 
+interface SendMessagePayload {
+  threadId: string;
+  text?: string;
+  images?: File[];
+  imageAltTexts?: string[];
+  toolResult?: SendToolResultInput;
+  streaming?: boolean;
+}
+
 export function useMessageSend(params: UseMessageSendParams) {
   const { t } = useTranslation('chats');
   const queryClient = useQueryClient();
@@ -47,7 +57,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   const wasAbortedRef = useRef(false);
 
   const sendMessage = useCallback(
-    async (sendMessageDto: SendMessageDto) => {
+    async (payload: SendMessagePayload) => {
       try {
         // Clean up any existing connection
         if (abortControllerRef.current) {
@@ -61,15 +71,44 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         const url = `${config.api.baseUrl}/runs/send-message`;
 
+        // Build FormData for multipart request
+        const formData = new FormData();
+        formData.append('threadId', payload.threadId);
+
+        if (payload.text !== undefined) {
+          formData.append('text', payload.text);
+        }
+
+        if (payload.images && payload.images.length > 0) {
+          for (const image of payload.images) {
+            formData.append('images', image);
+          }
+        }
+
+        if (payload.imageAltTexts && payload.imageAltTexts.length > 0) {
+          formData.append(
+            'imageAltTexts',
+            JSON.stringify(payload.imageAltTexts),
+          );
+        }
+
+        if (payload.toolResult) {
+          formData.append('toolResult', JSON.stringify(payload.toolResult));
+        }
+
+        if (payload.streaming !== undefined) {
+          formData.append('streaming', String(payload.streaming));
+        }
+
         const response = await fetch(url, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            // Don't set Content-Type - browser will set it with boundary for multipart
             Accept: 'text/event-stream',
             'Cache-Control': 'no-cache',
           },
           credentials: 'include',
-          body: JSON.stringify(sendMessageDto),
+          body: formData,
           signal,
         });
 
@@ -188,38 +227,33 @@ export function useMessageSend(params: UseMessageSendParams) {
   );
 
   const sendTextMessage = useCallback(
-    (input: SendMesageInput) => {
-      const textInput: TextInput = {
-        type: TextInputType.text,
-        text: input.text,
-      };
-
-      const sendMessageDto: SendMessageDto = {
+    (input: SendMessageInput) => {
+      const payload: SendMessagePayload = {
         threadId: params.threadId,
-        input: textInput,
+        text: input.text,
         streaming: true,
       };
 
-      return sendMessage(sendMessageDto);
+      // Add images and their alt texts if present
+      if (input.images && input.images.length > 0) {
+        payload.images = input.images.map((img) => img.file);
+        payload.imageAltTexts = input.images.map((img) => img.altText ?? '');
+      }
+
+      return sendMessage(payload);
     },
     [params.threadId, sendMessage],
   );
 
   const sendToolResult = useCallback(
     (input: SendToolResultInput) => {
-      const toolResultInput: ToolResultInput = {
-        type: ToolResultInputType.tool_result,
-        toolId: input.toolId,
-        toolName: input.toolName,
-        result: input.result,
-      };
-
-      const sendMessageDto: SendMessageDto = {
+      const payload: SendMessagePayload = {
         threadId: params.threadId,
-        input: toolResultInput,
+        toolResult: input,
+        streaming: true,
       };
 
-      return sendMessage(sendMessageDto);
+      return sendMessage(payload);
     },
     [params.threadId, sendMessage],
   );

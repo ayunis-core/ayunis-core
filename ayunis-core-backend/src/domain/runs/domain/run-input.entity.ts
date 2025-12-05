@@ -1,7 +1,12 @@
+import { ImageUploadData } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
+
 export class RunInput {}
 
-export class RunTextInput extends RunInput {
-  constructor(public readonly text: string) {
+export class RunUserInput extends RunInput {
+  constructor(
+    public readonly text: string,
+    public readonly pendingImages: ImageUploadData[] = [],
+  ) {
     super();
   }
 }

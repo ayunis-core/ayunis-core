@@ -103,6 +103,7 @@ describe('CreatePermittedModelUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       });
 
       const mockPermittedModel = new PermittedModel({
@@ -173,6 +174,7 @@ describe('CreatePermittedModelUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: true,
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);
@@ -206,6 +208,7 @@ describe('CreatePermittedModelUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);
@@ -261,6 +264,7 @@ describe('CreatePermittedModelUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: false,
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);

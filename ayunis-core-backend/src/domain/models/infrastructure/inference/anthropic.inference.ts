@@ -22,8 +22,10 @@ import {
 } from '@anthropic-ai/sdk/resources/messages';
 import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
+import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
@@ -32,7 +34,10 @@ export class AnthropicInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(AnthropicInferenceHandler.name);
   private readonly client: Anthropic;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly imageContentService: ImageContentService,
+  ) {
     super();
     this.client = new Anthropic({
       apiKey: this.configService.get('anthropic.apiKey'),
@@ -40,11 +45,16 @@ export class AnthropicInferenceHandler extends InferenceHandler {
   }
 
   async answer(input: InferenceInput): Promise<InferenceResponse> {
-    this.logger.log('answer', input);
+    this.logger.log('answer', {
+      model: input.model.name,
+      messageCount: input.messages.length,
+      toolCount: input.tools?.length ?? 0,
+      toolChoice: input.toolChoice,
+    });
     try {
-      const { messages, tools, toolChoice, systemPrompt } = input;
+      const { messages, tools, toolChoice, systemPrompt, orgId } = input;
       const anthropicTools = tools?.map(this.convertTool);
-      const anthropicMessages = this.convertMessages(messages);
+      const anthropicMessages = await this.convertMessages(messages, orgId);
       const anthropicToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
@@ -92,62 +102,77 @@ export class AnthropicInferenceHandler extends InferenceHandler {
     };
   };
 
-  private convertMessages = (messages: Message[]): Anthropic.MessageParam[] => {
-    const chatMessages = messages.reduce((convertedMessages, message) => {
-      // always push the first message and next loop
-      if (convertedMessages.length === 0) {
-        convertedMessages.push(this.convertMessage(message));
+  private convertMessages = async (
+    messages: Message[],
+    orgId: string,
+  ): Promise<Anthropic.MessageParam[]> => {
+    const chatMessages = await messages.reduce<
+      Promise<Anthropic.MessageParam[]>
+    >(
+      async (accPromise, message) => {
+        const convertedMessages = await accPromise;
+        // always push the first message and next loop
+        if (convertedMessages.length === 0) {
+          convertedMessages.push(await this.convertMessage(message, orgId));
+          return convertedMessages;
+        }
+        const lastMessage = convertedMessages.pop();
+        if (!lastMessage) {
+          throw new Error('lastMessage is undefined');
+        }
+        // assistant messages are always separate so
+        // an assistant message is always pushed
+        // and the following message is always pushed
+        if (
+          message.role === MessageRole.ASSISTANT ||
+          lastMessage.role === MessageRole.ASSISTANT
+        ) {
+          convertedMessages.push(lastMessage);
+          convertedMessages.push(await this.convertMessage(message, orgId));
+          return convertedMessages;
+        }
+
+        // all other messages are combined as one user message
+        // so assistant and user messages always follow each other
+        // user -> assistant -> user -> assistant
+        const convertedMessage = await this.convertMessage(message, orgId);
+
+        const convertedMessageContent =
+          typeof convertedMessage.content === 'string'
+            ? [{ type: 'text' as const, text: convertedMessage.content }]
+            : convertedMessage.content;
+
+        const lastMessageContent =
+          typeof lastMessage.content === 'string'
+            ? [{ type: 'text' as const, text: lastMessage.content }]
+            : lastMessage.content;
+
+        const allContent = [...lastMessageContent, ...convertedMessageContent];
+        convertedMessages.push({ role: 'user', content: allContent });
         return convertedMessages;
-      }
-      const lastMessage = convertedMessages.pop();
-      if (!lastMessage) {
-        throw new Error('lastMessage is undefined');
-      }
-      // assistant messages are always separate so
-      // an assistant message is always pushed
-      // and the following message is always pushed
-      if (
-        message.role === MessageRole.ASSISTANT ||
-        lastMessage.role === MessageRole.ASSISTANT
-      ) {
-        convertedMessages.push(lastMessage);
-        convertedMessages.push(this.convertMessage(message));
-        return convertedMessages;
-      }
-
-      // all other messages are combined as one user message
-      // so assistant and user messages always follow each other
-      // user -> assistant -> user -> assistant
-      const convertedMessage = this.convertMessage(message);
-
-      const convertedMessageContent =
-        typeof convertedMessage.content === 'string'
-          ? [{ type: 'text' as const, text: convertedMessage.content }]
-          : convertedMessage.content;
-
-      const lastMessageContent =
-        typeof lastMessage.content === 'string'
-          ? [{ type: 'text' as const, text: lastMessage.content }]
-          : lastMessage.content;
-
-      const allContent = [...lastMessageContent, ...convertedMessageContent];
-      convertedMessages.push({ role: 'user', content: allContent });
-      return convertedMessages;
-    }, [] as Anthropic.MessageParam[]);
+      },
+      Promise.resolve([] as Anthropic.MessageParam[]),
+    );
     return chatMessages;
   };
 
   // Map messages to Anthropic.MessageParam
-  private convertMessage = (message: Message): Anthropic.MessageParam => {
+  private convertMessage = async (
+    message: Message,
+    orgId: string,
+  ): Promise<Anthropic.MessageParam> => {
     if (message instanceof UserMessage) {
       return {
         role: 'user',
-        content: message.content.map((content) => {
-          return {
-            type: 'text',
-            text: content.text,
-          };
-        }),
+        content: await Promise.all(
+          message.content.map((content) =>
+            this.convertUserContent(content, {
+              orgId,
+              threadId: message.threadId,
+              messageId: message.id,
+            }),
+          ),
+        ),
       };
     }
     if (message instanceof AssistantMessage) {
@@ -264,4 +289,46 @@ export class AnthropicInferenceHandler extends InferenceHandler {
     const parameters = toolCall.input as object;
     return new ToolUseMessageContent(id, name, parameters);
   };
+
+  private async convertUserContent(
+    content: TextMessageContent | ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
+  ): Promise<Anthropic.ImageBlockParam | Anthropic.TextBlockParam> {
+    if (content instanceof TextMessageContent) {
+      return {
+        type: 'text',
+        text: content.text,
+      };
+    }
+
+    if (!(content instanceof ImageMessageContent)) {
+      throw new InferenceFailedError(
+        `Unsupported user content type for Anthropic`,
+        {
+          source: 'anthropic',
+        },
+      );
+    }
+
+    return this.convertImageContent(content, context);
+  }
+
+  private async convertImageContent(
+    content: ImageMessageContent,
+    context: { orgId: string; threadId: string; messageId: string },
+  ): Promise<Anthropic.ImageBlockParam> {
+    const imageData = await this.imageContentService.convertImageToBase64(
+      content,
+      context,
+    );
+
+    return {
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: imageData.contentType,
+        data: imageData.base64,
+      },
+    };
+  }
 }

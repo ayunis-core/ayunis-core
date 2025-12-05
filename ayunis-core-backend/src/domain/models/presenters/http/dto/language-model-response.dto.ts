@@ -70,6 +70,13 @@ export class LanguageModelResponseDto {
   isReasoning: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    description: 'Whether the model supports vision (image processing)',
+    example: false,
+  })
+  canVision: boolean;
+
+  @ApiProperty({
     type: 'string',
     format: 'date-time',
     description: 'The date the model was created',

@@ -38,6 +38,7 @@ describe('UpdateAgentUseCase', () => {
         isReasoning: false,
         isArchived: false,
         canUseTools: true,
+        canVision: true,
       }),
     });
   };

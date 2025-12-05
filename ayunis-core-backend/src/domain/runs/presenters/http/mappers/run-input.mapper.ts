@@ -1,23 +1,38 @@
 import {
   RunInput,
-  RunTextInput,
+  RunUserInput,
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { SendMessageDto } from '../dto/send-message.dto';
+import { ImageUploadData } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 
 export class RunInputMapper {
-  static toCommand(dto: SendMessageDto['input']): RunInput {
-    if ('type' in dto && dto.type === 'text') {
-      return new RunTextInput(dto.text);
-    } else if ('type' in dto && dto.type === 'tool_result') {
-      const toolResult = dto;
+  /**
+   * Converts DTO + uploaded files to RunInput.
+   *
+   * @param dto - The SendMessageDto from the request body
+   * @param files - Array of uploaded files (from @UploadedFiles())
+   */
+  static toCommand(
+    dto: SendMessageDto,
+    files: Express.Multer.File[] = [],
+  ): RunInput {
+    // Handle tool result input
+    if (dto.toolResult) {
       return new RunToolResultInput(
-        toolResult.toolId,
-        toolResult.toolName,
-        toolResult.result,
+        dto.toolResult.toolId,
+        dto.toolResult.toolName,
+        dto.toolResult.result,
       );
-    } else {
-      throw new Error('Invalid input type');
     }
+
+    // Handle user input (text and/or images)
+    const pendingImages: ImageUploadData[] = files.map((file, index) => ({
+      buffer: file.buffer,
+      contentType: file.mimetype,
+      altText: dto.imageAltTexts?.[index],
+    }));
+
+    return new RunUserInput(dto.text ?? '', pendingImages);
   }
 }

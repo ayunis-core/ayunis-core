@@ -5,9 +5,11 @@ import {
   IsUUID,
   ValidateNested,
   IsBoolean,
+  IsString,
+  IsArray,
 } from 'class-validator';
 import { ApiProperty, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { UUID } from 'crypto';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
@@ -86,6 +88,18 @@ export class ToolConfigDto {
   })
   toolConfigId?: UUID;
 }
+
+/**
+ * DTO for sending messages with optional file uploads via multipart/form-data.
+ *
+ * For user messages with images:
+ * - Send as multipart/form-data
+ * - Include files in 'images' field
+ * - Include JSON fields as form fields
+ *
+ * For tool results (no files):
+ * - Can send as application/json or multipart/form-data
+ */
 @ApiExtraModels(TextInput, ToolResultInput)
 export class SendMessageDto {
   @IsNotEmpty()
@@ -96,37 +110,72 @@ export class SendMessageDto {
   })
   threadId: UUID;
 
-  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    description: 'Text content of the user message (for user input)',
+    example: 'What do you see in this image?',
+    required: false,
+  })
+  text?: string;
+
+  @IsOptional()
+  @IsArray()
+  @Transform(({ value }: { value: unknown }): string[] | undefined => {
+    if (typeof value !== 'string') {
+      return value as string[] | undefined;
+    }
+    try {
+      return JSON.parse(value) as string[];
+    } catch {
+      // Return undefined - validation decorators will handle the error
+      return undefined;
+    }
+  })
+  @ApiProperty({
+    description:
+      'JSON array of alt texts matching the order of uploaded images',
+    type: 'array',
+    items: { type: 'string' },
+    required: false,
+  })
+  imageAltTexts?: string[];
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => Object, {
     discriminator: {
       property: 'type',
-      subTypes: [
-        { value: TextInput, name: 'text' },
-        { value: ToolResultInput, name: 'tool_result' },
-      ],
+      subTypes: [{ value: ToolResultInput, name: 'tool_result' }],
     },
+  })
+  @Transform(({ value }: { value: unknown }): ToolResultInput | undefined => {
+    if (typeof value !== 'string') {
+      return value as ToolResultInput | undefined;
+    }
+    try {
+      return JSON.parse(value) as ToolResultInput;
+    } catch {
+      // Return undefined - validation decorators will handle the error
+      return undefined;
+    }
   })
   @ApiProperty({
-    description: 'The input to use for the inference',
-    discriminator: {
-      propertyName: 'type',
-    },
-    oneOf: [
-      { $ref: getSchemaPath(TextInput) },
-      { $ref: getSchemaPath(ToolResultInput) },
-    ],
+    description: 'Tool result input (for tool_result type only)',
+    oneOf: [{ $ref: getSchemaPath(ToolResultInput) }],
+    required: false,
   })
-  input: TextInput | ToolResultInput;
+  toolResult?: ToolResultInput;
 
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   @ApiProperty({
     description: 'Enable streaming mode for real-time response updates',
     type: 'boolean',
     example: true,
     required: false,
-    default: false,
+    default: true,
   })
   streaming?: boolean;
 }

@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/shared/ui/shadcn/button';
 import { ArrowUp, Square } from 'lucide-react';
@@ -21,7 +21,15 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { AnonymousButton } from './AnonymousButton';
 import { AgentBadge } from './AgentBadge';
-import { SourceBadge } from './SourceBadge';
+import {
+  usePendingImages,
+  type PendingImage,
+  MAX_IMAGES,
+} from '../hooks/usePendingImages';
+import { useImagePaste } from '../hooks/useImagePaste';
+import { PendingImageThumbnail } from './PendingImageThumbnail';
+import { SourcesList } from './SourcesList';
+import { showError } from '@/shared/lib/toast';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -43,7 +51,10 @@ interface ChatInputProps {
   onFileUpload: (file: File) => void;
   onRemoveSource: (sourceId: string) => void;
   onDownloadSource: (sourceId: string) => void;
-  onSend: (message: string) => void;
+  onSend: (
+    message: string,
+    imageFiles?: Array<{ file: File; altText?: string }>,
+  ) => void;
   onSendCancelled: () => void;
   prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
@@ -53,6 +64,8 @@ interface ChatInputProps {
   onAnonymousChange?: (isAnonymous: boolean) => void;
   /** Whether anonymous mode is enforced by the selected model. */
   isAnonymousEnforced?: boolean;
+  /** Whether the selected model supports vision (image upload) */
+  isVisionEnabled?: boolean;
 }
 
 export interface ChatInputRef {
@@ -84,6 +97,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       isAnonymous,
       onAnonymousChange,
       isAnonymousEnforced,
+      isVisionEnabled = false,
     },
     ref,
   ) => {
@@ -91,6 +105,24 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const [message, setMessage] = useState(prefilledPrompt ?? '');
     const { t } = useTranslation('common');
     const { agents } = useAgents();
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const { pendingImages, addImages, removeImage, clearImages } =
+      usePendingImages();
+
+    // Handle paste events for images
+    const handleImagesPasted = (files: File[]) => {
+      const result = addImages(files);
+      if (result.limitExceeded) {
+        showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
+      }
+    };
+
+    useImagePaste({
+      containerRef,
+      isFocused: isFocused && isVisionEnabled,
+      onImagesPasted: handleImagesPasted,
+    });
 
     useImperativeHandle(ref, () => ({
       setMessage,
@@ -100,12 +132,24 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       },
     }));
 
-    function handleSend() {
-      if (!message.trim() || !(modelId || agentId)) return;
+    const handleSend = () => {
+      if (
+        (!message.trim() && pendingImages.length === 0) ||
+        !(modelId || agentId)
+      ) {
+        return;
+      }
 
-      onSend(message);
-      setMessage(''); // Clear message after sending
-    }
+      // Pass File objects to parent - upload happens in ChatPage/NewChatPage
+      const imageFiles = pendingImages.map((img) => ({
+        file: img.file,
+        altText: img.file.name || 'Pasted image',
+      }));
+
+      onSend(message, imageFiles.length > 0 ? imageFiles : undefined);
+      setMessage('');
+      clearImages();
+    };
 
     useKeyboardShortcut(
       ['Enter'],
@@ -119,36 +163,53 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       },
     );
 
-    function handlePromptSelect(promptContent: string) {
-      // Add the prompt content to the existing message
-      // If there's already content, add a space before the prompt
+    const handlePromptSelect = (promptContent: string) => {
       setMessage((prev) => (prev ? `${prev} ${promptContent}` : promptContent));
-    }
+    };
+
+    const handleImageSelect = (files: FileList | null) => {
+      if (!files) return;
+      const imageFiles = Array.from(files).filter((file) =>
+        file.type.startsWith('image/'),
+      );
+      if (imageFiles.length > 0) {
+        const result = addImages(imageFiles);
+        if (result.limitExceeded) {
+          showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
+        }
+      }
+    };
+
+    const canSend =
+      (message.trim() || pendingImages.length > 0) && (modelId || agentId);
 
     return (
-      <div className="w-full space-y-2" data-testid="chat-input">
-        {/* Main input section */}
+      <div
+        ref={containerRef}
+        className="w-full space-y-2"
+        data-testid="chat-input"
+      >
         <Card className="py-4">
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
-              {/* Sources */}
-              {sources.filter((source) => source.createdBy !== 'system')
-                .length > 0 && (
+              <SourcesList
+                sources={sources}
+                onRemove={onRemoveSource}
+                onDownload={onDownloadSource}
+              />
+
+              {pendingImages.length > 0 && (
                 <div className="flex flex-wrap gap-2 items-center">
-                  {sources
-                    .filter((source) => source.createdBy !== 'system')
-                    .map((source) => (
-                      <SourceBadge
-                        key={source.id}
-                        source={source}
-                        onRemove={onRemoveSource}
-                        onDownload={onDownloadSource}
-                      />
-                    ))}
+                  {pendingImages.map((image: PendingImage) => (
+                    <PendingImageThumbnail
+                      key={image.id}
+                      image={image}
+                      onRemove={removeImage}
+                    />
+                  ))}
                 </div>
               )}
 
-              {/* Textarea at the top */}
               <TextareaAutosize
                 maxRows={10}
                 value={message}
@@ -161,15 +222,16 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 data-testid="input"
               />
 
-              {/* Bottom row */}
               <div className="flex items-center justify-between">
                 {/* Left side */}
                 <div className="flex-shrink-0 flex space-x-2">
                   <PlusButton
                     onFileUpload={onFileUpload}
+                    onImageSelect={handleImageSelect}
                     isFileSourceDisabled={!isEmbeddingModelEnabled}
                     isCreatingFileSource={isCreatingFileSource}
                     onPromptSelect={handlePromptSelect}
+                    isImageUploadDisabled={!isVisionEnabled}
                   />
                   <AgentButton
                     selectedAgentId={agentId}
@@ -192,7 +254,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   )}
                 </div>
 
-                {/* Right side */}
                 <div className="flex-shrink-0 flex space-x-2">
                   <TooltipIf
                     condition={isModelChangeDisabled}
@@ -226,11 +287,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       <TooltipTrigger asChild>
                         <div>
                           <Button
-                            disabled={!message.trim() || !(modelId || agentId)}
+                            disabled={!canSend}
                             className="rounded-full"
                             size="icon"
                             data-testid="send"
-                            onClick={() => void handleSend()}
+                            onClick={handleSend}
                           >
                             <ArrowUp className="h-4 w-4" />
                           </Button>

@@ -21,6 +21,7 @@ export class AgentDtoMapper {
         provider: agent.model.model.provider,
         displayName: agent.model.model.displayName,
         anonymousOnly: agent.model.anonymousOnly,
+        canVision: agent.model.model.canVision,
       },
       tools: agent.tools.map((tool) => ({
         type: tool.type,

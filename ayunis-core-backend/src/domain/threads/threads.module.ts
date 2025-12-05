@@ -26,6 +26,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceAgentWithDefaultModelUseCase } from './application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
 import { AgentsModule } from '../agents/agents.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AgentsModule } from '../agents/agents.module';
     forwardRef(() => AgentsModule),
     MessagesModule,
     OrgsModule,
+    StorageModule,
   ],
   controllers: [ThreadsController],
   providers: [
