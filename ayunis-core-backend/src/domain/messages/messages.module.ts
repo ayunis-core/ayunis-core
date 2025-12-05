@@ -1,5 +1,4 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { MESSAGES_REPOSITORY } from './application/ports/messages.repository';
 import { LocalMessagesRepository } from './infrastructure/persistence/local/local-messages.repository';
 import { LocalMessagesRepositoryModule } from './infrastructure/persistence/local/local-messages-repository.module';
@@ -24,7 +23,6 @@ import { OrphanedImagesCleanupTask } from './infrastructure/tasks/orphaned-image
   imports: [
     LocalMessagesRepositoryModule,
     forwardRef(() => StorageModule),
-    ScheduleModule.forRoot(),
   ],
   providers: [
     {
