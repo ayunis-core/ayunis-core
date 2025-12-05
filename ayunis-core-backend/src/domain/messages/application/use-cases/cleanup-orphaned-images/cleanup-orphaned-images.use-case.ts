@@ -1,7 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
-import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import {
   MessagesRepository,
   MESSAGES_REPOSITORY,
@@ -18,6 +20,7 @@ export class CleanupOrphanedImagesUseCase {
 
   constructor(
     private readonly objectStoragePort: ObjectStoragePort,
+    private readonly deleteObjectUseCase: DeleteObjectUseCase,
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
   ) {}
@@ -79,11 +82,21 @@ export class CleanupOrphanedImagesUseCase {
       // Delete orphaned images
       for (const path of orphanedPaths) {
         try {
-          await this.objectStoragePort.delete(new StorageUrl(path, ''));
+          await this.deleteObjectUseCase.execute(
+            new DeleteObjectCommand(path),
+          );
           result.deletedCount++;
           result.deletedPaths.push(path);
           this.logger.debug(`Deleted orphaned image: ${path}`);
         } catch (error) {
+          // If object doesn't exist, it's already cleaned up - don't count as failure
+          if (error instanceof ObjectNotFoundError) {
+            this.logger.debug(
+              `Orphaned image already deleted: ${path}`,
+            );
+            continue;
+          }
+          
           result.failedCount++;
           const errorMessage =
             error instanceof Error ? error.message : 'Unknown error';
