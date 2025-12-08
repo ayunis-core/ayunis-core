@@ -19,9 +19,10 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Button } from '@/shared/ui/shadcn/button';
-import { MoreHorizontal, Edit, Trash2, UserCheck } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, UserCheck, Mail } from 'lucide-react';
 import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
+import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
 import { useUsers } from '../api/useUsers';
 import { useState } from 'react';
 import type { User } from '../model/openapi';
@@ -45,6 +46,10 @@ export default function UsersSection({
   const { deleteUser, isLoading: isDeletingUser } = useUserDelete({
     onSuccessCallback: () => setLoadingUserId(null),
   });
+  const { triggerPasswordReset, isLoading: isTriggeringReset } =
+    useTriggerPasswordReset({
+      onSuccessCallback: () => setLoadingUserId(null),
+    });
   const { confirm } = useConfirmation();
 
   const handleRoleToggle = (user: User) => {
@@ -84,8 +89,28 @@ export default function UsersSection({
     });
   };
 
+  const handleTriggerPasswordReset = (user: UserResponseDto) => {
+    confirm({
+      title: t('confirmPasswordReset.title'),
+      description: t('confirmPasswordReset.description', {
+        name: user.name,
+        email: user.email,
+      }),
+      confirmText: t('confirmPasswordReset.confirmText'),
+      cancelText: t('confirmPasswordReset.cancelText'),
+      variant: 'default',
+      onConfirm: () => {
+        setLoadingUserId(user.id);
+        triggerPasswordReset(user.id);
+      },
+    });
+  };
+
   const isUserLoading = (userId: string) => {
-    return loadingUserId === userId && (isUpdatingRole || isDeletingUser);
+    return (
+      loadingUserId === userId &&
+      (isUpdatingRole || isDeletingUser || isTriggeringReset)
+    );
   };
 
   return (
@@ -146,6 +171,13 @@ export default function UsersSection({
                               ? t('users.user')
                               : t('users.admin'),
                         })}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleTriggerPasswordReset(user)}
+                        disabled={isUserLoading(user.id)}
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        {t('users.sendPasswordReset')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"

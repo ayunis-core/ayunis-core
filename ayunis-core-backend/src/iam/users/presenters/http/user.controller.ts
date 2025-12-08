@@ -62,6 +62,8 @@ import { ResetPasswordUseCase } from '../../application/use-cases/reset-password
 import { ResetPasswordCommand } from '../../application/use-cases/reset-password/reset-password.command';
 import { ValidatePasswordResetTokenUseCase } from '../../application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
 import { ValidatePasswordResetTokenQuery } from '../../application/use-cases/validate-password-reset-token/validate-password-reset-token.query';
+import { AdminTriggerPasswordResetUseCase } from '../../application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
+import { AdminTriggerPasswordResetCommand } from '../../application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.command';
 import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
 
 @ApiTags('Users')
@@ -81,6 +83,7 @@ export class UserController {
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly validatePasswordResetTokenUseCase: ValidatePasswordResetTokenUseCase,
+    private readonly adminTriggerPasswordResetUseCase: AdminTriggerPasswordResetUseCase,
   ) {}
 
   @Get('')
@@ -368,6 +371,35 @@ export class UserController {
         userId,
         orgId,
       }),
+    );
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Post(':id/trigger-password-reset')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Trigger password reset for a user',
+    description:
+      'Send a password reset email to a user in your organization. Only organization admins can use this endpoint.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'User ID to send password reset email to',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Password reset email sent successfully',
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiUnauthorizedResponse({
+    description: "Not authorized to reset this user's password",
+  })
+  async triggerPasswordResetForUser(@Param('id') userId: UUID): Promise<void> {
+    this.logger.log('triggerPasswordResetForUser', { userId });
+
+    await this.adminTriggerPasswordResetUseCase.execute(
+      new AdminTriggerPasswordResetCommand(userId),
     );
   }
 
