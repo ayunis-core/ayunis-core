@@ -18,7 +18,8 @@
     "delete": "Löschen",
     "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
-    "admin": "Administrator"
+    "admin": "Administrator",
+    "sendPasswordReset": "Passwort-Reset senden"
   },
   "inviteDialog": {
     "inviteUser": "Benutzer einladen",
@@ -82,5 +83,15 @@
   "userRoleUpdate": {
     "success": "Benutzerrolle erfolgreich geändert",
     "error": "Fehler beim Ändern der Benutzerrolle. Bitte versuchen Sie es erneut."
+  },
+  "triggerPasswordReset": {
+    "success": "Passwort-Reset-E-Mail erfolgreich gesendet",
+    "error": "Fehler beim Senden der Passwort-Reset-E-Mail. Bitte versuchen Sie es erneut."
+  },
+  "confirmPasswordReset": {
+    "title": "Passwort-Reset-E-Mail senden",
+    "description": "Eine Passwort-Reset-E-Mail an {{name}} ({{email}}) senden?",
+    "confirmText": "Senden",
+    "cancelText": "Abbrechen"
   }
 }

@@ -20,10 +20,7 @@ import { ImageContentService } from './application/services/image-content.servic
 import { OrphanedImagesCleanupTask } from './infrastructure/tasks/orphaned-images-cleanup.task';
 
 @Module({
-  imports: [
-    LocalMessagesRepositoryModule,
-    forwardRef(() => StorageModule),
-  ],
+  imports: [LocalMessagesRepositoryModule, forwardRef(() => StorageModule)],
   providers: [
     {
       provide: MESSAGES_REPOSITORY,

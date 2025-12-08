@@ -82,21 +82,17 @@ export class CleanupOrphanedImagesUseCase {
       // Delete orphaned images
       for (const path of orphanedPaths) {
         try {
-          await this.deleteObjectUseCase.execute(
-            new DeleteObjectCommand(path),
-          );
+          await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
           result.deletedCount++;
           result.deletedPaths.push(path);
           this.logger.debug(`Deleted orphaned image: ${path}`);
         } catch (error) {
           // If object doesn't exist, it's already cleaned up - don't count as failure
           if (error instanceof ObjectNotFoundError) {
-            this.logger.debug(
-              `Orphaned image already deleted: ${path}`,
-            );
+            this.logger.debug(`Orphaned image already deleted: ${path}`);
             continue;
           }
-          
+
           result.failedCount++;
           const errorMessage =
             error instanceof Error ? error.message : 'Unknown error';

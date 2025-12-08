@@ -1,3 +1,4 @@
 export { useInviteCreate } from './useInviteCreate';
 export { useUserRoleUpdate } from './useUserRoleUpdate';
 export { useUserDelete } from './useUserDelete';
+export { useTriggerPasswordReset } from './useTriggerPasswordReset';

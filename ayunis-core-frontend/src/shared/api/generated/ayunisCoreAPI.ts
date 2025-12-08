@@ -3596,6 +3596,70 @@ export const useUserControllerDeleteUser = <TError = void,
     }
     
 /**
+ * Send a password reset email to a user in your organization. Only organization admins can use this endpoint.
+ * @summary Trigger password reset for a user
+ */
+export const userControllerTriggerPasswordResetForUser = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/${id}/trigger-password-reset`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getUserControllerTriggerPasswordResetForUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['userControllerTriggerPasswordResetForUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  userControllerTriggerPasswordResetForUser(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UserControllerTriggerPasswordResetForUserMutationResult = NonNullable<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>>
+    
+    export type UserControllerTriggerPasswordResetForUserMutationError = void
+
+    /**
+ * @summary Trigger password reset for a user
+ */
+export const useUserControllerTriggerPasswordResetForUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof userControllerTriggerPasswordResetForUser>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUserControllerTriggerPasswordResetForUserMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Send a password reset email to the provided email address. If the email exists in the system, a reset link will be sent.
  * @summary Trigger password reset
  */
