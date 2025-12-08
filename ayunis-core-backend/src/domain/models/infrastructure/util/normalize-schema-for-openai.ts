@@ -1,9 +1,11 @@
 /**
- * Recursively adds `additionalProperties: false` to all object types in a JSON schema.
- * OpenAI's strict mode requires this property to be set on all object schemas.
+ * Recursively normalizes a JSON schema for OpenAI's strict mode.
+ * OpenAI's strict mode requires:
+ * 1. `additionalProperties: false` on all object schemas
+ * 2. All properties must be listed in the `required` array
  *
  * @param schema - The JSON schema to normalize
- * @returns The normalized schema with `additionalProperties: false` added to all object types
+ * @returns The normalized schema compatible with OpenAI strict mode
  */
 export function normalizeSchemaForOpenAI(
   schema: Record<string, unknown> | undefined,
@@ -23,12 +25,21 @@ export function normalizeSchemaForOpenAI(
       string,
       Record<string, unknown>
     >;
+
+    // Normalize nested properties
     normalized.properties = Object.fromEntries(
       Object.entries(props).map(([key, value]) => [
         key,
         normalizeSchemaForOpenAI(value),
       ]),
     );
+
+    // Ensure all properties are listed in required array
+    // OpenAI strict mode requires ALL properties to be required
+    if (normalized.type === 'object') {
+      const propertyNames = Object.keys(props);
+      normalized.required = propertyNames;
+    }
   }
 
   // Handle array items
