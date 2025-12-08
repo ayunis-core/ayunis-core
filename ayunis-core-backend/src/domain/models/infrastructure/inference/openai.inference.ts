@@ -19,6 +19,7 @@ import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
 
 @Injectable()
 export class OpenAIInferenceHandler extends InferenceHandler {
@@ -91,7 +92,9 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       type: 'function' as const,
       name: tool.name,
       description: tool.description,
-      parameters: tool.parameters as Record<string, unknown> | null,
+      parameters: normalizeSchemaForOpenAI(
+        tool.parameters as Record<string, unknown> | undefined,
+      ) as Record<string, unknown> | null,
       strict: true,
     };
   };

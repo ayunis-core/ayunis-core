@@ -21,6 +21,7 @@ import { UserMessage } from 'src/domain/messages/domain/messages/user-message.en
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
 
 @Injectable()
 export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
@@ -98,7 +99,9 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       type: 'function' as const,
       name: tool.name,
       description: tool.description,
-      parameters: tool.parameters as FunctionParameters | null,
+      parameters: normalizeSchemaForOpenAI(
+        tool.parameters as Record<string, unknown> | undefined,
+      ) as FunctionParameters | null,
       strict: true,
     };
   };
