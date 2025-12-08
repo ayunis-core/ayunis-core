@@ -5,6 +5,7 @@ import { RetrieveFileContentUseCase } from './application/use-cases/retrieve-fil
 import { FileRetrieverType } from './domain/value-objects/file-retriever-type.enum';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
+import { DoclingFileRetrieverHandler } from './infrastructure/adapters/docling-file-retriever.handler';
 
 @Module({
   imports: [forwardRef(() => ModelsModule)],
@@ -12,12 +13,14 @@ import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-p
     FileRetrieverRegistry,
     MistralFileRetrieverHandler,
     NpmPdfParseFileRetrieverHandler,
+    DoclingFileRetrieverHandler,
     RetrieveFileContentUseCase,
     {
       provide: FileRetrieverRegistry,
       useFactory: (
         mistralHandler: MistralFileRetrieverHandler,
         npmPdfParseHandler: NpmPdfParseFileRetrieverHandler,
+        doclingHandler: DoclingFileRetrieverHandler,
       ) => {
         const registry = new FileRetrieverRegistry();
         registry.registerHandler(FileRetrieverType.MISTRAL, mistralHandler);
@@ -25,9 +28,14 @@ import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-p
           FileRetrieverType.NPM_PDF_PARSE,
           npmPdfParseHandler,
         );
+        registry.registerHandler(FileRetrieverType.DOCLING, doclingHandler);
         return registry;
       },
-      inject: [MistralFileRetrieverHandler, NpmPdfParseFileRetrieverHandler],
+      inject: [
+        MistralFileRetrieverHandler,
+        NpmPdfParseFileRetrieverHandler,
+        DoclingFileRetrieverHandler,
+      ],
     },
   ],
   exports: [RetrieveFileContentUseCase, FileRetrieverRegistry],

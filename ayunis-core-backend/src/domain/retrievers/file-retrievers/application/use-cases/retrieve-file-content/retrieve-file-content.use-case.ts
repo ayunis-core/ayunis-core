@@ -45,8 +45,13 @@ export class RetrieveFileContentUseCase {
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.MISTRAL,
         );
+      } else if (process.env.DOCLING_API_KEY) {
+        // Use Docling if API key is configured
+        handler = this.fileRetrieverRegistry.getHandler(
+          FileRetrieverType.DOCLING,
+        );
       } else {
-        // Use NpmPdfParse if Mistral is not permitted
+        // Use NpmPdfParse as fallback
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.NPM_PDF_PARSE,
         );
