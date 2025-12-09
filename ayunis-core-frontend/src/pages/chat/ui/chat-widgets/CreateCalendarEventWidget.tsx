@@ -86,6 +86,7 @@ export default function CreateCalendarEventWidget({
     params.location,
     params.start,
     params.end,
+    content.id,
   ]);
 
   function combineDateTime(d?: Date, time?: string): string | undefined {

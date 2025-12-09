@@ -37,7 +37,7 @@ export default function SendEmailWidget({
     setSubject(params.subject || '');
     setBody(params.body || '');
     setTo(params.to || '');
-  }, [params.subject, params.body, params.to]);
+  }, [params.subject, params.body, params.to, content.id]);
 
   const mailtoHref = useMemo(() => {
     const mailtoPath = to ? encodeURIComponent(to) : '';
