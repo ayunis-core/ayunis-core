@@ -6,6 +6,7 @@ import {
 } from 'src/domain/rag/indexers/application/ports/indexer';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { IngestContentUseCase } from './use-cases/ingest-content/ingest-content.use-case';
+import { IngestContentCommand } from './use-cases/ingest-content/ingest-content.command';
 import { SearchContentUseCase } from './use-cases/search-content/search-content.use-case';
 import { UUID } from 'crypto';
 import { DeleteContentUseCase } from './use-cases/delete-content/delete-content.use-case';
@@ -22,7 +23,13 @@ export class ParentChildIndexerAdapter extends IndexerPort {
   }
 
   async ingest(params: IngestInput): Promise<void> {
-    await this.ingestContentUseCase.execute(params);
+    await this.ingestContentUseCase.execute(
+      new IngestContentCommand({
+        orgId: params.orgId,
+        indexEntry: params.indexEntry,
+        content: params.content,
+      }),
+    );
   }
 
   async search(input: SearchInput): Promise<IndexEntry[]> {

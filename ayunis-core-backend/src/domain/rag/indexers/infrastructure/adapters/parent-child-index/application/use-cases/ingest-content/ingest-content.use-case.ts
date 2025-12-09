@@ -26,9 +26,8 @@ export class IngestContentUseCase {
     this.logger.debug('ingest content', {
       command,
     });
-    await this.parentChildIndexerRepository.delete(
-      command.indexEntry.relatedDocumentId,
-    );
+    // Note: Deletion is handled at the source level (CreateTextSourceUseCase)
+    // to avoid race conditions when indexing multiple chunks in parallel
     const childChunkTexts = this.splitTextUseCase.execute(
       new SplitTextCommand(command.content, SplitterType.RECURSIVE),
     );
