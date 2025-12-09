@@ -1,4 +1,10 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { FileRetrieverResult } from '../../../domain/file-retriever-result.entity';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
@@ -11,8 +17,7 @@ import { FileRetrieverUnexpectedError } from '../../file-retriever.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
-import { ConfigService } from '@nestjs/config';
-import { RetrievalConfig } from 'src/config/retrieval.config';
+import retrievalConfig from 'src/config/retrieval.config';
 
 @Injectable()
 export class RetrieveFileContentUseCase {
@@ -22,7 +27,8 @@ export class RetrieveFileContentUseCase {
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
     private readonly contextService: ContextService,
-    private readonly configService: ConfigService,
+    @Inject(retrievalConfig.KEY)
+    private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
 
   async execute(
@@ -44,12 +50,12 @@ export class RetrieveFileContentUseCase {
         permittedProviders.length > 0 &&
         permittedProviders.some((p) => p.provider === ModelProvider.MISTRAL)
       ) {
-        // Prefer Mistral if it is permitted
+        // Use Mistral if it is permitted
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.MISTRAL,
         );
-      } else if (this.configService.get<RetrievalConfig>('retrieval')?.docling.apiKey) {
-        // Use Docling if API key is configured
+      } else if (this.config.docling.serviceUrl) {
+        // Use Docling if service URL is configured
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.DOCLING,
         );

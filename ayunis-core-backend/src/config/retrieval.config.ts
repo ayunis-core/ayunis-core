@@ -5,7 +5,7 @@ export interface RetrievalConfig {
     apiKey: string | undefined;
   };
   docling: {
-    serviceUrl: string;
+    serviceUrl: string | undefined;
     apiKey: string | undefined;
   };
 }
@@ -17,7 +17,7 @@ export default registerAs(
       apiKey: process.env.MISTRAL_API_KEY,
     },
     docling: {
-      serviceUrl: process.env.DOCLING_SERVICE_URL || 'http://localhost:5001',
+      serviceUrl: process.env.DOCLING_SERVICE_URL,
       apiKey: process.env.DOCLING_API_KEY,
     },
   }),
