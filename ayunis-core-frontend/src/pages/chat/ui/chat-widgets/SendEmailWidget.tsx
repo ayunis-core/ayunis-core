@@ -34,9 +34,12 @@ export default function SendEmailWidget({
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
-    setSubject(params.subject || '');
-    setBody(params.body || '');
-    setTo(params.to || '');
+    const updateWidget = () => {
+      setSubject(params.subject || '');
+      setBody(params.body || '');
+      setTo(params.to || '');
+    };
+    updateWidget();
   }, [params.subject, params.body, params.to, content.id]);
 
   const mailtoHref = useMemo(() => {

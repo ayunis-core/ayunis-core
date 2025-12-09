@@ -65,21 +65,24 @@ export default function CreateCalendarEventWidget({
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
-    setTitle(params.title || '');
-    setDescription(params.description || '');
-    setLocation(params.location || '');
-    setStartDate(params.start ? new Date(params.start) : undefined);
-    setEndDate(params.end ? new Date(params.end) : undefined);
-    setStartTime(
-      params.start
-        ? new Date(params.start).toISOString().substring(11, 19)
-        : '10:30:00',
-    );
-    setEndTime(
-      params.end
-        ? new Date(params.end).toISOString().substring(11, 19)
-        : '11:30:00',
-    );
+    const updateWidget = () => {
+      setTitle(params.title || '');
+      setDescription(params.description || '');
+      setLocation(params.location || '');
+      setStartDate(params.start ? new Date(params.start) : undefined);
+      setEndDate(params.end ? new Date(params.end) : undefined);
+      setStartTime(
+        params.start
+          ? new Date(params.start).toISOString().substring(11, 19)
+          : '10:30:00',
+      );
+      setEndTime(
+        params.end
+          ? new Date(params.end).toISOString().substring(11, 19)
+          : '11:30:00',
+      );
+    };
+    updateWidget();
   }, [
     params.title,
     params.description,
