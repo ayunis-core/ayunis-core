@@ -1,4 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import axios from 'axios';
+import FormData from 'form-data';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { FileRetrieverHandler } from '../../application/ports/file-retriever.handler';
 import {
   FileRetrieverResult,
@@ -9,18 +12,19 @@ import {
   FileRetrieverUnexpectedError,
 } from '../../application/file-retriever.errors';
 import { File } from '../../domain/file.entity';
-import { getDoclingDocumentProcessingAPI } from 'src/common/clients/docling/generated/doclingDocumentProcessingAPI';
-import {
-  ConversionResult,
-  TaskStatus,
-} from 'src/common/clients/docling/generated/doclingDocumentProcessingAPI.schemas';
+import { ConvertResponse } from 'src/common/clients/docling/generated/ayunisDocumentProcessing.schemas';
+import retrievalConfig from 'src/config/retrieval.config';
 
 @Injectable()
 export class DoclingFileRetrieverHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(DoclingFileRetrieverHandler.name);
-  private readonly doclingApi = getDoclingDocumentProcessingAPI();
-  private readonly MAX_POLL_ATTEMPTS = 60;
-  private readonly POLL_INTERVAL_MS = 2000;
+
+  constructor(
+    @Inject(retrievalConfig.KEY)
+    private readonly config: ConfigType<typeof retrievalConfig>,
+  ) {
+    super();
+  }
 
   async processFile(file: File): Promise<FileRetrieverResult> {
     try {
@@ -28,21 +32,33 @@ export class DoclingFileRetrieverHandler extends FileRetrieverHandler {
         `Processing file with Docling: ${file.filename} (${file.fileType})`,
       );
 
-      // Convert Buffer to Blob for upload
-      const blobPart: BlobPart = file.fileData as unknown as BlobPart;
-      const fileBlob = new Blob([blobPart], { type: file.fileType });
+      // Use form-data package for proper multipart handling in Node.js
+      const formData = new FormData();
+      formData.append('file', file.fileData, {
+        filename: file.filename,
+        contentType: file.fileType,
+      });
 
-      // Submit conversion task
-      const taskResponse =
-        await this.doclingApi.convertDocumentUploadConvertUploadPost(
-          { file: fileBlob },
-          { output_format: 'markdown' },
-        );
+      // Make request with fresh axios (no default headers interfering)
+      const response = await axios.post<ConvertResponse>(
+        `${this.config.docling.serviceUrl}/convert/file`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            ...(this.config.docling.apiKey && {
+              'X-API-Key': this.config.docling.apiKey,
+            }),
+          },
+          timeout: 120000,
+        },
+      );
 
-      this.logger.debug(`Docling task created: ${taskResponse.task_id}`);
+      const result = response.data;
 
-      // Poll for completion
-      const result = await this.pollForCompletion(taskResponse.task_id);
+      this.logger.debug(
+        `Docling conversion complete: ${result.filename} (${result.pages ?? 'unknown'} pages)`,
+      );
 
       // Parse and return result
       return this.parseResponse(result);
@@ -62,37 +78,11 @@ export class DoclingFileRetrieverHandler extends FileRetrieverHandler {
     }
   }
 
-  private async pollForCompletion(taskId: string): Promise<ConversionResult> {
-    for (let attempt = 0; attempt < this.MAX_POLL_ATTEMPTS; attempt++) {
-      const result = await this.doclingApi.getTaskStatusTasksTaskIdGet(taskId);
-
-      if (result.status === TaskStatus.completed) {
-        return result;
-      }
-
-      if (result.status === TaskStatus.failed) {
-        throw new FileRetrievalFailedError(
-          result.error || 'Docling task failed',
-          { taskId, provider: 'docling' },
-        );
-      }
-
-      // Wait before next poll
-      await this.sleep(this.POLL_INTERVAL_MS);
-    }
-
-    throw new FileRetrievalFailedError(
-      `Docling task timed out after ${(this.MAX_POLL_ATTEMPTS * this.POLL_INTERVAL_MS) / 1000} seconds`,
-      { taskId, provider: 'docling' },
-    );
-  }
-
-  private parseResponse(result: ConversionResult): FileRetrieverResult {
-    const content = result.content;
+  private parseResponse(result: ConvertResponse): FileRetrieverResult {
+    const content = result.markdown;
 
     if (!content) {
       throw new FileRetrievalFailedError('Empty content from Docling', {
-        taskId: result.task_id,
         provider: 'docling',
       });
     }
@@ -102,13 +92,7 @@ export class DoclingFileRetrieverHandler extends FileRetrieverHandler {
 
     return new FileRetrieverResult(pages, {
       provider: 'docling',
-      taskId: result.task_id,
-      pageCount: result.page_count,
-      processingTimeMs: result.processing_time_ms,
+      pageCount: result.pages,
     });
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

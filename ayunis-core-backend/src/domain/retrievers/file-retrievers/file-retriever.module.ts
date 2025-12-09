@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './infrastructure/adapters/mistral-file-retriever.handler';
 import { FileRetrieverRegistry } from './application/file-retriever-handler.registry';
 import { RetrieveFileContentUseCase } from './application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
@@ -6,9 +7,13 @@ import { FileRetrieverType } from './domain/value-objects/file-retriever-type.en
 import { ModelsModule } from 'src/domain/models/models.module';
 import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
 import { DoclingFileRetrieverHandler } from './infrastructure/adapters/docling-file-retriever.handler';
+import retrievalConfig from 'src/config/retrieval.config';
 
 @Module({
-  imports: [forwardRef(() => ModelsModule)],
+  imports: [
+    forwardRef(() => ModelsModule),
+    ConfigModule.forFeature(retrievalConfig),
+  ],
   providers: [
     FileRetrieverRegistry,
     MistralFileRetrieverHandler,

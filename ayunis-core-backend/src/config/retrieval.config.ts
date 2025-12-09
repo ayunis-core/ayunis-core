@@ -1,7 +1,24 @@
 import { registerAs } from '@nestjs/config';
 
-export const retrievalConfig = registerAs('retrieval', () => ({
+export interface RetrievalConfig {
   mistral: {
-    apiKey: process.env.MISTRAL_API_KEY,
-  },
-}));
+    apiKey: string | undefined;
+  };
+  docling: {
+    serviceUrl: string;
+    apiKey: string | undefined;
+  };
+}
+
+export default registerAs(
+  'retrieval',
+  (): RetrievalConfig => ({
+    mistral: {
+      apiKey: process.env.MISTRAL_API_KEY,
+    },
+    docling: {
+      serviceUrl: process.env.DOCLING_SERVICE_URL || 'http://localhost:5001',
+      apiKey: process.env.DOCLING_API_KEY,
+    },
+  }),
+);
