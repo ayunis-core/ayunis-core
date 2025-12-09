@@ -32,13 +32,12 @@ export default function SendEmailWidget({
   const [to, setTo] = useState<string>(initialTo);
   const [copied, setCopied] = useState<boolean>(false);
 
-  // Reset state when content changes (for new streaming content)
+  // Update state when params change (for streaming updates)
   useEffect(() => {
-    setSubject(initialSubject);
-    setBody(initialBody);
-    setTo(initialTo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content.id]); // Only reset when content changes, not on every param change
+    setSubject(params.subject || '');
+    setBody(params.body || '');
+    setTo(params.to || '');
+  }, [params.subject, params.body, params.to]);
 
   const mailtoHref = useMemo(() => {
     const mailtoPath = to ? encodeURIComponent(to) : '';

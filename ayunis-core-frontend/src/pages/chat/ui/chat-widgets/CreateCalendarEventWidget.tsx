@@ -63,17 +63,30 @@ export default function CreateCalendarEventWidget({
   const [isStartDatePickerOpen, setIsStartDatePickerOpen] = useState(false);
   const [isEndDatePickerOpen, setIsEndDatePickerOpen] = useState(false);
 
-  // Reset state when params change (for new streaming content)
+  // Update state when params change (for streaming updates)
   useEffect(() => {
-    setTitle(initialTitle);
-    setDescription(initialDescription);
-    setLocation(initialLocation);
-    setStartDate(initialStartDate);
-    setEndDate(initialEndDate);
-    setStartTime(initialStartTime);
-    setEndTime(initialEndTime);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content.id]); // Only reset when content changes, not on every param change
+    setTitle(params.title || '');
+    setDescription(params.description || '');
+    setLocation(params.location || '');
+    setStartDate(params.start ? new Date(params.start) : undefined);
+    setEndDate(params.end ? new Date(params.end) : undefined);
+    setStartTime(
+      params.start
+        ? new Date(params.start).toISOString().substring(11, 19)
+        : '10:30:00',
+    );
+    setEndTime(
+      params.end
+        ? new Date(params.end).toISOString().substring(11, 19)
+        : '11:30:00',
+    );
+  }, [
+    params.title,
+    params.description,
+    params.location,
+    params.start,
+    params.end,
+  ]);
 
   function combineDateTime(d?: Date, time?: string): string | undefined {
     if (!d || !time) {
