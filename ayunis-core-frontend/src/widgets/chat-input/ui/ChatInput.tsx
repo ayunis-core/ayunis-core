@@ -183,6 +183,37 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const canSend =
       (message.trim() || pendingImages.length > 0) && (modelId || agentId);
 
+    function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+      // Ensure emojis are preserved when pasting
+      // Get the pasted text from clipboard
+      const pastedText = e.clipboardData.getData('text/plain');
+      
+      // If there's no text or it's empty, let default behavior handle it
+      if (!pastedText) return;
+
+      // Prevent default to handle paste manually
+      e.preventDefault();
+
+      const target = e.currentTarget;
+      const start = target.selectionStart ?? 0;
+      const end = target.selectionEnd ?? 0;
+
+      // Insert the pasted text at cursor position, preserving emojis
+      const newValue = 
+        message.substring(0, start) + 
+        pastedText + 
+        message.substring(end);
+
+      setMessage(newValue);
+
+      // Set cursor position after pasted content
+      // Need to wait for React to update
+      setTimeout(() => {
+        const newCursorPos = start + pastedText.length;
+        target.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    }
+
     return (
       <div
         ref={containerRef}
@@ -215,6 +246,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 value={message}
                 autoFocus
                 onChange={(e) => setMessage(e.target.value)}
+                onPaste={handlePaste}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={t('chatInput.placeholder')}
