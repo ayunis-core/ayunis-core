@@ -9,6 +9,7 @@ import {
   FileRetrieverPage,
 } from '../../../domain/file-retriever-result.entity';
 import { ContextService } from 'src/common/context/services/context.service';
+import retrievalConfig from 'src/config/retrieval.config';
 
 describe('ProcessFileUseCase', () => {
   let useCase: RetrieveFileContentUseCase;
@@ -16,6 +17,16 @@ describe('ProcessFileUseCase', () => {
   let mockRegistry: Partial<FileRetrieverRegistry>;
   let mockGetProviders: Partial<GetAllPermittedProvidersUseCase>;
   let mockContextService: Partial<ContextService>;
+
+  const mockRetrievalConfig = {
+    mistral: {
+      apiKey: undefined,
+    },
+    docling: {
+      serviceUrl: undefined,
+      apiKey: undefined,
+    },
+  };
 
   beforeEach(async () => {
     mockHandler = { processFile: jest.fn() };
@@ -38,6 +49,7 @@ describe('ProcessFileUseCase', () => {
           useValue: mockGetProviders,
         },
         { provide: ContextService, useValue: mockContextService },
+        { provide: retrievalConfig.KEY, useValue: mockRetrievalConfig },
       ],
     }).compile();
 

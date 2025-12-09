@@ -53,7 +53,6 @@ export class DoclingFileRetrieverHandler extends FileRetrieverHandler {
           timeout: 120000,
         },
       );
-      this.logger.debug(`Result of docling parsing: ${response.data.markdown}`);
 
       const result = response.data;
 
