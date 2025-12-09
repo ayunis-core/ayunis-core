@@ -25,13 +25,13 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
   }
 
   async delete(relatedDocumentId: UUID) {
-    const parentChunk = await this.parentChunkRepository.findOne({
+    const parentChunks = await this.parentChunkRepository.find({
       where: { relatedDocumentId },
     });
-    if (!parentChunk) {
+    if (parentChunks.length === 0) {
       return;
     }
-    await this.parentChunkRepository.remove(parentChunk);
+    await this.parentChunkRepository.remove(parentChunks);
   }
 
   async find(

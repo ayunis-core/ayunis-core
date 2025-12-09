@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import {
   FileSource,
   TextSource,
@@ -24,6 +25,8 @@ import { UUID } from 'crypto';
 import { IngestContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.command';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { IngestContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-content/ingest-content.use-case';
+import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
+import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { SourceRepository } from '../../ports/source.repository';
@@ -40,11 +43,13 @@ export class CreateTextSourceUseCase {
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly ingestContentUseCase: IngestContentUseCase,
+    private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
   ) {}
 
   async execute(command: CreateFileSourceCommand): Promise<FileSource>;
   async execute(command: CreateUrlSourceCommand): Promise<UrlSource>;
+  @Transactional()
   async execute(command: CreateTextSourceCommand): Promise<TextSource> {
     this.logger.debug('Creating text source');
     const orgId = this.contextService.get('orgId');
@@ -156,7 +161,9 @@ export class CreateTextSourceUseCase {
   }
 
   /**
-   * Index source content using the indexers module
+   * Index source content using the indexers module.
+   * Uses delete-once-then-parallel-ingest pattern to avoid race conditions
+   * while maintaining performance for parallel chunk processing.
    */
   private async indexSourceContentChunks(params: {
     source: TextSource;
@@ -164,6 +171,14 @@ export class CreateTextSourceUseCase {
   }): Promise<void> {
     this.logger.debug(`Indexing content for source: ${params.source.id}`);
 
+    // Step 1: Delete any existing index entries for this source ONCE
+    // (handles re-upload/re-index scenarios, no-op for new sources)
+    await this.deleteContentUseCase.execute(
+      new DeleteContentCommand({ documentId: params.source.id }),
+    );
+
+    // Step 2: Ingest all chunks in PARALLEL
+    // Safe because deletion is handled above, not in the ingest use case
     await Promise.all(
       params.source.contentChunks.map(async (chunk) => {
         const ingestCommand = new IngestContentCommand({

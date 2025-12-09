@@ -11,6 +11,8 @@ import { FileRetrieverUnexpectedError } from '../../file-retriever.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
+import { ConfigService } from '@nestjs/config';
+import { RetrievalConfig } from 'src/config/retrieval.config';
 
 @Injectable()
 export class RetrieveFileContentUseCase {
@@ -20,6 +22,7 @@ export class RetrieveFileContentUseCase {
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
     private readonly contextService: ContextService,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(
@@ -45,7 +48,7 @@ export class RetrieveFileContentUseCase {
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.MISTRAL,
         );
-      } else if (process.env.DOCLING_API_KEY) {
+      } else if (this.configService.get<RetrievalConfig>('retrieval')?.docling.apiKey) {
         // Use Docling if API key is configured
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.DOCLING,
