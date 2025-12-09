@@ -6,6 +6,9 @@ interface XAxisTickProps {
   doTruncate?: boolean;
 }
 
+const ROTATE_THRESHOLD = 12;
+const TRUNCATE_LENGTH = 20;
+
 export function XAxisTick({
   x,
   y,
@@ -14,18 +17,27 @@ export function XAxisTick({
   doTruncate = false,
 }: XAxisTickProps) {
   const original = payload?.value?.toString() ?? '';
-  const display =
-    doTruncate && maxChars > 0
-      ? `${original}`.length > maxChars
-        ? `${original.slice(0, Math.max(0, maxChars - 1))}…`
-        : original
+
+  // Always truncate long labels
+  const truncated =
+    original.length > TRUNCATE_LENGTH
+      ? `${original.slice(0, TRUNCATE_LENGTH)}…`
       : original;
+
+  // Additional truncation if doTruncate is set (many data points)
+  const display =
+    doTruncate && maxChars > 0 && truncated.length > maxChars
+      ? `${truncated.slice(0, Math.max(0, maxChars - 1))}…`
+      : truncated;
+
+  const shouldRotate = original.length > ROTATE_THRESHOLD;
 
   return (
     <g transform={`translate(${x},${y})`}>
       <text
-        dy={16}
-        textAnchor="middle"
+        dy={shouldRotate ? 8 : 16}
+        textAnchor={shouldRotate ? 'end' : 'middle'}
+        transform={shouldRotate ? 'rotate(-25)' : undefined}
         className="fill-muted-foreground text-xs"
       >
         <title>{original}</title>

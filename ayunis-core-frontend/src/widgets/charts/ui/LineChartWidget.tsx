@@ -72,10 +72,14 @@ export default function LineChartWidget({
       perPointPx={PER_POINT_PX}
       key={`${content.name}-${content.id}`}
     >
-      <LineChart data={chartData}>
+      <LineChart
+        data={chartData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+      >
         <CartesianGrid />
         <XAxis
           dataKey="name"
+          interval={0}
           tick={
             <XAxisTick
               maxChars={MAX_TICK_CHARS}
@@ -85,7 +89,9 @@ export default function LineChartWidget({
         />
         <YAxis />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
+        {yAxisSeries.length > 1 && (
+          <ChartLegend content={<ChartLegendContent />} verticalAlign="top" />
+        )}
         {yAxisSeries.map((series, index) => {
           const slugifiedKey = slugifyForCssVar(series.label);
           return (
