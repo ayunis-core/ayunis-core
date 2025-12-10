@@ -23,16 +23,21 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
       },
       onError: (error: unknown) => {
         console.error('Create predefined integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'INVALID_PREDEFINED_SLUG':
-            toast.error(t('integrations.createPredefinedIntegration.invalidSlug'));
-            break;
-          case 'DUPLICATE_MCP_INTEGRATION':
-            toast.error(t('integrations.createPredefinedIntegration.duplicateIntegration'));
-            break;
-          default:
-            toast.error(t('integrations.createPredefinedIntegration.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'INVALID_PREDEFINED_SLUG':
+              toast.error(t('integrations.createPredefinedIntegration.invalidSlug'));
+              break;
+            case 'DUPLICATE_MCP_INTEGRATION':
+              toast.error(t('integrations.createPredefinedIntegration.duplicateIntegration'));
+              break;
+            default:
+              toast.error(t('integrations.createPredefinedIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.createPredefinedIntegration.error'));
         }
       },
     },

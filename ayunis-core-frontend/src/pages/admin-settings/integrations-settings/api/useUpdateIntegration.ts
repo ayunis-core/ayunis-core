@@ -23,16 +23,21 @@ export function useUpdateIntegration(onSuccess?: () => void) {
       },
       onError: (error: unknown) => {
         console.error('Update integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MCP_INTEGRATION_NOT_FOUND':
-            toast.error(t('integrations.updateIntegration.notFound'));
-            break;
-          case 'INVALID_SERVER_URL':
-            toast.error(t('integrations.updateIntegration.invalidServerUrl'));
-            break;
-          default:
-            toast.error(t('integrations.updateIntegration.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.updateIntegration.notFound'));
+              break;
+            case 'INVALID_SERVER_URL':
+              toast.error(t('integrations.updateIntegration.invalidServerUrl'));
+              break;
+            default:
+              toast.error(t('integrations.updateIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.updateIntegration.error'));
         }
       },
     },

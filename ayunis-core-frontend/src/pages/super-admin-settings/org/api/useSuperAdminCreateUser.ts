@@ -39,16 +39,21 @@ export function useSuperAdminCreateUser(
         }
       },
       onError: (err) => {
-        const { code } = extractErrorData(err);
-        switch (code) {
-          case 'USER_EMAIL_PROVIDER_BLACKLISTED':
-            showError(t('createUser.emailProviderBlacklisted'));
-            break;
-          case 'USER_ALREADY_EXISTS':
-            showError(t('createUser.userAlreadyExists'));
-            break;
-          default:
-            showError(t('createUser.error'));
+        try {
+          const { code } = extractErrorData(err);
+          switch (code) {
+            case 'USER_EMAIL_PROVIDER_BLACKLISTED':
+              showError(t('createUser.emailProviderBlacklisted'));
+              break;
+            case 'USER_ALREADY_EXISTS':
+              showError(t('createUser.userAlreadyExists'));
+              break;
+            default:
+              showError(t('createUser.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('createUser.error'));
         }
       },
     },

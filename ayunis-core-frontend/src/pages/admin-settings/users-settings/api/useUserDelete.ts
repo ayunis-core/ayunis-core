@@ -30,13 +30,18 @@ export function useUserDelete(options?: UseUserDeleteOptions) {
       },
       onError: (err) => {
         console.error('Error deleting user', err);
-        const { code } = extractErrorData(err);
-        switch (code) {
-          case 'USER_NOT_FOUND':
-            showError(t('userDelete.notFound'));
-            break;
-          default:
-            showError(t('userDelete.error'));
+        try {
+          const { code } = extractErrorData(err);
+          switch (code) {
+            case 'USER_NOT_FOUND':
+              showError(t('userDelete.notFound'));
+              break;
+            default:
+              showError(t('userDelete.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('userDelete.error'));
         }
       },
     },

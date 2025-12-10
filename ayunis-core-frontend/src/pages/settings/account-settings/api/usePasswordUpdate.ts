@@ -38,16 +38,21 @@ export function usePasswordUpdate() {
         },
         onError: (error) => {
           console.error('Password update failed:', error);
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'INVALID_CREDENTIALS':
-              showError(t('account.error.incorrectCurrentPassword'));
-              break;
-            case 'INVALID_PASSWORD':
-              showError(t('account.error.invalidPassword'));
-              break;
-            default:
-              showError(t('account.error.updateFailed'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'INVALID_CREDENTIALS':
+                showError(t('account.error.incorrectCurrentPassword'));
+                break;
+              case 'INVALID_PASSWORD':
+                showError(t('account.error.invalidPassword'));
+                break;
+              default:
+                showError(t('account.error.updateFailed'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('account.error.updateFailed'));
           }
         },
       },

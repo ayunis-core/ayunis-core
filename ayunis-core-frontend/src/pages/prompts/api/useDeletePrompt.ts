@@ -18,13 +18,18 @@ export function useDeletePrompt() {
       },
       onError: (error) => {
         console.error('Delete prompt failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'PROMPT_NOT_FOUND':
-            showError(t('notFound'));
-            break;
-          default:
-            showError(t('deleteError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'PROMPT_NOT_FOUND':
+              showError(t('notFound'));
+              break;
+            default:
+              showError(t('deleteError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('deleteError'));
         }
       },
       onSettled: () => {

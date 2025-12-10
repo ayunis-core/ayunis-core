@@ -35,19 +35,24 @@ export function useValidateIntegration() {
       },
       onError: (error: unknown, variables) => {
         console.error('Validate integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MCP_CONNECTION_TIMEOUT':
-            toast.error(t('integrations.validateIntegration.connectionTimeout'));
-            break;
-          case 'MCP_AUTHENTICATION_FAILED':
-            toast.error(t('integrations.validateIntegration.authenticationFailed'));
-            break;
-          case 'MCP_INTEGRATION_NOT_FOUND':
-            toast.error(t('integrations.validateIntegration.notFound'));
-            break;
-          default:
-            toast.error(t('integrations.validateIntegration.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_CONNECTION_TIMEOUT':
+              toast.error(t('integrations.validateIntegration.connectionTimeout'));
+              break;
+            case 'MCP_AUTHENTICATION_FAILED':
+              toast.error(t('integrations.validateIntegration.authenticationFailed'));
+              break;
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.validateIntegration.notFound'));
+              break;
+            default:
+              toast.error(t('integrations.validateIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.validateIntegration.error'));
         }
         setValidatingIds((prev) => {
           const next = new Set(prev);

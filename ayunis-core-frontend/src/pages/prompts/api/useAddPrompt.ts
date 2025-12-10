@@ -52,10 +52,15 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
         },
         onError: (error) => {
           console.error('Create prompt failed:', error);
-          const { code } = extractErrorData(error);
-          switch (code) {
-            default:
-              showError(t('createError'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              default:
+                showError(t('createError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('createError'));
           }
         },
       },

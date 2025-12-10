@@ -22,19 +22,32 @@ export const Route = createFileRoute('/_authenticated')({
       }
       context.user = response;
     } catch (error) {
-      const { code } = extractErrorData(error);
-      if (code === 'EMAIL_NOT_VERIFIED') {
+      try {
+        const { code } = extractErrorData(error);
+        if (code === 'EMAIL_NOT_VERIFIED') {
+          throw redirect({
+            to: '/email-confirm',
+          });
+        }
+
         throw redirect({
-          to: '/email-confirm',
+          to: '/login',
+          search: {
+            redirect: location.pathname,
+          },
+        });
+      } catch (e) {
+        // If extractErrorData threw (non-AxiosError), redirect to login anyway
+        if (e instanceof Error && e.message.includes('redirect')) {
+          throw e; // Re-throw redirect
+        }
+        throw redirect({
+          to: '/login',
+          search: {
+            redirect: location.pathname,
+          },
         });
       }
-
-      throw redirect({
-        to: '/login',
-        search: {
-          redirect: location.pathname,
-        },
-      });
     }
   },
 });

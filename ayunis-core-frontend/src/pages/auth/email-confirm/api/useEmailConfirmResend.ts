@@ -35,14 +35,19 @@ export function useEmailConfirmResend() {
           form.reset();
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'RATE_LIMIT_EXCEEDED':
-              showError(t('emailConfirm.rateLimitExceeded'));
-              break;
-            default:
-              showError(t('emailConfirm.error'));
-              break;
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'RATE_LIMIT_EXCEEDED':
+                showError(t('emailConfirm.rateLimitExceeded'));
+                break;
+              default:
+                showError(t('emailConfirm.error'));
+                break;
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('emailConfirm.error'));
           }
         },
       },

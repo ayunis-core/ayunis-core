@@ -40,16 +40,21 @@ export function useResetPassword(token: string) {
         void navigate({ to: '/login' });
       },
       onError: (error) => {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'INVALID_TOKEN':
-            showError(t('resetPassword.invalidToken'));
-            break;
-          case 'INVALID_PASSWORD':
-            showError(t('resetPassword.invalidPassword'));
-            break;
-          default:
-            showError(t('resetPassword.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'INVALID_TOKEN':
+              showError(t('resetPassword.invalidToken'));
+              break;
+            case 'INVALID_PASSWORD':
+              showError(t('resetPassword.invalidPassword'));
+              break;
+            default:
+              showError(t('resetPassword.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('resetPassword.error'));
         }
       },
     },

@@ -22,13 +22,18 @@ export function useDeleteIntegration(onSuccess?: () => void) {
       },
       onError: (error: unknown) => {
         console.error('Delete integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MCP_INTEGRATION_NOT_FOUND':
-            toast.error(t('integrations.deleteIntegration.notFound'));
-            break;
-          default:
-            toast.error(t('integrations.deleteIntegration.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.deleteIntegration.notFound'));
+              break;
+            default:
+              toast.error(t('integrations.deleteIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.deleteIntegration.error'));
         }
       },
     },

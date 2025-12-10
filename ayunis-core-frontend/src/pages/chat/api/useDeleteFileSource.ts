@@ -53,13 +53,18 @@ export function useDeleteFileSource({
       },
       onError: (error, _, context) => {
         console.error('Error deleting file source', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'SOURCE_NOT_FOUND':
-            showError(t('chatInput.sourceNotFound'));
-            break;
-          default:
-            showError(t('chatInput.fileSourceDeleteError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'SOURCE_NOT_FOUND':
+              showError(t('chatInput.sourceNotFound'));
+              break;
+            default:
+              showError(t('chatInput.fileSourceDeleteError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('chatInput.fileSourceDeleteError'));
         }
 
         if (context?.previousData && context?.queryKey) {

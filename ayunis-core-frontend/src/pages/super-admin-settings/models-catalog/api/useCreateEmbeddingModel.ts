@@ -24,13 +24,18 @@ export function useCreateEmbeddingModel(onSuccess?: () => void) {
       },
       onError: (error: unknown) => {
         console.error('Create embedding model failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MODEL_ALREADY_EXISTS':
-            toast.error(t('models.alreadyExists'));
-            break;
-          default:
-            toast.error(t('models.createError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MODEL_ALREADY_EXISTS':
+              toast.error(t('models.alreadyExists'));
+              break;
+            default:
+              toast.error(t('models.createError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('models.createError'));
         }
       },
       onSettled: async () => {

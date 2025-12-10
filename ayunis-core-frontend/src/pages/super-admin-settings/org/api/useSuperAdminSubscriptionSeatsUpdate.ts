@@ -19,21 +19,26 @@ export default function useSuperAdminSubscriptionSeatsUpdate(orgId: string) {
           showSuccess(t('licenseSeats.updateSeatsSuccess'));
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'SUBSCRIPTION_NOT_FOUND':
-              showError(t('licenseSeats.updateSeatsErrorSubscriptionNotFound'));
-              break;
-            case 'TOO_MANY_USED_SEATS':
-              showError(t('licenseSeats.updateSeatsErrorTooManyUsedSeats'));
-              break;
-            case 'SUBSCRIPTION_ALREADY_CANCELLED':
-              showError(
-                t('licenseSeats.updateSeatsErrorSubscriptionAlreadyCancelled'),
-              );
-              break;
-            default:
-              showError(t('licenseSeats.updateSeatsErrorUnexpectedError'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'SUBSCRIPTION_NOT_FOUND':
+                showError(t('licenseSeats.updateSeatsErrorSubscriptionNotFound'));
+                break;
+              case 'TOO_MANY_USED_SEATS':
+                showError(t('licenseSeats.updateSeatsErrorTooManyUsedSeats'));
+                break;
+              case 'SUBSCRIPTION_ALREADY_CANCELLED':
+                showError(
+                  t('licenseSeats.updateSeatsErrorSubscriptionAlreadyCancelled'),
+                );
+                break;
+              default:
+                showError(t('licenseSeats.updateSeatsErrorUnexpectedError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('licenseSeats.updateSeatsErrorUnexpectedError'));
           }
         },
         onSettled: () => {

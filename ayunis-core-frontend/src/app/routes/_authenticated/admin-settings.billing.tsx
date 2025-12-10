@@ -24,10 +24,15 @@ export const Route = createFileRoute('/_authenticated/admin-settings/billing')({
       );
       return { subscription, subscriptionPrice };
     } catch (error) {
-      const { code } = extractErrorData(error);
-      switch (code) {
-        default:
-          throw error;
+      try {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          default:
+            throw error;
+        }
+      } catch {
+        // Non-AxiosError or extractErrorData threw - rethrow original error
+        throw error;
       }
     }
   },

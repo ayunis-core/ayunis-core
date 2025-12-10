@@ -29,13 +29,18 @@ export function useDeleteAgent() {
     },
     onError: (error) => {
       console.error('Delete agent failed:', error);
-      const { code } = extractErrorData(error);
-      switch (code) {
-        case 'AGENT_NOT_FOUND':
-          toast.error(t('delete.notFound'));
-          break;
-        default:
-          toast.error(t('delete.error'));
+      try {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'AGENT_NOT_FOUND':
+            toast.error(t('delete.notFound'));
+            break;
+          default:
+            toast.error(t('delete.error'));
+        }
+      } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
+        toast.error(t('delete.error'));
       }
     },
   });

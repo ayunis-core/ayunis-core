@@ -58,25 +58,30 @@ export function useRegister() {
         },
         onError: (error) => {
           console.error('Registration failed:', error);
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'USER_ALREADY_EXISTS':
-              showError(t('register.emailAlreadyExists'));
-              break;
-            case 'INVALID_PASSWORD':
-              showError(t('register.invalidPassword'));
-              break;
-            case 'USER_EMAIL_PROVIDER_BLACKLISTED':
-              showError(t('register.emailProviderBlacklisted'));
-              break;
-            case 'REGISTRATION_DISABLED':
-              showError(t('register.registrationDisabled'));
-              break;
-            case 'MARKETING_ACCEPTANCE_REQUIRED':
-              showError(t('register.marketingAcceptanceRequired'));
-              break;
-            default:
-              showError(t('register.registrationFailed'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'USER_ALREADY_EXISTS':
+                showError(t('register.emailAlreadyExists'));
+                break;
+              case 'INVALID_PASSWORD':
+                showError(t('register.invalidPassword'));
+                break;
+              case 'USER_EMAIL_PROVIDER_BLACKLISTED':
+                showError(t('register.emailProviderBlacklisted'));
+                break;
+              case 'REGISTRATION_DISABLED':
+                showError(t('register.registrationDisabled'));
+                break;
+              case 'MARKETING_ACCEPTANCE_REQUIRED':
+                showError(t('register.marketingAcceptanceRequired'));
+                break;
+              default:
+                showError(t('register.registrationFailed'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('register.registrationFailed'));
           }
         },
       },

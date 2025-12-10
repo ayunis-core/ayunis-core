@@ -58,19 +58,24 @@ export function useAssignMcpIntegration(
           );
         }
         console.error('Assign MCP integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MCP_INTEGRATION_NOT_FOUND':
-            showError(t('mcpIntegrations.errors.integrationNotFound'));
-            break;
-          case 'MCP_INTEGRATION_ALREADY_ASSIGNED':
-            showError(t('mcpIntegrations.errors.alreadyAssigned'));
-            break;
-          case 'MCP_INTEGRATION_DISABLED':
-            showError(t('mcpIntegrations.errors.integrationDisabled'));
-            break;
-          default:
-            showError(t('mcpIntegrations.errors.failedToConnect'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              showError(t('mcpIntegrations.errors.integrationNotFound'));
+              break;
+            case 'MCP_INTEGRATION_ALREADY_ASSIGNED':
+              showError(t('mcpIntegrations.errors.alreadyAssigned'));
+              break;
+            case 'MCP_INTEGRATION_DISABLED':
+              showError(t('mcpIntegrations.errors.integrationDisabled'));
+              break;
+            default:
+              showError(t('mcpIntegrations.errors.failedToConnect'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('mcpIntegrations.errors.failedToConnect'));
         }
       },
       onSuccess: () => {

@@ -63,10 +63,15 @@ export function useCreateAgent() {
     },
     onError: (error) => {
       console.error('Create agent failed:', error);
-      const { code } = extractErrorData(error);
-      switch (code) {
-        default:
-          toast.error(t('create.error'));
+      try {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          default:
+            toast.error(t('create.error'));
+        }
+      } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
+        toast.error(t('create.error'));
       }
     },
     onSettled: () => {

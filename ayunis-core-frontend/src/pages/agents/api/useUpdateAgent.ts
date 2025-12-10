@@ -71,13 +71,18 @@ export function useUpdateAgent({
     },
     onError: (error) => {
       console.error('Update agent failed:', error);
-      const { code } = extractErrorData(error);
-      switch (code) {
-        case 'AGENT_NOT_FOUND':
-          toast.error(t('update.notFound'));
-          break;
-        default:
-          toast.error(t('update.error'));
+      try {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'AGENT_NOT_FOUND':
+            toast.error(t('update.notFound'));
+            break;
+          default:
+            toast.error(t('update.error'));
+        }
+      } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
+        toast.error(t('update.error'));
       }
     },
   });

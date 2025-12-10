@@ -32,10 +32,15 @@ export function useForgotPassword() {
           void navigate({ to: '/login' });
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          switch (code) {
-            default:
-              showError(t('forgotPassword.error'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              default:
+                showError(t('forgotPassword.error'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('forgotPassword.error'));
           }
         },
       },

@@ -23,16 +23,21 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
       },
       onError: (error: unknown) => {
         console.error('Create custom integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'INVALID_SERVER_URL':
-            toast.error(t('integrations.createCustomIntegration.invalidServerUrl'));
-            break;
-          case 'DUPLICATE_MCP_INTEGRATION':
-            toast.error(t('integrations.createCustomIntegration.duplicateIntegration'));
-            break;
-          default:
-            toast.error(t('integrations.createCustomIntegration.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'INVALID_SERVER_URL':
+              toast.error(t('integrations.createCustomIntegration.invalidServerUrl'));
+              break;
+            case 'DUPLICATE_MCP_INTEGRATION':
+              toast.error(t('integrations.createCustomIntegration.duplicateIntegration'));
+              break;
+            default:
+              toast.error(t('integrations.createCustomIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.createCustomIntegration.error'));
         }
       },
     },

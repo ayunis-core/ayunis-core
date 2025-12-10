@@ -25,13 +25,18 @@ export function useToggleIntegration() {
       },
       onError: (error: unknown, variables) => {
         console.error('Enable integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MCP_INTEGRATION_NOT_FOUND':
-            toast.error(t('integrations.toggleIntegration.notFound'));
-            break;
-          default:
-            toast.error(t('integrations.toggleIntegration.enableError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.toggleIntegration.notFound'));
+              break;
+            default:
+              toast.error(t('integrations.toggleIntegration.enableError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.toggleIntegration.enableError'));
         }
         setTogglingIds((prev) => {
           const next = new Set(prev);
@@ -59,13 +64,18 @@ export function useToggleIntegration() {
       },
       onError: (error: unknown, variables) => {
         console.error('Disable integration failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MCP_INTEGRATION_NOT_FOUND':
-            toast.error(t('integrations.toggleIntegration.notFound'));
-            break;
-          default:
-            toast.error(t('integrations.toggleIntegration.disableError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.toggleIntegration.notFound'));
+              break;
+            default:
+              toast.error(t('integrations.toggleIntegration.disableError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.toggleIntegration.disableError'));
         }
         setTogglingIds((prev) => {
           const next = new Set(prev);

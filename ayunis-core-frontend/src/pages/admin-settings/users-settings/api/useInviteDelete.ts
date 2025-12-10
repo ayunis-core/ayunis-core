@@ -34,13 +34,18 @@ export function useInviteDelete() {
       },
       onError: (error, _, context) => {
         console.log(error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'INVITE_NOT_FOUND':
-            showError(t('inviteDelete.error.inviteNotFound'));
-            break;
-          default:
-            showError(t('inviteDelete.error.unexpectedError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'INVITE_NOT_FOUND':
+              showError(t('inviteDelete.error.inviteNotFound'));
+              break;
+            default:
+              showError(t('inviteDelete.error.unexpectedError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('inviteDelete.error.unexpectedError'));
         }
         queryClient.setQueryData(
           getInvitesControllerGetInvitesQueryKey(),

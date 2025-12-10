@@ -66,16 +66,21 @@ export default function useSuperAdminSubscriptionCreate({
           showSuccess(t('subscription.createSuccess'));
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'SUBSCRIPTION_ALREADY_EXISTS':
-              showError(t('subscription.createErrorAlreadyExists'));
-              break;
-            case 'TOO_MANY_USED_SEATS':
-              showError(t('subscription.createErrorTooManyUsedSeats'));
-              break;
-            default:
-              showError(t('subscription.createErrorUnexpected'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'SUBSCRIPTION_ALREADY_EXISTS':
+                showError(t('subscription.createErrorAlreadyExists'));
+                break;
+              case 'TOO_MANY_USED_SEATS':
+                showError(t('subscription.createErrorTooManyUsedSeats'));
+                break;
+              default:
+                showError(t('subscription.createErrorUnexpected'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('subscription.createErrorUnexpected'));
           }
         },
         onSettled: () => {

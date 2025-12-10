@@ -22,13 +22,18 @@ export function useDeleteModel() {
       },
       onError: (error: unknown) => {
         console.error('Delete model failed:', error);
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'MODEL_NOT_FOUND':
-            toast.error(t('models.notFound'));
-            break;
-          default:
-            toast.error(t('models.deleteError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MODEL_NOT_FOUND':
+              toast.error(t('models.notFound'));
+              break;
+            default:
+              toast.error(t('models.deleteError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('models.deleteError'));
         }
       },
       onSettled: async () => {
