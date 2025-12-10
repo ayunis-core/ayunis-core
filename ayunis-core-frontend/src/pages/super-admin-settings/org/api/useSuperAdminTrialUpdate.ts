@@ -61,19 +61,24 @@ export default function useSuperAdminTrialUpdate({
           showSuccess(t('trial.updateSuccess'));
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'TRIAL_NOT_FOUND':
-              showError(t('trial.updateErrorNotFound'));
-              break;
-            case 'TRIAL_CAPACITY_EXCEEDED':
-              showError(t('trial.updateErrorCapacityExceeded'));
-              break;
-            case 'TRIAL_UPDATE_FAILED':
-              showError(t('trial.updateErrorUnexpected'));
-              break;
-            default:
-              showError(t('trial.updateErrorUnexpected'));
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'TRIAL_NOT_FOUND':
+                showError(t('trial.updateErrorNotFound'));
+                break;
+              case 'TRIAL_CAPACITY_EXCEEDED':
+                showError(t('trial.updateErrorCapacityExceeded'));
+                break;
+              case 'TRIAL_UPDATE_FAILED':
+                showError(t('trial.updateErrorUnexpected'));
+                break;
+              default:
+                showError(t('trial.updateErrorUnexpected'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('trial.updateErrorUnexpected'));
           }
         },
         onSettled: () => {

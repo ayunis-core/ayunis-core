@@ -60,10 +60,15 @@ export default function useSubscriptionCreate() {
           showSuccess(t('subscription.createSuccess'));
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          if (code === 'SUBSCRIPTION_ALREADY_EXISTS') {
-            showError(t('subscription.createErrorAlreadyExists'));
-          } else {
+          try {
+            const { code } = extractErrorData(error);
+            if (code === 'SUBSCRIPTION_ALREADY_EXISTS') {
+              showError(t('subscription.createErrorAlreadyExists'));
+            } else {
+              showError(t('subscription.createErrorUnexpected'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('subscription.createErrorUnexpected'));
           }
         },

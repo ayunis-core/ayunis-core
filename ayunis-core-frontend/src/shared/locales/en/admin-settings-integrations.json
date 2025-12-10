@@ -2,29 +2,40 @@
   "integrations": {
     "createCustomIntegration": {
       "success": "Integration created successfully",
-      "error": "Failed to create integration: {{message}}"
+      "error": "Failed to create integration. Please try again.",
+      "invalidServerUrl": "Invalid server URL. Please check the URL format.",
+      "duplicateIntegration": "An integration with this URL already exists."
     },
     "createPredefinedIntegration": {
       "success": "Integration created successfully",
-      "error": "Failed to create integration: {{message}}"
+      "error": "Failed to create integration. Please try again.",
+      "invalidSlug": "Invalid integration type selected.",
+      "duplicateIntegration": "This integration type is already configured."
     },
     "updateIntegration": {
       "success": "Integration updated successfully",
-      "error": "Failed to update integration: {{message}}"
+      "error": "Failed to update integration. Please try again.",
+      "notFound": "Integration not found. It may have been deleted.",
+      "invalidServerUrl": "Invalid server URL. Please check the URL format."
     },
     "deleteIntegration": {
       "success": "Integration deleted successfully",
-      "error": "Failed to delete integration: {{message}}"
+      "error": "Failed to delete integration. Please try again.",
+      "notFound": "Integration not found. It may have been deleted."
     },
     "toggleIntegration": {
       "enableSuccess": "Integration enabled",
       "disableSuccess": "Integration disabled",
-      "enableError": "Failed to enable integration: {{message}}",
-      "disableError": "Failed to disable integration: {{message}}"
+      "enableError": "Failed to enable integration. Please try again.",
+      "disableError": "Failed to disable integration. Please try again.",
+      "notFound": "Integration not found. It may have been deleted."
     },
     "validateIntegration": {
       "success": "Connected successfully. Found {{prompts}} prompts, {{resources}} resources, {{tools}} tools.",
-      "error": "Connection failed: {{message}}"
+      "error": "Failed to validate integration. Please try again.",
+      "connectionTimeout": "Connection timed out. Please check if the server is running.",
+      "authenticationFailed": "Authentication failed. Please check your credentials.",
+      "notFound": "Integration not found. It may have been deleted."
     },
     "comingSoonDialog": {
       "title": "Coming Soon",

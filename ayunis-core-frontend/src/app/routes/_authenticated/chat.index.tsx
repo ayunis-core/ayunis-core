@@ -86,11 +86,16 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     };
   },
   errorComponent: ({ error }) => {
-    const { code } = extractErrorData(error);
-    if (code === 'MODEL_NOT_FOUND') {
+    try {
+      const { code } = extractErrorData(error);
+      if (code === 'MODEL_NOT_FOUND') {
+        return <NewChatPageNoModelError />;
+      }
+      return <NewChatPageNoModelError />;
+    } catch {
+      // Non-AxiosError (network failure, request cancellation, etc.)
       return <NewChatPageNoModelError />;
     }
-    return <NewChatPageNoModelError />;
   },
   component: RouteComponent,
 });

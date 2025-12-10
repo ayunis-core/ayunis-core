@@ -7,12 +7,15 @@ import {
 } from '../model/editPromptSchema';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 interface UseEditPromptOptions {
   onSuccessCallback?: () => void;
 }
 
 export function useEditPrompt(options?: UseEditPromptOptions) {
+  const { t } = useTranslation('prompts');
   const queryClient = useQueryClient();
   const updatePromptMutation = usePromptsControllerUpdate();
 
@@ -35,14 +38,26 @@ export function useEditPrompt(options?: UseEditPromptOptions) {
       {
         onSuccess: () => {
           void queryClient.invalidateQueries({ queryKey: ['prompts'] });
-          showSuccess('Prompt updated');
+          showSuccess(t('updateSuccess'));
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();
           }
         },
         onError: (error) => {
           console.error('Update prompt failed:', error);
-          showError('Update prompt failed');
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'PROMPT_NOT_FOUND':
+                showError(t('notFound'));
+                break;
+              default:
+                showError(t('updateError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
+            showError(t('updateError'));
+          }
         },
       },
     );

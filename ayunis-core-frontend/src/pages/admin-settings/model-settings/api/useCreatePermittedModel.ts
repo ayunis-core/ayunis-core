@@ -47,26 +47,31 @@ export function useCreatePermittedModel() {
         return { previousData, queryKey };
       },
       onError: (err, _, context) => {
-        const { code } = extractErrorData(err);
-        switch (code) {
-          case 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED':
-            showError(
-              t(
-                'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
-              ),
-            );
-            break;
-          case 'MODEL_PROVIDER_NOT_PERMITTED':
-            showError(
-              t('models.createPermittedModel.modelProviderNotPermitted'),
-            );
-            break;
-          case 'MODEL_NOT_FOUND':
-            showError(t('models.createPermittedModel.modelNotFound'));
-            break;
-          default:
-            showError(t('models.createPermittedModel.error'));
-            break;
+        try {
+          const { code } = extractErrorData(err);
+          switch (code) {
+            case 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED':
+              showError(
+                t(
+                  'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
+                ),
+              );
+              break;
+            case 'MODEL_PROVIDER_NOT_PERMITTED':
+              showError(
+                t('models.createPermittedModel.modelProviderNotPermitted'),
+              );
+              break;
+            case 'MODEL_NOT_FOUND':
+              showError(t('models.createPermittedModel.modelNotFound'));
+              break;
+            default:
+              showError(t('models.createPermittedModel.error'));
+              break;
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('models.createPermittedModel.error'));
         }
 
         if (context?.previousData && context?.queryKey) {

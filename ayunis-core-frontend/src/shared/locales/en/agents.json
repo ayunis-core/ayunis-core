@@ -55,10 +55,12 @@
   },
   "update": {
     "success": "Agent updated successfully!",
-    "error": "Failed to update agent. Please try again."
+    "error": "Failed to update agent. Please try again.",
+    "notFound": "Agent not found. It may have been deleted."
   },
   "delete": {
     "success": "Agent deleted successfully!",
-    "error": "Failed to delete agent. Please try again."
+    "error": "Failed to delete agent. Please try again.",
+    "notFound": "Agent not found. It may have been deleted."
   }
 }

@@ -24,16 +24,21 @@ export function useInviteCreate(
         onInviteCreated?.(response);
       },
       onError: (error) => {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'EMAIL_NOT_AVAILABLE':
-            showError(t('inviteCreate.emailNotAvailable'));
-            break;
-          case 'USER_EMAIL_PROVIDER_BLACKLISTED':
-            showError(t('inviteCreate.emailProviderBlacklisted'));
-            break;
-          default:
-            showError(t('inviteCreate.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'EMAIL_NOT_AVAILABLE':
+              showError(t('inviteCreate.emailNotAvailable'));
+              break;
+            case 'USER_EMAIL_PROVIDER_BLACKLISTED':
+              showError(t('inviteCreate.emailProviderBlacklisted'));
+              break;
+            default:
+              showError(t('inviteCreate.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('inviteCreate.error'));
         }
       },
       onSettled: () => {

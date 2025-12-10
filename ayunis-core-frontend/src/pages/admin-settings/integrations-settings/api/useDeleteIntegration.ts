@@ -5,6 +5,7 @@ import {
   useMcpIntegrationsControllerDelete,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useDeleteIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -20,20 +21,20 @@ export function useDeleteIntegration(onSuccess?: () => void) {
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        const errorMessage =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          'Unknown error';
-        toast.error(
-          t('integrations.deleteIntegration.error', {
-            message: errorMessage,
-          }),
-        );
+        console.error('Delete integration failed:', error);
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.deleteIntegration.notFound'));
+              break;
+            default:
+              toast.error(t('integrations.deleteIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.deleteIntegration.error'));
+        }
       },
     },
   });

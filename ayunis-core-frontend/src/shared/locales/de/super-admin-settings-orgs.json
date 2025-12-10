@@ -36,5 +36,9 @@
   "empty": {
     "title": "Noch keine Organisationen",
     "description": "Neue Organisationen erscheinen hier."
+  },
+  "createOrg": {
+    "success": "Organisation erfolgreich erstellt",
+    "error": "Organisation konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   }
 }

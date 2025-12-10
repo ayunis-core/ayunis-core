@@ -44,12 +44,17 @@ export function useLogin({ redirect }: { redirect?: string }) {
         },
         onError: (error) => {
           console.error('Login failed:', error);
-          const { status, code } = extractErrorData(error);
-          if (status === 401 || status === 403) {
-            showError(t('login.error.invalidCredentials'));
-          } else if (code === 'RATE_LIMIT_EXCEEDED') {
-            showError(t('login.error.rateLimitExceeded'));
-          } else {
+          try {
+            const { status, code } = extractErrorData(error);
+            if (status === 401 || status === 403) {
+              showError(t('login.error.invalidCredentials'));
+            } else if (code === 'RATE_LIMIT_EXCEEDED') {
+              showError(t('login.error.rateLimitExceeded'));
+            } else {
+              showError(t('login.error.unexpectedError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('login.error.unexpectedError'));
           }
         },

@@ -6,6 +6,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess, showError } from '@/shared/lib/toast';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 /**
  * Hook to assign an MCP integration to an agent with optimistic updates
@@ -46,7 +47,7 @@ export function useAssignMcpIntegration(
         // Return context with snapshot
         return { previousAssignments };
       },
-      onError: (_error, variables, context) => {
+      onError: (error, variables, context) => {
         // Rollback on error
         if (context?.previousAssignments) {
           queryClient.setQueryData(
@@ -56,7 +57,26 @@ export function useAssignMcpIntegration(
             context.previousAssignments,
           );
         }
-        showError(t('mcpIntegrations.errors.failedToConnect'));
+        console.error('Assign MCP integration failed:', error);
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              showError(t('mcpIntegrations.errors.integrationNotFound'));
+              break;
+            case 'MCP_INTEGRATION_ALREADY_ASSIGNED':
+              showError(t('mcpIntegrations.errors.alreadyAssigned'));
+              break;
+            case 'MCP_INTEGRATION_DISABLED':
+              showError(t('mcpIntegrations.errors.integrationDisabled'));
+              break;
+            default:
+              showError(t('mcpIntegrations.errors.failedToConnect'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('mcpIntegrations.errors.failedToConnect'));
+        }
       },
       onSuccess: () => {
         showSuccess(t('mcpIntegrations.success.connected'));

@@ -53,28 +53,34 @@ export function useInviteAccept(invite: Invite, inviteToken: string) {
         },
         onError: (error) => {
           console.error('Invite accept failed:', error);
-          const { code } = extractErrorData(error);
-          switch (code) {
-            case 'INVALID_INVITE_TOKEN':
-              showError(t('inviteAccept.invalidInviteToken'));
-              break;
-            case 'INVITE_NOT_FOUND':
-              showError(t('inviteAccept.inviteNotFound'));
-              break;
-            case 'INVITE_ALREADY_ACCEPTED':
-              showError(t('inviteAccept.inviteAlreadyAccepted'));
-              break;
-            case 'USER_EMAIL_PROVIDER_BLACKLISTED':
-              showError(t('inviteAccept.userEmailProviderBlacklisted'));
-              break;
-            case 'INVALID_PASSWORD':
-              showError(t('inviteAccept.invalidPassword'));
-              break;
-            case 'USER_ALREADY_EXISTS':
-              showError(t('inviteAccept.userAlreadyExists'));
-              break;
-            default:
-              throw error;
+          try {
+            const { code } = extractErrorData(error);
+            switch (code) {
+              case 'INVALID_INVITE_TOKEN':
+                showError(t('inviteAccept.invalidInviteToken'));
+                break;
+              case 'INVITE_NOT_FOUND':
+                showError(t('inviteAccept.inviteNotFound'));
+                break;
+              case 'INVITE_ALREADY_ACCEPTED':
+                showError(t('inviteAccept.inviteAlreadyAccepted'));
+                break;
+              case 'USER_EMAIL_PROVIDER_BLACKLISTED':
+                showError(t('inviteAccept.userEmailProviderBlacklisted'));
+                break;
+              case 'INVALID_PASSWORD':
+                showError(t('inviteAccept.invalidPassword'));
+                break;
+              case 'USER_ALREADY_EXISTS':
+                showError(t('inviteAccept.userAlreadyExists'));
+                break;
+              default:
+                throw error;
+            }
+          } catch (e) {
+            // If extractErrorData threw (non-AxiosError), or if we're in default case
+            // Re-throw to maintain original behavior
+            throw e === error ? error : e;
           }
         },
       },

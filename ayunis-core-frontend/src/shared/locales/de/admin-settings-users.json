@@ -78,11 +78,13 @@
   },
   "userDelete": {
     "success": "Benutzer erfolgreich gelöscht",
-    "error": "Fehler beim Löschen des Benutzers. Bitte versuchen Sie es erneut."
+    "error": "Fehler beim Löschen des Benutzers. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden. Er wurde möglicherweise bereits entfernt."
   },
   "userRoleUpdate": {
     "success": "Benutzerrolle erfolgreich geändert",
-    "error": "Fehler beim Ändern der Benutzerrolle. Bitte versuchen Sie es erneut."
+    "error": "Fehler beim Ändern der Benutzerrolle. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden. Er wurde möglicherweise entfernt."
   },
   "triggerPasswordReset": {
     "success": "Passwort-Reset-E-Mail erfolgreich gesendet",

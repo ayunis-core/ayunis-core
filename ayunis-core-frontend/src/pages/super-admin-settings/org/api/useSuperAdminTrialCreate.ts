@@ -42,16 +42,21 @@ export default function useSuperAdminTrialCreate({
         showSuccess(t('trial.createSuccess'));
       },
       onError: (error) => {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'TRIAL_ALREADY_EXISTS':
-            showError(t('trial.createErrorAlreadyExists'));
-            break;
-          case 'TRIAL_CAPACITY_EXCEEDED':
-            showError(t('trial.createErrorCapacityExceeded'));
-            break;
-          default:
-            showError(t('trial.createErrorUnexpected'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'TRIAL_ALREADY_EXISTS':
+              showError(t('trial.createErrorAlreadyExists'));
+              break;
+            case 'TRIAL_CAPACITY_EXCEEDED':
+              showError(t('trial.createErrorCapacityExceeded'));
+              break;
+            default:
+              showError(t('trial.createErrorUnexpected'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('trial.createErrorUnexpected'));
         }
       },
       onSettled: () => {

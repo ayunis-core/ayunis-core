@@ -19,10 +19,15 @@ export default function useSubscriptionUncancel() {
           showSuccess(t('subscription.uncancelSuccess'));
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          if (code === 'SUBSCRIPTION_NOT_FOUND') {
-            showError(t('subscription.uncancelErrorSubscriptionNotFound'));
-          } else {
+          try {
+            const { code } = extractErrorData(error);
+            if (code === 'SUBSCRIPTION_NOT_FOUND') {
+              showError(t('subscription.uncancelErrorSubscriptionNotFound'));
+            } else {
+              showError(t('subscription.uncancelError'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('subscription.uncancelError'));
           }
         },

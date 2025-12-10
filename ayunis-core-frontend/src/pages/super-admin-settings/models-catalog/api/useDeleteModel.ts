@@ -5,8 +5,11 @@ import {
   useSuperAdminModelsControllerDeleteCatalogModel,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useDeleteModel() {
+  const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useSuperAdminModelsControllerDeleteCatalogModel({
@@ -15,14 +18,23 @@ export function useDeleteModel() {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
         });
-        toast.success('Model deleted successfully');
+        toast.success(t('models.deleteSuccess'));
       },
       onError: (error: unknown) => {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred';
-        toast.error(`Failed to delete model: ${errorMessage}`);
+        console.error('Delete model failed:', error);
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MODEL_NOT_FOUND':
+              toast.error(t('models.notFound'));
+              break;
+            default:
+              toast.error(t('models.deleteError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('models.deleteError'));
+        }
       },
       onSettled: async () => {
         await router.invalidate();

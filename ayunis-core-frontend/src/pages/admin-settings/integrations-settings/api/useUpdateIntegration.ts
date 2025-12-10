@@ -6,6 +6,7 @@ import {
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { UpdateIntegrationFormData } from '../model/types';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useUpdateIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -21,20 +22,23 @@ export function useUpdateIntegration(onSuccess?: () => void) {
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        const errorMessage =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          'Unknown error';
-        toast.error(
-          t('integrations.updateIntegration.error', {
-            message: errorMessage,
-          }),
-        );
+        console.error('Update integration failed:', error);
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.updateIntegration.notFound'));
+              break;
+            case 'INVALID_SERVER_URL':
+              toast.error(t('integrations.updateIntegration.invalidServerUrl'));
+              break;
+            default:
+              toast.error(t('integrations.updateIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.updateIntegration.error'));
+        }
       },
     },
   });

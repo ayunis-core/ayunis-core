@@ -60,10 +60,15 @@ export default function useSuperAdminSubscriptionBillingInfoUpdate({
           showSuccess(t('billingInfo.updateSuccess'));
         },
         onError: (error) => {
-          const { code } = extractErrorData(error);
-          if (code === 'SUBSCRIPTION_NOT_FOUND') {
-            showError(t('billingInfo.updateErrorSubscriptionNotFound'));
-          } else {
+          try {
+            const { code } = extractErrorData(error);
+            if (code === 'SUBSCRIPTION_NOT_FOUND') {
+              showError(t('billingInfo.updateErrorSubscriptionNotFound'));
+            } else {
+              showError(t('billingInfo.updateErrorUnexpected'));
+            }
+          } catch {
+            // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('billingInfo.updateErrorUnexpected'));
           }
         },

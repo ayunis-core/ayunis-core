@@ -37,6 +37,7 @@
     "fileSourceUploadError": "Error uploading file",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data",
     "fileSourceDeleteError": "Error deleting file",
+    "sourceNotFound": "File not found. It may have been deleted.",
     "uploadDocument": "Upload Document",
     "uploadImage": "Upload Image",
     "imageLimitExceeded": "Maximum {{max}} images allowed. Some images were not added.",

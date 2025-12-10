@@ -5,6 +5,8 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { getSuperAdminOrgsControllerGetAllOrgsQueryKey } from '@/shared/api';
+import { useTranslation } from 'react-i18next';
+import { showError, showSuccess } from '@/shared/lib/toast';
 
 interface UseSuperAdminCreateOrgOptions {
   onSuccessCallback?: () => void;
@@ -13,6 +15,7 @@ interface UseSuperAdminCreateOrgOptions {
 export function useSuperAdminCreateOrg(
   options?: UseSuperAdminCreateOrgOptions,
 ) {
+  const { t } = useTranslation('super-admin-settings-orgs');
   const queryClient = useQueryClient();
   const router = useRouter();
   const createOrgMutation = useSuperAdminOrgsControllerCreateOrg({
@@ -23,10 +26,12 @@ export function useSuperAdminCreateOrg(
           queryKey: getSuperAdminOrgsControllerGetAllOrgsQueryKey(),
         });
         void router.invalidate();
+        showSuccess(t('createOrg.success'));
         options?.onSuccessCallback?.();
       },
       onError: (err) => {
         console.error('Error creating organization', err);
+        showError(t('createOrg.error'));
       },
     },
   });

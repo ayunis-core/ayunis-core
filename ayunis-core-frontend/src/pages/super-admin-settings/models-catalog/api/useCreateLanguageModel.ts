@@ -6,7 +6,10 @@ import {
   type CreateLanguageModelRequestDto,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 export function useCreateLanguageModel(onSuccess?: () => void) {
+  const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useSuperAdminModelsControllerCreateLanguageModel({
@@ -15,15 +18,24 @@ export function useCreateLanguageModel(onSuccess?: () => void) {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
         });
-        toast.success('Language model created successfully');
+        toast.success(t('models.createSuccess'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred';
-        toast.error(`Failed to create language model: ${errorMessage}`);
+        console.error('Create language model failed:', error);
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MODEL_ALREADY_EXISTS':
+              toast.error(t('models.alreadyExists'));
+              break;
+            default:
+              toast.error(t('models.createError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('models.createError'));
+        }
       },
       onSettled: async () => {
         await router.invalidate();

@@ -36,5 +36,9 @@
   "empty": {
     "title": "No organizations yet",
     "description": "Organizations you create will show up here."
+  },
+  "createOrg": {
+    "success": "Organization created successfully",
+    "error": "Failed to create organization. Please try again."
   }
 }

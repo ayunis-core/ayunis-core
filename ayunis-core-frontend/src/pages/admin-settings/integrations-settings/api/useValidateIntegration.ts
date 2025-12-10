@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useMcpIntegrationsControllerValidate } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegration } from '../model/types';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useValidateIntegration() {
   const { t } = useTranslation('admin-settings-integrations');
@@ -33,20 +34,26 @@ export function useValidateIntegration() {
         );
       },
       onError: (error: unknown, variables) => {
-        const errorMessage =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          'Unknown error';
-        toast.error(
-          t('integrations.validateIntegration.error', {
-            message: errorMessage,
-          }),
-        );
+        console.error('Validate integration failed:', error);
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'MCP_CONNECTION_TIMEOUT':
+              toast.error(t('integrations.validateIntegration.connectionTimeout'));
+              break;
+            case 'MCP_AUTHENTICATION_FAILED':
+              toast.error(t('integrations.validateIntegration.authenticationFailed'));
+              break;
+            case 'MCP_INTEGRATION_NOT_FOUND':
+              toast.error(t('integrations.validateIntegration.notFound'));
+              break;
+            default:
+              toast.error(t('integrations.validateIntegration.error'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          toast.error(t('integrations.validateIntegration.error'));
+        }
         setValidatingIds((prev) => {
           const next = new Set(prev);
           next.delete(variables.id);

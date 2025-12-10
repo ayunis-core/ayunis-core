@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 interface UseDeleteFileSourceProps {
   threadId?: string;
@@ -52,7 +53,19 @@ export function useDeleteFileSource({
       },
       onError: (error, _, context) => {
         console.error('Error deleting file source', error);
-        showError(t('chatInput.fileSourceDeleteError'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'SOURCE_NOT_FOUND':
+              showError(t('chatInput.sourceNotFound'));
+              break;
+            default:
+              showError(t('chatInput.fileSourceDeleteError'));
+          }
+        } catch {
+          // Non-AxiosError (network failure, request cancellation, etc.)
+          showError(t('chatInput.fileSourceDeleteError'));
+        }
 
         if (context?.previousData && context?.queryKey) {
           queryClient.setQueryData(context.queryKey, context.previousData);

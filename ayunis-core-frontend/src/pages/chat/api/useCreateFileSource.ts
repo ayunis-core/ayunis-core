@@ -52,14 +52,19 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     },
     onError: (error: unknown) => {
       console.error('Failed to create file source:', error);
-      const { code } = extractErrorData(error);
-      switch (code) {
-        case 'EMPTY_FILE_DATA':
-          showError(t('chatInput.fileSourceEmptyDataError'));
-          break;
-        default:
-          showError(t('chatInput.fileSourceUploadError'));
-          break;
+      try {
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'EMPTY_FILE_DATA':
+            showError(t('chatInput.fileSourceEmptyDataError'));
+            break;
+          default:
+            showError(t('chatInput.fileSourceUploadError'));
+            break;
+        }
+      } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
+        showError(t('chatInput.fileSourceUploadError'));
       }
     },
     onSettled: () => {
