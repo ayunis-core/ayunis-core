@@ -157,7 +157,7 @@ export default function PlusButton({
       <Input
         type="file"
         hidden
-        accept=".pdf,.csv"
+        accept=".pdf,.csv,.xlsx,.xls"
         onChange={(e) => handleDocumentChange(e.target.files)}
         ref={documentInputRef}
       />
