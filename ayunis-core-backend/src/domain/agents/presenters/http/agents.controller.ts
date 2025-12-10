@@ -358,7 +358,9 @@ export class AgentsController {
       const detectedType = detectFileType(file.mimetype, file.originalname);
       const canonicalMimeType = getCanonicalMimeType(detectedType);
       if (!canonicalMimeType) {
-        throw new Error(`Unable to determine MIME type for detected file type: ${detectedType}`);
+        throw new Error(
+          `Unable to determine MIME type for detected file type: ${detectedType}`,
+        );
       }
 
       // Create the file source

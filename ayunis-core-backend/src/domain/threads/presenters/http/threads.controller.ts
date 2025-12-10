@@ -322,7 +322,9 @@ export class ThreadsController {
         // This ensures we use the correct MIME type even if the browser sent an incorrect one
         const canonicalMimeType = getCanonicalMimeType(detectedType);
         if (!canonicalMimeType) {
-          throw new Error(`Unable to determine MIME type for detected file type: ${detectedType}`);
+          throw new Error(
+            `Unable to determine MIME type for detected file type: ${detectedType}`,
+          );
         }
         // Create the file source
         const command = new CreateFileSourceCommand({

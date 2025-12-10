@@ -54,7 +54,7 @@ export function detectFileType(
   const ext = extname(filename).toLowerCase();
 
   // PDF
-  if (mimetype === MIME_TYPES.PDF) {
+  if (mimetype === MIME_TYPES.PDF || ext === FILE_EXTENSIONS.PDF) {
     return 'pdf';
   }
 
