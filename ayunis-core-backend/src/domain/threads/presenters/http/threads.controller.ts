@@ -39,6 +39,7 @@ import {
   isDocumentFile,
   isSpreadsheetFile,
   isCSVFile,
+  getCanonicalMimeType,
 } from 'src/common/util/file-type';
 
 // Import use cases
@@ -317,9 +318,15 @@ export class ThreadsController {
       if (isDocumentFile(detectedType)) {
         // Read file data from disk since we're using diskStorage
         const fileData = fs.readFileSync(file.path);
+        // Get canonical MIME type based on detected file type
+        // This ensures we use the correct MIME type even if the browser sent an incorrect one
+        const canonicalMimeType = getCanonicalMimeType(detectedType);
+        if (!canonicalMimeType) {
+          throw new Error(`Unable to determine MIME type for detected file type: ${detectedType}`);
+        }
         // Create the file source
         const command = new CreateFileSourceCommand({
-          fileType: file.mimetype,
+          fileType: canonicalMimeType,
           fileData: fileData,
           fileName: file.originalname,
         });

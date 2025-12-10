@@ -113,3 +113,28 @@ export function isSpreadsheetFile(fileType: DetectedFileType): boolean {
 export function isCSVFile(fileType: DetectedFileType): boolean {
   return fileType === 'csv';
 }
+
+/**
+ * Get the canonical MIME type for a detected file type.
+ * This ensures we use the correct MIME type regardless of what the browser sent.
+ */
+export function getCanonicalMimeType(
+  fileType: DetectedFileType,
+): string | null {
+  switch (fileType) {
+    case 'pdf':
+      return MIME_TYPES.PDF;
+    case 'docx':
+      return MIME_TYPES.DOCX;
+    case 'pptx':
+      return MIME_TYPES.PPTX;
+    case 'xlsx':
+      return MIME_TYPES.XLSX;
+    case 'xls':
+      return MIME_TYPES.XLS;
+    case 'csv':
+      return MIME_TYPES.CSV;
+    default:
+      return null;
+  }
+}

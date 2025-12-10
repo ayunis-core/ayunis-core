@@ -74,6 +74,10 @@ import { CreateFileSourceCommand } from 'src/domain/sources/application/use-case
 import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
 import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
+import {
+  detectFileType,
+  getCanonicalMimeType,
+} from 'src/common/util/file-type';
 
 @ApiTags('agents')
 @Controller('agents')
@@ -349,9 +353,17 @@ export class AgentsController {
       // Read file data from disk since we're using diskStorage
       const fileData = fs.readFileSync(file.path);
 
+      // Detect file type and get canonical MIME type
+      // This ensures we use the correct MIME type even if the browser sent an incorrect one
+      const detectedType = detectFileType(file.mimetype, file.originalname);
+      const canonicalMimeType = getCanonicalMimeType(detectedType);
+      if (!canonicalMimeType) {
+        throw new Error(`Unable to determine MIME type for detected file type: ${detectedType}`);
+      }
+
       // Create the file source
       const createFileSourceCommand = new CreateFileSourceCommand({
-        fileType: file.mimetype,
+        fileType: canonicalMimeType,
         fileData: fileData,
         fileName: file.originalname,
       });
