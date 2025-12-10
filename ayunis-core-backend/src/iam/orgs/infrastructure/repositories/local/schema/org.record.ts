@@ -9,7 +9,6 @@ export class OrgRecord extends BaseRecord {
 
   @OneToMany(() => UserRecord, (user) => user.org, {
     cascade: true,
-    onDelete: 'CASCADE',
     nullable: false,
   })
   users: UserRecord[];

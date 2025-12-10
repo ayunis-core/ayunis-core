@@ -20,7 +20,6 @@ export class AgentSourceAssignmentRecord extends BaseRecord {
 
   @ManyToOne(() => SourceRecord, {
     onDelete: 'CASCADE',
-    cascade: true,
     eager: true,
   })
   @JoinColumn({ name: 'sourceId' })

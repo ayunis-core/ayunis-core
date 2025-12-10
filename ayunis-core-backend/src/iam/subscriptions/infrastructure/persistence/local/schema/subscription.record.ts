@@ -10,7 +10,7 @@ export class SubscriptionRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   cancelledAt: Date | null;
 
-  @ManyToOne(() => OrgRecord)
+  @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;
 
   @Column()
