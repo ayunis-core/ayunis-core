@@ -2,29 +2,40 @@
   "integrations": {
     "createCustomIntegration": {
       "success": "Integration erfolgreich erstellt",
-      "error": "Fehler beim Erstellen der Integration: {{message}}"
+      "error": "Integration konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+      "invalidServerUrl": "Ungültige Server-URL. Bitte überprüfen Sie das URL-Format.",
+      "duplicateIntegration": "Eine Integration mit dieser URL existiert bereits."
     },
     "createPredefinedIntegration": {
       "success": "Integration erfolgreich erstellt",
-      "error": "Fehler beim Erstellen der Integration: {{message}}"
+      "error": "Integration konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+      "invalidSlug": "Ungültiger Integrationstyp ausgewählt.",
+      "duplicateIntegration": "Dieser Integrationstyp ist bereits konfiguriert."
     },
     "updateIntegration": {
       "success": "Integration erfolgreich aktualisiert",
-      "error": "Fehler beim Aktualisieren der Integration: {{message}}"
+      "error": "Integration konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+      "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht.",
+      "invalidServerUrl": "Ungültige Server-URL. Bitte überprüfen Sie das URL-Format."
     },
     "deleteIntegration": {
       "success": "Integration erfolgreich gelöscht",
-      "error": "Fehler beim Löschen der Integration: {{message}}"
+      "error": "Integration konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+      "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht."
     },
     "toggleIntegration": {
       "enableSuccess": "Integration aktiviert",
       "disableSuccess": "Integration deaktiviert",
-      "enableError": "Fehler beim Aktivieren der Integration: {{message}}",
-      "disableError": "Fehler beim Deaktivieren der Integration: {{message}}"
+      "enableError": "Integration konnte nicht aktiviert werden. Bitte versuchen Sie es erneut.",
+      "disableError": "Integration konnte nicht deaktiviert werden. Bitte versuchen Sie es erneut.",
+      "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht."
     },
     "validateIntegration": {
       "success": "Erfolgreich verbunden. {{prompts}} Prompts, {{resources}} Ressourcen, {{tools}} Tools gefunden.",
-      "error": "Verbindung fehlgeschlagen: {{message}}"
+      "error": "Integration konnte nicht validiert werden. Bitte versuchen Sie es erneut.",
+      "connectionTimeout": "Zeitüberschreitung der Verbindung. Bitte überprüfen Sie, ob der Server läuft.",
+      "authenticationFailed": "Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
+      "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht."
     },
     "comingSoonDialog": {
       "title": "Demnächst verfügbar",

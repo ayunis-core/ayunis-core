@@ -37,6 +37,7 @@
     "fileSourceUploadError": "Fehler beim Hochladen der Datei",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
+    "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "uploadDocument": "Dokument hochladen",
     "uploadImage": "Bild hochladen",
     "imageLimitExceeded": "Maximal {{max}} Bilder erlaubt. Einige Bilder wurden nicht hinzugefügt.",

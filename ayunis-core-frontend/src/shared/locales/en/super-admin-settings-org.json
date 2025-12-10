@@ -212,5 +212,15 @@
     "title": "No trial found",
     "description": "This organization does not have an active trial.",
     "createTrial": "Create Trial"
+  },
+  "models": {
+    "createSuccess": "Model created successfully",
+    "createError": "Failed to create model. Please try again.",
+    "updateSuccess": "Model updated successfully",
+    "updateError": "Failed to update model. Please try again.",
+    "deleteSuccess": "Model deleted successfully",
+    "deleteError": "Failed to delete model. Please try again.",
+    "alreadyExists": "A model with this identifier already exists.",
+    "notFound": "Model not found. It may have been deleted."
   }
 }

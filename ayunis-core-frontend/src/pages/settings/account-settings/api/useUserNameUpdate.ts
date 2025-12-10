@@ -41,11 +41,13 @@ export function useUserNameUpdate(currentName: string) {
         },
         onError: (error) => {
           console.error('Username update failed:', error);
-          const { status } = extractErrorData(error);
-          if (status === 400) {
-            showError(t('account.error.invalidName'));
-          } else {
-            showError(t('account.error.updateFailed'));
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'VALIDATION_ERROR':
+              showError(t('account.error.invalidName'));
+              break;
+            default:
+              showError(t('account.error.updateFailed'));
           }
         },
       },

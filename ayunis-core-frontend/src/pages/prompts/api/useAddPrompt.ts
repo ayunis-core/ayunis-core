@@ -11,12 +11,15 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 interface UseAddPromptOptions {
   onSuccessCallback?: () => void;
 }
 
 export function useAddPrompt(options?: UseAddPromptOptions) {
+  const { t } = useTranslation('prompts');
   const queryClient = useQueryClient();
   const createPromptMutation = usePromptsControllerCreate();
   const router = useRouter();
@@ -42,14 +45,18 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
             queryKey: getPromptsControllerFindAllQueryKey(),
           });
           void router.invalidate();
-          showSuccess('Prompt created');
+          showSuccess(t('createSuccess'));
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();
           }
         },
         onError: (error) => {
           console.error('Create prompt failed:', error);
-          showError('Create prompt failed');
+          const { code } = extractErrorData(error);
+          switch (code) {
+            default:
+              showError(t('createError'));
+          }
         },
       },
     );

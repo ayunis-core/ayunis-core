@@ -1,4 +1,11 @@
 {
+  "createSuccess": "Prompt erfolgreich erstellt",
+  "createError": "Prompt konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+  "updateSuccess": "Prompt erfolgreich aktualisiert",
+  "updateError": "Prompt konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+  "deleteSuccess": "Prompt erfolgreich gelöscht",
+  "deleteError": "Prompt konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+  "notFound": "Prompt nicht gefunden. Er wurde möglicherweise gelöscht.",
   "page": {
     "title": "Meine Prompts"
   },

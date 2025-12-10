@@ -8,6 +8,7 @@ import {
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegration } from '../model/types';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useToggleIntegration() {
   const queryClient = useQueryClient();
@@ -23,20 +24,15 @@ export function useToggleIntegration() {
         toast.success(t('integrations.toggleIntegration.enableSuccess'));
       },
       onError: (error: unknown, variables) => {
-        const errorMessage =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          'Unknown error';
-        toast.error(
-          t('integrations.toggleIntegration.enableError', {
-            message: errorMessage,
-          }),
-        );
+        console.error('Enable integration failed:', error);
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'MCP_INTEGRATION_NOT_FOUND':
+            toast.error(t('integrations.toggleIntegration.notFound'));
+            break;
+          default:
+            toast.error(t('integrations.toggleIntegration.enableError'));
+        }
         setTogglingIds((prev) => {
           const next = new Set(prev);
           next.delete(variables.id);
@@ -62,20 +58,15 @@ export function useToggleIntegration() {
         toast.success(t('integrations.toggleIntegration.disableSuccess'));
       },
       onError: (error: unknown, variables) => {
-        const errorMessage =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          'Unknown error';
-        toast.error(
-          t('integrations.toggleIntegration.disableError', {
-            message: errorMessage,
-          }),
-        );
+        console.error('Disable integration failed:', error);
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'MCP_INTEGRATION_NOT_FOUND':
+            toast.error(t('integrations.toggleIntegration.notFound'));
+            break;
+          default:
+            toast.error(t('integrations.toggleIntegration.disableError'));
+        }
         setTogglingIds((prev) => {
           const next = new Set(prev);
           next.delete(variables.id);

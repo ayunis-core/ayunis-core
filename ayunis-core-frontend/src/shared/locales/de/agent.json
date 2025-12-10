@@ -48,7 +48,11 @@
     "errors": {
       "failedToConnect": "Fehler beim Verbinden der Integration. Bitte versuchen Sie es erneut.",
       "failedToDisconnect": "Fehler beim Trennen der Integration. Bitte versuchen Sie es erneut.",
-      "failedToLoad": "Fehler beim Laden der Integrationen. Bitte versuchen Sie es erneut."
+      "failedToLoad": "Fehler beim Laden der Integrationen. Bitte versuchen Sie es erneut.",
+      "integrationNotFound": "Integration nicht gefunden. Sie wurde möglicherweise entfernt.",
+      "alreadyAssigned": "Diese Integration ist bereits mit diesem Agenten verbunden.",
+      "integrationDisabled": "Diese Integration ist deaktiviert. Bitte aktivieren Sie sie zuerst.",
+      "notAssigned": "Diese Integration ist nicht mit diesem Agenten verbunden."
     }
   },
   "shares": {

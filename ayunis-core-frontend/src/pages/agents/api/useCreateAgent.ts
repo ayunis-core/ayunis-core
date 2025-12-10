@@ -10,6 +10,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 const createAgentSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -60,8 +61,13 @@ export function useCreateAgent() {
         });
       }
     },
-    onError: () => {
-      toast.error(t('create.error'));
+    onError: (error) => {
+      console.error('Create agent failed:', error);
+      const { code } = extractErrorData(error);
+      switch (code) {
+        default:
+          toast.error(t('create.error'));
+      }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({

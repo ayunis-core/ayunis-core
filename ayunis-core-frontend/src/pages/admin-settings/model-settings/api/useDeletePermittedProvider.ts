@@ -9,8 +9,11 @@ import {
   getAgentsControllerFindAllQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
 
 export function useDeletePermittedProvider() {
+  const { t } = useTranslation('admin-settings-models');
   const queryClient = useQueryClient();
   const deletePermittedProviderMutation =
     useModelsControllerDeletePermittedProvider({
@@ -34,6 +37,7 @@ export function useDeletePermittedProvider() {
         },
         onError: (err, _, context) => {
           console.error('Error deleting permitted provider', err);
+          showError(t('models.deletePermittedProvider.error'));
           if (context?.previousData && context?.queryKey) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }

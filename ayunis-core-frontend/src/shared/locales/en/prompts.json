@@ -1,4 +1,11 @@
 {
+  "createSuccess": "Prompt created successfully",
+  "createError": "Failed to create prompt. Please try again.",
+  "updateSuccess": "Prompt updated successfully",
+  "updateError": "Failed to update prompt. Please try again.",
+  "deleteSuccess": "Prompt deleted successfully",
+  "deleteError": "Failed to delete prompt. Please try again.",
+  "notFound": "Prompt not found. It may have been deleted.",
   "page": {
     "title": "My Prompts"
   },

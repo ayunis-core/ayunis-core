@@ -10,6 +10,7 @@ import {
   getAgentsControllerFindOneQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 const updateAgentSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -68,8 +69,16 @@ export function useUpdateAgent({
       toast.success(t('update.success'));
       onSuccessCallback?.();
     },
-    onError: () => {
-      toast.error(t('update.error'));
+    onError: (error) => {
+      console.error('Update agent failed:', error);
+      const { code } = extractErrorData(error);
+      switch (code) {
+        case 'AGENT_NOT_FOUND':
+          toast.error(t('update.notFound'));
+          break;
+        default:
+          toast.error(t('update.error'));
+      }
     },
   });
 

@@ -6,7 +6,10 @@ import {
   type UpdateEmbeddingModelRequestDto,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 export function useUpdateEmbeddingModel(onSuccess?: () => void) {
+  const { t } = useTranslation('super-admin-settings-org');
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useSuperAdminModelsControllerUpdateEmbeddingModel({
@@ -15,15 +18,19 @@ export function useUpdateEmbeddingModel(onSuccess?: () => void) {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
         });
-        toast.success('Embedding model updated successfully');
+        toast.success(t('models.updateSuccess'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred';
-        toast.error(`Failed to update embedding model: ${errorMessage}`);
+        console.error('Update embedding model failed:', error);
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'MODEL_NOT_FOUND':
+            toast.error(t('models.notFound'));
+            break;
+          default:
+            toast.error(t('models.updateError'));
+        }
       },
       onSettled: async () => {
         await router.invalidate();

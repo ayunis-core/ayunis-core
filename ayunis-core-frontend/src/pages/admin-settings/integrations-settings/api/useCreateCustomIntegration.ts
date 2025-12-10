@@ -6,6 +6,7 @@ import {
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateCustomIntegrationFormData } from '../model/types';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useCreateCustomIntegration(onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -21,20 +22,18 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        const errorMessage =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          'Unknown error';
-        toast.error(
-          t('integrations.createCustomIntegration.error', {
-            message: errorMessage,
-          }),
-        );
+        console.error('Create custom integration failed:', error);
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'INVALID_SERVER_URL':
+            toast.error(t('integrations.createCustomIntegration.invalidServerUrl'));
+            break;
+          case 'DUPLICATE_MCP_INTEGRATION':
+            toast.error(t('integrations.createCustomIntegration.duplicateIntegration'));
+            break;
+          default:
+            toast.error(t('integrations.createCustomIntegration.error'));
+        }
       },
     },
   });

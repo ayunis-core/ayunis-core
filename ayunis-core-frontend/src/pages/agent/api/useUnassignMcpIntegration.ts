@@ -6,6 +6,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess, showError } from '@/shared/lib/toast';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 /**
  * Hook to unassign an MCP integration from an agent with optimistic updates
@@ -40,7 +41,7 @@ export function useUnassignMcpIntegration() {
         // Return context with snapshot
         return { previousAssignments };
       },
-      onError: (_error, variables, context) => {
+      onError: (error, variables, context) => {
         // Rollback on error
         if (context?.previousAssignments) {
           queryClient.setQueryData(
@@ -50,7 +51,15 @@ export function useUnassignMcpIntegration() {
             context.previousAssignments,
           );
         }
-        showError(t('mcpIntegrations.errors.failedToDisconnect'));
+        console.error('Unassign MCP integration failed:', error);
+        const { code } = extractErrorData(error);
+        switch (code) {
+          case 'MCP_INTEGRATION_NOT_ASSIGNED':
+            showError(t('mcpIntegrations.errors.notAssigned'));
+            break;
+          default:
+            showError(t('mcpIntegrations.errors.failedToDisconnect'));
+        }
       },
       onSuccess: () => {
         showSuccess(t('mcpIntegrations.success.disconnected'));

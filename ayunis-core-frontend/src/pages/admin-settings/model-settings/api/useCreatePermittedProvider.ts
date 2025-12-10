@@ -8,8 +8,11 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
 
 export function useCreatePermittedProvider() {
+  const { t } = useTranslation('admin-settings-models');
   const queryClient = useQueryClient();
   const createPermittedProviderMutation =
     useModelsControllerCreatePermittedProvider({
@@ -32,6 +35,7 @@ export function useCreatePermittedProvider() {
         },
         onError: (err, _, context) => {
           console.error('Error creating permitted provider', err);
+          showError(t('models.createPermittedProvider.error'));
           if (context?.previousData && context?.queryKey) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }

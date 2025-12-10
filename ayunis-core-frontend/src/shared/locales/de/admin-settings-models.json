@@ -33,7 +33,14 @@
       "title": "Model löschen",
       "description": "Sind Sie sicher, dass Sie dieses Modell löschen möchten? Wenn Sie ein Embedding-Modell löschen, werden alle Quellen, die mit diesem Modell verknüpft sind, ebenfalls gelöscht. Wenn Sie ein Sprachmodell löschen, fallen alle Threads, die mit diesem Modell verknüpft sind, auf ein anderes Modell zurück.",
       "confirmText": "Löschen",
-      "cancelText": "Abbrechen"
+      "cancelText": "Abbrechen",
+      "error": "Modellzugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
+    },
+    "createPermittedProvider": {
+      "error": "Provider konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
+    },
+    "deletePermittedProvider": {
+      "error": "Provider-Zugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
     },
     "createPermittedModel": {
       "multipleEmbeddingModelsNotAllowed": "Es kann nur ein Embedding-Modell pro Organisation erstellt werden.",

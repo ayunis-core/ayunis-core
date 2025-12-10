@@ -48,7 +48,11 @@
     "errors": {
       "failedToConnect": "Failed to connect integration. Please try again.",
       "failedToDisconnect": "Failed to disconnect integration. Please try again.",
-      "failedToLoad": "Failed to load integrations. Please try again."
+      "failedToLoad": "Failed to load integrations. Please try again.",
+      "integrationNotFound": "Integration not found. It may have been removed.",
+      "alreadyAssigned": "This integration is already connected to this agent.",
+      "integrationDisabled": "This integration is disabled. Please enable it first.",
+      "notAssigned": "This integration is not connected to this agent."
     }
   },
   "shares": {

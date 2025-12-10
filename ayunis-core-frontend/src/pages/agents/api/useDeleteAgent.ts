@@ -6,6 +6,7 @@ import {
   getAgentsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
+import extractErrorData from '@/shared/api/extract-error-data';
 interface DeleteAgentParams {
   id: string;
 }
@@ -26,8 +27,16 @@ export function useDeleteAgent() {
       void router.invalidate();
       toast.success(t('delete.success'));
     },
-    onError: () => {
-      toast.error(t('delete.error'));
+    onError: (error) => {
+      console.error('Delete agent failed:', error);
+      const { code } = extractErrorData(error);
+      switch (code) {
+        case 'AGENT_NOT_FOUND':
+          toast.error(t('delete.notFound'));
+          break;
+        default:
+          toast.error(t('delete.error'));
+      }
     },
   });
 }

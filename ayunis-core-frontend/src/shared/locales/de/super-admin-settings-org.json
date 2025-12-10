@@ -212,5 +212,15 @@
     "title": "Kein Trial gefunden",
     "description": "Diese Organisation hat keinen aktiven Trial.",
     "createTrial": "Trial erstellen"
+  },
+  "models": {
+    "createSuccess": "Modell erfolgreich erstellt",
+    "createError": "Modell konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "updateSuccess": "Modell erfolgreich aktualisiert",
+    "updateError": "Modell konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "deleteSuccess": "Modell erfolgreich gelöscht",
+    "deleteError": "Modell konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "alreadyExists": "Ein Modell mit dieser Kennung existiert bereits.",
+    "notFound": "Modell nicht gefunden. Es wurde möglicherweise gelöscht."
   }
 }

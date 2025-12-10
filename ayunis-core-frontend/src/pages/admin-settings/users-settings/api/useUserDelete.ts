@@ -5,6 +5,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 interface UseUserDeleteOptions {
   onSuccessCallback?: () => void;
@@ -29,7 +30,14 @@ export function useUserDelete(options?: UseUserDeleteOptions) {
       },
       onError: (err) => {
         console.error('Error deleting user', err);
-        showError(t('userDelete.error'));
+        const { code } = extractErrorData(err);
+        switch (code) {
+          case 'USER_NOT_FOUND':
+            showError(t('userDelete.notFound'));
+            break;
+          default:
+            showError(t('userDelete.error'));
+        }
       },
     },
   });

@@ -6,8 +6,11 @@ import {
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import { showError } from '@/shared/lib/toast';
 
 export function useSuperAdminCreatePermittedProvider(orgId: string) {
+  const { t } = useTranslation('admin-settings-models');
   const queryClient = useQueryClient();
   const router = useRouter();
   const createPermittedProviderMutation =
@@ -64,6 +67,7 @@ export function useSuperAdminCreatePermittedProvider(orgId: string) {
         },
         onError: (err, _, context) => {
           console.error('Error creating permitted provider', err);
+          showError(t('models.createPermittedProvider.error'));
 
           if (context?.previousData && context?.queryKey) {
             queryClient.setQueryData(context.queryKey, context.previousData);

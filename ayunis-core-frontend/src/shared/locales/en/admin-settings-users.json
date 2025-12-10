@@ -77,11 +77,13 @@
   },
   "userDelete": {
     "success": "User deleted successfully!",
-    "error": "Failed to delete user. Please try again."
+    "error": "Failed to delete user. Please try again.",
+    "notFound": "User not found. They may have already been removed."
   },
   "userRoleUpdate": {
     "success": "User role updated successfully!",
-    "error": "Failed to update user role. Please try again."
+    "error": "Failed to update user role. Please try again.",
+    "notFound": "User not found. They may have been removed."
   },
   "triggerPasswordReset": {
     "success": "Password reset email sent successfully",
