@@ -70,14 +70,13 @@ export function detectFileType(
 
   // Excel (XLSX/XLS)
   // Note: application/vnd.ms-excel can be sent for both .xls and .csv files
-  if (mimetype === MIME_TYPES.XLSX) {
+  // Use extension-based fallback when MIME type is incorrect (e.g., application/octet-stream)
+  // For XLS, we only trust extension because XLS MIME can also indicate CSV files
+  if (mimetype === MIME_TYPES.XLSX || ext === FILE_EXTENSIONS.XLSX) {
     return 'xlsx';
   }
-  if (
-    mimetype === MIME_TYPES.XLS &&
-    (ext === FILE_EXTENSIONS.XLS || ext === FILE_EXTENSIONS.XLSX)
-  ) {
-    return ext === FILE_EXTENSIONS.XLSX ? 'xlsx' : 'xls';
+  if (ext === FILE_EXTENSIONS.XLS) {
+    return 'xls';
   }
 
   // CSV

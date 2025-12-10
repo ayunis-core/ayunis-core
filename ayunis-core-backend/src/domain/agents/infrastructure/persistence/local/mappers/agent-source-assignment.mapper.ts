@@ -25,7 +25,11 @@ export class AgentSourceAssignmentMapper {
     record.id = domain.id;
     record.agentId = agentId;
     record.sourceId = domain.source.id;
-    record.source = this.sourceMapper.toRecord(domain.source).source;
+    // Note: We intentionally don't set record.source here.
+    // The source already exists in the database (created by CreateDataSourceUseCase
+    // or CreateTextSourceUseCase). Setting it would cause TypeORM to try to
+    // insert it again due to cascade: true, causing a duplicate key error.
+    // The sourceId foreign key is sufficient for the relationship.
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

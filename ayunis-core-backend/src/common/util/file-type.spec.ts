@@ -67,6 +67,30 @@ describe('detectFileType', () => {
     it('returns "xlsx" when MIME type is XLS but extension is .xlsx', () => {
       expect(detectFileType(MIME_TYPES.XLS, 'spreadsheet.xlsx')).toBe('xlsx');
     });
+
+    it('returns "xlsx" when extension is .xlsx but MIME type is application/octet-stream', () => {
+      expect(
+        detectFileType('application/octet-stream', 'spreadsheet.xlsx'),
+      ).toBe('xlsx');
+    });
+
+    it('returns "xlsx" when extension is .XLSX (case insensitive)', () => {
+      expect(
+        detectFileType('application/octet-stream', 'SPREADSHEET.XLSX'),
+      ).toBe('xlsx');
+    });
+
+    it('returns "xls" when extension is .xls but MIME type is application/octet-stream', () => {
+      expect(
+        detectFileType('application/octet-stream', 'spreadsheet.xls'),
+      ).toBe('xls');
+    });
+
+    it('returns "xls" when extension is .XLS (case insensitive)', () => {
+      expect(
+        detectFileType('application/octet-stream', 'SPREADSHEET.XLS'),
+      ).toBe('xls');
+    });
   });
 
   describe('CSV detection', () => {
