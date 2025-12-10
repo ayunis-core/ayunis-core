@@ -341,7 +341,7 @@ export class ThreadsController {
             const sourceName =
               sheets.length === 1
                 ? `${baseFileName}.csv`
-                : `${baseFileName} - ${sheet.sheetName}.csv`;
+                : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
 
             const command = new CreateCSVDataSourceCommand({
               name: sourceName,

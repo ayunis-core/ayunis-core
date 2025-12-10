@@ -19,13 +19,28 @@ export function parseExcel(buffer: Buffer): ParsedSheet[] {
     const worksheet = workbook.Sheets[sheetName];
 
     // Convert sheet to array of arrays (rows)
-    const data: string[][] = XLSX.utils.sheet_to_json(worksheet, {
+    let data: string[][] = XLSX.utils.sheet_to_json(worksheet, {
       header: 1,
       defval: '',
       raw: false, // Convert all values to strings
     });
 
     // Skip empty sheets
+    if (data.length === 0) {
+      continue;
+    }
+
+    // Remove empty rows from the top (rows where all cells are empty)
+    while (
+      data.length > 0 &&
+      data[0].every(
+        (cell) => cell === '' || cell === null || cell === undefined,
+      )
+    ) {
+      data = data.slice(1);
+    }
+
+    // Skip if no data left after removing empty rows
     if (data.length === 0) {
       continue;
     }
