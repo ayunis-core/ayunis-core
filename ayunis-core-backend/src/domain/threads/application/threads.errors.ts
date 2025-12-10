@@ -16,6 +16,7 @@ export enum ThreadErrorCode {
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
   NO_MODEL_OR_AGENT_PROVIDED = 'NO_MODEL_OR_AGENT_PROVIDED',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
+  EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
 }
 
 /**
@@ -183,6 +184,20 @@ export class UnexpecteThreadError extends ThreadError {
       ThreadErrorCode.UNEXPECTED_THREAD_ERROR,
       500,
       {
+        ...metadata,
+      },
+    );
+  }
+}
+
+export class EmptyFileDataError extends ThreadError {
+  constructor(fileName: string, metadata?: ErrorMetadata) {
+    super(
+      `The file '${fileName}' contains no processable data`,
+      ThreadErrorCode.EMPTY_FILE_DATA,
+      400,
+      {
+        fileName,
         ...metadata,
       },
     );

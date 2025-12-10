@@ -35,6 +35,7 @@
     "agentButtonTooltip": "Agenten",
     "agentsEmptyState": "Noch kein Agent erstellt",
     "fileSourceUploadError": "Fehler beim Hochladen der Datei",
+    "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "uploadDocument": "Dokument hochladen",
     "uploadImage": "Bild hochladen",

@@ -35,6 +35,7 @@
     "agentButtonTooltip": "Agents",
     "agentsEmptyState": "No agent created yet",
     "fileSourceUploadError": "Error uploading file",
+    "fileSourceEmptyDataError": "The uploaded file contains no processable data",
     "fileSourceDeleteError": "Error deleting file",
     "uploadDocument": "Upload Document",
     "uploadImage": "Upload Image",

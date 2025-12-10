@@ -3,6 +3,7 @@ import {
   threadsControllerAddFileSource,
 } from '@/shared/api';
 import type { ThreadsControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -51,7 +52,15 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
     },
     onError: (error: unknown) => {
       console.error('Failed to create file source:', error);
-      showError(t('chatInput.fileSourceUploadError'));
+      const { code } = extractErrorData(error);
+      switch (code) {
+        case 'EMPTY_FILE_DATA':
+          showError(t('chatInput.fileSourceEmptyDataError'));
+          break;
+        default:
+          showError(t('chatInput.fileSourceUploadError'));
+          break;
+      }
     },
     onSettled: () => {
       if (!threadId) return;

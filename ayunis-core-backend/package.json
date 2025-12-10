@@ -88,7 +88,8 @@
     "typeorm": "^0.3.25",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
-    "winston-transport": "^4.9.0"
+    "winston-transport": "^4.9.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
