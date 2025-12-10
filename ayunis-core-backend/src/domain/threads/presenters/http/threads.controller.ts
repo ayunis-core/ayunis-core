@@ -34,6 +34,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
+import {
+  detectFileType,
+  isDocumentFile,
+  isSpreadsheetFile,
+  isCSVFile,
+  getCanonicalMimeType,
+} from 'src/common/util/file-type';
 
 // Import use cases
 import { CreateThreadUseCase } from '../../application/use-cases/create-thread/create-thread.use-case';
@@ -73,7 +80,10 @@ import { parseExcel } from 'src/common/util/excel';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { EmptyFileDataError } from '../../application/threads.errors';
+import {
+  EmptyFileDataError,
+  UnsupportedFileTypeError,
+} from '../../application/threads.errors';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -300,34 +310,34 @@ export class ThreadsController {
     try {
       const sources: Source[] = [];
 
-      // Get file extension for disambiguation (some browsers send wrong MIME types)
-      const fileExtension = extname(file.originalname).toLowerCase();
+      // Detect file type using centralized utility
+      const detectedType = detectFileType(file.mimetype, file.originalname);
+      this.logger.debug('File type detection', {
+        mimetype: file.mimetype,
+        originalname: file.originalname,
+        detectedType,
+      });
 
-      // Determine actual file type using both MIME type and extension
-      // application/vnd.ms-excel can be sent by some browsers (e.g., Firefox) for CSV files
-      const isCSV =
-        file.mimetype === 'text/csv' ||
-        (file.mimetype === 'application/vnd.ms-excel' &&
-          fileExtension === '.csv');
-      const isExcel =
-        file.mimetype ===
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        (file.mimetype === 'application/vnd.ms-excel' &&
-          (fileExtension === '.xls' || fileExtension === '.xlsx'));
-      const isPDF = file.mimetype === 'application/pdf';
-
-      if (isPDF) {
+      if (isDocumentFile(detectedType)) {
         // Read file data from disk since we're using diskStorage
         const fileData = fs.readFileSync(file.path);
+        // Get canonical MIME type based on detected file type
+        // This ensures we use the correct MIME type even if the browser sent an incorrect one
+        const canonicalMimeType = getCanonicalMimeType(detectedType);
+        if (!canonicalMimeType) {
+          throw new Error(
+            `Unable to determine MIME type for detected file type: ${detectedType}`,
+          );
+        }
         // Create the file source
         const command = new CreateFileSourceCommand({
-          fileType: file.mimetype,
+          fileType: canonicalMimeType,
           fileData: fileData,
           fileName: file.originalname,
         });
         const source = await this.createTextSourceUseCase.execute(command);
         sources.push(source);
-      } else if (isCSV) {
+      } else if (isCSVFile(detectedType)) {
         const fileData = fs.readFileSync(file.path, 'utf8');
         const { headers, data } = parseCSV(fileData);
         const command = new CreateCSVDataSourceCommand({
@@ -339,7 +349,7 @@ export class ThreadsController {
         });
         const source = await this.createDataSourceUseCase.execute(command);
         sources.push(source);
-      } else if (isExcel) {
+      } else if (isSpreadsheetFile(detectedType)) {
         const fileData = fs.readFileSync(file.path);
         const sheets = parseExcel(fileData);
 
@@ -369,7 +379,10 @@ export class ThreadsController {
           sources.push(source);
         }
       } else {
-        throw new Error('Invalid file type');
+        throw new UnsupportedFileTypeError(
+          detectedType === 'unknown' ? file.originalname : detectedType,
+          ['PDF', 'DOCX', 'PPTX', 'CSV', 'XLSX', 'XLS'],
+        );
       }
 
       // Add all sources to the thread

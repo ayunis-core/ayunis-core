@@ -24,6 +24,8 @@ export enum AgentErrorCode {
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_INTEGRATION_WRONG_ORGANIZATION = 'MCP_INTEGRATION_WRONG_ORGANIZATION',
   MCP_INTEGRATION_NOT_ASSIGNED = 'MCP_INTEGRATION_NOT_ASSIGNED',
+  UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
+  EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
 }
 
 /**
@@ -222,6 +224,41 @@ export class McpIntegrationNotAssignedError extends AgentError {
       AgentErrorCode.MCP_INTEGRATION_NOT_ASSIGNED,
       404,
       metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an unsupported file type is uploaded to an agent
+ */
+export class UnsupportedFileTypeError extends AgentError {
+  constructor(
+    fileType: string,
+    supportedTypes: string[],
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
+      AgentErrorCode.UNSUPPORTED_FILE_TYPE,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when an uploaded file contains no processable data
+ */
+export class EmptyFileDataError extends AgentError {
+  constructor(fileName: string, metadata?: ErrorMetadata) {
+    super(
+      `The file '${fileName}' contains no processable data`,
+      AgentErrorCode.EMPTY_FILE_DATA,
+      400,
+      {
+        fileName,
+        ...metadata,
+      },
     );
   }
 }

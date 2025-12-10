@@ -13,7 +13,11 @@ import { FileRetrieverType } from '../../../domain/value-objects/file-retriever-
 import { GetAllPermittedProvidersUseCase } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
 import { GetAllPermittedProvidersQuery } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { FileRetrieverUnexpectedError } from '../../file-retriever.errors';
+import {
+  FileRetrieverUnexpectedError,
+  InvalidFileTypeError,
+} from '../../file-retriever.errors';
+import { detectFileType } from 'src/common/util/file-type';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
@@ -41,29 +45,36 @@ export class RetrieveFileContentUseCase {
     }
     try {
       let handler: FileRetrieverHandler;
-      const permittedProviders =
-        await this.getAllPermittedProvidersUseCase.execute(
-          new GetAllPermittedProvidersQuery(orgId),
-        );
+      const fileType = detectFileType(command.fileType, command.fileName);
 
-      if (
-        permittedProviders.length > 0 &&
-        permittedProviders.some((p) => p.provider === ModelProvider.MISTRAL)
-      ) {
-        // Use Mistral if it is permitted
-        handler = this.fileRetrieverRegistry.getHandler(
-          FileRetrieverType.MISTRAL,
-        );
-      } else if (this.config.docling.serviceUrl) {
-        // Use Docling if service URL is configured
+      if (this.config.docling.serviceUrl) {
+        // Use Docling if service URL is configured (priority)
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.DOCLING,
         );
       } else {
-        // Use NpmPdfParse as fallback
-        handler = this.fileRetrieverRegistry.getHandler(
-          FileRetrieverType.NPM_PDF_PARSE,
-        );
+        const permittedProviders =
+          await this.getAllPermittedProvidersUseCase.execute(
+            new GetAllPermittedProvidersQuery(orgId),
+          );
+
+        if (
+          permittedProviders.length > 0 &&
+          permittedProviders.some((p) => p.provider === ModelProvider.MISTRAL)
+        ) {
+          // Use Mistral if it is permitted
+          handler = this.fileRetrieverRegistry.getHandler(
+            FileRetrieverType.MISTRAL,
+          );
+        } else if (fileType === 'docx' || fileType === 'pptx') {
+          // DOCX/PPTX require Docling or Mistral - throw error if neither available
+          throw new InvalidFileTypeError(fileType);
+        } else {
+          // Use NpmPdfParse as fallback (PDF only)
+          handler = this.fileRetrieverRegistry.getHandler(
+            FileRetrieverType.NPM_PDF_PARSE,
+          );
+        }
       }
       const file = new File(
         command.fileData,

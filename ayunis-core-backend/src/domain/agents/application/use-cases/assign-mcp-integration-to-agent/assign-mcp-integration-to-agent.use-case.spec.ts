@@ -1,4 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Mock the Transactional decorator
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { Logger } from '@nestjs/common';
 import { AssignMcpIntegrationToAgentUseCase } from './assign-mcp-integration-to-agent.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

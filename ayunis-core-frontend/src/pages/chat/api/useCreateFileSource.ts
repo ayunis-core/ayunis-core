@@ -55,6 +55,10 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       try {
         const { code } = extractErrorData(error);
         switch (code) {
+          case 'INVALID_FILE_TYPE':
+          case 'UNSUPPORTED_FILE_TYPE':
+            showError(t('chatInput.invalidFileTypeError'));
+            break;
           case 'EMPTY_FILE_DATA':
             showError(t('chatInput.fileSourceEmptyDataError'));
             break;

@@ -74,6 +74,23 @@ import { CreateFileSourceCommand } from 'src/domain/sources/application/use-case
 import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
 import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
+import {
+  detectFileType,
+  getCanonicalMimeType,
+  isDocumentFile,
+  isSpreadsheetFile,
+  isCSVFile,
+} from 'src/common/util/file-type';
+import {
+  UnsupportedFileTypeError,
+  EmptyFileDataError,
+} from '../../application/agents.errors';
+import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
+import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
+import { parseCSV } from 'src/common/util/csv';
+import { parseExcel } from 'src/common/util/excel';
+import { Source } from 'src/domain/sources/domain/source.entity';
+import { AgentSourceAssignment } from '../../domain/agent-source-assignment.entity';
 
 @ApiTags('agents')
 @Controller('agents')
@@ -94,6 +111,7 @@ export class AgentsController {
     private readonly agentDtoMapper: AgentDtoMapper,
     private readonly agentSourceDtoMapper: AgentSourceDtoMapper,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
+    private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
   ) {}
 
@@ -310,7 +328,11 @@ export class AgentsController {
     description: 'The file source has been successfully added to the agent',
   })
   @ApiResponse({ status: 404, description: 'Agent not found' })
-  @ApiResponse({ status: 400, description: 'Invalid file' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, CSV, XLSX, XLS',
+  })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @UseInterceptors(
     FileInterceptor('file', {
@@ -339,38 +361,104 @@ export class AgentsController {
       buffer: Buffer;
       path: string;
     },
-  ): Promise<AgentSourceResponseDto> {
+  ): Promise<AgentSourceResponseDto[]> {
     this.logger.log('addFileSource', {
       agentId,
       userId,
       fileName: file.originalname,
     });
     try {
-      // Read file data from disk since we're using diskStorage
-      const fileData = fs.readFileSync(file.path);
+      const sources: Source[] = [];
 
-      // Create the file source
-      const createFileSourceCommand = new CreateFileSourceCommand({
-        fileType: file.mimetype,
-        fileData: fileData,
-        fileName: file.originalname,
+      // Detect file type using centralized utility
+      const detectedType = detectFileType(file.mimetype, file.originalname);
+      this.logger.debug('File type detection', {
+        mimetype: file.mimetype,
+        originalname: file.originalname,
+        detectedType,
       });
 
-      const fileSource = await this.createTextSourceUseCase.execute(
-        createFileSourceCommand,
-      );
+      if (isDocumentFile(detectedType)) {
+        // Read file data from disk since we're using diskStorage
+        const fileData = fs.readFileSync(file.path);
+        const canonicalMimeType = getCanonicalMimeType(detectedType)!;
 
-      // Add the source to the agent
-      const sourceAssignment = await this.addSourceToAgentUseCase.execute(
-        new AddSourceToAgentCommand({
-          agentId,
-          source: fileSource,
-        }),
-      );
+        // Create the file source
+        const createFileSourceCommand = new CreateFileSourceCommand({
+          fileType: canonicalMimeType,
+          fileData: fileData,
+          fileName: file.originalname,
+        });
+
+        const fileSource = await this.createTextSourceUseCase.execute(
+          createFileSourceCommand,
+        );
+        sources.push(fileSource);
+      } else if (isCSVFile(detectedType)) {
+        const fileData = fs.readFileSync(file.path, 'utf8');
+        const { headers, data } = parseCSV(fileData);
+        const command = new CreateCSVDataSourceCommand({
+          name: file.originalname,
+          data: {
+            headers,
+            rows: data,
+          },
+        });
+        const source = await this.createDataSourceUseCase.execute(command);
+        sources.push(source);
+      } else if (isSpreadsheetFile(detectedType)) {
+        const fileData = fs.readFileSync(file.path);
+        const sheets = parseExcel(fileData);
+
+        // Validate that the file contains processable data
+        if (sheets.length === 0) {
+          throw new EmptyFileDataError(file.originalname);
+        }
+
+        // Get the base filename without extension
+        const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
+
+        for (const sheet of sheets) {
+          // Create a source name: if single sheet, use filename; if multiple, include sheet name
+          const sourceName =
+            sheets.length === 1
+              ? `${baseFileName}.csv`
+              : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
+
+          const command = new CreateCSVDataSourceCommand({
+            name: sourceName,
+            data: {
+              headers: sheet.headers,
+              rows: sheet.rows,
+            },
+          });
+          const source = await this.createDataSourceUseCase.execute(command);
+          sources.push(source);
+        }
+      } else {
+        throw new UnsupportedFileTypeError(
+          detectedType === 'unknown' ? file.originalname : detectedType,
+          ['PDF', 'DOCX', 'PPTX', 'CSV', 'XLSX', 'XLS'],
+        );
+      }
+
+      // Add all sources to the agent
+      const sourceAssignments: AgentSourceAssignment[] = [];
+      for (const source of sources) {
+        const sourceAssignment = await this.addSourceToAgentUseCase.execute(
+          new AddSourceToAgentCommand({
+            agentId,
+            source: source,
+          }),
+        );
+        sourceAssignments.push(sourceAssignment);
+      }
 
       // Clean up the uploaded file
       fs.unlinkSync(file.path);
-      return this.agentSourceDtoMapper.toDto(sourceAssignment);
+      return sourceAssignments.map((assignment) =>
+        this.agentSourceDtoMapper.toDto(assignment),
+      );
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error });
       // Clean up the uploaded file

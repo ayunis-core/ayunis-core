@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 import { AgentRepository } from '../../../application/ports/agent.repository';
 import { Agent } from '../../../domain/agent.entity';
@@ -20,7 +22,16 @@ export class LocalAgentRepository implements AgentRepository {
     @InjectRepository(AgentRecord)
     private readonly agentRepository: Repository<AgentRecord>,
     private readonly agentMapper: AgentMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
+
+  /**
+   * Get the EntityManager to use for database operations.
+   * Uses the CLS transaction context if available, otherwise falls back to the repository's manager.
+   */
+  private getManager(): EntityManager {
+    return this.txHost.tx ?? this.agentRepository.manager;
+  }
 
   async create(agent: Agent): Promise<Agent> {
     this.logger.log('create', {
@@ -75,144 +86,129 @@ export class LocalAgentRepository implements AgentRepository {
       userId: agent.userId,
     });
 
-    // get transaction
-    const queryRunner =
-      this.agentRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
+    // Use the CLS transaction context if available, otherwise use the repository's manager
+    const manager = this.getManager();
 
-    try {
-      await queryRunner.startTransaction();
-
-      const existing = await queryRunner.manager.findOne(AgentRecord, {
-        where: { id: agent.id, userId: agent.userId },
-        relations: {
-          agentTools: {
-            toolConfig: true,
-          },
-          model: {
-            model: true,
-          },
-          sourceAssignments: {
-            source: true,
-          },
-          mcpIntegrations: true,
+    const existing = await manager.findOne(AgentRecord, {
+      where: { id: agent.id, userId: agent.userId },
+      relations: {
+        agentTools: {
+          toolConfig: true,
         },
-      });
-
-      if (!existing) {
-        throw new AgentNotFoundError(agent.id);
-      }
-      this.logger.debug('Existing agent', {
-        existing,
-      });
-
-      // delete existing tool assignments if they are not in the new tool assignments
-      const existingToolAssignments = existing.agentTools;
-      const newToolAssignments = agent.toolAssignments;
-      const toolAssignmentsToDelete =
-        existingToolAssignments?.filter(
-          (ta) => !newToolAssignments.some((ta2) => ta2.id === ta.id),
-        ) ?? [];
-      this.logger.debug('Tool assignments to delete', {
-        existingToolAssignments,
-        newToolAssignments,
-        toolAssignmentsToDelete,
-      });
-      for (const ta of toolAssignmentsToDelete) {
-        await queryRunner.manager.delete(AgentToolAssignmentRecord, ta.id);
-      }
-
-      // delete existing source assignments if they are not in the new source assignments
-      const existingSourceAssignments = existing.sourceAssignments;
-      const newSourceAssignments = agent.sourceAssignments ?? [];
-      const sourceAssignmentsToDelete =
-        existingSourceAssignments?.filter(
-          (sa) => !newSourceAssignments.some((sa2) => sa2.id === sa.id),
-        ) ?? [];
-      this.logger.debug('Source assignments to delete', {
-        existingSourceAssignments,
-        newSourceAssignments,
-        sourceAssignmentsToDelete,
-      });
-      await queryRunner.manager.remove(
-        AgentSourceAssignmentRecord,
-        sourceAssignmentsToDelete,
-      );
-
-      const updatedAgent = new Agent({
-        ...agent,
-        toolAssignments: newToolAssignments,
-        sourceAssignments: newSourceAssignments,
-      });
-      this.logger.debug('Updated agent', {
-        agent,
-      });
-
-      // update agent with new data
-      const record = this.agentMapper.toRecord(updatedAgent);
-      const updatedRecord = await queryRunner.manager.save(AgentRecord, record);
-      this.logger.debug('Updated record', {
-        updatedRecord,
-      });
-
-      // Handle MCP integrations many-to-many relationship using relation API
-      const existingMcpIntegrationIds =
-        existing.mcpIntegrations?.map((i) => i.id) ?? [];
-      const newMcpIntegrationIds = agent.mcpIntegrationIds;
-
-      // Find integrations to add and remove
-      const integrationsToAdd = newMcpIntegrationIds.filter(
-        (id) => !existingMcpIntegrationIds.includes(id),
-      );
-      const integrationsToRemove = existingMcpIntegrationIds.filter(
-        (id) => !newMcpIntegrationIds.includes(id),
-      );
-
-      // Use relation API to update join table without loading full entities
-      if (integrationsToAdd.length > 0) {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .relation(AgentRecord, 'mcpIntegrations')
-          .of(agent.id)
-          .add(integrationsToAdd);
-      }
-
-      if (integrationsToRemove.length > 0) {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .relation(AgentRecord, 'mcpIntegrations')
-          .of(agent.id)
-          .remove(integrationsToRemove);
-      }
-
-      await queryRunner.commitTransaction();
-
-      // Reload with MCP integrations to return complete data
-      const reloadedAgent = await this.agentRepository.findOne({
-        where: { id: agent.id },
-        relations: {
-          mcpIntegrations: true,
-          agentTools: true,
+        model: {
           model: true,
-          sourceAssignments: {
-            source: true,
-          },
         },
-      });
+        sourceAssignments: {
+          source: true,
+        },
+        mcpIntegrations: true,
+      },
+    });
 
-      if (!reloadedAgent) {
-        throw new AgentNotFoundError(agent.id);
-      }
-
-      return this.agentMapper.toDomain(reloadedAgent);
-    } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
-      }
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (!existing) {
+      throw new AgentNotFoundError(agent.id);
     }
+    this.logger.debug('Existing agent', {
+      existing,
+    });
+
+    // delete existing tool assignments if they are not in the new tool assignments
+    const existingToolAssignments = existing.agentTools;
+    const newToolAssignments = agent.toolAssignments;
+    const toolAssignmentsToDelete =
+      existingToolAssignments?.filter(
+        (ta) => !newToolAssignments.some((ta2) => ta2.id === ta.id),
+      ) ?? [];
+    this.logger.debug('Tool assignments to delete', {
+      existingToolAssignments,
+      newToolAssignments,
+      toolAssignmentsToDelete,
+    });
+    for (const ta of toolAssignmentsToDelete) {
+      await manager.delete(AgentToolAssignmentRecord, ta.id);
+    }
+
+    // delete existing source assignments if they are not in the new source assignments
+    const existingSourceAssignments = existing.sourceAssignments;
+    const newSourceAssignments = agent.sourceAssignments ?? [];
+    const sourceAssignmentsToDelete =
+      existingSourceAssignments?.filter(
+        (sa) => !newSourceAssignments.some((sa2) => sa2.id === sa.id),
+      ) ?? [];
+    this.logger.debug('Source assignments to delete', {
+      existingSourceAssignments,
+      newSourceAssignments,
+      sourceAssignmentsToDelete,
+    });
+    await manager.remove(
+      AgentSourceAssignmentRecord,
+      sourceAssignmentsToDelete,
+    );
+
+    const updatedAgent = new Agent({
+      ...agent,
+      toolAssignments: newToolAssignments,
+      sourceAssignments: newSourceAssignments,
+    });
+    this.logger.debug('Updated agent', {
+      agent,
+    });
+
+    // update agent with new data
+    const record = this.agentMapper.toRecord(updatedAgent);
+    const updatedRecord = await manager.save(AgentRecord, record);
+    this.logger.debug('Updated record', {
+      updatedRecord,
+    });
+
+    // Handle MCP integrations many-to-many relationship using relation API
+    const existingMcpIntegrationIds =
+      existing.mcpIntegrations?.map((i) => i.id) ?? [];
+    const newMcpIntegrationIds = agent.mcpIntegrationIds;
+
+    // Find integrations to add and remove
+    const integrationsToAdd = newMcpIntegrationIds.filter(
+      (id) => !existingMcpIntegrationIds.includes(id),
+    );
+    const integrationsToRemove = existingMcpIntegrationIds.filter(
+      (id) => !newMcpIntegrationIds.includes(id),
+    );
+
+    // Use relation API to update join table without loading full entities
+    if (integrationsToAdd.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(AgentRecord, 'mcpIntegrations')
+        .of(agent.id)
+        .add(integrationsToAdd);
+    }
+
+    if (integrationsToRemove.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(AgentRecord, 'mcpIntegrations')
+        .of(agent.id)
+        .remove(integrationsToRemove);
+    }
+
+    // Reload with MCP integrations to return complete data
+    const reloadedAgent = await manager.findOne(AgentRecord, {
+      where: { id: agent.id },
+      relations: {
+        mcpIntegrations: true,
+        agentTools: true,
+        model: true,
+        sourceAssignments: {
+          source: true,
+        },
+      },
+    });
+
+    if (!reloadedAgent) {
+      throw new AgentNotFoundError(agent.id);
+    }
+
+    return this.agentMapper.toDomain(reloadedAgent);
   }
 
   async delete(agentId: UUID, userId: UUID): Promise<void> {

@@ -100,7 +100,7 @@ export default function AgentKnowledgeBaseCard({
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}
-                accept=".pdf,.txt,.doc,.docx,.md"
+                accept=".pdf,.docx,.pptx,.csv,.xlsx,.xls"
               />
               <TooltipIf
                 condition={!isEnabled}

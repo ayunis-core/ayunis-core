@@ -32,6 +32,7 @@ import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum
 import { SourceRepository } from '../../ports/source.repository';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
+import { MIME_TYPES } from 'src/common/util/file-type';
 
 @Injectable()
 export class CreateTextSourceUseCase {
@@ -123,11 +124,21 @@ export class CreateTextSourceUseCase {
     });
   }
 
-  private getFileType(fileType: string): FileType {
-    if (fileType === 'application/pdf') {
-      return FileType.PDF;
+  private getFileType(mimeType: string): FileType {
+    switch (mimeType) {
+      case MIME_TYPES.PDF:
+        return FileType.PDF;
+      case MIME_TYPES.DOCX:
+        return FileType.DOCX;
+      case MIME_TYPES.PPTX:
+        return FileType.PPTX;
+      default:
+        // This is a programming error - caller should validate/route file types before calling this use case
+        throw new Error(
+          `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
+            `This use case only handles PDF, DOCX, and PPTX. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+        );
     }
-    throw new Error('Invalid file type');
   }
 
   /**
