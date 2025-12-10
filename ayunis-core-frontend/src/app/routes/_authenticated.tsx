@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { createFileRoute, Outlet, redirect, isRedirect } from '@tanstack/react-router';
 import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,
@@ -37,10 +37,11 @@ export const Route = createFileRoute('/_authenticated')({
           },
         });
       } catch (e) {
-        // If extractErrorData threw (non-AxiosError), redirect to login anyway
-        if (e instanceof Error && e.message.includes('redirect')) {
-          throw e; // Re-throw redirect
+        // If it's a redirect (from EMAIL_NOT_VERIFIED or default case), re-throw it
+        if (isRedirect(e)) {
+          throw e;
         }
+        // If extractErrorData threw (non-AxiosError), redirect to login anyway
         throw redirect({
           to: '/login',
           search: {
