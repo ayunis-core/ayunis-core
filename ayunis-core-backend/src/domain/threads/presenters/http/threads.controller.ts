@@ -80,7 +80,10 @@ import { parseExcel } from 'src/common/util/excel';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { EmptyFileDataError } from '../../application/threads.errors';
+import {
+  EmptyFileDataError,
+  UnsupportedFileTypeError,
+} from '../../application/threads.errors';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -376,7 +379,10 @@ export class ThreadsController {
           sources.push(source);
         }
       } else {
-        throw new Error('Invalid file type');
+        throw new UnsupportedFileTypeError(
+          detectedType === 'unknown' ? file.originalname : detectedType,
+          ['PDF', 'DOCX', 'PPTX', 'CSV', 'XLSX', 'XLS'],
+        );
       }
 
       // Add all sources to the thread

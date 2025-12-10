@@ -36,7 +36,7 @@
     "agentsEmptyState": "Noch kein Agent erstellt",
     "fileSourceUploadError": "Fehler beim Hochladen der Datei",
     "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten",
-    "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt. Bitte laden Sie eine PDF-Datei hoch.",
+    "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
     "fileSourceDeleteError": "Fehler beim Löschen der Datei",
     "sourceNotFound": "Datei nicht gefunden. Sie wurde möglicherweise gelöscht.",
     "uploadDocument": "Dokument hochladen",
