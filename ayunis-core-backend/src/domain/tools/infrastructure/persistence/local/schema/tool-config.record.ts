@@ -9,7 +9,7 @@ export abstract class ToolConfigRecord extends BaseRecord {
   @Column()
   displayName: string;
 
-  @ManyToOne(() => UserRecord)
+  @ManyToOne(() => UserRecord, { onDelete: 'CASCADE' })
   user: UserRecord;
 
   @Column()

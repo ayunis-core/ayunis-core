@@ -5,7 +5,7 @@ import { Entity, Column, Index, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'trials' })
 export class TrialRecord extends BaseRecord {
-  @ManyToOne(() => OrgRecord)
+  @ManyToOne(() => OrgRecord, { onDelete: 'CASCADE' })
   org: OrgRecord;
 
   @Column()

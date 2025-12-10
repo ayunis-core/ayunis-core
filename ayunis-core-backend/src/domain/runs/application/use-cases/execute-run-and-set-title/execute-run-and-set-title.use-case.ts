@@ -25,6 +25,7 @@ import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -88,6 +89,10 @@ export class ExecuteRunAndSetTitleUseCase {
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
 
+      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND)
+      const errorCode =
+        error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
+
       // Yield error response
       const errorResponse: RunErrorResponseDto = {
         type: 'error',
@@ -97,7 +102,7 @@ export class ExecuteRunAndSetTitleUseCase {
             : 'An error occurred while executing the run',
         threadId: command.threadId,
         timestamp: new Date().toISOString(),
-        code: 'EXECUTION_ERROR',
+        code: errorCode,
         details: {
           error: error instanceof Error ? error.toString() : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'Unknown error',

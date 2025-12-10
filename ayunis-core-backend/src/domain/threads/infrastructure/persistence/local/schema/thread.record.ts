@@ -16,14 +16,14 @@ export class ThreadRecord extends BaseRecord {
   @Index()
   modelId?: UUID;
 
-  @ManyToOne(() => PermittedModelRecord)
+  @ManyToOne(() => PermittedModelRecord, { onDelete: 'SET NULL' })
   model?: PermittedModelRecord;
 
   @Column({ nullable: true })
   @Index()
   agentId?: UUID;
 
-  @ManyToOne(() => AgentRecord)
+  @ManyToOne(() => AgentRecord, { onDelete: 'SET NULL' })
   agent?: AgentRecord;
 
   @Column({ nullable: true })

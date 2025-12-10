@@ -57,6 +57,7 @@ import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-ca
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
 import { Response } from 'express';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
@@ -436,6 +437,10 @@ export class RunsController {
     } catch (error) {
       this.logger.error('Error in executeRunAndStream', error);
 
+      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND)
+      const errorCode =
+        error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
+
       // Send structured error response
       const errorResponse: RunErrorResponseDto = {
         type: 'error',
@@ -445,7 +450,7 @@ export class RunsController {
             : 'An error occurred while executing the run',
         threadId: params.threadId,
         timestamp: new Date().toISOString(),
-        code: 'EXECUTION_ERROR',
+        code: errorCode,
         details: {
           error: error instanceof Error ? error.toString() : 'Unknown error',
           stack: error instanceof Error ? error.stack : undefined,

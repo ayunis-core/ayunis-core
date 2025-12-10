@@ -25,7 +25,11 @@ export class AgentRecord extends BaseRecord {
   @Column({ nullable: false })
   modelId: UUID;
 
-  @ManyToOne(() => PermittedModelRecord, { nullable: false, eager: true })
+  @ManyToOne(() => PermittedModelRecord, {
+    nullable: false,
+    eager: true,
+    onDelete: 'RESTRICT',
+  })
   model: PermittedModelRecord;
 
   @Column({ nullable: false })

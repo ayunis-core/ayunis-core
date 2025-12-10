@@ -31,7 +31,10 @@ export class UserRecord extends BaseRecord {
   @Column()
   orgId: UUID;
 
-  @ManyToOne(() => OrgRecord, (org) => org.id, { nullable: false })
+  @ManyToOne(() => OrgRecord, (org) => org.id, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   org: OrgRecord;
 
   @Column({ default: false })
