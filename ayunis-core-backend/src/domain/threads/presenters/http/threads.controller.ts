@@ -73,6 +73,7 @@ import { parseExcel } from 'src/common/util/excel';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { EmptyFileDataError } from '../../application/threads.errors';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -341,6 +342,11 @@ export class ThreadsController {
       } else if (isExcel) {
         const fileData = fs.readFileSync(file.path);
         const sheets = parseExcel(fileData);
+
+        // Validate that the file contains processable data
+        if (sheets.length === 0) {
+          throw new EmptyFileDataError(file.originalname);
+        }
 
         // Get the base filename without extension
         const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
