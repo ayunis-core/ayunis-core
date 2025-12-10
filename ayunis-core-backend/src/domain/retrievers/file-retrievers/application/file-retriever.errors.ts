@@ -93,7 +93,7 @@ export class FileRetrieverUnexpectedError extends FileRetrieverError {
 export class InvalidFileTypeError extends FileRetrieverError {
   constructor(fileType: string, metadata?: ErrorMetadata) {
     super(
-      `This file type is currently not supported. Please upload a PDF file.`,
+      `${fileType} type is currently not supported.`,
       FileRetrieverErrorCode.INVALID_FILE_TYPE,
       400,
       metadata,
