@@ -1,4 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Mock the Transactional decorator
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { UnauthorizedException, Logger } from '@nestjs/common';
 import { UpdateAgentUseCase } from './update-agent.use-case';
 import { UpdateAgentCommand } from './update-agent.command';

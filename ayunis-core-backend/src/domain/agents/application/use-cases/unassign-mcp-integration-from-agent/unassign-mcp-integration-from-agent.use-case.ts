@@ -4,6 +4,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { AgentRepository } from '../../ports/agent.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnassignMcpIntegrationFromAgentCommand } from './unassign-mcp-integration-from-agent.command';
@@ -27,6 +28,7 @@ export class UnassignMcpIntegrationFromAgentUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(
     command: UnassignMcpIntegrationFromAgentCommand,
   ): Promise<Agent> {

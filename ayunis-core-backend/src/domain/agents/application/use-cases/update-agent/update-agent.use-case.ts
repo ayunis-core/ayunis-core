@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { AgentRepository } from '../../ports/agent.repository';
 import { UpdateAgentCommand } from './update-agent.command';
 import { Agent } from '../../../domain/agent.entity';
@@ -17,6 +18,7 @@ export class UpdateAgentUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: UpdateAgentCommand): Promise<Agent> {
     const userId = this.contextService.get('userId');
     if (!userId) {

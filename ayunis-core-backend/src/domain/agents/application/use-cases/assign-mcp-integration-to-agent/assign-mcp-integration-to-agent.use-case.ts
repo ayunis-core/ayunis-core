@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { AssignMcpIntegrationToAgentCommand } from './assign-mcp-integration-to-agent.command';
 import { AgentRepository } from '../../ports/agent.repository';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
@@ -44,6 +45,7 @@ export class AssignMcpIntegrationToAgentUseCase {
    * @throws McpIntegrationAlreadyAssignedError if integration is already assigned
    * @throws UnexpectedAgentError for unexpected errors
    */
+  @Transactional()
   async execute(command: AssignMcpIntegrationToAgentCommand): Promise<Agent> {
     this.logger.log('Assigning MCP integration to agent', {
       agentId: command.agentId,
