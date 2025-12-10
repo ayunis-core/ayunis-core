@@ -34,6 +34,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
+import {
+  detectFileType,
+  isDocumentFile,
+  isSpreadsheetFile,
+  isCSVFile,
+} from 'src/common/util/file-type';
 
 // Import use cases
 import { CreateThreadUseCase } from '../../application/use-cases/create-thread/create-thread.use-case';
@@ -300,23 +306,15 @@ export class ThreadsController {
     try {
       const sources: Source[] = [];
 
-      // Get file extension for disambiguation (some browsers send wrong MIME types)
-      const fileExtension = extname(file.originalname).toLowerCase();
+      // Detect file type using centralized utility
+      const detectedType = detectFileType(file.mimetype, file.originalname);
+      this.logger.debug('File type detection', {
+        mimetype: file.mimetype,
+        originalname: file.originalname,
+        detectedType,
+      });
 
-      // Determine actual file type using both MIME type and extension
-      // application/vnd.ms-excel can be sent by some browsers (e.g., Firefox) for CSV files
-      const isCSV =
-        file.mimetype === 'text/csv' ||
-        (file.mimetype === 'application/vnd.ms-excel' &&
-          fileExtension === '.csv');
-      const isExcel =
-        file.mimetype ===
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        (file.mimetype === 'application/vnd.ms-excel' &&
-          (fileExtension === '.xls' || fileExtension === '.xlsx'));
-      const isPDF = file.mimetype === 'application/pdf';
-
-      if (isPDF) {
+      if (isDocumentFile(detectedType)) {
         // Read file data from disk since we're using diskStorage
         const fileData = fs.readFileSync(file.path);
         // Create the file source
@@ -327,7 +325,7 @@ export class ThreadsController {
         });
         const source = await this.createTextSourceUseCase.execute(command);
         sources.push(source);
-      } else if (isCSV) {
+      } else if (isCSVFile(detectedType)) {
         const fileData = fs.readFileSync(file.path, 'utf8');
         const { headers, data } = parseCSV(fileData);
         const command = new CreateCSVDataSourceCommand({
@@ -339,7 +337,7 @@ export class ThreadsController {
         });
         const source = await this.createDataSourceUseCase.execute(command);
         sources.push(source);
-      } else if (isExcel) {
+      } else if (isSpreadsheetFile(detectedType)) {
         const fileData = fs.readFileSync(file.path);
         const sheets = parseExcel(fileData);
 

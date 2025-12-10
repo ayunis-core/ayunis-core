@@ -3,6 +3,7 @@ import {
   ErrorMetadata,
 } from '../../../../common/errors/base.error';
 import {
+  BadRequestException,
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ export enum FileRetrieverErrorCode {
   PROVIDER_NOT_AVAILABLE = 'PROVIDER_NOT_AVAILABLE',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   RETRIEVAL_FAILED = 'RETRIEVAL_FAILED',
+  INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
 }
 
 /**
@@ -34,6 +36,12 @@ export abstract class FileRetrieverError extends ApplicationError {
    */
   toHttpException() {
     switch (this.statusCode) {
+      case 400:
+        return new BadRequestException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
       case 404:
         return new NotFoundException({
           code: this.code,
@@ -79,5 +87,16 @@ export class FileRetrieverUnexpectedError extends FileRetrieverError {
       ...metadata,
       error,
     });
+  }
+}
+
+export class InvalidFileTypeError extends FileRetrieverError {
+  constructor(fileType: string, metadata?: ErrorMetadata) {
+    super(
+      `This file type is currently not supported. Please upload a PDF file.`,
+      FileRetrieverErrorCode.INVALID_FILE_TYPE,
+      400,
+      metadata,
+    );
   }
 }

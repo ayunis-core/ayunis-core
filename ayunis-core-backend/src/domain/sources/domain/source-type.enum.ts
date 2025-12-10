@@ -10,6 +10,8 @@ export enum TextType {
 
 export enum FileType {
   PDF = 'pdf',
+  DOCX = 'docx',
+  PPTX = 'pptx',
 }
 
 export enum DataType {

@@ -36,6 +36,7 @@
     "agentsEmptyState": "No agent created yet",
     "fileSourceUploadError": "Error uploading file",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data",
+    "invalidFileTypeError": "This file type is currently not supported. Please upload a PDF file.",
     "fileSourceDeleteError": "Error deleting file",
     "sourceNotFound": "File not found. It may have been deleted.",
     "uploadDocument": "Upload Document",
