@@ -101,6 +101,22 @@ describe('detectFileType', () => {
     it('returns "csv" when MIME type is application/vnd.ms-excel but extension is .csv', () => {
       expect(detectFileType(MIME_TYPES.XLS, 'data.csv')).toBe('csv');
     });
+
+    it('returns "csv" when extension is .csv but MIME type is application/octet-stream', () => {
+      expect(detectFileType('application/octet-stream', 'data.csv')).toBe(
+        'csv',
+      );
+    });
+
+    it('returns "csv" when extension is .CSV (case insensitive)', () => {
+      expect(detectFileType('application/octet-stream', 'DATA.CSV')).toBe(
+        'csv',
+      );
+    });
+
+    it('returns "csv" when MIME type is text/csv but extension is different', () => {
+      expect(detectFileType(MIME_TYPES.CSV, 'data.txt')).toBe('csv');
+    });
   });
 
   describe('Unknown handling', () => {

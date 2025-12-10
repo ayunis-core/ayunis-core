@@ -80,11 +80,8 @@ export function detectFileType(
   }
 
   // CSV
-  // Note: Some browsers (e.g., Firefox) send application/vnd.ms-excel for CSV files
-  if (
-    mimetype === MIME_TYPES.CSV ||
-    (mimetype === MIME_TYPES.XLS && ext === FILE_EXTENSIONS.CSV)
-  ) {
+  // Use extension-based fallback when MIME type is incorrect (e.g., application/octet-stream)
+  if (mimetype === MIME_TYPES.CSV || ext === FILE_EXTENSIONS.CSV) {
     return 'csv';
   }
 
