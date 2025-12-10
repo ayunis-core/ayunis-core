@@ -299,64 +299,71 @@ export class ThreadsController {
     try {
       const sources: Source[] = [];
 
-      switch (file.mimetype) {
-        case 'application/pdf': {
-          // Read file data from disk since we're using diskStorage
-          const fileData = fs.readFileSync(file.path);
-          // Create the file source
-          const command = new CreateFileSourceCommand({
-            fileType: file.mimetype,
-            fileData: fileData,
-            fileName: file.originalname,
-          });
-          const source = await this.createTextSourceUseCase.execute(command);
-          sources.push(source);
-          break;
-        }
-        case 'text/csv': {
-          const fileData = fs.readFileSync(file.path, 'utf8');
-          const { headers, data } = parseCSV(fileData);
+      // Get file extension for disambiguation (some browsers send wrong MIME types)
+      const fileExtension = extname(file.originalname).toLowerCase();
+
+      // Determine actual file type using both MIME type and extension
+      // application/vnd.ms-excel can be sent by some browsers (e.g., Firefox) for CSV files
+      const isCSV =
+        file.mimetype === 'text/csv' ||
+        (file.mimetype === 'application/vnd.ms-excel' &&
+          fileExtension === '.csv');
+      const isExcel =
+        file.mimetype ===
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        (file.mimetype === 'application/vnd.ms-excel' &&
+          (fileExtension === '.xls' || fileExtension === '.xlsx'));
+      const isPDF = file.mimetype === 'application/pdf';
+
+      if (isPDF) {
+        // Read file data from disk since we're using diskStorage
+        const fileData = fs.readFileSync(file.path);
+        // Create the file source
+        const command = new CreateFileSourceCommand({
+          fileType: file.mimetype,
+          fileData: fileData,
+          fileName: file.originalname,
+        });
+        const source = await this.createTextSourceUseCase.execute(command);
+        sources.push(source);
+      } else if (isCSV) {
+        const fileData = fs.readFileSync(file.path, 'utf8');
+        const { headers, data } = parseCSV(fileData);
+        const command = new CreateCSVDataSourceCommand({
+          name: file.originalname,
+          data: {
+            headers,
+            rows: data,
+          },
+        });
+        const source = await this.createDataSourceUseCase.execute(command);
+        sources.push(source);
+      } else if (isExcel) {
+        const fileData = fs.readFileSync(file.path);
+        const sheets = parseExcel(fileData);
+
+        // Get the base filename without extension
+        const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
+
+        for (const sheet of sheets) {
+          // Create a source name: if single sheet, use filename; if multiple, include sheet name
+          const sourceName =
+            sheets.length === 1
+              ? `${baseFileName}.csv`
+              : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
+
           const command = new CreateCSVDataSourceCommand({
-            name: file.originalname,
+            name: sourceName,
             data: {
-              headers,
-              rows: data,
+              headers: sheet.headers,
+              rows: sheet.rows,
             },
           });
           const source = await this.createDataSourceUseCase.execute(command);
           sources.push(source);
-          break;
         }
-        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': // .xlsx
-        case 'application/vnd.ms-excel': {
-          // .xls
-          const fileData = fs.readFileSync(file.path);
-          const sheets = parseExcel(fileData);
-
-          // Get the base filename without extension
-          const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
-
-          for (const sheet of sheets) {
-            // Create a source name: if single sheet, use filename; if multiple, include sheet name
-            const sourceName =
-              sheets.length === 1
-                ? `${baseFileName}.csv`
-                : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
-
-            const command = new CreateCSVDataSourceCommand({
-              name: sourceName,
-              data: {
-                headers: sheet.headers,
-                rows: sheet.rows,
-              },
-            });
-            const source = await this.createDataSourceUseCase.execute(command);
-            sources.push(source);
-          }
-          break;
-        }
-        default:
-          throw new Error('Invalid file type');
+      } else {
+        throw new Error('Invalid file type');
       }
 
       // Add all sources to the thread
