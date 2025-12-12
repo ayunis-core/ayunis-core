@@ -33,7 +33,7 @@ export default function CreateCalendarEventWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const { generate } = useGenerateIcs();
 
   const params = (content.params || {}) as Partial<CalendarEventInput>;

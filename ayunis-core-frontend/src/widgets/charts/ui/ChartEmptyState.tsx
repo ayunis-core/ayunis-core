@@ -2,7 +2,7 @@
 import { useTranslation } from 'react-i18next';
 
 export function ChartEmptyState() {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
 
   return (
     <div className="my-2 w-full p-4 text-sm text-muted-foreground">

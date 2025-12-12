@@ -10,415 +10,430 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as AuthenticatedImport } from "./routes/_authenticated";
-import { Route as IndexImport } from "./routes/index";
-import { Route as onboardingRegisterImport } from "./routes/(onboarding)/register";
-import { Route as onboardingLoginImport } from "./routes/(onboarding)/login";
-import { Route as onboardingEmailConfirmImport } from "./routes/(onboarding)/email-confirm";
-import { Route as onboardingConfirmEmailImport } from "./routes/(onboarding)/confirm-email";
-import { Route as onboardingAcceptInviteImport } from "./routes/(onboarding)/accept-invite";
-import { Route as AuthenticatedSuperAdminSettingsIndexImport } from "./routes/_authenticated/super-admin-settings.index";
-import { Route as AuthenticatedSettingsIndexImport } from "./routes/_authenticated/settings.index";
-import { Route as AuthenticatedPromptsIndexImport } from "./routes/_authenticated/prompts.index";
-import { Route as AuthenticatedChatIndexImport } from "./routes/_authenticated/chat.index";
-import { Route as AuthenticatedAgentsIndexImport } from "./routes/_authenticated/agents.index";
-import { Route as AuthenticatedAdminSettingsIndexImport } from "./routes/_authenticated/admin-settings.index";
-import { Route as AuthenticatedSettingsGeneralImport } from "./routes/_authenticated/settings.general";
-import { Route as AuthenticatedSettingsAccountImport } from "./routes/_authenticated/settings.account";
-import { Route as AuthenticatedChatsThreadIdImport } from "./routes/_authenticated/chats.$threadId";
-import { Route as AuthenticatedAgentsIdImport } from "./routes/_authenticated/agents.$id";
-import { Route as AuthenticatedAdminSettingsUsersImport } from "./routes/_authenticated/admin-settings.users";
-import { Route as AuthenticatedAdminSettingsModelsImport } from "./routes/_authenticated/admin-settings.models";
-import { Route as AuthenticatedAdminSettingsIntegrationsImport } from "./routes/_authenticated/admin-settings.integrations";
-import { Route as AuthenticatedAdminSettingsBillingImport } from "./routes/_authenticated/admin-settings.billing";
-import { Route as onboardingPasswordResetImport } from "./routes/(onboarding)/password.reset";
-import { Route as onboardingPasswordForgotImport } from "./routes/(onboarding)/password.forgot";
-import { Route as AuthenticatedSuperAdminSettingsOrgsIndexImport } from "./routes/_authenticated/super-admin-settings.orgs.index";
-import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexImport } from "./routes/_authenticated/super-admin-settings.models-catalog.index";
-import { Route as AuthenticatedSuperAdminSettingsOrgsIdImport } from "./routes/_authenticated/super-admin-settings.orgs.$id";
+import { Route as rootRoute } from './routes/__root'
+import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as IndexImport } from './routes/index'
+import { Route as onboardingRegisterImport } from './routes/(onboarding)/register'
+import { Route as onboardingLoginImport } from './routes/(onboarding)/login'
+import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/email-confirm'
+import { Route as onboardingConfirmEmailImport } from './routes/(onboarding)/confirm-email'
+import { Route as onboardingAcceptInviteImport } from './routes/(onboarding)/accept-invite'
+import { Route as AuthenticatedSuperAdminSettingsIndexImport } from './routes/_authenticated/super-admin-settings.index'
+import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticated/prompts.index'
+import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats.index'
+import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
+import { Route as AuthenticatedAgentsIndexImport } from './routes/_authenticated/agents.index'
+import { Route as AuthenticatedAdminSettingsIndexImport } from './routes/_authenticated/admin-settings.index'
+import { Route as AuthenticatedSettingsGeneralImport } from './routes/_authenticated/settings.general'
+import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings.account'
+import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
+import { Route as AuthenticatedAgentsIdImport } from './routes/_authenticated/agents.$id'
+import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
+import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
+import { Route as AuthenticatedAdminSettingsIntegrationsImport } from './routes/_authenticated/admin-settings.integrations'
+import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
+import { Route as onboardingPasswordResetImport } from './routes/(onboarding)/password.reset'
+import { Route as onboardingPasswordForgotImport } from './routes/(onboarding)/password.forgot'
+import { Route as AuthenticatedSuperAdminSettingsOrgsIndexImport } from './routes/_authenticated/super-admin-settings.orgs.index'
+import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
+import { Route as AuthenticatedSuperAdminSettingsOrgsIdImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 
 // Create/Update Routes
 
 const AuthenticatedRoute = AuthenticatedImport.update({
-  id: "/_authenticated",
+  id: '/_authenticated',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const IndexRoute = IndexImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const onboardingRegisterRoute = onboardingRegisterImport.update({
-  id: "/(onboarding)/register",
-  path: "/register",
+  id: '/(onboarding)/register',
+  path: '/register',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const onboardingLoginRoute = onboardingLoginImport.update({
-  id: "/(onboarding)/login",
-  path: "/login",
+  id: '/(onboarding)/login',
+  path: '/login',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const onboardingEmailConfirmRoute = onboardingEmailConfirmImport.update({
-  id: "/(onboarding)/email-confirm",
-  path: "/email-confirm",
+  id: '/(onboarding)/email-confirm',
+  path: '/email-confirm',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const onboardingConfirmEmailRoute = onboardingConfirmEmailImport.update({
-  id: "/(onboarding)/confirm-email",
-  path: "/confirm-email",
+  id: '/(onboarding)/confirm-email',
+  path: '/confirm-email',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const onboardingAcceptInviteRoute = onboardingAcceptInviteImport.update({
-  id: "/(onboarding)/accept-invite",
-  path: "/accept-invite",
+  id: '/(onboarding)/accept-invite',
+  path: '/accept-invite',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const AuthenticatedSuperAdminSettingsIndexRoute =
   AuthenticatedSuperAdminSettingsIndexImport.update({
-    id: "/super-admin-settings/",
-    path: "/super-admin-settings/",
+    id: '/super-admin-settings/',
+    path: '/super-admin-settings/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
   {
-    id: "/settings/",
-    path: "/settings/",
+    id: '/settings/',
+    path: '/settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any,
-);
+)
 
 const AuthenticatedPromptsIndexRoute = AuthenticatedPromptsIndexImport.update({
-  id: "/prompts/",
-  path: "/prompts/",
+  id: '/prompts/',
+  path: '/prompts/',
   getParentRoute: () => AuthenticatedRoute,
-} as any);
+} as any)
+
+const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexImport.update({
+  id: '/chats/',
+  path: '/chats/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexImport.update({
-  id: "/chat/",
-  path: "/chat/",
+  id: '/chat/',
+  path: '/chat/',
   getParentRoute: () => AuthenticatedRoute,
-} as any);
+} as any)
 
 const AuthenticatedAgentsIndexRoute = AuthenticatedAgentsIndexImport.update({
-  id: "/agents/",
-  path: "/agents/",
+  id: '/agents/',
+  path: '/agents/',
   getParentRoute: () => AuthenticatedRoute,
-} as any);
+} as any)
 
 const AuthenticatedAdminSettingsIndexRoute =
   AuthenticatedAdminSettingsIndexImport.update({
-    id: "/admin-settings/",
-    path: "/admin-settings/",
+    id: '/admin-settings/',
+    path: '/admin-settings/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedSettingsGeneralRoute =
   AuthenticatedSettingsGeneralImport.update({
-    id: "/settings/general",
-    path: "/settings/general",
+    id: '/settings/general',
+    path: '/settings/general',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedSettingsAccountRoute =
   AuthenticatedSettingsAccountImport.update({
-    id: "/settings/account",
-    path: "/settings/account",
+    id: '/settings/account',
+    path: '/settings/account',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedChatsThreadIdRoute = AuthenticatedChatsThreadIdImport.update(
   {
-    id: "/chats/$threadId",
-    path: "/chats/$threadId",
+    id: '/chats/$threadId',
+    path: '/chats/$threadId',
     getParentRoute: () => AuthenticatedRoute,
   } as any,
-);
+)
 
 const AuthenticatedAgentsIdRoute = AuthenticatedAgentsIdImport.update({
-  id: "/agents/$id",
-  path: "/agents/$id",
+  id: '/agents/$id',
+  path: '/agents/$id',
   getParentRoute: () => AuthenticatedRoute,
-} as any);
+} as any)
 
 const AuthenticatedAdminSettingsUsersRoute =
   AuthenticatedAdminSettingsUsersImport.update({
-    id: "/admin-settings/users",
-    path: "/admin-settings/users",
+    id: '/admin-settings/users',
+    path: '/admin-settings/users',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedAdminSettingsModelsRoute =
   AuthenticatedAdminSettingsModelsImport.update({
-    id: "/admin-settings/models",
-    path: "/admin-settings/models",
+    id: '/admin-settings/models',
+    path: '/admin-settings/models',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedAdminSettingsIntegrationsRoute =
   AuthenticatedAdminSettingsIntegrationsImport.update({
-    id: "/admin-settings/integrations",
-    path: "/admin-settings/integrations",
+    id: '/admin-settings/integrations',
+    path: '/admin-settings/integrations',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedAdminSettingsBillingRoute =
   AuthenticatedAdminSettingsBillingImport.update({
-    id: "/admin-settings/billing",
-    path: "/admin-settings/billing",
+    id: '/admin-settings/billing',
+    path: '/admin-settings/billing',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const onboardingPasswordResetRoute = onboardingPasswordResetImport.update({
-  id: "/(onboarding)/password/reset",
-  path: "/password/reset",
+  id: '/(onboarding)/password/reset',
+  path: '/password/reset',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const onboardingPasswordForgotRoute = onboardingPasswordForgotImport.update({
-  id: "/(onboarding)/password/forgot",
-  path: "/password/forgot",
+  id: '/(onboarding)/password/forgot',
+  path: '/password/forgot',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const AuthenticatedSuperAdminSettingsOrgsIndexRoute =
   AuthenticatedSuperAdminSettingsOrgsIndexImport.update({
-    id: "/super-admin-settings/orgs/",
-    path: "/super-admin-settings/orgs/",
+    id: '/super-admin-settings/orgs/',
+    path: '/super-admin-settings/orgs/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute =
   AuthenticatedSuperAdminSettingsModelsCatalogIndexImport.update({
-    id: "/super-admin-settings/models-catalog/",
-    path: "/super-admin-settings/models-catalog/",
+    id: '/super-admin-settings/models-catalog/',
+    path: '/super-admin-settings/models-catalog/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 const AuthenticatedSuperAdminSettingsOrgsIdRoute =
   AuthenticatedSuperAdminSettingsOrgsIdImport.update({
-    id: "/super-admin-settings/orgs/$id",
-    path: "/super-admin-settings/orgs/$id",
+    id: '/super-admin-settings/orgs/$id',
+    path: '/super-admin-settings/orgs/$id',
     getParentRoute: () => AuthenticatedRoute,
-  } as any);
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/_authenticated": {
-      id: "/_authenticated";
-      path: "";
-      fullPath: "";
-      preLoaderRoute: typeof AuthenticatedImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/accept-invite": {
-      id: "/(onboarding)/accept-invite";
-      path: "/accept-invite";
-      fullPath: "/accept-invite";
-      preLoaderRoute: typeof onboardingAcceptInviteImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/confirm-email": {
-      id: "/(onboarding)/confirm-email";
-      path: "/confirm-email";
-      fullPath: "/confirm-email";
-      preLoaderRoute: typeof onboardingConfirmEmailImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/email-confirm": {
-      id: "/(onboarding)/email-confirm";
-      path: "/email-confirm";
-      fullPath: "/email-confirm";
-      preLoaderRoute: typeof onboardingEmailConfirmImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/login": {
-      id: "/(onboarding)/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof onboardingLoginImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/register": {
-      id: "/(onboarding)/register";
-      path: "/register";
-      fullPath: "/register";
-      preLoaderRoute: typeof onboardingRegisterImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/password/forgot": {
-      id: "/(onboarding)/password/forgot";
-      path: "/password/forgot";
-      fullPath: "/password/forgot";
-      preLoaderRoute: typeof onboardingPasswordForgotImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/(onboarding)/password/reset": {
-      id: "/(onboarding)/password/reset";
-      path: "/password/reset";
-      fullPath: "/password/reset";
-      preLoaderRoute: typeof onboardingPasswordResetImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/_authenticated/admin-settings/billing": {
-      id: "/_authenticated/admin-settings/billing";
-      path: "/admin-settings/billing";
-      fullPath: "/admin-settings/billing";
-      preLoaderRoute: typeof AuthenticatedAdminSettingsBillingImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/admin-settings/integrations": {
-      id: "/_authenticated/admin-settings/integrations";
-      path: "/admin-settings/integrations";
-      fullPath: "/admin-settings/integrations";
-      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/admin-settings/models": {
-      id: "/_authenticated/admin-settings/models";
-      path: "/admin-settings/models";
-      fullPath: "/admin-settings/models";
-      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/admin-settings/users": {
-      id: "/_authenticated/admin-settings/users";
-      path: "/admin-settings/users";
-      fullPath: "/admin-settings/users";
-      preLoaderRoute: typeof AuthenticatedAdminSettingsUsersImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/agents/$id": {
-      id: "/_authenticated/agents/$id";
-      path: "/agents/$id";
-      fullPath: "/agents/$id";
-      preLoaderRoute: typeof AuthenticatedAgentsIdImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/chats/$threadId": {
-      id: "/_authenticated/chats/$threadId";
-      path: "/chats/$threadId";
-      fullPath: "/chats/$threadId";
-      preLoaderRoute: typeof AuthenticatedChatsThreadIdImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/settings/account": {
-      id: "/_authenticated/settings/account";
-      path: "/settings/account";
-      fullPath: "/settings/account";
-      preLoaderRoute: typeof AuthenticatedSettingsAccountImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/settings/general": {
-      id: "/_authenticated/settings/general";
-      path: "/settings/general";
-      fullPath: "/settings/general";
-      preLoaderRoute: typeof AuthenticatedSettingsGeneralImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/admin-settings/": {
-      id: "/_authenticated/admin-settings/";
-      path: "/admin-settings";
-      fullPath: "/admin-settings";
-      preLoaderRoute: typeof AuthenticatedAdminSettingsIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/agents/": {
-      id: "/_authenticated/agents/";
-      path: "/agents";
-      fullPath: "/agents";
-      preLoaderRoute: typeof AuthenticatedAgentsIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/chat/": {
-      id: "/_authenticated/chat/";
-      path: "/chat";
-      fullPath: "/chat";
-      preLoaderRoute: typeof AuthenticatedChatIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/prompts/": {
-      id: "/_authenticated/prompts/";
-      path: "/prompts";
-      fullPath: "/prompts";
-      preLoaderRoute: typeof AuthenticatedPromptsIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/settings/": {
-      id: "/_authenticated/settings/";
-      path: "/settings";
-      fullPath: "/settings";
-      preLoaderRoute: typeof AuthenticatedSettingsIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/super-admin-settings/": {
-      id: "/_authenticated/super-admin-settings/";
-      path: "/super-admin-settings";
-      fullPath: "/super-admin-settings";
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/super-admin-settings/orgs/$id": {
-      id: "/_authenticated/super-admin-settings/orgs/$id";
-      path: "/super-admin-settings/orgs/$id";
-      fullPath: "/super-admin-settings/orgs/$id";
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/super-admin-settings/models-catalog/": {
-      id: "/_authenticated/super-admin-settings/models-catalog/";
-      path: "/super-admin-settings/models-catalog";
-      fullPath: "/super-admin-settings/models-catalog";
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
-    "/_authenticated/super-admin-settings/orgs/": {
-      id: "/_authenticated/super-admin-settings/orgs/";
-      path: "/super-admin-settings/orgs";
-      fullPath: "/super-admin-settings/orgs";
-      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexImport;
-      parentRoute: typeof AuthenticatedImport;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/accept-invite': {
+      id: '/(onboarding)/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof onboardingAcceptInviteImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/confirm-email': {
+      id: '/(onboarding)/confirm-email'
+      path: '/confirm-email'
+      fullPath: '/confirm-email'
+      preLoaderRoute: typeof onboardingConfirmEmailImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/email-confirm': {
+      id: '/(onboarding)/email-confirm'
+      path: '/email-confirm'
+      fullPath: '/email-confirm'
+      preLoaderRoute: typeof onboardingEmailConfirmImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/login': {
+      id: '/(onboarding)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof onboardingLoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/register': {
+      id: '/(onboarding)/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof onboardingRegisterImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/password/forgot': {
+      id: '/(onboarding)/password/forgot'
+      path: '/password/forgot'
+      fullPath: '/password/forgot'
+      preLoaderRoute: typeof onboardingPasswordForgotImport
+      parentRoute: typeof rootRoute
+    }
+    '/(onboarding)/password/reset': {
+      id: '/(onboarding)/password/reset'
+      path: '/password/reset'
+      fullPath: '/password/reset'
+      preLoaderRoute: typeof onboardingPasswordResetImport
+      parentRoute: typeof rootRoute
+    }
+    '/_authenticated/admin-settings/billing': {
+      id: '/_authenticated/admin-settings/billing'
+      path: '/admin-settings/billing'
+      fullPath: '/admin-settings/billing'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsBillingImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/admin-settings/integrations': {
+      id: '/_authenticated/admin-settings/integrations'
+      path: '/admin-settings/integrations'
+      fullPath: '/admin-settings/integrations'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/admin-settings/models': {
+      id: '/_authenticated/admin-settings/models'
+      path: '/admin-settings/models'
+      fullPath: '/admin-settings/models'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsModelsImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/admin-settings/users': {
+      id: '/_authenticated/admin-settings/users'
+      path: '/admin-settings/users'
+      fullPath: '/admin-settings/users'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsUsersImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/agents/$id': {
+      id: '/_authenticated/agents/$id'
+      path: '/agents/$id'
+      fullPath: '/agents/$id'
+      preLoaderRoute: typeof AuthenticatedAgentsIdImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/chats/$threadId': {
+      id: '/_authenticated/chats/$threadId'
+      path: '/chats/$threadId'
+      fullPath: '/chats/$threadId'
+      preLoaderRoute: typeof AuthenticatedChatsThreadIdImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/settings/account': {
+      id: '/_authenticated/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof AuthenticatedSettingsAccountImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/settings/general': {
+      id: '/_authenticated/settings/general'
+      path: '/settings/general'
+      fullPath: '/settings/general'
+      preLoaderRoute: typeof AuthenticatedSettingsGeneralImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/admin-settings/': {
+      id: '/_authenticated/admin-settings/'
+      path: '/admin-settings'
+      fullPath: '/admin-settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/agents/': {
+      id: '/_authenticated/agents/'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AuthenticatedAgentsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/chat/': {
+      id: '/_authenticated/chat/'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/chats/': {
+      id: '/_authenticated/chats/'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof AuthenticatedChatsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/prompts/': {
+      id: '/_authenticated/prompts/'
+      path: '/prompts'
+      fullPath: '/prompts'
+      preLoaderRoute: typeof AuthenticatedPromptsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/super-admin-settings/': {
+      id: '/_authenticated/super-admin-settings/'
+      path: '/super-admin-settings'
+      fullPath: '/super-admin-settings'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/super-admin-settings/orgs/$id': {
+      id: '/_authenticated/super-admin-settings/orgs/$id'
+      path: '/super-admin-settings/orgs/$id'
+      fullPath: '/super-admin-settings/orgs/$id'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/super-admin-settings/models-catalog/': {
+      id: '/_authenticated/super-admin-settings/models-catalog/'
+      path: '/super-admin-settings/models-catalog'
+      fullPath: '/super-admin-settings/models-catalog'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/super-admin-settings/orgs/': {
+      id: '/_authenticated/super-admin-settings/orgs/'
+      path: '/super-admin-settings/orgs'
+      fullPath: '/super-admin-settings/orgs'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
   }
 }
 
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute;
-  AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute;
-  AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute;
-  AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute;
-  AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute;
-  AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute;
-  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute;
-  AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute;
-  AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute;
-  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute;
-  AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute;
-  AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute;
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute;
-  AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute;
-  AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute;
-  AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute;
-  AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute;
+  AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
+  AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
+  AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
+  AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
+  AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
+  AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
+  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
+  AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
+  AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
+  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
+  AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
+  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
+  AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -435,6 +450,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
   AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
+  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedPromptsIndexRoute: AuthenticatedPromptsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
@@ -445,198 +461,204 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute,
   AuthenticatedSuperAdminSettingsOrgsIndexRoute:
     AuthenticatedSuperAdminSettingsOrgsIndexRoute,
-};
+}
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
-);
+)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "": typeof AuthenticatedRouteWithChildren;
-  "/accept-invite": typeof onboardingAcceptInviteRoute;
-  "/confirm-email": typeof onboardingConfirmEmailRoute;
-  "/email-confirm": typeof onboardingEmailConfirmRoute;
-  "/login": typeof onboardingLoginRoute;
-  "/register": typeof onboardingRegisterRoute;
-  "/password/forgot": typeof onboardingPasswordForgotRoute;
-  "/password/reset": typeof onboardingPasswordResetRoute;
-  "/admin-settings/billing": typeof AuthenticatedAdminSettingsBillingRoute;
-  "/admin-settings/integrations": typeof AuthenticatedAdminSettingsIntegrationsRoute;
-  "/admin-settings/models": typeof AuthenticatedAdminSettingsModelsRoute;
-  "/admin-settings/users": typeof AuthenticatedAdminSettingsUsersRoute;
-  "/agents/$id": typeof AuthenticatedAgentsIdRoute;
-  "/chats/$threadId": typeof AuthenticatedChatsThreadIdRoute;
-  "/settings/account": typeof AuthenticatedSettingsAccountRoute;
-  "/settings/general": typeof AuthenticatedSettingsGeneralRoute;
-  "/admin-settings": typeof AuthenticatedAdminSettingsIndexRoute;
-  "/agents": typeof AuthenticatedAgentsIndexRoute;
-  "/chat": typeof AuthenticatedChatIndexRoute;
-  "/prompts": typeof AuthenticatedPromptsIndexRoute;
-  "/settings": typeof AuthenticatedSettingsIndexRoute;
-  "/super-admin-settings": typeof AuthenticatedSuperAdminSettingsIndexRoute;
-  "/super-admin-settings/orgs/$id": typeof AuthenticatedSuperAdminSettingsOrgsIdRoute;
-  "/super-admin-settings/models-catalog": typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute;
-  "/super-admin-settings/orgs": typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute;
+  '/': typeof IndexRoute
+  '': typeof AuthenticatedRouteWithChildren
+  '/accept-invite': typeof onboardingAcceptInviteRoute
+  '/confirm-email': typeof onboardingConfirmEmailRoute
+  '/email-confirm': typeof onboardingEmailConfirmRoute
+  '/login': typeof onboardingLoginRoute
+  '/register': typeof onboardingRegisterRoute
+  '/password/forgot': typeof onboardingPasswordForgotRoute
+  '/password/reset': typeof onboardingPasswordResetRoute
+  '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
+  '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
+  '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
+  '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
+  '/agents': typeof AuthenticatedAgentsIndexRoute
+  '/chat': typeof AuthenticatedChatIndexRoute
+  '/chats': typeof AuthenticatedChatsIndexRoute
+  '/prompts': typeof AuthenticatedPromptsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "": typeof AuthenticatedRouteWithChildren;
-  "/accept-invite": typeof onboardingAcceptInviteRoute;
-  "/confirm-email": typeof onboardingConfirmEmailRoute;
-  "/email-confirm": typeof onboardingEmailConfirmRoute;
-  "/login": typeof onboardingLoginRoute;
-  "/register": typeof onboardingRegisterRoute;
-  "/password/forgot": typeof onboardingPasswordForgotRoute;
-  "/password/reset": typeof onboardingPasswordResetRoute;
-  "/admin-settings/billing": typeof AuthenticatedAdminSettingsBillingRoute;
-  "/admin-settings/integrations": typeof AuthenticatedAdminSettingsIntegrationsRoute;
-  "/admin-settings/models": typeof AuthenticatedAdminSettingsModelsRoute;
-  "/admin-settings/users": typeof AuthenticatedAdminSettingsUsersRoute;
-  "/agents/$id": typeof AuthenticatedAgentsIdRoute;
-  "/chats/$threadId": typeof AuthenticatedChatsThreadIdRoute;
-  "/settings/account": typeof AuthenticatedSettingsAccountRoute;
-  "/settings/general": typeof AuthenticatedSettingsGeneralRoute;
-  "/admin-settings": typeof AuthenticatedAdminSettingsIndexRoute;
-  "/agents": typeof AuthenticatedAgentsIndexRoute;
-  "/chat": typeof AuthenticatedChatIndexRoute;
-  "/prompts": typeof AuthenticatedPromptsIndexRoute;
-  "/settings": typeof AuthenticatedSettingsIndexRoute;
-  "/super-admin-settings": typeof AuthenticatedSuperAdminSettingsIndexRoute;
-  "/super-admin-settings/orgs/$id": typeof AuthenticatedSuperAdminSettingsOrgsIdRoute;
-  "/super-admin-settings/models-catalog": typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute;
-  "/super-admin-settings/orgs": typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute;
+  '/': typeof IndexRoute
+  '': typeof AuthenticatedRouteWithChildren
+  '/accept-invite': typeof onboardingAcceptInviteRoute
+  '/confirm-email': typeof onboardingConfirmEmailRoute
+  '/email-confirm': typeof onboardingEmailConfirmRoute
+  '/login': typeof onboardingLoginRoute
+  '/register': typeof onboardingRegisterRoute
+  '/password/forgot': typeof onboardingPasswordForgotRoute
+  '/password/reset': typeof onboardingPasswordResetRoute
+  '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
+  '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
+  '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
+  '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
+  '/agents': typeof AuthenticatedAgentsIndexRoute
+  '/chat': typeof AuthenticatedChatIndexRoute
+  '/chats': typeof AuthenticatedChatsIndexRoute
+  '/prompts': typeof AuthenticatedPromptsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute;
-  "/": typeof IndexRoute;
-  "/_authenticated": typeof AuthenticatedRouteWithChildren;
-  "/(onboarding)/accept-invite": typeof onboardingAcceptInviteRoute;
-  "/(onboarding)/confirm-email": typeof onboardingConfirmEmailRoute;
-  "/(onboarding)/email-confirm": typeof onboardingEmailConfirmRoute;
-  "/(onboarding)/login": typeof onboardingLoginRoute;
-  "/(onboarding)/register": typeof onboardingRegisterRoute;
-  "/(onboarding)/password/forgot": typeof onboardingPasswordForgotRoute;
-  "/(onboarding)/password/reset": typeof onboardingPasswordResetRoute;
-  "/_authenticated/admin-settings/billing": typeof AuthenticatedAdminSettingsBillingRoute;
-  "/_authenticated/admin-settings/integrations": typeof AuthenticatedAdminSettingsIntegrationsRoute;
-  "/_authenticated/admin-settings/models": typeof AuthenticatedAdminSettingsModelsRoute;
-  "/_authenticated/admin-settings/users": typeof AuthenticatedAdminSettingsUsersRoute;
-  "/_authenticated/agents/$id": typeof AuthenticatedAgentsIdRoute;
-  "/_authenticated/chats/$threadId": typeof AuthenticatedChatsThreadIdRoute;
-  "/_authenticated/settings/account": typeof AuthenticatedSettingsAccountRoute;
-  "/_authenticated/settings/general": typeof AuthenticatedSettingsGeneralRoute;
-  "/_authenticated/admin-settings/": typeof AuthenticatedAdminSettingsIndexRoute;
-  "/_authenticated/agents/": typeof AuthenticatedAgentsIndexRoute;
-  "/_authenticated/chat/": typeof AuthenticatedChatIndexRoute;
-  "/_authenticated/prompts/": typeof AuthenticatedPromptsIndexRoute;
-  "/_authenticated/settings/": typeof AuthenticatedSettingsIndexRoute;
-  "/_authenticated/super-admin-settings/": typeof AuthenticatedSuperAdminSettingsIndexRoute;
-  "/_authenticated/super-admin-settings/orgs/$id": typeof AuthenticatedSuperAdminSettingsOrgsIdRoute;
-  "/_authenticated/super-admin-settings/models-catalog/": typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute;
-  "/_authenticated/super-admin-settings/orgs/": typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute;
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/(onboarding)/accept-invite': typeof onboardingAcceptInviteRoute
+  '/(onboarding)/confirm-email': typeof onboardingConfirmEmailRoute
+  '/(onboarding)/email-confirm': typeof onboardingEmailConfirmRoute
+  '/(onboarding)/login': typeof onboardingLoginRoute
+  '/(onboarding)/register': typeof onboardingRegisterRoute
+  '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
+  '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
+  '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
+  '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
+  '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/_authenticated/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
+  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
+  '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
+  '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
+  '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
+  '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/prompts/': typeof AuthenticatedPromptsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
+  '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | ""
-    | "/accept-invite"
-    | "/confirm-email"
-    | "/email-confirm"
-    | "/login"
-    | "/register"
-    | "/password/forgot"
-    | "/password/reset"
-    | "/admin-settings/billing"
-    | "/admin-settings/integrations"
-    | "/admin-settings/models"
-    | "/admin-settings/users"
-    | "/agents/$id"
-    | "/chats/$threadId"
-    | "/settings/account"
-    | "/settings/general"
-    | "/admin-settings"
-    | "/agents"
-    | "/chat"
-    | "/prompts"
-    | "/settings"
-    | "/super-admin-settings"
-    | "/super-admin-settings/orgs/$id"
-    | "/super-admin-settings/models-catalog"
-    | "/super-admin-settings/orgs";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | ''
+    | '/accept-invite'
+    | '/confirm-email'
+    | '/email-confirm'
+    | '/login'
+    | '/register'
+    | '/password/forgot'
+    | '/password/reset'
+    | '/admin-settings/billing'
+    | '/admin-settings/integrations'
+    | '/admin-settings/models'
+    | '/admin-settings/users'
+    | '/agents/$id'
+    | '/chats/$threadId'
+    | '/settings/account'
+    | '/settings/general'
+    | '/admin-settings'
+    | '/agents'
+    | '/chat'
+    | '/chats'
+    | '/prompts'
+    | '/settings'
+    | '/super-admin-settings'
+    | '/super-admin-settings/orgs/$id'
+    | '/super-admin-settings/models-catalog'
+    | '/super-admin-settings/orgs'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | ""
-    | "/accept-invite"
-    | "/confirm-email"
-    | "/email-confirm"
-    | "/login"
-    | "/register"
-    | "/password/forgot"
-    | "/password/reset"
-    | "/admin-settings/billing"
-    | "/admin-settings/integrations"
-    | "/admin-settings/models"
-    | "/admin-settings/users"
-    | "/agents/$id"
-    | "/chats/$threadId"
-    | "/settings/account"
-    | "/settings/general"
-    | "/admin-settings"
-    | "/agents"
-    | "/chat"
-    | "/prompts"
-    | "/settings"
-    | "/super-admin-settings"
-    | "/super-admin-settings/orgs/$id"
-    | "/super-admin-settings/models-catalog"
-    | "/super-admin-settings/orgs";
+    | '/'
+    | ''
+    | '/accept-invite'
+    | '/confirm-email'
+    | '/email-confirm'
+    | '/login'
+    | '/register'
+    | '/password/forgot'
+    | '/password/reset'
+    | '/admin-settings/billing'
+    | '/admin-settings/integrations'
+    | '/admin-settings/models'
+    | '/admin-settings/users'
+    | '/agents/$id'
+    | '/chats/$threadId'
+    | '/settings/account'
+    | '/settings/general'
+    | '/admin-settings'
+    | '/agents'
+    | '/chat'
+    | '/chats'
+    | '/prompts'
+    | '/settings'
+    | '/super-admin-settings'
+    | '/super-admin-settings/orgs/$id'
+    | '/super-admin-settings/models-catalog'
+    | '/super-admin-settings/orgs'
   id:
-    | "__root__"
-    | "/"
-    | "/_authenticated"
-    | "/(onboarding)/accept-invite"
-    | "/(onboarding)/confirm-email"
-    | "/(onboarding)/email-confirm"
-    | "/(onboarding)/login"
-    | "/(onboarding)/register"
-    | "/(onboarding)/password/forgot"
-    | "/(onboarding)/password/reset"
-    | "/_authenticated/admin-settings/billing"
-    | "/_authenticated/admin-settings/integrations"
-    | "/_authenticated/admin-settings/models"
-    | "/_authenticated/admin-settings/users"
-    | "/_authenticated/agents/$id"
-    | "/_authenticated/chats/$threadId"
-    | "/_authenticated/settings/account"
-    | "/_authenticated/settings/general"
-    | "/_authenticated/admin-settings/"
-    | "/_authenticated/agents/"
-    | "/_authenticated/chat/"
-    | "/_authenticated/prompts/"
-    | "/_authenticated/settings/"
-    | "/_authenticated/super-admin-settings/"
-    | "/_authenticated/super-admin-settings/orgs/$id"
-    | "/_authenticated/super-admin-settings/models-catalog/"
-    | "/_authenticated/super-admin-settings/orgs/";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/(onboarding)/accept-invite'
+    | '/(onboarding)/confirm-email'
+    | '/(onboarding)/email-confirm'
+    | '/(onboarding)/login'
+    | '/(onboarding)/register'
+    | '/(onboarding)/password/forgot'
+    | '/(onboarding)/password/reset'
+    | '/_authenticated/admin-settings/billing'
+    | '/_authenticated/admin-settings/integrations'
+    | '/_authenticated/admin-settings/models'
+    | '/_authenticated/admin-settings/users'
+    | '/_authenticated/agents/$id'
+    | '/_authenticated/chats/$threadId'
+    | '/_authenticated/settings/account'
+    | '/_authenticated/settings/general'
+    | '/_authenticated/admin-settings/'
+    | '/_authenticated/agents/'
+    | '/_authenticated/chat/'
+    | '/_authenticated/chats/'
+    | '/_authenticated/prompts/'
+    | '/_authenticated/settings/'
+    | '/_authenticated/super-admin-settings/'
+    | '/_authenticated/super-admin-settings/orgs/$id'
+    | '/_authenticated/super-admin-settings/models-catalog/'
+    | '/_authenticated/super-admin-settings/orgs/'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren;
-  onboardingAcceptInviteRoute: typeof onboardingAcceptInviteRoute;
-  onboardingConfirmEmailRoute: typeof onboardingConfirmEmailRoute;
-  onboardingEmailConfirmRoute: typeof onboardingEmailConfirmRoute;
-  onboardingLoginRoute: typeof onboardingLoginRoute;
-  onboardingRegisterRoute: typeof onboardingRegisterRoute;
-  onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute;
-  onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute;
+  IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  onboardingAcceptInviteRoute: typeof onboardingAcceptInviteRoute
+  onboardingConfirmEmailRoute: typeof onboardingConfirmEmailRoute
+  onboardingEmailConfirmRoute: typeof onboardingEmailConfirmRoute
+  onboardingLoginRoute: typeof onboardingLoginRoute
+  onboardingRegisterRoute: typeof onboardingRegisterRoute
+  onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
+  onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -649,11 +671,11 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingRegisterRoute: onboardingRegisterRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
-};
+}
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {
@@ -689,6 +711,7 @@ export const routeTree = rootRoute
         "/_authenticated/admin-settings/",
         "/_authenticated/agents/",
         "/_authenticated/chat/",
+        "/_authenticated/chats/",
         "/_authenticated/prompts/",
         "/_authenticated/settings/",
         "/_authenticated/super-admin-settings/",
@@ -760,6 +783,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/chat/": {
       "filePath": "_authenticated/chat.index.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/chats/": {
+      "filePath": "_authenticated/chats.index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/prompts/": {

@@ -28,7 +28,7 @@ export default function NewChatPage({
   isEmbeddingModelEnabled,
   agents,
 }: NewChatPageProps) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const { initiateChat } = useInitiateChat();
   const { models } = usePermittedModels();
   const chatInputRef = useRef<ChatInputRef>(null);

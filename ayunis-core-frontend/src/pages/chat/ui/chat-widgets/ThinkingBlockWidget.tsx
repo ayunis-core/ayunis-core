@@ -13,7 +13,7 @@ export default function ThinkingBlockWidget({
   content,
   open: initialOpen,
 }: ThinkingBlockWidgetProps) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const [open, setOpen] = useState(initialOpen);
 
   useEffect(() => {

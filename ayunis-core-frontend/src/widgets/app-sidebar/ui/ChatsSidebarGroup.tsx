@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Trash,
   ChevronDown,
+  Search,
 } from 'lucide-react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 
@@ -76,9 +77,16 @@ export function ChatsSidebarGroup() {
       <Collapsible defaultOpen className="group/collapsible">
         <SidebarGroup>
           <SidebarGroupLabel asChild>
-            <CollapsibleTrigger>
-              {t('sidebar.chats')}{' '}
-              <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+            <CollapsibleTrigger className="flex items-center w-full">
+              {t('sidebar.chats')}
+              <Link
+                to="/chats"
+                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Search className="size-4" />
+              </Link>
+              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
             </CollapsibleTrigger>
           </SidebarGroupLabel>
           <CollapsibleContent>
@@ -103,9 +111,16 @@ export function ChatsSidebarGroup() {
       <Collapsible defaultOpen className="group/collapsible">
         <SidebarGroup>
           <SidebarGroupLabel asChild>
-            <CollapsibleTrigger>
-              {t('sidebar.chats')}{' '}
-              <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+            <CollapsibleTrigger className="flex items-center w-full">
+              {t('sidebar.chats')}
+              <Link
+                to="/chats"
+                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Search className="size-4" />
+              </Link>
+              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
             </CollapsibleTrigger>
           </SidebarGroupLabel>
           <CollapsibleContent>
@@ -130,9 +145,16 @@ export function ChatsSidebarGroup() {
       <Collapsible defaultOpen className="group/collapsible">
         <SidebarGroup>
           <SidebarGroupLabel asChild>
-            <CollapsibleTrigger>
-              {t('sidebar.chats')}{' '}
-              <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+            <CollapsibleTrigger className="flex items-center w-full">
+              {t('sidebar.chats')}
+              <Link
+                to="/chats"
+                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Search className="size-4" />
+              </Link>
+              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
             </CollapsibleTrigger>
           </SidebarGroupLabel>
           <CollapsibleContent>
@@ -164,9 +186,16 @@ export function ChatsSidebarGroup() {
     <Collapsible defaultOpen className="group/collapsible">
       <SidebarGroup>
         <SidebarGroupLabel asChild>
-          <CollapsibleTrigger>
-            {t('sidebar.chats')}{' '}
-            <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+          <CollapsibleTrigger className="flex items-center w-full">
+            {t('sidebar.chats')}
+            <Link
+              to="/chats"
+              className="ml-auto mr-1 p-1 hover:bg-accent rounded"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Search className="size-4" />
+            </Link>
+            <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
           </CollapsibleTrigger>
         </SidebarGroupLabel>
         <CollapsibleContent>

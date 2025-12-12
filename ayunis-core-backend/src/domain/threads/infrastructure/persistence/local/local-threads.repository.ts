@@ -1,5 +1,6 @@
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
+  ThreadsFindAllFilters,
   ThreadsFindAllOptions,
   ThreadsRepository,
 } from 'src/domain/threads/application/ports/threads.repository';
@@ -82,19 +83,43 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,
+    filters?: ThreadsFindAllFilters,
   ): Promise<Thread[]> {
-    this.logger.log('findAll', { userId });
-    const threadEntities = await this.threadRepository.find({
-      where: { userId },
-      relations: this.getRelations(options),
-      order: options?.withMessages
-        ? {
-            messages: {
-              createdAt: 'ASC', // Ensure messages are ordered chronologically
-            },
-          }
-        : undefined,
-    });
+    this.logger.log('findAll', { userId, filters });
+
+    const queryBuilder = this.threadRepository
+      .createQueryBuilder('thread')
+      .where('thread.userId = :userId', { userId });
+
+    if (filters?.search) {
+      queryBuilder.andWhere('thread.title ILIKE :search', {
+        search: `%${filters.search}%`,
+      });
+    }
+
+    if (filters?.agentId) {
+      queryBuilder.andWhere('thread.agentId = :agentId', {
+        agentId: filters.agentId,
+      });
+    }
+
+    // Add relations based on options
+    if (options?.withMessages) {
+      queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
+      queryBuilder.orderBy('messages.createdAt', 'ASC');
+    }
+    if (options?.withSources) {
+      queryBuilder.leftJoinAndSelect(
+        'thread.sourceAssignments',
+        'sourceAssignments',
+      );
+      queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
+    }
+    if (options?.withModel) {
+      queryBuilder.leftJoinAndSelect('thread.model', 'model');
+    }
+
+    const threadEntities = await queryBuilder.getMany();
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 

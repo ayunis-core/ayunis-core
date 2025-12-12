@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 
 export default function NewChatPageNoModelError() {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
 
   return (
     <NewChatPageLayout header={<ContentAreaHeader title="New Chat" />}>

@@ -1,0 +1,68 @@
+{
+  "chat": {
+    "untitled": "Ohne Titel",
+    "anonymousMode": "Anonym",
+    "anonymousModeTooltip": "Dieser Chat ist im anonymen Modus. Personenbezogene Daten werden automatisch entfernt.",
+    "deleteThread": "Thread löschen",
+    "deleteThreadTitle": "Thread löschen",
+    "deleteThreadDescription": "Sind Sie sicher, dass Sie diesen Thread löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteText": "Löschen",
+    "cancelText": "Abbrechen",
+    "errorDeleteThread": "Thread konnte nicht gelöscht werden",
+    "unknownMessageType": "Unbekannter Nachrichtentyp",
+    "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden.",
+    "errorExecutionError": "Fehler beim Abruf der Antwort",
+    "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
+    "errorNoModelFound": "Kein Modell gefunden",
+    "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
+    "errorToolNotFound": "Tool nicht gefunden",
+    "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "errorDownloadSource": "Quelle konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
+    "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
+    "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
+    "errorRemoveAgent": "Agent konnte nicht entfernt werden",
+    "thinking": "Nachdenken",
+    "tools": {
+      "internet_search": "Im Internet suchen",
+      "website_content": "Website abfragen",
+      "source_query": "Quelle durchsuchen",
+      "code_execution": "Berechnung ausführen",
+      "send_email": {
+        "subject": "Betreff",
+        "body": "Nachricht",
+        "to": "Empfänger",
+        "toPlaceholder": "E-Mail-Adresse eingeben",
+        "subjectPlaceholder": "Betreff eingeben",
+        "bodyPlaceholder": "Nachricht eingeben",
+        "open": "In E-Mail App öffnen",
+        "copyBody": "Text kopieren",
+        "copied": "Kopiert"
+      },
+      "create_calendar_event": {
+        "title": "Titel",
+        "titlePlaceholder": "Ereignistitel",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "Ereignisbeschreibung",
+        "location": "Ort",
+        "locationPlaceholder": "Wo findet es statt?",
+        "start": "Beginn",
+        "end": "Ende",
+        "open": "In Google Kalender öffnen",
+        "downloadIcs": "Kalendereintrag herunterladen (.ics)",
+        "invalidRange": "Ende muss nach dem Beginn liegen",
+        "selectDate": "Datum wählen"
+      }
+    },
+    "charts": {
+      "emptyState": "Keine Diagrammdaten verfügbar"
+    }
+  },
+  "newChat": {
+    "newChat": "Neuer Chat",
+    "title": "Wie kann ich Ihnen helfen?",
+    "noModelTitle": "Herzlich Willkommen",
+    "noModelDescription": "Bevor es losgehen kann, benötigen wir mindestens ein freigeschaltetes Modell. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
+    "configureModel": "Modell konfigurieren",
+    "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden."
+  }
+}

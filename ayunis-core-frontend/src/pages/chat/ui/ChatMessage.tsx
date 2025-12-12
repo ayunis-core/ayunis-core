@@ -47,7 +47,7 @@ export default function ChatMessage({
   isLoading = false,
   isStreaming = false,
 }: ChatMessageProps) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const { theme } = useTheme();
   // Show loading indicator when isLoading is true and no message
   if (isLoading && !message) {

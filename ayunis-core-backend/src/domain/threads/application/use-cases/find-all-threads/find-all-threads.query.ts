@@ -9,5 +9,9 @@ export class FindAllThreadsQuery {
       withAgent?: boolean;
       withModel?: boolean;
     },
+    public readonly filters?: {
+      search?: string;
+      agentId?: string;
+    },
   ) {}
 }

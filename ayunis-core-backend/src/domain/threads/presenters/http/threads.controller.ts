@@ -13,6 +13,7 @@ import {
   HttpStatus,
   Res,
   StreamableFile,
+  Query,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { UUID } from 'crypto';
@@ -29,6 +30,7 @@ import {
   ApiConsumes,
   getSchemaPath,
   ApiExtraModels,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -69,6 +71,7 @@ import { SourceDtoMapper } from './mappers/source.mapper';
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
+import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import * as fs from 'fs';
@@ -134,6 +137,18 @@ export class ThreadsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all threads for the current user' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search threads by title',
+  })
+  @ApiQuery({
+    name: 'agentId',
+    required: false,
+    type: String,
+    description: 'Filter threads by agent ID',
+  })
   @ApiResponse({
     status: 200,
     description: 'Returns all threads for the current user',
@@ -148,10 +163,14 @@ export class ThreadsController {
   @ApiExtraModels(GetThreadsResponseDtoItem)
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
+    @Query() queryParams: FindAllThreadsQueryParamsDto,
   ): Promise<GetThreadsResponseDtoItem[]> {
-    this.logger.log('findAll');
+    this.logger.log('findAll', { filters: queryParams });
     const threads = await this.findAllThreadsUseCase.execute(
-      new FindAllThreadsQuery(userId),
+      new FindAllThreadsQuery(userId, undefined, {
+        search: queryParams.search,
+        agentId: queryParams.agentId,
+      }),
     );
     return this.getThreadsDtoMapper.toDtoArray(threads);
   }

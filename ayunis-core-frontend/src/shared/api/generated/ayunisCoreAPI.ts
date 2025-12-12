@@ -98,6 +98,7 @@ import type {
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
   ThreadsControllerAddFileSourceBody,
+  ThreadsControllerFindAllParams,
   ThreadsControllerGetThreadSources200Item,
   UpdateAgentDto,
   UpdateBillingInfoDto,
@@ -5891,33 +5892,34 @@ export const useThreadsControllerCreate = <TError = void,
  * @summary Get all threads for the current user
  */
 export const threadsControllerFindAll = (
-    
+    params?: ThreadsControllerFindAllParams,
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<GetThreadsResponseDtoItem[]>(
-      {url: `/threads`, method: 'GET', signal
+      {url: `/threads`, method: 'GET',
+        params, signal
     },
       );
     }
   
 
-export const getThreadsControllerFindAllQueryKey = () => {
-    return [`/threads`] as const;
+export const getThreadsControllerFindAllQueryKey = (params?: ThreadsControllerFindAllParams,) => {
+    return [`/threads`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getThreadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
+export const getThreadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(params?: ThreadsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerFindAllQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getThreadsControllerFindAllQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerFindAll>>> = ({ signal }) => threadsControllerFindAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadsControllerFindAll>>> = ({ signal }) => threadsControllerFindAll(params, signal);
 
       
 
@@ -5931,7 +5933,7 @@ export type ThreadsControllerFindAllQueryError = void
 
 
 export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
+ params: undefined |  ThreadsControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof threadsControllerFindAll>>,
           TError,
@@ -5941,7 +5943,7 @@ export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof th
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
+ params?: ThreadsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof threadsControllerFindAll>>,
           TError,
@@ -5951,7 +5953,7 @@ export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof th
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
+ params?: ThreadsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -5959,11 +5961,11 @@ export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof th
  */
 
 export function useThreadsControllerFindAll<TData = Awaited<ReturnType<typeof threadsControllerFindAll>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
+ params?: ThreadsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadsControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getThreadsControllerFindAllQueryOptions(options)
+  const queryOptions = getThreadsControllerFindAllQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
