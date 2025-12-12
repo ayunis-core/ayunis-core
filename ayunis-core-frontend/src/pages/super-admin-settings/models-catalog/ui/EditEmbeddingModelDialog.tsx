@@ -116,150 +116,156 @@ export function EditEmbeddingModelDialog({
     onOpenChange(newOpen);
   };
 
-  if (!model) return null;
-
+  // Important: Dialog must always be rendered (not conditionally returned) so it receives
+  // the open={false} transition. Without this, Radix UI won't clean up its Portal and
+  // overlay, leaving an invisible layer that blocks all pointer events.
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>Edit Embedding Model</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="e.g., text-embedding-3-small"
-                      disabled={isUpdating}
-                      required
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="provider"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Provider</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isUpdating}
-                  >
+      {model && (
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Embedding Model</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form
+              onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
+              className="space-y-4"
+            >
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a provider" />
-                      </SelectTrigger>
+                      <Input
+                        {...field}
+                        placeholder="e.g., text-embedding-3-small"
+                        disabled={isUpdating}
+                        required
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {PROVIDERS.map((provider) => (
-                        <SelectItem key={provider.value} value={provider.value}>
-                          {provider.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Display Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="e.g., Text Embedding 3 Small"
+              <FormField
+                control={form.control}
+                name="provider"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Provider</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
                       disabled={isUpdating}
-                      required
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a provider" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PROVIDERS.map((provider) => (
+                          <SelectItem
+                            key={provider.value}
+                            value={provider.value}
+                          >
+                            {provider.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="dimensions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dimensions</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(Number(value))}
-                    value={String(field.value)}
-                    disabled={isUpdating}
-                  >
+              <FormField
+                control={form.control}
+                name="displayName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select dimensions" />
-                      </SelectTrigger>
+                      <Input
+                        {...field}
+                        placeholder="e.g., Text Embedding 3 Small"
+                        disabled={isUpdating}
+                        required
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {DIMENSIONS.map((dim) => (
-                        <SelectItem key={dim.value} value={String(dim.value)}>
-                          {dim.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="isArchived"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
+              <FormField
+                control={form.control}
+                name="dimensions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dimensions</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      value={String(field.value)}
                       disabled={isUpdating}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Archived</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select dimensions" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {DIMENSIONS.map((dim) => (
+                          <SelectItem key={dim.value} value={String(dim.value)}>
+                            {dim.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={isUpdating}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating ? 'Updating...' : 'Update'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+              <FormField
+                control={form.control}
+                name="isArchived"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isUpdating}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Archived</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isUpdating}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating ? 'Updating...' : 'Update'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }

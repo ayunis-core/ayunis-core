@@ -33,9 +33,11 @@ export default function ConfirmationModal() {
 
   const isDangerous = options?.variant === 'destructive';
 
-  // Important: Dialog must always be rendered (not conditionally returned) so it receives
-  // the open={false} transition. Without this, Radix UI won't clean up its Portal and
-  // overlay, leaving an invisible layer that blocks all pointer events.
+  // CRITICAL: DialogContent must stay rendered during the close transition.
+  // Radix adds pointer-events:none to <body> when Dialog opens, and removes it on close.
+  // If DialogContent unmounts before Radix completes cleanup (e.g., if options is cleared
+  // immediately), pointer-events:none stays on body permanently, blocking all interactions.
+  // This is why hideConfirmation() only sets isOpen=false but keeps options populated.
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       {options && (

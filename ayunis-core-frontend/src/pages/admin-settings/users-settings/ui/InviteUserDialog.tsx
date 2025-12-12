@@ -45,14 +45,6 @@ export default function InviteUserDialog() {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
 
-  const { createInvite, isLoading: isCreatingInvite } = useInviteCreate(
-    (response: CreateInviteResponseDto) => {
-      if (response.url) {
-        setInviteUrl(response.url);
-      }
-    },
-  );
-
   const form = useForm<InviteFormData>({
     defaultValues: {
       email: '',
@@ -60,23 +52,29 @@ export default function InviteUserDialog() {
     },
   });
 
-  function onSubmit(data: InviteFormData) {
-    createInvite(data);
-    // Don't close dialog immediately if URL might be returned
-    if (!inviteUrl) {
-      // Reset form but keep dialog open to potentially show URL
-      form.reset();
-    }
-  }
-
-  function handleCancel() {
+  function handleClose() {
     setIsOpen(false);
     form.reset();
     setInviteUrl(null);
     setIsUrlCopied(false);
   }
 
-  function handleClose() {
+  const { createInvite, isLoading: isCreatingInvite } = useInviteCreate(
+    (response: CreateInviteResponseDto) => {
+      if (response.url) {
+        setInviteUrl(response.url);
+      } else {
+        // Email was sent successfully, close the dialog
+        handleClose();
+      }
+    },
+  );
+
+  function onSubmit(data: InviteFormData) {
+    createInvite(data);
+  }
+
+  function handleCancel() {
     setIsOpen(false);
     form.reset();
     setInviteUrl(null);
