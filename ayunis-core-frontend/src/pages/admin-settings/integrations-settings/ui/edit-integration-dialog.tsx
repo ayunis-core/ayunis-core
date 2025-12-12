@@ -94,64 +94,97 @@ export function EditIntegrationDialog({
     onOpenChange(newOpen);
   };
 
-  if (!integration) return null;
+  const authMethod = integration?.authMethod ?? 'NO_AUTH';
 
-  const authMethod = integration.authMethod ?? 'NO_AUTH';
-
+  // Important: Dialog must always be rendered (not conditionally returned) so it receives
+  // the open={false} transition. Without this, Radix UI won't clean up its Portal and
+  // overlay, leaving an invisible layer that blocks all pointer events.
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>{t('integrations.editDialog.title')}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('integrations.editDialog.name')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t('integrations.editDialog.namePlaceholder')}
-                      {...field}
-                      disabled={isUpdating}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+      {integration && (
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>{t('integrations.editDialog.title')}</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form
+              onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
+              className="space-y-4"
+            >
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('integrations.editDialog.name')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t(
+                          'integrations.editDialog.namePlaceholder',
+                        )}
+                        {...field}
+                        disabled={isUpdating}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {authMethod === 'CUSTOM_HEADER' && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="authHeaderName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t('integrations.editDialog.headerName')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={
+                              integration.authHeaderName ||
+                              t('integrations.editDialog.headerNamePlaceholder')
+                            }
+                            {...field}
+                            disabled={isUpdating}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="credentials"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t('integrations.editDialog.credentials')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder={t(
+                              'integrations.editDialog.credentialsPlaceholder',
+                            )}
+                            {...field}
+                            disabled={isUpdating}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('integrations.editDialog.credentialsDescription')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
-            />
 
-            {authMethod === 'CUSTOM_HEADER' && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="authHeaderName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('integrations.editDialog.headerName')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={
-                            integration.authHeaderName ||
-                            t('integrations.editDialog.headerNamePlaceholder')
-                          }
-                          {...field}
-                          disabled={isUpdating}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              {authMethod === 'BEARER_TOKEN' && (
                 <FormField
                   control={form.control}
                   name="credentials"
@@ -170,65 +203,37 @@ export function EditIntegrationDialog({
                           disabled={isUpdating}
                         />
                       </FormControl>
-                      <FormDescription>
-                        {t('integrations.editDialog.credentialsDescription')}
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </>
-            )}
+              )}
 
-            {authMethod === 'BEARER_TOKEN' && (
-              <FormField
-                control={form.control}
-                name="credentials"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t('integrations.editDialog.credentials')}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={t(
-                          'integrations.editDialog.credentialsPlaceholder',
-                        )}
-                        {...field}
-                        disabled={isUpdating}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+              {authMethod === 'NO_AUTH' && (
+                <FormDescription>
+                  {t('integrations.editDialog.noCredentialsMessage')}
+                </FormDescription>
+              )}
 
-            {authMethod === 'NO_AUTH' && (
-              <FormDescription>
-                {t('integrations.editDialog.noCredentialsMessage')}
-              </FormDescription>
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={isUpdating}
-              >
-                {t('integrations.editDialog.cancel')}
-              </Button>
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating
-                  ? t('integrations.editDialog.updating')
-                  : t('integrations.editDialog.update')}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isUpdating}
+                >
+                  {t('integrations.editDialog.cancel')}
+                </Button>
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating
+                    ? t('integrations.editDialog.updating')
+                    : t('integrations.editDialog.update')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }

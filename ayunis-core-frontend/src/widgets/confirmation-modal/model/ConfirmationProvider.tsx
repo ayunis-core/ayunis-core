@@ -18,7 +18,17 @@ export function ConfirmationProvider({ children }: ConfirmationProviderProps) {
 
   function hideConfirmation() {
     setIsOpen(false);
-    setOptions(null);
+
+    // Force cleanup of Radix's pointer-events on body
+    // Radix Dialog has a bug where it doesn't always remove this
+    const cleanup = () => {
+      document.body.style.pointerEvents = '';
+    };
+
+    // Run cleanup after delays to catch when Radix adds it
+    setTimeout(cleanup, 0);
+    setTimeout(cleanup, 100);
+    setTimeout(cleanup, 300);
   }
 
   return (
