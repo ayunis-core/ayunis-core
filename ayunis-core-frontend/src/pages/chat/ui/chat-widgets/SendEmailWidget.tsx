@@ -15,7 +15,7 @@ export default function SendEmailWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const params = (content.params || {}) as {
     subject?: string;
     body?: string;

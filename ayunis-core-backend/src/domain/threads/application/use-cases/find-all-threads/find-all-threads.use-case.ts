@@ -10,9 +10,16 @@ export class FindAllThreadsUseCase {
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
   async execute(query: FindAllThreadsQuery): Promise<Thread[]> {
-    this.logger.log('findAll', { userId: query.userId });
+    this.logger.log('findAll', {
+      userId: query.userId,
+      filters: query.filters,
+    });
     try {
-      return await this.threadsRepository.findAll(query.userId, query.options);
+      return await this.threadsRepository.findAll(
+        query.userId,
+        query.options,
+        query.filters,
+      );
     } catch (error) {
       this.logger.error('Failed to find all threads', {
         userId: query.userId,

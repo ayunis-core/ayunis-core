@@ -1401,6 +1401,8 @@ export type FileSourceResponseDtoFileType = typeof FileSourceResponseDtoFileType
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const FileSourceResponseDtoFileType = {
   pdf: 'pdf',
+  docx: 'docx',
+  pptx: 'pptx',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -2406,6 +2408,17 @@ export type UserControllerValidateResetToken200 = {
 export type StorageControllerUploadFileBody = {
   /** The file to upload */
   file: Blob;
+};
+
+export type ThreadsControllerFindAllParams = {
+/**
+ * Search threads by title
+ */
+search?: string;
+/**
+ * Filter threads by agent ID
+ */
+agentId?: string;
 };
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;

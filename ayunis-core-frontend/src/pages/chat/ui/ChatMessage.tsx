@@ -47,7 +47,7 @@ export default function ChatMessage({
   isLoading = false,
   isStreaming = false,
 }: ChatMessageProps) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const { theme } = useTheme();
   // Show loading indicator when isLoading is true and no message
   if (isLoading && !message) {
@@ -61,7 +61,7 @@ export default function ChatMessage({
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm text-muted-foreground">
-            {t('chat.aiThinking')}
+            {t('chat.thinking')}
           </span>
         </div>
       </div>

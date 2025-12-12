@@ -35,7 +35,7 @@ export default function ExecutableToolWidget({
   content: ToolUseMessageContent;
   isStreaming?: boolean;
 }) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const [open, setOpen] = useState(false);
 
   // Check if params are empty or incomplete (streaming in progress)

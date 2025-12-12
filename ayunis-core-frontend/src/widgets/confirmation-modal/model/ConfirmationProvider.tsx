@@ -10,7 +10,7 @@ interface ConfirmationProviderProps {
 export function ConfirmationProvider({ children }: ConfirmationProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmationOptions | null>(null);
-  const cleanupTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const cleanupTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   function cancelPendingCleanups() {
     cleanupTimeoutsRef.current.forEach(clearTimeout);

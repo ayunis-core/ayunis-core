@@ -74,7 +74,7 @@ function validate(input: CalendarEventInput): void {
 }
 
 export function useGenerateIcs() {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
 
   const generate = useCallback(
     (data: CalendarEventInput): string => {

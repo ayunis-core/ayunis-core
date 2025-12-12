@@ -1,0 +1,68 @@
+{
+  "chat": {
+    "untitled": "Untitled",
+    "anonymousMode": "Anonymous",
+    "anonymousModeTooltip": "This chat is in anonymous mode. Personal data is automatically redacted.",
+    "deleteThread": "Delete thread",
+    "deleteThreadTitle": "Delete Thread",
+    "deleteThreadDescription": "Are you sure you want to delete this thread? This action cannot be undone.",
+    "deleteText": "Delete",
+    "cancelText": "Cancel",
+    "errorDeleteThread": "Failed to delete thread",
+    "unknownMessageType": "Unknown message type",
+    "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
+    "errorExecutionError": "Error fetching response",
+    "errorUnexpected": "An unexpected error occurred",
+    "errorNoModelFound": "No model found",
+    "errorMaxIterationsReached": "Maximal number of iterations reached",
+    "errorToolNotFound": "Tool not found",
+    "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
+    "errorDownloadSource": "Failed to download source. Please try again.",
+    "errorUpdateModel": "Model could not be updated",
+    "errorUpdateAgent": "Agent could not be updated",
+    "errorRemoveAgent": "Agent could not be removed",
+    "thinking": "Thinking",
+    "tools": {
+      "internet_search": "Search the internet",
+      "website_content": "Query website",
+      "source_query": "Query source",
+      "code_execution": "Calculate",
+      "send_email": {
+        "subject": "Subject",
+        "body": "Body",
+        "to": "To",
+        "toPlaceholder": "Enter email address",
+        "subjectPlaceholder": "Enter email subject",
+        "bodyPlaceholder": "Write your email body",
+        "open": "Open in email app",
+        "copyBody": "Copy body",
+        "copied": "Copied"
+      },
+      "create_calendar_event": {
+        "title": "Title",
+        "titlePlaceholder": "Event title",
+        "description": "Description",
+        "descriptionPlaceholder": "Event description",
+        "location": "Location",
+        "locationPlaceholder": "Where is it?",
+        "start": "Start",
+        "end": "End",
+        "open": "Open in Google Calendar",
+        "downloadIcs": "Download .ics",
+        "invalidRange": "End must be after start",
+        "selectDate": "Select date"
+      }
+    },
+    "charts": {
+      "emptyState": "No chart data available"
+    }
+  },
+  "newChat": {
+    "newChat": "New Chat",
+    "title": "How can I help you?",
+    "noModelTitle": "Welcome",
+    "noModelDescription": "Before we can start, we need at least one enabled model. Please contact your administrator and ask them to enable at least one model. If you are an administrator, you can configure a model in the settings.",
+    "configureModel": "Configure Model",
+    "upgradeToProError": "You need to upgrade to a paid plan to use this feature."
+  }
+}

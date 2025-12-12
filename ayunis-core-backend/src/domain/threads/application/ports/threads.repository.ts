@@ -8,12 +8,18 @@ export interface ThreadsFindAllOptions {
   withModel?: boolean;
 }
 
+export interface ThreadsFindAllFilters {
+  search?: string;
+  agentId?: string;
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
   abstract findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,
+    filters?: ThreadsFindAllFilters,
   ): Promise<Thread[]>;
   abstract findAllByModel(
     modelId: UUID,

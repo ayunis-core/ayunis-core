@@ -25,8 +25,8 @@ import enSuperAdminSettingsOrg from './shared/locales/en/super-admin-settings-or
 import deSuperAdminSettingsOrg from './shared/locales/de/super-admin-settings-org.json';
 import enSettings from './shared/locales/en/settings.json';
 import deSettings from './shared/locales/de/settings.json';
-import enChats from './shared/locales/en/chats.json';
-import deChats from './shared/locales/de/chats.json';
+import enChat from './shared/locales/en/chat.json';
+import deChat from './shared/locales/de/chat.json';
 import enPrompts from './shared/locales/en/prompts.json';
 import dePrompts from './shared/locales/de/prompts.json';
 import enAgents from './shared/locales/en/agents.json';
@@ -35,6 +35,8 @@ import enAgent from './shared/locales/en/agent.json';
 import deAgent from './shared/locales/de/agent.json';
 import enQuickActions from './shared/locales/en/quickActions.json';
 import deQuickActions from './shared/locales/de/quickActions.json';
+import enChats from './shared/locales/en/chats.json';
+import deChats from './shared/locales/de/chats.json';
 
 const resources = {
   en: {
@@ -49,6 +51,7 @@ const resources = {
     'super-admin-settings-orgs': enSuperAdminSettingsOrgs,
     'super-admin-settings-org': enSuperAdminSettingsOrg,
     settings: enSettings,
+    chat: enChat,
     chats: enChats,
     prompts: enPrompts,
     agents: enAgents,
@@ -67,6 +70,7 @@ const resources = {
     'super-admin-settings-orgs': deSuperAdminSettingsOrgs,
     'super-admin-settings-org': deSuperAdminSettingsOrg,
     settings: deSettings,
+    chat: deChat,
     chats: deChats,
     prompts: dePrompts,
     agents: deAgents,

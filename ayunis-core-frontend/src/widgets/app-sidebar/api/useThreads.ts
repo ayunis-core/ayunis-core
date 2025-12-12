@@ -16,7 +16,7 @@ export function useThreads() {
     isLoading,
     error,
     refetch,
-  } = useThreadsControllerFindAll({
+  } = useThreadsControllerFindAll(undefined, {
     query: {
       queryKey: getThreadsControllerFindAllQueryKey(),
     },

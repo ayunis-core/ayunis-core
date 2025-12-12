@@ -50,7 +50,7 @@ interface SendMessagePayload {
 }
 
 export function useMessageSend(params: UseMessageSendParams) {
-  const { t } = useTranslation('chats');
+  const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
