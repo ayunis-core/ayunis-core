@@ -1,22 +1,22 @@
 // Utils
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Features
-import { useModelDistribution } from "@/features/usage";
+import { useModelDistribution } from '@/features/usage';
 
 // UI
-import { ModelDistributionLoading } from "./ModelDistributionLoading";
-import { ModelDistributionError } from "./ModelDistributionError";
-import { ModelDistributionEmpty } from "./ModelDistributionEmpty";
-import { ModelDistributionChart } from "./ModelDistributionChart";
+import { ModelDistributionLoading } from './ModelDistributionLoading';
+import { ModelDistributionError } from './ModelDistributionError';
+import { ModelDistributionEmpty } from './ModelDistributionEmpty';
+import { ModelDistributionChart } from './ModelDistributionChart';
 
 const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
 ];
 
 const MAX_DISPLAY_MODELS = 10; // Number of individual models to show before grouping into "Others"
@@ -27,9 +27,17 @@ interface ModelDistributionProps {
   selectedModel?: string;
 }
 
-export function ModelDistribution({ startDate, endDate, selectedModel }: ModelDistributionProps) {
-  const { t } = useTranslation("admin-settings-usage");
-  const { data: modelDistribution, isLoading, error } = useModelDistribution({
+export function ModelDistribution({
+  startDate,
+  endDate,
+  selectedModel,
+}: ModelDistributionProps) {
+  const { t } = useTranslation('admin-settings-usage');
+  const {
+    data: modelDistribution,
+    isLoading,
+    error,
+  } = useModelDistribution({
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
     modelId: selectedModel,
@@ -42,10 +50,10 @@ export function ModelDistribution({ startDate, endDate, selectedModel }: ModelDi
     }
 
     const models = modelDistribution.models;
-    
+
     // Calculate total tokens for percentage recalculation
     const totalTokens = models.reduce((sum, model) => sum + model.tokens, 0);
-    
+
     if (totalTokens === 0) {
       return { chartData: [], chartConfig: {}, modelBreakdown: [] };
     }
@@ -61,13 +69,13 @@ export function ModelDistribution({ startDate, endDate, selectedModel }: ModelDi
       fill: string;
     }> = [];
     const configMap: Record<string, { label: string; color: string }> = {};
-    const breakdownItems: Array<typeof models[0] & { color: string }> = [];
+    const breakdownItems: Array<(typeof models)[0] & { color: string }> = [];
 
     // Add top models
     topModels.forEach((model, index) => {
       const color = CHART_COLORS[index % CHART_COLORS.length];
       const percentage = (model.tokens / totalTokens) * 100;
-      
+
       chartDataItems.push({
         name: model.displayName,
         value: percentage,
@@ -89,23 +97,29 @@ export function ModelDistribution({ startDate, endDate, selectedModel }: ModelDi
 
     // Aggregate remaining models into "Others" if there are any
     if (otherModels.length > 0) {
-      const othersTokens = otherModels.reduce((sum, model) => sum + model.tokens, 0);
-      const othersRequests = otherModels.reduce((sum, model) => sum + model.requests, 0);
-      const othersCost = otherModels.reduce((sum, model) => sum + (model.cost || 0), 0);
+      const othersTokens = otherModels.reduce(
+        (sum, model) => sum + model.tokens,
+        0,
+      );
+      const othersRequests = otherModels.reduce(
+        (sum, model) => sum + model.requests,
+        0,
+      );
       const othersPercentage = (othersTokens / totalTokens) * 100;
-      
+
       // Use the next color for "Others"
       const othersColor = CHART_COLORS[topModels.length % CHART_COLORS.length];
-      
-      const othersLabel = t("charts.modelDistribution.others");
+
+      const othersLabel = t('charts.modelDistribution.others');
       const othersEntry = {
-        modelId: "others",
+        modelId: 'others',
         modelName: othersLabel,
-        displayName: t("charts.modelDistribution.othersWithCount", { count: otherModels.length }),
-        provider: otherModels[0]?.provider || "openai" as const,
+        displayName: t('charts.modelDistribution.othersWithCount', {
+          count: otherModels.length,
+        }),
+        provider: otherModels[0]?.provider || ('openai' as const),
         tokens: othersTokens,
         requests: othersRequests,
-        cost: othersCost > 0 ? othersCost : undefined,
         percentage: othersPercentage,
         color: othersColor,
       };
@@ -152,4 +166,3 @@ export function ModelDistribution({ startDate, endDate, selectedModel }: ModelDi
     />
   );
 }
-

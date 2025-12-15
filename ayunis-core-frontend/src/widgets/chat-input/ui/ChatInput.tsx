@@ -187,7 +187,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       // Ensure emojis are preserved when pasting
       // Get the pasted text from clipboard
       const pastedText = e.clipboardData.getData('text/plain');
-      
+
       // If there's no text or it's empty, let default behavior handle it
       if (!pastedText) return;
 
@@ -199,10 +199,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       const end = target.selectionEnd ?? 0;
 
       // Insert the pasted text at cursor position, preserving emojis
-      const newValue = 
-        message.substring(0, start) + 
-        pastedText + 
-        message.substring(end);
+      const newValue =
+        message.substring(0, start) + pastedText + message.substring(end);
 
       setMessage(newValue);
 

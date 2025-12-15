@@ -66,7 +66,6 @@ export class GetUserUsageUseCase {
     const validSortFields: Array<typeof query.sortBy> = [
       'tokens',
       'requests',
-      'cost',
       'lastActivity',
       'userName',
     ];

@@ -1,17 +1,19 @@
-import SettingsLayout from "../../admin-settings-layout";
-import { UsageStatsCards } from "./UsageStatsCards";
-import { ProviderConsumption } from "@/pages/admin-settings/usage-settings/ui/provider-consumption-chart";
-import { ModelDistribution } from "@/pages/admin-settings/usage-settings/ui/model-distribution-chart";
-import { UserUsageTable } from "@/pages/admin-settings/usage-settings/ui/user-usage-table";
-import { UsageFilters } from "./UsageFilters";
-import { useState } from "react";
+import SettingsLayout from '../../admin-settings-layout';
+import { UsageStatsCards } from './UsageStatsCards';
+import { ProviderConsumption } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart';
+import { ModelDistribution } from '@/pages/admin-settings/usage-settings/ui/model-distribution-chart';
+import { UserUsageTable } from '@/pages/admin-settings/usage-settings/ui/user-usage-table';
+import { UsageFilters } from './UsageFilters';
+import { useState } from 'react';
 
 export default function UsageSettingsPage() {
   const [dateRange, setDateRange] = useState<{
     startDate?: Date;
     endDate?: Date;
   }>({});
-  const [selectedProvider, setSelectedProvider] = useState<string | undefined>();
+  const [selectedProvider, setSelectedProvider] = useState<
+    string | undefined
+  >();
   const [selectedModel, setSelectedModel] = useState<string | undefined>();
 
   return (
@@ -51,4 +53,3 @@ export default function UsageSettingsPage() {
     </SettingsLayout>
   );
 }
-

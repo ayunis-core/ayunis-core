@@ -20,7 +20,6 @@ export class UsageQueryMapper {
           date: new Date(point.date),
           tokens: parseInt(point.tokens),
           requests: parseInt(point.requests),
-          cost: point.cost ? parseFloat(point.cost) : undefined,
         }),
     );
   }
@@ -32,13 +31,11 @@ export class UsageQueryMapper {
   ): ProviderUsage {
     const tokens = parseInt(row.tokens);
     const requests = parseInt(row.requests);
-    const cost = row.cost ? parseFloat(row.cost) : undefined;
     const percentage = totalTokens > 0 ? (tokens / totalTokens) * 100 : 0;
     return new ProviderUsage({
       provider: row.provider as ModelProvider,
       tokens,
       requests,
-      cost,
       percentage,
       timeSeriesData: timeSeries ?? [],
     });
@@ -52,7 +49,6 @@ export class UsageQueryMapper {
     const items: ModelDistribution[] = rows.map((r) => {
       const tokens = parseInt(r.tokens);
       const requests = parseInt(r.requests);
-      const cost = r.cost ? parseFloat(r.cost) : undefined;
       const percentage = totalTokens > 0 ? (tokens / totalTokens) * 100 : 0;
       return new ModelDistribution({
         modelId: r.modelId as unknown as UUID,
@@ -61,7 +57,6 @@ export class UsageQueryMapper {
         provider: r.provider,
         tokens,
         requests,
-        cost,
         percentage,
       });
     });

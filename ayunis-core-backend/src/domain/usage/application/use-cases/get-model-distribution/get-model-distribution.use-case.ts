@@ -78,7 +78,6 @@ export class GetModelDistributionUseCase {
             provider: model.provider,
             tokens: model.tokens,
             requests: model.requests,
-            cost: model.cost,
             percentage: (model.tokens / totalTokens) * 100,
           }),
       )

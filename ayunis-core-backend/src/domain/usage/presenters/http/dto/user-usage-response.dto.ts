@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/pagination';
 
 export class UserUsageDto {
@@ -16,11 +16,6 @@ export class UserUsageDto {
 
   @ApiProperty({ description: 'Total requests for this user' })
   requests: number;
-
-  @ApiPropertyOptional({
-    description: 'Total cost for this user (self-hosted mode only)',
-  })
-  cost?: number;
 
   @ApiProperty({
     type: String,

@@ -16,7 +16,6 @@ export async function getProviderStats(
     .select('usage.provider', 'provider')
     .addSelect('SUM(usage.totalTokens)', 'tokens')
     .addSelect('COUNT(*)', 'requests')
-    .addSelect('SUM(usage.cost)', 'cost')
     .where('usage.organizationId = :orgId', { orgId: organizationId });
 
   if (startDate) {

@@ -8,7 +8,6 @@ export class ModelDistribution {
   public readonly provider: ModelProvider;
   public readonly tokens: number;
   public readonly requests: number;
-  public readonly cost: number | undefined;
   public readonly percentage: number;
 
   constructor(params: {
@@ -18,7 +17,6 @@ export class ModelDistribution {
     provider: ModelProvider;
     tokens: number;
     requests: number;
-    cost?: number;
     percentage: number;
   }) {
     this.modelId = params.modelId;
@@ -27,7 +25,6 @@ export class ModelDistribution {
     this.provider = params.provider;
     this.tokens = params.tokens;
     this.requests = params.requests;
-    this.cost = params.cost;
     this.percentage = params.percentage;
   }
 }

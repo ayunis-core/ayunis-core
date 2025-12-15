@@ -1,2 +1,1 @@
-export { default } from "./ui/UsageSettingsPage";
-
+export { default } from './ui/UsageSettingsPage';

@@ -11,7 +11,6 @@ export async function getUserUsageRows(
     .select('usage.userId', 'userId')
     .addSelect('SUM(usage.totalTokens)', 'tokens')
     .addSelect('COUNT(usage.id)', 'requests')
-    .addSelect('SUM(usage.cost)', 'cost')
     .from(UsageRecord, 'usage')
     .where('CAST(usage.organizationId AS uuid) = CAST(:orgId AS uuid)', {
       orgId: params.organizationId.toString(),
@@ -57,7 +56,6 @@ export async function getUserUsageRows(
     .addSelect('user.email', 'userEmail')
     .addSelect('COALESCE("usageagg"."tokens", 0)', 'tokens')
     .addSelect('COALESCE("usageagg"."requests", 0)', 'requests')
-    .addSelect('COALESCE("usageagg"."cost", 0)', 'cost')
     .addSelect('"lastactivityagg"."lastActivity"', 'lastActivity')
     .where('CAST(user.orgId AS uuid) = CAST(:orgId AS uuid)', {
       orgId: params.organizationId.toString(),
@@ -67,7 +65,6 @@ export async function getUserUsageRows(
     .addGroupBy('user.email')
     .addGroupBy('"usageagg"."tokens"')
     .addGroupBy('"usageagg"."requests"')
-    .addGroupBy('"usageagg"."cost"')
     .addGroupBy('"lastactivityagg"."lastActivity"');
 
   // Set parameters from subqueries
@@ -90,11 +87,6 @@ export async function getUserUsageRows(
     params.sortField.includes('usage.totalTokens')
   ) {
     orderByField = 'COALESCE("usageagg"."tokens", 0)';
-  } else if (
-    params.sortField === 'COALESCE(SUM(usage.cost), 0)' ||
-    params.sortField.includes('usage.cost')
-  ) {
-    orderByField = 'COALESCE("usageagg"."cost", 0)';
   } else if (
     params.sortField === 'COUNT(usage.id)' ||
     params.sortField.includes('usage.id')

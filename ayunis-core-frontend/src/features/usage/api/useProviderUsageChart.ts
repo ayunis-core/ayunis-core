@@ -1,7 +1,7 @@
 import {
   useUsageControllerGetProviderUsageChart,
   type UsageControllerGetProviderUsageChartParams,
-} from "@/shared/api";
+} from '@/shared/api';
 
 export function useProviderUsageChart(
   params?: UsageControllerGetProviderUsageChartParams,

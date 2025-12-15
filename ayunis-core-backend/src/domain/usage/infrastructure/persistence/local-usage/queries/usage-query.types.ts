@@ -7,7 +7,6 @@ export interface ProviderStatsRow {
   provider: ModelProvider | string;
   tokens: string; // numeric aggregates come back as strings
   requests: string;
-  cost: string | null;
 }
 
 export interface ModelStatsRow {
@@ -17,7 +16,6 @@ export interface ModelStatsRow {
   displayName: string | null;
   tokens: string;
   requests: string;
-  cost: string | null;
 }
 
 export interface TopModelRow {
@@ -30,13 +28,11 @@ export interface TimeSeriesRow {
   date: string | Date;
   tokens: string;
   requests: string;
-  cost: string | null;
 }
 
 export interface UsageAggregateRow {
   totalTokens: string | null;
   totalRequests: string;
-  totalCost: string | null;
   totalUsers: string;
 }
 
@@ -46,7 +42,6 @@ export interface UserUsageRow {
   userEmail: string | null;
   tokens: string | null;
   requests: string;
-  cost: string | null;
   lastActivity: Date | null;
 }
 

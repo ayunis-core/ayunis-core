@@ -16,7 +16,6 @@ export async function getProviderTimeSeries(
     .select('DATE(usage.createdAt)', 'date')
     .addSelect('SUM(usage.totalTokens)', 'tokens')
     .addSelect('COUNT(*)', 'requests')
-    .addSelect('SUM(usage.cost)', 'cost')
     .where('usage.organizationId = :orgId', { orgId: organizationId })
     .andWhere('usage.provider = :provider', { provider });
 

@@ -11,7 +11,7 @@ import {
 } from '@/shared/ui/shadcn/card';
 
 // Api
-import { useUsageStats, useUsageConfig } from '@/features/usage';
+import { useUsageStats } from '@/features/usage';
 
 interface UsageStatsCardsProps {
   startDate?: Date;
@@ -20,7 +20,6 @@ interface UsageStatsCardsProps {
 
 export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
   const { t, i18n } = useTranslation('admin-settings-usage');
-  const { data: config } = useUsageConfig();
   const { data: stats, isLoading } = useUsageStats({
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
@@ -38,24 +37,10 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
     }).format(value);
   };
 
-  const formatCost = (value?: number, currency?: string) => {
-    if (value === undefined) {
-      return '-';
-    }
-
-    const resolvedCurrency = currency || config?.defaultCurrency || 'EUR';
-
-    return new Intl.NumberFormat(i18n.language, {
-      style: 'currency',
-      currency: resolvedCurrency,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {[1, 2].map((i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-4 w-24" />
@@ -74,7 +59,7 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>{t('stats.totalTokens')}</CardTitle>
@@ -96,19 +81,6 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
           </p>
         </CardContent>
       </Card>
-
-      {config?.showCostInformation && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('stats.estimatedCost')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-semibold">
-              {formatCost(stats.totalCost, stats.currency)}
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

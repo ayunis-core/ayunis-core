@@ -5,7 +5,6 @@ export class ProviderUsage {
   public readonly provider: ModelProvider;
   public readonly tokens: number;
   public readonly requests: number;
-  public readonly cost: number | undefined;
   public readonly percentage: number;
   public readonly timeSeriesData: TimeSeriesPoint[];
 
@@ -13,14 +12,12 @@ export class ProviderUsage {
     provider: ModelProvider;
     tokens: number;
     requests: number;
-    cost?: number;
     percentage: number;
     timeSeriesData: TimeSeriesPoint[];
   }) {
     this.provider = params.provider;
     this.tokens = params.tokens;
     this.requests = params.requests;
-    this.cost = params.cost;
     this.percentage = params.percentage;
     this.timeSeriesData = params.timeSeriesData;
   }

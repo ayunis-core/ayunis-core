@@ -8,7 +8,6 @@ import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 export type UserUsageSortBy =
   | 'tokens'
   | 'requests'
-  | 'cost'
   | 'lastActivity'
   | 'userName';
 export type SortOrder = 'asc' | 'desc';

@@ -20,7 +20,6 @@ export class ProviderUsageResponseDtoMapper {
       provider: provider.provider,
       tokens: provider.tokens,
       requests: provider.requests,
-      cost: provider.cost,
       percentage: provider.percentage,
       timeSeriesData: provider.timeSeriesData.map((point) =>
         this.toTimeSeriesDto(point),
@@ -33,7 +32,6 @@ export class ProviderUsageResponseDtoMapper {
       date: point.date,
       tokens: point.tokens,
       requests: point.requests,
-      cost: point.cost,
     };
   }
 }

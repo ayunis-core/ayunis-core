@@ -27,10 +27,14 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'INVALID_SERVER_URL':
-              toast.error(t('integrations.createCustomIntegration.invalidServerUrl'));
+              toast.error(
+                t('integrations.createCustomIntegration.invalidServerUrl'),
+              );
               break;
             case 'DUPLICATE_MCP_INTEGRATION':
-              toast.error(t('integrations.createCustomIntegration.duplicateIntegration'));
+              toast.error(
+                t('integrations.createCustomIntegration.duplicateIntegration'),
+              );
               break;
             default:
               toast.error(t('integrations.createCustomIntegration.error'));

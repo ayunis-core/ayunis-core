@@ -1,7 +1,7 @@
 import {
   useUsageControllerGetProviderUsage,
   type UsageControllerGetProviderUsageParams,
-} from "@/shared/api";
+} from '@/shared/api';
 
 export function useProviderUsage(
   params?: UsageControllerGetProviderUsageParams,

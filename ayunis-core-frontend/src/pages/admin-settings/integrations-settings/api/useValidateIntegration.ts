@@ -39,10 +39,14 @@ export function useValidateIntegration() {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MCP_CONNECTION_TIMEOUT':
-              toast.error(t('integrations.validateIntegration.connectionTimeout'));
+              toast.error(
+                t('integrations.validateIntegration.connectionTimeout'),
+              );
               break;
             case 'MCP_AUTHENTICATION_FAILED':
-              toast.error(t('integrations.validateIntegration.authenticationFailed'));
+              toast.error(
+                t('integrations.validateIntegration.authenticationFailed'),
+              );
               break;
             case 'MCP_INTEGRATION_NOT_FOUND':
               toast.error(t('integrations.validateIntegration.notFound'));

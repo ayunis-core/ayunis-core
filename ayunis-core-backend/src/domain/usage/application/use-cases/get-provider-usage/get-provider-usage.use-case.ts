@@ -29,7 +29,6 @@ export class GetProviderUsageUseCase {
         provider: provider.provider,
         tokens: provider.tokens,
         requests: provider.requests,
-        cost: provider.cost,
         percentage,
         timeSeriesData: provider.timeSeriesData,
       });

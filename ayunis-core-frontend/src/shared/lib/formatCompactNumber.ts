@@ -1,8 +1,7 @@
 export function formatCompactNumber(value: number, locale: string): string {
   return new Intl.NumberFormat(locale, {
-    notation: "compact",
+    notation: 'compact',
     maximumFractionDigits: 1,
-    compactDisplay: "short",
+    compactDisplay: 'short',
   }).format(value);
 }
-

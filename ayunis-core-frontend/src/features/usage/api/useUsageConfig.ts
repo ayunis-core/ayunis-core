@@ -1,3 +1,3 @@
-import { useUsageControllerGetUsageConfig as useUsageConfig } from "@/shared/api";
+import { useUsageControllerGetUsageConfig as useUsageConfig } from '@/shared/api';
 
 export { useUsageConfig };

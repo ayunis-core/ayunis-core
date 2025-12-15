@@ -1,2 +1,1 @@
-export { ModelDistribution } from "./ModelDistribution";
-
+export { ModelDistribution } from './ModelDistribution';

@@ -34,26 +34,23 @@ describe('GetProviderUsageUseCase', () => {
   });
 
   describe('successful execution', () => {
-    it('should return provider usage data with cost', async () => {
+    it('should return provider usage data', async () => {
       const mockProviderUsage = [
         new ProviderUsage({
           provider: ModelProvider.OPENAI,
           tokens: 1000,
           requests: 10,
-          cost: 5.0,
           percentage: 50,
           timeSeriesData: [
             new TimeSeriesPoint({
               date: new Date('2024-01-01'),
               tokens: 500,
               requests: 5,
-              cost: 2.5,
             }),
             new TimeSeriesPoint({
               date: new Date('2024-01-02'),
               tokens: 500,
               requests: 5,
-              cost: 2.5,
             }),
           ],
         }),
@@ -61,20 +58,17 @@ describe('GetProviderUsageUseCase', () => {
           provider: ModelProvider.ANTHROPIC,
           tokens: 1000,
           requests: 10,
-          cost: 6.0,
           percentage: 50,
           timeSeriesData: [
             new TimeSeriesPoint({
               date: new Date('2024-01-01'),
               tokens: 500,
               requests: 5,
-              cost: 3.0,
             }),
             new TimeSeriesPoint({
               date: new Date('2024-01-02'),
               tokens: 500,
               requests: 5,
-              cost: 3.0,
             }),
           ],
         }),
@@ -88,9 +82,6 @@ describe('GetProviderUsageUseCase', () => {
       const result = await useCase.execute(query);
 
       expect(result).toHaveLength(2);
-      expect(result[0].cost).toBe(5.0);
-      expect(result[1].cost).toBe(6.0);
-      expect(result[0].timeSeriesData[0].cost).toBe(2.5);
       expect(result[0].percentage).toBe(50);
       expect(result[1].percentage).toBe(50);
     });

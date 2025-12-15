@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UsageStatsResponseDto {
   @ApiProperty({
@@ -13,20 +13,6 @@ export class UsageStatsResponseDto {
     example: 3450,
   })
   totalRequests: number;
-
-  @ApiPropertyOptional({
-    description:
-      'Total cost incurred in the period. Only available in self-hosted deployments.',
-    example: 25.75,
-  })
-  totalCost?: number;
-
-  @ApiPropertyOptional({
-    description:
-      'Currency code for cost information. Only available in self-hosted deployments.',
-    example: 'USD',
-  })
-  currency?: string;
 
   @ApiProperty({
     description:

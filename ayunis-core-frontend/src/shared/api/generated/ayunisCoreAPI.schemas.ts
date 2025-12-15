@@ -104,19 +104,6 @@ export const PermittedLanguageModelResponseDtoType = {
   language: 'language',
 } as const;
 
-/**
- * Currency for cost calculation (ISO 4217 code)
- * @nullable
- */
-export type PermittedLanguageModelResponseDtoCurrency = typeof PermittedLanguageModelResponseDtoCurrency[keyof typeof PermittedLanguageModelResponseDtoCurrency] | null;
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedLanguageModelResponseDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface PermittedLanguageModelResponseDto {
   /** The id of the permitted model */
   id: string;
@@ -138,21 +125,6 @@ export interface PermittedLanguageModelResponseDto {
   canVision: boolean;
   /** Whether this model enforces anonymous mode */
   anonymousOnly: boolean;
-  /**
-   * Cost per 1K input tokens
-   * @nullable
-   */
-  inputTokenCost: number | null;
-  /**
-   * Cost per 1K output tokens
-   * @nullable
-   */
-  outputTokenCost: number | null;
-  /**
-   * Currency for cost calculation (ISO 4217 code)
-   * @nullable
-   */
-  currency: PermittedLanguageModelResponseDtoCurrency;
 }
 
 /**
@@ -381,19 +353,6 @@ export const PermittedEmbeddingModelResponseDtoType = {
   embedding: 'embedding',
 } as const;
 
-/**
- * Currency for cost calculation (ISO 4217 code)
- * @nullable
- */
-export type PermittedEmbeddingModelResponseDtoCurrency = typeof PermittedEmbeddingModelResponseDtoCurrency[keyof typeof PermittedEmbeddingModelResponseDtoCurrency] | null;
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedEmbeddingModelResponseDtoCurrency = {
-  EUR: 'EUR',
-  USD: 'USD',
-} as const;
-
 export interface PermittedEmbeddingModelResponseDto {
   /** The id of the permitted model */
   id: string;
@@ -412,21 +371,6 @@ export interface PermittedEmbeddingModelResponseDto {
    * @nullable
    */
   dimensions: number | null;
-  /**
-   * Cost per 1K input tokens
-   * @nullable
-   */
-  inputTokenCost: number | null;
-  /**
-   * Cost per 1K output tokens
-   * @nullable
-   */
-  outputTokenCost: number | null;
-  /**
-   * Currency for cost calculation (ISO 4217 code)
-   * @nullable
-   */
-  currency: PermittedEmbeddingModelResponseDtoCurrency;
 }
 
 /**
@@ -2465,42 +2409,6 @@ export interface ModelDistributionResponseDto {
   models: ModelDistributionDto[];
 }
 
-/**
- * Model provider
- */
-export type ModelBreakdownDtoProvider = typeof ModelBreakdownDtoProvider[keyof typeof ModelBreakdownDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelBreakdownDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-export interface ModelBreakdownDto {
-  /** Model ID */
-  modelId: string;
-  /** Model name */
-  modelName: string;
-  /** Model display name */
-  displayName: string;
-  /** Model provider */
-  provider: ModelBreakdownDtoProvider;
-  /** Tokens used for this model */
-  tokens: number;
-  /** Requests made to this model */
-  requests: number;
-  /** Cost for this model (self-hosted mode only) */
-  cost?: number;
-  /** Percentage of user's total usage */
-  percentage: number;
-}
-
 export interface UserUsageDto {
   /** User ID */
   userId: string;
@@ -2512,8 +2420,6 @@ export interface UserUsageDto {
   tokens: number;
   /** Total requests for this user */
   requests: number;
-  /** Total cost for this user (self-hosted mode only) */
-  cost?: number;
   /**
    * Last activity date (null if no activity)
    * @nullable
@@ -2521,8 +2427,6 @@ export interface UserUsageDto {
   lastActivity: string | null;
   /** Whether the user is considered active */
   isActive: boolean;
-  /** Model breakdown for this user */
-  modelBreakdown: ModelBreakdownDto[];
 }
 
 export interface PaginationDto {
@@ -2843,10 +2747,6 @@ sortBy?: UsageControllerGetUserUsageSortBy;
  * Sort order (ascending or descending). Defaults to desc.
  */
 sortOrder?: UsageControllerGetUserUsageSortOrder;
-/**
- * Whether to include detailed model usage breakdown for each user. Defaults to true.
- */
-includeModelBreakdown?: boolean;
 };
 
 export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsageSortBy[keyof typeof UsageControllerGetUserUsageSortBy];

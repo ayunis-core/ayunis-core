@@ -8,8 +8,6 @@ export class UsageStatsResponseDtoMapper {
     return {
       totalTokens: usageStats.totalTokens,
       totalRequests: usageStats.totalRequests,
-      totalCost: usageStats.totalCost,
-      currency: usageStats.currency,
       activeUsers: usageStats.activeUsers,
       totalUsers: usageStats.totalUsers,
       topModels: usageStats.topModels,

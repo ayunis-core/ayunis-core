@@ -1,2 +1,1 @@
-export { UserUsageTable } from "./UserUsageTable";
-
+export { UserUsageTable } from './UserUsageTable';

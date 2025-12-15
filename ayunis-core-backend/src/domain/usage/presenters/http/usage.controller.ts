@@ -55,12 +55,12 @@ export class UsageController {
   @ApiOperation({
     summary: 'Get usage dashboard configuration',
     description:
-      'Returns configuration settings for the usage dashboard, including deployment mode and cost display settings. This endpoint helps the frontend determine which features to show based on the deployment type.',
+      'Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.',
   })
   @ApiResponse({
     status: 200,
     description:
-      'Usage configuration retrieved successfully. Returns deployment mode information and cost display settings.',
+      'Usage configuration retrieved successfully. Returns deployment mode information.',
     type: UsageConfigResponseDto,
   })
   getUsageConfig(): UsageConfigResponseDto {
@@ -71,10 +71,6 @@ export class UsageController {
 
     return {
       isSelfHosted,
-      showCostInformation: isSelfHosted,
-      // Currently we only support EUR.
-      defaultCurrency: UsageConstants.DEFAULT_CURRENCY,
-      costDecimalPlaces: UsageConstants.COST_DECIMAL_PLACES,
     };
   }
 
@@ -82,12 +78,11 @@ export class UsageController {
   @ApiOperation({
     summary: 'Get overall usage statistics',
     description:
-      'Returns aggregated usage statistics including total tokens, requests, active users, and cost information (self-hosted only). Dates are optional - if not provided, shows all usage.',
+      'Returns aggregated usage statistics including total tokens, requests, and active users. Dates are optional - if not provided, shows all usage.',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Usage statistics retrieved successfully. Cost fields are only included in self-hosted deployments.',
+    description: 'Usage statistics retrieved successfully.',
     type: UsageStatsResponseDto,
   })
   @ApiQuery({
@@ -350,7 +345,7 @@ export class UsageController {
   })
   @ApiQuery({
     name: 'sortBy',
-    enum: ['tokens', 'requests', 'cost', 'lastActivity', 'userName'],
+    enum: ['tokens', 'requests', 'lastActivity', 'userName'],
     required: false,
     description: 'Field to sort users by. Defaults to tokens.',
     example: 'tokens',

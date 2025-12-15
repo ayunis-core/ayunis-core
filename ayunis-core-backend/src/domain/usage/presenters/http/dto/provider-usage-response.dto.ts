@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 
 export class TimeSeriesPointDto {
@@ -10,11 +10,6 @@ export class TimeSeriesPointDto {
 
   @ApiProperty({ description: 'Number of requests at this point' })
   requests: number;
-
-  @ApiPropertyOptional({
-    description: 'Cost at this point (self-hosted mode only)',
-  })
-  cost?: number;
 }
 
 export class ProviderUsageDto {
@@ -26,11 +21,6 @@ export class ProviderUsageDto {
 
   @ApiProperty({ description: 'Total requests for this provider' })
   requests: number;
-
-  @ApiPropertyOptional({
-    description: 'Total cost for this provider (self-hosted mode only)',
-  })
-  cost?: number;
 
   @ApiProperty({ description: 'Percentage of total usage' })
   percentage: number;

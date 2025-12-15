@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 
 export class ModelDistributionDto {
@@ -19,11 +19,6 @@ export class ModelDistributionDto {
 
   @ApiProperty({ description: 'Total requests for this model' })
   requests: number;
-
-  @ApiPropertyOptional({
-    description: 'Total cost for this model (self-hosted mode only)',
-  })
-  cost?: number;
 
   @ApiProperty({ description: 'Percentage of total usage' })
   percentage: number;

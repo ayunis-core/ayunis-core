@@ -1,3 +1,1 @@
-export { ProviderConsumption } from "./ProviderConsumption";
-
-
+export { ProviderConsumption } from './ProviderConsumption';

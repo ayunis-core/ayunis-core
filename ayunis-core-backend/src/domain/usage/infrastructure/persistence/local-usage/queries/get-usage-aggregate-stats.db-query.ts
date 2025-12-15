@@ -13,7 +13,6 @@ export async function getUsageAggregateStats(
     .createQueryBuilder('usage')
     .select('SUM(usage.totalTokens)', 'totalTokens')
     .addSelect('COUNT(*)', 'totalRequests')
-    .addSelect('SUM(usage.cost)', 'totalCost')
     .addSelect('COUNT(DISTINCT usage.userId)', 'totalUsers')
     .where('usage.organizationId = :orgId', { orgId: organizationId });
 

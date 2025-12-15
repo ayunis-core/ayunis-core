@@ -32,12 +32,10 @@ describe('GetUsageStatsUseCase', () => {
   });
 
   describe('successful execution', () => {
-    it('should return usage stats with cost', async () => {
+    it('should return usage stats', async () => {
       const mockStats = new UsageStats({
         totalTokens: 10000,
         totalRequests: 100,
-        totalCost: 50.5,
-        currency: 'EUR',
         activeUsers: 10,
         totalUsers: 20,
         topModels: ['Model 1', 'Model 2'],
@@ -52,16 +50,14 @@ describe('GetUsageStatsUseCase', () => {
 
       expect(result.totalTokens).toBe(10000);
       expect(result.totalRequests).toBe(100);
-      expect(result.totalCost).toBe(50.5);
-      expect(result.currency).toBe('EUR');
+      expect(result.activeUsers).toBe(10);
+      expect(result.totalUsers).toBe(20);
     });
 
     it('should ensure non-negative values', async () => {
       const mockStats = new UsageStats({
         totalTokens: -100,
         totalRequests: -50,
-        totalCost: -10,
-        currency: 'EUR',
         activeUsers: -5,
         totalUsers: -10,
         topModels: [],
@@ -76,8 +72,6 @@ describe('GetUsageStatsUseCase', () => {
 
       expect(result.totalTokens).toBe(0);
       expect(result.totalRequests).toBe(0);
-      // Negative cost should be clamped to 0
-      expect(result.totalCost).toBe(0);
       expect(result.activeUsers).toBe(0);
       expect(result.totalUsers).toBe(0);
     });
@@ -106,7 +100,6 @@ describe('GetUsageStatsUseCase', () => {
       const mockStats = new UsageStats({
         totalTokens: 0,
         totalRequests: 0,
-        totalCost: 0,
         activeUsers: 0,
         totalUsers: 0,
         topModels: [],
@@ -121,31 +114,8 @@ describe('GetUsageStatsUseCase', () => {
 
       expect(result.totalTokens).toBe(0);
       expect(result.totalRequests).toBe(0);
-      expect(result.totalCost).toBe(0);
       expect(result.activeUsers).toBe(0);
       expect(result.totalUsers).toBe(0);
-    });
-
-    it('should return undefined cost when totalCost is undefined', async () => {
-      const mockStats = new UsageStats({
-        totalTokens: 10000,
-        totalRequests: 100,
-        totalCost: undefined,
-        currency: undefined,
-        activeUsers: 10,
-        totalUsers: 20,
-        topModels: [],
-      });
-
-      jest
-        .spyOn(mockUsageRepository, 'getUsageStats')
-        .mockResolvedValue(mockStats);
-
-      const query = new GetUsageStatsQuery({ organizationId: orgId });
-      const result = await useCase.execute(query);
-
-      expect(result.totalCost).toBeUndefined();
-      expect(result.currency).toBeUndefined();
     });
   });
 

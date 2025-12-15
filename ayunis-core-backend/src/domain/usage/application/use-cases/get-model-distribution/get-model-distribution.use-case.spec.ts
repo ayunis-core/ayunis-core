@@ -35,7 +35,7 @@ describe('GetModelDistributionUseCase', () => {
   });
 
   describe('successful execution', () => {
-    it('should return model distribution with cost', async () => {
+    it('should return model distribution', async () => {
       const mockModelDistribution = [
         new ModelDistribution({
           modelId: 'model-1' as UUID,
@@ -44,7 +44,6 @@ describe('GetModelDistributionUseCase', () => {
           provider: ModelProvider.OPENAI,
           tokens: 1000,
           requests: 10,
-          cost: 5.0,
           percentage: 50,
         }),
         new ModelDistribution({
@@ -54,7 +53,6 @@ describe('GetModelDistributionUseCase', () => {
           provider: ModelProvider.ANTHROPIC,
           tokens: 1000,
           requests: 10,
-          cost: 6.0,
           percentage: 50,
         }),
       ];
@@ -67,8 +65,6 @@ describe('GetModelDistributionUseCase', () => {
       const result = await useCase.execute(query);
 
       expect(result).toHaveLength(2);
-      expect(result[0].cost).toBe(5.0);
-      expect(result[1].cost).toBe(6.0);
       expect(result[0].percentage).toBe(50);
       expect(result[1].percentage).toBe(50);
     });

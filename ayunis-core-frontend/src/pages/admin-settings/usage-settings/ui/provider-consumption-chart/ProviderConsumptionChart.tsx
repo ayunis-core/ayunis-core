@@ -1,9 +1,9 @@
 // Utils
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // UI
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
@@ -11,23 +11,34 @@ import {
   ChartLegend,
   ChartLegendContent,
   type ChartConfig,
-} from "@/shared/ui/shadcn/chart";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/ui/shadcn/card";
+} from '@/shared/ui/shadcn/chart';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/shared/ui/shadcn/card';
 
 interface ProviderConsumptionChartProps {
   chartData: Array<Record<string, number | string>>;
   chartConfig: ChartConfig;
 }
 
-export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderConsumptionChartProps) {
-  const { t } = useTranslation("admin-settings-usage");
+export function ProviderConsumptionChart({
+  chartData,
+  chartConfig,
+}: ProviderConsumptionChartProps) {
+  const { t } = useTranslation('admin-settings-usage');
   const seriesKeys = useMemo(() => Object.keys(chartConfig), [chartConfig]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("charts.providerConsumption.title")}</CardTitle>
-        <CardDescription>{t("charts.providerConsumption.description")}</CardDescription>
+        <CardTitle>{t('charts.providerConsumption.title')}</CardTitle>
+        <CardDescription>
+          {t('charts.providerConsumption.description')}
+        </CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -35,9 +46,24 @@ export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderCon
           <AreaChart data={chartData}>
             <defs>
               {seriesKeys.map((key) => (
-                <linearGradient id={`fill-${key}`} x1="0" y1="0" x2="0" y2="1" key={key}>
-                  <stop offset="5%" stopColor={`var(--color-${key})`} stopOpacity={0.8} />
-                  <stop offset="95%" stopColor={`var(--color-${key})`} stopOpacity={0.1} />
+                <linearGradient
+                  id={`fill-${key}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                  key={key}
+                >
+                  <stop
+                    offset="5%"
+                    stopColor={`var(--color-${key})`}
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={`var(--color-${key})`}
+                    stopOpacity={0.1}
+                  />
                 </linearGradient>
               ))}
             </defs>
@@ -50,7 +76,10 @@ export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderCon
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value as string);
-                return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                return date.toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                });
               }}
             />
             <ChartTooltip
@@ -58,7 +87,10 @@ export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderCon
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) =>
-                    new Date(value as string).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                    new Date(value as string).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                    })
                   }
                   indicator="dot"
                 />
@@ -84,4 +116,3 @@ export function ProviderConsumptionChart({ chartData, chartConfig }: ProviderCon
     </Card>
   );
 }
-

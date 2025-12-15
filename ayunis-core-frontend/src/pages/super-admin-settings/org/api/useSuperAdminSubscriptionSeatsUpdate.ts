@@ -23,14 +23,18 @@ export default function useSuperAdminSubscriptionSeatsUpdate(orgId: string) {
             const { code } = extractErrorData(error);
             switch (code) {
               case 'SUBSCRIPTION_NOT_FOUND':
-                showError(t('licenseSeats.updateSeatsErrorSubscriptionNotFound'));
+                showError(
+                  t('licenseSeats.updateSeatsErrorSubscriptionNotFound'),
+                );
                 break;
               case 'TOO_MANY_USED_SEATS':
                 showError(t('licenseSeats.updateSeatsErrorTooManyUsedSeats'));
                 break;
               case 'SUBSCRIPTION_ALREADY_CANCELLED':
                 showError(
-                  t('licenseSeats.updateSeatsErrorSubscriptionAlreadyCancelled'),
+                  t(
+                    'licenseSeats.updateSeatsErrorSubscriptionAlreadyCancelled',
+                  ),
                 );
                 break;
               default:

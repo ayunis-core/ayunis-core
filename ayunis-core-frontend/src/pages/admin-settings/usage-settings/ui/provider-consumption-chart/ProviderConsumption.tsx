@@ -1,15 +1,15 @@
 // Utils
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 // Features
-import { useProviderUsageChart } from "@/features/usage";
-import { usePermittedProviders } from "@/features/models";
+import { useProviderUsageChart } from '@/features/usage';
+import { usePermittedProviders } from '@/features/models';
 
 // UI
-import { ProviderConsumptionLoading } from "./ProviderConsumptionLoading";
-import { ProviderConsumptionError } from "./ProviderConsumptionError";
-import { ProviderConsumptionEmpty } from "./ProviderConsumptionEmpty";
-import { ProviderConsumptionChart } from "./ProviderConsumptionChart";
+import { ProviderConsumptionLoading } from './ProviderConsumptionLoading';
+import { ProviderConsumptionError } from './ProviderConsumptionError';
+import { ProviderConsumptionEmpty } from './ProviderConsumptionEmpty';
+import { ProviderConsumptionChart } from './ProviderConsumptionChart';
 
 interface ProviderConsumptionProps {
   startDate?: Date;
@@ -17,8 +17,16 @@ interface ProviderConsumptionProps {
   selectedProvider?: string;
 }
 
-export function ProviderConsumption({ startDate, endDate, selectedProvider }: ProviderConsumptionProps) {
-  const { data: chartResp, isLoading, error } = useProviderUsageChart({
+export function ProviderConsumption({
+  startDate,
+  endDate,
+  selectedProvider,
+}: ProviderConsumptionProps) {
+  const {
+    data: chartResp,
+    isLoading,
+    error,
+  } = useProviderUsageChart({
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
     provider: selectedProvider,
@@ -36,7 +44,10 @@ export function ProviderConsumption({ startDate, endDate, selectedProvider }: Pr
   }, [providers]);
 
   const { chartData, chartConfig } = useMemo(() => {
-    const empty = { chartData: [] as Array<Record<string, string | number>>, chartConfig: {} as Record<string, { label: string; color: string }> };
+    const empty = {
+      chartData: [] as Array<Record<string, string | number>>,
+      chartConfig: {} as Record<string, { label: string; color: string }>,
+    };
     const rows = chartResp?.timeSeries ?? [];
     if (rows.length === 0) return empty;
 
@@ -44,15 +55,18 @@ export function ProviderConsumption({ startDate, endDate, selectedProvider }: Pr
     const chartData = rows.map((r) => ({ date: r.date, ...r.values }));
 
     const palette = [
-      "var(--chart-1)",
-      "var(--chart-2)",
-      "var(--chart-3)",
-      "var(--chart-4)",
-      "var(--chart-5)",
+      'var(--chart-1)',
+      'var(--chart-2)',
+      'var(--chart-3)',
+      'var(--chart-4)',
+      'var(--chart-5)',
     ];
     const chartConfig: Record<string, { label: string; color: string }> = {};
     seriesKeys.forEach((key, idx) => {
-      chartConfig[key] = { label: providerDisplayNames[key] || key, color: palette[idx % palette.length] };
+      chartConfig[key] = {
+        label: providerDisplayNames[key] || key,
+        color: palette[idx % palette.length],
+      };
     });
 
     return { chartData, chartConfig };
@@ -71,9 +85,6 @@ export function ProviderConsumption({ startDate, endDate, selectedProvider }: Pr
   }
 
   return (
-    <ProviderConsumptionChart 
-      chartData={chartData} 
-      chartConfig={chartConfig} 
-    />
+    <ProviderConsumptionChart chartData={chartData} chartConfig={chartConfig} />
   );
 }

@@ -1,21 +1,38 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/shadcn/card";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/shared/ui/shadcn/empty";
-import { useTranslation } from "react-i18next";
-import { AlertCircle } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/shared/ui/shadcn/card';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from '@/shared/ui/shadcn/empty';
+import { useTranslation } from 'react-i18next';
+import { AlertCircle } from 'lucide-react';
 
 interface ProviderConsumptionErrorProps {
   error: unknown;
 }
 
-export function ProviderConsumptionError({ error }: ProviderConsumptionErrorProps) {
-  const { t } = useTranslation("admin-settings-usage");
-  const errorMessage = error instanceof Error ? error.message : t("charts.errorUnknown");
+export function ProviderConsumptionError({
+  error,
+}: ProviderConsumptionErrorProps) {
+  const { t } = useTranslation('admin-settings-usage');
+  const errorMessage =
+    error instanceof Error ? error.message : t('charts.errorUnknown');
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("charts.providerConsumption.title")}</CardTitle>
-        <CardDescription>{t("charts.providerConsumption.description")}</CardDescription>
+        <CardTitle>{t('charts.providerConsumption.title')}</CardTitle>
+        <CardDescription>
+          {t('charts.providerConsumption.description')}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Empty>
@@ -24,7 +41,7 @@ export function ProviderConsumptionError({ error }: ProviderConsumptionErrorProp
           </EmptyMedia>
 
           <EmptyHeader>
-            <EmptyTitle>{t("charts.errorTitle")}</EmptyTitle>
+            <EmptyTitle>{t('charts.errorTitle')}</EmptyTitle>
             <EmptyDescription>{errorMessage}</EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -32,4 +49,3 @@ export function ProviderConsumptionError({ error }: ProviderConsumptionErrorProp
     </Card>
   );
 }
-

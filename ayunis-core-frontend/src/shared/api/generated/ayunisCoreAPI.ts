@@ -9094,7 +9094,7 @@ export function useUsageControllerGetModelDistribution<TData = Awaited<ReturnTyp
 
 
 /**
- * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status and optional model breakdown per user. Dates are optional - if not provided, shows all usage.
+ * Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.
  * @summary Get usage statistics by user
  */
 export const usageControllerGetUserUsage = (

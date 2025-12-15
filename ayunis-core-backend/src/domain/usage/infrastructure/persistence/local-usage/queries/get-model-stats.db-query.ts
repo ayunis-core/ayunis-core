@@ -24,7 +24,6 @@ export async function getModelStats(
     .addSelect('model.displayName', 'displayName')
     .addSelect('SUM(usage.totalTokens)', 'tokens')
     .addSelect('COUNT(*)', 'requests')
-    .addSelect('SUM(usage.cost)', 'cost')
     .where('usage.organizationId = :orgId', { orgId: organizationId });
 
   if (startDate) {

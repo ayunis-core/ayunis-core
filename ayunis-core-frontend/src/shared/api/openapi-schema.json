@@ -4579,7 +4579,7 @@
     },
     "/usage/users": {
       "get": {
-        "description": "Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status and optional model breakdown per user. Dates are optional - if not provided, shows all usage.",
+        "description": "Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.",
         "operationId": "UsageController_getUserUsage",
         "parameters": [
           {
@@ -4657,21 +4657,11 @@
               "enum": ["asc", "desc"],
               "type": "string"
             }
-          },
-          {
-            "name": "includeModelBreakdown",
-            "required": false,
-            "in": "query",
-            "description": "Whether to include detailed model usage breakdown for each user. Defaults to true.",
-            "schema": {
-              "example": true,
-              "type": "boolean"
-            }
           }
         ],
         "responses": {
           "200": {
-            "description": "User usage statistics retrieved successfully. Includes pagination metadata and optional model breakdown.",
+            "description": "User usage statistics retrieved successfully. Includes pagination metadata.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5425,22 +5415,6 @@
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode"
-          },
-          "inputTokenCost": {
-            "type": "number",
-            "description": "Cost per 1K input tokens",
-            "nullable": true
-          },
-          "outputTokenCost": {
-            "type": "number",
-            "description": "Cost per 1K output tokens",
-            "nullable": true
-          },
-          "currency": {
-            "type": "string",
-            "enum": ["EUR", "USD"],
-            "description": "Currency for cost calculation (ISO 4217 code)",
-            "nullable": true
           }
         },
         "required": [
@@ -5453,10 +5427,7 @@
           "canStream",
           "isReasoning",
           "canVision",
-          "anonymousOnly",
-          "inputTokenCost",
-          "outputTokenCost",
-          "currency"
+          "anonymousOnly"
         ]
       },
       "PermittedLanguageModelResponseDtoNullable": {
@@ -5686,22 +5657,6 @@
             "type": "number",
             "description": "The number of dimensions for embeddings",
             "nullable": true
-          },
-          "inputTokenCost": {
-            "type": "number",
-            "description": "Cost per 1K input tokens",
-            "nullable": true
-          },
-          "outputTokenCost": {
-            "type": "number",
-            "description": "Cost per 1K output tokens",
-            "nullable": true
-          },
-          "currency": {
-            "type": "string",
-            "enum": ["EUR", "USD"],
-            "description": "Currency for cost calculation (ISO 4217 code)",
-            "nullable": true
           }
         },
         "required": [
@@ -5711,10 +5666,7 @@
           "displayName",
           "type",
           "isArchived",
-          "dimensions",
-          "inputTokenCost",
-          "outputTokenCost",
-          "currency"
+          "dimensions"
         ]
       },
       "CreateLanguageModelRequestDto": {
@@ -8777,61 +8729,6 @@
         },
         "required": ["models"]
       },
-      "ModelBreakdownDto": {
-        "type": "object",
-        "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "Model ID"
-          },
-          "modelName": {
-            "type": "string",
-            "description": "Model name"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "Model display name"
-          },
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "description": "Model provider"
-          },
-          "tokens": {
-            "type": "number",
-            "description": "Tokens used for this model"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Requests made to this model"
-          },
-          "cost": {
-            "type": "number",
-            "description": "Cost for this model (self-hosted mode only)"
-          },
-          "percentage": {
-            "type": "number",
-            "description": "Percentage of user's total usage"
-          }
-        },
-        "required": [
-          "modelId",
-          "modelName",
-          "displayName",
-          "provider",
-          "tokens",
-          "requests",
-          "percentage"
-        ]
-      },
       "UserUsageDto": {
         "type": "object",
         "properties": {
@@ -8855,10 +8752,6 @@
             "type": "number",
             "description": "Total requests for this user"
           },
-          "cost": {
-            "type": "number",
-            "description": "Total cost for this user (self-hosted mode only)"
-          },
           "lastActivity": {
             "type": "string",
             "format": "date-time",
@@ -8868,13 +8761,6 @@
           "isActive": {
             "type": "boolean",
             "description": "Whether the user is considered active"
-          },
-          "modelBreakdown": {
-            "description": "Model breakdown for this user",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ModelBreakdownDto"
-            }
           }
         },
         "required": [
@@ -8884,8 +8770,7 @@
           "tokens",
           "requests",
           "lastActivity",
-          "isActive",
-          "modelBreakdown"
+          "isActive"
         ]
       },
       "PaginationDto": {

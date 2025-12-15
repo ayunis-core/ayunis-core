@@ -190,7 +190,6 @@ export class LocalUsageRepository extends UsageRepository {
     for (const stat of userStats) {
       const tokens = stat.tokens ? parseInt(stat.tokens) : 0;
       const requests = parseInt(stat.requests || '0');
-      const cost = stat.cost ? parseFloat(stat.cost) : undefined;
       // For users with no usage, lastActivity should be null
       const lastActivity = stat.lastActivity
         ? new Date(stat.lastActivity)
@@ -203,7 +202,6 @@ export class LocalUsageRepository extends UsageRepository {
           userEmail: stat.userEmail || '',
           tokens,
           requests,
-          cost: requests > 0 ? cost : undefined,
           lastActivity,
           isActive: this.isUserActive(lastActivity),
         }),
@@ -227,7 +225,6 @@ export class LocalUsageRepository extends UsageRepository {
     )) ?? {
       totalTokens: '0',
       totalRequests: '0',
-      totalCost: null,
       totalUsers: '0',
     };
 
@@ -253,8 +250,6 @@ export class LocalUsageRepository extends UsageRepository {
     return new UsageStats({
       totalTokens: (stats.totalTokens ? parseInt(stats.totalTokens) : 0) || 0,
       totalRequests: parseInt(stats.totalRequests) || 0,
-      totalCost: stats.totalCost ? parseFloat(stats.totalCost) : undefined,
-      currency: stats.totalCost ? UsageConstants.DEFAULT_CURRENCY : undefined,
       activeUsers,
       totalUsers: parseInt(stats.totalUsers) || 0,
       topModels,
@@ -287,8 +282,6 @@ export class LocalUsageRepository extends UsageRepository {
         return 'COALESCE(SUM(usage.totalTokens), 0)';
       case 'requests':
         return 'COUNT(usage.id)';
-      case 'cost':
-        return 'COALESCE(SUM(usage.cost), 0)';
       case 'lastActivity':
         return 'MAX(usage.createdAt)';
       case 'userName':

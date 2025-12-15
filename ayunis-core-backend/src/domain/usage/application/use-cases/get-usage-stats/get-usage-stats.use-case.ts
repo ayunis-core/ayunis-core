@@ -14,13 +14,22 @@ export class GetUsageStatsUseCase {
       this.validateDateRange(query.startDate, query.endDate);
     }
 
-    const usageStats = await this.usageRepository.getUsageStats({
+    const stats = await this.usageRepository.getUsageStats({
       organizationId: query.organizationId,
       startDate: query.startDate,
       endDate: query.endDate,
     });
 
-    return this.processUsageStats(usageStats);
+    return new UsageStats({
+      totalTokens: Math.max(0, stats.totalTokens),
+      totalRequests: Math.max(0, stats.totalRequests),
+      activeUsers: Math.min(
+        Math.max(0, stats.activeUsers),
+        Math.max(0, stats.totalUsers),
+      ),
+      totalUsers: Math.max(0, stats.totalUsers),
+      topModels: stats.topModels || [],
+    });
   }
 
   private validateDateRange(startDate: Date, endDate: Date): void {
@@ -43,23 +52,5 @@ export class GetUsageStatsUseCase {
         `Date range cannot exceed ${maxDays} days`,
       );
     }
-  }
-
-  private processUsageStats(stats: UsageStats): UsageStats {
-    return new UsageStats({
-      totalTokens: Math.max(0, stats.totalTokens),
-      totalRequests: Math.max(0, stats.totalRequests),
-      totalCost:
-        stats.totalCost !== undefined
-          ? Math.max(0, stats.totalCost)
-          : undefined,
-      currency: stats.currency,
-      activeUsers: Math.min(
-        Math.max(0, stats.activeUsers),
-        Math.max(0, stats.totalUsers),
-      ),
-      totalUsers: Math.max(0, stats.totalUsers),
-      topModels: stats.topModels || [],
-    });
   }
 }
