@@ -1,4 +1,11 @@
-import { ArrowLeft, Users, Brain, CreditCard, Plug, BarChart3 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Users,
+  Brain,
+  CreditCard,
+  Plug,
+  BarChart3,
+} from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
