@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class PermittedLanguageModelResponseDto {
   @ApiProperty({
@@ -66,27 +65,6 @@ export class PermittedLanguageModelResponseDto {
     description: 'Whether this model enforces anonymous mode',
   })
   anonymousOnly: boolean;
-
-  @ApiProperty({
-    type: 'number',
-    description: 'Cost per 1K input tokens',
-    nullable: true,
-  })
-  inputTokenCost?: number;
-
-  @ApiProperty({
-    type: 'number',
-    description: 'Cost per 1K output tokens',
-    nullable: true,
-  })
-  outputTokenCost?: number;
-
-  @ApiProperty({
-    enum: Object.values(Currency),
-    description: 'Currency for cost calculation (ISO 4217 code)',
-    nullable: true,
-  })
-  currency?: Currency;
 }
 
 export class PermittedLanguageModelResponseDtoNullable {

@@ -306,31 +306,29 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     const finishReason = choice?.finishReason;
     const usage = chunk.data.usage;
 
-    // If this is the final chunk with usage information
+    // Skip empty chunks with no useful data
     if (
-      usage &&
-      (finishReason || (!textContentDelta && !toolCallsDelta.length))
+      !textContentDelta &&
+      !toolCallsDelta.length &&
+      !usage &&
+      !finishReason
     ) {
-      return new StreamInferenceResponseChunk({
-        thinkingDelta: null,
-        textContentDelta,
-        toolCallsDelta,
-        finishReason,
-        usage: {
-          inputTokens: usage.promptTokens,
-          outputTokens: usage.completionTokens,
-        },
-      });
-    }
-
-    if (!textContentDelta && !toolCallsDelta.length) {
       return null;
     }
 
+    // Always include usage data when available to prevent data loss
+    // This ensures usage is captured even if it arrives with content
     return new StreamInferenceResponseChunk({
       thinkingDelta: null,
       textContentDelta,
       toolCallsDelta,
+      finishReason,
+      usage: usage
+        ? {
+            inputTokens: usage.promptTokens,
+            outputTokens: usage.completionTokens,
+          }
+        : undefined,
     });
   };
 
