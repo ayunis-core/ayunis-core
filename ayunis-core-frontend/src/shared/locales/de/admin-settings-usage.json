@@ -5,7 +5,7 @@
     "last30Days": "Letzte 30 Tage",
     "last90Days": "Letzte 90 Tage",
     "custom": "Benutzerdefiniert",
-    "allTime": "Alle Zeit",
+    "allTime": "Gesamter Zeitraum",
     "allProviders": "Alle Anbieter",
     "allModels": "Alle Modelle"
   },
@@ -53,4 +53,3 @@
     "emptyState": "Keine Benutzer entsprechen den ausgewählten Filtern auf dieser Seite. Versuchen Sie, Ihre Filter anzupassen oder zu einer anderen Seite zu navigieren."
   }
 }
-
