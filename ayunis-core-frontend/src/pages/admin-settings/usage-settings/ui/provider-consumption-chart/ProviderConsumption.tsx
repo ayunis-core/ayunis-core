@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 // Features
 import { useProviderUsageChart } from "@/features/usage";
+import { usePermittedProviders } from "@/features/models";
 
 // UI
 import { ProviderConsumptionLoading } from "./ProviderConsumptionLoading";
@@ -23,6 +24,17 @@ export function ProviderConsumption({ startDate, endDate, selectedProvider }: Pr
     provider: selectedProvider,
   } as Parameters<typeof useProviderUsageChart>[0]);
 
+  const { providers } = usePermittedProviders();
+
+  // Create a map from technical provider name to display name
+  const providerDisplayNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    providers.forEach((p) => {
+      map[p.provider] = p.displayName;
+    });
+    return map;
+  }, [providers]);
+
   const { chartData, chartConfig } = useMemo(() => {
     const empty = { chartData: [] as Array<Record<string, string | number>>, chartConfig: {} as Record<string, { label: string; color: string }> };
     const rows = chartResp?.timeSeries ?? [];
@@ -40,11 +52,11 @@ export function ProviderConsumption({ startDate, endDate, selectedProvider }: Pr
     ];
     const chartConfig: Record<string, { label: string; color: string }> = {};
     seriesKeys.forEach((key, idx) => {
-      chartConfig[key] = { label: key, color: palette[idx % palette.length] };
+      chartConfig[key] = { label: providerDisplayNames[key] || key, color: palette[idx % palette.length] };
     });
 
     return { chartData, chartConfig };
-  }, [chartResp?.timeSeries]);
+  }, [chartResp?.timeSeries, providerDisplayNames]);
 
   if (isLoading) {
     return <ProviderConsumptionLoading />;

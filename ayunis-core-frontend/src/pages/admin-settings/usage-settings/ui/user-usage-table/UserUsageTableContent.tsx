@@ -3,6 +3,7 @@ import type { UserUsageDto } from "@/shared/api/generated/ayunisCoreAPI.schemas"
 
 // Utils
 import { formatDistanceToNow } from "date-fns";
+import { de, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 
 // UI
@@ -154,7 +155,10 @@ export function UserUsageTableContent({
                     {user.lastActivity ? (
                       <span className="text-sm">
                         {/* TODO: Fix typing issue on the dto level */}
-                        {formatDistanceToNow(new Date(user.lastActivity as unknown as string), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(user.lastActivity as unknown as string), {
+                          addSuffix: true,
+                          locale: i18n.language === "de" ? de : enUS,
+                        })}
                       </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">-</span>
