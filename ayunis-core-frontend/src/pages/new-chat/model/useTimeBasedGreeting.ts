@@ -146,7 +146,7 @@ const greetings: Record<string, Greeting[]> = {
     },
     {
       de: 'Die Warteschlange wäre jetzt lang. Hier nicht.',
-      en: "The queue would be long now. Not here.",
+      en: 'The queue would be long now. Not here.',
     },
     {
       de: 'Mitten im Tagesgeschäft. Schießen Sie los.',
@@ -206,7 +206,7 @@ const greetings: Record<string, Greeting[]> = {
     },
     {
       de: 'Mittagspause? Für mich ein Fremdwort.',
-      en: "Lunch break? A foreign concept to me.",
+      en: 'Lunch break? A foreign concept to me.',
     },
     {
       de: 'Der Schalter wäre jetzt zu. Fragen Sie trotzdem.',
@@ -278,7 +278,7 @@ const greetings: Record<string, Greeting[]> = {
     },
     {
       de: 'Die Kaffeemaschine läuft auf Hochtouren. Ich auch.',
-      en: "The coffee machine is running at full speed. So am I.",
+      en: 'The coffee machine is running at full speed. So am I.',
     },
     {
       de: 'Mittagsloch im Amt. Hier ist alles dicht.',
@@ -314,7 +314,7 @@ const greetings: Record<string, Greeting[]> = {
   lateAfternoon: [
     {
       de: 'Die Sprechstunde neigt sich dem Ende zu – fragen Sie schnell.',
-      en: "Office hours are coming to an end – ask quickly.",
+      en: 'Office hours are coming to an end – ask quickly.',
     },
     {
       de: 'Noch im Dienst. Was kann ich klären?',
@@ -470,7 +470,7 @@ const greetings: Record<string, Greeting[]> = {
     },
     {
       de: 'Schlaflos in der Behörde? Ich auch – freiwillig.',
-      en: "Sleepless at the office? Me too – voluntarily.",
+      en: 'Sleepless at the office? Me too – voluntarily.',
     },
     {
       de: 'Die Sterne leuchten. Mein Service auch.',
@@ -530,7 +530,6 @@ export function useTimeBasedGreeting(): string {
     const hour = new Date().getHours();
     const period = getTimePeriod(hour);
     return getRandomGreeting(period);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Return greeting in user's language (default to German if not English)

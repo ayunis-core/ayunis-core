@@ -183,7 +183,10 @@ curl -X POST http://localhost:3000/api/admin/language-models \
     "canStream": true, # true if the model can stream its response
     "isReasoning": false, # true if the model has reasoning capabilities
     "canUseTools": true, # true if the model can use tools / function calling
-    "isArchived": false # model will be hidden everywhere if true
+    "isArchived": false, # model will be hidden everywhere if true
+    "inputTokenCost": 1,
+    "outputTokenCost": 1,
+    "currency": "EUR"
   }'
 ```
 
@@ -201,7 +204,10 @@ curl -X POST http://localhost:3000/api/admin/embedding-models \
     "name": "mistral-large-latest", # the exact string identifying the model at the provider side
     "provider": "mistral", # mistral, openai, anthropic or ollama
     "displayName": "Mistral Large", # the name displayed to the user
-    "dimensions": 1024 # 1024 or 1536, see /src/domain/models/domain/value-objects/embedding-dimensions.enum.ts
+    "dimensions": 1024, # 1024 or 1536, see /src/domain/models/domain/value-objects/embedding-dimensions.enum.ts
+    "inputTokenCost": 1,
+    "outputTokenCost": 1,
+    "currency": "EUR"
   }'
 ```
 
@@ -220,7 +226,7 @@ curl -X GET http://localhost:3000/api/admin/models/ \
 
 ```bash
 # Update model
-curl -X PUT http://localhost:3000/api/admin/models/:id \
+curl -X PUT http://localhost:3000/api/admin/language-models/:id \
   -H "Content-Type: application/json" \
   -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
   -d '{
@@ -228,8 +234,12 @@ curl -X PUT http://localhost:3000/api/admin/models/:id \
     "provider": "mistral",
     "displayName": "Mistral Large",
     "canStream": true,
+    "canUseTools": true,
     "isReasoning": false,
-    "isArchived": false
+    "isArchived": false,
+    "inputTokenCost": 1,
+    "outputTokenCost": 1,
+    "currency": "EUR"
   }'
 ```
 

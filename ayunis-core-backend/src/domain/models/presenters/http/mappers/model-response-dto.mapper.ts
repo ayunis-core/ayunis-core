@@ -21,6 +21,8 @@ export class ModelResponseDtoMapper {
       isReasoning: permittedModel.model.isReasoning,
       canVision: permittedModel.model.canVision,
       anonymousOnly: permittedModel.anonymousOnly,
+      // Note: Cost fields (inputTokenCost, outputTokenCost, currency) are intentionally
+      // not exposed to users. They are tracked internally for usage analytics only.
     };
   }
 
@@ -35,6 +37,8 @@ export class ModelResponseDtoMapper {
       type: ModelType.EMBEDDING,
       isArchived: permittedModel.model.isArchived,
       dimensions: permittedModel.model.dimensions,
+      // Note: Cost fields (inputTokenCost, outputTokenCost, currency) are intentionally
+      // not exposed to users. They are tracked internally for usage analytics only.
     };
   }
 }

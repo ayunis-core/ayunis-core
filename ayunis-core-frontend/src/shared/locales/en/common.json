@@ -62,7 +62,11 @@
     "fileSourceDisabled": "To upload documents, an embedding model must be enabled."
   },
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "error": {
     "title": "Something went wrong",

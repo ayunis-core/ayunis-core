@@ -1,4 +1,11 @@
-import { Pencil, Search, FileText, Eye, HelpCircle, type LucideIcon } from 'lucide-react';
+import {
+  Pencil,
+  Search,
+  FileText,
+  Eye,
+  HelpCircle,
+  type LucideIcon,
+} from 'lucide-react';
 
 export interface QuickActionPrompt {
   labelKey: string;

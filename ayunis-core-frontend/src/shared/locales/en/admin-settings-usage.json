@@ -1,0 +1,55 @@
+{
+  "filters": {
+    "selectDateRange": "Select date range",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "last90Days": "Last 90 days",
+    "custom": "Custom",
+    "allTime": "All time",
+    "allProviders": "All Providers",
+    "allModels": "All Models"
+  },
+  "stats": {
+    "totalTokens": "Consumed Tokens",
+    "activeUsers": "Active Users",
+    "estimatedCost": "Estimated Cost"
+  },
+  "charts": {
+    "noData": "No data available",
+    "noDataDescription": "There is no consumption data available for the selected time period.",
+    "errorTitle": "Error loading data",
+    "errorUnknown": "Unknown error",
+    "modelDistribution": {
+      "title": "Model Distribution",
+      "description": "Model distribution breakdown",
+      "models": "Models",
+      "more": "more",
+      "others": "Others",
+      "othersWithCount": "Others ({{count}} models)"
+    },
+    "tokenConsumption": {
+      "title": "Token Consumption",
+      "description": "Showing total tokens consumed"
+    },
+    "providerConsumption": {
+      "title": "Consumption by Provider",
+      "description": "Showing total tokens consumed"
+    }
+  },
+  "userUsage": {
+    "title": "User Usage",
+    "subtitle": "Individual user consumption breakdown",
+    "viewAll": "View All",
+    "noData": "No user usage data available",
+    "error": "Error loading user usage data",
+    "user": "User",
+    "tokens": "Tokens",
+    "requests": "Requests",
+    "lastActive": "Last Active",
+    "status": "Status",
+    "active": "active",
+    "inactive": "inactive",
+    "emptyState": "No users match the selected filters on this page. Try adjusting your filters or navigate to another page."
+  }
+}
+

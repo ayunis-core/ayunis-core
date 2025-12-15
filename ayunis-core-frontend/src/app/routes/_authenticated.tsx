@@ -1,4 +1,9 @@
-import { createFileRoute, Outlet, redirect, isRedirect } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  isRedirect,
+} from '@tanstack/react-router';
 import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,

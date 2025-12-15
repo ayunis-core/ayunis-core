@@ -250,6 +250,22 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
           textContentDelta: chunk.delta ?? null,
           toolCallsDelta: [],
         });
+      case 'response.completed': {
+        const usage = chunk.response?.usage;
+
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: null,
+          textContentDelta: null,
+          toolCallsDelta: [],
+          finishReason: 'stop',
+          usage: usage
+            ? {
+                inputTokens: usage.input_tokens,
+                outputTokens: usage.output_tokens,
+              }
+            : undefined,
+        });
+      }
       case 'response.function_call_arguments.delta':
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,

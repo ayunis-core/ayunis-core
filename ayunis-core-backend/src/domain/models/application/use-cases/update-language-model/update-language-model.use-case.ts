@@ -32,6 +32,9 @@ export class UpdateLanguageModelUseCase {
         canUseTools: command.canUseTools,
         isReasoning: command.isReasoning,
         canVision: command.canVision,
+        inputTokenCost: command.inputTokenCost,
+        outputTokenCost: command.outputTokenCost,
+        currency: command.currency,
       });
       await this.modelsRepository.save(model);
       return model;

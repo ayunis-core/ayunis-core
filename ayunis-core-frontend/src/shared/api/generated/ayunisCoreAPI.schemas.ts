@@ -2265,6 +2265,186 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export interface UsageConfigResponseDto {
+  /** Whether the deployment is self-hosted. Determines feature availability. */
+  isSelfHosted: boolean;
+  /** Whether cost information should be displayed in the UI. True for self-hosted, false for cloud deployments. */
+  showCostInformation: boolean;
+  /** Default currency code used for cost calculations and display */
+  defaultCurrency: string;
+  /** Number of decimal places to use when formatting cost values */
+  costDecimalPlaces: number;
+}
+
+export interface UsageStatsResponseDto {
+  /** Total tokens consumed across all users and models in the specified period */
+  totalTokens: number;
+  /** Total number of API requests made in the specified period */
+  totalRequests: number;
+  /** Total cost incurred in the period. Only available in self-hosted deployments. */
+  totalCost?: number;
+  /** Currency code for cost information. Only available in self-hosted deployments. */
+  currency?: string;
+  /** Number of users who made requests within the active user threshold (last 30 days) */
+  activeUsers: number;
+  /** Total number of unique users who made requests in the specified period */
+  totalUsers: number;
+  /** List of the most frequently used model names, ordered by usage */
+  topModels: string[];
+}
+
+export interface TimeSeriesPointDto {
+  /** Date of the data point */
+  date: string;
+  /** Number of tokens at this point */
+  tokens: number;
+  /** Number of requests at this point */
+  requests: number;
+  /** Cost at this point (self-hosted mode only) */
+  cost?: number;
+}
+
+/**
+ * Model provider
+ */
+export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typeof ProviderUsageDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProviderUsageDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+} as const;
+
+export interface ProviderUsageDto {
+  /** Model provider */
+  provider: ProviderUsageDtoProvider;
+  /** Total tokens for this provider */
+  tokens: number;
+  /** Total requests for this provider */
+  requests: number;
+  /** Total cost for this provider (self-hosted mode only) */
+  cost?: number;
+  /** Percentage of total usage */
+  percentage: number;
+  /** Time series data for this provider */
+  timeSeriesData: TimeSeriesPointDto[];
+}
+
+export interface ProviderUsageResponseDto {
+  /** Provider usage statistics */
+  providers: ProviderUsageDto[];
+}
+
+export interface ProviderValuesDto {
+  /** Tokens for OpenAI */
+  openai?: number;
+  /** Tokens for Anthropic */
+  anthropic?: number;
+  /** Tokens for Mistral */
+  mistral?: number;
+  /** Tokens for Ollama */
+  ollama?: number;
+  /** Tokens for Synaforce */
+  synaforce?: number;
+  /** Tokens for Ayunis (internal) */
+  ayunis?: number;
+}
+
+export interface ProviderTimeSeriesRowDto {
+  /** Date of the data point */
+  date: string;
+  /** Tokens per provider for this date */
+  values: ProviderValuesDto;
+}
+
+export interface ProviderUsageChartResponseDto {
+  /** Aligned time series rows by date with provider token values */
+  timeSeries: ProviderTimeSeriesRowDto[];
+}
+
+/**
+ * Model provider
+ */
+export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[keyof typeof ModelDistributionDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelDistributionDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+} as const;
+
+export interface ModelDistributionDto {
+  /** Model ID */
+  modelId: string;
+  /** Model name */
+  modelName: string;
+  /** Model display name */
+  displayName: string;
+  /** Model provider */
+  provider: ModelDistributionDtoProvider;
+  /** Total tokens for this model */
+  tokens: number;
+  /** Total requests for this model */
+  requests: number;
+  /** Total cost for this model (self-hosted mode only) */
+  cost?: number;
+  /** Percentage of total usage */
+  percentage: number;
+}
+
+export interface ModelDistributionResponseDto {
+  /** Model distribution statistics */
+  models: ModelDistributionDto[];
+}
+
+export interface UserUsageDto {
+  /** User ID */
+  userId: string;
+  /** User name */
+  userName: string;
+  /** User email */
+  userEmail: string;
+  /** Total tokens for this user */
+  tokens: number;
+  /** Total requests for this user */
+  requests: number;
+  /**
+   * Last activity date (null if no activity)
+   * @nullable
+   */
+  lastActivity: string | null;
+  /** Whether the user is considered active */
+  isActive: boolean;
+}
+
+export interface PaginationDto {
+  /** Maximum number of items per page */
+  limit: number;
+  /** Number of items to skip */
+  offset: number;
+  /** Total number of items available */
+  total?: number;
+}
+
+export interface UserUsageResponseDto {
+  /** User usage statistics */
+  data: UserUsageDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
 export interface CreatePromptDto {
   /**
    * The title of the prompt
@@ -2471,6 +2651,124 @@ export type RunsControllerSendMessageBody = {
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto;
+
+export type UsageControllerGetUsageStatsParams = {
+/**
+ * Start date in ISO format. If provided, must be used with endDate.
+ */
+startDate?: string;
+/**
+ * End date in ISO format. If provided, must be used with startDate.
+ */
+endDate?: string;
+};
+
+export type UsageControllerGetProviderUsageParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+/**
+ * Whether to include time series data for trend charts. Defaults to true.
+ */
+includeTimeSeries?: boolean;
+/**
+ * Filter by provider (e.g., openai, anthropic)
+ */
+provider?: string;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
+};
+
+export type UsageControllerGetProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+/**
+ * Filter by provider (e.g., openai, anthropic)
+ */
+provider?: string;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
+};
+
+export type UsageControllerGetModelDistributionParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+/**
+ * Maximum number of models to return. Defaults to 10. Frontend can decide how to handle aggregation if needed.
+ */
+maxModels?: number;
+/**
+ * Filter by model ID
+ */
+modelId?: string;
+};
+
+export type UsageControllerGetUserUsageParams = {
+/**
+ * Start date in ISO format
+ */
+startDate?: string;
+/**
+ * End date in ISO format
+ */
+endDate?: string;
+/**
+ * Number of users per page (1-1000). Defaults to 50.
+ */
+limit?: number;
+/**
+ * Number of users to skip for pagination. Defaults to 0.
+ */
+offset?: number;
+/**
+ * Search term to filter users by name or email
+ */
+search?: string;
+/**
+ * Field to sort users by. Defaults to tokens.
+ */
+sortBy?: UsageControllerGetUserUsageSortBy;
+/**
+ * Sort order (ascending or descending). Defaults to desc.
+ */
+sortOrder?: UsageControllerGetUserUsageSortOrder;
+};
+
+export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsageSortBy[keyof typeof UsageControllerGetUserUsageSortBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UsageControllerGetUserUsageSortBy = {
+  tokens: 'tokens',
+  requests: 'requests',
+  cost: 'cost',
+  lastActivity: 'lastActivity',
+  userName: 'userName',
+} as const;
+
+export type UsageControllerGetUserUsageSortOrder = typeof UsageControllerGetUserUsageSortOrder[keyof typeof UsageControllerGetUserUsageSortOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UsageControllerGetUserUsageSortOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 
 export type AdminControllerGetModelParams = {
 name: string;

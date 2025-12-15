@@ -76,6 +76,9 @@ export class AdminController {
         isReasoning: createLanguageModelDto.isReasoning,
         canVision: createLanguageModelDto.canVision,
         isArchived: createLanguageModelDto.isArchived,
+        inputTokenCost: createLanguageModelDto.inputTokenCost,
+        outputTokenCost: createLanguageModelDto.outputTokenCost,
+        currency: createLanguageModelDto.currency,
       }),
     );
   }
@@ -91,6 +94,9 @@ export class AdminController {
         displayName: createEmbeddingModelDto.displayName,
         isArchived: createEmbeddingModelDto.isArchived,
         dimensions: createEmbeddingModelDto.dimensions,
+        inputTokenCost: createEmbeddingModelDto.inputTokenCost,
+        outputTokenCost: createEmbeddingModelDto.outputTokenCost,
+        currency: createEmbeddingModelDto.currency,
       }),
     );
   }
@@ -111,6 +117,9 @@ export class AdminController {
         isReasoning: updateLanguageModelDto.isReasoning,
         canVision: updateLanguageModelDto.canVision,
         isArchived: updateLanguageModelDto.isArchived,
+        inputTokenCost: updateLanguageModelDto.inputTokenCost,
+        outputTokenCost: updateLanguageModelDto.outputTokenCost,
+        currency: updateLanguageModelDto.currency,
       }),
     );
   }
@@ -128,6 +137,9 @@ export class AdminController {
         displayName: updateEmbeddingModelDto.displayName,
         isArchived: updateEmbeddingModelDto.isArchived,
         dimensions: updateEmbeddingModelDto.dimensions,
+        inputTokenCost: updateEmbeddingModelDto.inputTokenCost,
+        outputTokenCost: updateEmbeddingModelDto.outputTokenCost,
+        currency: updateEmbeddingModelDto.currency,
       }),
     );
   }

@@ -17,6 +17,8 @@ import enAdminSettingsUsers from './shared/locales/en/admin-settings-users.json'
 import deAdminSettingsUsers from './shared/locales/de/admin-settings-users.json';
 import enAdminSettingsIntegrations from './shared/locales/en/admin-settings-integrations.json';
 import deAdminSettingsIntegrations from './shared/locales/de/admin-settings-integrations.json';
+import enAdminSettingsUsage from './shared/locales/en/admin-settings-usage.json';
+import deAdminSettingsUsage from './shared/locales/de/admin-settings-usage.json';
 import enSuperAdminSettingsLayout from './shared/locales/en/super-admin-settings-layout.json';
 import deSuperAdminSettingsLayout from './shared/locales/de/super-admin-settings-layout.json';
 import enSuperAdminSettingsOrgs from './shared/locales/en/super-admin-settings-orgs.json';
@@ -47,6 +49,7 @@ const resources = {
     'admin-settings-models': enAdminSettingsModels,
     'admin-settings-users': enAdminSettingsUsers,
     'admin-settings-integrations': enAdminSettingsIntegrations,
+    'admin-settings-usage': enAdminSettingsUsage,
     'super-admin-settings-layout': enSuperAdminSettingsLayout,
     'super-admin-settings-orgs': enSuperAdminSettingsOrgs,
     'super-admin-settings-org': enSuperAdminSettingsOrg,
@@ -66,6 +69,7 @@ const resources = {
     'admin-settings-models': deAdminSettingsModels,
     'admin-settings-users': deAdminSettingsUsers,
     'admin-settings-integrations': deAdminSettingsIntegrations,
+    'admin-settings-usage': deAdminSettingsUsage,
     'super-admin-settings-layout': deSuperAdminSettingsLayout,
     'super-admin-settings-orgs': deSuperAdminSettingsOrgs,
     'super-admin-settings-org': deSuperAdminSettingsOrg,

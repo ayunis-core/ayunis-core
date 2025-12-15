@@ -27,10 +27,16 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'INVALID_PREDEFINED_SLUG':
-              toast.error(t('integrations.createPredefinedIntegration.invalidSlug'));
+              toast.error(
+                t('integrations.createPredefinedIntegration.invalidSlug'),
+              );
               break;
             case 'DUPLICATE_MCP_INTEGRATION':
-              toast.error(t('integrations.createPredefinedIntegration.duplicateIntegration'));
+              toast.error(
+                t(
+                  'integrations.createPredefinedIntegration.duplicateIntegration',
+                ),
+              );
               break;
             default:
               toast.error(t('integrations.createPredefinedIntegration.error'));

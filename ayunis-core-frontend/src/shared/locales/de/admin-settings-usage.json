@@ -1,0 +1,54 @@
+{
+  "filters": {
+    "selectDateRange": "Datumsbereich auswählen",
+    "last7Days": "Letzte 7 Tage",
+    "last30Days": "Letzte 30 Tage",
+    "last90Days": "Letzte 90 Tage",
+    "custom": "Benutzerdefiniert",
+    "allTime": "Gesamter Zeitraum",
+    "allProviders": "Alle Anbieter",
+    "allModels": "Alle Modelle"
+  },
+  "stats": {
+    "totalTokens": "Verbrauchte Tokens",
+    "activeUsers": "Aktive Nutzer",
+    "estimatedCost": "Geschätzte Kosten"
+  },
+  "charts": {
+    "noData": "Keine Daten verfügbar",
+    "noDataDescription": "Für den ausgewählten Zeitraum sind keine Verbrauchsdaten verfügbar.",
+    "errorTitle": "Fehler beim Laden der Daten",
+    "errorUnknown": "Unbekannter Fehler",
+    "modelDistribution": {
+      "title": "Modellverteilung",
+      "description": "Verbrauch nach Modell",
+      "models": "Modelle",
+      "more": "mehr",
+      "others": "Andere",
+      "othersWithCount": "Andere ({{count}} Modelle)"
+    },
+    "tokenConsumption": {
+      "title": "Token Verbrauch",
+      "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
+    },
+    "providerConsumption": {
+      "title": "Verbrauch nach Provider",
+      "description": "Anzeigen der Gesamtzahl der Besucher im ausgewählten Zeitraum"
+    }
+  },
+  "userUsage": {
+    "title": "Nutzerverbrauch",
+    "subtitle": "Individual Nutzerverbrauch",
+    "viewAll": "Alle anzeigen",
+    "noData": "Keine Nutzerverbrauchdaten verfügbar",
+    "error": "Fehler beim Laden der Nutzerverbrauchdaten",
+    "user": "Nutzer",
+    "tokens": "Tokens",
+    "requests": "Anfragen",
+    "lastActive": "Letzte Aktivität",
+    "status": "Status",
+    "active": "aktiv",
+    "inactive": "inaktiv",
+    "emptyState": "Keine Benutzer entsprechen den ausgewählten Filtern auf dieser Seite. Versuchen Sie, Ihre Filter anzupassen oder zu einer anderen Seite zu navigieren."
+  }
+}

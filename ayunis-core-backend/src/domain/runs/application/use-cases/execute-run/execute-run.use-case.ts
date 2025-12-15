@@ -71,6 +71,8 @@ import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/fin
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
+import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
@@ -96,6 +98,7 @@ export class ExecuteRunUseCase {
     private readonly contextService: ContextService,
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly collectUsageUseCase: CollectUsageUseCase,
   ) {}
 
   async execute(
@@ -550,6 +553,19 @@ export class ExecuteRunUseCase {
                 inferenceResponse.content,
               ),
             );
+
+            if (
+              inferenceResponse.meta.inputTokens !== undefined &&
+              inferenceResponse.meta.outputTokens !== undefined
+            ) {
+              this.collectUsageAsync(
+                params.model,
+                inferenceResponse.meta.inputTokens,
+                inferenceResponse.meta.outputTokens,
+                assistantMessage.id,
+              );
+            }
+
             params.trace.event({
               name: 'new_message',
               output: assistantMessage,
@@ -805,16 +821,20 @@ export class ExecuteRunUseCase {
 
     // Track whether streaming completed successfully or was interrupted
     let streamCompletedSuccessfully = false;
+    // Track chunks for usage collection
+    const allChunks: StreamInferenceResponseChunk[] = [];
 
     // Convert observable to async iterable
     const asyncIterable = {
       [Symbol.asyncIterator]() {
         let completed = false;
         let error: any = null;
-        const chunks: StreamInferenceResponseChunk[] = [];
+        let consumedIndex = 0;
 
         const subscription = stream$.subscribe({
-          next: (chunk) => chunks.push(chunk),
+          next: (chunk) => {
+            allChunks.push(chunk); // Track for usage collection and iterator
+          },
           error: (err) => {
             error = err as Error;
             completed = true;
@@ -826,7 +846,7 @@ export class ExecuteRunUseCase {
 
         return {
           async next() {
-            while (chunks.length === 0 && !completed) {
+            while (consumedIndex >= allChunks.length && !completed) {
               await new Promise((resolve) => setTimeout(resolve, 10));
             }
 
@@ -835,8 +855,8 @@ export class ExecuteRunUseCase {
               throw error;
             }
 
-            if (chunks.length > 0) {
-              const chunk = chunks.shift()!;
+            if (consumedIndex < allChunks.length) {
+              const chunk = allChunks[consumedIndex++];
               return { value: chunk, done: false } as IteratorResult<
                 StreamInferenceResponseChunk,
                 void
@@ -866,6 +886,19 @@ export class ExecuteRunUseCase {
         yield message;
       }
     } finally {
+      // Collect usage data from streaming chunks (fire-and-forget)
+      if (streamCompletedSuccessfully && allChunks.length > 0) {
+        const usage = this.extractUsageFromChunks(allChunks);
+        if (usage) {
+          this.collectUsageAsync(
+            model,
+            usage.inputTokens,
+            usage.outputTokens,
+            assistantMessage.id,
+          );
+        }
+      }
+
       // Save the assistant message with accumulated content
       const savedMessageId =
         await this.saveAssistantMessageWithAccumulatedContent(
@@ -1254,5 +1287,59 @@ export class ExecuteRunUseCase {
       // Return original text on anonymization failure to not block the conversation
       return text;
     }
+  }
+
+  /**
+   * Collects usage data asynchronously (fire-and-forget).
+   * Errors are logged but don't block the main flow.
+   */
+  private collectUsageAsync(
+    model: LanguageModel,
+    inputTokens: number,
+    outputTokens: number,
+    messageId?: UUID,
+  ): void {
+    this.logger.debug('Collecting usage', {
+      modelId: model.id,
+      modelName: model.name,
+      inputTokens,
+      outputTokens,
+      messageId,
+    });
+
+    this.collectUsageUseCase
+      .execute(
+        new CollectUsageCommand({
+          model,
+          inputTokens,
+          outputTokens,
+          requestId: messageId,
+        }),
+      )
+      .catch((error) => {
+        this.logger.debug('Usage collection failed', { error: error as Error });
+      });
+  }
+
+  /**
+   * Extracts accumulated usage data from streaming chunks.
+   * Returns undefined if no usage data found in any chunk.
+   */
+  private extractUsageFromChunks(
+    chunks: StreamInferenceResponseChunk[],
+  ): { inputTokens: number; outputTokens: number } | undefined {
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let hasUsageData = false;
+
+    for (const chunk of chunks) {
+      if (chunk.usage) {
+        inputTokens += chunk.usage.inputTokens || 0;
+        outputTokens += chunk.usage.outputTokens || 0;
+        hasUsageData = true;
+      }
+    }
+
+    return hasUsageData ? { inputTokens, outputTokens } : undefined;
   }
 }

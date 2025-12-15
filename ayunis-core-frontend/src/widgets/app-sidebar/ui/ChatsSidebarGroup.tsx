@@ -186,16 +186,15 @@ export function ChatsSidebarGroup() {
     <Collapsible defaultOpen className="group/collapsible">
       <SidebarGroup>
         <SidebarGroupLabel asChild>
-          <CollapsibleTrigger className="flex items-center w-full">
+          <CollapsibleTrigger className="flex items-center justify-between w-full">
             {t('sidebar.chats')}
             <Link
               to="/chats"
-              className="ml-auto mr-1 p-1 hover:bg-accent rounded"
+              className="text-muted-foreground"
               onClick={(e) => e.stopPropagation()}
             >
               <Search className="size-4" />
             </Link>
-            <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
           </CollapsibleTrigger>
         </SidebarGroupLabel>
         <CollapsibleContent>

@@ -1,0 +1,40 @@
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/shared/ui/shadcn/card';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from '@/shared/ui/shadcn/empty';
+import { useTranslation } from 'react-i18next';
+import { Users } from 'lucide-react';
+
+export function UserUsageTableEmpty() {
+  const { t } = useTranslation('admin-settings-usage');
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('userUsage.title')}</CardTitle>
+        <CardDescription>{t('userUsage.subtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Empty>
+          <EmptyMedia variant="icon">
+            <Users className="text-muted-foreground" />
+          </EmptyMedia>
+          <EmptyHeader>
+            <EmptyTitle>{t('userUsage.noData')}</EmptyTitle>
+            <EmptyDescription>{t('charts.noDataDescription')}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </CardContent>
+    </Card>
+  );
+}

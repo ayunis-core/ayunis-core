@@ -1,4 +1,5 @@
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class CreateLanguageModelCommand {
   name: string;
@@ -9,6 +10,9 @@ export class CreateLanguageModelCommand {
   isReasoning: boolean;
   canVision: boolean;
   isArchived: boolean;
+  inputTokenCost?: number;
+  outputTokenCost?: number;
+  currency?: Currency;
 
   constructor(params: {
     name: string;
@@ -19,6 +23,9 @@ export class CreateLanguageModelCommand {
     isReasoning: boolean;
     canVision: boolean;
     isArchived: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: Currency;
   }) {
     this.name = params.name;
     this.provider = params.provider;
@@ -28,5 +35,8 @@ export class CreateLanguageModelCommand {
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
     this.isArchived = params.isArchived;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }

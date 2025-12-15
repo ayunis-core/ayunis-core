@@ -2,12 +2,16 @@ import { ModelProvider } from '../value-objects/model-provider.enum';
 import { Model } from '../model.entity';
 import { ModelType } from '../value-objects/model-type.enum';
 import { UUID } from 'crypto';
+import { Currency } from '../value-objects/currency.enum';
 
 export class LanguageModel extends Model {
   public readonly canStream: boolean;
   public readonly canUseTools: boolean;
   public readonly isReasoning: boolean;
   public readonly canVision: boolean;
+  public readonly inputTokenCost?: number;
+  public readonly outputTokenCost?: number;
+  public readonly currency?: Currency;
 
   constructor(params: {
     id?: UUID;
@@ -21,11 +25,17 @@ export class LanguageModel extends Model {
     isReasoning: boolean;
     canVision: boolean;
     isArchived: boolean;
+    inputTokenCost?: number;
+    outputTokenCost?: number;
+    currency?: Currency;
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
+    this.inputTokenCost = params.inputTokenCost;
+    this.outputTokenCost = params.outputTokenCost;
+    this.currency = params.currency;
   }
 }

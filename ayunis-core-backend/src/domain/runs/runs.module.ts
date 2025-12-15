@@ -12,6 +12,7 @@ import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { AnonymizationModule } from 'src/common/anonymization/anonymization.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AnonymizationModule } from 'src/common/anonymization/anonymization.modu
     McpModule,
     SourcesModule,
     AnonymizationModule,
+    UsageModule,
   ],
   controllers: [RunsController],
   providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],

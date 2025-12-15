@@ -301,14 +301,34 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
               : JSON.stringify(toolCall.function?.arguments),
         }));
     }
-    if (!textContentDelta && !toolCallsDelta.length) {
+
+    const choice = chunk.data.choices?.[0];
+    const finishReason = choice?.finishReason;
+    const usage = chunk.data.usage;
+
+    // Skip empty chunks with no useful data
+    if (
+      !textContentDelta &&
+      !toolCallsDelta.length &&
+      !usage &&
+      !finishReason
+    ) {
       return null;
     }
 
+    // Always include usage data when available to prevent data loss
+    // This ensures usage is captured even if it arrives with content
     return new StreamInferenceResponseChunk({
       thinkingDelta: null,
       textContentDelta,
       toolCallsDelta,
+      finishReason,
+      usage: usage
+        ? {
+            inputTokens: usage.promptTokens,
+            outputTokens: usage.completionTokens,
+          }
+        : undefined,
     });
   };
 
