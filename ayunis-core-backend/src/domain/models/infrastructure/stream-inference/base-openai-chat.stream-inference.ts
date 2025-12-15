@@ -66,6 +66,7 @@ export class BaseOpenAIChatStreamInferenceHandler
           ? this.convertToolChoice(toolChoice)
           : undefined,
         stream: true,
+        stream_options: { include_usage: true },
       };
       this.logger.debug('completionOptions', completionOptions);
       const completionFn = () =>
@@ -83,7 +84,8 @@ export class BaseOpenAIChatStreamInferenceHandler
         if (
           delta.textContentDelta ||
           delta.thinkingDelta ||
-          delta.toolCallsDelta.length > 0
+          delta.toolCallsDelta.length > 0 ||
+          delta.usage
         ) {
           subscriber.next(delta);
         }
@@ -249,6 +251,7 @@ export class BaseOpenAIChatStreamInferenceHandler
       : { thinkingDelta: null, textContentDelta: null };
 
     const finishReason = chunk.choices[0]?.finish_reason ?? null;
+    const usage = chunk.usage;
 
     return new StreamInferenceResponseChunk({
       thinkingDelta,
@@ -264,6 +267,12 @@ export class BaseOpenAIChatStreamInferenceHandler
             }),
         ) ?? [],
       finishReason,
+      usage: usage
+        ? {
+            inputTokens: usage.prompt_tokens,
+            outputTokens: usage.completion_tokens,
+          }
+        : undefined,
     });
   };
 }
