@@ -42,7 +42,7 @@ export class CodeExecutionTool extends Tool {
 
     super({
       name: ToolType.CODE_EXECUTION,
-      description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in a sandboxed environment. To see results, print them to the console - you will see the output but the user will NOT see it directly. Variables do not persist between executions. You can write CSV files to /execution/output/ directory - these will automatically be saved as thread data sources and become available for future analysis.${csvDescription}`,
+      description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in a sandboxed environment. To see results, print them to the console - you will see the output but the user will NOT see it directly. Variables do not persist between executions. You can write *CSV* files to /execution/output/ directory - these will automatically be saved as thread data sources and become available for future analysis.${csvDescription}. IMPORTANT: Only save CSV files to output. For now, no other file types are supported. If the user asks for anything else, write it in the chat directly without using a tool.`,
       parameters: codeExecutionToolParameters,
       type: ToolType.CODE_EXECUTION,
     });
