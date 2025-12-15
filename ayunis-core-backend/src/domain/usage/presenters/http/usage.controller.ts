@@ -305,12 +305,12 @@ export class UsageController {
   @ApiOperation({
     summary: 'Get usage statistics by user',
     description:
-      'Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status and optional model breakdown per user. Dates are optional - if not provided, shows all usage.',
+      'Returns paginated user usage statistics with search, sorting, and filtering capabilities. Includes activity status. Dates are optional - if not provided, shows all usage.',
   })
   @ApiResponse({
     status: 200,
     description:
-      'User usage statistics retrieved successfully. Includes pagination metadata and optional model breakdown.',
+      'User usage statistics retrieved successfully. Includes pagination metadata.',
     type: UserUsageResponseDto,
   })
   @ApiQuery({
@@ -362,14 +362,6 @@ export class UsageController {
     description: 'Sort order (ascending or descending). Defaults to desc.',
     example: 'desc',
   })
-  @ApiQuery({
-    name: 'includeModelBreakdown',
-    type: Boolean,
-    required: false,
-    description:
-      'Whether to include detailed model usage breakdown for each user. Defaults to true.',
-    example: true,
-  })
   async getUserUsage(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query('startDate') startDate?: string,
@@ -379,7 +371,6 @@ export class UsageController {
     @Query('search') search?: string,
     @Query('sortBy') sortBy: UserUsageSortBy = 'tokens',
     @Query('sortOrder') sortOrder: SortOrder = 'desc',
-    @Query('includeModelBreakdown') includeModelBreakdown: boolean = true,
   ) {
     const query = new GetUserUsageQuery({
       organizationId: orgId,
@@ -390,7 +381,6 @@ export class UsageController {
       searchTerm: search,
       sortBy,
       sortOrder,
-      includeModelBreakdown,
     });
     const userUsage = await this.getUserUsageUseCase.execute(query);
 

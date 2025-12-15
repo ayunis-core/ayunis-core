@@ -26,8 +26,7 @@ This domain implements usage collection, aggregation, and reporting functionalit
 - **ProviderUsage**: Aggregated usage statistics grouped by model provider with time series data
 - **UsageStats**: Overall usage statistics including totals, active users, and top models
 - **ModelDistribution**: Usage distribution by individual models with percentage breakdown
-- **UserUsageItem**: Per-user usage statistics with optional model breakdown
-- **ModelBreakdownItem**: Detailed model usage within a user's usage data
+- **UserUsageItem**: Per-user usage statistics
 - **TimeSeriesPoint**: Time-based data point for trend analysis
 
 #### Value Objects
@@ -110,7 +109,7 @@ All endpoints are prefixed with `/admin/usage` and require admin authentication.
 - `GET /admin/usage/models` - Get model distribution
   - Query params: `startDate`, `endDate`, `maxModels`, `modelId` (optional)
 - `GET /admin/usage/users` - Get user usage with pagination and search
-  - Query params: `startDate`, `endDate`, `limit`, `offset`, `search`, `sortBy`, `sortOrder`, `includeModelBreakdown` (optional)
+  - Query params: `startDate`, `endDate`, `limit`, `offset`, `search`, `sortBy`, `sortOrder` (optional)
 
 ## Deployment Modes
 

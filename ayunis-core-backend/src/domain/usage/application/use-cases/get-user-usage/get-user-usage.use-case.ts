@@ -91,7 +91,7 @@ export class GetUserUsageUseCase {
         UsageConstants.ACTIVE_USER_DAYS_THRESHOLD * 24 * 60 * 60 * 1000,
     );
 
-    // Process each user to determine activity status and calculate model breakdown percentages
+    // Process each user to determine activity status
     const processedUsers = result.data.map((user) => {
       // Determine if user is active based on last activity
       // Users with no activity (lastActivity === null) are considered inactive
@@ -99,15 +99,9 @@ export class GetUserUsageUseCase {
         ? user.lastActivity >= activeThresholdDate
         : false;
 
-      const processedModelBreakdown = user.modelBreakdown.map((model) => ({
-        ...model,
-        percentage: user.tokens > 0 ? (model.tokens / user.tokens) * 100 : 0,
-      }));
-
       return {
         ...user,
         isActive,
-        modelBreakdown: processedModelBreakdown,
       };
     });
 

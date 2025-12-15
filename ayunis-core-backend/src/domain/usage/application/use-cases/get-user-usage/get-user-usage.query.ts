@@ -20,7 +20,6 @@ export class GetUserUsageQuery extends PaginatedQuery {
   public readonly searchTerm?: string;
   public readonly sortBy: UserUsageSortBy;
   public readonly sortOrder: SortOrder;
-  public readonly includeModelBreakdown: boolean;
 
   constructor(params: {
     organizationId: UUID;
@@ -31,7 +30,6 @@ export class GetUserUsageQuery extends PaginatedQuery {
     searchTerm?: string;
     sortBy?: UserUsageSortBy;
     sortOrder?: SortOrder;
-    includeModelBreakdown?: boolean;
   }) {
     super({
       limit: params.limit ?? UsageConstants.DEFAULT_USER_USAGE_LIMIT,
@@ -43,6 +41,5 @@ export class GetUserUsageQuery extends PaginatedQuery {
     this.searchTerm = params.searchTerm;
     this.sortBy = params.sortBy ?? 'tokens';
     this.sortOrder = params.sortOrder ?? 'desc';
-    this.includeModelBreakdown = params.includeModelBreakdown ?? true;
   }
 }

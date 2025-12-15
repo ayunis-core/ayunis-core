@@ -1,5 +1,4 @@
 import { UUID } from 'crypto';
-import { ModelBreakdownItem } from './model-breakdown-item.entity';
 
 export class UserUsageItem {
   public readonly userId: UUID;
@@ -10,7 +9,6 @@ export class UserUsageItem {
   public readonly cost: number | undefined;
   public readonly lastActivity: Date | null;
   public readonly isActive: boolean;
-  public readonly modelBreakdown: ModelBreakdownItem[];
 
   constructor(params: {
     userId: UUID;
@@ -21,7 +19,6 @@ export class UserUsageItem {
     cost?: number;
     lastActivity: Date | null;
     isActive: boolean;
-    modelBreakdown: ModelBreakdownItem[];
   }) {
     this.userId = params.userId;
     this.userName = params.userName;
@@ -31,6 +28,5 @@ export class UserUsageItem {
     this.cost = params.cost;
     this.lastActivity = params.lastActivity;
     this.isActive = params.isActive;
-    this.modelBreakdown = params.modelBreakdown;
   }
 }

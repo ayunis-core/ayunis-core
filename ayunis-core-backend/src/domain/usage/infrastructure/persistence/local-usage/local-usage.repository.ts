@@ -16,7 +16,6 @@ import { GetUsageStatsQuery } from '../../../application/use-cases/get-usage-sta
 import { Paginated } from 'src/common/pagination';
 import { UsageStats } from '../../../domain/usage-stats.entity';
 import { UserUsageItem } from '../../../domain/user-usage-item.entity';
-import { ModelBreakdownItem } from '../../../domain/model-breakdown-item.entity';
 import { UsageRecord } from './schema/usage.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { UsageMapper } from './mappers/usage.mapper';
@@ -24,7 +23,6 @@ import { getProviderStats } from './queries/get-provider-stats.db-query';
 import { getModelStats } from './queries/get-model-stats.db-query';
 import { getTopModels } from './queries/get-top-models.db-query';
 import { getProviderTimeSeries as queryProviderTimeSeries } from './queries/get-provider-time-series.db-query';
-import { getUserModelStats } from './queries/get-user-model-stats.db-query';
 import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
 import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
 import { findUsageRecordsByOrganization } from './queries/find-usage-records-by-organization.db-query';
@@ -198,51 +196,6 @@ export class LocalUsageRepository extends UsageRepository {
         ? new Date(stat.lastActivity)
         : null;
 
-      let modelBreakdown: ModelBreakdownItem[] = [];
-
-      if (query.includeModelBreakdown && requests > 0) {
-        modelBreakdown = await this.getUserModelBreakdown(
-          stat.userId as unknown as UUID,
-          query.organizationId,
-          query.startDate,
-          query.endDate,
-        );
-
-        // Validate that breakdown sum matches total tokens
-        const breakdownTokens = modelBreakdown.reduce(
-          (sum, model) => sum + model.tokens,
-          0,
-        );
-        const breakdownRequests = modelBreakdown.reduce(
-          (sum, model) => sum + model.requests,
-          0,
-        );
-
-        // Log warning if breakdown doesn't match totals (indicates data integrity issue)
-        if (breakdownTokens !== tokens || breakdownRequests !== requests) {
-          const missingTokens = tokens - breakdownTokens;
-          const missingRequests = requests - breakdownRequests;
-          const breakdownPercentage =
-            tokens > 0 ? ((breakdownTokens / tokens) * 100).toFixed(2) : '0.00';
-
-          this.logger.warn(
-            `User usage breakdown mismatch for userId: ${stat.userId}`,
-            {
-              userId: stat.userId,
-              userName: stat.userName,
-              totalTokens: tokens,
-              totalRequests: requests,
-              breakdownTokens,
-              breakdownRequests,
-              breakdownModelCount: modelBreakdown.length,
-              missingTokens,
-              missingRequests,
-              breakdownPercentage: `${breakdownPercentage}%`,
-            },
-          );
-        }
-      }
-
       users.push(
         new UserUsageItem({
           userId: stat.userId as unknown as UUID,
@@ -253,7 +206,6 @@ export class LocalUsageRepository extends UsageRepository {
           cost: requests > 0 ? cost : undefined,
           lastActivity,
           isActive: this.isUserActive(lastActivity),
-          modelBreakdown,
         }),
       );
     }
@@ -320,25 +272,6 @@ export class LocalUsageRepository extends UsageRepository {
       startDate,
       endDate,
     );
-  }
-
-  private async getUserModelBreakdown(
-    userId: UUID,
-    organizationId: UUID,
-    startDate?: Date,
-    endDate?: Date,
-  ): Promise<ModelBreakdownItem[]> {
-    const modelStats = await getUserModelStats(
-      this.usageRepository,
-      userId,
-      organizationId,
-      startDate,
-      endDate,
-    );
-
-    const breakdown =
-      this.usageQueryMapper.mapUserModelStatsToBreakdown(modelStats);
-    return breakdown;
   }
 
   private getActiveThresholdDate(): Date {

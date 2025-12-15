@@ -10,14 +10,12 @@ import { ProviderUsage } from '../../domain/provider-usage.entity';
 import { TimeSeriesPoint } from '../../domain/time-series-point.entity';
 import { ModelDistribution } from '../../domain/model-distribution.entity';
 import { UserUsageItem } from '../../domain/user-usage-item.entity';
-import { ModelBreakdownItem } from '../../domain/model-breakdown-item.entity';
 export {
   UsageStats,
   ProviderUsage,
   TimeSeriesPoint,
   ModelDistribution,
   UserUsageItem,
-  ModelBreakdownItem,
 };
 
 export abstract class UsageRepository {

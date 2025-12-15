@@ -1,34 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import { PaginationDto } from 'src/common/pagination';
-
-export class ModelBreakdownDto {
-  @ApiProperty({ description: 'Model ID' })
-  modelId: string;
-
-  @ApiProperty({ description: 'Model name' })
-  modelName: string;
-
-  @ApiProperty({ description: 'Model display name' })
-  displayName: string;
-
-  @ApiProperty({ enum: ModelProvider, description: 'Model provider' })
-  provider: ModelProvider;
-
-  @ApiProperty({ description: 'Tokens used for this model' })
-  tokens: number;
-
-  @ApiProperty({ description: 'Requests made to this model' })
-  requests: number;
-
-  @ApiPropertyOptional({
-    description: 'Cost for this model (self-hosted mode only)',
-  })
-  cost?: number;
-
-  @ApiProperty({ description: "Percentage of user's total usage" })
-  percentage: number;
-}
 
 export class UserUsageDto {
   @ApiProperty({ description: 'User ID' })
@@ -61,12 +32,6 @@ export class UserUsageDto {
 
   @ApiProperty({ description: 'Whether the user is considered active' })
   isActive: boolean;
-
-  @ApiProperty({
-    description: 'Model breakdown for this user',
-    type: [ModelBreakdownDto],
-  })
-  modelBreakdown: ModelBreakdownDto[];
 }
 
 export class UserUsageResponseDto {

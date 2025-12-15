@@ -8,9 +8,7 @@ import {
 } from '../../usage.errors';
 import { Paginated } from 'src/common/pagination';
 import { UserUsageItem } from '../../../domain/user-usage-item.entity';
-import { ModelBreakdownItem } from '../../../domain/model-breakdown-item.entity';
 import { UUID } from 'crypto';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 describe('GetUserUsageUseCase', () => {
@@ -41,16 +39,6 @@ describe('GetUserUsageUseCase', () => {
   describe('successful execution', () => {
     it('should return user usage data', async () => {
       const userId = 'user-id' as UUID;
-      const modelBreakdown = [
-        new ModelBreakdownItem({
-          modelId: 'model-id' as UUID,
-          modelName: 'model-name',
-          displayName: 'Model Name',
-          provider: ModelProvider.OPENAI,
-          tokens: 100,
-          requests: 5,
-        }),
-      ];
 
       const mockUserUsage = new Paginated<UserUsageItem>({
         data: [
@@ -62,7 +50,6 @@ describe('GetUserUsageUseCase', () => {
             requests: 5,
             lastActivity: new Date(),
             isActive: true,
-            modelBreakdown,
           }),
         ],
         limit: 50,
@@ -84,56 +71,6 @@ describe('GetUserUsageUseCase', () => {
       expect(result.data[0].isActive).toBe(true);
     });
 
-    it('should calculate model breakdown percentages correctly', async () => {
-      const userId = 'user-id' as UUID;
-      const modelBreakdown = [
-        new ModelBreakdownItem({
-          modelId: 'model-id-1' as UUID,
-          modelName: 'model-1',
-          displayName: 'Model 1',
-          provider: ModelProvider.OPENAI,
-          tokens: 60,
-          requests: 3,
-        }),
-        new ModelBreakdownItem({
-          modelId: 'model-id-2' as UUID,
-          modelName: 'model-2',
-          displayName: 'Model 2',
-          provider: ModelProvider.ANTHROPIC,
-          tokens: 40,
-          requests: 2,
-        }),
-      ];
-
-      const mockUserUsage = new Paginated<UserUsageItem>({
-        data: [
-          new UserUsageItem({
-            userId,
-            userName: 'Test User',
-            userEmail: 'test@example.com',
-            tokens: 100, // Total tokens
-            requests: 5,
-            lastActivity: new Date(),
-            isActive: true,
-            modelBreakdown,
-          }),
-        ],
-        limit: 50,
-        offset: 0,
-        total: 1,
-      });
-
-      jest
-        .spyOn(mockUsageRepository, 'getUserUsage')
-        .mockResolvedValue(mockUserUsage);
-
-      const query = new GetUserUsageQuery({ organizationId: orgId });
-      const result = await useCase.execute(query);
-
-      expect(result.data[0].modelBreakdown[0].percentage).toBe(60);
-      expect(result.data[0].modelBreakdown[1].percentage).toBe(40);
-    });
-
     it('should mark users as inactive if lastActivity is null', async () => {
       const userId = 'user-id' as UUID;
       const mockUserUsage = new Paginated<UserUsageItem>({
@@ -146,7 +83,6 @@ describe('GetUserUsageUseCase', () => {
             requests: 0,
             lastActivity: null, // No activity
             isActive: false,
-            modelBreakdown: [],
           }),
         ],
         limit: 50,
@@ -179,7 +115,6 @@ describe('GetUserUsageUseCase', () => {
             requests: 5,
             lastActivity: oldDate,
             isActive: false,
-            modelBreakdown: [],
           }),
         ],
         limit: 50,
