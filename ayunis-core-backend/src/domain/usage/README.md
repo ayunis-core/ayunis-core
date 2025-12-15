@@ -94,21 +94,21 @@ Usage data is automatically collected during AI inference through integration wi
 
 ## API Endpoints
 
-All endpoints are prefixed with `/admin/usage` and require admin authentication.
+All endpoints are prefixed with `/usage` and require admin authentication.
 
 ### Configuration
-- `GET /admin/usage/config` - Get deployment mode and cost display settings
+- `GET /usage/config` - Get deployment mode and cost display settings
 
 ### Analytics
-- `GET /admin/usage/stats` - Get overall usage statistics
+- `GET /usage/stats` - Get overall usage statistics
   - Query params: `startDate`, `endDate` (optional)
-- `GET /admin/usage/providers` - Get provider usage breakdown with time series
+- `GET /usage/providers` - Get provider usage breakdown with time series
   - Query params: `startDate`, `endDate`, `includeTimeSeries`, `provider`, `modelId` (optional)
-- `GET /admin/usage/providers/chart` - Get chart-ready provider time series aligned by date
+- `GET /usage/providers/chart` - Get chart-ready provider time series aligned by date
   - Query params: `startDate`, `endDate`, `provider`, `modelId` (optional)
-- `GET /admin/usage/models` - Get model distribution
+- `GET /usage/models` - Get model distribution
   - Query params: `startDate`, `endDate`, `maxModels`, `modelId` (optional)
-- `GET /admin/usage/users` - Get user usage with pagination and search
+- `GET /usage/users` - Get user usage with pagination and search
   - Query params: `startDate`, `endDate`, `limit`, `offset`, `search`, `sortBy`, `sortOrder` (optional)
 
 ## Deployment Modes
