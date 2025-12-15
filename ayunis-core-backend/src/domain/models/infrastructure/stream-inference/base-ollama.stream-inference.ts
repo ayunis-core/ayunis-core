@@ -262,8 +262,7 @@ export class BaseOllamaStreamInferenceHandler
 
     const usage =
       chunk.done &&
-      (chunk.prompt_eval_count !== undefined ||
-        chunk.eval_count !== undefined)
+      (chunk.prompt_eval_count !== undefined || chunk.eval_count !== undefined)
         ? {
             inputTokens: chunk.prompt_eval_count,
             outputTokens: chunk.eval_count,

@@ -1,7 +1,12 @@
-import { useModelsControllerGetAllPermittedProviders } from "@/shared/api";
+import { useModelsControllerGetAllPermittedProviders } from '@/shared/api';
 
 export function usePermittedProviders() {
-  const { data: providers = [], isLoading, error, refetch } = useModelsControllerGetAllPermittedProviders();
+  const {
+    data: providers = [],
+    isLoading,
+    error,
+    refetch,
+  } = useModelsControllerGetAllPermittedProviders();
 
   return {
     providers,
