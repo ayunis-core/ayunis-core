@@ -35,6 +35,7 @@ describe('CollectUsageUseCase', () => {
       canStream: true,
       canUseTools: true,
       isReasoning: false,
+      canVision: false,
       isArchived: false,
       ...overrides,
     });
