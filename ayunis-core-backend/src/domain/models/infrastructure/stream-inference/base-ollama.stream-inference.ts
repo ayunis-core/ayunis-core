@@ -261,7 +261,9 @@ export class BaseOllamaStreamInferenceHandler
     const finishReason = chunk.done ? chunk.done_reason : null;
 
     const usage =
-      chunk.done && (chunk.prompt_eval_count || chunk.eval_count)
+      chunk.done &&
+      (chunk.prompt_eval_count !== undefined ||
+        chunk.eval_count !== undefined)
         ? {
             inputTokens: chunk.prompt_eval_count,
             outputTokens: chunk.eval_count,
