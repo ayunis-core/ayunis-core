@@ -12,9 +12,12 @@ import {
 } from '@/shared/ui/shadcn/sidebar';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { useAppControllerIsCloud } from '@/shared/api';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
+  const { data: appConfig } = useAppControllerIsCloud();
+  const isCloud = appConfig?.isCloud ?? false;
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -74,14 +77,16 @@ export function AdminSettingsSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link to={'/admin-settings/usage'}>
-                  <BarChart3 />
-                  <span>{t('layout.usage')}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {!isCloud && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to={'/admin-settings/usage'}>
+                    <BarChart3 />
+                    <span>{t('layout.usage')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
