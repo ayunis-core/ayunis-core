@@ -215,6 +215,35 @@ describe('CollectUsageUseCase', () => {
       expect(saveCall.cost).toBeUndefined();
       expect(saveCall.currency).toBeUndefined();
     });
+
+    it('should return undefined cost if model has costs but no currency', async () => {
+      const model = createMockModel({
+        inputTokenCost: 0.001,
+        outputTokenCost: 0.002,
+        currency: undefined,
+      });
+
+      const command = new CollectUsageCommand({
+        model,
+        inputTokens: 1000,
+        outputTokens: 500,
+        requestId,
+      });
+
+      await useCase.execute(command);
+
+      const saveMock = mockUsageRepository.save as jest.Mock<
+        Promise<void>,
+        [Usage]
+      >;
+      const saveCall = saveMock.mock.calls[0]?.[0];
+      if (!saveCall) {
+        throw new Error('save was not called');
+      }
+      // Cost should be undefined because currency is missing
+      expect(saveCall.cost).toBeUndefined();
+      expect(saveCall.currency).toBeUndefined();
+    });
   });
 
   describe('validation errors', () => {

@@ -118,12 +118,14 @@ export class CollectUsageUseCase {
 
     if (
       model.inputTokenCost === undefined ||
-      model.outputTokenCost === undefined
+      model.outputTokenCost === undefined ||
+      model.currency === undefined
     ) {
       this.logger.debug('No cost information available for model', {
         modelId: model.id,
         hasInputCost: model.inputTokenCost !== undefined,
         hasOutputCost: model.outputTokenCost !== undefined,
+        hasCurrency: model.currency !== undefined,
       });
 
       return { cost: undefined, currency: undefined };
