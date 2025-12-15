@@ -288,7 +288,7 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     // input_tokens are only sent in message_start, not in message_delta
     if (chunk.type === 'message_start') {
       const usage = chunk.message.usage;
-      if (usage?.input_tokens) {
+      if (usage?.input_tokens !== undefined) {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
           textContentDelta: null,
@@ -305,7 +305,7 @@ export class AnthropicStreamInferenceHandler implements StreamInferenceHandler {
     // output_tokens are sent in message_delta at the end of the stream
     if (chunk.type === 'message_delta') {
       const usage = chunk.usage;
-      if (usage?.output_tokens) {
+      if (usage?.output_tokens !== undefined) {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
           textContentDelta: null,
