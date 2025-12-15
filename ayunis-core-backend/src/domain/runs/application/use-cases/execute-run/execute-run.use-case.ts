@@ -554,12 +554,17 @@ export class ExecuteRunUseCase {
               ),
             );
 
-            this.collectUsageAsync(
-              params.orgId,
-              params.model,
-              inferenceResponse.meta,
-              assistantMessage.id, // messageId
-            );
+            if (
+              inferenceResponse.meta.inputTokens !== undefined &&
+              inferenceResponse.meta.outputTokens !== undefined
+            ) {
+              this.collectUsageAsync(
+                params.model,
+                inferenceResponse.meta.inputTokens,
+                inferenceResponse.meta.outputTokens,
+                assistantMessage.id,
+              );
+            }
 
             params.trace.event({
               name: 'new_message',
@@ -883,12 +888,15 @@ export class ExecuteRunUseCase {
     } finally {
       // Collect usage data from streaming chunks (fire-and-forget)
       if (streamCompletedSuccessfully && allChunks.length > 0) {
-        this.collectUsageFromStreamingChunks(
-          params.orgId,
-          model,
-          allChunks,
-          assistantMessage.id,
-        );
+        const usage = this.extractUsageFromChunks(allChunks);
+        if (usage) {
+          this.collectUsageAsync(
+            model,
+            usage.inputTokens,
+            usage.outputTokens,
+            assistantMessage.id,
+          );
+        }
       }
 
       // Save the assistant message with accumulated content
@@ -1282,127 +1290,56 @@ export class ExecuteRunUseCase {
   }
 
   /**
-   * Collects usage data asynchronously without blocking the main flow.
-   * Validates required data and executes usage collection in a fire-and-forget manner.
+   * Collects usage data asynchronously (fire-and-forget).
+   * Errors are logged but don't block the main flow.
    */
   private collectUsageAsync(
-    orgId: UUID,
     model: LanguageModel,
-    meta: { inputTokens?: number; outputTokens?: number; totalTokens?: number },
+    inputTokens: number,
+    outputTokens: number,
     messageId?: UUID,
   ): void {
-    this.logger.log('collectUsageAsync called', {
-      orgId,
+    this.logger.debug('Collecting usage', {
       modelId: model.id,
       modelName: model.name,
-      inputTokens: meta.inputTokens,
-      outputTokens: meta.outputTokens,
-      totalTokens: meta.totalTokens,
+      inputTokens,
+      outputTokens,
       messageId,
     });
 
-    // Don't block the main flow - run async
-    setImmediate(() => {
-      void (async () => {
-        try {
-          if (
-            meta.inputTokens === undefined ||
-            meta.outputTokens === undefined
-          ) {
-            this.logger.log(
-              'Skipping usage collection - missing required data',
-              {
-                inputTokens: meta.inputTokens,
-                outputTokens: meta.outputTokens,
-                totalTokens: meta.totalTokens,
-              },
-            );
-            return;
-          }
-
-          await this.collectUsageUseCase.execute(
-            new CollectUsageCommand({
-              model,
-              inputTokens: meta.inputTokens,
-              outputTokens: meta.outputTokens,
-              requestId: messageId,
-            }),
-          );
-        } catch (error) {
-          // Already logged in CollectUsageUseCase, just debug log here
-          this.logger.debug('Usage collection failed in async handler', {
-            error: error as Error,
-          });
-        }
-      })();
-    });
-  }
-
-  /**
-   * Accumulates usage data from streaming chunks and triggers async collection.
-   * Only processes chunks that contain usage information.
-   */
-  private collectUsageFromStreamingChunks(
-    orgId: UUID,
-    model: LanguageModel,
-    chunks: StreamInferenceResponseChunk[],
-    messageId?: UUID,
-  ): void {
-    const { totalInputTokens, totalOutputTokens } =
-      this.accumulateUsageFromChunks(chunks);
-
-    if (totalInputTokens === 0 && totalOutputTokens === 0) {
-      this.logger.debug('No usage data found in streaming chunks', {
-        orgId,
-        modelId: model.id,
-        totalChunks: chunks.length,
+    this.collectUsageUseCase
+      .execute(
+        new CollectUsageCommand({
+          model,
+          inputTokens,
+          outputTokens,
+          requestId: messageId,
+        }),
+      )
+      .catch((error) => {
+        this.logger.debug('Usage collection failed', { error: error as Error });
       });
-
-      return;
-    }
-
-    const totalTokens = totalInputTokens + totalOutputTokens;
-
-    this.logger.log('Collecting usage from streaming chunks', {
-      orgId,
-      modelId: model.id,
-      modelName: model.name,
-      totalInputTokens,
-      totalOutputTokens,
-      totalTokens,
-      messageId,
-    });
-
-    this.collectUsageAsync(
-      orgId,
-      model,
-      {
-        inputTokens: totalInputTokens,
-        outputTokens: totalOutputTokens,
-        totalTokens,
-      },
-      messageId,
-    );
   }
 
   /**
-   * Accumulates input and output tokens from streaming chunks.
-   * Returns zero values if no chunks contain usage data.
+   * Extracts accumulated usage data from streaming chunks.
+   * Returns undefined if no usage data found in any chunk.
    */
-  private accumulateUsageFromChunks(chunks: StreamInferenceResponseChunk[]): {
-    totalInputTokens: number;
-    totalOutputTokens: number;
-  } {
-    let totalInputTokens = 0;
-    let totalOutputTokens = 0;
+  private extractUsageFromChunks(
+    chunks: StreamInferenceResponseChunk[],
+  ): { inputTokens: number; outputTokens: number } | undefined {
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let hasUsageData = false;
 
     for (const chunk of chunks) {
       if (chunk.usage) {
-        totalInputTokens += chunk.usage.inputTokens || 0;
-        totalOutputTokens += chunk.usage.outputTokens || 0;
+        inputTokens += chunk.usage.inputTokens || 0;
+        outputTokens += chunk.usage.outputTokens || 0;
+        hasUsageData = true;
       }
     }
 
-    return { totalInputTokens, totalOutputTokens };
+    return hasUsageData ? { inputTokens, outputTokens } : undefined;
   }
 }
