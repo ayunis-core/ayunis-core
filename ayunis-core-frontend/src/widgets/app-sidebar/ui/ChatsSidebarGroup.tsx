@@ -188,7 +188,11 @@ export function ChatsSidebarGroup() {
         <SidebarGroupLabel asChild>
           <CollapsibleTrigger className="flex items-center justify-between w-full">
             {t('sidebar.chats')}
-            <Link to="/chats" onClick={(e) => e.stopPropagation()}>
+            <Link
+              to="/chats"
+              className="text-muted-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Search className="size-4" />
             </Link>
           </CollapsibleTrigger>
