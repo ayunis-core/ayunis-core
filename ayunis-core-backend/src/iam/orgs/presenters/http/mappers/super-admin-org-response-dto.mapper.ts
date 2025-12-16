@@ -4,6 +4,7 @@ import {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
 } from '../dtos/super-admin-org-response.dto';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class SuperAdminOrgResponseDtoMapper {
@@ -15,9 +16,14 @@ export class SuperAdminOrgResponseDtoMapper {
     };
   }
 
-  toListDto(orgs: Org[]): SuperAdminOrgListResponseDto {
+  toListDto(paginatedOrgs: Paginated<Org>): SuperAdminOrgListResponseDto {
     return {
-      orgs: orgs.map((org) => this.toDto(org)),
+      orgs: paginatedOrgs.data.map((org) => this.toDto(org)),
+      pagination: {
+        limit: paginatedOrgs.limit,
+        offset: paginatedOrgs.offset,
+        total: paginatedOrgs.total,
+      },
     };
   }
 }

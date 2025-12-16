@@ -6,6 +6,7 @@ import {
   Logger,
   Param,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -33,6 +35,7 @@ import {
   UserResponseDto,
 } from './dtos/user-response.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
 import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUserByIdQuery } from '../../application/use-cases/find-user-by-id/find-user-by-id.query';
 import { DeleteUserCommand } from '../../application/use-cases/delete-user/delete-user.command';
@@ -69,6 +72,26 @@ export class SuperAdminUsersController {
     format: 'uuid',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search users by name or email',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of users to return',
+    example: 25,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of users to skip before collecting results',
+    example: 0,
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully retrieved users in the organization',
@@ -85,13 +108,19 @@ export class SuperAdminUsersController {
   })
   async getUsersByOrgId(
     @Param('orgId') orgId: UUID,
+    @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<UsersListResponseDto> {
-    this.logger.log('getUsersByOrgId', { orgId });
+    this.logger.log('getUsersByOrgId', { orgId, queryParams });
 
-    const users = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery(orgId),
+    const paginatedUsers = await this.findUsersByOrgIdUseCase.execute(
+      new FindUsersByOrgIdQuery({
+        orgId,
+        search: queryParams.search,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      }),
     );
-    return this.userResponseDtoMapper.toListDto(users);
+    return this.userResponseDtoMapper.toListDto(paginatedUsers);
   }
 
   @Delete(':userId')

@@ -7,6 +7,7 @@ import { UserRole } from '../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from '../../../domain/value-objects/system-role.enum';
+import { Paginated } from 'src/common/pagination';
 
 describe('FindUsersByOrgIdUseCase', () => {
   let useCase: FindUsersByOrgIdUseCase;
@@ -15,7 +16,7 @@ describe('FindUsersByOrgIdUseCase', () => {
 
   beforeEach(async () => {
     mockUsersRepository = {
-      findManyByOrgId: jest.fn(),
+      findManyByOrgIdPaginated: jest.fn(),
     };
 
     mockContextService = {
@@ -45,7 +46,7 @@ describe('FindUsersByOrgIdUseCase', () => {
   });
 
   it('should find users by org ID successfully', async () => {
-    const query = new FindUsersByOrgIdQuery('org-id' as UUID);
+    const query = new FindUsersByOrgIdQuery({ orgId: 'org-id' as UUID });
     const mockUsers = [
       new User({
         id: 'user-1' as UUID,
@@ -69,26 +70,50 @@ describe('FindUsersByOrgIdUseCase', () => {
       }),
     ];
 
+    const paginatedResult = new Paginated({
+      data: mockUsers,
+      limit: 25,
+      offset: 0,
+      total: 2,
+    });
+
     jest
-      .spyOn(mockUsersRepository, 'findManyByOrgId')
-      .mockResolvedValue(mockUsers);
+      .spyOn(mockUsersRepository, 'findManyByOrgIdPaginated')
+      .mockResolvedValue(paginatedResult);
 
     const result = await useCase.execute(query);
 
-    expect(result).toBe(mockUsers);
-    expect(result).toHaveLength(2);
-    expect(mockUsersRepository.findManyByOrgId).toHaveBeenCalledWith('org-id');
+    expect(result.data).toEqual(mockUsers);
+    expect(result.data).toHaveLength(2);
+    expect(result.total).toBe(2);
+    expect(mockUsersRepository.findManyByOrgIdPaginated).toHaveBeenCalledWith(
+      'org-id',
+      { search: undefined, limit: 25, offset: 0 },
+    );
   });
 
   it('should return empty array when no users found for org ID', async () => {
-    const query = new FindUsersByOrgIdQuery('org-id' as UUID);
+    const query = new FindUsersByOrgIdQuery({ orgId: 'org-id' as UUID });
 
-    jest.spyOn(mockUsersRepository, 'findManyByOrgId').mockResolvedValue([]);
+    const emptyPaginatedResult = new Paginated({
+      data: [],
+      limit: 25,
+      offset: 0,
+      total: 0,
+    });
+
+    jest
+      .spyOn(mockUsersRepository, 'findManyByOrgIdPaginated')
+      .mockResolvedValue(emptyPaginatedResult);
 
     const result = await useCase.execute(query);
 
-    expect(result).toEqual([]);
-    expect(result).toHaveLength(0);
-    expect(mockUsersRepository.findManyByOrgId).toHaveBeenCalledWith('org-id');
+    expect(result.data).toEqual([]);
+    expect(result.data).toHaveLength(0);
+    expect(result.total).toBe(0);
+    expect(mockUsersRepository.findManyByOrgIdPaginated).toHaveBeenCalledWith(
+      'org-id',
+      { search: undefined, limit: 25, offset: 0 },
+    );
   });
 });

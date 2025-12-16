@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   Logger,
@@ -16,6 +17,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import {
@@ -26,10 +28,11 @@ import {
 // Import DTOs
 import { CreateInviteDto } from './dtos/create-invite.dto';
 import { AcceptInviteDto } from './dtos/accept-invite.dto';
+import { GetInvitesQueryParamsDto } from './dtos/get-invites-query-params.dto';
 import {
-  InviteResponseDto,
   InviteDetailResponseDto,
   AcceptInviteResponseDto,
+  InvitesListResponseDto,
 } from './dtos/invite-response.dto';
 
 // Import Use Cases
@@ -152,23 +155,50 @@ export class InvitesController {
     description:
       'Retrieve all invites for the organization with calculated status and sent date',
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search invites by email',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of invites to return',
+    example: 25,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of invites to skip before collecting results',
+    example: 0,
+  })
   @ApiResponse({
     status: 200,
     description: 'Returns all invites for the organization',
-    type: [InviteResponseDto],
+    type: InvitesListResponseDto,
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async getInvites(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<InviteResponseDto[]> {
-    this.logger.log('getInvites', { userId, orgId });
+    @Query() queryParams: GetInvitesQueryParamsDto,
+  ): Promise<InvitesListResponseDto> {
+    this.logger.log('getInvites', { userId, orgId, queryParams });
 
-    const invites = await this.getInvitesByOrgUseCase.execute(
-      new GetInvitesByOrgQuery({ orgId, requestingUserId: userId }),
+    const paginatedInvites = await this.getInvitesByOrgUseCase.execute(
+      new GetInvitesByOrgQuery({
+        orgId,
+        requestingUserId: userId,
+        search: queryParams.search,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      }),
     );
 
-    return this.inviteResponseMapper.toDtoArray(invites);
+    return this.inviteResponseMapper.toListDto(paginatedInvites);
   }
 
   @Public()

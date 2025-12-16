@@ -18,6 +18,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -50,6 +51,7 @@ import { UpdateUserNameDto } from './dtos/update-user-name.dto';
 import { UpdatePasswordDto } from './dtos/update-password.dto';
 import { ConfirmEmailDto } from './dtos/confirm-email.dto';
 import { ResendEmailConfirmationDto } from './dtos/resend-email-confirmation.dto';
+import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from '../../domain/value-objects/role.object';
 import { Public } from 'src/common/guards/public.guard';
@@ -93,6 +95,26 @@ export class UserController {
     description:
       "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search users by name or email',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of users to return',
+    example: 25,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of users to skip before collecting results',
+    example: 0,
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully retrieved users in the organization',
@@ -106,14 +128,20 @@ export class UserController {
   })
   async getUsersInOrganization(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<UsersListResponseDto> {
-    this.logger.log('getUsersInOrganization', { orgId });
+    this.logger.log('getUsersInOrganization', { orgId, queryParams });
 
-    const users = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery(orgId),
+    const paginatedUsers = await this.findUsersByOrgIdUseCase.execute(
+      new FindUsersByOrgIdQuery({
+        orgId,
+        search: queryParams.search,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      }),
     );
 
-    return this.userResponseDtoMapper.toListDto(users);
+    return this.userResponseDtoMapper.toListDto(paginatedUsers);
   }
 
   @Roles(UserRole.ADMIN)

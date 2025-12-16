@@ -6,6 +6,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class FindUsersByOrgIdUseCase {
@@ -16,8 +17,13 @@ export class FindUsersByOrgIdUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(query: FindUsersByOrgIdQuery): Promise<User[]> {
-    this.logger.log('findManyByOrgId', { orgId: query.orgId });
+  async execute(query: FindUsersByOrgIdQuery): Promise<Paginated<User>> {
+    this.logger.log('findManyByOrgId', {
+      orgId: query.orgId,
+      search: query.search,
+      limit: query.limit,
+      offset: query.offset,
+    });
     const systemRole = this.contextService.get('systemRole');
     const orgRole = this.contextService.get('role');
     if (
@@ -25,6 +31,10 @@ export class FindUsersByOrgIdUseCase {
     ) {
       throw new UnauthorizedAccessError({ orgId: query.orgId });
     }
-    return this.usersRepository.findManyByOrgId(query.orgId);
+    return this.usersRepository.findManyByOrgIdPaginated(query.orgId, {
+      search: query.search,
+      limit: query.limit,
+      offset: query.offset,
+    });
   }
 }

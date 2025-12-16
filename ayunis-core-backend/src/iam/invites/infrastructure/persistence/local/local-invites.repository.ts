@@ -2,10 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { UUID } from 'crypto';
-import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
+import {
+  InvitesRepository,
+  FindByOrgIdOptions,
+} from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { InviteRecord } from './schema/invite.record';
 import { InviteMapper } from './mappers/invite.mapper';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
@@ -54,6 +58,43 @@ export class LocalInvitesRepository implements InvitesRepository {
       count: entities.length,
     });
     return entities.map((entity) => this.inviteMapper.toDomain(entity));
+  }
+
+  async findByOrgIdPaginated(
+    orgId: UUID,
+    options?: FindByOrgIdOptions,
+  ): Promise<Paginated<Invite>> {
+    this.logger.log('findByOrgIdPaginated', { orgId, options });
+
+    const limit = options?.limit ?? 25;
+    const offset = options?.offset ?? 0;
+
+    const queryBuilder = this.inviteRepository
+      .createQueryBuilder('invite')
+      .where('invite.orgId = :orgId', { orgId });
+
+    if (options?.search) {
+      queryBuilder.andWhere('invite.email ILIKE :search', {
+        search: `%${options.search}%`,
+      });
+    }
+
+    queryBuilder.orderBy('invite.createdAt', 'DESC').skip(offset).take(limit);
+
+    const [entities, total] = await queryBuilder.getManyAndCount();
+
+    this.logger.debug('Found invites by org (paginated)', {
+      orgId,
+      count: entities.length,
+      total,
+    });
+
+    return new Paginated({
+      data: entities.map((entity) => this.inviteMapper.toDomain(entity)),
+      limit,
+      offset,
+      total,
+    });
   }
 
   async findOneByEmail(email: string): Promise<Invite | null> {

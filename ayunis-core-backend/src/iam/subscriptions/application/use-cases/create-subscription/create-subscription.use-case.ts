@@ -79,7 +79,7 @@ export class CreateSubscriptionUseCase {
         );
       }
 
-      const [invites, users] = await Promise.all([
+      const [paginatedInvites, paginatedUsers] = await Promise.all([
         this.getInvitesByOrgUseCase.execute(
           new GetInvitesByOrgQuery({
             orgId: command.orgId,
@@ -88,17 +88,20 @@ export class CreateSubscriptionUseCase {
           }),
         ),
         this.findUsersByOrgIdUseCase.execute(
-          new FindUsersByOrgIdQuery(command.orgId),
+          new FindUsersByOrgIdQuery({ orgId: command.orgId }),
         ),
       ]);
-      if (invites.length + users.length > command.noOfSeats) {
+      const invitesCount =
+        paginatedInvites.total ?? paginatedInvites.data.length;
+      const usersCount = paginatedUsers.total ?? paginatedUsers.data.length;
+      if (invitesCount + usersCount > command.noOfSeats) {
         this.logger.warn('Too many used seats', {
           orgId: command.orgId,
-          openInvites: invites.length,
+          openInvites: invitesCount,
         });
         throw new TooManyUsedSeatsError({
           orgId: command.orgId,
-          openInvites: invites.length,
+          openInvites: invitesCount,
         });
       }
 

@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import {
+  UsersRepository,
+  FindManyByOrgIdOptions,
+} from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UUID } from 'crypto';
 import { Repository, ILike } from 'typeorm';
@@ -11,6 +14,7 @@ import {
   UserAlreadyExistsError,
   UserAuthenticationFailedError,
 } from 'src/iam/users/application/users.errors';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
@@ -52,6 +56,44 @@ export class LocalUsersRepository extends UsersRepository {
       where: { orgId },
     });
     return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
+  }
+
+  async findManyByOrgIdPaginated(
+    orgId: UUID,
+    options?: FindManyByOrgIdOptions,
+  ): Promise<Paginated<User>> {
+    this.logger.log('findManyByOrgIdPaginated', { orgId, options });
+
+    const limit = options?.limit ?? 25;
+    const offset = options?.offset ?? 0;
+
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.orgId = :orgId', { orgId });
+
+    if (options?.search) {
+      queryBuilder.andWhere(
+        '(user.name ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${options.search}%` },
+      );
+    }
+
+    queryBuilder.orderBy('user.createdAt', 'DESC').skip(offset).take(limit);
+
+    const [userEntities, total] = await queryBuilder.getManyAndCount();
+
+    this.logger.debug('Found users by org (paginated)', {
+      orgId,
+      count: userEntities.length,
+      total,
+    });
+
+    return new Paginated({
+      data: userEntities.map((userEntity) => UserMapper.toDomain(userEntity)),
+      limit,
+      offset,
+      total,
+    });
   }
 
   async create(user: User): Promise<User> {

@@ -13,6 +13,7 @@ import {
   ToolResultMessageContentResponseDto,
 } from './get-thread-response.dto/message-response.dto';
 import { ModelResponseDto } from './get-thread-response.dto/model-response-dto';
+import { PaginationDto } from 'src/common/pagination';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -55,4 +56,18 @@ export class GetThreadsResponseDtoItem {
     example: false,
   })
   isAnonymous: boolean;
+}
+
+export class ThreadsListResponseDto {
+  @ApiProperty({
+    description: 'List of threads',
+    type: [GetThreadsResponseDtoItem],
+  })
+  threads: GetThreadsResponseDtoItem[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    type: PaginationDto,
+  })
+  pagination: PaginationDto;
 }

@@ -1,20 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUUID, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class FindAllThreadsQueryParamsDto {
-  @ApiPropertyOptional({ description: 'Search threads by title' })
+export class GetInvitesQueryParamsDto {
+  @ApiPropertyOptional({
+    description: 'Search invites by email',
+    example: 'user@example.com',
+  })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Filter threads by agent ID' })
-  @IsOptional()
-  @IsUUID()
-  agentId?: string;
-
   @ApiPropertyOptional({
-    description: 'Maximum number of threads to return',
+    description: 'Maximum number of invites to return',
     example: 25,
     default: 25,
     minimum: 1,
@@ -28,7 +26,7 @@ export class FindAllThreadsQueryParamsDto {
   limit?: number;
 
   @ApiPropertyOptional({
-    description: 'Number of threads to skip before collecting results',
+    description: 'Number of invites to skip before collecting results',
     example: 0,
     default: 0,
     minimum: 0,

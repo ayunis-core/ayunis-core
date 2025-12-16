@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Thread } from '../../../domain/thread.entity';
-import { GetThreadsResponseDtoItem } from '../dto/get-threads-response-item.dto';
+import {
+  GetThreadsResponseDtoItem,
+  ThreadsListResponseDto,
+} from '../dto/get-threads-response-item.dto';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class GetThreadsDtoMapper {
@@ -16,5 +20,16 @@ export class GetThreadsDtoMapper {
 
   toDtoArray(threads: Thread[]): GetThreadsResponseDtoItem[] {
     return threads.map((thread) => this.toDto(thread));
+  }
+
+  toListDto(paginatedThreads: Paginated<Thread>): ThreadsListResponseDto {
+    return {
+      threads: paginatedThreads.data.map((thread) => this.toDto(thread)),
+      pagination: {
+        limit: paginatedThreads.limit,
+        offset: paginatedThreads.offset,
+        total: paginatedThreads.total,
+      },
+    };
   }
 }

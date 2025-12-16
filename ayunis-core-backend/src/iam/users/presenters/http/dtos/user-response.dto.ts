@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UUID } from 'crypto';
+import { PaginationDto } from 'src/common/pagination';
 
 export class UserResponseDto {
   @ApiProperty({
@@ -50,4 +51,10 @@ export class UsersListResponseDto {
     type: [UserResponseDto],
   })
   users: UserResponseDto[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    type: PaginationDto,
+  })
+  pagination: PaginationDto;
 }

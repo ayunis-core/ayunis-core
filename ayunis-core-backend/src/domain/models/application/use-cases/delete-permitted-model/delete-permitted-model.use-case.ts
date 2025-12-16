@@ -179,17 +179,18 @@ export class DeletePermittedModelUseCase {
     orgId: UUID,
     model: PermittedEmbeddingModel,
   ): Promise<void> {
-    const users = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery(orgId),
+    const paginatedUsers = await this.findUsersByOrgIdUseCase.execute(
+      new FindUsersByOrgIdQuery({ orgId }),
     );
 
-    for (const user of users) {
-      const threads = await this.findAllThreadsUseCase.execute(
-        new FindAllThreadsQuery(user.id, {
-          withSources: true,
+    for (const user of paginatedUsers.data) {
+      const paginatedThreads = await this.findAllThreadsUseCase.execute(
+        new FindAllThreadsQuery({
+          userId: user.id,
+          options: { withSources: true },
         }),
       );
-      for (const thread of threads) {
+      for (const thread of paginatedThreads.data) {
         if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
           for (const sourceAssignment of thread.sourceAssignments) {
             await this.deleteSourceUseCase.execute(

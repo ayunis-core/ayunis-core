@@ -79,24 +79,27 @@ export class UpdateSeatsUseCase {
       }
       const subscription = result.subscription;
 
-      const users = await this.findUsersByOrgIdUseCase.execute(
-        new FindUsersByOrgIdQuery(command.orgId),
+      const paginatedUsers = await this.findUsersByOrgIdUseCase.execute(
+        new FindUsersByOrgIdQuery({ orgId: command.orgId }),
       );
-      const openInvites = await this.getInvitesByOrgUseCase.execute(
+      const paginatedOpenInvites = await this.getInvitesByOrgUseCase.execute(
         new GetInvitesByOrgQuery({
           orgId: command.orgId,
           requestingUserId: command.requestingUserId,
           onlyOpen: true,
         }),
       );
-      if (command.noOfSeats < users.length + openInvites.length) {
+      const usersCount = paginatedUsers.total ?? paginatedUsers.data.length;
+      const openInvitesCount =
+        paginatedOpenInvites.total ?? paginatedOpenInvites.data.length;
+      if (command.noOfSeats < usersCount + openInvitesCount) {
         this.logger.warn('Too many used seats', {
           orgId: command.orgId,
-          openInvites: openInvites,
+          openInvites: openInvitesCount,
         });
         throw new TooManyUsedSeatsError({
           orgId: command.orgId,
-          openInvites: openInvites.length,
+          openInvites: openInvitesCount,
         });
       }
 

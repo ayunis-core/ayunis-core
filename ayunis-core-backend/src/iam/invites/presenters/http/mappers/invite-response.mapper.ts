@@ -5,8 +5,10 @@ import {
   InviteStatus,
   InviteDetailResponseDto,
   AcceptInviteResponseDto,
+  InvitesListResponseDto,
 } from '../dtos/invite-response.dto';
 import { InviteWithOrgDetails } from '../../../application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class InviteResponseMapper {
@@ -26,6 +28,17 @@ export class InviteResponseMapper {
 
   toDtoArray(invites: Invite[]): InviteResponseDto[] {
     return invites.map((invite) => this.toDto(invite));
+  }
+
+  toListDto(paginatedInvites: Paginated<Invite>): InvitesListResponseDto {
+    return {
+      invites: paginatedInvites.data.map((invite) => this.toDto(invite)),
+      pagination: {
+        limit: paginatedInvites.limit,
+        offset: paginatedInvites.offset,
+        total: paginatedInvites.total,
+      },
+    };
   }
 
   toDetailDto(inviteWithOrg: InviteWithOrgDetails): InviteDetailResponseDto {

@@ -2,6 +2,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   ThreadsFindAllFilters,
   ThreadsFindAllOptions,
+  ThreadsFindAllPaginationOptions,
   ThreadsRepository,
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { ThreadNotFoundError } from 'src/domain/threads/application/threads.erro
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -121,6 +123,70 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
     const threadEntities = await queryBuilder.getMany();
     return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+  }
+
+  async findAllPaginated(
+    userId: UUID,
+    options?: ThreadsFindAllOptions,
+    filters?: ThreadsFindAllFilters,
+    pagination?: ThreadsFindAllPaginationOptions,
+  ): Promise<Paginated<Thread>> {
+    this.logger.log('findAllPaginated', { userId, filters, pagination });
+
+    const limit = pagination?.limit ?? 25;
+    const offset = pagination?.offset ?? 0;
+
+    const queryBuilder = this.threadRepository
+      .createQueryBuilder('thread')
+      .where('thread.userId = :userId', { userId });
+
+    if (filters?.search) {
+      queryBuilder.andWhere('thread.title ILIKE :search', {
+        search: `%${filters.search}%`,
+      });
+    }
+
+    if (filters?.agentId) {
+      queryBuilder.andWhere('thread.agentId = :agentId', {
+        agentId: filters.agentId,
+      });
+    }
+
+    // Add relations based on options
+    if (options?.withMessages) {
+      queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
+    }
+    if (options?.withSources) {
+      queryBuilder.leftJoinAndSelect(
+        'thread.sourceAssignments',
+        'sourceAssignments',
+      );
+      queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
+    }
+    if (options?.withModel) {
+      queryBuilder.leftJoinAndSelect('thread.model', 'model');
+    }
+
+    // Order by most recent first
+    queryBuilder.orderBy('thread.updatedAt', 'DESC');
+
+    // Apply pagination
+    queryBuilder.skip(offset).take(limit);
+
+    const [threadEntities, total] = await queryBuilder.getManyAndCount();
+
+    this.logger.debug('Found threads (paginated)', {
+      userId,
+      count: threadEntities.length,
+      total,
+    });
+
+    return new Paginated({
+      data: threadEntities.map((entity) => this.threadMapper.toDomain(entity)),
+      limit,
+      offset,
+      total,
+    });
   }
 
   async findAllByModel(

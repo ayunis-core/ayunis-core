@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OrgsRepository } from '../../../application/ports/orgs.repository';
+import {
+  OrgsRepository,
+  FindAllForSuperAdminOptions,
+} from '../../../application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, Repository } from 'typeorm';
@@ -13,6 +16,7 @@ import {
   OrgDeletionFailedError,
   OrgRetrievalFailedError,
 } from '../../../application/orgs.errors';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
@@ -86,6 +90,49 @@ export class LocalOrgsRepository extends OrgsRepository {
       const orgRecords = await this.orgRepository.find(findOptions);
 
       return orgRecords.map((record) => OrgMapper.toDomain(record));
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Failed to retrieve organizations for super admin', {
+        error: err,
+      });
+      throw new OrgRetrievalFailedError(err.message);
+    }
+  }
+
+  async findAllForSuperAdminPaginated(
+    options?: FindAllForSuperAdminOptions,
+  ): Promise<Paginated<Org>> {
+    this.logger.log('findAllForSuperAdminPaginated', { options });
+
+    const limit = options?.limit ?? 25;
+    const offset = options?.offset ?? 0;
+
+    try {
+      const queryBuilder = this.orgRepository
+        .createQueryBuilder('org')
+        .leftJoinAndSelect('org.users', 'users');
+
+      if (options?.search) {
+        queryBuilder.andWhere('org.name ILIKE :search', {
+          search: `%${options.search}%`,
+        });
+      }
+
+      queryBuilder.orderBy('org.createdAt', 'DESC').skip(offset).take(limit);
+
+      const [orgRecords, total] = await queryBuilder.getManyAndCount();
+
+      this.logger.debug('Found organizations (paginated)', {
+        count: orgRecords.length,
+        total,
+      });
+
+      return new Paginated({
+        data: orgRecords.map((record) => OrgMapper.toDomain(record)),
+        limit,
+        offset,
+        total,
+      });
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error('Failed to retrieve organizations for super admin', {

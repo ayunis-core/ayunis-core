@@ -4,6 +4,8 @@ import { OrgsRepository } from '../../ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { OrgUnauthorizedError } from '../../orgs.errors';
+import { SuperAdminGetAllOrgsQuery } from './super-admin-get-all-orgs.query';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class SuperAdminGetAllOrgsUseCase {
@@ -14,8 +16,12 @@ export class SuperAdminGetAllOrgsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(): Promise<Org[]> {
-    this.logger.log('superAdminGetAllOrgs', {});
+  async execute(query: SuperAdminGetAllOrgsQuery): Promise<Paginated<Org>> {
+    this.logger.log('superAdminGetAllOrgs', {
+      search: query.search,
+      limit: query.limit,
+      offset: query.offset,
+    });
 
     const systemRole = this.contextService.get('systemRole');
     if (systemRole !== SystemRole.SUPER_ADMIN) {
@@ -25,6 +31,10 @@ export class SuperAdminGetAllOrgsUseCase {
       throw new OrgUnauthorizedError('Super admin privileges required');
     }
 
-    return this.orgsRepository.findAllForSuperAdmin();
+    return this.orgsRepository.findAllForSuperAdminPaginated({
+      search: query.search,
+      limit: query.limit,
+      offset: query.offset,
+    });
   }
 }

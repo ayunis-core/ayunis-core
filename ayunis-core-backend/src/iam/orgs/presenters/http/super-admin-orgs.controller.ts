@@ -7,6 +7,7 @@ import {
   Logger,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -20,11 +21,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { SuperAdminGetAllOrgsUseCase } from '../../application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
+import { SuperAdminGetAllOrgsQuery } from '../../application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.query';
 import { SuperAdminOrgResponseDtoMapper } from './mappers/super-admin-org-response-dto.mapper';
 import {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
 } from './dtos/super-admin-org-response.dto';
+import { GetOrgsQueryParamsDto } from './dtos/get-orgs-query-params.dto';
 import { UUID } from 'crypto';
 import { FindOrgByIdQuery } from '../../application/use-cases/find-org-by-id/find-org-by-id.query';
 import { FindOrgByIdUseCase } from '../../application/use-cases/find-org-by-id/find-org-by-id.use-case';
@@ -93,6 +96,12 @@ export class SuperAdminOrgsController {
     description: 'The requester is not a super admin.',
   })
   @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search organizations by name.',
+  })
+  @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
@@ -106,10 +115,18 @@ export class SuperAdminOrgsController {
     description: 'Number of organizations to skip before collecting results.',
     example: 0,
   })
-  async getAllOrgs(): Promise<SuperAdminOrgListResponseDto> {
-    const orgs = await this.superAdminGetAllOrgsUseCase.execute();
+  async getAllOrgs(
+    @Query() queryParams: GetOrgsQueryParamsDto,
+  ): Promise<SuperAdminOrgListResponseDto> {
+    const paginatedOrgs = await this.superAdminGetAllOrgsUseCase.execute(
+      new SuperAdminGetAllOrgsQuery({
+        search: queryParams.search,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      }),
+    );
 
-    return this.superAdminOrgResponseDtoMapper.toListDto(orgs);
+    return this.superAdminOrgResponseDtoMapper.toListDto(paginatedOrgs);
   }
 
   @Get(':id')

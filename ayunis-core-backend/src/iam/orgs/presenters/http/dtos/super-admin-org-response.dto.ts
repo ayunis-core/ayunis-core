@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
+import { PaginationDto } from 'src/common/pagination';
 
 export class SuperAdminOrgResponseDto {
   @ApiProperty({
@@ -29,4 +30,10 @@ export class SuperAdminOrgListResponseDto {
     type: [SuperAdminOrgResponseDto],
   })
   orgs: SuperAdminOrgResponseDto[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    type: PaginationDto,
+  })
+  pagination: PaginationDto;
 }

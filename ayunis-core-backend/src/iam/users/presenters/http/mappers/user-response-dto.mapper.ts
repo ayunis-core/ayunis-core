@@ -4,6 +4,7 @@ import {
   UsersListResponseDto,
 } from '../dtos/user-response.dto';
 import { User } from '../../../domain/user.entity';
+import { Paginated } from 'src/common/pagination';
 
 @Injectable()
 export class UserResponseDtoMapper {
@@ -18,9 +19,14 @@ export class UserResponseDtoMapper {
     };
   }
 
-  toListDto(users: User[]): UsersListResponseDto {
+  toListDto(paginatedUsers: Paginated<User>): UsersListResponseDto {
     return {
-      users: users.map((user) => this.toDto(user)),
+      users: paginatedUsers.data.map((user) => this.toDto(user)),
+      pagination: {
+        limit: paginatedUsers.limit,
+        offset: paginatedUsers.offset,
+        total: paginatedUsers.total,
+      },
     };
   }
 }

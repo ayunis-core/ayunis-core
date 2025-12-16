@@ -4,7 +4,6 @@ import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
 import {
   UnauthorizedSubscriptionAccessError,
@@ -15,7 +14,6 @@ import { isActive } from '../../util/is-active';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { User } from 'src/iam/users/domain/user.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -73,7 +71,7 @@ export class GetActiveSubscriptionUseCase {
 
       const subscription = subscriptions[0];
 
-      const [invites, users] = await Promise.all([
+      const [paginatedInvites, paginatedUsers] = await Promise.all([
         this.getInvitesByOrgUseCase.execute(
           new GetInvitesByOrgQuery({
             orgId: query.orgId,
@@ -82,14 +80,17 @@ export class GetActiveSubscriptionUseCase {
           }),
         ),
         this.findUsersByOrgIdUseCase.execute(
-          new FindUsersByOrgIdQuery(query.orgId),
+          new FindUsersByOrgIdQuery({ orgId: query.orgId }),
         ),
       ]);
 
+      const invitesCount =
+        paginatedInvites.total ?? paginatedInvites.data.length;
+      const usersCount = paginatedUsers.total ?? paginatedUsers.data.length;
       const availableSeats = this.getAvailableSeats(
         subscription,
-        invites,
-        users,
+        invitesCount,
+        usersCount,
       );
       const nextRenewalDate = this.getNextRenewalDate(subscription);
       return { subscription, availableSeats, nextRenewalDate };
@@ -109,10 +110,10 @@ export class GetActiveSubscriptionUseCase {
 
   private getAvailableSeats(
     subscription: Subscription,
-    invites: Invite[],
-    users: User[],
+    invitesCount: number,
+    usersCount: number,
   ): number {
-    return subscription.noOfSeats - invites.length - users.length;
+    return subscription.noOfSeats - invitesCount - usersCount;
   }
 
   private getNextRenewalDate(subscription: Subscription): Date {
