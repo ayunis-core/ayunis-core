@@ -7,6 +7,7 @@ import {
   LogOut,
   Plus,
   Bot,
+  Megaphone,
 } from 'lucide-react';
 
 import {
@@ -118,6 +119,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton id="updates-button">
+              <Megaphone />
+              <span>{t('sidebar.updates')}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
