@@ -45,6 +45,11 @@ const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
     displayName: 'Ayunis',
     hostedIn: ModelProviderLocation.AYUNIS,
   },
+  {
+    provider: ModelProvider.AZURE,
+    displayName: 'MS Azure',
+    hostedIn: ModelProviderLocation.EU,
+  },
 ];
 
 @Injectable()

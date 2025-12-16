@@ -33,6 +33,7 @@ export class ModelRegistry {
       [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
       [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
       [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
+      [ModelProvider.AZURE]: 'models.azure.apiKey',
     };
 
     const configKey = providerConfigMap[provider];
