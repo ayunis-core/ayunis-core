@@ -36,6 +36,7 @@
     "failedToRemove": "Fehler beim Entfernen der Quelle",
     "failedToAdd": "Fehler beim Hinzufügen der Quelle",
     "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
+    "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
     "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße ist 50MB.",
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",

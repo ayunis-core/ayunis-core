@@ -39,6 +39,9 @@ export default function useAgentSources({
             case 'UNSUPPORTED_FILE_TYPE':
               toast.error(t('sources.invalidFileTypeError'));
               break;
+            case 'EMPTY_FILE_DATA':
+              toast.error(t('sources.fileSourceEmptyDataError'));
+              break;
             case 'FILE_TOO_LARGE':
               toast.error(t('sources.fileSourceTooLargeError'));
               break;
