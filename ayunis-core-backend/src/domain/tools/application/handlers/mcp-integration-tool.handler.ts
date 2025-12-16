@@ -23,8 +23,16 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
     const { tool, input } = params;
     this.logger.log('execute', tool, input);
     try {
+      const validatedInput = tool.validateParams(input) as Record<
+        string,
+        unknown
+      >;
       const result = await this.executeMcpToolUseCase.execute(
-        new ExecuteMcpToolCommand(tool.integrationId, tool.name, input),
+        new ExecuteMcpToolCommand(
+          tool.integrationId,
+          tool.name,
+          validatedInput,
+        ),
       );
       return JSON.stringify(result.content);
     } catch (error) {

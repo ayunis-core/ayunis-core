@@ -40,18 +40,9 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
     const { orgId } = context;
     this.logger.log('execute', tool, input);
     try {
-      const isValid = tool.validateParams(input);
-      if (!isValid) {
-        this.logger.error('Invalid input', input);
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message:
-            'You did not pass valid parameters to the tool. Please check the parameters and try again.',
-          exposeToLLM: true,
-        });
-      }
+      const validatedInput = tool.validateParams(input);
       const source = await this.getSourceByIdUseCase.execute(
-        new GetTextSourceByIdQuery(input.sourceId as UUID),
+        new GetTextSourceByIdQuery(validatedInput.sourceId as UUID),
       );
       if (!source) {
         this.logger.error('Source not found', input);
@@ -69,7 +60,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
             sourceId: source.id,
             userId: input.userId as UUID,
           },
-          query: input.query as string,
+          query: validatedInput.query,
         }),
       );
 
