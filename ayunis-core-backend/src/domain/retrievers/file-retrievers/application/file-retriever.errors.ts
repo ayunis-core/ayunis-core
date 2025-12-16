@@ -6,6 +6,11 @@ import {
   BadRequestException,
   NotFoundException,
   InternalServerErrorException,
+  UnauthorizedException,
+  PayloadTooLargeException,
+  UnprocessableEntityException,
+  ServiceUnavailableException,
+  GatewayTimeoutException,
 } from '@nestjs/common';
 
 /**
@@ -16,6 +21,11 @@ export enum FileRetrieverErrorCode {
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   RETRIEVAL_FAILED = 'RETRIEVAL_FAILED',
   INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
+  TOO_MANY_PAGES = 'TOO_MANY_PAGES',
+  SERVICE_BUSY = 'SERVICE_BUSY',
+  SERVICE_TIMEOUT = 'SERVICE_TIMEOUT',
+  UNAUTHORIZED = 'UNAUTHORIZED',
 }
 
 /**
@@ -35,31 +45,31 @@ export abstract class FileRetrieverError extends ApplicationError {
    * Convert to a NestJS HTTP exception
    */
   toHttpException() {
+    const payload = {
+      code: this.code,
+      message: this.message,
+      ...(this.metadata && { metadata: this.metadata }),
+    };
+
     switch (this.statusCode) {
       case 400:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new BadRequestException(payload);
+      case 401:
+        return new UnauthorizedException(payload);
       case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new NotFoundException(payload);
+      case 413:
+        return new PayloadTooLargeException(payload);
+      case 422:
+        return new UnprocessableEntityException(payload);
       case 500:
-        return new InternalServerErrorException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new InternalServerErrorException(payload);
+      case 503:
+        return new ServiceUnavailableException(payload);
+      case 504:
+        return new GatewayTimeoutException(payload);
       default:
-        return new InternalServerErrorException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new InternalServerErrorException(payload);
     }
   }
 }
@@ -96,6 +106,61 @@ export class InvalidFileTypeError extends FileRetrieverError {
       `${fileType} type is currently not supported.`,
       FileRetrieverErrorCode.INVALID_FILE_TYPE,
       400,
+      metadata,
+    );
+  }
+}
+
+export class FileTooLargeError extends FileRetrieverError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'File exceeds maximum size limit (50MB)',
+      FileRetrieverErrorCode.FILE_TOO_LARGE,
+      413,
+      metadata,
+    );
+  }
+}
+
+export class TooManyPagesError extends FileRetrieverError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Document rejected by preflight check (too many pages)',
+      FileRetrieverErrorCode.TOO_MANY_PAGES,
+      422,
+      metadata,
+    );
+  }
+}
+
+export class ServiceBusyError extends FileRetrieverError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Document processing service is busy. Please try again later.',
+      FileRetrieverErrorCode.SERVICE_BUSY,
+      503,
+      metadata,
+    );
+  }
+}
+
+export class ServiceTimeoutError extends FileRetrieverError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Document conversion exceeded timeout',
+      FileRetrieverErrorCode.SERVICE_TIMEOUT,
+      504,
+      metadata,
+    );
+  }
+}
+
+export class FileRetrieverUnauthorizedError extends FileRetrieverError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Invalid or missing API key for document processing service',
+      FileRetrieverErrorCode.UNAUTHORIZED,
+      401,
       metadata,
     );
   }

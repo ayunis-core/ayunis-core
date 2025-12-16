@@ -62,6 +62,18 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
           case 'EMPTY_FILE_DATA':
             showError(t('chatInput.fileSourceEmptyDataError'));
             break;
+          case 'FILE_TOO_LARGE':
+            showError(t('chatInput.fileSourceTooLargeError'));
+            break;
+          case 'TOO_MANY_PAGES':
+            showError(t('chatInput.fileSourceTooManyPagesError'));
+            break;
+          case 'SERVICE_BUSY':
+            showError(t('chatInput.fileSourceServiceBusyError'));
+            break;
+          case 'SERVICE_TIMEOUT':
+            showError(t('chatInput.fileSourceTimeoutError'));
+            break;
           default:
             showError(t('chatInput.fileSourceUploadError'));
             break;
