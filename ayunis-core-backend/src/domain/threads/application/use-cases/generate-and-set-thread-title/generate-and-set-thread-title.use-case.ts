@@ -66,9 +66,13 @@ export class GenerateAndSetThreadTitleUseCase {
       }
 
       // Remove extra spaces and <think>...</think> blocks
-      const title = firstContent.text
+      let title = firstContent.text
         .replace(/<think(ing)?>([\s\S]*?)<\/think(ing)?>/g, '')
         .trim();
+
+      // Strip markdown formatting
+      title = this.stripMarkdownFormatting(title);
+
       if (!title) {
         throw new EmptyTitleResponseError(command.thread.id);
       }
@@ -99,5 +103,34 @@ export class GenerateAndSetThreadTitleUseCase {
       // Don't throw error - just log it
       return null;
     }
+  }
+
+  /**
+   * Strips markdown formatting from text
+   * Removes: bold, italic, code, strikethrough, headers, links, and quotes
+   */
+  private stripMarkdownFormatting(text: string): string {
+    return (
+      text
+        // Remove bold: **text** or __text__
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        // Remove italic: *text* or _text_ (but not within words)
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/(?<!\w)_(.+?)_(?!\w)/g, '$1')
+        // Remove strikethrough: ~~text~~
+        .replace(/~~(.+?)~~/g, '$1')
+        // Remove inline code: `text`
+        .replace(/`(.+?)`/g, '$1')
+        // Remove headers: # text
+        .replace(/^#{1,6}\s+/gm, '')
+        // Remove links: [text](url) -> text
+        .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+        // Remove quotes
+        .replace(/["""]/g, '')
+        // Clean up any extra whitespace
+        .replace(/\s+/g, ' ')
+        .trim()
+    );
   }
 }
