@@ -22,6 +22,7 @@
     "errorUpdateAgent": "Agent could not be updated",
     "errorRemoveAgent": "Agent could not be removed",
     "thinking": "Thinking",
+    "copyToClipboard": "Copy to clipboard",
     "tools": {
       "internet_search": "Search the internet",
       "website_content": "Query website",

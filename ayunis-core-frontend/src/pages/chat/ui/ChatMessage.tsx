@@ -5,6 +5,11 @@ import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
 import { Bot, Loader2, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import type {
   Message,
   AssistantMessageContent,
@@ -44,11 +49,12 @@ interface ChatMessageProps {
 
 function CopyMessageButton({ message }: { message: Message }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation('chat');
 
   const extractTextContent = (message: Message): string => {
     if (message.role !== 'assistant') return '';
     if (!message.content || message.content.length === 0) return '';
-    
+
     return message.content
       .filter((content) => content.type === 'text')
       .map((content) => (content as TextMessageContent).text)
@@ -72,19 +78,24 @@ function CopyMessageButton({ message }: { message: Message }) {
   if (!textContent) return null;
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-7 w-7 mt-1"
-      onClick={handleCopy}
-      aria-label="Copy message"
-    >
-      {copied ? (
-        <Check className="h-3.5 w-3.5" />
-      ) : (
-        <Copy className="h-3.5 w-3.5" />
-      )}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 mt-1"
+          onClick={() => void handleCopy()}
+          aria-label={t('chat.copyToClipboard')}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{t('chat.copyToClipboard')}</TooltipContent>
+    </Tooltip>
   );
 }
 
