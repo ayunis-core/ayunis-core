@@ -25,12 +25,13 @@ import {
 import { Input } from '@/shared/ui/shadcn/input';
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { type CreateAgentData, useCreateAgent } from '../api/useCreateAgent';
 import { useTranslation } from 'react-i18next';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useModelsControllerGetEffectiveDefaultModel } from '@/shared/api/generated/ayunisCoreAPI';
 
 interface CreateAgentDialogProps {
   buttonText?: string;
@@ -55,6 +56,16 @@ export default function CreateAgentDialog({
     resetForm,
     isLoading,
   } = useCreateAgent();
+
+  // Fetch the user's effective default model
+  const { data: defaultModelData } = useModelsControllerGetEffectiveDefaultModel();
+
+  // Pre-select the default model when the dialog opens
+  useEffect(() => {
+    if (isOpen && defaultModelData?.permittedLanguageModel?.id) {
+      form.setValue('modelId', defaultModelData.permittedLanguageModel.id);
+    }
+  }, [isOpen, defaultModelData, form]);
 
   const handleSubmit = (data: CreateAgentData) => {
     const toolAssignments = internetSearchEnabled
@@ -119,7 +130,7 @@ export default function CreateAgentDialog({
                     <FormLabel>{t('createDialog.form.modelLabel')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
