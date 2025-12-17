@@ -130,7 +130,7 @@ export default function CreateAgentDialog({
                     <FormLabel>{t('createDialog.form.modelLabel')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
