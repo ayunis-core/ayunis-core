@@ -47,6 +47,7 @@ function CopyMessageButton({ message }: { message: Message }) {
 
   const extractTextContent = (message: Message): string => {
     if (message.role !== 'assistant') return '';
+    if (!message.content || message.content.length === 0) return '';
     
     return message.content
       .filter((content) => content.type === 'text')
