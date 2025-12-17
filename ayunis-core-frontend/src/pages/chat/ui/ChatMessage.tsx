@@ -2,8 +2,14 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
-import { Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2, Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import type {
   Message,
   AssistantMessageContent,
@@ -39,6 +45,58 @@ interface ChatMessageProps {
   isLoading?: boolean;
   hideAvatar?: boolean;
   isStreaming?: boolean;
+}
+
+function CopyMessageButton({ message }: { message: Message }) {
+  const [copied, setCopied] = useState(false);
+  const { t } = useTranslation('chat');
+
+  const extractTextContent = (message: Message): string => {
+    if (message.role !== 'assistant') return '';
+    if (!message.content || message.content.length === 0) return '';
+
+    return message.content
+      .filter((content) => content.type === 'text')
+      .map((content) => (content as TextMessageContent).text)
+      .join('\n\n');
+  };
+
+  const handleCopy = async () => {
+    const textContent = extractTextContent(message);
+    if (!textContent) return;
+
+    try {
+      await navigator.clipboard.writeText(textContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy message:', error);
+    }
+  };
+
+  const textContent = extractTextContent(message);
+  if (!textContent) return null;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 mt-1"
+          onClick={() => void handleCopy()}
+          aria-label={t('chat.copyToClipboard')}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{t('chat.copyToClipboard')}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 export default function ChatMessage({
@@ -115,6 +173,7 @@ export default function ChatMessage({
           >
             {renderMessageContent(message, isStreaming)}
           </div>
+          <CopyMessageButton message={message} />
         </div>
       </div>
     );
