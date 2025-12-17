@@ -38,18 +38,10 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    const { code, dataSourceIds } = input;
-
-    const isValid = tool.validateParams(input);
-    if (!isValid) {
-      throw new ToolExecutionFailedError({
-        toolName: tool.name,
-        message: 'Invalid input parameters',
-        exposeToLLM: true,
-      });
-    }
 
     try {
+      const validatedInput = tool.validateParams(input);
+      const { code, dataSourceIds } = validatedInput;
       // Get the code execution service client
       const codeExecutionService = getAyunisCodeExecutionService();
 
@@ -92,7 +84,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
 
       // Prepare the execution request
       const executionRequest: ExecutionRequest = {
-        code: code as string,
+        code: code,
         files: executionFiles,
       };
 

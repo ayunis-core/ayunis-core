@@ -4,6 +4,11 @@ import { ToolType } from '../value-objects/tool-type.enum';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { Tool } from '../tool.entity';
 
+interface SourceQueryToolParameters {
+  sourceId: string;
+  query: string;
+}
+
 function sourceQueryToolParameters(sources: Source[]): JSONSchema {
   return {
     type: 'object' as const,
@@ -37,14 +42,14 @@ export class SourceQueryTool extends Tool {
     });
   }
 
-  validateParams(params: Record<string, any>): boolean {
+  validateParams(params: Record<string, any>): SourceQueryToolParameters {
     const ajv = new Ajv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);
     if (!valid) {
       throw new Error(JSON.stringify(validate.errors));
     }
-    return true;
+    return params as unknown as SourceQueryToolParameters;
   }
 
   get returnsPii(): boolean {
