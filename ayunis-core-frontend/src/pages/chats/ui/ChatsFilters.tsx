@@ -9,7 +9,7 @@ import {
 import { useNavigate } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Agent } from '../model/types';
 
 interface ChatsFiltersProps {
@@ -26,6 +26,12 @@ export default function ChatsFilters({
   const { t } = useTranslation('chats');
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(search ?? '');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus search input on mount
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   // Sync search value with URL params
   useEffect(() => {
@@ -67,6 +73,7 @@ export default function ChatsFilters({
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
+          ref={searchInputRef}
           type="text"
           placeholder={t('filters.searchPlaceholder')}
           value={searchValue}
