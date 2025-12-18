@@ -184,12 +184,12 @@ export class DeletePermittedModelUseCase {
     );
 
     for (const user of users) {
-      const threads = await this.findAllThreadsUseCase.execute(
+      const threadsResult = await this.findAllThreadsUseCase.execute(
         new FindAllThreadsQuery(user.id, {
           withSources: true,
         }),
       );
-      for (const thread of threads) {
+      for (const thread of threadsResult.data) {
         if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
           for (const sourceAssignment of thread.sourceAssignments) {
             await this.deleteSourceUseCase.execute(

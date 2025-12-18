@@ -75,6 +75,7 @@ import { CreateThreadDto } from './dto/create-thread.dto';
 import { UpdateThreadTitleDto } from './dto/update-thread-title.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
+import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
@@ -154,30 +155,45 @@ export class ThreadsController {
     type: String,
     description: 'Filter threads by agent ID',
   })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of threads to return (default: 50)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of threads to skip (default: 0)',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Returns all threads for the current user',
-    schema: {
-      type: 'array',
-      items: {
-        $ref: getSchemaPath(GetThreadsResponseDtoItem),
-      },
-    },
+    description: 'Returns paginated threads for the current user',
+    type: GetThreadsResponseDto,
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiExtraModels(GetThreadsResponseDtoItem)
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Query() queryParams: FindAllThreadsQueryParamsDto,
-  ): Promise<GetThreadsResponseDtoItem[]> {
+  ): Promise<GetThreadsResponseDto> {
     this.logger.log('findAll', { filters: queryParams });
     const threads = await this.findAllThreadsUseCase.execute(
-      new FindAllThreadsQuery(userId, undefined, {
-        search: queryParams.search,
-        agentId: queryParams.agentId,
-      }),
+      new FindAllThreadsQuery(
+        userId,
+        undefined,
+        {
+          search: queryParams.search,
+          agentId: queryParams.agentId,
+        },
+        {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+        },
+      ),
     );
-    return this.getThreadsDtoMapper.toDtoArray(threads);
+    return this.getThreadsDtoMapper.toPaginatedDto(threads);
   }
 
   @Get(':id')

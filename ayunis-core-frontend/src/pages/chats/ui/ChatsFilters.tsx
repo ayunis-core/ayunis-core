@@ -47,9 +47,10 @@ export default function ChatsFilters({
       if (searchValue !== (search ?? '')) {
         void navigate({
           to: '/chats',
-          search: (prev: { search?: string; agentId?: string }) => ({
+          search: (prev: { search?: string; agentId?: string; page?: number }) => ({
             ...prev,
             search: searchValue || undefined,
+            page: undefined, // Reset to page 1 when search changes
           }),
         });
       }
@@ -61,9 +62,10 @@ export default function ChatsFilters({
   const handleAgentChange = (value: string) => {
     void navigate({
       to: '/chats',
-      search: (prev: { search?: string; agentId?: string }) => ({
+      search: (prev: { search?: string; agentId?: string; page?: number }) => ({
         ...prev,
         agentId: value === 'all' ? undefined : value,
+        page: undefined, // Reset to page 1 when agent filter changes
       }),
     });
   };
