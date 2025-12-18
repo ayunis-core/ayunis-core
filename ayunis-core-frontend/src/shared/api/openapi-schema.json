@@ -1453,16 +1453,49 @@
     },
     "/users": {
       "get": {
-        "description": "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+        "description": "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
         "operationId": "UserController_getUsersInOrganization",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successfully retrieved users in the organization",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UsersListResponseDto"
+                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
                 }
               }
             }
@@ -1854,7 +1887,7 @@
     },
     "/super-admin/users/{orgId}": {
       "get": {
-        "description": "Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.",
+        "description": "Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminUsersController_getUsersByOrgId",
         "parameters": [
           {
@@ -1867,6 +1900,38 @@
               "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1875,7 +1940,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UsersListResponseDto"
+                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
                 }
               }
             }
@@ -6197,18 +6262,26 @@
         },
         "required": ["id", "name", "email", "role", "orgId", "createdAt"]
       },
-      "UsersListResponseDto": {
+      "PaginatedUsersListResponseDto": {
         "type": "object",
         "properties": {
-          "users": {
-            "description": "List of users in the organization",
+          "data": {
+            "description": "Array of users for the current page",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UserResponseDto"
             }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
-        "required": ["users"]
+        "required": ["data", "pagination"]
       },
       "UpdateUserRoleDto": {
         "type": "object",

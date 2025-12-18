@@ -24,7 +24,7 @@ import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
 import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
 import { useUsers } from '../api/useUsers';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { User } from '../model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -32,10 +32,14 @@ import { useTranslation } from 'react-i18next';
 
 interface UsersSectionProps {
   users: User[];
+  searchSlot?: ReactNode;
+  paginationSlot?: ReactNode;
 }
 
 export default function UsersSection({
   users: usersFromLoader,
+  searchSlot,
+  paginationSlot,
 }: UsersSectionProps) {
   const { t } = useTranslation('admin-settings-users');
   const { users } = useUsers({ initialData: usersFromLoader });
@@ -119,6 +123,7 @@ export default function UsersSection({
         <CardTitle>{t('users.users')}</CardTitle>
       </CardHeader>
       <CardContent>
+        {searchSlot && <div className="mb-4">{searchSlot}</div>}
         <Table>
           <TableHeader>
             <TableRow>
@@ -194,6 +199,7 @@ export default function UsersSection({
             ))}
           </TableBody>
         </Table>
+        {paginationSlot}
       </CardContent>
     </Card>
   );

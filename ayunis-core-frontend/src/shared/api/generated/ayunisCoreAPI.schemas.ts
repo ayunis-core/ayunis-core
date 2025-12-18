@@ -708,9 +708,11 @@ export interface UserResponseDto {
   createdAt: string;
 }
 
-export interface UsersListResponseDto {
-  /** List of users in the organization */
-  users: UserResponseDto[];
+export interface PaginatedUsersListResponseDto {
+  /** Array of users for the current page */
+  data: UserResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
 }
 
 /**
@@ -2571,6 +2573,21 @@ limit?: number;
 offset?: number;
 };
 
+export type UserControllerGetUsersInOrganizationParams = {
+/**
+ * Search users by name or email
+ */
+search?: string;
+/**
+ * Maximum number of users to return (default: 25)
+ */
+limit?: number;
+/**
+ * Number of users to skip (default: 0)
+ */
+offset?: number;
+};
+
 export type UserControllerValidateResetTokenParams = {
 /**
  * Password reset token from email
@@ -2580,6 +2597,21 @@ token: string;
 
 export type UserControllerValidateResetToken200 = {
   valid?: boolean;
+};
+
+export type SuperAdminUsersControllerGetUsersByOrgIdParams = {
+/**
+ * Search users by name or email
+ */
+search?: string;
+/**
+ * Maximum number of users to return (default: 25)
+ */
+limit?: number;
+/**
+ * Number of users to skip (default: 0)
+ */
+offset?: number;
 };
 
 export type StorageControllerUploadFileBody = {

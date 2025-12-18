@@ -1,4 +1,7 @@
 {
+  "search": {
+    "placeholder": "Search users by name or email..."
+  },
   "header": {
     "title": "Users",
     "description": "View and manage users in this organization."

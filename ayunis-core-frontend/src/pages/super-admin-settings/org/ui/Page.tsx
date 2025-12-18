@@ -4,6 +4,7 @@ import type {
   SubscriptionResponseDto,
   UserResponseDto,
   SuperAdminTrialResponseDto,
+  PaginationDto,
 } from '@/shared/api';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
@@ -27,6 +28,9 @@ import { useCallback } from 'react';
 interface SuperAdminSettingsOrgPageProps {
   org: SuperAdminOrgResponseDto;
   users: UserResponseDto[];
+  usersPagination?: PaginationDto;
+  usersSearch?: string;
+  usersCurrentPage: number;
   subscription: SubscriptionResponseDto | null;
   trial: SuperAdminTrialResponseDto | null;
   initialTab?: 'org' | 'users' | 'subscriptions' | 'models' | 'trials';
@@ -34,6 +38,9 @@ interface SuperAdminSettingsOrgPageProps {
 export default function SuperAdminSettingsOrgPage({
   org,
   users,
+  usersPagination,
+  usersSearch,
+  usersCurrentPage,
   subscription,
   trial,
   initialTab = 'org',
@@ -77,7 +84,13 @@ export default function SuperAdminSettingsOrgPage({
           <OrgDetails org={org} />
         </TabsContent>
         <TabsContent value="users" className="mt-4">
-          <UsersTable users={users} orgId={org.id} />
+          <UsersTable
+            users={users}
+            orgId={org.id}
+            pagination={usersPagination}
+            search={usersSearch}
+            currentPage={usersCurrentPage}
+          />
         </TabsContent>
         <TabsContent value="subscriptions" className="mt-4">
           {subscription ? (

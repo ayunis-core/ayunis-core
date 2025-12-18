@@ -1,4 +1,7 @@
 {
+  "search": {
+    "placeholder": "Search users by name or email..."
+  },
   "users": {
     "invites": "Invites",
     "users": "Users",
