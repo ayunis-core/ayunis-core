@@ -17,12 +17,14 @@ import { useTranslation } from 'react-i18next';
 import type { SuperAdminOrgResponseDto } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
 import { formatDate } from '@/shared/lib/format-date';
+import type { ReactNode } from 'react';
 
 interface OrgsTableProps {
   orgs: SuperAdminOrgResponseDto[];
+  searchSlot?: ReactNode;
 }
 
-export default function OrgsTable({ orgs }: OrgsTableProps) {
+export default function OrgsTable({ orgs, searchSlot }: OrgsTableProps) {
   const { t } = useTranslation('super-admin-settings-orgs');
   const router = useRouter();
 
@@ -33,6 +35,7 @@ export default function OrgsTable({ orgs }: OrgsTableProps) {
         <CardDescription>{t('header.description')}</CardDescription>
       </CardHeader>
       <CardContent>
+        {searchSlot && <div className="mb-4">{searchSlot}</div>}
         {orgs.length === 0 ? (
           <div className="flex flex-col items-center justify-center space-y-2 py-10 text-center">
             <h3 className="text-lg font-semibold">{t('empty.title')}</h3>

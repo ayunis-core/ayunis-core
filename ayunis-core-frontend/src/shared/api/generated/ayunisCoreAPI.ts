@@ -2949,7 +2949,7 @@ export const useSuperAdminOrgsControllerCreateOrg = <TError = void,
     }
     
 /**
- * Retrieve every organization in the system. Only accessible to users with the super admin system role.
+ * Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.
  * @summary List all organizations
  */
 export const superAdminOrgsControllerGetAllOrgs = (
