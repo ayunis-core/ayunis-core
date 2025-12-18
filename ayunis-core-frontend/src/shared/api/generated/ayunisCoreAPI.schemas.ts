@@ -22,6 +22,7 @@ export type ModelWithConfigResponseDtoProvider = typeof ModelWithConfigResponseD
 export const ModelWithConfigResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -86,6 +87,7 @@ export type PermittedLanguageModelResponseDtoProvider = typeof PermittedLanguage
 export const PermittedLanguageModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -161,6 +163,7 @@ export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoRespo
 export const ModelProviderInfoResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -202,6 +205,7 @@ export type CreatePermittedProviderDtoProvider = typeof CreatePermittedProviderD
 export const CreatePermittedProviderDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -224,6 +228,7 @@ export type PermittedProviderResponseDtoProvider = typeof PermittedProviderRespo
 export const PermittedProviderResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -265,6 +270,7 @@ export type DeletePermittedProviderDtoProvider = typeof DeletePermittedProviderD
 export const DeletePermittedProviderDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -287,6 +293,7 @@ export type ModelProviderWithPermittedStatusResponseDtoProvider = typeof ModelPr
 export const ModelProviderWithPermittedStatusResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -335,6 +342,7 @@ export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddi
 export const PermittedEmbeddingModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -383,6 +391,7 @@ export type CreateLanguageModelRequestDtoProvider = typeof CreateLanguageModelRe
 export const CreateLanguageModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -419,6 +428,7 @@ export type UpdateLanguageModelRequestDtoProvider = typeof UpdateLanguageModelRe
 export const UpdateLanguageModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -455,6 +465,7 @@ export type CreateEmbeddingModelRequestDtoProvider = typeof CreateEmbeddingModel
 export const CreateEmbeddingModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -498,6 +509,7 @@ export type UpdateEmbeddingModelRequestDtoProvider = typeof UpdateEmbeddingModel
 export const UpdateEmbeddingModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -541,6 +553,7 @@ export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoPr
 export const LanguageModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -596,6 +609,7 @@ export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDto
 export const EmbeddingModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -2268,12 +2282,6 @@ export interface UpdateTrialRequestDto {
 export interface UsageConfigResponseDto {
   /** Whether the deployment is self-hosted. Determines feature availability. */
   isSelfHosted: boolean;
-  /** Whether cost information should be displayed in the UI. True for self-hosted, false for cloud deployments. */
-  showCostInformation: boolean;
-  /** Default currency code used for cost calculations and display */
-  defaultCurrency: string;
-  /** Number of decimal places to use when formatting cost values */
-  costDecimalPlaces: number;
 }
 
 export interface UsageStatsResponseDto {
@@ -2281,10 +2289,6 @@ export interface UsageStatsResponseDto {
   totalTokens: number;
   /** Total number of API requests made in the specified period */
   totalRequests: number;
-  /** Total cost incurred in the period. Only available in self-hosted deployments. */
-  totalCost?: number;
-  /** Currency code for cost information. Only available in self-hosted deployments. */
-  currency?: string;
   /** Number of users who made requests within the active user threshold (last 30 days) */
   activeUsers: number;
   /** Total number of unique users who made requests in the specified period */
@@ -2300,8 +2304,6 @@ export interface TimeSeriesPointDto {
   tokens: number;
   /** Number of requests at this point */
   requests: number;
-  /** Cost at this point (self-hosted mode only) */
-  cost?: number;
 }
 
 /**
@@ -2314,6 +2316,7 @@ export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typ
 export const ProviderUsageDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -2328,8 +2331,6 @@ export interface ProviderUsageDto {
   tokens: number;
   /** Total requests for this provider */
   requests: number;
-  /** Total cost for this provider (self-hosted mode only) */
-  cost?: number;
   /** Percentage of total usage */
   percentage: number;
   /** Time series data for this provider */
@@ -2378,6 +2379,7 @@ export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[k
 export const ModelDistributionDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -2398,8 +2400,6 @@ export interface ModelDistributionDto {
   tokens: number;
   /** Total requests for this model */
   requests: number;
-  /** Total cost for this model (self-hosted mode only) */
-  cost?: number;
   /** Percentage of total usage */
   percentage: number;
 }
@@ -2756,7 +2756,6 @@ export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsa
 export const UsageControllerGetUserUsageSortBy = {
   tokens: 'tokens',
   requests: 'requests',
-  cost: 'cost',
   lastActivity: 'lastActivity',
   userName: 'userName',
 } as const;

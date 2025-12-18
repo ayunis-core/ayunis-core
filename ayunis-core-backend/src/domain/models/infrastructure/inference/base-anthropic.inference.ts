@@ -28,9 +28,17 @@ import { InferenceFailedError } from 'src/domain/models/application/models.error
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
+// Type for Anthropic-compatible clients (Anthropic SDK and Bedrock SDK)
+// Only requires the messages.create method which is what we use
+type AnthropicCompatibleClient = {
+  messages: {
+    create: Anthropic['messages']['create'];
+  };
+};
+
 export abstract class BaseAnthropicInferenceHandler extends InferenceHandler {
   private readonly logger = new Logger(BaseAnthropicInferenceHandler.name);
-  protected client: Anthropic;
+  protected client: AnthropicCompatibleClient;
 
   constructor(protected readonly imageContentService: ImageContentService) {
     super();

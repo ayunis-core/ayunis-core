@@ -21,6 +21,11 @@ const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
     hostedIn: ModelProviderLocation.US,
   },
   {
+    provider: ModelProvider.BEDROCK,
+    displayName: 'AWS Bedrock',
+    hostedIn: ModelProviderLocation.EU,
+  },
+  {
     provider: ModelProvider.MISTRAL,
     displayName: 'Mistral',
     hostedIn: ModelProviderLocation.EU,

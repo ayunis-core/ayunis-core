@@ -8645,7 +8645,7 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
     }
     
 /**
- * Returns configuration settings for the usage dashboard, including deployment mode and cost display settings. This endpoint helps the frontend determine which features to show based on the deployment type.
+ * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
  * @summary Get usage dashboard configuration
  */
 export const usageControllerGetUsageConfig = (
@@ -8734,7 +8734,7 @@ export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<type
 
 
 /**
- * Returns aggregated usage statistics including total tokens, requests, active users, and cost information (self-hosted only). Dates are optional - if not provided, shows all usage.
+ * Returns aggregated usage statistics including total tokens, requests, and active users. Dates are optional - if not provided, shows all usage.
  * @summary Get overall usage statistics
  */
 export const usageControllerGetUsageStats = (

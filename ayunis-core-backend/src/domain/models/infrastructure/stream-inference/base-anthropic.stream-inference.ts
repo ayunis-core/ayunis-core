@@ -29,13 +29,21 @@ import { ImageContentService } from 'src/domain/messages/application/services/im
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
+// Type for Anthropic-compatible clients (Anthropic SDK and Bedrock SDK)
+// Only requires the messages.create method which is what we use
+type AnthropicCompatibleClient = {
+  messages: {
+    create: Anthropic['messages']['create'];
+  };
+};
+
 export abstract class BaseAnthropicStreamInferenceHandler
   implements StreamInferenceHandler
 {
   private readonly logger = new Logger(
     BaseAnthropicStreamInferenceHandler.name,
   );
-  protected client: Anthropic;
+  protected client: AnthropicCompatibleClient;
 
   constructor(protected readonly imageContentService: ImageContentService) {}
 
