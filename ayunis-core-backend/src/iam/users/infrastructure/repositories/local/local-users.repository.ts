@@ -90,6 +90,15 @@ export class LocalUsersRepository extends UsersRepository {
     });
   }
 
+  async findAllIdsByOrgId(orgId: UUID): Promise<UUID[]> {
+    this.logger.log('findAllIdsByOrgId', { orgId });
+    const users = await this.userRepository.find({
+      where: { orgId },
+      select: { id: true },
+    });
+    return users.map((user) => user.id);
+  }
+
   async create(user: User): Promise<User> {
     this.logger.log('create', { userId: user.id, email: user.email });
     // Check if user already exists by email (case-insensitive)

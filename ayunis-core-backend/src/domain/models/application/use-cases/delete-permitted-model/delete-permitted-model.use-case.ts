@@ -19,12 +19,10 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
-import { FindAllThreadsQuery } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.query';
-import { FindAllThreadsUseCase } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.use-case';
-import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
-import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
+import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
+import { FindAllThreadsByOrgWithSourcesQuery } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.query';
+import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
+import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -41,9 +39,8 @@ export class DeletePermittedModelUseCase {
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
     private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
-    private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
-    private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
-    private readonly deleteSourceUseCase: DeleteSourceUseCase,
+    private readonly findAllThreadsByOrgWithSourcesUseCase: FindAllThreadsByOrgWithSourcesUseCase,
+    private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -179,31 +176,24 @@ export class DeletePermittedModelUseCase {
     orgId: UUID,
     model: PermittedEmbeddingModel,
   ): Promise<void> {
-    const usersResult = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery({
-        orgId,
-        pagination: { limit: 1000, offset: 0 },
-      }),
+    // Single query - get all threads with sources for the org
+    const threads = await this.findAllThreadsByOrgWithSourcesUseCase.execute(
+      new FindAllThreadsByOrgWithSourcesQuery(orgId),
     );
 
-    for (const user of usersResult.data) {
-      const threadsResult = await this.findAllThreadsUseCase.execute(
-        new FindAllThreadsQuery(user.id, { withSources: true }, undefined, {
-          limit: 1000,
-          offset: 0,
-        }),
+    // Collect all sources from all threads
+    const sources = threads
+      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source) ?? [])
+      .filter(Boolean);
+
+    // Batch delete RAG index + sources (2 queries total)
+    if (sources.length > 0) {
+      await this.deleteSourcesUseCase.execute(
+        new DeleteSourcesCommand(sources),
       );
-      for (const thread of threadsResult.data) {
-        if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
-          for (const sourceAssignment of thread.sourceAssignments) {
-            await this.deleteSourceUseCase.execute(
-              new DeleteSourceCommand(sourceAssignment.source),
-            );
-          }
-        }
-      }
     }
 
+    // Delete the model
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId: orgId,

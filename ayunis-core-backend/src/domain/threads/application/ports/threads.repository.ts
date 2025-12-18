@@ -58,4 +58,5 @@ export abstract class ThreadsRepository {
     excludeUserId?: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
+  abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
 }

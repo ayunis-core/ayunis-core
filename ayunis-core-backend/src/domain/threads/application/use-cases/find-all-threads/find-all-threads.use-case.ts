@@ -22,7 +22,10 @@ export class FindAllThreadsUseCase {
         query.userId,
         query.options,
         query.filters,
-        { limit: query.limit, offset: query.offset },
+        {
+          limit: query.limit,
+          offset: query.offset,
+        },
       );
     } catch (error) {
       this.logger.error('Failed to find all threads', {

@@ -25,6 +25,7 @@ import { GetThreadsDtoMapper } from './presenters/http/mappers/get-threads.mappe
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceAgentWithDefaultModelUseCase } from './application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
+import { FindAllThreadsByOrgWithSourcesUseCase } from './application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { AgentsModule } from '../agents/agents.module';
 import { StorageModule } from '../storage/storage.module';
 
@@ -57,6 +58,7 @@ import { StorageModule } from '../storage/storage.module';
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
     ReplaceAgentWithDefaultModelUseCase,
+    FindAllThreadsByOrgWithSourcesUseCase,
     // Mappers
     SourceDtoMapper,
     GetThreadDtoMapper,
@@ -75,6 +77,7 @@ import { StorageModule } from '../storage/storage.module';
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
     ReplaceAgentWithDefaultModelUseCase,
+    FindAllThreadsByOrgWithSourcesUseCase,
     // Export mappers
     GetThreadDtoMapper,
     GetThreadsDtoMapper,

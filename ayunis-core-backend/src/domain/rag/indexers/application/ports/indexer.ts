@@ -20,4 +20,5 @@ export abstract class IndexerPort {
   abstract ingest(input: IngestInput): Promise<void>;
   abstract search(input: SearchInput): Promise<IndexEntry[]>;
   abstract delete(documentId: UUID): Promise<void>;
+  abstract deleteMany(documentIds: UUID[]): Promise<void>;
 }
