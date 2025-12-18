@@ -73,7 +73,7 @@ export class GetActiveSubscriptionUseCase {
 
       const subscription = subscriptions[0];
 
-      const [invites, users] = await Promise.all([
+      const [invites, usersResult] = await Promise.all([
         this.getInvitesByOrgUseCase.execute(
           new GetInvitesByOrgQuery({
             orgId: query.orgId,
@@ -82,14 +82,17 @@ export class GetActiveSubscriptionUseCase {
           }),
         ),
         this.findUsersByOrgIdUseCase.execute(
-          new FindUsersByOrgIdQuery(query.orgId),
+          new FindUsersByOrgIdQuery({
+            orgId: query.orgId,
+            pagination: { limit: 1000, offset: 0 },
+          }),
         ),
       ]);
 
       const availableSeats = this.getAvailableSeats(
         subscription,
         invites,
-        users,
+        usersResult.data,
       );
       const nextRenewalDate = this.getNextRenewalDate(subscription);
       return { subscription, availableSeats, nextRenewalDate };

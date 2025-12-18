@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import {
   UserResponseDto,
   UsersListResponseDto,
+  PaginatedUsersListResponseDto,
 } from '../dtos/user-response.dto';
 import { User } from '../../../domain/user.entity';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class UserResponseDtoMapper {
@@ -21,6 +23,17 @@ export class UserResponseDtoMapper {
   toListDto(users: User[]): UsersListResponseDto {
     return {
       users: users.map((user) => this.toDto(user)),
+    };
+  }
+
+  toPaginatedDto(paginated: Paginated<User>): PaginatedUsersListResponseDto {
+    return {
+      data: paginated.data.map((user) => this.toDto(user)),
+      pagination: {
+        limit: paginated.limit,
+        offset: paginated.offset,
+        total: paginated.total,
+      },
     };
   }
 }

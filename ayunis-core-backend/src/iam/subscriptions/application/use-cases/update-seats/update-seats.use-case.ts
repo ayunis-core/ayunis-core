@@ -79,8 +79,11 @@ export class UpdateSeatsUseCase {
       }
       const subscription = result.subscription;
 
-      const users = await this.findUsersByOrgIdUseCase.execute(
-        new FindUsersByOrgIdQuery(command.orgId),
+      const usersResult = await this.findUsersByOrgIdUseCase.execute(
+        new FindUsersByOrgIdQuery({
+          orgId: command.orgId,
+          pagination: { limit: 1000, offset: 0 },
+        }),
       );
       const openInvites = await this.getInvitesByOrgUseCase.execute(
         new GetInvitesByOrgQuery({
@@ -89,7 +92,7 @@ export class UpdateSeatsUseCase {
           onlyOpen: true,
         }),
       );
-      if (command.noOfSeats < users.length + openInvites.length) {
+      if (command.noOfSeats < usersResult.data.length + openInvites.length) {
         this.logger.warn('Too many used seats', {
           orgId: command.orgId,
           openInvites: openInvites,
