@@ -18,7 +18,10 @@ export default function ModelSettingsPage() {
   return (
     <SettingsLayout>
       <div className="space-y-4">
-        <OrgDefaultModelCard models={languageModels} isLoading={modelsLoading} />
+        <OrgDefaultModelCard
+          models={languageModels}
+          isLoading={modelsLoading}
+        />
         {hasModels ? (
           <>
             <ModelTypeCard type="language" models={languageModels} />
