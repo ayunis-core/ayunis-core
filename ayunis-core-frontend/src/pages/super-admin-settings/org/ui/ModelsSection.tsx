@@ -39,8 +39,16 @@ export default function ModelsSection({ orgId }: ModelsSectionProps) {
       />
       {hasModels ? (
         <>
-          <ModelTypeCard type="language" models={languageModels} orgId={orgId} />
-          <ModelTypeCard type="embedding" models={embeddingModels} orgId={orgId} />
+          <ModelTypeCard
+            type="language"
+            models={languageModels}
+            orgId={orgId}
+          />
+          <ModelTypeCard
+            type="embedding"
+            models={embeddingModels}
+            orgId={orgId}
+          />
         </>
       ) : (
         <Card>
