@@ -117,6 +117,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'sourceAssignments',
       );
       queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
+      queryBuilder.leftJoinAndSelect('source.textSourceDetails', 'textSourceDetails');
+      queryBuilder.leftJoinAndSelect('source.dataSourceDetails', 'dataSourceDetails');
     }
     if (options?.withModel) {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
@@ -323,5 +325,19 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async delete(id: UUID, userId: UUID): Promise<void> {
     this.logger.log('delete', { id, userId });
     await this.threadRepository.delete({ id, userId });
+  }
+
+  async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
+    this.logger.log('findAllByOrgIdWithSources', { orgId });
+    const threadEntities = await this.threadRepository
+      .createQueryBuilder('thread')
+      .innerJoin('users', 'user', 'user.id = thread.userId')
+      .leftJoinAndSelect('thread.sourceAssignments', 'sourceAssignments')
+      .leftJoinAndSelect('sourceAssignments.source', 'source')
+      .leftJoinAndSelect('source.textSourceDetails', 'textSourceDetails')
+      .leftJoinAndSelect('source.dataSourceDetails', 'dataSourceDetails')
+      .where('user.orgId = :orgId', { orgId })
+      .getMany();
+    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 }

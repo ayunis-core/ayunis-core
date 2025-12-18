@@ -7,4 +7,5 @@ export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
   abstract save(source: Source): Promise<Source>;
   abstract delete(source: Source): Promise<void>;
+  abstract deleteMany(sourceIds: UUID[]): Promise<void>;
 }

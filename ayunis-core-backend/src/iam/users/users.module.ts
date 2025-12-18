@@ -38,6 +38,7 @@ import { ValidatePasswordResetTokenUseCase } from './application/use-cases/valid
 import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
 import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
 import { InvitesModule } from '../invites/invites.module';
@@ -103,6 +104,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     ResetPasswordUseCase,
     ValidatePasswordResetTokenUseCase,
     FindUserByEmailUseCase,
+    FindAllUserIdsByOrgIdUseCase,
     AdminTriggerPasswordResetUseCase,
     // Services
     EmailConfirmationJwtService,
@@ -119,6 +121,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
     IsValidPasswordUseCase,
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
+    FindAllUserIdsByOrgIdUseCase,
     UsersRepository, // Export repository for seeding
   ],
 })

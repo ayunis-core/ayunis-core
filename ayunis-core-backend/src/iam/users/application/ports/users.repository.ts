@@ -19,6 +19,7 @@ export abstract class UsersRepository {
     pagination: UsersPagination,
     filters?: UsersFilters,
   ): Promise<Paginated<User>>;
+  abstract findAllIdsByOrgId(orgId: UUID): Promise<UUID[]>;
   abstract create(user: User): Promise<User>;
   abstract update(user: User): Promise<User>;
   abstract delete(id: UUID): Promise<void>;
