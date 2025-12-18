@@ -44,14 +44,12 @@ import type {
   CreateLanguageModelRequestDto,
   CreateOrgRequestDto,
   CreatePermittedModelDto,
-  CreatePermittedProviderDto,
   CreatePredefinedIntegrationDto,
   CreatePromptDto,
   CreateSubscriptionRequestDto,
   CreateThreadDto,
   CreateTrialRequestDto,
   CreateUserDto,
-  DeletePermittedProviderDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
@@ -67,12 +65,10 @@ import type {
   MeResponseDto,
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
-  ModelProviderWithPermittedStatusResponseDto,
   ModelWithConfigResponseDto,
   PaginatedUsersListResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
-  PermittedProviderResponseDto,
   PredefinedConfigResponseDto,
   PriceResponseDto,
   PromptResponseDto,
@@ -1234,312 +1230,6 @@ export function useModelsControllerGetModelProviderInfo<TData = Awaited<ReturnTy
 
 
 /**
- * @summary Create a permitted provider (Admin only)
- */
-export const modelsControllerCreatePermittedProvider = (
-    createPermittedProviderDto: CreatePermittedProviderDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedProviderResponseDto>(
-      {url: `/models/providers/permitted`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createPermittedProviderDto, signal
-    },
-      );
-    }
-  
-
-
-export const getModelsControllerCreatePermittedProviderMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerCreatePermittedProvider>>, TError,{data: CreatePermittedProviderDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerCreatePermittedProvider>>, TError,{data: CreatePermittedProviderDto}, TContext> => {
-
-const mutationKey = ['modelsControllerCreatePermittedProvider'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerCreatePermittedProvider>>, {data: CreatePermittedProviderDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  modelsControllerCreatePermittedProvider(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ModelsControllerCreatePermittedProviderMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerCreatePermittedProvider>>>
-    export type ModelsControllerCreatePermittedProviderMutationBody = CreatePermittedProviderDto
-    export type ModelsControllerCreatePermittedProviderMutationError = void
-
-    /**
- * @summary Create a permitted provider (Admin only)
- */
-export const useModelsControllerCreatePermittedProvider = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerCreatePermittedProvider>>, TError,{data: CreatePermittedProviderDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof modelsControllerCreatePermittedProvider>>,
-        TError,
-        {data: CreatePermittedProviderDto},
-        TContext
-      > => {
-
-      const mutationOptions = getModelsControllerCreatePermittedProviderMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Get all permitted providers
- */
-export const modelsControllerGetAllPermittedProviders = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedProviderResponseDto[]>(
-      {url: `/models/providers/permitted`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getModelsControllerGetAllPermittedProvidersQueryKey = () => {
-    return [`/models/providers/permitted`] as const;
-    }
-
-    
-export const getModelsControllerGetAllPermittedProvidersQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetAllPermittedProvidersQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>> = ({ signal }) => modelsControllerGetAllPermittedProviders(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ModelsControllerGetAllPermittedProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>>
-export type ModelsControllerGetAllPermittedProvidersQueryError = void
-
-
-export function useModelsControllerGetAllPermittedProviders<TData = Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetAllPermittedProviders<TData = Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetAllPermittedProviders<TData = Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all permitted providers
- */
-
-export function useModelsControllerGetAllPermittedProviders<TData = Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllPermittedProviders>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getModelsControllerGetAllPermittedProvidersQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Delete a permitted provider (Admin only)
- */
-export const modelsControllerDeletePermittedProvider = (
-    deletePermittedProviderDto: DeletePermittedProviderDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/models/providers/permitted`, method: 'DELETE',
-      headers: {'Content-Type': 'application/json', },
-      data: deletePermittedProviderDto
-    },
-      );
-    }
-  
-
-
-export const getModelsControllerDeletePermittedProviderMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerDeletePermittedProvider>>, TError,{data: DeletePermittedProviderDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof modelsControllerDeletePermittedProvider>>, TError,{data: DeletePermittedProviderDto}, TContext> => {
-
-const mutationKey = ['modelsControllerDeletePermittedProvider'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof modelsControllerDeletePermittedProvider>>, {data: DeletePermittedProviderDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  modelsControllerDeletePermittedProvider(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ModelsControllerDeletePermittedProviderMutationResult = NonNullable<Awaited<ReturnType<typeof modelsControllerDeletePermittedProvider>>>
-    export type ModelsControllerDeletePermittedProviderMutationBody = DeletePermittedProviderDto
-    export type ModelsControllerDeletePermittedProviderMutationError = void
-
-    /**
- * @summary Delete a permitted provider (Admin only)
- */
-export const useModelsControllerDeletePermittedProvider = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof modelsControllerDeletePermittedProvider>>, TError,{data: DeletePermittedProviderDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof modelsControllerDeletePermittedProvider>>,
-        TError,
-        {data: DeletePermittedProviderDto},
-        TContext
-      > => {
-
-      const mutationOptions = getModelsControllerDeletePermittedProviderMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Returns all available model providers with information about whether each is permitted for the organization
- * @summary Get all model provider infos with permitted status (Admin only)
- */
-export const modelsControllerGetAllModelProviderInfosWithPermittedStatus = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<ModelProviderWithPermittedStatusResponseDto[]>(
-      {url: `/models/providers/all-with-permitted-status`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey = () => {
-    return [`/models/providers/all-with-permitted-status`] as const;
-    }
-
-    
-export const getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>> = ({ signal }) => modelsControllerGetAllModelProviderInfosWithPermittedStatus(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>>
-export type ModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryError = void
-
-
-export function useModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>,
-          TError,
-          Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all model provider infos with permitted status (Admin only)
- */
-
-export function useModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * @summary Check if an embedding model is enabled for this org
  */
 export const modelsControllerIsEmbeddingModelEnabled = (
@@ -2221,317 +1911,6 @@ export const useSuperAdminModelsControllerUpdatePermittedModel = <TError = void,
       return useMutation(mutationOptions , queryClient);
     }
     
-/**
- * Retrieve all permitted providers for the specified organization. This endpoint is only accessible to super admins.
- * @summary Get all permitted providers for a specific organization
- */
-export const superAdminModelsControllerGetPermittedProviders = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<PermittedProviderResponseDto[]>(
-      {url: `/super-admin/models/${orgId}/permitted-providers`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSuperAdminModelsControllerGetPermittedProvidersQueryKey = (orgId: string,) => {
-    return [`/super-admin/models/${orgId}/permitted-providers`] as const;
-    }
-
-    
-export const getSuperAdminModelsControllerGetPermittedProvidersQueryOptions = <TData = Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminModelsControllerGetPermittedProvidersQueryKey(orgId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>> = ({ signal }) => superAdminModelsControllerGetPermittedProviders(orgId, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminModelsControllerGetPermittedProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>>
-export type SuperAdminModelsControllerGetPermittedProvidersQueryError = void
-
-
-export function useSuperAdminModelsControllerGetPermittedProviders<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminModelsControllerGetPermittedProviders<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminModelsControllerGetPermittedProviders<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all permitted providers for a specific organization
- */
-
-export function useSuperAdminModelsControllerGetPermittedProviders<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetPermittedProviders>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminModelsControllerGetPermittedProvidersQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Create a new permitted provider for the specified organization. This endpoint is only accessible to super admins.
- * @summary Create a permitted provider for a specific organization
- */
-export const superAdminModelsControllerCreatePermittedProvider = (
-    orgId: string,
-    createPermittedProviderDto: CreatePermittedProviderDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/super-admin/models/${orgId}/permitted-providers`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createPermittedProviderDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminModelsControllerCreatePermittedProviderMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerCreatePermittedProvider>>, TError,{orgId: string;data: CreatePermittedProviderDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerCreatePermittedProvider>>, TError,{orgId: string;data: CreatePermittedProviderDto}, TContext> => {
-
-const mutationKey = ['superAdminModelsControllerCreatePermittedProvider'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminModelsControllerCreatePermittedProvider>>, {orgId: string;data: CreatePermittedProviderDto}> = (props) => {
-          const {orgId,data} = props ?? {};
-
-          return  superAdminModelsControllerCreatePermittedProvider(orgId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminModelsControllerCreatePermittedProviderMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminModelsControllerCreatePermittedProvider>>>
-    export type SuperAdminModelsControllerCreatePermittedProviderMutationBody = CreatePermittedProviderDto
-    export type SuperAdminModelsControllerCreatePermittedProviderMutationError = void
-
-    /**
- * @summary Create a permitted provider for a specific organization
- */
-export const useSuperAdminModelsControllerCreatePermittedProvider = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerCreatePermittedProvider>>, TError,{orgId: string;data: CreatePermittedProviderDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminModelsControllerCreatePermittedProvider>>,
-        TError,
-        {orgId: string;data: CreatePermittedProviderDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminModelsControllerCreatePermittedProviderMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Delete a permitted provider for the specified organization. This endpoint is only accessible to super admin.
- * @summary Delete a permitted provider for a specific organization
- */
-export const superAdminModelsControllerDeletePermittedProvider = (
-    orgId: string,
-    deletePermittedProviderDto: DeletePermittedProviderDto,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/super-admin/models/${orgId}/permitted-providers`, method: 'DELETE',
-      headers: {'Content-Type': 'application/json', },
-      data: deletePermittedProviderDto
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminModelsControllerDeletePermittedProviderMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerDeletePermittedProvider>>, TError,{orgId: string;data: DeletePermittedProviderDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerDeletePermittedProvider>>, TError,{orgId: string;data: DeletePermittedProviderDto}, TContext> => {
-
-const mutationKey = ['superAdminModelsControllerDeletePermittedProvider'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminModelsControllerDeletePermittedProvider>>, {orgId: string;data: DeletePermittedProviderDto}> = (props) => {
-          const {orgId,data} = props ?? {};
-
-          return  superAdminModelsControllerDeletePermittedProvider(orgId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminModelsControllerDeletePermittedProviderMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminModelsControllerDeletePermittedProvider>>>
-    export type SuperAdminModelsControllerDeletePermittedProviderMutationBody = DeletePermittedProviderDto
-    export type SuperAdminModelsControllerDeletePermittedProviderMutationError = void
-
-    /**
- * @summary Delete a permitted provider for a specific organization
- */
-export const useSuperAdminModelsControllerDeletePermittedProvider = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminModelsControllerDeletePermittedProvider>>, TError,{orgId: string;data: DeletePermittedProviderDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminModelsControllerDeletePermittedProvider>>,
-        TError,
-        {orgId: string;data: DeletePermittedProviderDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminModelsControllerDeletePermittedProviderMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Returns all available model providers with information about whether each is permitted for the specified organization. This endpoint is only accessible to super admins.
- * @summary Get all model provider infos with permitted status for a specific organization
- */
-export const superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus = (
-    orgId: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<ModelProviderWithPermittedStatusResponseDto[]>(
-      {url: `/super-admin/models/${orgId}/providers/all-with-permitted-status`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-export const getSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey = (orgId: string,) => {
-    return [`/super-admin/models/${orgId}/providers/all-with-permitted-status`] as const;
-    }
-
-    
-export const getSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions = <TData = Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey(orgId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>> = ({ signal }) => superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus(orgId, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>>
-export type SuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryError = void
-
-
-export function useSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>,
-          TError,
-          Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all model provider infos with permitted status for a specific organization
- */
-
-export function useSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus<TData = Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminModelsControllerGetAllModelProviderInfosWithPermittedStatus>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions(orgId,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
 /**
  * Retrieve all models (language and embedding) from the master catalog. This endpoint is only accessible to super admins.
  * @summary Get all models in the catalog
@@ -5847,6 +5226,71 @@ export function useStorageControllerGetPresignedUrl<TData = Awaited<ReturnType<t
 
 
 /**
+ * @summary Retrieve content from a URL
+ */
+export const urlRetrieverControllerRetrieveUrl = (
+    retrieveUrlDto: RetrieveUrlDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/retrievers/url`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: retrieveUrlDto, signal
+    },
+      );
+    }
+  
+
+
+export const getUrlRetrieverControllerRetrieveUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext> => {
+
+const mutationKey = ['urlRetrieverControllerRetrieveUrl'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, {data: RetrieveUrlDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  urlRetrieverControllerRetrieveUrl(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UrlRetrieverControllerRetrieveUrlMutationResult = NonNullable<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>>
+    export type UrlRetrieverControllerRetrieveUrlMutationBody = RetrieveUrlDto
+    export type UrlRetrieverControllerRetrieveUrlMutationError = unknown
+
+    /**
+ * @summary Retrieve content from a URL
+ */
+export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>,
+        TError,
+        {data: RetrieveUrlDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUrlRetrieverControllerRetrieveUrlMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * @summary Create a new thread
  */
 export const threadsControllerCreate = (
@@ -8348,71 +7792,6 @@ export const useMcpIntegrationsControllerValidate = <TError = void,
       > => {
 
       const mutationOptions = getMcpIntegrationsControllerValidateMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * @summary Retrieve content from a URL
- */
-export const urlRetrieverControllerRetrieveUrl = (
-    retrieveUrlDto: RetrieveUrlDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/retrievers/url`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: retrieveUrlDto, signal
-    },
-      );
-    }
-  
-
-
-export const getUrlRetrieverControllerRetrieveUrlMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext> => {
-
-const mutationKey = ['urlRetrieverControllerRetrieveUrl'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, {data: RetrieveUrlDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  urlRetrieverControllerRetrieveUrl(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UrlRetrieverControllerRetrieveUrlMutationResult = NonNullable<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>>
-    export type UrlRetrieverControllerRetrieveUrlMutationBody = RetrieveUrlDto
-    export type UrlRetrieverControllerRetrieveUrlMutationError = unknown
-
-    /**
- * @summary Retrieve content from a URL
- */
-export const useUrlRetrieverControllerRetrieveUrl = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>, TError,{data: RetrieveUrlDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof urlRetrieverControllerRetrieveUrl>>,
-        TError,
-        {data: RetrieveUrlDto},
-        TContext
-      > => {
-
-      const mutationOptions = getUrlRetrieverControllerRetrieveUrlMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

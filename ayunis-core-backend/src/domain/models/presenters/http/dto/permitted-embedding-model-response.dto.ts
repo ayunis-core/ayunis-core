@@ -25,6 +25,12 @@ export class PermittedEmbeddingModelResponseDto {
 
   @ApiProperty({
     type: 'string',
+    description: 'The display name of the provider',
+  })
+  providerDisplayName: string;
+
+  @ApiProperty({
+    type: 'string',
     description: 'The display name of the model',
   })
   displayName: string;

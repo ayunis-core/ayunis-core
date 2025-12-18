@@ -12,7 +12,7 @@ import {
 } from '@/shared/ui/shadcn/select';
 
 // Api
-import { usePermittedProviders } from '@/features/models';
+import { useProviders } from '@/features/models';
 import { usePermittedModels } from '@/features/usePermittedModels';
 
 interface UsageFiltersProps {
@@ -33,7 +33,7 @@ export function UsageFilters({
   onModelChange,
 }: UsageFiltersProps) {
   const { t } = useTranslation('admin-settings-usage');
-  const { providers } = usePermittedProviders();
+  const { providers } = useProviders();
   const { models } = usePermittedModels();
 
   const DAY_IN_MS = 24 * 60 * 60 * 1000;

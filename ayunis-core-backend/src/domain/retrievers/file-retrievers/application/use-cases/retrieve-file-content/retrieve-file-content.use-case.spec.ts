@@ -3,7 +3,6 @@ import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
-import { GetAllPermittedProvidersUseCase } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
 import {
   FileRetrieverResult,
   FileRetrieverPage,
@@ -15,7 +14,6 @@ describe('ProcessFileUseCase', () => {
   let useCase: RetrieveFileContentUseCase;
   let mockHandler: Partial<FileRetrieverHandler>;
   let mockRegistry: Partial<FileRetrieverRegistry>;
-  let mockGetProviders: Partial<GetAllPermittedProvidersUseCase>;
   let mockContextService: Partial<ContextService>;
 
   const mockRetrievalConfig = {
@@ -33,9 +31,6 @@ describe('ProcessFileUseCase', () => {
     mockRegistry = {
       getHandler: jest.fn().mockReturnValue(mockHandler),
     };
-    mockGetProviders = {
-      execute: jest.fn().mockResolvedValue([{ provider: 'mistral' }]),
-    };
     mockContextService = {
       get: jest.fn().mockReturnValue('123e4567-e89b-12d3-a456-426614174000'),
     };
@@ -44,10 +39,6 @@ describe('ProcessFileUseCase', () => {
       providers: [
         RetrieveFileContentUseCase,
         { provide: FileRetrieverRegistry, useValue: mockRegistry },
-        {
-          provide: GetAllPermittedProvidersUseCase,
-          useValue: mockGetProviders,
-        },
         { provide: ContextService, useValue: mockContextService },
         { provide: retrievalConfig.KEY, useValue: mockRetrievalConfig },
       ],

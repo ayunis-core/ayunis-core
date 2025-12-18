@@ -403,140 +403,6 @@
         ]
       }
     },
-    "/models/providers/permitted": {
-      "post": {
-        "operationId": "ModelsController_createPermittedProvider",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created a permitted provider",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedProviderResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid provider input or provider already permitted"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a permitted provider (Admin only)",
-        "tags": [
-          "models"
-        ]
-      },
-      "get": {
-        "operationId": "ModelsController_getAllPermittedProviders",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all permitted providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PermittedProviderResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all permitted providers",
-        "tags": [
-          "models"
-        ]
-      },
-      "delete": {
-        "operationId": "ModelsController_deletePermittedProvider",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeletePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully deleted a permitted provider"
-          },
-          "400": {
-            "description": "Invalid provider input"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Permitted provider not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a permitted provider (Admin only)",
-        "tags": [
-          "models"
-        ]
-      }
-    },
-    "/models/providers/all-with-permitted-status": {
-      "get": {
-        "description": "Returns all available model providers with information about whether each is permitted for the organization",
-        "operationId": "ModelsController_getAllModelProviderInfosWithPermittedStatus",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all model provider infos with permitted status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ModelProviderWithPermittedStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid admin token"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all model provider infos with permitted status (Admin only)",
-        "tags": [
-          "models"
-        ]
-      }
-    },
     "/models/embedding/enabled": {
       "get": {
         "operationId": "ModelsController_isEmbeddingModelEnabled",
@@ -972,187 +838,6 @@
         ]
       }
     },
-    "/super-admin/models/{orgId}/permitted-providers": {
-      "get": {
-        "description": "Retrieve all permitted providers for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_getPermittedProviders",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to get permitted providers for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved permitted providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PermittedProviderResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all permitted providers for a specific organization",
-        "tags": [
-          "Super Admin Models"
-        ]
-      },
-      "post": {
-        "description": "Create a new permitted provider for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_createPermittedProvider",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to create permitted provider for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created permitted provider"
-          },
-          "400": {
-            "description": "Invalid provider data provided or provider already permitted"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a permitted provider for a specific organization",
-        "tags": [
-          "Super Admin Models"
-        ]
-      },
-      "delete": {
-        "description": "Delete a permitted provider for the specified organization. This endpoint is only accessible to super admin.",
-        "operationId": "SuperAdminModelsController_deletePermittedProvider",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to delete permitted provider for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeletePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully deleted permitted provider"
-          },
-          "400": {
-            "description": "Invalid provider data provided"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Permitted provider not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a permitted provider for a specific organization",
-        "tags": [
-          "Super Admin Models"
-        ]
-      }
-    },
-    "/super-admin/models/{orgId}/providers/all-with-permitted-status": {
-      "get": {
-        "description": "Returns all available model providers with information about whether each is permitted for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_getAllModelProviderInfosWithPermittedStatus",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to check permitted status for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all model provider infos with permitted status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ModelProviderWithPermittedStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all model provider infos with permitted status for a specific organization",
-        "tags": [
-          "Super Admin Models"
-        ]
-      }
-    },
     "/super-admin/models/catalog": {
       "get": {
         "description": "Retrieve all models (language and embedding) from the master catalog. This endpoint is only accessible to super admins.",
@@ -1436,38 +1121,26 @@
         ]
       },
       "get": {
-        "description": "Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.",
+        "description": "Retrieve every organization in the system. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminOrgsController_getAllOrgs",
         "parameters": [
           {
-            "name": "search",
+            "name": "offset",
             "required": false,
             "in": "query",
-            "description": "Search organizations by name.",
+            "description": "Number of organizations to skip before collecting results.",
             "schema": {
-              "example": "Acme",
-              "type": "string"
+              "example": 0,
+              "type": "number"
             }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
-            "description": "Maximum number of organizations to return (default: 50).",
+            "description": "Maximum number of organizations to return.",
             "schema": {
-              "default": 50,
               "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of organizations to skip (default: 0).",
-            "schema": {
-              "default": 0,
-              "example": 0,
               "type": "number"
             }
           }
@@ -1531,49 +1204,16 @@
     },
     "/users": {
       "get": {
-        "description": "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+        "description": "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
         "operationId": "UserController_getUsersInOrganization",
-        "parameters": [
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search users by name or email",
-            "schema": {
-              "example": "john",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of users to return (default: 25)",
-            "schema": {
-              "default": 25,
-              "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of users to skip (default: 0)",
-            "schema": {
-              "default": 0,
-              "example": 0,
-              "type": "number"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Successfully retrieved users in the organization",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
+                  "$ref": "#/components/schemas/UsersListResponseDto"
                 }
               }
             }
@@ -1987,7 +1627,7 @@
     },
     "/super-admin/users/{orgId}": {
       "get": {
-        "description": "Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.",
+        "description": "Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminUsersController_getUsersByOrgId",
         "parameters": [
           {
@@ -2000,38 +1640,6 @@
               "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search users by name or email",
-            "schema": {
-              "example": "john",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of users to return (default: 25)",
-            "schema": {
-              "default": 25,
-              "example": 25,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of users to skip (default: 0)",
-            "schema": {
-              "default": 0,
-              "example": 0,
-              "type": "number"
-            }
           }
         ],
         "responses": {
@@ -2040,7 +1648,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
+                  "$ref": "#/components/schemas/UsersListResponseDto"
                 }
               }
             }
@@ -3016,6 +2624,31 @@
         ]
       }
     },
+    "/retrievers/url": {
+      "post": {
+        "operationId": "UrlRetrieverController_retrieveUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The content has been successfully retrieved"
+          }
+        },
+        "summary": "Retrieve content from a URL",
+        "tags": [
+          "retrievers"
+        ]
+      }
+    },
     "/threads": {
       "post": {
         "operationId": "ThreadsController_create",
@@ -3073,34 +2706,18 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of threads to return (default: 50)",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of threads to skip (default: 0)",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Returns paginated threads for the current user",
+            "description": "Returns all threads for the current user",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetThreadsResponseDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetThreadsResponseDtoItem"
+                  }
                 }
               }
             }
@@ -3179,51 +2796,6 @@
           }
         },
         "summary": "Delete a thread",
-        "tags": [
-          "threads"
-        ]
-      }
-    },
-    "/threads/{id}/title": {
-      "patch": {
-        "operationId": "ThreadsController_updateTitle",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread to update",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateThreadTitleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "The thread title has been successfully updated"
-          },
-          "400": {
-            "description": "Invalid title data"
-          },
-          "404": {
-            "description": "Thread not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update a thread title",
         "tags": [
           "threads"
         ]
@@ -4374,31 +3946,6 @@
         "summary": "Validate MCP integration connection",
         "tags": [
           "mcp-integrations"
-        ]
-      }
-    },
-    "/retrievers/url": {
-      "post": {
-        "operationId": "UrlRetrieverController_retrieveUrl",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RetrieveUrlDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The content has been successfully retrieved"
-          }
-        },
-        "summary": "Retrieve content from a URL",
-        "tags": [
-          "retrievers"
         ]
       }
     },
@@ -5823,6 +5370,10 @@
             ],
             "description": "The provider of the model"
           },
+          "providerDisplayName": {
+            "type": "string",
+            "description": "The display name of the provider"
+          },
           "displayName": {
             "type": "string",
             "description": "The display name of the model"
@@ -5859,6 +5410,7 @@
           "id",
           "name",
           "provider",
+          "providerDisplayName",
           "displayName",
           "type",
           "isArchived",
@@ -5953,142 +5505,6 @@
           "hostedIn"
         ]
       },
-      "CreatePermittedProviderDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "description": "The model provider to permit",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "example": "openai"
-          }
-        },
-        "required": [
-          "provider"
-        ]
-      },
-      "PermittedProviderResponseDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "description": "The permitted model provider",
-            "example": "openai"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The display name of the model provider",
-            "example": "OpenAI"
-          },
-          "hostedIn": {
-            "type": "string",
-            "enum": [
-              "DE",
-              "EU",
-              "US",
-              "SELF_HOSTED",
-              "AYUNIS"
-            ],
-            "description": "The location where the provider hosts their services",
-            "example": "US"
-          }
-        },
-        "required": [
-          "provider",
-          "displayName",
-          "hostedIn"
-        ]
-      },
-      "DeletePermittedProviderDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "description": "The model provider to remove",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "example": "openai"
-          }
-        },
-        "required": [
-          "provider"
-        ]
-      },
-      "ModelProviderWithPermittedStatusResponseDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "bedrock",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "description": "The model provider identifier",
-            "example": "openai"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The display name of the model provider",
-            "example": "OpenAI"
-          },
-          "hostedIn": {
-            "type": "string",
-            "enum": [
-              "DE",
-              "EU",
-              "US",
-              "SELF_HOSTED",
-              "AYUNIS"
-            ],
-            "description": "The location where the provider hosts their services",
-            "example": "DE"
-          },
-          "isPermitted": {
-            "type": "boolean",
-            "description": "Whether this provider is permitted for the organization",
-            "example": true
-          }
-        },
-        "required": [
-          "provider",
-          "displayName",
-          "hostedIn",
-          "isPermitted"
-        ]
-      },
       "EmbeddingModelEnabledResponseDto": {
         "type": "object",
         "properties": {
@@ -6127,6 +5543,10 @@
             ],
             "description": "The provider of the model"
           },
+          "providerDisplayName": {
+            "type": "string",
+            "description": "The display name of the provider"
+          },
           "displayName": {
             "type": "string",
             "description": "The display name of the model"
@@ -6152,6 +5572,7 @@
           "id",
           "name",
           "provider",
+          "providerDisplayName",
           "displayName",
           "type",
           "isArchived",
@@ -6606,52 +6027,19 @@
           "createdAt"
         ]
       },
-      "PaginationDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of items per page",
-            "example": 50
-          },
-          "offset": {
-            "type": "number",
-            "description": "Number of items to skip",
-            "example": 0
-          },
-          "total": {
-            "type": "number",
-            "description": "Total number of items available",
-            "example": 150
-          }
-        },
-        "required": [
-          "limit",
-          "offset"
-        ]
-      },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
         "properties": {
-          "data": {
-            "description": "Array of organizations for the current page",
+          "orgs": {
+            "description": "Collection of organizations accessible to super admins",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
             }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
           }
         },
         "required": [
-          "data",
-          "pagination"
+          "orgs"
         ]
       },
       "UserResponseDto": {
@@ -6704,28 +6092,19 @@
           "createdAt"
         ]
       },
-      "PaginatedUsersListResponseDto": {
+      "UsersListResponseDto": {
         "type": "object",
         "properties": {
-          "data": {
-            "description": "Array of users for the current page",
+          "users": {
+            "description": "List of users in the organization",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UserResponseDto"
             }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
           }
         },
         "required": [
-          "data",
-          "pagination"
+          "users"
         ]
       },
       "UpdateUserRoleDto": {
@@ -7437,6 +6816,19 @@
           "objectName",
           "size",
           "etag"
+        ]
+      },
+      "RetrieveUrlDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to retrieve content from",
+            "example": "https://example.com/article"
+          }
+        },
+        "required": [
+          "url"
         ]
       },
       "CreateThreadDto": {
@@ -8242,45 +7634,6 @@
           "isAnonymous"
         ]
       },
-      "GetThreadsResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Array of threads for the current page",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/GetThreadsResponseDtoItem"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "pagination"
-        ]
-      },
-      "UpdateThreadTitleDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "The new title for the thread",
-            "example": "My conversation about AI",
-            "minLength": 1,
-            "maxLength": 200
-          }
-        },
-        "required": [
-          "title"
-        ]
-      },
       "ToolAssignmentDto": {
         "type": "object",
         "properties": {
@@ -8976,19 +8329,6 @@
         "required": [
           "valid",
           "capabilities"
-        ]
-      },
-      "RetrieveUrlDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL to retrieve content from",
-            "example": "https://example.com/article"
-          }
-        },
-        "required": [
-          "url"
         ]
       },
       "MessageContentResponseDto": {
@@ -9699,6 +9039,30 @@
           "requests",
           "lastActivity",
           "isActive"
+        ]
+      },
+      "PaginationDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of items per page",
+            "example": 50
+          },
+          "offset": {
+            "type": "number",
+            "description": "Number of items to skip",
+            "example": 0
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of items available",
+            "example": 150
+          }
+        },
+        "required": [
+          "limit",
+          "offset"
         ]
       },
       "UserUsageResponseDto": {
