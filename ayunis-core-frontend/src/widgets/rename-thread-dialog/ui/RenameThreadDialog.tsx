@@ -78,8 +78,8 @@ export function RenameThreadDialog({
       setError(null);
     }
 
-    // Show error if exceeding max length
-    if (newTitle.length > MAX_TITLE_LENGTH) {
+    // Show error if exceeding max length (use trimmed length for consistency)
+    if (newTitle.trim().length > MAX_TITLE_LENGTH) {
       setError(t('sidebar.renameThreadMaxLengthError', { max: MAX_TITLE_LENGTH }));
     }
   };
@@ -110,7 +110,7 @@ export function RenameThreadDialog({
                 <p className="text-sm text-destructive">{error}</p>
               )}
               <p className="text-xs text-muted-foreground text-right">
-                {title.length}/{MAX_TITLE_LENGTH}
+                {title.trim().length}/{MAX_TITLE_LENGTH}
               </p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function RenameThreadDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isRenaming || !title.trim() || title.length > MAX_TITLE_LENGTH}
+              disabled={isRenaming || !title.trim() || title.trim().length > MAX_TITLE_LENGTH}
             >
               {isRenaming ? t('common.loading') : t('sidebar.renameThreadConfirm')}
             </Button>
