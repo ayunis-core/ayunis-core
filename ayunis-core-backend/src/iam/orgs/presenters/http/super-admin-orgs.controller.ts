@@ -7,6 +7,7 @@ import {
   Logger,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -33,6 +34,8 @@ import { CreateOrgCommand } from '../../application/use-cases/create-org/create-
 import { CreateOrgRequestDto } from './dtos/create-org-request.dto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
+import { SuperAdminGetAllOrgsQueryParamsDto } from './dtos/super-admin-get-all-orgs-query-params.dto';
+import { SuperAdminGetAllOrgsQuery } from '../../application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.query';
 
 @ApiTags('Super Admin Orgs')
 @Controller('super-admin/orgs')
@@ -83,7 +86,7 @@ export class SuperAdminOrgsController {
   @ApiOperation({
     summary: 'List all organizations',
     description:
-      'Retrieve every organization in the system. Only accessible to users with the super admin system role.',
+      'Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.',
   })
   @ApiOkResponse({
     description: 'Successfully retrieved organizations for the super admin.',
@@ -93,23 +96,40 @@ export class SuperAdminOrgsController {
     description: 'The requester is not a super admin.',
   })
   @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search organizations by name.',
+    example: 'Acme',
+  })
+  @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
-    description: 'Maximum number of organizations to return.',
+    description: 'Maximum number of organizations to return (default: 50).',
     example: 25,
   })
   @ApiQuery({
     name: 'offset',
     required: false,
     type: Number,
-    description: 'Number of organizations to skip before collecting results.',
+    description: 'Number of organizations to skip (default: 0).',
     example: 0,
   })
-  async getAllOrgs(): Promise<SuperAdminOrgListResponseDto> {
-    const orgs = await this.superAdminGetAllOrgsUseCase.execute();
+  async getAllOrgs(
+    @Query() queryParams: SuperAdminGetAllOrgsQueryParamsDto,
+  ): Promise<SuperAdminOrgListResponseDto> {
+    const orgs = await this.superAdminGetAllOrgsUseCase.execute(
+      new SuperAdminGetAllOrgsQuery({
+        search: queryParams.search,
+        pagination: {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+        },
+      }),
+    );
 
-    return this.superAdminOrgResponseDtoMapper.toListDto(orgs);
+    return this.superAdminOrgResponseDtoMapper.toPaginatedDto(orgs);
   }
 
   @Get(':id')

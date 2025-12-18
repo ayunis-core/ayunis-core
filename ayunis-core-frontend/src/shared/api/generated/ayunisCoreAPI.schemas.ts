@@ -665,9 +665,20 @@ export interface SuperAdminOrgResponseDto {
   createdAt: string;
 }
 
+export interface PaginationDto {
+  /** Maximum number of items per page */
+  limit: number;
+  /** Number of items to skip */
+  offset: number;
+  /** Total number of items available */
+  total?: number;
+}
+
 export interface SuperAdminOrgListResponseDto {
-  /** Collection of organizations accessible to super admins */
-  orgs: SuperAdminOrgResponseDto[];
+  /** Array of organizations for the current page */
+  data: SuperAdminOrgResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
 }
 
 /**
@@ -1587,15 +1598,6 @@ export interface GetThreadsResponseDtoItem {
   updatedAt: string;
   /** Whether the thread is in anonymous mode (PII redaction enabled) */
   isAnonymous: boolean;
-}
-
-export interface PaginationDto {
-  /** Maximum number of items per page */
-  limit: number;
-  /** Number of items to skip */
-  offset: number;
-  /** Total number of items available */
-  total?: number;
 }
 
 export interface GetThreadsResponseDto {
@@ -2556,13 +2558,17 @@ export type SuperAdminModelsControllerGetAllCatalogModels200Item = LanguageModel
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**
- * Number of organizations to skip before collecting results.
+ * Search organizations by name.
  */
-offset?: number;
+search?: string;
 /**
- * Maximum number of organizations to return.
+ * Maximum number of organizations to return (default: 50).
  */
 limit?: number;
+/**
+ * Number of organizations to skip (default: 0).
+ */
+offset?: number;
 };
 
 export type UserControllerValidateResetTokenParams = {
