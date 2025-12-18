@@ -1,5 +1,4 @@
 import { UUID } from 'crypto';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
 
 export abstract class CreateLegalAcceptanceCommand {
@@ -33,17 +32,5 @@ export class CreatePrivacyPolicyAcceptanceCommand extends CreateLegalAcceptanceC
       ...params,
       type: LegalAcceptanceType.PRIVACY_POLICY,
     });
-  }
-}
-
-export class CreateModelProviderAcceptanceCommand extends CreateLegalAcceptanceCommand {
-  provider: ModelProvider;
-
-  constructor(params: { userId: UUID; orgId: UUID; provider: ModelProvider }) {
-    super({
-      ...params,
-      type: LegalAcceptanceType.MODEL_PROVIDER,
-    });
-    this.provider = params.provider;
   }
 }

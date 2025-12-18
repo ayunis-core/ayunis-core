@@ -10,9 +10,6 @@ import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
 import { File } from '../../../domain/file.entity';
 import { FileRetrieverType } from '../../../domain/value-objects/file-retriever-type.enum';
-import { GetAllPermittedProvidersUseCase } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
-import { GetAllPermittedProvidersQuery } from 'src/domain/models/application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   FileRetrieverUnexpectedError,
   InvalidFileTypeError,
@@ -29,7 +26,6 @@ export class RetrieveFileContentUseCase {
 
   constructor(
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
-    private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
     private readonly contextService: ContextService,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
@@ -52,30 +48,16 @@ export class RetrieveFileContentUseCase {
         handler = this.fileRetrieverRegistry.getHandler(
           FileRetrieverType.DOCLING,
         );
+      } else if (fileType === 'docx' || fileType === 'pptx') {
+        // DOCX/PPTX require Docling - throw error if not available
+        throw new InvalidFileTypeError(fileType);
       } else {
-        const permittedProviders =
-          await this.getAllPermittedProvidersUseCase.execute(
-            new GetAllPermittedProvidersQuery(orgId),
-          );
-
-        if (
-          permittedProviders.length > 0 &&
-          permittedProviders.some((p) => p.provider === ModelProvider.MISTRAL)
-        ) {
-          // Use Mistral if it is permitted
-          handler = this.fileRetrieverRegistry.getHandler(
-            FileRetrieverType.MISTRAL,
-          );
-        } else if (fileType === 'docx' || fileType === 'pptx') {
-          // DOCX/PPTX require Docling or Mistral - throw error if neither available
-          throw new InvalidFileTypeError(fileType);
-        } else {
-          // Use NpmPdfParse as fallback (PDF only)
-          handler = this.fileRetrieverRegistry.getHandler(
-            FileRetrieverType.NPM_PDF_PARSE,
-          );
-        }
+        // Use NpmPdfParse as fallback (PDF only)
+        handler = this.fileRetrieverRegistry.getHandler(
+          FileRetrieverType.NPM_PDF_PARSE,
+        );
       }
+
       const file = new File(
         command.fileData,
         command.fileName,

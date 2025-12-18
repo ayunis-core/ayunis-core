@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   CreateLegalAcceptanceCommand,
-  CreateModelProviderAcceptanceCommand,
   CreatePrivacyPolicyAcceptanceCommand,
   CreateTosAcceptanceCommand,
 } from './create-legal-acceptance.command';
@@ -9,7 +8,6 @@ import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptan
 import { ConfigService } from '@nestjs/config';
 import { LegalAcceptancesRepository } from '../../ports/legal-acceptances.repository';
 import { TosAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/tos-acceptance.entity';
-import { ModelProviderAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/model-provider-acceptance.entity';
 import { PrivacyPolicyAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/privacy-policy-acceptance.entity';
 
 @Injectable()
@@ -43,15 +41,6 @@ export class CreateLegalAcceptanceUseCase {
         userId,
         orgId,
         version: this.configService.get('legal.privacyPolicy.version')!,
-      });
-    } else if (command instanceof CreateModelProviderAcceptanceCommand) {
-      legalAcceptance = new ModelProviderAcceptance({
-        userId,
-        orgId,
-        version: this.configService.get(
-          `legal.providers.${command.provider}.version`,
-        )!,
-        provider: command.provider,
       });
     } else {
       throw new Error(`Unsupported legal acceptance type: ${type}`);

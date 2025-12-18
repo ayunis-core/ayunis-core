@@ -1,12 +1,10 @@
 import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance.entity';
 import { TosAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/tos-acceptance.entity';
 import { PrivacyPolicyAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/privacy-policy-acceptance.entity';
-import { ModelProviderAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance-variants/model-provider-acceptance.entity';
 import {
   LegalAcceptanceRecord,
   TermsOfServiceLegalAcceptanceRecord,
   PrivacyPolicyLegalAcceptanceRecord,
-  ModelProviderLegalAcceptanceRecord,
 } from '../schema/legal-acceptance.record';
 import { Injectable } from '@nestjs/common';
 
@@ -28,13 +26,6 @@ export class LegalAcceptancesMapper {
 
     if (record instanceof PrivacyPolicyLegalAcceptanceRecord) {
       return new PrivacyPolicyAcceptance(baseParams);
-    }
-
-    if (record instanceof ModelProviderLegalAcceptanceRecord) {
-      return new ModelProviderAcceptance({
-        ...baseParams,
-        provider: record.modelProvider,
-      });
     }
 
     throw new Error(`Unknown legal acceptance type: ${record.type}`);
@@ -59,18 +50,6 @@ export class LegalAcceptancesMapper {
       privacyRecord.version = legalAcceptance.version;
       privacyRecord.type = legalAcceptance.type;
       return privacyRecord;
-    }
-
-    if (legalAcceptance instanceof ModelProviderAcceptance) {
-      const modelProviderRecord = new ModelProviderLegalAcceptanceRecord();
-      const modelProviderAcceptance = legalAcceptance;
-      modelProviderRecord.id = legalAcceptance.id;
-      modelProviderRecord.userId = legalAcceptance.userId;
-      modelProviderRecord.orgId = legalAcceptance.orgId;
-      modelProviderRecord.version = legalAcceptance.version;
-      modelProviderRecord.type = legalAcceptance.type;
-      modelProviderRecord.modelProvider = modelProviderAcceptance.provider;
-      return modelProviderRecord;
     }
 
     throw new Error(`Unknown legal acceptance type: ${legalAcceptance.type}`);

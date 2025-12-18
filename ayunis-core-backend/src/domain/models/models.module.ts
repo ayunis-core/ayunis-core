@@ -47,19 +47,10 @@ import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-
 import { ModelProviderInfoRegistry } from './application/registry/model-provider-info.registry';
 import { GetModelProviderInfoUseCase } from './application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
 import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/model-provider-info-response-dto.mapper';
-import { CreatePermittedProviderUseCase } from './application/use-cases/create-permitted-provider/create-permitted-provider.use-case';
-import { DeletePermittedProviderUseCase } from './application/use-cases/delete-permitted-provider/delete-permitted-provider.use-case';
-import { GetAllPermittedProvidersUseCase } from './application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
-import { PermittedProviderResponseDtoMapper } from './presenters/http/mappers/permitted-provider-response-dto.mapper';
-import { LocalPermittedProvidersRepositoryModule } from './infrastructure/persistence/local-permitted-providers/local-permitted-providers-repository.module';
-import { GetAllModelProviderInfosWithPermittedStatusUseCase } from './application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
-import { ModelProviderWithPermittedStatusResponseDtoMapper } from './presenters/http/mappers/model-provider-with-permitted-status-response-dto.mapper';
 import { ThreadsModule } from '../threads/threads.module';
 import { AgentsModule } from '../agents/agents.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
-import { LegalAcceptancesModule } from 'src/iam/legal-acceptances/legal-acceptances.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
-import { IsProviderPermittedUseCase } from './application/use-cases/is-provider-permitted/is-provider-permitted.use-case';
 import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ollama.inference';
 import { LocalOllamaStreamInferenceHandler } from './infrastructure/stream-inference/local-ollama.stream-inference';
 import { SynaforceInferenceHandler } from './infrastructure/inference/synaforce.inference';
@@ -85,8 +76,6 @@ import { MessagesModule } from '../messages/messages.module';
     LocalPermittedModelsRepositoryModule,
     LocalUserDefaultModelsRepositoryModule,
     LocalModelsRepositoryModule,
-    LocalPermittedProvidersRepositoryModule,
-    LegalAcceptancesModule,
     OrgsModule,
     UsersModule,
     StorageModule,
@@ -103,8 +92,6 @@ import { MessagesModule } from '../messages/messages.module';
     ModelWithConfigResponseDtoMapper,
     CatalogModelResponseDtoMapper,
     ModelProviderInfoResponseDtoMapper,
-    PermittedProviderResponseDtoMapper,
-    ModelProviderWithPermittedStatusResponseDtoMapper,
     MessageRequestDtoMapper,
     MistralInferenceHandler,
     OpenAIInferenceHandler,
@@ -236,12 +223,6 @@ import { MessagesModule } from '../messages/messages.module';
     GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
-    // Permitted Provider Use Cases
-    CreatePermittedProviderUseCase,
-    DeletePermittedProviderUseCase,
-    GetAllPermittedProvidersUseCase,
-    GetAllModelProviderInfosWithPermittedStatusUseCase,
-    IsProviderPermittedUseCase,
   ],
   exports: [
     InferenceHandlerRegistry,
@@ -253,7 +234,6 @@ import { MessagesModule } from '../messages/messages.module';
     GetPermittedLanguageModelUseCase,
     GetPermittedEmbeddingModelUseCase,
     GetPermittedModelsUseCase,
-    GetAllPermittedProvidersUseCase,
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     // Use Cases
@@ -281,7 +261,6 @@ import { MessagesModule } from '../messages/messages.module';
     // TODO: These modules should be part of this module and not separate
     LocalModelsRepositoryModule, // Export repository for seeding
     LocalPermittedModelsRepositoryModule, // Export repository for seeding
-    LocalPermittedProvidersRepositoryModule, // Export repository for seeding
   ],
 })
 export class ModelsModule {}

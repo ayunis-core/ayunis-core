@@ -1,7 +1,3 @@
-import {
-  type CreatePermittedModelDto,
-  type ModelProviderWithPermittedStatusResponseDto,
-} from '@/shared/api';
+import { type CreatePermittedModelDto } from '@/shared/api';
 
 export type Model = CreatePermittedModelDto;
-export type Provider = ModelProviderWithPermittedStatusResponseDto;
