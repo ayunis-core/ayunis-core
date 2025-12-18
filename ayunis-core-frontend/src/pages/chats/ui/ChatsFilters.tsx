@@ -47,7 +47,11 @@ export default function ChatsFilters({
       if (searchValue !== (search ?? '')) {
         void navigate({
           to: '/chats',
-          search: (prev: { search?: string; agentId?: string; page?: number }) => ({
+          search: (prev: {
+            search?: string;
+            agentId?: string;
+            page?: number;
+          }) => ({
             ...prev,
             search: searchValue || undefined,
             page: undefined, // Reset to page 1 when search changes
