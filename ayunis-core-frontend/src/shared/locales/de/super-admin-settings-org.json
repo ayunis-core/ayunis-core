@@ -1,4 +1,7 @@
 {
+  "search": {
+    "placeholder": "Benutzer nach Name oder E-Mail suchen..."
+  },
   "header": {
     "title": "Benutzer",
     "description": "Benutzer dieser Organisation anzeigen und verwalten."

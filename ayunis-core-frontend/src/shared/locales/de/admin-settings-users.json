@@ -1,4 +1,7 @@
 {
+  "search": {
+    "placeholder": "Benutzer nach Name oder E-Mail suchen..."
+  },
   "users": {
     "invites": "Einladungen",
     "users": "Benutzer",

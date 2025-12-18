@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
 export class SuperAdminOrgResponseDto {
   @ApiProperty({
@@ -25,8 +26,14 @@ export class SuperAdminOrgResponseDto {
 
 export class SuperAdminOrgListResponseDto {
   @ApiProperty({
-    description: 'Collection of organizations accessible to super admins',
+    description: 'Array of organizations for the current page',
     type: [SuperAdminOrgResponseDto],
   })
-  orgs: SuperAdminOrgResponseDto[];
+  data: SuperAdminOrgResponseDto[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    type: PaginationDto,
+  })
+  pagination: PaginationDto;
 }

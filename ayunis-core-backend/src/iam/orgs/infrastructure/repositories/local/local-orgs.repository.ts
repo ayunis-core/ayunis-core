@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OrgsRepository } from '../../../application/ports/orgs.repository';
+import {
+  OrgsRepository,
+  OrgsPagination,
+  OrgsFilters,
+} from '../../../application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { OrgRecord } from './schema/org.record';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
@@ -13,6 +17,7 @@ import {
   OrgDeletionFailedError,
   OrgRetrievalFailedError,
 } from '../../../application/orgs.errors';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
@@ -74,18 +79,44 @@ export class LocalOrgsRepository extends OrgsRepository {
     return orgs.map((org) => org.id);
   }
 
-  async findAllForSuperAdmin(): Promise<Org[]> {
-    this.logger.log('findAllForSuperAdmin', {});
+  async findAllForSuperAdmin(
+    pagination: OrgsPagination,
+    filters?: OrgsFilters,
+  ): Promise<Paginated<Org>> {
+    this.logger.log('findAllForSuperAdmin', {
+      limit: pagination.limit,
+      offset: pagination.offset,
+      search: filters?.search,
+    });
 
     try {
-      const findOptions: FindManyOptions<OrgRecord> = {
-        order: { createdAt: 'DESC' },
-        relations: { users: true },
-      };
+      const queryBuilder = this.orgRepository
+        .createQueryBuilder('org')
+        .leftJoinAndSelect('org.users', 'users')
+        .orderBy('org.createdAt', 'DESC');
 
-      const orgRecords = await this.orgRepository.find(findOptions);
+      // Apply search filter (case-insensitive)
+      if (filters?.search) {
+        queryBuilder.andWhere('org.name ILIKE :search', {
+          search: `%${filters.search}%`,
+        });
+      }
 
-      return orgRecords.map((record) => OrgMapper.toDomain(record));
+      // Get total count before pagination
+      const total = await queryBuilder.getCount();
+
+      // Apply pagination
+      queryBuilder.skip(pagination.offset).take(pagination.limit);
+
+      const orgRecords = await queryBuilder.getMany();
+      const orgs = orgRecords.map((record) => OrgMapper.toDomain(record));
+
+      return new Paginated<Org>({
+        data: orgs,
+        limit: pagination.limit,
+        offset: pagination.offset,
+        total,
+      });
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error('Failed to retrieve organizations for super admin', {

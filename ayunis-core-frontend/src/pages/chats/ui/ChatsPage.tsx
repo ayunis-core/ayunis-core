@@ -4,6 +4,7 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import ChatsFilters from './ChatsFilters';
 import ChatCard from './ChatCard';
 import ChatsEmptyState from './ChatsEmptyState';
+import ChatsPagination from './ChatsPagination';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
 import type { ChatListItem, Agent } from '../model/types';
@@ -14,6 +15,8 @@ interface ChatsPageProps {
   search?: string;
   agentId?: string;
   hasFilters: boolean;
+  pagination?: { total?: number; limit: number; offset: number };
+  currentPage: number;
 }
 
 export default function ChatsPage({
@@ -22,15 +25,16 @@ export default function ChatsPage({
   search,
   agentId,
   hasFilters,
+  pagination,
+  currentPage,
 }: ChatsPageProps) {
   const { t } = useTranslation('chats');
 
-  // Sort chats by creation date (newest first)
-  const sortedChats = [...chats].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const total = pagination?.total ?? 0;
+  const limit = pagination?.limit ?? 20;
+  const totalPages = Math.ceil(total / limit);
 
-  if (chats.length === 0 && !hasFilters) {
+  if (chats.length === 0 && !hasFilters && currentPage === 1) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
@@ -53,11 +57,17 @@ export default function ChatsPage({
               <ChatsEmptyState hasFilters={hasFilters} />
             ) : (
               <div className="space-y-3">
-                {sortedChats.map((chat) => (
+                {chats.map((chat) => (
                   <ChatCard key={chat.id} chat={chat} />
                 ))}
               </div>
             )}
+            <ChatsPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              search={search}
+              agentId={agentId}
+            />
           </>
         }
       />

@@ -1362,26 +1362,38 @@
         "tags": ["Super Admin Orgs"]
       },
       "get": {
-        "description": "Retrieve every organization in the system. Only accessible to users with the super admin system role.",
+        "description": "Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.",
         "operationId": "SuperAdminOrgsController_getAllOrgs",
         "parameters": [
           {
-            "name": "offset",
+            "name": "search",
             "required": false,
             "in": "query",
-            "description": "Number of organizations to skip before collecting results.",
+            "description": "Search organizations by name.",
             "schema": {
-              "example": 0,
-              "type": "number"
+              "example": "Acme",
+              "type": "string"
             }
           },
           {
             "name": "limit",
             "required": false,
             "in": "query",
-            "description": "Maximum number of organizations to return.",
+            "description": "Maximum number of organizations to return (default: 50).",
             "schema": {
+              "default": 50,
               "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of organizations to skip (default: 0).",
+            "schema": {
+              "default": 0,
+              "example": 0,
               "type": "number"
             }
           }
@@ -1441,16 +1453,49 @@
     },
     "/users": {
       "get": {
-        "description": "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+        "description": "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
         "operationId": "UserController_getUsersInOrganization",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successfully retrieved users in the organization",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UsersListResponseDto"
+                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
                 }
               }
             }
@@ -1842,7 +1887,7 @@
     },
     "/super-admin/users/{orgId}": {
       "get": {
-        "description": "Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.",
+        "description": "Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.",
         "operationId": "SuperAdminUsersController_getUsersByOrgId",
         "parameters": [
           {
@@ -1855,6 +1900,38 @@
               "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1863,7 +1940,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UsersListResponseDto"
+                  "$ref": "#/components/schemas/PaginatedUsersListResponseDto"
                 }
               }
             }
@@ -2838,18 +2915,34 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of threads to return (default: 50)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of threads to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Returns all threads for the current user",
+            "description": "Returns paginated threads for the current user",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GetThreadsResponseDtoItem"
-                  }
+                  "$ref": "#/components/schemas/GetThreadsResponseDto"
                 }
               }
             }
@@ -4324,12 +4417,12 @@
     },
     "/usage/config": {
       "get": {
-        "description": "Returns configuration settings for the usage dashboard, including deployment mode and cost display settings. This endpoint helps the frontend determine which features to show based on the deployment type.",
+        "description": "Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.",
         "operationId": "UsageController_getUsageConfig",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Usage configuration retrieved successfully. Returns deployment mode information and cost display settings.",
+            "description": "Usage configuration retrieved successfully. Returns deployment mode information.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4345,7 +4438,7 @@
     },
     "/usage/stats": {
       "get": {
-        "description": "Returns aggregated usage statistics including total tokens, requests, active users, and cost information (self-hosted only). Dates are optional - if not provided, shows all usage.",
+        "description": "Returns aggregated usage statistics including total tokens, requests, and active users. Dates are optional - if not provided, shows all usage.",
         "operationId": "UsageController_getUsageStats",
         "parameters": [
           {
@@ -4371,7 +4464,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Usage statistics retrieved successfully. Cost fields are only included in self-hosted deployments.",
+            "description": "Usage statistics retrieved successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4638,13 +4731,7 @@
             "in": "query",
             "description": "Field to sort users by. Defaults to tokens.",
             "schema": {
-              "enum": [
-                "tokens",
-                "requests",
-                "cost",
-                "lastActivity",
-                "userName"
-              ],
+              "enum": ["tokens", "requests", "lastActivity", "userName"],
               "type": "string"
             }
           },
@@ -6093,18 +6180,47 @@
         },
         "required": ["id", "name", "createdAt"]
       },
+      "PaginationDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of items per page",
+            "example": 50
+          },
+          "offset": {
+            "type": "number",
+            "description": "Number of items to skip",
+            "example": 0
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of items available",
+            "example": 150
+          }
+        },
+        "required": ["limit", "offset"]
+      },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
         "properties": {
-          "orgs": {
-            "description": "Collection of organizations accessible to super admins",
+          "data": {
+            "description": "Array of organizations for the current page",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
             }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
-        "required": ["orgs"]
+        "required": ["data", "pagination"]
       },
       "UserResponseDto": {
         "type": "object",
@@ -6146,18 +6262,26 @@
         },
         "required": ["id", "name", "email", "role", "orgId", "createdAt"]
       },
-      "UsersListResponseDto": {
+      "PaginatedUsersListResponseDto": {
         "type": "object",
         "properties": {
-          "users": {
-            "description": "List of users in the organization",
+          "data": {
+            "description": "Array of users for the current page",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UserResponseDto"
             }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
           }
         },
-        "required": ["users"]
+        "required": ["data", "pagination"]
       },
       "UpdateUserRoleDto": {
         "type": "object",
@@ -7478,6 +7602,27 @@
         },
         "required": ["id", "createdAt", "updatedAt", "isAnonymous"]
       },
+      "GetThreadsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of threads for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GetThreadsResponseDtoItem"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "pagination"]
+      },
       "ToolAssignmentDto": {
         "type": "object",
         "properties": {
@@ -8442,29 +8587,9 @@
             "type": "boolean",
             "description": "Whether the deployment is self-hosted. Determines feature availability.",
             "example": true
-          },
-          "showCostInformation": {
-            "type": "boolean",
-            "description": "Whether cost information should be displayed in the UI. True for self-hosted, false for cloud deployments.",
-            "example": true
-          },
-          "defaultCurrency": {
-            "type": "string",
-            "description": "Default currency code used for cost calculations and display",
-            "example": "USD"
-          },
-          "costDecimalPlaces": {
-            "type": "number",
-            "description": "Number of decimal places to use when formatting cost values",
-            "example": 6
           }
         },
-        "required": [
-          "isSelfHosted",
-          "showCostInformation",
-          "defaultCurrency",
-          "costDecimalPlaces"
-        ]
+        "required": ["isSelfHosted"]
       },
       "UsageStatsResponseDto": {
         "type": "object",
@@ -8478,16 +8603,6 @@
             "type": "number",
             "description": "Total number of API requests made in the specified period",
             "example": 3450
-          },
-          "totalCost": {
-            "type": "number",
-            "description": "Total cost incurred in the period. Only available in self-hosted deployments.",
-            "example": 25.75
-          },
-          "currency": {
-            "type": "string",
-            "description": "Currency code for cost information. Only available in self-hosted deployments.",
-            "example": "USD"
           },
           "activeUsers": {
             "type": "number",
@@ -8531,10 +8646,6 @@
           "requests": {
             "type": "number",
             "description": "Number of requests at this point"
-          },
-          "cost": {
-            "type": "number",
-            "description": "Cost at this point (self-hosted mode only)"
           }
         },
         "required": ["date", "tokens", "requests"]
@@ -8562,10 +8673,6 @@
           "requests": {
             "type": "number",
             "description": "Total requests for this provider"
-          },
-          "cost": {
-            "type": "number",
-            "description": "Total cost for this provider (self-hosted mode only)"
           },
           "percentage": {
             "type": "number",
@@ -8697,10 +8804,6 @@
             "type": "number",
             "description": "Total requests for this model"
           },
-          "cost": {
-            "type": "number",
-            "description": "Total cost for this model (self-hosted mode only)"
-          },
           "percentage": {
             "type": "number",
             "description": "Percentage of total usage"
@@ -8772,27 +8875,6 @@
           "lastActivity",
           "isActive"
         ]
-      },
-      "PaginationDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of items per page",
-            "example": 50
-          },
-          "offset": {
-            "type": "number",
-            "description": "Number of items to skip",
-            "example": 0
-          },
-          "total": {
-            "type": "number",
-            "description": "Total number of items available",
-            "example": 150
-          }
-        },
-        "required": ["limit", "offset"]
       },
       "UserUsageResponseDto": {
         "type": "object",

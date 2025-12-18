@@ -2,6 +2,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   ThreadsFindAllFilters,
   ThreadsFindAllOptions,
+  ThreadsPagination,
   ThreadsRepository,
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
@@ -14,6 +15,8 @@ import { ThreadNotFoundError } from 'src/domain/threads/application/threads.erro
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
+import { Paginated } from 'src/common/pagination/paginated.entity';
+import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -84,8 +87,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID,
     options?: ThreadsFindAllOptions,
     filters?: ThreadsFindAllFilters,
-  ): Promise<Thread[]> {
-    this.logger.log('findAll', { userId, filters });
+    pagination?: ThreadsPagination,
+  ): Promise<Paginated<Thread>> {
+    this.logger.log('findAll', { userId, filters, pagination });
 
     const queryBuilder = this.threadRepository
       .createQueryBuilder('thread')
@@ -106,7 +110,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
     // Add relations based on options
     if (options?.withMessages) {
       queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
-      queryBuilder.orderBy('messages.createdAt', 'ASC');
     }
     if (options?.withSources) {
       queryBuilder.leftJoinAndSelect(
@@ -119,8 +122,33 @@ export class LocalThreadsRepository extends ThreadsRepository {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
 
+    // Get total count before pagination
+    const total = await queryBuilder.getCount();
+
+    // Order by most recent first
+    queryBuilder.orderBy('thread.updatedAt', 'DESC');
+
+    // Apply messages ordering if needed
+    if (options?.withMessages) {
+      queryBuilder.addOrderBy('messages.createdAt', 'ASC');
+    }
+
+    // Apply pagination
+    const limit = pagination?.limit ?? ThreadsConstants.DEFAULT_LIMIT;
+    const offset = pagination?.offset ?? 0;
+    queryBuilder.skip(offset).take(limit);
+
     const threadEntities = await queryBuilder.getMany();
-    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+    const threads = threadEntities.map((entity) =>
+      this.threadMapper.toDomain(entity),
+    );
+
+    return new Paginated<Thread>({
+      data: threads,
+      limit,
+      offset,
+      total,
+    });
   }
 
   async findAllByModel(

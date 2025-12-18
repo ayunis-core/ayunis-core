@@ -8,6 +8,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +20,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiBadRequestResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -29,10 +31,11 @@ import { CreateUserUseCase } from '../../application/use-cases/create-user/creat
 import { CreateUserCommand } from '../../application/use-cases/create-user/create-user.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
 import {
-  UsersListResponseDto,
   UserResponseDto,
+  PaginatedUsersListResponseDto,
 } from './dtos/user-response.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
 import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
 import { FindUserByIdQuery } from '../../application/use-cases/find-user-by-id/find-user-by-id.query';
 import { DeleteUserCommand } from '../../application/use-cases/delete-user/delete-user.command';
@@ -61,7 +64,7 @@ export class SuperAdminUsersController {
   @ApiOperation({
     summary: 'Get users by organization ID',
     description:
-      'Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.',
+      'Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.',
   })
   @ApiParam({
     name: 'orgId',
@@ -69,10 +72,28 @@ export class SuperAdminUsersController {
     format: 'uuid',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search users by name or email',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of users to return (default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of users to skip (default: 0)',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully retrieved users in the organization',
-    type: UsersListResponseDto,
+    type: PaginatedUsersListResponseDto,
   })
   @ApiNotFoundResponse({
     description: 'Organization not found',
@@ -85,13 +106,21 @@ export class SuperAdminUsersController {
   })
   async getUsersByOrgId(
     @Param('orgId') orgId: UUID,
-  ): Promise<UsersListResponseDto> {
-    this.logger.log('getUsersByOrgId', { orgId });
+    @Query() queryParams: GetUsersQueryParamsDto,
+  ): Promise<PaginatedUsersListResponseDto> {
+    this.logger.log('getUsersByOrgId', { orgId, ...queryParams });
 
     const users = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery(orgId),
+      new FindUsersByOrgIdQuery({
+        orgId,
+        search: queryParams.search,
+        pagination: {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+        },
+      }),
     );
-    return this.userResponseDtoMapper.toListDto(users);
+    return this.userResponseDtoMapper.toPaginatedDto(users);
   }
 
   @Delete(':userId')

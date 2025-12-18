@@ -22,6 +22,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiBadRequestResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../../authentication/application/decorators/current-user.decorator';
 import { UserProperty } from '../../../authentication/application/decorators/current-user.decorator';
@@ -42,9 +43,10 @@ import { ResendEmailConfirmationUseCase } from '../../application/use-cases/rese
 import { ResendEmailConfirmationCommand } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.command';
 import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
 import {
-  UsersListResponseDto,
   UserResponseDto,
+  PaginatedUsersListResponseDto,
 } from './dtos/user-response.dto';
+import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
 import { UpdateUserRoleDto } from './dtos/update-user-role.dto';
 import { UpdateUserNameDto } from './dtos/update-user-name.dto';
 import { UpdatePasswordDto } from './dtos/update-password.dto';
@@ -91,12 +93,30 @@ export class UserController {
   @ApiOperation({
     summary: 'Get users in current organization',
     description:
-      "Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+      "Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.",
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search users by name or email',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of users to return (default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of users to skip (default: 0)',
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully retrieved users in the organization',
-    type: UsersListResponseDto,
+    type: PaginatedUsersListResponseDto,
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated',
@@ -106,14 +126,22 @@ export class UserController {
   })
   async getUsersInOrganization(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<UsersListResponseDto> {
-    this.logger.log('getUsersInOrganization', { orgId });
+    @Query() queryParams: GetUsersQueryParamsDto,
+  ): Promise<PaginatedUsersListResponseDto> {
+    this.logger.log('getUsersInOrganization', { orgId, ...queryParams });
 
     const users = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery(orgId),
+      new FindUsersByOrgIdQuery({
+        orgId,
+        search: queryParams.search,
+        pagination: {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+        },
+      }),
     );
 
-    return this.userResponseDtoMapper.toListDto(users);
+    return this.userResponseDtoMapper.toPaginatedDto(users);
   }
 
   @Roles(UserRole.ADMIN)
