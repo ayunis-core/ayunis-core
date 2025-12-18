@@ -94,7 +94,10 @@ export class CreateSubscriptionUseCase {
           }),
         ),
       ]);
-      if (invites.length + usersResult.data.length > command.noOfSeats) {
+      if (
+        invites.length + (usersResult.total ?? usersResult.data.length) >
+        command.noOfSeats
+      ) {
         this.logger.warn('Too many used seats', {
           orgId: command.orgId,
           openInvites: invites.length,

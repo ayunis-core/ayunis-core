@@ -92,7 +92,10 @@ export class UpdateSeatsUseCase {
           onlyOpen: true,
         }),
       );
-      if (command.noOfSeats < usersResult.data.length + openInvites.length) {
+      if (
+        command.noOfSeats <
+        (usersResult.total ?? usersResult.data.length) + openInvites.length
+      ) {
         this.logger.warn('Too many used seats', {
           orgId: command.orgId,
           openInvites: openInvites,
