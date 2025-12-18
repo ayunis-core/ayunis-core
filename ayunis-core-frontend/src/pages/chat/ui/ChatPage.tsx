@@ -5,7 +5,7 @@ import ChatInput from '@/widgets/chat-input';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { MoreVertical, ShieldCheck, Trash2 } from 'lucide-react';
+import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
 import { useConfirmation } from '@/widgets/confirmation-modal';
+import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -95,6 +96,7 @@ export default function ChatPage({
   const [isStreaming, setIsStreaming] = useState(false);
   const [isProcessingPendingSources, setIsProcessingPendingSources] =
     useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 
   // Memoize sorted messages to avoid sorting on every render
   const sortedMessages = useMemo(() => {
@@ -279,6 +281,10 @@ export default function ChatPage({
     });
   }
 
+  function handleRenameThread() {
+    setRenameDialogOpen(true);
+  }
+
   async function handleDownloadSource(sourceId: string) {
     try {
       // Call the download endpoint
@@ -405,6 +411,10 @@ export default function ChatPage({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleRenameThread}>
+              <Pencil className="h-4 w-4" />
+              <span>{t('chat.renameThread')}</span>
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleDeleteThread}
               variant="destructive"
@@ -473,6 +483,12 @@ export default function ChatPage({
         chatHeader={chatHeader}
         chatContent={chatContent}
         chatInput={chatInput}
+      />
+      <RenameThreadDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        threadId={thread.id}
+        currentTitle={threadTitle ?? null}
       />
     </AppLayout>
   );

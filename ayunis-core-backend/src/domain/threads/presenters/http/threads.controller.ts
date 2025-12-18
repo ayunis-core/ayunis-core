@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Body,
   Delete,
+  Patch,
   UseInterceptors,
   UploadedFile,
   HttpCode,
@@ -56,6 +57,8 @@ import { CreateThreadCommand } from '../../application/use-cases/create-thread/c
 import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
 import { FindAllThreadsQuery } from '../../application/use-cases/find-all-threads/find-all-threads.query';
 import { DeleteThreadCommand } from '../../application/use-cases/delete-thread/delete-thread.command';
+import { UpdateThreadTitleUseCase } from '../../application/use-cases/update-thread-title/update-thread-title.use-case';
+import { UpdateThreadTitleCommand } from '../../application/use-cases/update-thread-title/update-thread-title.command';
 import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
 import { RemoveSourceCommand } from '../../application/use-cases/remove-source-from-thread/remove-source.command';
 import { FindThreadSourcesQuery } from '../../application/use-cases/get-thread-sources/get-thread-sources.query';
@@ -69,6 +72,7 @@ import {
 } from './dto/get-thread-response.dto/source-response.dto';
 import { SourceDtoMapper } from './mappers/source.mapper';
 import { CreateThreadDto } from './dto/create-thread.dto';
+import { UpdateThreadTitleDto } from './dto/update-thread-title.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
@@ -98,6 +102,7 @@ export class ThreadsController {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
+    private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
@@ -218,6 +223,36 @@ export class ThreadsController {
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
     this.logger.log('delete', { id });
     await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id));
+  }
+
+  @Patch(':id/title')
+  @ApiOperation({ summary: 'Update a thread title' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the thread to update',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiBody({ type: UpdateThreadTitleDto })
+  @ApiResponse({
+    status: 204,
+    description: 'The thread title has been successfully updated',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid title data' })
+  @ApiResponse({ status: 404, description: 'Thread not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateTitle(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() updateThreadTitleDto: UpdateThreadTitleDto,
+  ): Promise<void> {
+    this.logger.log('updateTitle', { id, title: updateThreadTitleDto.title });
+    await this.updateThreadTitleUseCase.execute(
+      new UpdateThreadTitleCommand({
+        threadId: id,
+        title: updateThreadTitleDto.title,
+      }),
+    );
   }
 
   // Source Management Endpoints
