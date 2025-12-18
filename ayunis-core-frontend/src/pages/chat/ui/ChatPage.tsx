@@ -388,8 +388,20 @@ export default function ChatPage({
   const chatHeader = (
     <ContentAreaHeader
       title={
-        <span className="inline-flex items-center gap-2" data-testid="header">
+        <span className="group inline-flex items-center gap-2" data-testid="header">
           {threadTitle || t('chat.untitled')}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleRenameThread}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded"
+                aria-label={t('chat.renameThread')}
+              >
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{t('chat.renameThread')}</TooltipContent>
+          </Tooltip>
           {thread.isAnonymous && (
             <Tooltip>
               <TooltipTrigger asChild>
