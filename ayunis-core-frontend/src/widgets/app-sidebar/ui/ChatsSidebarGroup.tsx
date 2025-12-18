@@ -6,7 +6,9 @@ import {
   Trash,
   ChevronDown,
   Search,
+  Pencil,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 
 import {
@@ -34,6 +36,7 @@ import {
 } from '@/shared/ui/shadcn/collapsible';
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
+import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
@@ -49,6 +52,19 @@ export function ChatsSidebarGroup() {
   });
   const params = useParams({ strict: false });
   const navigate = useNavigate();
+
+  // Rename dialog state
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [threadToRename, setThreadToRename] = useState<{
+    id: string;
+    title: string | null;
+  } | null>(null);
+
+  const handleRenameClick = (threadId: string, currentTitle: string | null) => {
+    setThreadToRename({ id: threadId, title: currentTitle });
+    // Delay to allow dropdown menu to fully close first
+    setTimeout(() => setRenameDialogOpen(true), 0);
+  };
 
   const handleDeleteClick = (threadId: string) => {
     confirm({
@@ -183,71 +199,96 @@ export function ChatsSidebarGroup() {
   }
 
   return (
-    <Collapsible defaultOpen className="group/collapsible">
-      <SidebarGroup>
-        <SidebarGroupLabel asChild>
-          <CollapsibleTrigger className="flex items-center justify-between w-full">
-            {t('sidebar.chats')}
-            <Link
-              to="/chats"
-              className="text-muted-foreground"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Search className="size-4" />
-            </Link>
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
-        <CollapsibleContent>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {threads
-                .sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
-                .map((thread) => (
-                  <SidebarMenuItem key={thread.id} data-testid="chat">
-                    <SidebarMenuButton asChild>
-                      <Link
-                        to={'/chats/$threadId'}
-                        params={{ threadId: thread.id }}
-                      >
-                        <MessageCircle />
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate">
-                            {thread.title || t('sidebar.untitled')}
-                          </span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        data-testid="dropdown-menu-trigger"
-                        asChild
-                      >
-                        <SidebarMenuAction showOnHover>
-                          <MoreHorizontal />
-                          <span className="sr-only">{t('sidebar.more')}</span>
-                        </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        className="w-48 rounded-lg"
-                        side="bottom"
-                        align="end"
-                        data-testid="chat-dropdown"
-                      >
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(thread.id)}
-                          data-testid="delete"
+    <>
+      <Collapsible defaultOpen className="group/collapsible">
+        <SidebarGroup>
+          <SidebarGroupLabel asChild>
+            <CollapsibleTrigger className="flex items-center justify-between w-full">
+              {t('sidebar.chats')}
+              <Link
+                to="/chats"
+                className="text-muted-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Search className="size-4" />
+              </Link>
+            </CollapsibleTrigger>
+          </SidebarGroupLabel>
+          <CollapsibleContent>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {threads
+                  .sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
+                  .map((thread) => (
+                    <SidebarMenuItem key={thread.id} data-testid="chat">
+                      <SidebarMenuButton asChild>
+                        <Link
+                          to={'/chats/$threadId'}
+                          params={{ threadId: thread.id }}
                         >
-                          <Trash className="text-destructive" />
-                          <span>{t('sidebar.deleteChat')}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </CollapsibleContent>
-      </SidebarGroup>
-    </Collapsible>
+                          <MessageCircle />
+                          <div className="grid flex-1 text-left text-sm leading-tight">
+                            <span className="truncate">
+                              {thread.title || t('sidebar.untitled')}
+                            </span>
+                          </div>
+                        </Link>
+                      </SidebarMenuButton>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          data-testid="dropdown-menu-trigger"
+                          asChild
+                        >
+                          <SidebarMenuAction showOnHover>
+                            <MoreHorizontal />
+                            <span className="sr-only">{t('sidebar.more')}</span>
+                          </SidebarMenuAction>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          className="w-48 rounded-lg"
+                          side="bottom"
+                          align="end"
+                          data-testid="chat-dropdown"
+                        >
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleRenameClick(thread.id, thread.title ?? null)
+                            }
+                            data-testid="rename"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span>{t('sidebar.renameChat')}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(thread.id)}
+                            data-testid="delete"
+                          >
+                            <Trash className="text-destructive" />
+                            <span>{t('sidebar.deleteChat')}</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </SidebarMenuItem>
+                  ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </SidebarGroup>
+      </Collapsible>
+
+      {threadToRename && (
+        <RenameThreadDialog
+          open={renameDialogOpen}
+          onOpenChange={(open) => {
+            setRenameDialogOpen(open);
+            if (!open) {
+              setThreadToRename(null);
+            }
+          }}
+          threadId={threadToRename.id}
+          currentTitle={threadToRename.title}
+        />
+      )}
+    </>
   );
 }

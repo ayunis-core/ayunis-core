@@ -21,7 +21,18 @@
     "deleteChatTitle": "Chat löschen",
     "deleteChatDescription": "Sind Sie sicher, dass Sie diesen Chat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteChatConfirm": "Löschen",
-    "deleteChatCancel": "Abbrechen"
+    "deleteChatCancel": "Abbrechen",
+    "renameChat": "Chat umbenennen",
+    "renameThreadTitle": "Chat umbenennen",
+    "renameThreadDescription": "Geben Sie einen neuen Titel für diesen Chat ein.",
+    "renameThreadLabel": "Titel",
+    "renameThreadPlaceholder": "Chat-Titel eingeben",
+    "renameThreadConfirm": "Umbenennen",
+    "renameThreadCancel": "Abbrechen",
+    "renameThreadSuccess": "Chat erfolgreich umbenannt",
+    "renameThreadError": "Chat konnte nicht umbenannt werden",
+    "renameThreadEmptyError": "Titel darf nicht leer sein",
+    "renameThreadMaxLengthError": "Titel darf maximal {{max}} Zeichen lang sein"
   },
   "chatInput": {
     "placeholder": "Stellen Sie eine Frage in Ayunis Core...",

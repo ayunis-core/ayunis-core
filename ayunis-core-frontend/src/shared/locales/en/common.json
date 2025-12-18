@@ -21,7 +21,18 @@
     "deleteChatTitle": "Delete Chat",
     "deleteChatDescription": "Are you sure you want to delete this chat? This action cannot be undone.",
     "deleteChatConfirm": "Delete",
-    "deleteChatCancel": "Cancel"
+    "deleteChatCancel": "Cancel",
+    "renameChat": "Rename Chat",
+    "renameThreadTitle": "Rename Chat",
+    "renameThreadDescription": "Enter a new title for this chat.",
+    "renameThreadLabel": "Title",
+    "renameThreadPlaceholder": "Enter chat title",
+    "renameThreadConfirm": "Rename",
+    "renameThreadCancel": "Cancel",
+    "renameThreadSuccess": "Chat renamed successfully",
+    "renameThreadError": "Failed to rename chat",
+    "renameThreadEmptyError": "Title cannot be empty",
+    "renameThreadMaxLengthError": "Title cannot exceed {{max}} characters"
   },
   "chatInput": {
     "placeholder": "Ask a question in Ayunis Core...",
