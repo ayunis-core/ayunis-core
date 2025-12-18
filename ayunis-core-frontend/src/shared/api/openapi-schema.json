@@ -5703,6 +5703,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5813,6 +5814,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5917,6 +5919,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5959,6 +5962,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5980,6 +5984,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6022,6 +6027,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6043,6 +6049,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6111,6 +6118,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6164,6 +6172,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6228,6 +6237,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6292,6 +6302,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6343,6 +6354,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6399,6 +6411,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6490,6 +6503,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -9458,6 +9472,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -9595,6 +9610,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",

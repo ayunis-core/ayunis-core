@@ -39,8 +39,10 @@ interface EditLanguageModelDialogProps {
 }
 
 const PROVIDERS = [
+  { value: 'otc', label: 'OTC' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
+  { value: 'bedrock', label: 'AWS Bedrock' },
   { value: 'mistral', label: 'Mistral' },
   { value: 'ollama', label: 'Ollama' },
   { value: 'synaforce', label: 'Synaforce' },

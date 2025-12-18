@@ -48,11 +48,13 @@ export default function ModelsSection({ orgId }: ModelsSectionProps) {
   );
 
   const providerPriority: Array<ModelWithConfigResponseDtoProvider> = [
+    ModelWithConfigResponseDtoProvider.otc,
     ModelWithConfigResponseDtoProvider.ayunis,
     ModelWithConfigResponseDtoProvider.synaforce,
     ModelWithConfigResponseDtoProvider.mistral,
     ModelWithConfigResponseDtoProvider.ollama,
     ModelWithConfigResponseDtoProvider.anthropic,
+    ModelWithConfigResponseDtoProvider.bedrock,
     ModelWithConfigResponseDtoProvider.openai,
   ];
 

@@ -29,6 +29,7 @@ export class ModelRegistry {
       [ModelProvider.MISTRAL]: 'models.mistral.apiKey',
       [ModelProvider.OPENAI]: 'models.openai.apiKey',
       [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
+      [ModelProvider.BEDROCK]: 'models.bedrock.awsRegion',
       [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
       [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
       [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',

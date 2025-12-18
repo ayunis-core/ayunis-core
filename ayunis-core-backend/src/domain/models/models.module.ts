@@ -74,6 +74,8 @@ import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-infe
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
 import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
 import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
+import { BedrockInferenceHandler } from './infrastructure/inference/bedrock.inference';
+import { BedrockStreamInferenceHandler } from './infrastructure/stream-inference/bedrock.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
@@ -119,6 +121,8 @@ import { MessagesModule } from '../messages/messages.module';
     AyunisOllamaInferenceHandler,
     OtcStreamInferenceHandler,
     OtcInferenceHandler,
+    BedrockInferenceHandler,
+    BedrockStreamInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
     {
@@ -131,12 +135,14 @@ import { MessagesModule } from '../messages/messages.module';
         synaforceHandler: SynaforceStreamInferenceHandler,
         ayunisHandler: AyunisOllamaStreamInferenceHandler,
         otcHandler: OtcStreamInferenceHandler,
+        bedrockHandler: BedrockStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
         configService: ConfigService,
       ) => {
         const registry = new StreamInferenceHandlerRegistry(configService);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
+        registry.register(ModelProvider.BEDROCK, bedrockHandler);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
@@ -153,6 +159,7 @@ import { MessagesModule } from '../messages/messages.module';
         SynaforceStreamInferenceHandler,
         AyunisOllamaStreamInferenceHandler,
         OtcStreamInferenceHandler,
+        BedrockStreamInferenceHandler,
         MockStreamInferenceHandler,
         ConfigService,
       ],
@@ -163,6 +170,7 @@ import { MessagesModule } from '../messages/messages.module';
         mistralHandler: MistralInferenceHandler,
         openaiHandler: OpenAIInferenceHandler,
         anthropicHandler: AnthropicInferenceHandler,
+        bedrockHandler: BedrockInferenceHandler,
         ollamaHandler: LocalOllamaInferenceHandler,
         synaforceHandler: SynaforceInferenceHandler,
         ayunisHandler: AyunisOllamaInferenceHandler,
@@ -174,6 +182,7 @@ import { MessagesModule } from '../messages/messages.module';
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
+        registry.register(ModelProvider.BEDROCK, bedrockHandler);
         registry.register(ModelProvider.OLLAMA, ollamaHandler);
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
@@ -185,6 +194,7 @@ import { MessagesModule } from '../messages/messages.module';
         MistralInferenceHandler,
         OpenAIInferenceHandler,
         AnthropicInferenceHandler,
+        BedrockInferenceHandler,
         LocalOllamaInferenceHandler,
         SynaforceInferenceHandler,
         AyunisOllamaInferenceHandler,

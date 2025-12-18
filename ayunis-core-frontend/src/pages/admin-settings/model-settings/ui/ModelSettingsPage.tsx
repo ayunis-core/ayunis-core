@@ -35,6 +35,7 @@ export default function ModelSettingsPage() {
     ModelWithConfigResponseDtoProvider.mistral,
     ModelWithConfigResponseDtoProvider.ollama,
     ModelWithConfigResponseDtoProvider.anthropic,
+    ModelWithConfigResponseDtoProvider.bedrock,
     ModelWithConfigResponseDtoProvider.openai,
   ];
 
