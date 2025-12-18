@@ -117,8 +117,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'sourceAssignments',
       );
       queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
-      queryBuilder.leftJoinAndSelect('source.textSourceDetails', 'textSourceDetails');
-      queryBuilder.leftJoinAndSelect('source.dataSourceDetails', 'dataSourceDetails');
+      queryBuilder.leftJoinAndSelect(
+        'source.textSourceDetails',
+        'textSourceDetails',
+      );
+      queryBuilder.leftJoinAndSelect(
+        'source.dataSourceDetails',
+        'dataSourceDetails',
+      );
     }
     if (options?.withModel) {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
