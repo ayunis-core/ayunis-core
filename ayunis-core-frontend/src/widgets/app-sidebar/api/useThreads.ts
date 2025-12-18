@@ -10,22 +10,31 @@ export interface SidebarThread {
   timestamp: string;
 }
 
+const SIDEBAR_THREADS_LIMIT = 20;
+
 export function useThreads() {
-  const {
-    data: threads = [],
-    isLoading,
-    error,
-    refetch,
-  } = useThreadsControllerFindAll(undefined, {
-    query: {
-      queryKey: getThreadsControllerFindAllQueryKey(),
+  const { data, isLoading, error, refetch } = useThreadsControllerFindAll(
+    { limit: SIDEBAR_THREADS_LIMIT, offset: 0 },
+    {
+      query: {
+        queryKey: getThreadsControllerFindAllQueryKey({
+          limit: SIDEBAR_THREADS_LIMIT,
+          offset: 0,
+        }),
+      },
     },
-  });
+  );
+
+  const threads = data?.data ?? [];
+  const total = data?.pagination?.total ?? 0;
+  const hasMore = total > SIDEBAR_THREADS_LIMIT;
 
   return {
     threads,
     isLoading,
     error,
     refetch,
+    hasMore,
+    total,
   };
 }

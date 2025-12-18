@@ -21,7 +21,8 @@
     "deleteChatTitle": "Chat löschen",
     "deleteChatDescription": "Sind Sie sicher, dass Sie diesen Chat löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteChatConfirm": "Löschen",
-    "deleteChatCancel": "Abbrechen"
+    "deleteChatCancel": "Abbrechen",
+    "showMore": "Mehr anzeigen..."
   },
   "chatInput": {
     "placeholder": "Stellen Sie eine Frage in Ayunis Core...",

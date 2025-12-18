@@ -1589,6 +1589,22 @@ export interface GetThreadsResponseDtoItem {
   isAnonymous: boolean;
 }
 
+export interface PaginationDto {
+  /** Maximum number of items per page */
+  limit: number;
+  /** Number of items to skip */
+  offset: number;
+  /** Total number of items available */
+  total?: number;
+}
+
+export interface GetThreadsResponseDto {
+  /** Array of threads for the current page */
+  data: GetThreadsResponseDtoItem[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
 /**
  * The type of tool to assign
  */
@@ -2268,12 +2284,6 @@ export interface UpdateTrialRequestDto {
 export interface UsageConfigResponseDto {
   /** Whether the deployment is self-hosted. Determines feature availability. */
   isSelfHosted: boolean;
-  /** Whether cost information should be displayed in the UI. True for self-hosted, false for cloud deployments. */
-  showCostInformation: boolean;
-  /** Default currency code used for cost calculations and display */
-  defaultCurrency: string;
-  /** Number of decimal places to use when formatting cost values */
-  costDecimalPlaces: number;
 }
 
 export interface UsageStatsResponseDto {
@@ -2281,10 +2291,6 @@ export interface UsageStatsResponseDto {
   totalTokens: number;
   /** Total number of API requests made in the specified period */
   totalRequests: number;
-  /** Total cost incurred in the period. Only available in self-hosted deployments. */
-  totalCost?: number;
-  /** Currency code for cost information. Only available in self-hosted deployments. */
-  currency?: string;
   /** Number of users who made requests within the active user threshold (last 30 days) */
   activeUsers: number;
   /** Total number of unique users who made requests in the specified period */
@@ -2300,8 +2306,6 @@ export interface TimeSeriesPointDto {
   tokens: number;
   /** Number of requests at this point */
   requests: number;
-  /** Cost at this point (self-hosted mode only) */
-  cost?: number;
 }
 
 /**
@@ -2328,8 +2332,6 @@ export interface ProviderUsageDto {
   tokens: number;
   /** Total requests for this provider */
   requests: number;
-  /** Total cost for this provider (self-hosted mode only) */
-  cost?: number;
   /** Percentage of total usage */
   percentage: number;
   /** Time series data for this provider */
@@ -2398,8 +2400,6 @@ export interface ModelDistributionDto {
   tokens: number;
   /** Total requests for this model */
   requests: number;
-  /** Total cost for this model (self-hosted mode only) */
-  cost?: number;
   /** Percentage of total usage */
   percentage: number;
 }
@@ -2427,15 +2427,6 @@ export interface UserUsageDto {
   lastActivity: string | null;
   /** Whether the user is considered active */
   isActive: boolean;
-}
-
-export interface PaginationDto {
-  /** Maximum number of items per page */
-  limit: number;
-  /** Number of items to skip */
-  offset: number;
-  /** Total number of items available */
-  total?: number;
 }
 
 export interface UserUsageResponseDto {
@@ -2599,6 +2590,14 @@ search?: string;
  * Filter threads by agent ID
  */
 agentId?: string;
+/**
+ * Maximum number of threads to return (default: 50)
+ */
+limit?: number;
+/**
+ * Number of threads to skip (default: 0)
+ */
+offset?: number;
 };
 
 export type ThreadsControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
@@ -2756,7 +2755,6 @@ export type UsageControllerGetUserUsageSortBy = typeof UsageControllerGetUserUsa
 export const UsageControllerGetUserUsageSortBy = {
   tokens: 'tokens',
   requests: 'requests',
-  cost: 'cost',
   lastActivity: 'lastActivity',
   userName: 'userName',
 } as const;

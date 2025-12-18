@@ -37,7 +37,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
-  const { threads, isLoading, error } = useThreads();
+  const { threads, isLoading, error, hasMore } = useThreads();
   const { confirm } = useConfirmation();
   const { deleteChat } = useDeleteThread({
     onSuccess: () => {
@@ -244,6 +244,15 @@ export function ChatsSidebarGroup() {
                     </DropdownMenu>
                   </SidebarMenuItem>
                 ))}
+              {hasMore && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link to="/chats" className="text-muted-foreground">
+                      <span>{t('sidebar.showMore')}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>
