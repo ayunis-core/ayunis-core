@@ -251,7 +251,9 @@ export function ChatsSidebarGroup() {
                           data-testid="chat-dropdown"
                         >
                           <DropdownMenuItem
-                            onClick={() => handleRenameClick(thread.id, thread.title ?? null)}
+                            onClick={() =>
+                              handleRenameClick(thread.id, thread.title ?? null)
+                            }
                             data-testid="rename"
                           >
                             <Pencil className="h-4 w-4" />
