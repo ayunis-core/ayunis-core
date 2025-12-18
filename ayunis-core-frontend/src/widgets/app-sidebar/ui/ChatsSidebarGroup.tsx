@@ -62,7 +62,8 @@ export function ChatsSidebarGroup() {
 
   const handleRenameClick = (threadId: string, currentTitle: string | null) => {
     setThreadToRename({ id: threadId, title: currentTitle });
-    setRenameDialogOpen(true);
+    // Delay to allow dropdown menu to fully close first
+    setTimeout(() => setRenameDialogOpen(true), 0);
   };
 
   const handleDeleteClick = (threadId: string) => {
@@ -276,7 +277,12 @@ export function ChatsSidebarGroup() {
       {threadToRename && (
         <RenameThreadDialog
           open={renameDialogOpen}
-          onOpenChange={setRenameDialogOpen}
+          onOpenChange={(open) => {
+            setRenameDialogOpen(open);
+            if (!open) {
+              setThreadToRename(null);
+            }
+          }}
           threadId={threadToRename.id}
           currentTitle={threadToRename.title}
         />
