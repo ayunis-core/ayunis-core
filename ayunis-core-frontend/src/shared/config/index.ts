@@ -15,6 +15,7 @@ const config = {
   },
   features: {
     devtools: import.meta.env.MODE !== 'production',
+    releaseNotes: import.meta.env.VITE_RELEASE_NOTES_ENABLED === 'true',
   },
   analytics: {
     gtmContainerId: import.meta.env.VITE_GTM_CONTAINER_ID as string | undefined,
