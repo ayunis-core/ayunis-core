@@ -2,10 +2,7 @@ import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity'
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelRegistry } from '../../registry/model.registry';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
-import { ModelProviderNotPermittedError } from '../../models.errors';
 import { Injectable, Logger } from '@nestjs/common';
-import { IsProviderPermittedUseCase } from '../is-provider-permitted/is-provider-permitted.use-case';
-import { IsProviderPermittedQuery } from '../is-provider-permitted/is-provider-permitted.query';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -18,7 +15,6 @@ export class CreatePermittedModelUseCase {
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelRegistry: ModelRegistry,
-    private readonly isProviderPermittedUseCase: IsProviderPermittedUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -37,12 +33,6 @@ export class CreatePermittedModelUseCase {
         throw new UnauthorizedAccessError();
       }
       const model = this.modelRegistry.getAvailableModel(command.modelId);
-      const isProviderPermitted = await this.isProviderPermittedUseCase.execute(
-        new IsProviderPermittedQuery(command.orgId, model.provider),
-      );
-      if (!isProviderPermitted) {
-        throw new ModelProviderNotPermittedError(model.provider);
-      }
       const permittedModel = new PermittedModel({
         model: model,
         orgId: command.orgId,

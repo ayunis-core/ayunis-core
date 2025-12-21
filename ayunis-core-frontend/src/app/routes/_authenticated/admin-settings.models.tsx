@@ -1,8 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import {
-  getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions,
-  getModelsControllerGetAvailableModelsWithConfigQueryOptions,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { getModelsControllerGetAvailableModelsWithConfigQueryOptions } from '@/shared/api/generated/ayunisCoreAPI';
 import ModelSettingsPage from '@/pages/admin-settings/model-settings';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/models')({
@@ -10,12 +7,7 @@ export const Route = createFileRoute('/_authenticated/admin-settings/models')({
   loader: async ({ context: { queryClient } }) => {
     const modelsQueryOptions =
       getModelsControllerGetAvailableModelsWithConfigQueryOptions();
-    const providersQueryOptions =
-      getModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryOptions();
-    await Promise.all([
-      queryClient.fetchQuery(modelsQueryOptions),
-      queryClient.fetchQuery(providersQueryOptions),
-    ]);
+    await queryClient.fetchQuery(modelsQueryOptions);
   },
 });
 

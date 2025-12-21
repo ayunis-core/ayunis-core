@@ -4,14 +4,10 @@ import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelRegistry } from '../../registry/model.registry';
-import { IsProviderPermittedUseCase } from '../is-provider-permitted/is-provider-permitted.use-case';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import {
-  ModelNotFoundError,
-  ModelProviderNotPermittedError,
-} from '../../models.errors';
+import { ModelNotFoundError } from '../../models.errors';
 import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -20,7 +16,6 @@ describe('CreatePermittedModelUseCase', () => {
   let useCase: CreatePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let modelRegistry: jest.Mocked<ModelRegistry>;
-  let isProviderPermittedUseCase: jest.Mocked<IsProviderPermittedUseCase>;
   let mockContextService: any;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -41,10 +36,6 @@ describe('CreatePermittedModelUseCase', () => {
       unregister: jest.fn(),
     };
 
-    const mockIsProviderPermittedUseCase = {
-      execute: jest.fn(),
-    };
-
     mockContextService = {
       get: jest.fn(),
     };
@@ -57,10 +48,6 @@ describe('CreatePermittedModelUseCase', () => {
           useValue: mockPermittedModelsRepository,
         },
         { provide: ModelRegistry, useValue: mockModelRegistry },
-        {
-          provide: IsProviderPermittedUseCase,
-          useValue: mockIsProviderPermittedUseCase,
-        },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
@@ -70,7 +57,6 @@ describe('CreatePermittedModelUseCase', () => {
     );
     permittedModelsRepository = module.get(PermittedModelsRepository);
     modelRegistry = module.get(ModelRegistry);
-    isProviderPermittedUseCase = module.get(IsProviderPermittedUseCase);
 
     // Configure ContextService mock
     mockContextService.get.mockImplementation((key: string) => {
@@ -112,7 +98,6 @@ describe('CreatePermittedModelUseCase', () => {
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);
-      isProviderPermittedUseCase.execute.mockResolvedValue(true);
       permittedModelsRepository.create.mockResolvedValue(mockPermittedModel);
 
       const logSpy = jest.spyOn(Logger.prototype, 'log');
@@ -122,12 +107,6 @@ describe('CreatePermittedModelUseCase', () => {
 
       // Assert
       expect(modelRegistry.getAvailableModel).toHaveBeenCalledWith(mockModelId);
-      expect(isProviderPermittedUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orgId: mockOrgId,
-          provider: 'openai',
-        }),
-      );
       expect(permittedModelsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: mockModel,
@@ -157,41 +136,6 @@ describe('CreatePermittedModelUseCase', () => {
       );
 
       expect(modelRegistry.getAvailableModel).toHaveBeenCalledWith(mockModelId);
-      expect(isProviderPermittedUseCase.execute).not.toHaveBeenCalled();
-      expect(permittedModelsRepository.create).not.toHaveBeenCalled();
-    });
-
-    it('should throw ModelProviderNotPermittedError when provider is not permitted', async () => {
-      // Arrange
-      const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
-
-      const mockModel = new LanguageModel({
-        id: mockModelId,
-        name: 'claude-3-sonnet',
-        displayName: 'claude-3-sonnet',
-        provider: ModelProvider.ANTHROPIC,
-        canStream: true,
-        isReasoning: false,
-        isArchived: false,
-        canUseTools: true,
-        canVision: true,
-      });
-
-      modelRegistry.getAvailableModel.mockReturnValue(mockModel);
-      isProviderPermittedUseCase.execute.mockResolvedValue(false);
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ModelProviderNotPermittedError,
-      );
-
-      expect(modelRegistry.getAvailableModel).toHaveBeenCalledWith(mockModelId);
-      expect(isProviderPermittedUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orgId: mockOrgId,
-          provider: 'anthropic',
-        }),
-      );
       expect(permittedModelsRepository.create).not.toHaveBeenCalled();
     });
 
@@ -212,7 +156,6 @@ describe('CreatePermittedModelUseCase', () => {
       });
 
       modelRegistry.getAvailableModel.mockReturnValue(mockModel);
-      isProviderPermittedUseCase.execute.mockResolvedValue(true);
 
       const repositoryError = new Error('Database constraint violation');
       permittedModelsRepository.create.mockRejectedValue(repositoryError);
@@ -249,42 +192,6 @@ describe('CreatePermittedModelUseCase', () => {
 
       // Should not log error for ModelNotFoundError as it's a business logic error
       expect(errorSpy).not.toHaveBeenCalled();
-    });
-
-    it('should handle provider permission check errors', async () => {
-      // Arrange
-      const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
-
-      const mockModel = new LanguageModel({
-        id: mockModelId,
-        name: 'gpt-4',
-        displayName: 'gpt-4',
-        provider: ModelProvider.OPENAI,
-        canStream: true,
-        isReasoning: false,
-        isArchived: false,
-        canUseTools: true,
-        canVision: false,
-      });
-
-      modelRegistry.getAvailableModel.mockReturnValue(mockModel);
-
-      const permissionError = new Error('Permission service unavailable');
-      isProviderPermittedUseCase.execute.mockRejectedValue(permissionError);
-
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Permission service unavailable',
-      );
-
-      expect(isProviderPermittedUseCase.execute).toHaveBeenCalled();
-      expect(permittedModelsRepository.create).not.toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Error creating permitted model',
-        permissionError,
-      );
     });
   });
 });

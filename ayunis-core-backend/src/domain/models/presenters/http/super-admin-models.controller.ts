@@ -39,30 +39,15 @@ import { UpdatePermittedModelUseCase } from '../../application/use-cases/update-
 import { UpdatePermittedModelCommand } from '../../application/use-cases/update-permitted-model/update-permitted-model.command';
 import { GetPermittedModelsUseCase } from '../../application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../../application/use-cases/get-permitted-models/get-permitted-models.query';
-import { CreatePermittedProviderUseCase } from '../../application/use-cases/create-permitted-provider/create-permitted-provider.use-case';
-import { CreatePermittedProviderCommand } from '../../application/use-cases/create-permitted-provider/create-permitted-provider.command';
-import { DeletePermittedProviderUseCase } from '../../application/use-cases/delete-permitted-provider/delete-permitted-provider.use-case';
-import { DeletePermittedProviderCommand } from '../../application/use-cases/delete-permitted-provider/delete-permitted-provider.command';
-import { GetAllPermittedProvidersUseCase } from '../../application/use-cases/get-all-permitted-providers/get-all-permitted-providers.use-case';
-import { GetAllPermittedProvidersQuery } from '../../application/use-cases/get-all-permitted-providers/get-all-permitted-providers.query';
-import { GetAllModelProviderInfosWithPermittedStatusUseCase } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.use-case';
-import { GetAllModelProviderInfosWithPermittedStatusQuery } from '../../application/use-cases/get-all-model-provider-infos-with-permitted-status/get-all-model-provider-infos-with-permitted-status.query';
 import { GetAvailableModelsUseCase } from '../../application/use-cases/get-available-models/get-available-models.use-case';
 import { GetAvailableModelsQuery } from '../../application/use-cases/get-available-models/get-available-models.query';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
-import { CreatePermittedProviderDto } from './dto/create-permitted-provider.dto';
-import { DeletePermittedProviderDto } from './dto/delete-permitted-provider.dto';
-import { PermittedProviderResponseDto } from './dto/permitted-provider-response.dto';
-import { PermittedProviderResponseDtoMapper } from './mappers/permitted-provider-response-dto.mapper';
 import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
 import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
-import { ModelProviderWithPermittedStatusResponseDto } from './dto/model-provider-with-permitted-status-response.dto';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
-import { ModelProviderWithPermittedStatusResponseDtoMapper } from './mappers/model-provider-with-permitted-status-response-dto.mapper';
-import { PermittedProvider } from '../../domain/permitted-model-provider.entity';
 import {
   PermittedLanguageModel,
   PermittedEmbeddingModel,
@@ -97,13 +82,9 @@ import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
 @SystemRoles(SystemRole.SUPER_ADMIN)
 @ApiExtraModels(
   CreatePermittedModelDto,
-  CreatePermittedProviderDto,
-  DeletePermittedProviderDto,
-  PermittedProviderResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedEmbeddingModelResponseDto,
   ModelWithConfigResponseDto,
-  ModelProviderWithPermittedStatusResponseDto,
   CreateLanguageModelRequestDto,
   UpdateLanguageModelRequestDto,
   CreateEmbeddingModelRequestDto,
@@ -118,15 +99,9 @@ export class SuperAdminModelsController {
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
-    private readonly createPermittedProviderUseCase: CreatePermittedProviderUseCase,
-    private readonly deletePermittedProviderUseCase: DeletePermittedProviderUseCase,
-    private readonly getAllPermittedProvidersUseCase: GetAllPermittedProvidersUseCase,
-    private readonly getAllModelProviderInfosWithPermittedStatusUseCase: GetAllModelProviderInfosWithPermittedStatusUseCase,
     private readonly getAvailableModelsUseCase: GetAvailableModelsUseCase,
-    private readonly permittedProviderResponseDtoMapper: PermittedProviderResponseDtoMapper,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
-    private readonly modelProviderWithPermittedStatusResponseDtoMapper: ModelProviderWithPermittedStatusResponseDtoMapper,
     private readonly getAllModelsUseCase: GetAllModelsUseCase,
     private readonly getModelByIdUseCase: GetModelByIdUseCase,
     private readonly createLanguageModelUseCase: CreateLanguageModelUseCase,
@@ -536,217 +511,6 @@ export class SuperAdminModelsController {
       return this.modelResponseDtoMapper.toEmbeddingModelDto(updatedModel);
     }
     throw new Error(`Unknown model type: ${updatedModel.constructor.name}`);
-  }
-
-  @Get(':orgId/permitted-providers')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get all permitted providers for a specific organization',
-    description:
-      'Retrieve all permitted providers for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to get permitted providers for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Successfully retrieved permitted providers',
-    schema: {
-      type: 'array',
-      items: {
-        $ref: getSchemaPath(PermittedProviderResponseDto),
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
-  async getPermittedProviders(
-    @Param('orgId') orgId: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<PermittedProviderResponseDto[]> {
-    this.logger.log(
-      `Getting permitted providers for org ${orgId} by super admin ${userId}`,
-    );
-
-    const query = new GetAllPermittedProvidersQuery(orgId);
-    const providers = await this.getAllPermittedProvidersUseCase.execute(query);
-
-    const responseDtos =
-      this.permittedProviderResponseDtoMapper.toDtoArray(providers);
-    this.logger.log(
-      `Successfully retrieved ${providers.length} permitted providers for org ${orgId}`,
-    );
-
-    return responseDtos;
-  }
-
-  @Get(':orgId/providers/all-with-permitted-status')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary:
-      'Get all model provider infos with permitted status for a specific organization',
-    description:
-      'Returns all available model providers with information about whether each is permitted for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to check permitted status for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description:
-      'Successfully retrieved all model provider infos with permitted status',
-    schema: {
-      type: 'array',
-      items: {
-        $ref: getSchemaPath(ModelProviderWithPermittedStatusResponseDto),
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
-  async getAllModelProviderInfosWithPermittedStatus(
-    @Param('orgId') orgId: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID,
-  ): Promise<ModelProviderWithPermittedStatusResponseDto[]> {
-    this.logger.log(
-      `Getting all provider infos with permitted status for org ${orgId} by super admin ${userId}`,
-    );
-
-    const query = new GetAllModelProviderInfosWithPermittedStatusQuery(orgId);
-    const providerInfos =
-      await this.getAllModelProviderInfosWithPermittedStatusUseCase.execute(
-        query,
-      );
-
-    const responseDtos =
-      this.modelProviderWithPermittedStatusResponseDtoMapper.toDtoArray(
-        providerInfos,
-      );
-
-    this.logger.log(
-      `Successfully retrieved ${providerInfos.length} provider infos with permitted status for org ${orgId}`,
-    );
-
-    return responseDtos;
-  }
-
-  @Post(':orgId/permitted-providers')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Create a permitted provider for a specific organization',
-    description:
-      'Create a new permitted provider for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to create permitted provider for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiBody({ type: CreatePermittedProviderDto })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Successfully created permitted provider',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid provider data provided or provider already permitted',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
-  async createPermittedProvider(
-    @Param('orgId') orgId: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Body() createPermittedProviderDto: CreatePermittedProviderDto,
-  ): Promise<void> {
-    this.logger.log(
-      `Creating permitted provider for org ${orgId} by super admin ${userId}`,
-    );
-
-    const permittedProvider = new PermittedProvider({
-      provider: createPermittedProviderDto.provider,
-      orgId,
-    });
-
-    const command = new CreatePermittedProviderCommand({
-      permittedProvider,
-    });
-
-    await this.createPermittedProviderUseCase.execute(command);
-    this.logger.log(`Successfully created permitted provider for org ${orgId}`);
-  }
-
-  @Delete(':orgId/permitted-providers')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Delete a permitted provider for a specific organization',
-    description:
-      'Delete a permitted provider for the specified organization. This endpoint is only accessible to super admin.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to delete permitted provider for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiBody({ type: DeletePermittedProviderDto })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Successfully deleted permitted provider',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Permitted provider not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid provider data provided',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
-  async deletePermittedProvider(
-    @Param('orgId') orgId: UUID,
-    @CurrentUser(UserProperty.ID) userId: UUID,
-    @Body() deletePermittedProviderDto: DeletePermittedProviderDto,
-  ): Promise<void> {
-    this.logger.log(
-      `Deleting permitted provider for org ${orgId} by super admin ${userId}`,
-    );
-
-    const permittedProvider = new PermittedProvider({
-      provider: deletePermittedProviderDto.provider,
-      orgId,
-    });
-
-    const command = new DeletePermittedProviderCommand(
-      orgId,
-      permittedProvider,
-    );
-
-    await this.deletePermittedProviderUseCase.execute(command);
-    this.logger.log(`Successfully deleted permitted provider for org ${orgId}`);
   }
 
   // Catalog Management Endpoints

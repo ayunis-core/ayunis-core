@@ -10,6 +10,7 @@ export function getFlagByProvider(provider: Provider): string {
     case 'ollama':
       return `🇩🇪`;
     case 'mistral':
+    case 'bedrock':
       return `🇪🇺`;
     case 'openai':
       return `🇺🇸`;

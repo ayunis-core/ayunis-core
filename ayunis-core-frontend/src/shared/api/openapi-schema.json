@@ -375,132 +375,6 @@
         "tags": ["models"]
       }
     },
-    "/models/providers/permitted": {
-      "post": {
-        "operationId": "ModelsController_createPermittedProvider",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created a permitted provider",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PermittedProviderResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid provider input or provider already permitted"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a permitted provider (Admin only)",
-        "tags": ["models"]
-      },
-      "get": {
-        "operationId": "ModelsController_getAllPermittedProviders",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all permitted providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PermittedProviderResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all permitted providers",
-        "tags": ["models"]
-      },
-      "delete": {
-        "operationId": "ModelsController_deletePermittedProvider",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeletePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully deleted a permitted provider"
-          },
-          "400": {
-            "description": "Invalid provider input"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Permitted provider not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a permitted provider (Admin only)",
-        "tags": ["models"]
-      }
-    },
-    "/models/providers/all-with-permitted-status": {
-      "get": {
-        "description": "Returns all available model providers with information about whether each is permitted for the organization",
-        "operationId": "ModelsController_getAllModelProviderInfosWithPermittedStatus",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all model provider infos with permitted status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ModelProviderWithPermittedStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid admin token"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all model provider infos with permitted status (Admin only)",
-        "tags": ["models"]
-      }
-    },
     "/models/embedding/enabled": {
       "get": {
         "operationId": "ModelsController_isEmbeddingModelEnabled",
@@ -915,179 +789,6 @@
           }
         },
         "summary": "Update a permitted model for a specific organization",
-        "tags": ["Super Admin Models"]
-      }
-    },
-    "/super-admin/models/{orgId}/permitted-providers": {
-      "get": {
-        "description": "Retrieve all permitted providers for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_getPermittedProviders",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to get permitted providers for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved permitted providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PermittedProviderResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all permitted providers for a specific organization",
-        "tags": ["Super Admin Models"]
-      },
-      "post": {
-        "description": "Create a new permitted provider for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_createPermittedProvider",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to create permitted provider for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created permitted provider"
-          },
-          "400": {
-            "description": "Invalid provider data provided or provider already permitted"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a permitted provider for a specific organization",
-        "tags": ["Super Admin Models"]
-      },
-      "delete": {
-        "description": "Delete a permitted provider for the specified organization. This endpoint is only accessible to super admin.",
-        "operationId": "SuperAdminModelsController_deletePermittedProvider",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to delete permitted provider for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeletePermittedProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully deleted permitted provider"
-          },
-          "400": {
-            "description": "Invalid provider data provided"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Permitted provider not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a permitted provider for a specific organization",
-        "tags": ["Super Admin Models"]
-      }
-    },
-    "/super-admin/models/{orgId}/providers/all-with-permitted-status": {
-      "get": {
-        "description": "Returns all available model providers with information about whether each is permitted for the specified organization. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminModelsController_getAllModelProviderInfosWithPermittedStatus",
-        "parameters": [
-          {
-            "name": "orgId",
-            "required": true,
-            "in": "path",
-            "description": "Organization ID to check permitted status for",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved all model provider infos with permitted status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ModelProviderWithPermittedStatusResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all model provider infos with permitted status for a specific organization",
         "tags": ["Super Admin Models"]
       }
     },
@@ -2783,6 +2484,29 @@
         "tags": ["storage"]
       }
     },
+    "/retrievers/url": {
+      "post": {
+        "operationId": "UrlRetrieverController_retrieveUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrieveUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The content has been successfully retrieved"
+          }
+        },
+        "summary": "Retrieve content from a URL",
+        "tags": ["retrievers"]
+      }
+    },
     "/threads": {
       "post": {
         "operationId": "ThreadsController_create",
@@ -4010,29 +3734,6 @@
         "tags": ["mcp-integrations"]
       }
     },
-    "/retrievers/url": {
-      "post": {
-        "operationId": "UrlRetrieverController_retrieveUrl",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RetrieveUrlDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The content has been successfully retrieved"
-          }
-        },
-        "summary": "Retrieve content from a URL",
-        "tags": ["retrievers"]
-      }
-    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -4324,12 +4025,12 @@
     },
     "/usage/config": {
       "get": {
-        "description": "Returns configuration settings for the usage dashboard, including deployment mode and cost display settings. This endpoint helps the frontend determine which features to show based on the deployment type.",
+        "description": "Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.",
         "operationId": "UsageController_getUsageConfig",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Usage configuration retrieved successfully. Returns deployment mode information and cost display settings.",
+            "description": "Usage configuration retrieved successfully. Returns deployment mode information.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4345,7 +4046,7 @@
     },
     "/usage/stats": {
       "get": {
-        "description": "Returns aggregated usage statistics including total tokens, requests, active users, and cost information (self-hosted only). Dates are optional - if not provided, shows all usage.",
+        "description": "Returns aggregated usage statistics including total tokens, requests, and active users. Dates are optional - if not provided, shows all usage.",
         "operationId": "UsageController_getUsageStats",
         "parameters": [
           {
@@ -4371,7 +4072,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Usage statistics retrieved successfully. Cost fields are only included in self-hosted deployments.",
+            "description": "Usage statistics retrieved successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4638,13 +4339,7 @@
             "in": "query",
             "description": "Field to sort users by. Defaults to tokens.",
             "schema": {
-              "enum": [
-                "tokens",
-                "requests",
-                "cost",
-                "lastActivity",
-                "userName"
-              ],
+              "enum": ["tokens", "requests", "lastActivity", "userName"],
               "type": "string"
             }
           },
@@ -5273,6 +4968,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5379,6 +5075,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5386,6 +5083,10 @@
               "otc"
             ],
             "description": "The provider of the model"
+          },
+          "providerDisplayName": {
+            "type": "string",
+            "description": "The display name of the provider"
           },
           "displayName": {
             "type": "string",
@@ -5421,6 +5122,7 @@
           "id",
           "name",
           "provider",
+          "providerDisplayName",
           "displayName",
           "type",
           "isArchived",
@@ -5475,6 +5177,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5497,113 +5200,6 @@
           }
         },
         "required": ["provider", "displayName", "hostedIn"]
-      },
-      "CreatePermittedProviderDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "description": "The model provider to permit",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "example": "openai"
-          }
-        },
-        "required": ["provider"]
-      },
-      "PermittedProviderResponseDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "description": "The permitted model provider",
-            "example": "openai"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The display name of the model provider",
-            "example": "OpenAI"
-          },
-          "hostedIn": {
-            "type": "string",
-            "enum": ["DE", "EU", "US", "SELF_HOSTED", "AYUNIS"],
-            "description": "The location where the provider hosts their services",
-            "example": "US"
-          }
-        },
-        "required": ["provider", "displayName", "hostedIn"]
-      },
-      "DeletePermittedProviderDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "description": "The model provider to remove",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "example": "openai"
-          }
-        },
-        "required": ["provider"]
-      },
-      "ModelProviderWithPermittedStatusResponseDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "enum": [
-              "openai",
-              "anthropic",
-              "mistral",
-              "ollama",
-              "synaforce",
-              "ayunis",
-              "otc"
-            ],
-            "description": "The model provider identifier",
-            "example": "openai"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "The display name of the model provider",
-            "example": "OpenAI"
-          },
-          "hostedIn": {
-            "type": "string",
-            "enum": ["DE", "EU", "US", "SELF_HOSTED", "AYUNIS"],
-            "description": "The location where the provider hosts their services",
-            "example": "DE"
-          },
-          "isPermitted": {
-            "type": "boolean",
-            "description": "Whether this provider is permitted for the organization",
-            "example": true
-          }
-        },
-        "required": ["provider", "displayName", "hostedIn", "isPermitted"]
       },
       "EmbeddingModelEnabledResponseDto": {
         "type": "object",
@@ -5632,6 +5228,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5639,6 +5236,10 @@
               "otc"
             ],
             "description": "The provider of the model"
+          },
+          "providerDisplayName": {
+            "type": "string",
+            "description": "The display name of the provider"
           },
           "displayName": {
             "type": "string",
@@ -5663,6 +5264,7 @@
           "id",
           "name",
           "provider",
+          "providerDisplayName",
           "displayName",
           "type",
           "isArchived",
@@ -5683,6 +5285,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5747,6 +5350,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5811,6 +5415,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5858,6 +5463,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5910,6 +5516,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -5999,6 +5606,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -6800,6 +6408,17 @@
           }
         },
         "required": ["objectName", "size", "etag"]
+      },
+      "RetrieveUrlDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL to retrieve content from",
+            "example": "https://example.com/article"
+          }
+        },
+        "required": ["url"]
       },
       "CreateThreadDto": {
         "type": "object",
@@ -8086,17 +7705,6 @@
         },
         "required": ["valid", "capabilities"]
       },
-      "RetrieveUrlDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "URL to retrieve content from",
-            "example": "https://example.com/article"
-          }
-        },
-        "required": ["url"]
-      },
       "MessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -8442,29 +8050,9 @@
             "type": "boolean",
             "description": "Whether the deployment is self-hosted. Determines feature availability.",
             "example": true
-          },
-          "showCostInformation": {
-            "type": "boolean",
-            "description": "Whether cost information should be displayed in the UI. True for self-hosted, false for cloud deployments.",
-            "example": true
-          },
-          "defaultCurrency": {
-            "type": "string",
-            "description": "Default currency code used for cost calculations and display",
-            "example": "USD"
-          },
-          "costDecimalPlaces": {
-            "type": "number",
-            "description": "Number of decimal places to use when formatting cost values",
-            "example": 6
           }
         },
-        "required": [
-          "isSelfHosted",
-          "showCostInformation",
-          "defaultCurrency",
-          "costDecimalPlaces"
-        ]
+        "required": ["isSelfHosted"]
       },
       "UsageStatsResponseDto": {
         "type": "object",
@@ -8478,16 +8066,6 @@
             "type": "number",
             "description": "Total number of API requests made in the specified period",
             "example": 3450
-          },
-          "totalCost": {
-            "type": "number",
-            "description": "Total cost incurred in the period. Only available in self-hosted deployments.",
-            "example": 25.75
-          },
-          "currency": {
-            "type": "string",
-            "description": "Currency code for cost information. Only available in self-hosted deployments.",
-            "example": "USD"
           },
           "activeUsers": {
             "type": "number",
@@ -8531,10 +8109,6 @@
           "requests": {
             "type": "number",
             "description": "Number of requests at this point"
-          },
-          "cost": {
-            "type": "number",
-            "description": "Cost at this point (self-hosted mode only)"
           }
         },
         "required": ["date", "tokens", "requests"]
@@ -8547,6 +8121,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -8562,10 +8137,6 @@
           "requests": {
             "type": "number",
             "description": "Total requests for this provider"
-          },
-          "cost": {
-            "type": "number",
-            "description": "Total cost for this provider (self-hosted mode only)"
           },
           "percentage": {
             "type": "number",
@@ -8681,6 +8252,7 @@
             "enum": [
               "openai",
               "anthropic",
+              "bedrock",
               "mistral",
               "ollama",
               "synaforce",
@@ -8696,10 +8268,6 @@
           "requests": {
             "type": "number",
             "description": "Total requests for this model"
-          },
-          "cost": {
-            "type": "number",
-            "description": "Total cost for this model (self-hosted mode only)"
           },
           "percentage": {
             "type": "number",

@@ -11,7 +11,6 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
-import { PermittedProviderRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-providers/schema/permitted-provider.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 
 // Import enums
@@ -27,7 +26,7 @@ import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal
  * - 1 admin user (admin@demo.local)
  * - 1 language model (gpt-4o-mini)
  * - 1 active subscription
- * - Permitted provider and model for the org
+ * - Permitted model for the org
  */
 async function seedMinimal() {
   const runner = new SeedRunner();
@@ -46,9 +45,6 @@ async function seedMinimal() {
     const subscriptionRepo = dataSource.getRepository(SubscriptionRecord);
     const billingInfoRepo = dataSource.getRepository(
       SubscriptionBillingInfoRecord,
-    );
-    const permittedProviderRepo = dataSource.getRepository(
-      PermittedProviderRecord,
     );
     const permittedModelRepo = dataSource.getRepository(PermittedModelRecord);
 
@@ -160,26 +156,7 @@ async function seedMinimal() {
       );
     }
 
-    // 5. Create permitted provider
-    const existingPermittedProvider = await permittedProviderRepo.findOne({
-      where: { provider: ModelProvider.OPENAI, orgId: org.id },
-    });
-
-    if (!existingPermittedProvider) {
-      const permittedProvider = permittedProviderRepo.create({
-        id: randomUUID(),
-        provider: ModelProvider.OPENAI,
-        orgId: org.id,
-      });
-      await permittedProviderRepo.save(permittedProvider);
-      console.log(`✅ Created permitted provider: ${ModelProvider.OPENAI}`);
-    } else {
-      console.log(
-        `⏭️  Permitted provider already exists: ${ModelProvider.OPENAI}`,
-      );
-    }
-
-    // 6. Create permitted model
+    // 5. Create permitted model
     const existingPermittedModel = await permittedModelRepo.findOne({
       where: { modelId: model.id, orgId: org.id },
     });
