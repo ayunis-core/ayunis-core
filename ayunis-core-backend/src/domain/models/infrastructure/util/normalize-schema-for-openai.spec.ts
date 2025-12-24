@@ -243,6 +243,8 @@ describe('normalizeSchemaForOpenAI', () => {
       expect(result).toEqual({
         type: 'object',
         additionalProperties: false,
+        properties: {},
+        required: [],
       });
     });
 
@@ -380,7 +382,7 @@ describe('normalizeSchemaForOpenAI', () => {
       });
     });
 
-    it('should not add required array for object without properties key', () => {
+    it('should add empty properties and required array for object without properties key', () => {
       const schema = {
         type: 'object',
       };
@@ -390,8 +392,9 @@ describe('normalizeSchemaForOpenAI', () => {
       expect(result).toEqual({
         type: 'object',
         additionalProperties: false,
+        properties: {},
+        required: [],
       });
-      expect(result).not.toHaveProperty('required');
     });
   });
 });
