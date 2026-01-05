@@ -130,9 +130,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
 
-    // Get total count before pagination
-    const total = await queryBuilder.getCount();
-
     // Order by most recent first
     queryBuilder.orderBy('thread.updatedAt', 'DESC');
 
@@ -141,12 +138,16 @@ export class LocalThreadsRepository extends ThreadsRepository {
       queryBuilder.addOrderBy('messages.createdAt', 'ASC');
     }
 
-    // Apply pagination
+    // Apply pagination and get data with count in one call
+    // getManyAndCount() automatically uses COUNT(DISTINCT thread.id) for correct totals with joins
     const limit = pagination?.limit ?? ThreadsConstants.DEFAULT_LIMIT;
     const offset = pagination?.offset ?? 0;
-    queryBuilder.skip(offset).take(limit);
 
-    const threadEntities = await queryBuilder.getMany();
+    const [threadEntities, total] = await queryBuilder
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
+
     const threads = threadEntities.map((entity) =>
       this.threadMapper.toDomain(entity),
     );

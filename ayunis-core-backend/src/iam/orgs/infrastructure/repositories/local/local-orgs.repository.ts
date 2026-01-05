@@ -102,13 +102,13 @@ export class LocalOrgsRepository extends OrgsRepository {
         });
       }
 
-      // Get total count before pagination
-      const total = await queryBuilder.getCount();
+      // Apply pagination and get data with count in one call
+      // getManyAndCount() automatically uses COUNT(DISTINCT org.id) for correct totals with joins
+      const [orgRecords, total] = await queryBuilder
+        .skip(pagination.offset)
+        .take(pagination.limit)
+        .getManyAndCount();
 
-      // Apply pagination
-      queryBuilder.skip(pagination.offset).take(pagination.limit);
-
-      const orgRecords = await queryBuilder.getMany();
       const orgs = orgRecords.map((record) => OrgMapper.toDomain(record));
 
       return new Paginated<Org>({
