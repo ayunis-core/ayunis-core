@@ -4,6 +4,9 @@ applyDomPatch(); // Must be called before React renders
 import { initSentry } from '@/shared/lib/sentry';
 initSentry();
 
+import { initReleaseNotes } from '@/shared/lib/release-notes';
+initReleaseNotes();
+
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
