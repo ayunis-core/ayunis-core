@@ -1,8 +1,5 @@
-import {
-  getUserControllerGetUsersInOrganizationQueryKey,
-  useUserControllerDeleteUser,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { useQueryClient } from '@tanstack/react-query';
+import { useUserControllerDeleteUser } from '@/shared/api/generated/ayunisCoreAPI';
+import { useRouter } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -12,16 +9,13 @@ interface UseUserDeleteOptions {
 }
 
 export function useUserDelete(options?: UseUserDeleteOptions) {
-  const queryClient = useQueryClient();
+  const router = useRouter();
   const { t } = useTranslation('admin-settings-users');
   const deleteUserMutation = useUserControllerDeleteUser({
     mutation: {
       onSuccess: () => {
-        console.log('Delete user succeeded, invalidating queries');
         showSuccess(t('userDelete.success'));
-        void queryClient.invalidateQueries({
-          queryKey: [...getUserControllerGetUsersInOrganizationQueryKey()],
-        });
+        void router.invalidate();
 
         // Call the success callback
         if (options?.onSuccessCallback) {

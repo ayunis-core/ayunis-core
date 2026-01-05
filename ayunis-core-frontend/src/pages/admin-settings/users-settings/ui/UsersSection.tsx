@@ -23,7 +23,6 @@ import { MoreHorizontal, Edit, Trash2, UserCheck, Mail } from 'lucide-react';
 import { useUserRoleUpdate } from '../api/useUserRoleUpdate';
 import { useUserDelete } from '../api/useUserDelete';
 import { useTriggerPasswordReset } from '../api/useTriggerPasswordReset';
-import { useUsers } from '../api/useUsers';
 import { useState, type ReactNode } from 'react';
 import type { User } from '../model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -37,12 +36,11 @@ interface UsersSectionProps {
 }
 
 export default function UsersSection({
-  users: usersFromLoader,
+  users,
   searchSlot,
   paginationSlot,
 }: UsersSectionProps) {
   const { t } = useTranslation('admin-settings-users');
-  const { users } = useUsers({ initialData: usersFromLoader });
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({
     onSuccessCallback: () => setLoadingUserId(null),

@@ -50,7 +50,7 @@ export default function SuperAdminUsersSearch({
           params: { id: orgId },
           search: (prev: SearchParams) => ({
             ...prev,
-            tab: 'users',
+            tab: 'users' as const,
             usersSearch: newValue || undefined,
             usersPage: undefined,
           }),
