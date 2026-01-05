@@ -1609,6 +1609,15 @@ export interface GetThreadsResponseDto {
   pagination: PaginationDto;
 }
 
+export interface UpdateThreadTitleDto {
+  /**
+   * The new title for the thread
+   * @minLength 1
+   * @maxLength 200
+   */
+  title: string;
+}
+
 /**
  * The type of tool to assign
  */

@@ -116,6 +116,7 @@ import type {
   UpdatePermittedModelDto,
   UpdatePromptDto,
   UpdateSeatsDto,
+  UpdateThreadTitleDto,
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
@@ -6145,6 +6146,71 @@ export const useThreadsControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update a thread title
+ */
+export const threadsControllerUpdateTitle = (
+    id: string,
+    updateThreadTitleDto: UpdateThreadTitleDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/title`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateThreadTitleDto
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUpdateTitleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, TError,{id: string;data: UpdateThreadTitleDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, TError,{id: string;data: UpdateThreadTitleDto}, TContext> => {
+
+const mutationKey = ['threadsControllerUpdateTitle'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, {id: string;data: UpdateThreadTitleDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadsControllerUpdateTitle(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUpdateTitleMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>>
+    export type ThreadsControllerUpdateTitleMutationBody = UpdateThreadTitleDto
+    export type ThreadsControllerUpdateTitleMutationError = void
+
+    /**
+ * @summary Update a thread title
+ */
+export const useThreadsControllerUpdateTitle = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, TError,{id: string;data: UpdateThreadTitleDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUpdateTitle>>,
+        TError,
+        {id: string;data: UpdateThreadTitleDto},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUpdateTitleMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
