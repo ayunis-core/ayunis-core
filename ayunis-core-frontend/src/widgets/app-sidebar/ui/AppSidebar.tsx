@@ -7,6 +7,7 @@ import {
   LogOut,
   Plus,
   Bot,
+  Megaphone,
 } from 'lucide-react';
 
 import {
@@ -39,6 +40,8 @@ import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
 import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import config from '@/shared/config';
+import { useReleaseNotes } from '@/features/useReleaseNotes';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -47,6 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
+  useReleaseNotes();
 
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
@@ -118,6 +122,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter>
         <SidebarMenu>
+          {config.features.releaseNotes && (
+            <SidebarMenuItem>
+              <SidebarMenuButton id="updates-button">
+                <Megaphone />
+                <span>{t('sidebar.updates')}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
