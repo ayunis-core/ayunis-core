@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,7 @@ export function RenameThreadDialog({
   const { t } = useTranslation('common');
   const [title, setTitle] = useState(currentTitle || '');
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { rename, isRenaming } = useRenameThread({
     onSuccess: () => {
@@ -84,9 +85,15 @@ export function RenameThreadDialog({
     }
   };
 
+  const handleOpenAutoFocus = (event: Event) => {
+    event.preventDefault();
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" onOpenAutoFocus={handleOpenAutoFocus}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t('sidebar.renameThreadTitle')}</DialogTitle>
@@ -98,11 +105,11 @@ export function RenameThreadDialog({
             <div className="grid gap-2">
               <Label htmlFor="title">{t('sidebar.renameThreadLabel')}</Label>
               <Input
+                ref={inputRef}
                 id="title"
                 value={title}
                 onChange={handleTitleChange}
                 placeholder={t('sidebar.renameThreadPlaceholder')}
-                autoFocus
                 maxLength={MAX_TITLE_LENGTH + 1}
                 aria-invalid={!!error}
               />
