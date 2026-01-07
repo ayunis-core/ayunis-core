@@ -50,6 +50,7 @@ import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/mo
 import { ThreadsModule } from '../threads/threads.module';
 import { AgentsModule } from '../agents/agents.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
+import { ClearDefaultsByCatalogModelIdUseCase } from './application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { LocalOllamaInferenceHandler } from './infrastructure/inference/local-ollama.inference';
 import { LocalOllamaStreamInferenceHandler } from './infrastructure/stream-inference/local-ollama.stream-inference';
@@ -214,6 +215,8 @@ import { MessagesModule } from '../messages/messages.module';
     GetOrgDefaultModelUseCase,
     // Org Default Model Use Cases
     ManageOrgDefaultModelUseCase,
+    // Catalog Model Archival Use Cases
+    ClearDefaultsByCatalogModelIdUseCase,
     // Model Management Use Cases
     CreateLanguageModelUseCase,
     CreateEmbeddingModelUseCase,
