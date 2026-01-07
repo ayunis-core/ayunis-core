@@ -1,5 +1,4 @@
 import {
-  getSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey,
   getSuperAdminModelsControllerGetAvailableModelsQueryKey,
   getSuperAdminModelsControllerGetPermittedModelsQueryKey,
   type ModelWithConfigResponseDto,
@@ -62,9 +61,6 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
           const queryKeys = [
             getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId),
             getSuperAdminModelsControllerGetPermittedModelsQueryKey(orgId),
-            getSuperAdminModelsControllerGetAllModelProviderInfosWithPermittedStatusQueryKey(
-              orgId,
-            ),
           ];
 
           await Promise.all(

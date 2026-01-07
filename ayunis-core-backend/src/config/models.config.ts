@@ -10,6 +10,11 @@ export const modelsConfig = registerAs('models', () => ({
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY,
   },
+  bedrock: {
+    awsRegion: process.env.AWS_BEDROCK_REGION,
+    awsAccessKeyId: process.env.AWS_BEDROCK_ACCESS_KEY_ID,
+    awsSecretAccessKey: process.env.AWS_BEDROCK_SECRET_ACCESS_KEY,
+  },
   ollama: {
     baseURL: process.env.OLLAMA_BASE_URL,
   },

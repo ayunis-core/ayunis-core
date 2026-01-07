@@ -3,6 +3,12 @@
     "loading": "Modelle werden geladen...",
     "noModelsAvailable": "Keine Modelle verfügbar. Bitte überprüfen Sie Ihre Konfiguration.",
     "noModelsForProvider": "Keine Modelle für diesen Provider verfügbar.",
+    "languageModels": "Sprachmodelle",
+    "embeddingModels": "Embedding-Modelle",
+    "languageModelsDescription": "Modelle für Textgenerierung und Konversation.",
+    "embeddingModelsDescription": "Modelle für Dokumentenanalyse und Suche.",
+    "noLanguageModels": "Keine Sprachmodelle verfügbar.",
+    "noEmbeddingModels": "Keine Embedding-Modelle verfügbar.",
     "streaming": "Streaming",
     "streamingTooltip": "Das Modell sendet Antworten als Stream. Dadurch wird die Antwort Schritt für Schritt geliefert",
     "reasoning": "Reasoning",
@@ -11,23 +17,14 @@
     "embeddingTooltip": "Das Modell wird verwendet, um Dokumente zu embedden, was für die Dokumentenanalyse-Funktionen erforderlich ist",
     "tools": "Tools",
     "toolsTooltip": "Das Modell kann Tools verwenden, wie z.B. die Internetrecherche, Dokumentenanalyse oder Datenaufbereitung",
-    "enableProvider": "Provider freischalten",
-    "disableProvider": "Provider deaktivieren",
-    "providerDisabled": "Kann nicht aktiviert werden, da der Provider nicht freigeschaltet ist.",
+    "vision": "Vision",
+    "visionTooltip": "Das Modell kann Bilder verarbeiten und verstehen",
     "hostedIn": {
       "de": "Betrieben in 🇩🇪",
       "us": "Betrieben in 🇺🇸",
       "eu": "Betrieben in 🇪🇺",
       "selfHosted": "Betrieben auf Ihrer eigenen Infrastruktur",
       "ayunis": "Betrieben in 🇩🇪 in souveräner Cloud"
-    },
-    "providerConfirmation": {
-      "enableProvider": "{{provider}} freischalten",
-      "disableProvider": "{{provider}} deaktivieren",
-      "enableProviderDescription": "Wenn Sie diesen Provider freischalten, können alle Benutzer diesen Provider verwenden und auf dessen freigeschalteten Modelle zugreifen.",
-      "disableProviderDescription": "Wenn Sie diesen Provider deaktivieren, können Benutzer nicht mehr auf dessen freigeschalteten Modelle zugreifen.",
-      "acceptTermsAndPrivacy": "Ich akzeptiere die <termsLink>zusätzlichen Nutzungsbedingungen</termsLink>.",
-      "mistralProviderHint": "Zusätzlich wird das OCR-Modell von Mistral verwendet, um hochgeladene PDF-Dateien zu analysieren und ein verbessertes Ergebnis gegenüber regulären OCR-Tools zu erzielen."
     },
     "deletePermittedModel": {
       "title": "Model löschen",
@@ -36,15 +33,8 @@
       "cancelText": "Abbrechen",
       "error": "Modellzugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
     },
-    "createPermittedProvider": {
-      "error": "Provider konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
-    },
-    "deletePermittedProvider": {
-      "error": "Provider-Zugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
-    },
     "createPermittedModel": {
       "multipleEmbeddingModelsNotAllowed": "Es kann nur ein Embedding-Modell pro Organisation erstellt werden.",
-      "modelProviderNotPermitted": "Der Modell-Provider ist nicht freigeschaltet.",
       "modelNotFound": "Das Modell wurde nicht gefunden.",
       "error": "Ein Fehler ist aufgetreten, während das Modell freigeschaltet wurde."
     },

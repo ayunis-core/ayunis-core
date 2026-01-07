@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 // Features
 import { useProviderUsageChart } from '@/features/usage';
-import { usePermittedProviders } from '@/features/models';
+import { useProviders } from '@/features/models';
 
 // UI
 import { ProviderConsumptionLoading } from './ProviderConsumptionLoading';
@@ -32,7 +32,7 @@ export function ProviderConsumption({
     provider: selectedProvider,
   } as Parameters<typeof useProviderUsageChart>[0]);
 
-  const { providers } = usePermittedProviders();
+  const { providers } = useProviders();
 
   // Create a map from technical provider name to display name
   const providerDisplayNames = useMemo(() => {

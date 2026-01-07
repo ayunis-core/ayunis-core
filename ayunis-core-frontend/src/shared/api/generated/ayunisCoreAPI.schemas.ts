@@ -22,6 +22,7 @@ export type ModelWithConfigResponseDtoProvider = typeof ModelWithConfigResponseD
 export const ModelWithConfigResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -86,6 +87,7 @@ export type PermittedLanguageModelResponseDtoProvider = typeof PermittedLanguage
 export const PermittedLanguageModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -111,6 +113,8 @@ export interface PermittedLanguageModelResponseDto {
   name: string;
   /** The provider of the model */
   provider: PermittedLanguageModelResponseDtoProvider;
+  /** The display name of the provider */
+  providerDisplayName: string;
   /** The display name of the model */
   displayName: string;
   /** The type of the model (always language) */
@@ -161,6 +165,7 @@ export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoRespo
 export const ModelProviderInfoResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -192,134 +197,6 @@ export interface ModelProviderInfoResponseDto {
   hostedIn: ModelProviderInfoResponseDtoHostedIn;
 }
 
-/**
- * The model provider to permit
- */
-export type CreatePermittedProviderDtoProvider = typeof CreatePermittedProviderDtoProvider[keyof typeof CreatePermittedProviderDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreatePermittedProviderDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-export interface CreatePermittedProviderDto {
-  /** The model provider to permit */
-  provider: CreatePermittedProviderDtoProvider;
-}
-
-/**
- * The permitted model provider
- */
-export type PermittedProviderResponseDtoProvider = typeof PermittedProviderResponseDtoProvider[keyof typeof PermittedProviderResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedProviderResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The location where the provider hosts their services
- */
-export type PermittedProviderResponseDtoHostedIn = typeof PermittedProviderResponseDtoHostedIn[keyof typeof PermittedProviderResponseDtoHostedIn];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PermittedProviderResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
-} as const;
-
-export interface PermittedProviderResponseDto {
-  /** The permitted model provider */
-  provider: PermittedProviderResponseDtoProvider;
-  /** The display name of the model provider */
-  displayName: string;
-  /** The location where the provider hosts their services */
-  hostedIn: PermittedProviderResponseDtoHostedIn;
-}
-
-/**
- * The model provider to remove
- */
-export type DeletePermittedProviderDtoProvider = typeof DeletePermittedProviderDtoProvider[keyof typeof DeletePermittedProviderDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const DeletePermittedProviderDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-export interface DeletePermittedProviderDto {
-  /** The model provider to remove */
-  provider: DeletePermittedProviderDtoProvider;
-}
-
-/**
- * The model provider identifier
- */
-export type ModelProviderWithPermittedStatusResponseDtoProvider = typeof ModelProviderWithPermittedStatusResponseDtoProvider[keyof typeof ModelProviderWithPermittedStatusResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelProviderWithPermittedStatusResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-} as const;
-
-/**
- * The location where the provider hosts their services
- */
-export type ModelProviderWithPermittedStatusResponseDtoHostedIn = typeof ModelProviderWithPermittedStatusResponseDtoHostedIn[keyof typeof ModelProviderWithPermittedStatusResponseDtoHostedIn];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelProviderWithPermittedStatusResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
-} as const;
-
-export interface ModelProviderWithPermittedStatusResponseDto {
-  /** The model provider identifier */
-  provider: ModelProviderWithPermittedStatusResponseDtoProvider;
-  /** The display name of the model provider */
-  displayName: string;
-  /** The location where the provider hosts their services */
-  hostedIn: ModelProviderWithPermittedStatusResponseDtoHostedIn;
-  /** Whether this provider is permitted for the organization */
-  isPermitted: boolean;
-}
-
 export interface EmbeddingModelEnabledResponseDto {
   /** Whether the organization has an embedding model enabled */
   isEmbeddingModelEnabled: boolean;
@@ -335,6 +212,7 @@ export type PermittedEmbeddingModelResponseDtoProvider = typeof PermittedEmbeddi
 export const PermittedEmbeddingModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -360,6 +238,8 @@ export interface PermittedEmbeddingModelResponseDto {
   name: string;
   /** The provider of the model */
   provider: PermittedEmbeddingModelResponseDtoProvider;
+  /** The display name of the provider */
+  providerDisplayName: string;
   /** The display name of the model */
   displayName: string;
   /** The type of the model (always embedding) */
@@ -383,6 +263,7 @@ export type CreateLanguageModelRequestDtoProvider = typeof CreateLanguageModelRe
 export const CreateLanguageModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -419,6 +300,7 @@ export type UpdateLanguageModelRequestDtoProvider = typeof UpdateLanguageModelRe
 export const UpdateLanguageModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -455,6 +337,7 @@ export type CreateEmbeddingModelRequestDtoProvider = typeof CreateEmbeddingModel
 export const CreateEmbeddingModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -498,6 +381,7 @@ export type UpdateEmbeddingModelRequestDtoProvider = typeof UpdateEmbeddingModel
 export const UpdateEmbeddingModelRequestDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -541,6 +425,7 @@ export type LanguageModelResponseDtoProvider = typeof LanguageModelResponseDtoPr
 export const LanguageModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -596,6 +481,7 @@ export type EmbeddingModelResponseDtoProvider = typeof EmbeddingModelResponseDto
 export const EmbeddingModelResponseDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -1075,6 +961,11 @@ export interface UploadFileResponseDto {
   contentType?: string;
   /** Last modified date of the uploaded object */
   lastModified?: string;
+}
+
+export interface RetrieveUrlDto {
+  /** URL to retrieve content from */
+  url: string;
 }
 
 export interface CreateThreadDto {
@@ -2050,11 +1941,6 @@ export interface ValidationResponseDto {
   error?: string;
 }
 
-export interface RetrieveUrlDto {
-  /** URL to retrieve content from */
-  url: string;
-}
-
 /**
  * Type of the message content
  */
@@ -2331,6 +2217,7 @@ export type ProviderUsageDtoProvider = typeof ProviderUsageDtoProvider[keyof typ
 export const ProviderUsageDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',
@@ -2393,6 +2280,7 @@ export type ModelDistributionDtoProvider = typeof ModelDistributionDtoProvider[k
 export const ModelDistributionDtoProvider = {
   openai: 'openai',
   anthropic: 'anthropic',
+  bedrock: 'bedrock',
   mistral: 'mistral',
   ollama: 'ollama',
   synaforce: 'synaforce',

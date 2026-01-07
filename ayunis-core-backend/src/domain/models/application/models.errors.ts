@@ -27,7 +27,6 @@ export enum ModelErrorCode {
   MODEL_UPDATE_FAILED = 'MODEL_UPDATE_FAILED',
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
   MODEL_PROVIDER_INFO_NOT_FOUND = 'MODEL_PROVIDER_INFO_NOT_FOUND',
-  MODEL_PROVIDER_NOT_PERMITTED = 'MODEL_PROVIDER_NOT_PERMITTED',
   MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED = 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED',
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
 }
@@ -296,20 +295,6 @@ export class ModelProviderInfoNotFoundError extends ModelError {
       `Model provider info for '${provider}' not found`,
       ModelErrorCode.MODEL_PROVIDER_INFO_NOT_FOUND,
       404,
-      metadata,
-    );
-  }
-}
-
-/**
- * Error thrown when a model provider is not permitted
- */
-export class ModelProviderNotPermittedError extends ModelError {
-  constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
-    super(
-      `Model provider '${provider}' is not permitted`,
-      ModelErrorCode.MODEL_PROVIDER_NOT_PERMITTED,
-      403,
       metadata,
     );
   }

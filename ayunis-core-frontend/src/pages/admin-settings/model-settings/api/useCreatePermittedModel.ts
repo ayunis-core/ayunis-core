@@ -57,11 +57,6 @@ export function useCreatePermittedModel() {
                 ),
               );
               break;
-            case 'MODEL_PROVIDER_NOT_PERMITTED':
-              showError(
-                t('models.createPermittedModel.modelProviderNotPermitted'),
-              );
-              break;
             case 'MODEL_NOT_FOUND':
               showError(t('models.createPermittedModel.modelNotFound'));
               break;
