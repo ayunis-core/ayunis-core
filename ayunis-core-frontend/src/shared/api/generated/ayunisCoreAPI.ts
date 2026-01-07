@@ -57,7 +57,7 @@ import type {
   ErrorResponseDto,
   ForgotPasswordDto,
   GetThreadResponseDto,
-  GetThreadsResponseDtoItem,
+  GetThreadsResponseDto,
   InviteDetailResponseDto,
   InviteResponseDto,
   IsCloudResponseDto,
@@ -69,6 +69,7 @@ import type {
   ModelProviderInfoResponseDto,
   ModelProviderWithPermittedStatusResponseDto,
   ModelWithConfigResponseDto,
+  PaginatedUsersListResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
   PermittedProviderResponseDto,
@@ -100,6 +101,7 @@ import type {
   SuperAdminOrgsControllerGetAllOrgsParams,
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
+  SuperAdminUsersControllerGetUsersByOrgIdParams,
   ThreadsControllerAddFileSourceBody,
   ThreadsControllerFindAllParams,
   ThreadsControllerGetThreadSources200Item,
@@ -114,6 +116,7 @@ import type {
   UpdatePermittedModelDto,
   UpdatePromptDto,
   UpdateSeatsDto,
+  UpdateThreadTitleDto,
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
@@ -125,11 +128,11 @@ import type {
   UsageControllerGetUsageStatsParams,
   UsageControllerGetUserUsageParams,
   UsageStatsResponseDto,
+  UserControllerGetUsersInOrganizationParams,
   UserControllerValidateResetToken200,
   UserControllerValidateResetTokenParams,
   UserResponseDto,
   UserUsageResponseDto,
-  UsersListResponseDto,
   ValidationResponseDto
 } from './ayunisCoreAPI.schemas';
 
@@ -2949,7 +2952,7 @@ export const useSuperAdminOrgsControllerCreateOrg = <TError = void,
     }
     
 /**
- * Retrieve every organization in the system. Only accessible to users with the super admin system role.
+ * Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.
  * @summary List all organizations
  */
 export const superAdminOrgsControllerGetAllOrgs = (
@@ -3128,37 +3131,38 @@ export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType
 
 
 /**
- * Retrieve all users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
+ * Retrieve paginated users that belong to the current authenticated user's organization. Returns user information without sensitive data like password hashes.
  * @summary Get users in current organization
  */
 export const userControllerGetUsersInOrganization = (
-    
+    params?: UserControllerGetUsersInOrganizationParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<UsersListResponseDto>(
-      {url: `/users`, method: 'GET', signal
+      return customAxiosInstance<PaginatedUsersListResponseDto>(
+      {url: `/users`, method: 'GET',
+        params, signal
     },
       );
     }
   
 
-export const getUserControllerGetUsersInOrganizationQueryKey = () => {
-    return [`/users`] as const;
+export const getUserControllerGetUsersInOrganizationQueryKey = (params?: UserControllerGetUsersInOrganizationParams,) => {
+    return [`/users`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getUserControllerGetUsersInOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
+export const getUserControllerGetUsersInOrganizationQueryOptions = <TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(params?: UserControllerGetUsersInOrganizationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getUserControllerGetUsersInOrganizationQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getUserControllerGetUsersInOrganizationQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>> = ({ signal }) => userControllerGetUsersInOrganization(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>> = ({ signal }) => userControllerGetUsersInOrganization(params, signal);
 
       
 
@@ -3172,7 +3176,7 @@ export type UserControllerGetUsersInOrganizationQueryError = void
 
 
 export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
+ params: undefined |  UserControllerGetUsersInOrganizationParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>,
           TError,
@@ -3182,7 +3186,7 @@ export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnTy
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
+ params?: UserControllerGetUsersInOrganizationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>,
           TError,
@@ -3192,7 +3196,7 @@ export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnTy
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
+ params?: UserControllerGetUsersInOrganizationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -3200,11 +3204,11 @@ export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnTy
  */
 
 export function useUserControllerGetUsersInOrganization<TData = Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
+ params?: UserControllerGetUsersInOrganizationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof userControllerGetUsersInOrganization>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getUserControllerGetUsersInOrganizationQueryOptions(options)
+  const queryOptions = getUserControllerGetUsersInOrganizationQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -3894,37 +3898,41 @@ export function useUserControllerValidateResetToken<TData = Awaited<ReturnType<t
 
 
 /**
- * Retrieve all users that belong to the specified organization. This endpoint is only accessible to super admins.
+ * Retrieve paginated users that belong to the specified organization. This endpoint is only accessible to super admins.
  * @summary Get users by organization ID
  */
 export const superAdminUsersControllerGetUsersByOrgId = (
     orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<UsersListResponseDto>(
-      {url: `/super-admin/users/${orgId}`, method: 'GET', signal
+      return customAxiosInstance<PaginatedUsersListResponseDto>(
+      {url: `/super-admin/users/${orgId}`, method: 'GET',
+        params, signal
     },
       );
     }
   
 
-export const getSuperAdminUsersControllerGetUsersByOrgIdQueryKey = (orgId: string,) => {
-    return [`/super-admin/users/${orgId}`] as const;
+export const getSuperAdminUsersControllerGetUsersByOrgIdQueryKey = (orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams,) => {
+    return [`/super-admin/users/${orgId}`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getSuperAdminUsersControllerGetUsersByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
+export const getSuperAdminUsersControllerGetUsersByOrgIdQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(orgId);
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsersControllerGetUsersByOrgIdQueryKey(orgId,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>> = ({ signal }) => superAdminUsersControllerGetUsersByOrgId(orgId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>> = ({ signal }) => superAdminUsersControllerGetUsersByOrgId(orgId,params, signal);
 
       
 
@@ -3938,7 +3946,8 @@ export type SuperAdminUsersControllerGetUsersByOrgIdQueryError = void
 
 
 export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
- orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>> & Pick<
+ orgId: string,
+    params: undefined |  SuperAdminUsersControllerGetUsersByOrgIdParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>,
           TError,
@@ -3948,7 +3957,8 @@ export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<Retu
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>> & Pick<
+ orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>,
           TError,
@@ -3958,7 +3968,8 @@ export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<Retu
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
+ orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -3966,11 +3977,12 @@ export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<Retu
  */
 
 export function useSuperAdminUsersControllerGetUsersByOrgId<TData = Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError = void>(
- orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
+ orgId: string,
+    params?: SuperAdminUsersControllerGetUsersByOrgIdParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsersControllerGetUsersByOrgId>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSuperAdminUsersControllerGetUsersByOrgIdQueryOptions(orgId,options)
+  const queryOptions = getSuperAdminUsersControllerGetUsersByOrgIdQueryOptions(orgId,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5908,7 +5920,7 @@ export const threadsControllerFindAll = (
 ) => {
       
       
-      return customAxiosInstance<GetThreadsResponseDtoItem[]>(
+      return customAxiosInstance<GetThreadsResponseDto>(
       {url: `/threads`, method: 'GET',
         params, signal
     },
@@ -6134,6 +6146,71 @@ export const useThreadsControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update a thread title
+ */
+export const threadsControllerUpdateTitle = (
+    id: string,
+    updateThreadTitleDto: UpdateThreadTitleDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/title`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateThreadTitleDto
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUpdateTitleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, TError,{id: string;data: UpdateThreadTitleDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, TError,{id: string;data: UpdateThreadTitleDto}, TContext> => {
+
+const mutationKey = ['threadsControllerUpdateTitle'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, {id: string;data: UpdateThreadTitleDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  threadsControllerUpdateTitle(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUpdateTitleMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>>
+    export type ThreadsControllerUpdateTitleMutationBody = UpdateThreadTitleDto
+    export type ThreadsControllerUpdateTitleMutationError = void
+
+    /**
+ * @summary Update a thread title
+ */
+export const useThreadsControllerUpdateTitle = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUpdateTitle>>, TError,{id: string;data: UpdateThreadTitleDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUpdateTitle>>,
+        TError,
+        {id: string;data: UpdateThreadTitleDto},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUpdateTitleMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -8645,7 +8722,7 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
     }
     
 /**
- * Returns configuration settings for the usage dashboard, including deployment mode and cost display settings. This endpoint helps the frontend determine which features to show based on the deployment type.
+ * Returns configuration settings for the usage dashboard, including deployment mode. This endpoint helps the frontend determine which features to show based on the deployment type.
  * @summary Get usage dashboard configuration
  */
 export const usageControllerGetUsageConfig = (
@@ -8734,7 +8811,7 @@ export function useUsageControllerGetUsageConfig<TData = Awaited<ReturnType<type
 
 
 /**
- * Returns aggregated usage statistics including total tokens, requests, active users, and cost information (self-hosted only). Dates are optional - if not provided, shows all usage.
+ * Returns aggregated usage statistics including total tokens, requests, and active users. Dates are optional - if not provided, shows all usage.
  * @summary Get overall usage statistics
  */
 export const usageControllerGetUsageStats = (

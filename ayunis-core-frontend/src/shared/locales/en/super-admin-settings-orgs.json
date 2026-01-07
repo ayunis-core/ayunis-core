@@ -40,5 +40,8 @@
   "createOrg": {
     "success": "Organization created successfully",
     "error": "Failed to create organization. Please try again."
+  },
+  "search": {
+    "placeholder": "Search organizations..."
   }
 }

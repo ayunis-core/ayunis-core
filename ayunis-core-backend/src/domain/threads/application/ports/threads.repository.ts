@@ -1,6 +1,7 @@
 import { SourceAssignment } from '../../domain/thread-source-assignment.entity';
 import { Thread } from '../../domain/thread.entity';
 import { UUID } from 'crypto';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 export interface ThreadsFindAllOptions {
   withSources?: boolean;
@@ -13,6 +14,11 @@ export interface ThreadsFindAllFilters {
   agentId?: string;
 }
 
+export interface ThreadsPagination {
+  limit: number;
+  offset: number;
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
@@ -20,7 +26,8 @@ export abstract class ThreadsRepository {
     userId: UUID,
     options?: ThreadsFindAllOptions,
     filters?: ThreadsFindAllFilters,
-  ): Promise<Thread[]>;
+    pagination?: ThreadsPagination,
+  ): Promise<Paginated<Thread>>;
   abstract findAllByModel(
     modelId: UUID,
     options?: ThreadsFindAllOptions,
@@ -51,4 +58,5 @@ export abstract class ThreadsRepository {
     excludeUserId?: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
+  abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
 }

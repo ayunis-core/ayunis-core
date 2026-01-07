@@ -2,6 +2,7 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   ThreadsFindAllFilters,
   ThreadsFindAllOptions,
+  ThreadsPagination,
   ThreadsRepository,
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
@@ -14,6 +15,8 @@ import { ThreadNotFoundError } from 'src/domain/threads/application/threads.erro
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ThreadSourceAssignmentMapper } from './mappers/thread-source-assignment.mapper';
 import { ThreadSourceAssignmentRecord } from './schema/thread-source-assignment.record';
+import { Paginated } from 'src/common/pagination/paginated.entity';
+import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -84,8 +87,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
     userId: UUID,
     options?: ThreadsFindAllOptions,
     filters?: ThreadsFindAllFilters,
-  ): Promise<Thread[]> {
-    this.logger.log('findAll', { userId, filters });
+    pagination?: ThreadsPagination,
+  ): Promise<Paginated<Thread>> {
+    this.logger.log('findAll', { userId, filters, pagination });
 
     const queryBuilder = this.threadRepository
       .createQueryBuilder('thread')
@@ -106,7 +110,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
     // Add relations based on options
     if (options?.withMessages) {
       queryBuilder.leftJoinAndSelect('thread.messages', 'messages');
-      queryBuilder.orderBy('messages.createdAt', 'ASC');
     }
     if (options?.withSources) {
       queryBuilder.leftJoinAndSelect(
@@ -114,13 +117,47 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'sourceAssignments',
       );
       queryBuilder.leftJoinAndSelect('sourceAssignments.source', 'source');
+      queryBuilder.leftJoinAndSelect(
+        'source.textSourceDetails',
+        'textSourceDetails',
+      );
+      queryBuilder.leftJoinAndSelect(
+        'source.dataSourceDetails',
+        'dataSourceDetails',
+      );
     }
     if (options?.withModel) {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
 
-    const threadEntities = await queryBuilder.getMany();
-    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
+    // Order by most recent first
+    queryBuilder.orderBy('thread.updatedAt', 'DESC');
+
+    // Apply messages ordering if needed
+    if (options?.withMessages) {
+      queryBuilder.addOrderBy('messages.createdAt', 'ASC');
+    }
+
+    // Apply pagination and get data with count in one call
+    // getManyAndCount() automatically uses COUNT(DISTINCT thread.id) for correct totals with joins
+    const limit = pagination?.limit ?? ThreadsConstants.DEFAULT_LIMIT;
+    const offset = pagination?.offset ?? 0;
+
+    const [threadEntities, total] = await queryBuilder
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
+
+    const threads = threadEntities.map((entity) =>
+      this.threadMapper.toDomain(entity),
+    );
+
+    return new Paginated<Thread>({
+      data: threads,
+      limit,
+      offset,
+      total,
+    });
   }
 
   async findAllByModel(
@@ -295,5 +332,19 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async delete(id: UUID, userId: UUID): Promise<void> {
     this.logger.log('delete', { id, userId });
     await this.threadRepository.delete({ id, userId });
+  }
+
+  async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
+    this.logger.log('findAllByOrgIdWithSources', { orgId });
+    const threadEntities = await this.threadRepository
+      .createQueryBuilder('thread')
+      .innerJoin('users', 'user', 'user.id = thread.userId')
+      .leftJoinAndSelect('thread.sourceAssignments', 'sourceAssignments')
+      .leftJoinAndSelect('sourceAssignments.source', 'source')
+      .leftJoinAndSelect('source.textSourceDetails', 'textSourceDetails')
+      .leftJoinAndSelect('source.dataSourceDetails', 'dataSourceDetails')
+      .where('user.orgId = :orgId', { orgId })
+      .getMany();
+    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
   }
 }

@@ -112,4 +112,16 @@ export class LocalSourceRepository extends SourceRepository {
     const { source: record } = this.mapper.toRecord(source);
     await this.sourceRepository.remove(record);
   }
+
+  async deleteMany(sourceIds: UUID[]): Promise<void> {
+    this.logger.log('deleteMany', { count: sourceIds.length });
+    if (sourceIds.length === 0) {
+      return;
+    }
+    await this.sourceRepository
+      .createQueryBuilder()
+      .delete()
+      .where('id IN (:...ids)', { ids: sourceIds })
+      .execute();
+  }
 }

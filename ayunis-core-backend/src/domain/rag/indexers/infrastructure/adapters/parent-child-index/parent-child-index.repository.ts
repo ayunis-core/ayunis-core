@@ -34,6 +34,18 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     await this.parentChunkRepository.remove(parentChunks);
   }
 
+  async deleteMany(relatedDocumentIds: UUID[]): Promise<void> {
+    if (relatedDocumentIds.length === 0) {
+      return;
+    }
+    await this.parentChunkRepository
+      .createQueryBuilder()
+      .delete()
+      .from(ParentChunkRecord)
+      .where('relatedDocumentId IN (:...ids)', { ids: relatedDocumentIds })
+      .execute();
+  }
+
   async find(
     queryVector: number[],
     relatedDocumentId: UUID,

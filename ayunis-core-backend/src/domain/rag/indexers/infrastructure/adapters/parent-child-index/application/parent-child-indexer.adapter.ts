@@ -11,6 +11,8 @@ import { SearchContentUseCase } from './use-cases/search-content/search-content.
 import { UUID } from 'crypto';
 import { DeleteContentUseCase } from './use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from './use-cases/delete-content/delete-content.command';
+import { DeleteContentsUseCase } from './use-cases/delete-contents/delete-contents.use-case';
+import { DeleteContentsCommand } from './use-cases/delete-contents/delete-contents.command';
 
 @Injectable()
 export class ParentChildIndexerAdapter extends IndexerPort {
@@ -18,6 +20,7 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     private readonly ingestContentUseCase: IngestContentUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
+    private readonly deleteContentsUseCase: DeleteContentsUseCase,
   ) {
     super();
   }
@@ -40,6 +43,14 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     await this.deleteContentUseCase.execute(
       new DeleteContentCommand({
         documentId,
+      }),
+    );
+  }
+
+  async deleteMany(documentIds: UUID[]): Promise<void> {
+    await this.deleteContentsUseCase.execute(
+      new DeleteContentsCommand({
+        documentIds,
       }),
     );
   }

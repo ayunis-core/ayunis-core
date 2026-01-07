@@ -19,6 +19,12 @@ export function normalizeSchemaForOpenAI(
     normalized.additionalProperties = false;
   }
 
+  // Add empty properties object if missing (OpenAI requires it)
+  if (normalized.type === 'object' && !('properties' in normalized)) {
+    normalized.properties = {};
+    normalized.required = [];
+  }
+
   // Recursively process properties
   if (normalized.properties && typeof normalized.properties === 'object') {
     const props = normalized.properties as Record<

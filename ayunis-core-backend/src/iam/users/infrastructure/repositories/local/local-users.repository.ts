@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import {
+  UsersRepository,
+  UsersPagination,
+  UsersFilters,
+} from 'src/iam/users/application/ports/users.repository';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UUID } from 'crypto';
 import { Repository, ILike } from 'typeorm';
@@ -11,6 +15,7 @@ import {
   UserAlreadyExistsError,
   UserAuthenticationFailedError,
 } from 'src/iam/users/application/users.errors';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
@@ -46,12 +51,52 @@ export class LocalUsersRepository extends UsersRepository {
     return UserMapper.toDomain(userRecord);
   }
 
-  async findManyByOrgId(orgId: UUID): Promise<User[]> {
-    this.logger.log('findManyByOrgId', { orgId });
-    const userEntities = await this.userRepository.find({
-      where: { orgId },
+  async findManyByOrgId(
+    orgId: UUID,
+    pagination: UsersPagination,
+    filters?: UsersFilters,
+  ): Promise<Paginated<User>> {
+    this.logger.log('findManyByOrgId', {
+      orgId,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      search: filters?.search,
     });
-    return userEntities.map((userEntity) => UserMapper.toDomain(userEntity));
+
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.orgId = :orgId', { orgId })
+      .orderBy('user.createdAt', 'DESC');
+
+    if (filters?.search) {
+      queryBuilder.andWhere(
+        '(user.name ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${filters.search}%` },
+      );
+    }
+
+    const total = await queryBuilder.getCount();
+
+    queryBuilder.skip(pagination.offset).take(pagination.limit);
+
+    const userRecords = await queryBuilder.getMany();
+    const users = userRecords.map((record) => UserMapper.toDomain(record));
+
+    return new Paginated<User>({
+      data: users,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      total,
+    });
+  }
+
+  async findAllIdsByOrgId(orgId: UUID): Promise<UUID[]> {
+    this.logger.log('findAllIdsByOrgId', { orgId });
+    const users = await this.userRepository.find({
+      where: { orgId },
+      select: { id: true },
+    });
+    return users.map((user) => user.id);
   }
 
   async create(user: User): Promise<User> {

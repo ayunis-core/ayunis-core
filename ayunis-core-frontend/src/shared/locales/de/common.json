@@ -33,7 +33,8 @@
     "renameThreadSuccess": "Chat erfolgreich umbenannt",
     "renameThreadError": "Chat konnte nicht umbenannt werden",
     "renameThreadEmptyError": "Titel darf nicht leer sein",
-    "renameThreadMaxLengthError": "Titel darf maximal {{max}} Zeichen lang sein"
+    "renameThreadMaxLengthError": "Titel darf maximal {{max}} Zeichen lang sein",
+    "showMore": "Mehr anzeigen..."
   },
   "chatInput": {
     "placeholder": "Stellen Sie eine Frage in Ayunis Core...",
