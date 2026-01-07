@@ -17,7 +17,7 @@ const USERS_PER_PAGE = 25;
 const searchSchema = z.object({
   tab: z.enum(['org', 'users', 'subscriptions', 'models', 'trials']).optional(),
   usersSearch: z.string().optional(),
-  usersPage: z.number().optional().catch(1),
+  usersPage: z.number().min(1).optional().catch(1),
 });
 
 export const Route = createFileRoute(
