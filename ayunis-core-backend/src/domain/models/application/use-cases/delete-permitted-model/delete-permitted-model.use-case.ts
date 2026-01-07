@@ -108,7 +108,7 @@ export class DeletePermittedModelUseCase {
       await this.getPermittedModelsUseCase.execute(
         new GetPermittedModelsQuery(orgId),
       )
-    ).filter((model) => model instanceof PermittedLanguageModel);
+    ).filter((m) => m instanceof PermittedLanguageModel);
     if (permittedModels.length === 1 && permittedModels[0].id === model.id) {
       throw new PermittedModelDeletionFailedError(
         'Cannot delete the last permitted language model in an organization',
@@ -116,9 +116,7 @@ export class DeletePermittedModelUseCase {
     }
 
     // Check if the model is the default model in the organization
-    const modelToDelete = permittedModels.find(
-      (model) => model.id === model.id,
-    );
+    const modelToDelete = permittedModels.find((m) => m.id === model.id);
     if (!modelToDelete) {
       throw new PermittedModelDeletionFailedError('Model not found', {
         modelId: model.id,
