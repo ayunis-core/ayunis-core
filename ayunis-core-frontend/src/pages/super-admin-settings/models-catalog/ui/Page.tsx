@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import ModelsCatalogList from './ModelsCatalogList';
+import { ModelsCatalogTabs } from './ModelsCatalogTabs';
 import { CreateLanguageModelDialog } from './CreateLanguageModelDialog';
 import { EditLanguageModelDialog } from './EditLanguageModelDialog';
 import { CreateEmbeddingModelDialog } from './CreateEmbeddingModelDialog';
@@ -35,6 +36,9 @@ export default function ModelsCatalogPage({
     useState<EmbeddingModelResponseDto | null>(null);
   const { deleteModel, isDeleting } = useDeleteModel();
   const { confirm } = useConfirmation();
+
+  const activeModels = models.filter((m) => !m.isArchived);
+  const archivedModels = models.filter((m) => m.isArchived);
 
   function handleDeleteModel(
     model: SuperAdminModelsControllerGetAllCatalogModels200Item,
@@ -71,15 +75,29 @@ export default function ModelsCatalogPage({
         </DropdownMenu>
       }
     >
-      <div className="space-y-4">
-        <ModelsCatalogList
-          models={models}
-          onEditLanguageModel={setEditLanguageModel}
-          onEditEmbeddingModel={setEditEmbeddingModel}
-          onDeleteModel={handleDeleteModel}
-          isDeleting={isDeleting}
-        />
-      </div>
+      <ModelsCatalogTabs
+        activeCount={activeModels.length}
+        archivedCount={archivedModels.length}
+        renderActiveContent={() => (
+          <ModelsCatalogList
+            models={activeModels}
+            onEditLanguageModel={setEditLanguageModel}
+            onEditEmbeddingModel={setEditEmbeddingModel}
+            onDeleteModel={handleDeleteModel}
+            isDeleting={isDeleting}
+          />
+        )}
+        renderArchivedContent={() => (
+          <ModelsCatalogList
+            models={archivedModels}
+            onEditLanguageModel={setEditLanguageModel}
+            onEditEmbeddingModel={setEditEmbeddingModel}
+            onDeleteModel={handleDeleteModel}
+            isDeleting={isDeleting}
+            isArchivedView
+          />
+        )}
+      />
 
       {/* Dialogs */}
       <CreateLanguageModelDialog

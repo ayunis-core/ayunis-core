@@ -63,6 +63,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       where: {
         orgId,
         isDefault: true,
+        model: { isArchived: false },
       },
       relations: {
         model: true,
@@ -123,7 +124,10 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
     this.logger.debug('findOneEmbedding', { orgId });
     const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId },
+      where: {
+        orgId,
+        model: { isArchived: false },
+      },
       relations: {
         model: true,
       },
@@ -151,7 +155,10 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
 
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
     const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId },
+      where: {
+        orgId,
+        model: { isArchived: false },
+      },
       relations: {
         model: true,
       },
