@@ -122,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter>
         <SidebarMenu>
-          {config.features.releaseNotes && (
+          {config.features.announcableOrgId && (
             <SidebarMenuItem>
               <SidebarMenuButton id="updates-button">
                 <Megaphone />
