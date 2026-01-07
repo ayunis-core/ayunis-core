@@ -13,7 +13,7 @@ const CHATS_PER_PAGE = 20;
 const searchSchema = z.object({
   search: z.string().optional(),
   agentId: z.string().optional(),
-  page: z.number().optional().catch(1),
+  page: z.number().min(1).optional().catch(1),
 });
 
 export const Route = createFileRoute('/_authenticated/chats/')({
