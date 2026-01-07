@@ -63,6 +63,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       where: {
         orgId,
         isDefault: true,
+        model: { isArchived: false },
       },
       relations: {
         model: true,
@@ -123,7 +124,10 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
     this.logger.debug('findOneEmbedding', { orgId });
     const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId },
+      where: {
+        orgId,
+        model: { isArchived: false },
+      },
       relations: {
         model: true,
       },
@@ -151,7 +155,10 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
 
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
     const permittedModels = await this.permittedModelRepository.find({
-      where: { orgId },
+      where: {
+        orgId,
+        model: { isArchived: false },
+      },
       relations: {
         model: true,
       },
@@ -293,5 +300,37 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     });
 
     return this.permittedModelMapper.toDomain(updatedModel);
+  }
+
+  async findAllByCatalogModelId(
+    catalogModelId: UUID,
+  ): Promise<PermittedModel[]> {
+    this.logger.log('findAllByCatalogModelId', { catalogModelId });
+
+    const permittedModels = await this.permittedModelRepository.find({
+      where: { modelId: catalogModelId },
+      relations: { model: true },
+    });
+
+    this.logger.debug('Found permitted models by catalog model id', {
+      catalogModelId,
+      count: permittedModels.length,
+    });
+
+    return permittedModels.map((pm) => this.permittedModelMapper.toDomain(pm));
+  }
+
+  async unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void> {
+    this.logger.log('unsetDefaultsByCatalogModelId', { catalogModelId });
+
+    const result = await this.permittedModelRepository.update(
+      { modelId: catalogModelId, isDefault: true },
+      { isDefault: false },
+    );
+
+    this.logger.debug('Unset defaults for catalog model', {
+      catalogModelId,
+      affected: result.affected,
+    });
   }
 }

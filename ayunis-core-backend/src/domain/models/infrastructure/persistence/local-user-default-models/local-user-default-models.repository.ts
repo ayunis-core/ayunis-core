@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { UserDefaultModelsRepository } from '../../../application/ports/user-default-models.repository';
 import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
@@ -173,6 +173,26 @@ export class LocalUserDefaultModelsRepository extends UserDefaultModelsRepositor
     this.logger.debug('Deleted user default models by model id', {
       modelId,
       affected: result.affected,
+    });
+  }
+
+  async deleteByPermittedModelIds(permittedModelIds: UUID[]): Promise<void> {
+    if (permittedModelIds.length === 0) {
+      this.logger.debug('deleteByPermittedModelIds called with empty array');
+      return;
+    }
+
+    this.logger.log('deleteByPermittedModelIds', {
+      count: permittedModelIds.length,
+    });
+
+    const result = await this.userDefaultModelRepository.delete({
+      model: { id: In(permittedModelIds) },
+    });
+
+    this.logger.debug('Deleted user default models by permitted model ids', {
+      affected: result.affected,
+      permittedModelIds,
     });
   }
 }

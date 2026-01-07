@@ -224,6 +224,12 @@
     "deleteSuccess": "Model deleted successfully",
     "deleteError": "Failed to delete model. Please try again.",
     "alreadyExists": "A model with this identifier already exists.",
-    "notFound": "Model not found. It may have been deleted."
+    "notFound": "Model not found. It may have been deleted.",
+    "tabs": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "emptyArchived": "No archived models",
+    "emptyArchivedDescription": "Models you archive will appear here."
   }
 }

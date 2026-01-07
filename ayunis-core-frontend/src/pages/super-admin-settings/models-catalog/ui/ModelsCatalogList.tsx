@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -22,6 +23,7 @@ interface ModelsCatalogListProps {
     model: SuperAdminModelsControllerGetAllCatalogModels200Item,
   ) => void;
   isDeleting: boolean;
+  isArchivedView?: boolean;
 }
 
 function isLanguageModel(
@@ -42,9 +44,23 @@ export default function ModelsCatalogList({
   onEditEmbeddingModel,
   onDeleteModel,
   isDeleting,
+  isArchivedView = false,
 }: ModelsCatalogListProps) {
+  const { t } = useTranslation('super-admin-settings-org');
   const languageModels = models.filter(isLanguageModel);
   const embeddingModels = models.filter(isEmbeddingModel);
+
+  // Show a combined empty state for archived view when there are no archived models at all
+  if (isArchivedView && models.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-2 py-16 text-center">
+        <h3 className="text-lg font-semibold">{t('models.emptyArchived')}</h3>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          {t('models.emptyArchivedDescription')}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -61,7 +77,9 @@ export default function ModelsCatalogList({
             <div className="flex flex-col items-center justify-center space-y-2 py-10 text-center">
               <h3 className="text-lg font-semibold">No language models</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                No language models have been added to the catalog yet.
+                {isArchivedView
+                  ? 'No language models have been archived.'
+                  : 'No language models have been added to the catalog yet.'}
               </p>
             </div>
           ) : (
@@ -95,7 +113,9 @@ export default function ModelsCatalogList({
             <div className="flex flex-col items-center justify-center space-y-2 py-10 text-center">
               <h3 className="text-lg font-semibold">No embedding models</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                No embedding models have been added to the catalog yet.
+                {isArchivedView
+                  ? 'No embedding models have been archived.'
+                  : 'No embedding models have been added to the catalog yet.'}
               </p>
             </div>
           ) : (

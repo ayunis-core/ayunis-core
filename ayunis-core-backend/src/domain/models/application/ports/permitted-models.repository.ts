@@ -41,4 +41,8 @@ export abstract class PermittedModelsRepository {
     orgId: UUID;
   }): Promise<PermittedLanguageModel>;
   abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
+  abstract findAllByCatalogModelId(
+    catalogModelId: UUID,
+  ): Promise<PermittedModel[]>;
+  abstract unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void>;
 }

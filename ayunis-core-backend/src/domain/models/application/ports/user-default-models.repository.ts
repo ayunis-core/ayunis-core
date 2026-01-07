@@ -20,4 +20,5 @@ export abstract class UserDefaultModelsRepository {
     userId: UUID,
   ): Promise<void>;
   abstract deleteByModelId(modelId: UUID): Promise<void>;
+  abstract deleteByPermittedModelIds(permittedModelIds: UUID[]): Promise<void>;
 }
