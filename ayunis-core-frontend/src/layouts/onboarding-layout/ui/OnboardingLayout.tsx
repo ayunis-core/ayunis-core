@@ -1,4 +1,8 @@
-import React from 'react';
+// Utils
+import React from "react";
+import { useTranslation } from "react-i18next";
+
+// UI
 import {
   Card,
   CardContent,
@@ -6,9 +10,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
-import gradientBg from '@/shared/assets/brand/gradient.png';
+} from "@/shared/ui/shadcn/card";
+
+// Static
+import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
+import authBg from "@/shared/assets/brand/auth-bg.jpg";
 
 interface OnboardingLayoutProps {
   children?: React.ReactNode;
@@ -23,6 +29,8 @@ export default function OnboardingLayout({
   description,
   footer,
 }: OnboardingLayoutProps) {
+  const { t } = useTranslation("auth");
+
   return (
     <div className="h-screen flex">
       {/* Left side - Form */}
@@ -66,35 +74,52 @@ export default function OnboardingLayout({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Impressum
+              {t("onboardingLayout.imprint")}
             </a>
             <a
               href="https://www.ayunis.com/datenschutz-core"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Datenschutz
+              {t("onboardingLayout.privacy")}
             </a>
           </div>
         </div>
       </div>
 
       {/* Right side - Gradient background with chat mockup */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden p-4">
+      <div className="hidden lg:flex flex-1 p-4">
         <div
-          className="h-full w-full rounded-xl"
+          className="flex flex-col flex-1 relative overflow-hidden h-full w-full rounded-xl"
           style={{
-            backgroundImage: `url(${gradientBg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundImage: `url(${authBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
-        />
-
-        {/* Bottom text */}
-        <div className="absolute bottom-8 left-8 right-8">
-          <div className="flex justify-center items-center gap-2 text-white/90 text-sm">
-            <span>Über 700 Kommunen vertrauen Ayunis bereits.</span>
+        >
+          {/* Title Text */}
+          <div className="z-1 flex justify-center gap-15 my-auto translate-y-[90px]">
+            <h2 className="flex flex-col items-center justify-center gap-2 max-w-[550px] mx-auto text-center text-3xl font-medium text-white">
+              <span className="text-5xl font-bold">700</span>
+              {t("onboardingLayout.statTrustedText")}
+            </h2>
           </div>
+
+          {/* Bottom text */}
+          <div className="z-1 flex justify-center gap-15 mb-12">
+            <div className="text-center">
+              <i className="text-4xl">🇩🇪</i>
+              <div className="text-lg font-medium text-white">{t("onboardingLayout.madeInGermany")}</div>
+              <div className="text-lg font-medium text-muted-foreground">{t("onboardingLayout.headquarteredInMunich")}</div>
+            </div>
+
+            <div className="text-center">
+              <i className="text-4xl">🇪🇺</i>
+              <div className="text-lg font-medium text-white">{t("onboardingLayout.gdprCompliant")}</div>
+              <div className="text-lg font-medium text-muted-foreground">{t("onboardingLayout.hostedInEurope")}</div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

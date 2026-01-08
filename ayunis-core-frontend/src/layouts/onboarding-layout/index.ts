@@ -1,2 +1,2 @@
-import OnboardingLayout from './ui/OnboardingLayout';
+import OnboardingLayout from "./ui/OnboardingLayout";
 export default OnboardingLayout;
