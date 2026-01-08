@@ -65,10 +65,10 @@ export class AddAzure1767865559794 implements MigrationInterface {
       `ALTER TYPE "public"."usage_provider_enum_old" RENAME TO "usage_provider_enum"`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_4eca2a1e72564bfdec6c88dcf3" ON "usage" ("createdAt", "provider") `,
+      `CREATE INDEX "IDX_4eca2a1e72564bfdec6c88dcf3" ON "usage" ("provider", "createdAt") `,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_a84595aeab2b176022e1ef6b0c" ON "usage" ("createdAt", "organizationId", "provider") `,
+      `CREATE INDEX "IDX_a84595aeab2b176022e1ef6b0c" ON "usage" ("organizationId", "provider", "createdAt") `,
     );
     await queryRunner.query(
       `CREATE TYPE "public"."models_provider_enum_old" AS ENUM('openai', 'anthropic', 'bedrock', 'mistral', 'ollama', 'synaforce', 'ayunis', 'otc')`,
