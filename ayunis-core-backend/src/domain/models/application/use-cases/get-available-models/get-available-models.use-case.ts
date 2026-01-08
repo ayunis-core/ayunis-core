@@ -56,6 +56,7 @@ export class GetAvailableModelsUseCase {
       [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
       [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
       [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
+      [ModelProvider.AZURE]: 'models.azure.apiKey',
     } as const;
 
     const configKey = providerConfigMap[provider];
