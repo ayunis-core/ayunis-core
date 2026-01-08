@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { GetAllModelsUseCase } from '../use-cases/get-all-models/get-all-models.use-case';
 import { UUID } from 'crypto';
 import { Model } from '../../domain/model.entity';
+import { ModelProviderInfoRegistry } from './model-provider-info.registry';
 
 @Injectable()
 export class ModelRegistry {
@@ -14,6 +15,7 @@ export class ModelRegistry {
   constructor(
     private readonly configService: ConfigService,
     private readonly getAllModelsUseCase: GetAllModelsUseCase,
+    private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
   ) {
     this.logger.log(ModelRegistry.name);
   }
@@ -24,19 +26,7 @@ export class ModelRegistry {
   }
 
   private hasApiKeyForProvider(provider: ModelProvider): boolean {
-    const providerConfigMap = {
-      [ModelProvider.OTC]: 'models.otc.apiKey',
-      [ModelProvider.MISTRAL]: 'models.mistral.apiKey',
-      [ModelProvider.OPENAI]: 'models.openai.apiKey',
-      [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
-      [ModelProvider.BEDROCK]: 'models.bedrock.awsRegion',
-      [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
-      [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
-      [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
-      [ModelProvider.AZURE]: 'models.azure.apiKey',
-    };
-
-    const configKey = providerConfigMap[provider];
+    const configKey = this.modelProviderInfoRegistry.getConfigKey(provider);
     if (!configKey) {
       this.logger.warn(`No config mapping found for provider: ${provider}`);
       return false;

@@ -8,6 +8,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { ModelsRepository } from '../../ports/models.repository';
 import { ConfigService } from '@nestjs/config';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
 
 @Injectable()
 export class GetAvailableModelsUseCase {
@@ -17,6 +18,7 @@ export class GetAvailableModelsUseCase {
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
     private readonly configService: ConfigService,
+    private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
   ) {}
 
   async execute(query: GetAvailableModelsQuery): Promise<Model[]> {
@@ -47,20 +49,7 @@ export class GetAvailableModelsUseCase {
       return false;
     }
 
-    const providerConfigMap = {
-      [ModelProvider.OTC]: 'models.otc.apiKey',
-      [ModelProvider.MISTRAL]: 'models.mistral.apiKey',
-      [ModelProvider.OPENAI]: 'models.openai.apiKey',
-      [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
-      [ModelProvider.BEDROCK]: 'models.bedrock.awsRegion',
-      [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
-      [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
-      [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
-      [ModelProvider.AZURE]: 'models.azure.apiKey',
-    } as const;
-
-    const configKey = providerConfigMap[provider];
-
+    const configKey = this.modelProviderInfoRegistry.getConfigKey(provider);
     if (!configKey) {
       this.logger.warn(`No config mapping found for provider: ${provider}`);
       return false;

@@ -32,23 +32,13 @@ import type {
   UpdateEmbeddingModelRequestDtoProvider,
 } from '@/shared/api';
 import { CreateEmbeddingModelRequestDtoDimensions } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 
 interface EditEmbeddingModelDialogProps {
   model: EmbeddingModelResponseDto | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const PROVIDERS = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'bedrock', label: 'AWS Bedrock' },
-  { value: 'mistral', label: 'Mistral' },
-  { value: 'ollama', label: 'Ollama' },
-  { value: 'synaforce', label: 'Synaforce' },
-  { value: 'ayunis', label: 'Ayunis' },
-  { value: 'azure', label: 'MS Azure' },
-];
 
 const DIMENSIONS = [
   { value: 1024, label: '1024' },
@@ -169,7 +159,7 @@ export function EditEmbeddingModelDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PROVIDERS.map((provider) => (
+                        {EMBEDDING_MODEL_PROVIDERS.map((provider) => (
                           <SelectItem
                             key={provider.value}
                             value={provider.value}

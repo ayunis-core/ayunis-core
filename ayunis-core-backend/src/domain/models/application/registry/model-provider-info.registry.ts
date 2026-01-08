@@ -4,72 +4,105 @@ import { ModelProviderLocation } from '../../domain/value-objects/model-provider
 import { ModelProviderInfoNotFoundError } from '../models.errors';
 import { Injectable, Logger } from '@nestjs/common';
 
-const MODEL_PROVIDER_INFOS: ModelProviderInfoEntity[] = [
+/**
+ * Extended provider configuration that includes the config key for API key lookup.
+ */
+export interface ModelProviderConfig extends ModelProviderInfoEntity {
+  configKey: string;
+}
+
+const MODEL_PROVIDER_CONFIGS: ModelProviderConfig[] = [
   {
     provider: ModelProvider.OTC,
     displayName: 'Open Telekom Cloud',
     hostedIn: ModelProviderLocation.DE,
+    configKey: 'models.otc.apiKey',
   },
   {
     provider: ModelProvider.OPENAI,
     displayName: 'OpenAI',
     hostedIn: ModelProviderLocation.US,
+    configKey: 'models.openai.apiKey',
   },
   {
     provider: ModelProvider.ANTHROPIC,
     displayName: 'Anthropic',
     hostedIn: ModelProviderLocation.US,
+    configKey: 'models.anthropic.apiKey',
   },
   {
     provider: ModelProvider.BEDROCK,
     displayName: 'AWS Bedrock',
     hostedIn: ModelProviderLocation.EU,
+    configKey: 'models.bedrock.awsRegion',
   },
   {
     provider: ModelProvider.MISTRAL,
     displayName: 'Mistral',
     hostedIn: ModelProviderLocation.EU,
+    configKey: 'models.mistral.apiKey',
   },
   {
     provider: ModelProvider.OLLAMA,
     displayName: 'Ollama',
     hostedIn: ModelProviderLocation.SELF_HOSTED,
+    configKey: 'models.ollama.baseURL',
   },
   {
     provider: ModelProvider.SYNAFORCE,
     displayName: 'Ayunis Sovereign Cloud',
     hostedIn: ModelProviderLocation.AYUNIS,
+    configKey: 'models.synaforce.baseURL',
   },
   {
     provider: ModelProvider.AYUNIS,
     displayName: 'Ayunis',
     hostedIn: ModelProviderLocation.AYUNIS,
+    configKey: 'models.ayunis.baseURL',
   },
   {
     provider: ModelProvider.AZURE,
     displayName: 'MS Azure',
     hostedIn: ModelProviderLocation.EU,
+    configKey: 'models.azure.apiKey',
   },
 ];
 
 @Injectable()
 export class ModelProviderInfoRegistry {
   private readonly logger = new Logger(ModelProviderInfoRegistry.name);
-  private readonly modelProviderInfos: ModelProviderInfoEntity[] =
-    MODEL_PROVIDER_INFOS;
+  private readonly modelProviderConfigs: ModelProviderConfig[] =
+    MODEL_PROVIDER_CONFIGS;
 
   public getModelProviderInfo(
     provider: ModelProvider,
   ): ModelProviderInfoEntity {
-    const modelProviderInfo = this.modelProviderInfos.find(
+    const modelProviderConfig = this.modelProviderConfigs.find(
       (info) => info.provider === provider,
     );
-    if (!modelProviderInfo) {
+    if (!modelProviderConfig) {
       this.logger.error(
         `Model provider info not found for provider: ${provider}`,
       );
       throw new ModelProviderInfoNotFoundError(provider);
     }
-    return modelProviderInfo;
+    return modelProviderConfig;
+  }
+
+  /**
+   * Get the config key for looking up the API key/credentials for a provider.
+   */
+  public getConfigKey(provider: ModelProvider): string | undefined {
+    const config = this.modelProviderConfigs.find(
+      (c) => c.provider === provider,
+    );
+    return config?.configKey;
+  }
+
+  /**
+   * Get all provider info entities.
+   */
+  public getAllProviderInfos(): ModelProviderInfoEntity[] {
+    return this.modelProviderConfigs;
   }
 }

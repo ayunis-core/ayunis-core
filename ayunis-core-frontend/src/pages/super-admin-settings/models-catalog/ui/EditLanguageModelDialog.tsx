@@ -31,24 +31,13 @@ import type {
   LanguageModelResponseDto,
   UpdateLanguageModelRequestDtoProvider,
 } from '@/shared/api';
+import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 
 interface EditLanguageModelDialogProps {
   model: LanguageModelResponseDto | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const PROVIDERS = [
-  { value: 'otc', label: 'OTC' },
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'bedrock', label: 'AWS Bedrock' },
-  { value: 'mistral', label: 'Mistral' },
-  { value: 'ollama', label: 'Ollama' },
-  { value: 'synaforce', label: 'Synaforce' },
-  { value: 'ayunis', label: 'Ayunis' },
-  { value: 'azure', label: 'MS Azure' },
-];
 
 export function EditLanguageModelDialog({
   model,
@@ -151,7 +140,7 @@ export function EditLanguageModelDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PROVIDERS.map((provider) => (
+                        {LANGUAGE_MODEL_PROVIDERS.map((provider) => (
                           <SelectItem
                             key={provider.value}
                             value={provider.value}

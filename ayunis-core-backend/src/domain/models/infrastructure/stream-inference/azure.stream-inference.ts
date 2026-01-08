@@ -25,7 +25,9 @@ export class AzureStreamInferenceHandler extends BaseOpenAIChatStreamInferenceHa
     return this.client as AzureOpenAI;
   }
 
-  answer(input: StreamInferenceInput): Observable<StreamInferenceResponseChunk> {
+  answer(
+    input: StreamInferenceInput,
+  ): Observable<StreamInferenceResponseChunk> {
     // Ensure client is initialized before calling parent
     this.getClient();
     return super.answer(input);

@@ -41,7 +41,9 @@ describe('UpdateLanguageModelUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<UpdateLanguageModelUseCase>(UpdateLanguageModelUseCase);
+    useCase = module.get<UpdateLanguageModelUseCase>(
+      UpdateLanguageModelUseCase,
+    );
     modelsRepository = module.get(ModelsRepository);
     clearDefaultsUseCase = module.get(ClearDefaultsByCatalogModelIdUseCase);
 

@@ -59,6 +59,7 @@ import { GetModelProviderInfoQuery } from '../../application/use-cases/get-model
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { ModelProviderInfoResponseDto } from './dto/model-provider-info-response.dto';
 import { ModelProviderInfoResponseDtoMapper } from './mappers/model-provider-info-response-dto.mapper';
+import { ModelProviderInfoRegistry } from '../../application/registry/model-provider-info.registry';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetPermittedLanguageModelsQuery } from '../../application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
@@ -91,6 +92,7 @@ export class ModelsController {
     private readonly getOrgDefaultModelUseCase: GetOrgDefaultModelUseCase,
     private readonly manageOrgDefaultModelUseCase: ManageOrgDefaultModelUseCase,
     private readonly getModelProviderInfoUseCase: GetModelProviderInfoUseCase,
+    private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
     private readonly modelResponseDtoMapper: ModelResponseDtoMapper,
     private readonly modelWithConfigResponseDtoMapper: ModelWithConfigResponseDtoMapper,
     private readonly modelProviderInfoResponseDtoMapper: ModelProviderInfoResponseDtoMapper,
@@ -134,6 +136,23 @@ export class ModelsController {
       allAvailableModelsWithConfig,
       permittedModels,
     );
+  }
+
+  @Get('providers')
+  @ApiOperation({
+    summary: 'Get all available model providers with their info',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved all model providers',
+    type: [ModelProviderInfoResponseDto],
+  })
+  @ApiExtraModels(ModelProviderInfoResponseDto)
+  getProviders(): ModelProviderInfoResponseDto[] {
+    this.logger.log('getProviders');
+    return this.modelProviderInfoRegistry
+      .getAllProviderInfos()
+      .map((info) => this.modelProviderInfoResponseDtoMapper.toDto(info));
   }
 
   @Post('permitted')
