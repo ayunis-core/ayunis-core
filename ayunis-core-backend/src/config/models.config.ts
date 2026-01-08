@@ -32,4 +32,9 @@ export const modelsConfig = registerAs('models', () => ({
     apiKey: process.env.OTC_API_KEY,
     baseURL: 'https://llm-server.llmhub.t-systems.net/v2',
   },
+  azure: {
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION,
+  },
 }));

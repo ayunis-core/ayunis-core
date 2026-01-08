@@ -16,6 +16,8 @@ export function getFlagByProvider(provider: Provider): string {
       return `🇺🇸`;
     case 'anthropic':
       return `🇺🇸`;
+    case 'azure':
+      return `🇪🇺`;
     default:
       return '';
   }

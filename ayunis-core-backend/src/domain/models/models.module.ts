@@ -68,6 +68,8 @@ import { OtcInferenceHandler } from './infrastructure/inference/otc.inference';
 import { OtcStreamInferenceHandler } from './infrastructure/stream-inference/otc.stream-inference';
 import { BedrockInferenceHandler } from './infrastructure/inference/bedrock.inference';
 import { BedrockStreamInferenceHandler } from './infrastructure/stream-inference/bedrock.stream-inference';
+import { AzureInferenceHandler } from './infrastructure/inference/azure.inference';
+import { AzureStreamInferenceHandler } from './infrastructure/stream-inference/azure.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
@@ -111,6 +113,8 @@ import { MessagesModule } from '../messages/messages.module';
     OtcInferenceHandler,
     BedrockInferenceHandler,
     BedrockStreamInferenceHandler,
+    AzureInferenceHandler,
+    AzureStreamInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
     {
@@ -124,6 +128,7 @@ import { MessagesModule } from '../messages/messages.module';
         ayunisHandler: AyunisOllamaStreamInferenceHandler,
         otcHandler: OtcStreamInferenceHandler,
         bedrockHandler: BedrockStreamInferenceHandler,
+        azureHandler: AzureStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -136,6 +141,7 @@ import { MessagesModule } from '../messages/messages.module';
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
         registry.register(ModelProvider.OTC, otcHandler);
+        registry.register(ModelProvider.AZURE, azureHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -148,6 +154,7 @@ import { MessagesModule } from '../messages/messages.module';
         AyunisOllamaStreamInferenceHandler,
         OtcStreamInferenceHandler,
         BedrockStreamInferenceHandler,
+        AzureStreamInferenceHandler,
         MockStreamInferenceHandler,
         ConfigService,
       ],
@@ -163,6 +170,7 @@ import { MessagesModule } from '../messages/messages.module';
         synaforceHandler: SynaforceInferenceHandler,
         ayunisHandler: AyunisOllamaInferenceHandler,
         otcHandler: OtcInferenceHandler,
+        azureHandler: AzureInferenceHandler,
         mockHandler: MockInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -175,6 +183,7 @@ import { MessagesModule } from '../messages/messages.module';
         registry.register(ModelProvider.SYNAFORCE, synaforceHandler);
         registry.register(ModelProvider.AYUNIS, ayunisHandler);
         registry.register(ModelProvider.OTC, otcHandler);
+        registry.register(ModelProvider.AZURE, azureHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -187,6 +196,7 @@ import { MessagesModule } from '../messages/messages.module';
         SynaforceInferenceHandler,
         AyunisOllamaInferenceHandler,
         OtcInferenceHandler,
+        AzureInferenceHandler,
         MockInferenceHandler,
         ConfigService,
       ],

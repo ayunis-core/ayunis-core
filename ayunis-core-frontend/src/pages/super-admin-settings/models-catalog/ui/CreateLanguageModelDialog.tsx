@@ -27,22 +27,12 @@ import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { useCreateLanguageModel } from '../api/useCreateLanguageModel';
 import type { LanguageModelFormData } from '../model/types';
 import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
+import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 
 interface CreateLanguageModelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const PROVIDERS = [
-  { value: 'otc', label: 'OTC' },
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'bedrock', label: 'AWS Bedrock' },
-  { value: 'mistral', label: 'Mistral' },
-  { value: 'ollama', label: 'Ollama' },
-  { value: 'synaforce', label: 'Synaforce' },
-  { value: 'ayunis', label: 'Ayunis' },
-];
 
 export function CreateLanguageModelDialog({
   open,
@@ -124,7 +114,7 @@ export function CreateLanguageModelDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {PROVIDERS.map((provider) => (
+                      {LANGUAGE_MODEL_PROVIDERS.map((provider) => (
                         <SelectItem key={provider.value} value={provider.value}>
                           {provider.label}
                         </SelectItem>

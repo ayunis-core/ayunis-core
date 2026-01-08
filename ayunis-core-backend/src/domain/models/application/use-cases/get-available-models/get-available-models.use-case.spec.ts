@@ -9,6 +9,7 @@ import { UUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
 
 describe('GetAvailableModelsUseCase', () => {
   let useCase: GetAvailableModelsUseCase;
@@ -36,12 +37,35 @@ describe('GetAvailableModelsUseCase', () => {
       get: jest.fn(),
     };
 
+    const mockModelProviderInfoRegistry = {
+      getConfigKey: jest.fn().mockImplementation((provider: ModelProvider) => {
+        const configMap: Record<ModelProvider, string> = {
+          [ModelProvider.OTC]: 'models.otc.apiKey',
+          [ModelProvider.OPENAI]: 'models.openai.apiKey',
+          [ModelProvider.ANTHROPIC]: 'models.anthropic.apiKey',
+          [ModelProvider.BEDROCK]: 'models.bedrock.awsRegion',
+          [ModelProvider.MISTRAL]: 'models.mistral.apiKey',
+          [ModelProvider.OLLAMA]: 'models.ollama.baseURL',
+          [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
+          [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
+          [ModelProvider.AZURE]: 'models.azure.apiKey',
+        };
+        return configMap[provider];
+      }),
+      getModelProviderInfo: jest.fn(),
+      getAllProviderInfos: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetAvailableModelsUseCase,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: ModelProviderInfoRegistry,
+          useValue: mockModelProviderInfoRegistry,
+        },
       ],
     }).compile();
 

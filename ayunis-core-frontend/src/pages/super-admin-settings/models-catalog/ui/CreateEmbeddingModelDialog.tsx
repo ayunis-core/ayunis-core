@@ -27,21 +27,12 @@ import { Checkbox } from '@/shared/ui/shadcn/checkbox';
 import { useCreateEmbeddingModel } from '../api/useCreateEmbeddingModel';
 import type { EmbeddingModelFormData } from '../model/types';
 import type { CreateEmbeddingModelRequestDtoProvider } from '@/shared/api';
+import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 
 interface CreateEmbeddingModelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const PROVIDERS = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'bedrock', label: 'AWS Bedrock' },
-  { value: 'mistral', label: 'Mistral' },
-  { value: 'ollama', label: 'Ollama' },
-  { value: 'synaforce', label: 'Synaforce' },
-  { value: 'ayunis', label: 'Ayunis' },
-];
 
 const DIMENSIONS = [
   { value: 1024, label: '1024' },
@@ -126,7 +117,7 @@ export function CreateEmbeddingModelDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {PROVIDERS.map((provider) => (
+                      {EMBEDDING_MODEL_PROVIDERS.map((provider) => (
                         <SelectItem key={provider.value} value={provider.value}>
                           {provider.label}
                         </SelectItem>

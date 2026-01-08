@@ -7,4 +7,5 @@ export enum ModelProvider {
   SYNAFORCE = 'synaforce',
   AYUNIS = 'ayunis',
   OTC = 'otc',
+  AZURE = 'azure',
 }
