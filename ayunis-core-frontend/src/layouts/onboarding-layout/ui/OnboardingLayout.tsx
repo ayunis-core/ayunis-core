@@ -1,6 +1,6 @@
 // Utils
-import React from "react";
-import { useTranslation } from "react-i18next";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 // UI
 import {
@@ -10,11 +10,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/shadcn/card";
+} from '@/shared/ui/shadcn/card';
 
 // Static
-import brandFullLight from "@/shared/assets/brand/brand-full-light.svg";
-import authBg from "@/shared/assets/brand/auth-bg.jpg";
+import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
+import authBg from '@/shared/assets/brand/auth-bg.jpg';
 
 interface OnboardingLayoutProps {
   children?: React.ReactNode;
@@ -29,7 +29,7 @@ export default function OnboardingLayout({
   description,
   footer,
 }: OnboardingLayoutProps) {
-  const { t } = useTranslation("auth");
+  const { t } = useTranslation('auth');
 
   return (
     <div className="h-screen flex">
@@ -74,14 +74,14 @@ export default function OnboardingLayout({
               target="_blank"
               rel="noopener noreferrer"
             >
-              {t("onboardingLayout.imprint")}
+              {t('onboardingLayout.imprint')}
             </a>
             <a
               href="https://www.ayunis.com/datenschutz-core"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {t("onboardingLayout.privacy")}
+              {t('onboardingLayout.privacy')}
             </a>
           </div>
         </div>
@@ -93,15 +93,15 @@ export default function OnboardingLayout({
           className="flex flex-col flex-1 relative overflow-hidden h-full w-full rounded-xl"
           style={{
             backgroundImage: `url(${authBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
           {/* Title Text */}
           <div className="z-1 flex justify-center gap-15 my-auto translate-y-[90px]">
             <h2 className="flex flex-col items-center justify-center gap-2 max-w-[550px] mx-auto text-center text-3xl font-medium text-white">
               <span className="text-5xl font-bold">700</span>
-              {t("onboardingLayout.statTrustedText")}
+              {t('onboardingLayout.statTrustedText')}
             </h2>
           </div>
 
@@ -109,17 +109,24 @@ export default function OnboardingLayout({
           <div className="z-1 flex justify-center gap-15 mb-12">
             <div className="text-center">
               <i className="text-4xl">🇩🇪</i>
-              <div className="text-lg font-medium text-white">{t("onboardingLayout.madeInGermany")}</div>
-              <div className="text-lg font-medium text-muted-foreground">{t("onboardingLayout.headquarteredInMunich")}</div>
+              <div className="text-lg font-medium text-white">
+                {t('onboardingLayout.madeInGermany')}
+              </div>
+              <div className="text-lg font-medium text-muted-foreground">
+                {t('onboardingLayout.headquarteredInMunich')}
+              </div>
             </div>
 
             <div className="text-center">
               <i className="text-4xl">🇪🇺</i>
-              <div className="text-lg font-medium text-white">{t("onboardingLayout.gdprCompliant")}</div>
-              <div className="text-lg font-medium text-muted-foreground">{t("onboardingLayout.hostedInEurope")}</div>
+              <div className="text-lg font-medium text-white">
+                {t('onboardingLayout.gdprCompliant')}
+              </div>
+              <div className="text-lg font-medium text-muted-foreground">
+                {t('onboardingLayout.hostedInEurope')}
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
