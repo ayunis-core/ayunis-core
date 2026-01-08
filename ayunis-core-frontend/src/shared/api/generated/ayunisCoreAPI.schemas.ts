@@ -28,6 +28,7 @@ export const ModelWithConfigResponseDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -93,6 +94,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -171,6 +173,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -218,6 +221,7 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -269,6 +273,7 @@ export const CreateLanguageModelRequestDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -306,6 +311,7 @@ export const UpdateLanguageModelRequestDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -343,6 +349,7 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -387,6 +394,7 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -431,6 +439,7 @@ export const LanguageModelResponseDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -487,6 +496,7 @@ export const EmbeddingModelResponseDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 /**
@@ -2223,6 +2233,7 @@ export const ProviderUsageDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 export interface ProviderUsageDto {
@@ -2286,6 +2297,7 @@ export const ModelDistributionDtoProvider = {
   synaforce: 'synaforce',
   ayunis: 'ayunis',
   otc: 'otc',
+  azure: 'azure',
 } as const;
 
 export interface ModelDistributionDto {

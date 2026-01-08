@@ -47,6 +47,7 @@ const PROVIDERS = [
   { value: 'ollama', label: 'Ollama' },
   { value: 'synaforce', label: 'Synaforce' },
   { value: 'ayunis', label: 'Ayunis' },
+  { value: 'azure', label: 'MS Azure' },
 ];
 
 const DIMENSIONS = [
