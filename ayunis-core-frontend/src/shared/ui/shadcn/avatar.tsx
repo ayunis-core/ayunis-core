@@ -6,7 +6,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 function Avatar({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Root>): React.ReactElement {
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
@@ -22,7 +22,7 @@ function Avatar({
 function AvatarImage({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Image>): React.ReactElement {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
@@ -35,7 +35,7 @@ function AvatarImage({
 function AvatarFallback({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback>): React.ReactElement {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"

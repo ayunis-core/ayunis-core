@@ -6,7 +6,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 function Switch({
   className,
   ...props
-}: React.ComponentProps<typeof SwitchPrimitive.Root>) {
+}: React.ComponentProps<typeof SwitchPrimitive.Root>): React.ReactElement {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"

@@ -3,9 +3,17 @@
   "style": "new-york",
   "rsc": false,
   "tsx": true,
+  "registries": {
+    "@ayunis": {
+      "url": "https://registry.ayunis.de/r/{name}.json",
+      "headers": {
+        "Authorization": "Bearer ${AYUNIS_REGISTRY_TOKEN}"
+      }
+    }
+  },
   "tailwind": {
     "config": "",
-    "css": "src/styles.css",
+    "css": "src/styles/main.css",
     "baseColor": "zinc",
     "cssVariables": true,
     "prefix": ""
