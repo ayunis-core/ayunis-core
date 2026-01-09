@@ -10,12 +10,14 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
 import { Table, TableHeader } from '@/shared/ui/shadcn/table';
 import { useInviteDelete } from '../api/useInviteDelete';
+import { useDeleteAllInvites } from '../api/useDeleteAllInvites';
 import type { Invite } from '../model/openapi';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +29,7 @@ interface InvitesSectionProps {
 export default function InvitesSection({ invites }: InvitesSectionProps) {
   const { t } = useTranslation('admin-settings-users');
   const { deleteInvite, isLoading: isDeletingInvite } = useInviteDelete();
+  const { deleteAllInvites, isDeleting } = useDeleteAllInvites();
   const { confirm } = useConfirmation();
   const pendingInvites = invites.filter((invite) => invite.acceptedAt === null);
   if (pendingInvites.length === 0) {
@@ -46,10 +49,34 @@ export default function InvitesSection({ invites }: InvitesSectionProps) {
     });
   };
 
+  const handleDeleteAllInvites = () => {
+    confirm({
+      title: t('confirmations.deleteAllInvitesTitle'),
+      description: t('confirmations.deleteAllInvitesDescription', {
+        count: pendingInvites.length,
+      }),
+      confirmText: t('confirmations.deleteText'),
+      cancelText: t('confirmations.cancelText'),
+      variant: 'destructive',
+      onConfirm: () => deleteAllInvites(),
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('users.invites')}</CardTitle>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteAllInvites}
+            disabled={isDeleting || isDeletingInvite}
+          >
+            <Trash2 className="h-4 w-4" />
+            {t('users.deleteAll')}
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <Table>

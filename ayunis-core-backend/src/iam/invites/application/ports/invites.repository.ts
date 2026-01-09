@@ -14,4 +14,5 @@ export abstract class InvitesRepository {
   ): Promise<Invite[]>;
   abstract accept(id: UUID): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
+  abstract deleteAllPendingByOrg(orgId: UUID): Promise<number>;
 }

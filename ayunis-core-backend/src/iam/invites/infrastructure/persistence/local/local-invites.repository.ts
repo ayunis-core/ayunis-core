@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, IsNull } from 'typeorm';
 import { UUID } from 'crypto';
 import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
@@ -108,5 +108,21 @@ export class LocalInvitesRepository implements InvitesRepository {
     this.logger.log('delete', { id });
     await this.inviteRepository.delete(id);
     this.logger.debug('Invite deleted successfully', { id });
+  }
+
+  async deleteAllPendingByOrg(orgId: UUID): Promise<number> {
+    this.logger.log('deleteAllPendingByOrg', { orgId });
+
+    const result = await this.inviteRepository.delete({
+      orgId,
+      acceptedAt: IsNull(), // Only delete pending invites (not accepted)
+    });
+
+    const deletedCount = result.affected ?? 0;
+    this.logger.debug('Pending invites deleted', {
+      orgId,
+      count: deletedCount,
+    });
+    return deletedCount;
   }
 }

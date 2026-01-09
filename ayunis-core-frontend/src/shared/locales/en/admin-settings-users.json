@@ -23,6 +23,7 @@
     "more": "More",
     "edit": "Edit",
     "delete": "Delete",
+    "deleteAll": "Delete All",
     "changeRole": "Change to role '{{role}}'",
     "user": "User",
     "admin": "Admin",
@@ -68,7 +69,13 @@
     "confirmText": "Confirm",
     "deleteText": "Delete",
     "changeRoleText": "Change Role",
-    "cancelText": "Cancel"
+    "cancelText": "Cancel",
+    "deleteAllInvitesTitle": "Delete All Pending Invites",
+    "deleteAllInvitesDescription": "Are you sure you want to delete all {{count}} pending invites? This action cannot be undone."
+  },
+  "deleteAllInvites": {
+    "success": "{{count}} pending invite(s) deleted successfully",
+    "error": "Failed to delete invites. Please try again."
   },
   "inviteCreate": {
     "success": "Invite created successfully!",

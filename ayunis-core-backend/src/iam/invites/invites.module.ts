@@ -23,6 +23,7 @@ import { GetInvitesByOrgUseCase } from './application/use-cases/get-invites-by-o
 import { GetInviteByTokenUseCase } from './application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
 import { SendInvitationEmailUseCase } from './application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { DeleteInviteByEmailUseCase } from './application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
+import { DeleteAllPendingInvitesUseCase } from './application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -80,6 +81,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     CreateBulkInvitesUseCase,
     AcceptInviteUseCase,
     DeleteInviteUseCase,
+    DeleteAllPendingInvitesUseCase,
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,

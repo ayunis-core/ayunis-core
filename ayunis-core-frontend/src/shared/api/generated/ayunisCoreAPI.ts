@@ -52,6 +52,7 @@ import type {
   CreateThreadDto,
   CreateTrialRequestDto,
   CreateUserDto,
+  DeleteAllPendingInvitesResponseDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
@@ -4029,6 +4030,69 @@ export const useInvitesControllerAcceptInvite = <TError = void,
       > => {
 
       const mutationOptions = getInvitesControllerAcceptInviteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete all pending invitations for the organization (Admin only)
+ * @summary Delete all pending invites
+ */
+export const invitesControllerDeleteAllPending = (
+    
+ ) => {
+      
+      
+      return customAxiosInstance<DeleteAllPendingInvitesResponseDto>(
+      {url: `/invites/all`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerDeleteAllPendingMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, TError,void, TContext> => {
+
+const mutationKey = ['invitesControllerDeleteAllPending'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, void> = () => {
+          
+
+          return  invitesControllerDeleteAllPending()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerDeleteAllPendingMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>>
+    
+    export type InvitesControllerDeleteAllPendingMutationError = void
+
+    /**
+ * @summary Delete all pending invites
+ */
+export const useInvitesControllerDeleteAllPending = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerDeleteAllPendingMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

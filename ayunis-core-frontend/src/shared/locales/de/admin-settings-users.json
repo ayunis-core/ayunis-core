@@ -23,6 +23,7 @@
     "more": "Mehr",
     "edit": "Bearbeiten",
     "delete": "Löschen",
+    "deleteAll": "Alle löschen",
     "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
     "admin": "Administrator",
@@ -69,7 +70,13 @@
     "confirmText": "Bestätigen",
     "deleteText": "Löschen",
     "changeRoleText": "Rolle ändern",
-    "cancelText": "Abbrechen"
+    "cancelText": "Abbrechen",
+    "deleteAllInvitesTitle": "Alle ausstehenden Einladungen löschen",
+    "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+  },
+  "deleteAllInvites": {
+    "success": "{{count}} ausstehende Einladung(en) erfolgreich gelöscht",
+    "error": "Fehler beim Löschen der Einladungen. Bitte versuchen Sie es erneut."
   },
   "inviteCreate": {
     "success": "Einladung erfolgreich erstellt",

@@ -916,6 +916,11 @@ export interface AcceptInviteResponseDto {
   orgId: string;
 }
 
+export interface DeleteAllPendingInvitesResponseDto {
+  /** Number of invites deleted */
+  deletedCount: number;
+}
+
 export interface SubscriptionBillingInfoResponseDto {
   /** Company name */
   companyName: string;

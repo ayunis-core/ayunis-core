@@ -60,6 +60,9 @@ import { SendInvitationEmailCommand } from '../../application/use-cases/send-inv
 import { ConfigService } from '@nestjs/config';
 import { SendInvitationEmailUseCase } from '../../application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { CreateInviteResponseDto } from './dtos/create-invite-response.dto';
+import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-invites-response.dto';
+import { DeleteAllPendingInvitesUseCase } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
+import { DeleteAllPendingInvitesCommand } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
 
 @ApiTags('invites')
 @Controller('invites')
@@ -71,6 +74,7 @@ export class InvitesController {
     private readonly createBulkInvitesUseCase: CreateBulkInvitesUseCase,
     private readonly acceptInviteUseCase: AcceptInviteUseCase,
     private readonly deleteInviteUseCase: DeleteInviteUseCase,
+    private readonly deleteAllPendingInvitesUseCase: DeleteAllPendingInvitesUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly getInviteByTokenUseCase: GetInviteByTokenUseCase,
     private readonly inviteResponseMapper: InviteResponseMapper,
@@ -286,6 +290,35 @@ export class InvitesController {
     );
 
     return this.inviteResponseMapper.toAcceptResponseDto(result);
+  }
+
+  @Delete('all')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Delete all pending invites',
+    description:
+      'Delete all pending invitations for the organization (Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'All pending invites have been deleted',
+    type: DeleteAllPendingInvitesResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async deleteAllPending(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<DeleteAllPendingInvitesResponseDto> {
+    this.logger.log('deleteAllPending', { orgId });
+
+    const result = await this.deleteAllPendingInvitesUseCase.execute(
+      new DeleteAllPendingInvitesCommand(orgId),
+    );
+
+    return { deletedCount: result.deletedCount };
   }
 
   @Delete(':id')
