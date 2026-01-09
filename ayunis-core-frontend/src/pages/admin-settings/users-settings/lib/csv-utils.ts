@@ -1,15 +1,32 @@
+export type CsvErrorCode =
+  | 'EMPTY_FILE'
+  | 'INVALID_HEADERS'
+  | 'INVALID_ROW_FORMAT'
+  | 'INVALID_EMAIL'
+  | 'INVALID_ROLE'
+  | 'DUPLICATE_EMAIL';
+
+export interface CsvError {
+  code: CsvErrorCode;
+  row?: number;
+  /** For DUPLICATE_EMAIL: the row where the email first appeared */
+  firstOccurrenceRow?: number;
+  /** For INVALID_HEADERS: the detected separator */
+  separator?: string;
+}
+
 export interface ParsedInvite {
   email: string;
   role: 'admin' | 'user';
   rowNumber: number;
   isValid: boolean;
-  error?: string;
+  error?: CsvError;
 }
 
 export interface CsvParseResult {
   success: boolean;
   data: ParsedInvite[];
-  errors: Array<{ row: number; message: string }>;
+  errors: CsvError[];
 }
 
 const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -38,7 +55,7 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     return {
       success: false,
       data: [],
-      errors: [{ row: 0, message: 'CSV file is empty' }],
+      errors: [{ code: 'EMPTY_FILE' }],
     };
   }
 
@@ -59,17 +76,12 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     return {
       success: false,
       data: [],
-      errors: [
-        {
-          row: 1,
-          message: `Invalid CSV headers. Expected: email${separator}role`,
-        },
-      ],
+      errors: [{ code: 'INVALID_HEADERS', row: 1, separator }],
     };
   }
 
   const result: ParsedInvite[] = [];
-  const errors: Array<{ row: number; message: string }> = [];
+  const errors: CsvError[] = [];
   const seenEmails = new Map<string, number>(); // email -> first row number
 
   // Parse data rows
@@ -81,14 +93,15 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     const values = parseCsvLine(line, separator);
 
     if (values.length !== 2) {
+      const error: CsvError = { code: 'INVALID_ROW_FORMAT', row: rowNumber };
       result.push({
         email: values[0] || '',
         role: 'user',
         rowNumber,
         isValid: false,
-        error: 'Invalid row format',
+        error,
       });
-      errors.push({ row: rowNumber, message: 'Invalid row format' });
+      errors.push(error);
       continue;
     }
 
@@ -97,18 +110,18 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     const normalizedRole = roleValue.trim().toLowerCase();
 
     let isValid = true;
-    let error: string | undefined;
+    let error: CsvError | undefined;
 
     // Validate email format
     if (!EMAIL_REGEX.test(normalizedEmail)) {
       isValid = false;
-      error = 'Invalid email format';
+      error = { code: 'INVALID_EMAIL', row: rowNumber };
     }
 
     // Validate role
     if (isValid && !VALID_ROLES.includes(normalizedRole)) {
       isValid = false;
-      error = "Invalid role. Must be 'user' or 'admin'";
+      error = { code: 'INVALID_ROLE', row: rowNumber };
     }
 
     // Check for duplicates within the file
@@ -116,14 +129,18 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
       const existingRow = seenEmails.get(normalizedEmail);
       if (existingRow !== undefined) {
         isValid = false;
-        error = `Duplicate email (first occurrence at row ${existingRow})`;
+        error = {
+          code: 'DUPLICATE_EMAIL',
+          row: rowNumber,
+          firstOccurrenceRow: existingRow,
+        };
       } else {
         seenEmails.set(normalizedEmail, rowNumber);
       }
     }
 
     if (!isValid && error) {
-      errors.push({ row: rowNumber, message: error });
+      errors.push(error);
     }
 
     result.push({

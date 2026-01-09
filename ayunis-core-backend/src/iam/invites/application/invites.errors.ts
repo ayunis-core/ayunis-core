@@ -19,7 +19,6 @@ export enum InvitesErrorCode {
   USER_ALREADY_EXISTS = 'USER_ALREADY_EXISTS',
   UNEXPECTED_INVITE_ERROR = 'UNEXPECTED_INVITE_ERROR',
   BULK_INVITE_VALIDATION_FAILED = 'BULK_INVITE_VALIDATION_FAILED',
-  BULK_INVITE_DUPLICATE_EMAILS = 'BULK_INVITE_DUPLICATE_EMAILS',
 }
 
 /**
@@ -206,20 +205,6 @@ export class BulkInviteValidationFailedError extends InviteError {
       InvitesErrorCode.BULK_INVITE_VALIDATION_FAILED,
       400,
       { errors, ...metadata },
-    );
-  }
-}
-
-/**
- * Error thrown when duplicate emails are found in the bulk invite request
- */
-export class BulkInviteDuplicateEmailsError extends InviteError {
-  constructor(duplicates: string[], metadata?: ErrorMetadata) {
-    super(
-      `Duplicate emails in request: ${duplicates.join(', ')}`,
-      InvitesErrorCode.BULK_INVITE_DUPLICATE_EMAILS,
-      400,
-      { duplicates, ...metadata },
     );
   }
 }

@@ -42,9 +42,6 @@ export function useBulkInviteCreate(
             case 'BULK_INVITE_VALIDATION_FAILED':
               showError(t('bulkInvite.validationFailed'));
               break;
-            case 'BULK_INVITE_DUPLICATE_EMAILS':
-              showError(t('bulkInvite.duplicateEmail'));
-              break;
             default:
               showError(t('bulkInvite.error'));
           }

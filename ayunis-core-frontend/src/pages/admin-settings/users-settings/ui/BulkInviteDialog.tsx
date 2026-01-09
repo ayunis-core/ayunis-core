@@ -32,6 +32,7 @@ import {
   generateUrlsCsv,
   downloadCsv,
   type ParsedInvite,
+  type CsvError,
 } from '../lib/csv-utils';
 import { useBulkInviteCreate } from '../api/useBulkInviteCreate';
 import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -92,6 +93,31 @@ export default function BulkInviteDialog({
     },
   );
 
+  // Translate CSV error codes to localized messages
+  const translateCsvError = useCallback(
+    (error: CsvError): string => {
+      switch (error.code) {
+        case 'EMPTY_FILE':
+          return t('bulkInvite.emptyFile');
+        case 'INVALID_HEADERS':
+          return t('bulkInvite.invalidHeaders');
+        case 'INVALID_ROW_FORMAT':
+          return t('bulkInvite.invalidRowFormat');
+        case 'INVALID_EMAIL':
+          return t('bulkInvite.invalidEmail');
+        case 'INVALID_ROLE':
+          return t('bulkInvite.invalidRole');
+        case 'DUPLICATE_EMAIL':
+          return t('bulkInvite.duplicateEmailWithRow', {
+            row: error.firstOccurrenceRow,
+          });
+        default:
+          return t('bulkInvite.parseError');
+      }
+    },
+    [t],
+  );
+
   const handleFileRead = useCallback(
     (file: File) => {
       const reader = new FileReader();
@@ -99,11 +125,17 @@ export default function BulkInviteDialog({
         const content = e.target?.result as string;
         const result = parseInviteCsv(content);
 
-        if (!result.success) {
-          setParseError(
-            result.errors[0]?.message ?? t('bulkInvite.parseError'),
-          );
-          return;
+        if (!result.success && result.errors.length > 0) {
+          const firstError = result.errors[0];
+          // Only show file-level errors (EMPTY_FILE, INVALID_HEADERS) as parse errors
+          // Row-level errors will be shown in the preview table
+          if (
+            firstError.code === 'EMPTY_FILE' ||
+            firstError.code === 'INVALID_HEADERS'
+          ) {
+            setParseError(translateCsvError(firstError));
+            return;
+          }
         }
 
         if (result.data.length === 0) {
@@ -125,7 +157,7 @@ export default function BulkInviteDialog({
       };
       reader.readAsText(file);
     },
-    [t],
+    [t, translateCsvError],
   );
 
   const handleFileSelect = useCallback(
@@ -304,7 +336,7 @@ export default function BulkInviteDialog({
                     <span className="truncate max-w-[250px]">{item.email}</span>
                     {item.error && (
                       <span className="text-xs text-destructive">
-                        {item.error}
+                        {translateCsvError(item.error)}
                       </span>
                     )}
                   </div>

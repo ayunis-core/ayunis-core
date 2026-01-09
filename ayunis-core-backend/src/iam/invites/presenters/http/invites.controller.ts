@@ -161,7 +161,7 @@ export class InvitesController {
   }
 
   @Post('bulk')
-  @RateLimit({ limit: 100, windowMs: 15 * 60 * 1000 }) // 100 invites per 15 minutes
+  @RateLimit({ limit: 20, windowMs: 15 * 60 * 1000 }) // 20 bulk invites per 15 minutes
   @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Create multiple invites in bulk',
