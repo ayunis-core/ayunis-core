@@ -47,6 +47,7 @@ export default function UsersSettingsPage({
         {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (
           <InvitesSection
             invites={invites}
+            totalInvites={invitesTotal}
             searchSlot={<InvitesSearch search={invitesSearch} />}
             paginationSlot={
               <InvitesPagination

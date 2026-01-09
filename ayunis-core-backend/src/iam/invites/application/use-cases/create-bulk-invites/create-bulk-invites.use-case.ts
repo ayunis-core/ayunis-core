@@ -110,9 +110,8 @@ export class CreateBulkInvitesUseCase {
     command: CreateBulkInvitesCommand,
   ): Promise<ValidationError[]> {
     const errors: ValidationError[] = [];
-    const emailProviderBlacklist = this.configService.get<string[]>(
-      'auth.emailProviderBlacklist',
-    )!;
+    const emailProviderBlacklist =
+      this.configService.get<string[]>('auth.emailProviderBlacklist') ?? [];
 
     // Check for duplicates within the request
     const emailCounts = new Map<string, number[]>();

@@ -25,12 +25,14 @@ import { useTranslation } from 'react-i18next';
 
 interface InvitesSectionProps {
   invites: Invite[];
+  totalInvites: number;
   searchSlot?: ReactNode;
   paginationSlot?: ReactNode;
 }
 
 export default function InvitesSection({
   invites,
+  totalInvites,
   searchSlot,
   paginationSlot,
 }: InvitesSectionProps) {
@@ -56,7 +58,7 @@ export default function InvitesSection({
     confirm({
       title: t('confirmations.deleteAllInvitesTitle'),
       description: t('confirmations.deleteAllInvitesDescription', {
-        count: invites.length,
+        count: totalInvites,
       }),
       confirmText: t('confirmations.deleteText'),
       cancelText: t('confirmations.cancelText'),
@@ -74,7 +76,7 @@ export default function InvitesSection({
             variant="outline"
             size="sm"
             onClick={handleDeleteAllInvites}
-            disabled={isDeleting || isDeletingInvite || invites.length === 0}
+            disabled={isDeleting || isDeletingInvite || totalInvites === 0}
           >
             <Trash2 className="h-4 w-4" />
             {t('users.deleteAll')}
