@@ -4,11 +4,16 @@ import { ChevronRight, MoreHorizontal } from 'lucide-react';
 
 import { cn } from '@/shared/lib/shadcn/utils';
 
-function Breadcrumb({ ...props }: React.ComponentProps<'nav'>) {
+function Breadcrumb({
+  ...props
+}: React.ComponentProps<'nav'>): React.ReactElement {
   return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
 }
 
-function BreadcrumbList({ className, ...props }: React.ComponentProps<'ol'>) {
+function BreadcrumbList({
+  className,
+  ...props
+}: React.ComponentProps<'ol'>): React.ReactElement {
   return (
     <ol
       data-slot="breadcrumb-list"
@@ -21,7 +26,10 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<'ol'>) {
   );
 }
 
-function BreadcrumbItem({ className, ...props }: React.ComponentProps<'li'>) {
+function BreadcrumbItem({
+  className,
+  ...props
+}: React.ComponentProps<'li'>): React.ReactElement {
   return (
     <li
       data-slot="breadcrumb-item"
@@ -37,7 +45,7 @@ function BreadcrumbLink({
   ...props
 }: React.ComponentProps<'a'> & {
   asChild?: boolean;
-}) {
+}): React.ReactElement {
   const Comp = asChild ? Slot : 'a';
 
   return (
@@ -49,7 +57,10 @@ function BreadcrumbLink({
   );
 }
 
-function BreadcrumbPage({ className, ...props }: React.ComponentProps<'span'>) {
+function BreadcrumbPage({
+  className,
+  ...props
+}: React.ComponentProps<'span'>): React.ReactElement {
   return (
     <span
       data-slot="breadcrumb-page"
@@ -66,7 +77,7 @@ function BreadcrumbSeparator({
   children,
   className,
   ...props
-}: React.ComponentProps<'li'>) {
+}: React.ComponentProps<'li'>): React.ReactElement {
   return (
     <li
       data-slot="breadcrumb-separator"
@@ -83,7 +94,7 @@ function BreadcrumbSeparator({
 function BreadcrumbEllipsis({
   className,
   ...props
-}: React.ComponentProps<'span'>) {
+}: React.ComponentProps<'span'>): React.ReactElement {
   return (
     <span
       data-slot="breadcrumb-ellipsis"
