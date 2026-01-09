@@ -98,7 +98,7 @@ export default function OnboardingLayout({
           }}
         >
           {/* Title Text */}
-          <div className="z-1 flex justify-center gap-15 my-auto translate-y-[90px]">
+          <div className="flex justify-center my-auto translate-y-[90px]">
             <h2 className="flex flex-col items-center justify-center gap-2 max-w-[550px] mx-auto text-center text-3xl font-medium text-white">
               <span className="text-5xl font-bold">700</span>
               {t('onboardingLayout.statTrustedText')}
