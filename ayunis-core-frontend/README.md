@@ -39,6 +39,31 @@ Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
 pnpx shadcn@latest add button
 ```
 
+### Ayunis Private Registry
+
+This project uses a custom Ayunis registry for shared shadcn components. The registry is configured in `components.json`:
+
+```json
+{
+  "registries": {
+    "@ayunis": {
+      "url": "https://registry.ayunis.de/r/{name}.json",
+      "headers": {
+        "Authorization": "Bearer ${AYUNIS_REGISTRY_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+To add components from the Ayunis registry:
+
+```bash
+pnpx shadcn@latest add @ayunis/component-name
+```
+
+**Note:** You need to set the `AYUNIS_REGISTRY_TOKEN` environment variable and have the registry server running on port 1998.
+
 
 
 ## Routing
