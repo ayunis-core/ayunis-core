@@ -18,6 +18,7 @@ export enum InvitesErrorCode {
   EMAIL_NOT_AVAILABLE = 'EMAIL_NOT_AVAILABLE',
   USER_ALREADY_EXISTS = 'USER_ALREADY_EXISTS',
   UNEXPECTED_INVITE_ERROR = 'UNEXPECTED_INVITE_ERROR',
+  BULK_INVITE_VALIDATION_FAILED = 'BULK_INVITE_VALIDATION_FAILED',
 }
 
 /**
@@ -182,6 +183,28 @@ export class UnexpectedInviteError extends InviteError {
       InvitesErrorCode.UNEXPECTED_INVITE_ERROR,
       500,
       metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when bulk invite validation fails for one or more rows
+ */
+export class BulkInviteValidationFailedError extends InviteError {
+  constructor(
+    errors: Array<{
+      row: number;
+      email: string;
+      errorCode: string;
+      message: string;
+    }>,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      'Bulk invite validation failed',
+      InvitesErrorCode.BULK_INVITE_VALIDATION_FAILED,
+      400,
+      { errors, ...metadata },
     );
   }
 }

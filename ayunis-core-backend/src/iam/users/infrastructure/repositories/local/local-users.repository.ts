@@ -51,6 +51,29 @@ export class LocalUsersRepository extends UsersRepository {
     return UserMapper.toDomain(userRecord);
   }
 
+  async findManyByEmails(emails: string[]): Promise<User[]> {
+    this.logger.log('findManyByEmails', { emailCount: emails.length });
+
+    if (emails.length === 0) {
+      return [];
+    }
+
+    // Convert emails to lowercase for case-insensitive comparison
+    const lowerEmails = emails.map((e) => e.toLowerCase());
+
+    const userRecords = await this.userRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.email) IN (:...emails)', { emails: lowerEmails })
+      .getMany();
+
+    this.logger.debug('Found users by emails', {
+      requestedCount: emails.length,
+      foundCount: userRecords.length,
+    });
+
+    return userRecords.map((record) => UserMapper.toDomain(record));
+  }
+
   async findManyByOrgId(
     orgId: UUID,
     pagination: UsersPagination,

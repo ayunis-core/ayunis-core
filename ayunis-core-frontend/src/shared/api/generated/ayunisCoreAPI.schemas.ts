@@ -66,6 +66,49 @@ export interface ModelWithConfigResponseDto {
   anonymousOnly: boolean | null;
 }
 
+/**
+ * The model provider identifier
+ */
+export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoResponseDtoProvider[keyof typeof ModelProviderInfoResponseDtoProvider];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderInfoResponseDtoProvider = {
+  openai: 'openai',
+  anthropic: 'anthropic',
+  bedrock: 'bedrock',
+  mistral: 'mistral',
+  ollama: 'ollama',
+  synaforce: 'synaforce',
+  ayunis: 'ayunis',
+  otc: 'otc',
+  azure: 'azure',
+} as const;
+
+/**
+ * The location where the provider hosts their services
+ */
+export type ModelProviderInfoResponseDtoHostedIn = typeof ModelProviderInfoResponseDtoHostedIn[keyof typeof ModelProviderInfoResponseDtoHostedIn];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ModelProviderInfoResponseDtoHostedIn = {
+  DE: 'DE',
+  EU: 'EU',
+  US: 'US',
+  SELF_HOSTED: 'SELF_HOSTED',
+  AYUNIS: 'AYUNIS',
+} as const;
+
+export interface ModelProviderInfoResponseDto {
+  /** The model provider identifier */
+  provider: ModelProviderInfoResponseDtoProvider;
+  /** The display name of the model provider */
+  displayName: string;
+  /** The location where the provider hosts their services */
+  hostedIn: ModelProviderInfoResponseDtoHostedIn;
+}
+
 export interface CreatePermittedModelDto {
   /** The id of the model */
   modelId: string;
@@ -155,49 +198,6 @@ export interface SetUserDefaultModelDto {
 export interface SetOrgDefaultModelDto {
   /** The ID of the permitted model to set as organization default */
   permittedModelId: string;
-}
-
-/**
- * The model provider identifier
- */
-export type ModelProviderInfoResponseDtoProvider = typeof ModelProviderInfoResponseDtoProvider[keyof typeof ModelProviderInfoResponseDtoProvider];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelProviderInfoResponseDtoProvider = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  bedrock: 'bedrock',
-  mistral: 'mistral',
-  ollama: 'ollama',
-  synaforce: 'synaforce',
-  ayunis: 'ayunis',
-  otc: 'otc',
-  azure: 'azure',
-} as const;
-
-/**
- * The location where the provider hosts their services
- */
-export type ModelProviderInfoResponseDtoHostedIn = typeof ModelProviderInfoResponseDtoHostedIn[keyof typeof ModelProviderInfoResponseDtoHostedIn];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ModelProviderInfoResponseDtoHostedIn = {
-  DE: 'DE',
-  EU: 'EU',
-  US: 'US',
-  SELF_HOSTED: 'SELF_HOSTED',
-  AYUNIS: 'AYUNIS',
-} as const;
-
-export interface ModelProviderInfoResponseDto {
-  /** The model provider identifier */
-  provider: ModelProviderInfoResponseDtoProvider;
-  /** The display name of the model provider */
-  displayName: string;
-  /** The location where the provider hosts their services */
-  hostedIn: ModelProviderInfoResponseDtoHostedIn;
 }
 
 export interface EmbeddingModelEnabledResponseDto {
@@ -736,6 +736,81 @@ export interface CreateInviteResponseDto {
 }
 
 /**
+ * Role to assign to the invited user
+ */
+export type CreateBulkInviteItemDtoRole = typeof CreateBulkInviteItemDtoRole[keyof typeof CreateBulkInviteItemDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateBulkInviteItemDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface CreateBulkInviteItemDto {
+  /** Email address of the person to invite */
+  email: string;
+  /** Role to assign to the invited user */
+  role: CreateBulkInviteItemDtoRole;
+}
+
+export interface CreateBulkInvitesDto {
+  /**
+   * Array of invites to create
+   * @minItems 1
+   * @maxItems 500
+   */
+  invites: CreateBulkInviteItemDto[];
+}
+
+/**
+ * Role assigned to the invited user
+ */
+export type BulkInviteResultDtoRole = typeof BulkInviteResultDtoRole[keyof typeof BulkInviteResultDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const BulkInviteResultDtoRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface BulkInviteResultDto {
+  /** Email address of the invited user */
+  email: string;
+  /** Role assigned to the invited user */
+  role: BulkInviteResultDtoRole;
+  /** Whether the invite was created successfully */
+  success: boolean;
+  /**
+   * Invitation URL (only populated when email configuration is unavailable)
+   * @nullable
+   */
+  url: string | null;
+  /**
+   * Error code if the invite failed
+   * @nullable
+   */
+  errorCode: string | null;
+  /**
+   * Error message if the invite failed
+   * @nullable
+   */
+  errorMessage: string | null;
+}
+
+export interface CreateBulkInvitesResponseDto {
+  /** Total number of invites in the request */
+  totalCount: number;
+  /** Number of invites created successfully */
+  successCount: number;
+  /** Number of invites that failed */
+  failureCount: number;
+  /** Individual results for each invite */
+  results: BulkInviteResultDto[];
+}
+
+/**
  * Role assigned to the invited user
  */
 export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof InviteResponseDtoRole];
@@ -775,6 +850,13 @@ export interface InviteResponseDto {
   expiresAt: string;
   /** Date when the invite was accepted (if applicable) */
   acceptedAt?: string;
+}
+
+export interface PaginatedInvitesListResponseDto {
+  /** Array of invites for the current page */
+  data: InviteResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
 }
 
 /**
@@ -839,6 +921,11 @@ export interface AcceptInviteResponseDto {
   email: string;
   /** Organization ID the user was invited to */
   orgId: string;
+}
+
+export interface DeleteAllPendingInvitesResponseDto {
+  /** Number of invites deleted */
+  deletedCount: number;
 }
 
 export interface SubscriptionBillingInfoResponseDto {
@@ -2519,6 +2606,21 @@ search?: string;
 limit?: number;
 /**
  * Number of users to skip (default: 0)
+ */
+offset?: number;
+};
+
+export type InvitesControllerGetInvitesParams = {
+/**
+ * Search invites by email
+ */
+search?: string;
+/**
+ * Maximum number of invites to return (default: 25)
+ */
+limit?: number;
+/**
+ * Number of invites to skip (default: 0)
  */
 offset?: number;
 };

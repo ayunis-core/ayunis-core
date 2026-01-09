@@ -16,12 +16,14 @@ import { InviteJwtService } from './application/services/invite-jwt.service';
 
 // Use Cases
 import { CreateInviteUseCase } from './application/use-cases/create-invite/create-invite.use-case';
+import { CreateBulkInvitesUseCase } from './application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
 import { AcceptInviteUseCase } from './application/use-cases/accept-invite/accept-invite.use-case';
 import { DeleteInviteUseCase } from './application/use-cases/delete-invite/delete-invite.use-case';
 import { GetInvitesByOrgUseCase } from './application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInviteByTokenUseCase } from './application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
 import { SendInvitationEmailUseCase } from './application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { DeleteInviteByEmailUseCase } from './application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
+import { DeleteAllPendingInvitesUseCase } from './application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -76,8 +78,10 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
 
     // Use Cases
     CreateInviteUseCase,
+    CreateBulkInvitesUseCase,
     AcceptInviteUseCase,
     DeleteInviteUseCase,
+    DeleteAllPendingInvitesUseCase,
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,

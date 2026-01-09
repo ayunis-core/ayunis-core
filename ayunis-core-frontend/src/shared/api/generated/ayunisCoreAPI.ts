@@ -35,6 +35,8 @@ import type {
   ConfirmEmailDto,
   CreateAgentDto,
   CreateAgentShareDto,
+  CreateBulkInvitesDto,
+  CreateBulkInvitesResponseDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelDto,
   CreateEmbeddingModelRequestDto,
@@ -50,6 +52,7 @@ import type {
   CreateThreadDto,
   CreateTrialRequestDto,
   CreateUserDto,
+  DeleteAllPendingInvitesResponseDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
@@ -57,7 +60,7 @@ import type {
   GetThreadResponseDto,
   GetThreadsResponseDto,
   InviteDetailResponseDto,
-  InviteResponseDto,
+  InvitesControllerGetInvitesParams,
   IsCloudResponseDto,
   LanguageModelResponseDto,
   LoginDto,
@@ -66,6 +69,7 @@ import type {
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
+  PaginatedInvitesListResponseDto,
   PaginatedUsersListResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
@@ -390,6 +394,94 @@ export function useModelsControllerGetAvailableModelsWithConfig<TData = Awaited<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsControllerGetAvailableModelsWithConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get all available model providers with their info
+ */
+export const modelsControllerGetProviders = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelProviderInfoResponseDto[]>(
+      {url: `/models/providers`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getModelsControllerGetProvidersQueryKey = () => {
+    return [`/models/providers`] as const;
+    }
+
+    
+export const getModelsControllerGetProvidersQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetProvidersQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetProviders>>> = ({ signal }) => modelsControllerGetProviders(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerGetProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetProviders>>>
+export type ModelsControllerGetProvidersQueryError = unknown
+
+
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all available model providers with their info
+ */
+
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerGetProvidersQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -3634,37 +3726,38 @@ export const useInvitesControllerCreate = <TError = void,
     }
     
 /**
- * Retrieve all invites for the organization with calculated status and sent date
+ * Retrieve paginated invites with optional search
  * @summary Get all invites for current user's organization
  */
 export const invitesControllerGetInvites = (
-    
+    params?: InvitesControllerGetInvitesParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<InviteResponseDto[]>(
-      {url: `/invites`, method: 'GET', signal
+      return customAxiosInstance<PaginatedInvitesListResponseDto>(
+      {url: `/invites`, method: 'GET',
+        params, signal
     },
       );
     }
   
 
-export const getInvitesControllerGetInvitesQueryKey = () => {
-    return [`/invites`] as const;
+export const getInvitesControllerGetInvitesQueryKey = (params?: InvitesControllerGetInvitesParams,) => {
+    return [`/invites`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+export const getInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInvitesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInvitesQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInvites>>> = ({ signal }) => invitesControllerGetInvites(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInvites>>> = ({ signal }) => invitesControllerGetInvites(params, signal);
 
       
 
@@ -3678,7 +3771,7 @@ export type InvitesControllerGetInvitesQueryError = void
 
 
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
+ params: undefined |  InvitesControllerGetInvitesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof invitesControllerGetInvites>>,
           TError,
@@ -3688,7 +3781,7 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
+ params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof invitesControllerGetInvites>>,
           TError,
@@ -3698,7 +3791,7 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+ params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -3706,11 +3799,11 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
  */
 
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+ params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getInvitesControllerGetInvitesQueryOptions(options)
+  const queryOptions = getInvitesControllerGetInvitesQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -3722,6 +3815,72 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
 
 
 
+/**
+ * Send invitations to multiple users. All rows are validated before any are processed.
+ * @summary Create multiple invites in bulk
+ */
+export const invitesControllerCreateBulk = (
+    createBulkInvitesDto: CreateBulkInvitesDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CreateBulkInvitesResponseDto>(
+      {url: `/invites/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBulkInvitesDto, signal
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerCreateBulkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, TError,{data: CreateBulkInvitesDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, TError,{data: CreateBulkInvitesDto}, TContext> => {
+
+const mutationKey = ['invitesControllerCreateBulk'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, {data: CreateBulkInvitesDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  invitesControllerCreateBulk(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerCreateBulkMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerCreateBulk>>>
+    export type InvitesControllerCreateBulkMutationBody = CreateBulkInvitesDto
+    export type InvitesControllerCreateBulkMutationError = void
+
+    /**
+ * @summary Create multiple invites in bulk
+ */
+export const useInvitesControllerCreateBulk = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, TError,{data: CreateBulkInvitesDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerCreateBulk>>,
+        TError,
+        {data: CreateBulkInvitesDto},
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerCreateBulkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * Retrieve invite details including organization name by token
  * @summary Get a single invite by token
@@ -3873,6 +4032,69 @@ export const useInvitesControllerAcceptInvite = <TError = void,
       > => {
 
       const mutationOptions = getInvitesControllerAcceptInviteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete all pending invitations for the organization (Admin only)
+ * @summary Delete all pending invites
+ */
+export const invitesControllerDeleteAllPending = (
+    
+ ) => {
+      
+      
+      return customAxiosInstance<DeleteAllPendingInvitesResponseDto>(
+      {url: `/invites/all`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerDeleteAllPendingMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, TError,void, TContext> => {
+
+const mutationKey = ['invitesControllerDeleteAllPending'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, void> = () => {
+          
+
+          return  invitesControllerDeleteAllPending()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerDeleteAllPendingMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>>
+    
+    export type InvitesControllerDeleteAllPendingMutationError = void
+
+    /**
+ * @summary Delete all pending invites
+ */
+export const useInvitesControllerDeleteAllPending = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerDeleteAllPending>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerDeleteAllPendingMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -2,6 +2,13 @@
   "search": {
     "placeholder": "Search users by name or email..."
   },
+  "invitesSearch": {
+    "placeholder": "Search invites by email..."
+  },
+  "inviteMenu": {
+    "inviteOne": "Invite One User",
+    "inviteMany": "Invite Multiple Users"
+  },
   "users": {
     "invites": "Invites",
     "users": "Users",
@@ -19,10 +26,12 @@
     "more": "More",
     "edit": "Edit",
     "delete": "Delete",
+    "deleteAll": "Delete All",
     "changeRole": "Change to role '{{role}}'",
     "user": "User",
     "admin": "Admin",
-    "sendPasswordReset": "Send Password Reset"
+    "sendPasswordReset": "Send Password Reset",
+    "noInvitesFound": "No invites found"
   },
   "inviteDialog": {
     "inviteUser": "Invite User",
@@ -64,7 +73,13 @@
     "confirmText": "Confirm",
     "deleteText": "Delete",
     "changeRoleText": "Change Role",
-    "cancelText": "Cancel"
+    "cancelText": "Cancel",
+    "deleteAllInvitesTitle": "Delete All Pending Invites",
+    "deleteAllInvitesDescription": "Are you sure you want to delete all {{count}} pending invites? This action cannot be undone."
+  },
+  "deleteAllInvites": {
+    "success": "{{count}} pending invite(s) deleted successfully",
+    "error": "Failed to delete invites. Please try again."
   },
   "inviteCreate": {
     "success": "Invite created successfully!",
@@ -97,5 +112,45 @@
     "description": "Send a password reset email to {{name}} ({{email}})?",
     "confirmText": "Send",
     "cancelText": "Cancel"
+  },
+  "bulkInvite": {
+    "dialogTitle": "Bulk Invite Users",
+    "dialogDescription": "Upload a CSV file to invite multiple users at once.",
+    "uploadTitle": "Upload CSV File",
+    "uploadDescription": "Upload a CSV file with columns: email, role (user or admin)",
+    "downloadTemplate": "Download Template",
+    "selectFile": "Select CSV File",
+    "dragDrop": "or drag and drop",
+    "csvFormat": "CSV file with email,role columns",
+    "previewTitle": "Preview Invites",
+    "previewDescription": "Review the invites before sending. All rows must be valid to proceed.",
+    "rowNumber": "Row",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "back": "Back",
+    "submit": "Send {{count}} Invites",
+    "submitting": "Sending invites...",
+    "resultsTitle": "Invites Sent",
+    "resultsDescription": "{{success}} of {{total}} invites were created successfully.",
+    "allSuccess": "All {{count}} invites created successfully!",
+    "partialSuccess": "{{success}} of {{total}} invites created.",
+    "downloadUrls": "Download Invite URLs",
+    "close": "Close",
+    "error": "Failed to create invites. Please try again.",
+    "validationFailed": "Some invites failed validation. Please check the errors.",
+    "parseError": "Failed to parse CSV file. Please check the format.",
+    "invalidHeaders": "Invalid CSV headers. Expected: email,role",
+    "invalidRowFormat": "Invalid row format",
+    "invalidRole": "Invalid role. Must be 'user' or 'admin'",
+    "invalidEmail": "Invalid email format",
+    "duplicateEmail": "Duplicate email in file",
+    "duplicateEmailWithRow": "Duplicate email (first occurrence at row {{row}})",
+    "emptyFile": "CSV file is empty",
+    "tooManyRows": "Too many rows. Maximum is 500.",
+    "emailAlreadyInvited": "Email already has a pending invite",
+    "emailAlreadyUser": "Email is already a user in this organization"
   }
 }

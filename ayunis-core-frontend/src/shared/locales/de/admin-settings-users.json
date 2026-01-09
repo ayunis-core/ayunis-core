@@ -2,6 +2,13 @@
   "search": {
     "placeholder": "Benutzer nach Name oder E-Mail suchen..."
   },
+  "invitesSearch": {
+    "placeholder": "Einladungen nach E-Mail suchen..."
+  },
+  "inviteMenu": {
+    "inviteOne": "Einen Benutzer einladen",
+    "inviteMany": "Mehrere Benutzer einladen"
+  },
   "users": {
     "invites": "Einladungen",
     "users": "Benutzer",
@@ -19,10 +26,12 @@
     "more": "Mehr",
     "edit": "Bearbeiten",
     "delete": "Löschen",
+    "deleteAll": "Alle löschen",
     "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
     "admin": "Administrator",
-    "sendPasswordReset": "Passwort-Reset senden"
+    "sendPasswordReset": "Passwort-Reset senden",
+    "noInvitesFound": "Keine Einladungen gefunden"
   },
   "inviteDialog": {
     "inviteUser": "Benutzer einladen",
@@ -65,7 +74,13 @@
     "confirmText": "Bestätigen",
     "deleteText": "Löschen",
     "changeRoleText": "Rolle ändern",
-    "cancelText": "Abbrechen"
+    "cancelText": "Abbrechen",
+    "deleteAllInvitesTitle": "Alle ausstehenden Einladungen löschen",
+    "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+  },
+  "deleteAllInvites": {
+    "success": "{{count}} ausstehende Einladung(en) erfolgreich gelöscht",
+    "error": "Fehler beim Löschen der Einladungen. Bitte versuchen Sie es erneut."
   },
   "inviteCreate": {
     "success": "Einladung erfolgreich erstellt",
@@ -98,5 +113,45 @@
     "description": "Eine Passwort-Reset-E-Mail an {{name}} ({{email}}) senden?",
     "confirmText": "Senden",
     "cancelText": "Abbrechen"
+  },
+  "bulkInvite": {
+    "dialogTitle": "Masseneinladung",
+    "dialogDescription": "Laden Sie eine CSV-Datei hoch, um mehrere Benutzer gleichzeitig einzuladen.",
+    "uploadTitle": "CSV-Datei hochladen",
+    "uploadDescription": "Laden Sie eine CSV-Datei mit den Spalten: email, role (user oder admin) hoch",
+    "downloadTemplate": "Vorlage herunterladen",
+    "selectFile": "CSV-Datei auswählen",
+    "dragDrop": "oder per Drag & Drop",
+    "csvFormat": "CSV-Datei mit email,role Spalten",
+    "previewTitle": "Einladungen prüfen",
+    "previewDescription": "Überprüfen Sie die Einladungen vor dem Versenden. Alle Zeilen müssen gültig sein.",
+    "rowNumber": "Zeile",
+    "email": "E-Mail",
+    "role": "Rolle",
+    "status": "Status",
+    "valid": "Gültig",
+    "invalid": "Ungültig",
+    "back": "Zurück",
+    "submit": "{{count}} Einladungen senden",
+    "submitting": "Einladungen werden gesendet...",
+    "resultsTitle": "Einladungen gesendet",
+    "resultsDescription": "{{success}} von {{total}} Einladungen wurden erfolgreich erstellt.",
+    "allSuccess": "Alle {{count}} Einladungen erfolgreich erstellt!",
+    "partialSuccess": "{{success}} von {{total}} Einladungen erstellt.",
+    "downloadUrls": "Einladungs-URLs herunterladen",
+    "close": "Schließen",
+    "error": "Fehler beim Erstellen der Einladungen. Bitte versuchen Sie es erneut.",
+    "validationFailed": "Einige Einladungen haben die Validierung nicht bestanden. Bitte überprüfen Sie die Fehler.",
+    "parseError": "CSV-Datei konnte nicht gelesen werden. Bitte überprüfen Sie das Format.",
+    "invalidHeaders": "Ungültige CSV-Spalten. Erwartet: email,role",
+    "invalidRowFormat": "Ungültiges Zeilenformat",
+    "invalidRole": "Ungültige Rolle. Muss 'user' oder 'admin' sein",
+    "invalidEmail": "Ungültiges E-Mail-Format",
+    "duplicateEmail": "Doppelte E-Mail in der Datei",
+    "duplicateEmailWithRow": "Doppelte E-Mail (erstes Vorkommen in Zeile {{row}})",
+    "emptyFile": "CSV-Datei ist leer",
+    "tooManyRows": "Zu viele Zeilen. Maximum ist 500.",
+    "emailAlreadyInvited": "E-Mail hat bereits eine ausstehende Einladung",
+    "emailAlreadyUser": "E-Mail ist bereits ein Benutzer in dieser Organisation"
   }
 }

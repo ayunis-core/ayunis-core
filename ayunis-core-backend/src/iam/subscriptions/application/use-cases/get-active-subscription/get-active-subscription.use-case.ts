@@ -4,7 +4,6 @@ import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { GetInvitesByOrgUseCase } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInvitesByOrgQuery } from 'src/iam/invites/application/use-cases/get-invites-by-org/get-invites-by-org.query';
-import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { getNextDate } from '../../util/get-date-for-anchor-and-cycle';
 import {
   UnauthorizedSubscriptionAccessError,
@@ -72,7 +71,7 @@ export class GetActiveSubscriptionUseCase {
 
       const subscription = subscriptions[0];
 
-      const [invites, usersResult] = await Promise.all([
+      const [invitesResult, usersResult] = await Promise.all([
         this.getInvitesByOrgUseCase.execute(
           new GetInvitesByOrgQuery({
             orgId: query.orgId,
@@ -90,7 +89,7 @@ export class GetActiveSubscriptionUseCase {
 
       const availableSeats = this.getAvailableSeats(
         subscription,
-        invites,
+        invitesResult.total ?? invitesResult.data.length,
         usersResult.total ?? usersResult.data.length,
       );
       const nextRenewalDate = this.getNextRenewalDate(subscription);
@@ -111,10 +110,10 @@ export class GetActiveSubscriptionUseCase {
 
   private getAvailableSeats(
     subscription: Subscription,
-    invites: Invite[],
+    openInvitesCount: number,
     userCount: number,
   ): number {
-    return subscription.noOfSeats - invites.length - userCount;
+    return subscription.noOfSeats - openInvitesCount - userCount;
   }
 
   private getNextRenewalDate(subscription: Subscription): Date {

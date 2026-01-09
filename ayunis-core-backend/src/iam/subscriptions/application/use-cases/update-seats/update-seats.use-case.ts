@@ -85,24 +85,26 @@ export class UpdateSeatsUseCase {
           pagination: { limit: 1000, offset: 0 },
         }),
       );
-      const openInvites = await this.getInvitesByOrgUseCase.execute(
+      const openInvitesResult = await this.getInvitesByOrgUseCase.execute(
         new GetInvitesByOrgQuery({
           orgId: command.orgId,
           requestingUserId: command.requestingUserId,
           onlyOpen: true,
         }),
       );
+      const openInvitesCount =
+        openInvitesResult.total ?? openInvitesResult.data.length;
       if (
         command.noOfSeats <
-        (usersResult.total ?? usersResult.data.length) + openInvites.length
+        (usersResult.total ?? usersResult.data.length) + openInvitesCount
       ) {
         this.logger.warn('Too many used seats', {
           orgId: command.orgId,
-          openInvites: openInvites,
+          openInvites: openInvitesCount,
         });
         throw new TooManyUsedSeatsError({
           orgId: command.orgId,
-          openInvites: openInvites.length,
+          openInvites: openInvitesCount,
         });
       }
 

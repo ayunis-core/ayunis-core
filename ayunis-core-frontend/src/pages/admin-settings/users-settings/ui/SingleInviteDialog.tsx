@@ -6,7 +6,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/shared/ui/shadcn/dialog';
 import {
   Form,
@@ -39,9 +38,16 @@ interface InviteFormData {
   role: InviteRole;
 }
 
-export default function InviteUserDialog() {
+interface SingleInviteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function SingleInviteDialog({
+  open,
+  onOpenChange,
+}: SingleInviteDialogProps) {
   const { t } = useTranslation('admin-settings-users');
-  const [isOpen, setIsOpen] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
 
@@ -53,7 +59,7 @@ export default function InviteUserDialog() {
   });
 
   function handleClose() {
-    setIsOpen(false);
+    onOpenChange(false);
     form.reset();
     setInviteUrl(null);
     setIsUrlCopied(false);
@@ -75,15 +81,12 @@ export default function InviteUserDialog() {
   }
 
   function handleCancel() {
-    setIsOpen(false);
-    form.reset();
-    setInviteUrl(null);
-    setIsUrlCopied(false);
+    handleClose();
   }
 
-  function handleOpenChange(open: boolean) {
-    if (open) {
-      setIsOpen(true);
+  function handleOpenChange(newOpen: boolean) {
+    if (newOpen) {
+      onOpenChange(true);
     } else {
       handleClose();
     }
@@ -220,10 +223,7 @@ export default function InviteUserDialog() {
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm">{t('inviteDialog.inviteUser')}</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>

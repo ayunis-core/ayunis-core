@@ -7,6 +7,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class GetInvitesByOrgUseCase {
@@ -17,11 +18,14 @@ export class GetInvitesByOrgUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(query: GetInvitesByOrgQuery): Promise<Invite[]> {
+  async execute(query: GetInvitesByOrgQuery): Promise<Paginated<Invite>> {
     try {
       this.logger.log('execute', {
         orgId: query.orgId,
         requestingUserId: query.requestingUserId,
+        search: query.search,
+        limit: query.limit,
+        offset: query.offset,
       });
 
       const orgId = this.contextService.get('orgId');
@@ -33,20 +37,20 @@ export class GetInvitesByOrgUseCase {
         throw new UnauthorizedInviteAccessError();
       }
 
-      let invites = await this.invitesRepository.findByOrgId(query.orgId);
-      if (query.onlyOpen) {
-        invites = invites.filter(
-          (invite) =>
-            invite.acceptedAt === null || invite.acceptedAt === undefined,
+      const paginatedInvites =
+        await this.invitesRepository.findByOrgIdPaginated(
+          query.orgId,
+          { limit: query.limit, offset: query.offset },
+          { search: query.search, onlyPending: query.onlyOpen },
         );
-      }
 
       this.logger.debug('Found invites', {
         orgId: query.orgId,
-        count: invites.length,
+        count: paginatedInvites.data.length,
+        total: paginatedInvites.total,
       });
 
-      return invites;
+      return paginatedInvites;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;

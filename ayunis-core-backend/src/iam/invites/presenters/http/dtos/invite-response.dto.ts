@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { PaginationDto } from 'src/common/pagination/pagination.dto';
 
 export enum InviteStatus {
   PENDING = 'pending',
@@ -84,4 +85,18 @@ export class AcceptInviteResponseDto {
     format: 'uuid',
   })
   orgId: string;
+}
+
+export class PaginatedInvitesListResponseDto {
+  @ApiProperty({
+    description: 'Array of invites for the current page',
+    type: [InviteResponseDto],
+  })
+  data: InviteResponseDto[];
+
+  @ApiProperty({
+    description: 'Pagination metadata',
+    type: PaginationDto,
+  })
+  pagination: PaginationDto;
 }

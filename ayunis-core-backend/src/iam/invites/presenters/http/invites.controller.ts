@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   Logger,
@@ -16,6 +17,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import {
@@ -27,13 +29,17 @@ import {
 import { CreateInviteDto } from './dtos/create-invite.dto';
 import { AcceptInviteDto } from './dtos/accept-invite.dto';
 import {
-  InviteResponseDto,
   InviteDetailResponseDto,
   AcceptInviteResponseDto,
+  PaginatedInvitesListResponseDto,
 } from './dtos/invite-response.dto';
+import { CreateBulkInvitesDto } from './dtos/create-bulk-invites.dto';
+import { CreateBulkInvitesResponseDto } from './dtos/create-bulk-invites-response.dto';
+import { GetInvitesQueryParamsDto } from './dtos/get-invites-query-params.dto';
 
 // Import Use Cases
 import { CreateInviteUseCase } from '../../application/use-cases/create-invite/create-invite.use-case';
+import { CreateBulkInvitesUseCase } from '../../application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
 import { AcceptInviteUseCase } from '../../application/use-cases/accept-invite/accept-invite.use-case';
 import { DeleteInviteUseCase } from '../../application/use-cases/delete-invite/delete-invite.use-case';
 import { GetInvitesByOrgUseCase } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
@@ -41,6 +47,7 @@ import { GetInviteByTokenUseCase } from '../../application/use-cases/get-invite-
 
 // Import Commands and Queries
 import { CreateInviteCommand } from '../../application/use-cases/create-invite/create-invite.command';
+import { CreateBulkInvitesCommand } from '../../application/use-cases/create-bulk-invites/create-bulk-invites.command';
 import { AcceptInviteCommand } from '../../application/use-cases/accept-invite/accept-invite.command';
 import { DeleteInviteCommand } from '../../application/use-cases/delete-invite/delete-invite.command';
 import { GetInvitesByOrgQuery } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.query';
@@ -50,10 +57,15 @@ import { GetInviteByTokenQuery } from '../../application/use-cases/get-invite-by
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SendInvitationEmailCommand } from '../../application/use-cases/send-invitation-email/send-invitation-email.command';
 import { ConfigService } from '@nestjs/config';
 import { SendInvitationEmailUseCase } from '../../application/use-cases/send-invitation-email/send-invitation-email.use-case';
 import { CreateInviteResponseDto } from './dtos/create-invite-response.dto';
+import { DeleteAllPendingInvitesResponseDto } from './dtos/delete-all-pending-invites-response.dto';
+import { DeleteAllPendingInvitesUseCase } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
+import { DeleteAllPendingInvitesCommand } from '../../application/use-cases/delete-all-pending-invites/delete-all-pending-invites.command';
 
 @ApiTags('invites')
 @Controller('invites')
@@ -62,8 +74,10 @@ export class InvitesController {
 
   constructor(
     private readonly createInviteUseCase: CreateInviteUseCase,
+    private readonly createBulkInvitesUseCase: CreateBulkInvitesUseCase,
     private readonly acceptInviteUseCase: AcceptInviteUseCase,
     private readonly deleteInviteUseCase: DeleteInviteUseCase,
+    private readonly deleteAllPendingInvitesUseCase: DeleteAllPendingInvitesUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly getInviteByTokenUseCase: GetInviteByTokenUseCase,
     private readonly inviteResponseMapper: InviteResponseMapper,
@@ -146,29 +160,98 @@ export class InvitesController {
     }
   }
 
+  @Post('bulk')
+  @RateLimit({ limit: 20, windowMs: 15 * 60 * 1000 }) // 20 bulk invites per 15 minutes
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Create multiple invites in bulk',
+    description:
+      'Send invitations to multiple users. All rows are validated before any are processed.',
+  })
+  @ApiBody({ type: CreateBulkInvitesDto })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiResponse({
+    status: 201,
+    description: 'The invites have been processed',
+    type: CreateBulkInvitesResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed for one or more invites',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async createBulk(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Body() dto: CreateBulkInvitesDto,
+  ): Promise<CreateBulkInvitesResponseDto> {
+    this.logger.log('createBulk', {
+      userId,
+      orgId,
+      inviteCount: dto.invites.length,
+    });
+
+    const result = await this.createBulkInvitesUseCase.execute(
+      new CreateBulkInvitesCommand({
+        invites: dto.invites,
+        orgId,
+        userId,
+      }),
+    );
+
+    return result;
+  }
+
   @Get()
   @ApiOperation({
     summary: "Get all invites for current user's organization",
-    description:
-      'Retrieve all invites for the organization with calculated status and sent date',
+    description: 'Retrieve paginated invites with optional search',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search invites by email',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Maximum number of invites to return (default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Number of invites to skip (default: 0)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Returns all invites for the organization',
-    type: [InviteResponseDto],
+    description: 'Returns paginated invites for the organization',
+    type: PaginatedInvitesListResponseDto,
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async getInvites(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<InviteResponseDto[]> {
-    this.logger.log('getInvites', { userId, orgId });
+    @Query() queryParams: GetInvitesQueryParamsDto,
+  ): Promise<PaginatedInvitesListResponseDto> {
+    this.logger.log('getInvites', { userId, orgId, ...queryParams });
 
     const invites = await this.getInvitesByOrgUseCase.execute(
-      new GetInvitesByOrgQuery({ orgId, requestingUserId: userId }),
+      new GetInvitesByOrgQuery({
+        orgId,
+        requestingUserId: userId,
+        onlyOpen: true, // Only show pending invites
+        search: queryParams.search,
+        pagination: {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+        },
+      }),
     );
 
-    return this.inviteResponseMapper.toDtoArray(invites);
+    return this.inviteResponseMapper.toPaginatedDto(invites);
   }
 
   @Public()
@@ -237,6 +320,35 @@ export class InvitesController {
     );
 
     return this.inviteResponseMapper.toAcceptResponseDto(result);
+  }
+
+  @Delete('all')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Delete all pending invites',
+    description:
+      'Delete all pending invitations for the organization (Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'All pending invites have been deleted',
+    type: DeleteAllPendingInvitesResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Unauthorized - Admin role required',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async deleteAllPending(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<DeleteAllPendingInvitesResponseDto> {
+    this.logger.log('deleteAllPending', { orgId });
+
+    const result = await this.deleteAllPendingInvitesUseCase.execute(
+      new DeleteAllPendingInvitesCommand(orgId),
+    );
+
+    return { deletedCount: result.deletedCount };
   }
 
   @Delete(':id')
