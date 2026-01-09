@@ -4,10 +4,54 @@ import { XIcon } from 'lucide-react';
 
 import { cn } from '@/shared/lib/shadcn/utils';
 
+// Cleanup utility to remove stuck pointer-events from body
+// This fixes a known Radix UI bug: https://github.com/radix-ui/primitives/issues/1241
+function cleanupDialogPointerEvents() {
+  // Only cleanup if no dialog is currently open
+  if (!document.querySelector('[data-radix-dialog-content]')) {
+    document.body.style.pointerEvents = '';
+  }
+}
+
 function Dialog({
+  children,
+  open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+  const wasOpenRef = React.useRef(open);
+  const cleanupTimeoutsRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  React.useEffect(() => {
+    // Detect close transition (open was true, now false)
+    if (wasOpenRef.current && !open) {
+      // Cancel any pending cleanups
+      cleanupTimeoutsRef.current.forEach((id) => clearTimeout(id));
+      cleanupTimeoutsRef.current = [];
+
+      // Schedule cleanup at multiple intervals to catch when Radix adds pointer-events
+      cleanupTimeoutsRef.current = [
+        setTimeout(cleanupDialogPointerEvents, 0),
+        setTimeout(cleanupDialogPointerEvents, 100),
+        setTimeout(cleanupDialogPointerEvents, 300),
+      ];
+    }
+    wasOpenRef.current = open;
+  }, [open]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      cleanupTimeoutsRef.current.forEach((id) => clearTimeout(id));
+      // Final cleanup attempt on unmount
+      setTimeout(cleanupDialogPointerEvents, 0);
+    };
+  }, []);
+
+  return (
+    <DialogPrimitive.Root data-slot="dialog" open={open} {...props}>
+      {children}
+    </DialogPrimitive.Root>
+  );
 }
 
 function DialogTrigger({
