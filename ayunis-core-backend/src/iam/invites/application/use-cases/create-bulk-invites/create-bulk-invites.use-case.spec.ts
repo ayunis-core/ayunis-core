@@ -38,6 +38,7 @@ describe('CreateBulkInvitesUseCase', () => {
       createMany: jest.fn(),
       findByEmailsAndOrg: jest.fn(),
       deleteAllPendingByOrg: jest.fn(),
+      delete: jest.fn(),
     };
 
     const mockUsersRepository = {
@@ -213,7 +214,7 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(sendInvitationEmailUseCase.execute).toHaveBeenCalledTimes(1);
     });
 
-    it('should return URL when email sending fails', async () => {
+    it('should delete invite and mark as failed when email sending fails', async () => {
       const command = new CreateBulkInvitesCommand({
         invites: [{ email: 'user1@example.com', role: UserRole.USER }],
         orgId: mockOrgId,
@@ -230,10 +231,62 @@ describe('CreateBulkInvitesUseCase', () => {
 
       const result = await useCase.execute(command);
 
+      expect(result.results[0].success).toBe(false);
+      expect(result.results[0].url).toBeNull();
+      expect(result.results[0].errorCode).toBe('EMAIL_SENDING_FAILED');
+      expect(result.results[0].errorMessage).toBe('Email service unavailable');
+      expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should delete invite from database when JWT generation fails', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [{ email: 'user@example.com', role: UserRole.USER }],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+
+      setupDefaultConfigMocks();
+      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockImplementation(() => {
+        throw new Error('JWT generation failed');
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.results[0].success).toBe(false);
+      expect(result.results[0].errorMessage).toBe('JWT generation failed');
+      expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle mixed success/failure in bulk invites', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [
+          { email: 'success@example.com', role: UserRole.USER },
+          { email: 'fail@example.com', role: UserRole.USER },
+        ],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+
+      setupDefaultConfigMocks({ hasEmailConfig: true });
+      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+
+      // First email succeeds, second fails
+      sendInvitationEmailUseCase.execute
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('Email failed'));
+
+      const result = await useCase.execute(command);
+
+      expect(result.totalCount).toBe(2);
+      expect(result.successCount).toBe(1);
+      expect(result.failureCount).toBe(1);
       expect(result.results[0].success).toBe(true);
-      expect(result.results[0].url).toBe(
-        'http://localhost:3001/accept-invite?token=mock-token',
-      );
+      expect(result.results[1].success).toBe(false);
+      expect(invitesRepository.delete).toHaveBeenCalledTimes(1);
     });
   });
 

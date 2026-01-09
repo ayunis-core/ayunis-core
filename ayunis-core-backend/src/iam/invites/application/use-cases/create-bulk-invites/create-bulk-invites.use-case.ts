@@ -337,14 +337,35 @@ export class CreateBulkInvitesUseCase {
                   ? emailError.message
                   : 'Unknown error',
             });
-            // Invite was created, but email failed - still return URL
+
+            // Delete the invite since email delivery failed
+            try {
+              await this.invitesRepository.delete(invite.id);
+              this.logger.debug('Deleted invite after email sending failure', {
+                inviteId: invite.id,
+                email: inviteData.email,
+              });
+            } catch (deleteError) {
+              this.logger.error('Failed to delete invite after email failure', {
+                inviteId: invite.id,
+                email: inviteData.email,
+                error:
+                  deleteError instanceof Error
+                    ? deleteError.message
+                    : 'Unknown error',
+              });
+            }
+
             results.push({
               email: inviteData.email,
               role: inviteData.role,
-              success: true,
-              url: inviteAcceptUrl,
-              errorCode: null,
-              errorMessage: null,
+              success: false,
+              url: null,
+              errorCode: 'EMAIL_SENDING_FAILED',
+              errorMessage:
+                emailError instanceof Error
+                  ? emailError.message
+                  : 'Failed to send invitation email',
             });
           }
         } else {
@@ -363,6 +384,27 @@ export class CreateBulkInvitesUseCase {
           email: inviteData.email,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
+
+        // Delete the invite since processing failed
+        try {
+          await this.invitesRepository.delete(invite.id);
+          this.logger.debug('Deleted invite after processing failure', {
+            inviteId: invite.id,
+            email: inviteData.email,
+          });
+        } catch (deleteError) {
+          this.logger.error(
+            'Failed to delete invite after processing failure',
+            {
+              inviteId: invite.id,
+              email: inviteData.email,
+              error:
+                deleteError instanceof Error
+                  ? deleteError.message
+                  : 'Unknown error',
+            },
+          );
+        }
 
         results.push({
           email: inviteData.email,
