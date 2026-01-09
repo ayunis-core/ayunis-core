@@ -1,5 +1,5 @@
 import SettingsLayout from '../../admin-settings-layout';
-import InviteUserDialog from './InviteUserDialog';
+import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
 import UsersSection from './UsersSection';
 import UsersSearch from './UsersSearch';
@@ -30,7 +30,7 @@ export default function UsersSettingsPage({
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <SettingsLayout action={<InviteUserDialog />}>
+    <SettingsLayout action={<InviteMenuButton />}>
       <div className="space-y-4">
         {invites.length > 0 && <InvitesSection invites={invites} />}
         <UsersSection

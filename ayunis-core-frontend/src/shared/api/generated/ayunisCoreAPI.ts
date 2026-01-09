@@ -35,6 +35,8 @@ import type {
   ConfirmEmailDto,
   CreateAgentDto,
   CreateAgentShareDto,
+  CreateBulkInvitesDto,
+  CreateBulkInvitesResponseDto,
   CreateCustomIntegrationDto,
   CreateEmbeddingModelDto,
   CreateEmbeddingModelRequestDto,
@@ -390,6 +392,94 @@ export function useModelsControllerGetAvailableModelsWithConfig<TData = Awaited<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsControllerGetAvailableModelsWithConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get all available model providers with their info
+ */
+export const modelsControllerGetProviders = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelProviderInfoResponseDto[]>(
+      {url: `/models/providers`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getModelsControllerGetProvidersQueryKey = () => {
+    return [`/models/providers`] as const;
+    }
+
+    
+export const getModelsControllerGetProvidersQueryOptions = <TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getModelsControllerGetProvidersQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof modelsControllerGetProviders>>> = ({ signal }) => modelsControllerGetProviders(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ModelsControllerGetProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof modelsControllerGetProviders>>>
+export type ModelsControllerGetProvidersQueryError = unknown
+
+
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>,
+          TError,
+          Awaited<ReturnType<typeof modelsControllerGetProviders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all available model providers with their info
+ */
+
+export function useModelsControllerGetProviders<TData = Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof modelsControllerGetProviders>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getModelsControllerGetProvidersQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -3722,6 +3812,72 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
 
 
 
+/**
+ * Send invitations to multiple users. All rows are validated before any are processed.
+ * @summary Create multiple invites in bulk
+ */
+export const invitesControllerCreateBulk = (
+    createBulkInvitesDto: CreateBulkInvitesDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CreateBulkInvitesResponseDto>(
+      {url: `/invites/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBulkInvitesDto, signal
+    },
+      );
+    }
+  
+
+
+export const getInvitesControllerCreateBulkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, TError,{data: CreateBulkInvitesDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, TError,{data: CreateBulkInvitesDto}, TContext> => {
+
+const mutationKey = ['invitesControllerCreateBulk'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, {data: CreateBulkInvitesDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  invitesControllerCreateBulk(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InvitesControllerCreateBulkMutationResult = NonNullable<Awaited<ReturnType<typeof invitesControllerCreateBulk>>>
+    export type InvitesControllerCreateBulkMutationBody = CreateBulkInvitesDto
+    export type InvitesControllerCreateBulkMutationError = void
+
+    /**
+ * @summary Create multiple invites in bulk
+ */
+export const useInvitesControllerCreateBulk = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invitesControllerCreateBulk>>, TError,{data: CreateBulkInvitesDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invitesControllerCreateBulk>>,
+        TError,
+        {data: CreateBulkInvitesDto},
+        TContext
+      > => {
+
+      const mutationOptions = getInvitesControllerCreateBulkMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * Retrieve invite details including organization name by token
  * @summary Get a single invite by token

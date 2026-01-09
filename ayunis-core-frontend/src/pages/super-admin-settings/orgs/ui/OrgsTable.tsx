@@ -55,6 +55,7 @@ export default function OrgsTable({ orgs, searchSlot }: OrgsTableProps) {
               {orgs.map((org) => (
                 <TableRow
                   key={org.id}
+                  className="cursor-pointer"
                   onClick={() => {
                     void router.navigate({
                       to: '/super-admin-settings/orgs/$id',

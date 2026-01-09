@@ -2,6 +2,10 @@
   "search": {
     "placeholder": "Search users by name or email..."
   },
+  "inviteMenu": {
+    "inviteOne": "Invite One User",
+    "inviteMany": "Invite Multiple Users"
+  },
   "users": {
     "invites": "Invites",
     "users": "Users",
@@ -97,5 +101,43 @@
     "description": "Send a password reset email to {{name}} ({{email}})?",
     "confirmText": "Send",
     "cancelText": "Cancel"
+  },
+  "bulkInvite": {
+    "dialogTitle": "Bulk Invite Users",
+    "dialogDescription": "Upload a CSV file to invite multiple users at once.",
+    "uploadTitle": "Upload CSV File",
+    "uploadDescription": "Upload a CSV file with columns: email, role (user or admin)",
+    "downloadTemplate": "Download Template",
+    "selectFile": "Select CSV File",
+    "dragDrop": "or drag and drop",
+    "csvFormat": "CSV file with email,role columns",
+    "previewTitle": "Preview Invites",
+    "previewDescription": "Review the invites before sending. All rows must be valid to proceed.",
+    "rowNumber": "Row",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "back": "Back",
+    "submit": "Send {{count}} Invites",
+    "submitting": "Sending invites...",
+    "resultsTitle": "Invites Sent",
+    "resultsDescription": "{{success}} of {{total}} invites were created successfully.",
+    "allSuccess": "All {{count}} invites created successfully!",
+    "partialSuccess": "{{success}} of {{total}} invites created.",
+    "downloadUrls": "Download Invite URLs",
+    "close": "Close",
+    "error": "Failed to create invites. Please try again.",
+    "validationFailed": "Some invites failed validation. Please check the errors.",
+    "parseError": "Failed to parse CSV file. Please check the format.",
+    "invalidHeaders": "Invalid CSV headers. Expected: email,role",
+    "invalidRole": "Invalid role. Must be 'user' or 'admin'",
+    "invalidEmail": "Invalid email format",
+    "duplicateEmail": "Duplicate email in file",
+    "emptyFile": "CSV file is empty",
+    "tooManyRows": "Too many rows. Maximum is 500.",
+    "emailAlreadyInvited": "Email already has a pending invite",
+    "emailAlreadyUser": "Email is already a user in this organization"
   }
 }

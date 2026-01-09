@@ -68,6 +68,32 @@ export class LocalInvitesRepository implements InvitesRepository {
     return this.inviteMapper.toDomain(entity);
   }
 
+  async findByEmailsAndOrg(emails: string[], orgId: string): Promise<Invite[]> {
+    this.logger.log('findByEmailsAndOrg', { emailCount: emails.length, orgId });
+
+    if (emails.length === 0) {
+      return [];
+    }
+
+    // Convert emails to lowercase for case-insensitive comparison
+    const lowerEmails = emails.map((e) => e.toLowerCase());
+
+    const entities = await this.inviteRepository
+      .createQueryBuilder('invite')
+      .where('invite.orgId = :orgId', { orgId })
+      .andWhere('LOWER(invite.email) IN (:...emails)', { emails: lowerEmails })
+      .andWhere('invite.acceptedAt IS NULL') // Only pending invites
+      .getMany();
+
+    this.logger.debug('Found invites by emails and org', {
+      orgId,
+      requestedCount: emails.length,
+      foundCount: entities.length,
+    });
+
+    return entities.map((entity) => this.inviteMapper.toDomain(entity));
+  }
+
   async accept(id: UUID): Promise<void> {
     this.logger.log('accept', { id });
 

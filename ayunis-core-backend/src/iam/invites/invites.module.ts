@@ -16,6 +16,7 @@ import { InviteJwtService } from './application/services/invite-jwt.service';
 
 // Use Cases
 import { CreateInviteUseCase } from './application/use-cases/create-invite/create-invite.use-case';
+import { CreateBulkInvitesUseCase } from './application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
 import { AcceptInviteUseCase } from './application/use-cases/accept-invite/accept-invite.use-case';
 import { DeleteInviteUseCase } from './application/use-cases/delete-invite/delete-invite.use-case';
 import { GetInvitesByOrgUseCase } from './application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
@@ -76,6 +77,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
 
     // Use Cases
     CreateInviteUseCase,
+    CreateBulkInvitesUseCase,
     AcceptInviteUseCase,
     DeleteInviteUseCase,
     GetInvitesByOrgUseCase,
