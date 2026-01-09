@@ -60,7 +60,7 @@ import type {
   GetThreadResponseDto,
   GetThreadsResponseDto,
   InviteDetailResponseDto,
-  InviteResponseDto,
+  InvitesControllerGetInvitesParams,
   IsCloudResponseDto,
   LanguageModelResponseDto,
   LoginDto,
@@ -69,6 +69,7 @@ import type {
   ModelDistributionResponseDto,
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
+  PaginatedInvitesListResponseDto,
   PaginatedUsersListResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
@@ -3725,37 +3726,38 @@ export const useInvitesControllerCreate = <TError = void,
     }
     
 /**
- * Retrieve all invites for the organization with calculated status and sent date
+ * Retrieve paginated invites with optional search
  * @summary Get all invites for current user's organization
  */
 export const invitesControllerGetInvites = (
-    
+    params?: InvitesControllerGetInvitesParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<InviteResponseDto[]>(
-      {url: `/invites`, method: 'GET', signal
+      return customAxiosInstance<PaginatedInvitesListResponseDto>(
+      {url: `/invites`, method: 'GET',
+        params, signal
     },
       );
     }
   
 
-export const getInvitesControllerGetInvitesQueryKey = () => {
-    return [`/invites`] as const;
+export const getInvitesControllerGetInvitesQueryKey = (params?: InvitesControllerGetInvitesParams,) => {
+    return [`/invites`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+export const getInvitesControllerGetInvitesQueryOptions = <TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInvitesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getInvitesControllerGetInvitesQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInvites>>> = ({ signal }) => invitesControllerGetInvites(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitesControllerGetInvites>>> = ({ signal }) => invitesControllerGetInvites(params, signal);
 
       
 
@@ -3769,7 +3771,7 @@ export type InvitesControllerGetInvitesQueryError = void
 
 
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
+ params: undefined |  InvitesControllerGetInvitesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof invitesControllerGetInvites>>,
           TError,
@@ -3779,7 +3781,7 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
+ params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof invitesControllerGetInvites>>,
           TError,
@@ -3789,7 +3791,7 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+ params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -3797,11 +3799,11 @@ export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof
  */
 
 export function useInvitesControllerGetInvites<TData = Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
+ params?: InvitesControllerGetInvitesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitesControllerGetInvites>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getInvitesControllerGetInvitesQueryOptions(options)
+  const queryOptions = getInvitesControllerGetInvitesQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

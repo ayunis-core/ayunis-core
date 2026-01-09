@@ -12,6 +12,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useBulkInviteCreate(
   onSuccess?: (response: CreateBulkInvitesResponseDto) => void,
+  onError?: () => void,
 ) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -50,6 +51,7 @@ export function useBulkInviteCreate(
         } catch {
           showError(t('bulkInvite.error'));
         }
+        onError?.();
       },
       onSettled: () => {
         void queryClient.invalidateQueries({

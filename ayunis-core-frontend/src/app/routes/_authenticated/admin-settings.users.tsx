@@ -1,6 +1,5 @@
 import UsersSettingsPage from '@/pages/admin-settings/users-settings';
 import { createFileRoute } from '@tanstack/react-router';
-import { queryOptions } from '@tanstack/react-query';
 import { z } from 'zod';
 import {
   getInvitesControllerGetInvitesQueryKey,
@@ -10,26 +9,40 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 const USERS_PER_PAGE = 25;
+const INVITES_PER_PAGE = 10;
 
 const searchSchema = z.object({
   search: z.string().optional(),
   page: z.number().min(1).optional().catch(1),
+  invitesSearch: z.string().optional(),
+  invitesPage: z.number().min(1).optional().catch(1),
 });
-
-const invitesQueryOptions = () =>
-  queryOptions({
-    queryKey: getInvitesControllerGetInvitesQueryKey(),
-    queryFn: () => invitesControllerGetInvites(),
-  });
 
 export const Route = createFileRoute('/_authenticated/admin-settings/users')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   component: RouteComponent,
-  loader: async ({ deps: { search, page = 1 }, context: { queryClient } }) => {
+  loader: async ({
+    deps: { search, page = 1, invitesSearch, invitesPage = 1 },
+    context: { queryClient },
+  }) => {
     const offset = (page - 1) * USERS_PER_PAGE;
-    const [invites, usersResponse] = await Promise.all([
-      queryClient.fetchQuery(invitesQueryOptions()),
+    const invitesOffset = (invitesPage - 1) * INVITES_PER_PAGE;
+
+    const [invitesResponse, usersResponse] = await Promise.all([
+      queryClient.fetchQuery({
+        queryKey: getInvitesControllerGetInvitesQueryKey({
+          search: invitesSearch,
+          limit: INVITES_PER_PAGE,
+          offset: invitesOffset,
+        }),
+        queryFn: () =>
+          invitesControllerGetInvites({
+            search: invitesSearch,
+            limit: INVITES_PER_PAGE,
+            offset: invitesOffset,
+          }),
+      }),
       queryClient.fetchQuery({
         queryKey: getUserControllerGetUsersInOrganizationQueryKey({
           search,
@@ -45,19 +58,31 @@ export const Route = createFileRoute('/_authenticated/admin-settings/users')({
       }),
     ]);
     return {
-      invites,
+      invitesResponse,
       usersResponse,
       search,
       page,
+      invitesSearch,
+      invitesPage,
     };
   },
 });
 
 function RouteComponent() {
-  const { invites, usersResponse, search, page } = Route.useLoaderData();
+  const {
+    invitesResponse,
+    usersResponse,
+    search,
+    page,
+    invitesSearch,
+    invitesPage,
+  } = Route.useLoaderData();
   return (
     <UsersSettingsPage
-      invites={invites}
+      invites={invitesResponse.data}
+      invitesPagination={invitesResponse.pagination}
+      invitesSearch={invitesSearch}
+      invitesCurrentPage={invitesPage ?? 1}
       users={usersResponse.data}
       pagination={usersResponse.pagination}
       search={search}

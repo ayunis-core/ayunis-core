@@ -86,6 +86,10 @@ export default function BulkInviteDialog({
       setResults(response);
       setStep('results');
     },
+    () => {
+      // On error, go back to preview step so user can retry
+      setStep('preview');
+    },
   );
 
   const handleFileRead = useCallback(

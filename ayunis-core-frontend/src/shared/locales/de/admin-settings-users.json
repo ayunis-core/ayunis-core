@@ -2,6 +2,9 @@
   "search": {
     "placeholder": "Benutzer nach Name oder E-Mail suchen..."
   },
+  "invitesSearch": {
+    "placeholder": "Einladungen nach E-Mail suchen..."
+  },
   "inviteMenu": {
     "inviteOne": "Einen Benutzer einladen",
     "inviteMany": "Mehrere Benutzer einladen"
@@ -27,7 +30,8 @@
     "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
     "admin": "Administrator",
-    "sendPasswordReset": "Passwort-Reset senden"
+    "sendPasswordReset": "Passwort-Reset senden",
+    "noInvitesFound": "Keine Einladungen gefunden"
   },
   "inviteDialog": {
     "inviteUser": "Benutzer einladen",

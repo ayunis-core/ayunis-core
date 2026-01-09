@@ -852,6 +852,13 @@ export interface InviteResponseDto {
   acceptedAt?: string;
 }
 
+export interface PaginatedInvitesListResponseDto {
+  /** Array of invites for the current page */
+  data: InviteResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
 /**
  * Role assigned to the invited user
  */
@@ -2599,6 +2606,21 @@ search?: string;
 limit?: number;
 /**
  * Number of users to skip (default: 0)
+ */
+offset?: number;
+};
+
+export type InvitesControllerGetInvitesParams = {
+/**
+ * Search invites by email
+ */
+search?: string;
+/**
+ * Maximum number of invites to return (default: 25)
+ */
+limit?: number;
+/**
+ * Number of invites to skip (default: 0)
  */
 offset?: number;
 };

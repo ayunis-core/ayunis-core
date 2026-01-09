@@ -2,10 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull } from 'typeorm';
 import { UUID } from 'crypto';
-import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
+import {
+  InvitesRepository,
+  InvitesPagination,
+  InvitesFilters,
+} from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { InviteRecord } from './schema/invite.record';
 import { InviteMapper } from './mappers/invite.mapper';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
@@ -42,18 +47,48 @@ export class LocalInvitesRepository implements InvitesRepository {
     return this.inviteMapper.toDomain(entity);
   }
 
-  async findByOrgId(orgId: UUID): Promise<Invite[]> {
-    this.logger.log('findByOrgId', { orgId });
-    const entities = await this.inviteRepository.find({
-      where: { orgId },
-      order: { createdAt: 'DESC' },
+  async findByOrgIdPaginated(
+    orgId: UUID,
+    pagination: InvitesPagination,
+    filters?: InvitesFilters,
+  ): Promise<Paginated<Invite>> {
+    this.logger.log('findByOrgIdPaginated', {
+      orgId,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      search: filters?.search,
     });
 
-    this.logger.debug('Found invites by org', {
-      orgId,
-      count: entities.length,
+    const queryBuilder = this.inviteRepository
+      .createQueryBuilder('invite')
+      .where('invite.orgId = :orgId', { orgId })
+      .orderBy('invite.createdAt', 'DESC');
+
+    if (filters?.onlyPending) {
+      queryBuilder.andWhere('invite.acceptedAt IS NULL');
+    }
+
+    if (filters?.search) {
+      queryBuilder.andWhere('invite.email ILIKE :search', {
+        search: `%${filters.search}%`,
+      });
+    }
+
+    const total = await queryBuilder.getCount();
+
+    queryBuilder.skip(pagination.offset).take(pagination.limit);
+
+    const inviteRecords = await queryBuilder.getMany();
+    const invites = inviteRecords.map((record) =>
+      this.inviteMapper.toDomain(record),
+    );
+
+    return new Paginated<Invite>({
+      data: invites,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      total,
     });
-    return entities.map((entity) => this.inviteMapper.toDomain(entity));
   }
 
   async findOneByEmail(email: string): Promise<Invite | null> {

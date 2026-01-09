@@ -1,6 +1,8 @@
 import SettingsLayout from '../../admin-settings-layout';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
+import InvitesSearch from './InvitesSearch';
+import InvitesPagination from './InvitesPagination';
 import UsersSection from './UsersSection';
 import UsersSearch from './UsersSearch';
 import UsersPagination from './UsersPagination';
@@ -12,6 +14,9 @@ import type {
 
 interface UsersSettingsPageProps {
   invites: Invite[];
+  invitesPagination?: PaginationDto;
+  invitesSearch?: string;
+  invitesCurrentPage: number;
   users: UserResponseDto[];
   pagination?: PaginationDto;
   search?: string;
@@ -20,6 +25,9 @@ interface UsersSettingsPageProps {
 
 export default function UsersSettingsPage({
   invites,
+  invitesPagination,
+  invitesSearch,
+  invitesCurrentPage,
   users,
   pagination,
   search,
@@ -29,10 +37,26 @@ export default function UsersSettingsPage({
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
 
+  const invitesTotal = invitesPagination?.total ?? 0;
+  const invitesLimit = invitesPagination?.limit ?? 10;
+  const invitesTotalPages = Math.ceil(invitesTotal / invitesLimit);
+
   return (
     <SettingsLayout action={<InviteMenuButton />}>
       <div className="space-y-4">
-        {invites.length > 0 && <InvitesSection invites={invites} />}
+        {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (
+          <InvitesSection
+            invites={invites}
+            searchSlot={<InvitesSearch search={invitesSearch} />}
+            paginationSlot={
+              <InvitesPagination
+                currentPage={invitesCurrentPage}
+                totalPages={invitesTotalPages}
+                search={invitesSearch}
+              />
+            }
+          />
+        )}
         <UsersSection
           users={users}
           searchSlot={<UsersSearch search={search} />}
