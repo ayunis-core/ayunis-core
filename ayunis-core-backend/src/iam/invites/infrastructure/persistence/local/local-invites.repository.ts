@@ -35,6 +35,23 @@ export class LocalInvitesRepository implements InvitesRepository {
     this.logger.debug('Invite created successfully', { inviteId: invite.id });
   }
 
+  async createMany(invites: Invite[]): Promise<void> {
+    this.logger.log('createMany', { inviteCount: invites.length });
+
+    if (invites.length === 0) {
+      return;
+    }
+
+    const entities = invites.map((invite) =>
+      this.inviteMapper.toEntity(invite),
+    );
+    await this.inviteRepository.save(entities);
+
+    this.logger.debug('Invites created successfully', {
+      inviteCount: invites.length,
+    });
+  }
+
   async findOne(id: UUID): Promise<Invite | null> {
     this.logger.log('findOne', { id });
     const entity = await this.inviteRepository.findOne({ where: { id } });

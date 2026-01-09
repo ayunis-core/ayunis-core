@@ -153,11 +153,10 @@ export class CreateBulkInvitesUseCase {
     );
 
     // Batch check for existing users
-    const existingUsers = await Promise.all(
-      uniqueEmails.map((email) => this.usersRepository.findOneByEmail(email)),
-    );
+    const existingUsers =
+      await this.usersRepository.findManyByEmails(uniqueEmails);
     const existingUserEmails = new Set(
-      existingUsers.filter((u) => u !== null).map((u) => u.email.toLowerCase()),
+      existingUsers.map((u) => u.email.toLowerCase()),
     );
 
     // Validate each invite
@@ -283,20 +282,32 @@ export class CreateBulkInvitesUseCase {
       '7d',
     );
 
-    for (const inviteData of command.invites) {
-      try {
-        const inviteExpiresAt = this.getInviteExpiresAt(validDuration);
-
-        const invite = new Invite({
+    // Create all invite entities upfront
+    const inviteExpiresAt = this.getInviteExpiresAt(validDuration);
+    const invites: Invite[] = command.invites.map(
+      (inviteData) =>
+        new Invite({
           email: inviteData.email,
           orgId: command.orgId,
           role: inviteData.role,
           inviterId: command.userId,
           expiresAt: inviteExpiresAt,
-        });
+        }),
+    );
 
-        await this.invitesRepository.create(invite);
+    // Batch insert all invites
+    await this.invitesRepository.createMany(invites);
 
+    this.logger.debug('Invites batch created successfully', {
+      count: invites.length,
+    });
+
+    // Process each invite for token generation and email sending
+    for (let i = 0; i < invites.length; i++) {
+      const invite = invites[i];
+      const inviteData = command.invites[i];
+
+      try {
         // Generate JWT token for the invite
         const inviteToken = this.inviteJwtService.generateInviteToken({
           inviteId: invite.id,
@@ -347,13 +358,8 @@ export class CreateBulkInvitesUseCase {
             errorMessage: null,
           });
         }
-
-        this.logger.debug('Invite created successfully', {
-          inviteId: invite.id,
-          email: invite.email,
-        });
       } catch (error) {
-        this.logger.error('Failed to create invite', {
+        this.logger.error('Failed to process invite', {
           email: inviteData.email,
           error: error instanceof Error ? error.message : 'Unknown error',
         });

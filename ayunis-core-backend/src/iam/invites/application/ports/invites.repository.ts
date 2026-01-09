@@ -16,6 +16,7 @@ export interface InvitesFilters {
 @Injectable()
 export abstract class InvitesRepository {
   abstract create(invite: Invite): Promise<void>;
+  abstract createMany(invites: Invite[]): Promise<void>;
   abstract findOne(id: UUID): Promise<Invite | null>;
   abstract findByOrgIdPaginated(
     orgId: UUID,

@@ -35,12 +35,14 @@ describe('CreateBulkInvitesUseCase', () => {
   beforeEach(async () => {
     const mockInvitesRepository = {
       create: jest.fn(),
+      createMany: jest.fn(),
       findByEmailsAndOrg: jest.fn(),
       deleteAllPendingByOrg: jest.fn(),
     };
 
     const mockUsersRepository = {
       findOneByEmail: jest.fn(),
+      findManyByEmails: jest.fn(),
     };
 
     const mockConfigService = {
@@ -153,7 +155,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks();
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
       const result = await useCase.execute(command);
@@ -164,7 +166,13 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results).toHaveLength(2);
       expect(result.results[0].success).toBe(true);
       expect(result.results[1].success).toBe(true);
-      expect(invitesRepository.create).toHaveBeenCalledTimes(2);
+      expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
+      expect(invitesRepository.createMany).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ email: 'user1@example.com' }),
+          expect.objectContaining({ email: 'user2@example.com' }),
+        ]),
+      );
     });
 
     it('should return invite URLs when email config is not available', async () => {
@@ -176,7 +184,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ hasEmailConfig: false });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
       const result = await useCase.execute(command);
@@ -196,7 +204,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ hasEmailConfig: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
       const result = await useCase.execute(command);
@@ -214,7 +222,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ hasEmailConfig: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       sendInvitationEmailUseCase.execute.mockRejectedValue(
         new Error('Email service unavailable'),
@@ -242,12 +250,12 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks();
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         BulkInviteValidationFailedError,
       );
-      expect(invitesRepository.create).not.toHaveBeenCalled();
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
     });
 
     it('should throw BulkInviteValidationFailedError for blacklisted email providers', async () => {
@@ -259,7 +267,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ emailProviderBlacklist: ['gmail'] });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         BulkInviteValidationFailedError,
@@ -281,7 +289,7 @@ describe('CreateBulkInvitesUseCase', () => {
         expiresAt: new Date(Date.now() + 86400000),
       });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([existingInvite]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         BulkInviteValidationFailedError,
@@ -307,7 +315,7 @@ describe('CreateBulkInvitesUseCase', () => {
         name: 'Existing User',
         hasAcceptedMarketing: false,
       });
-      usersRepository.findOneByEmail.mockResolvedValue(existingUser);
+      usersRepository.findManyByEmails.mockResolvedValue([existingUser]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         BulkInviteValidationFailedError,
@@ -327,7 +335,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ emailProviderBlacklist: ['gmail'] });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
 
       try {
         await useCase.execute(command);
@@ -377,7 +385,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ isCloudHosted: false });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
       await useCase.execute(command);
@@ -397,7 +405,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ isCloudHosted: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
         createMockSubscription(5, 10),
@@ -406,7 +414,7 @@ describe('CreateBulkInvitesUseCase', () => {
       await useCase.execute(command);
 
       expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
-      expect(invitesRepository.create).toHaveBeenCalledTimes(2);
+      expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
     it('should update seats when not enough available in cloud instance', async () => {
@@ -422,7 +430,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ isCloudHosted: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
         createMockSubscription(1, 10),
@@ -448,7 +456,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ isCloudHosted: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockRejectedValue(
         new SubscriptionNotFoundError(mockOrgId),
@@ -457,7 +465,7 @@ describe('CreateBulkInvitesUseCase', () => {
       await useCase.execute(command);
 
       expect(updateSeatsUseCase.execute).not.toHaveBeenCalled();
-      expect(invitesRepository.create).toHaveBeenCalledTimes(1);
+      expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
     });
 
     it('should throw InvalidSeatsError when subscription has negative available seats', async () => {
@@ -469,13 +477,13 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ isCloudHosted: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
         createMockSubscription(-1, 10),
       );
 
       await expect(useCase.execute(command)).rejects.toThrow(InvalidSeatsError);
-      expect(invitesRepository.create).not.toHaveBeenCalled();
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
     });
   });
 
@@ -497,7 +505,7 @@ describe('CreateBulkInvitesUseCase', () => {
       );
     });
 
-    it('should handle individual invite creation failures gracefully', async () => {
+    it('should throw UnexpectedInviteError when batch creation fails', async () => {
       const command = new CreateBulkInvitesCommand({
         invites: [
           { email: 'user1@example.com', role: UserRole.USER },
@@ -509,22 +517,14 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks();
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
-      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      invitesRepository.createMany.mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      // First invite succeeds, second fails
-      invitesRepository.create
-        .mockResolvedValueOnce(undefined)
-        .mockRejectedValueOnce(new Error('Database error'));
-
-      const result = await useCase.execute(command);
-
-      expect(result.totalCount).toBe(2);
-      expect(result.successCount).toBe(1);
-      expect(result.failureCount).toBe(1);
-      expect(result.results[0].success).toBe(true);
-      expect(result.results[1].success).toBe(false);
-      expect(result.results[1].errorCode).toBe('UNEXPECTED_ERROR');
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UnexpectedInviteError,
+      );
     });
 
     it('should re-throw application errors', async () => {
@@ -536,7 +536,7 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ isCloudHosted: true });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       getActiveSubscriptionUseCase.execute.mockRejectedValue(
         new Error('Unexpected subscription error'),
       );
@@ -557,21 +557,23 @@ describe('CreateBulkInvitesUseCase', () => {
 
       setupDefaultConfigMocks({ inviteExpiresIn: '24h' });
       invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
-      usersRepository.findOneByEmail.mockResolvedValue(null);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
       const beforeExecution = Date.now();
       await useCase.execute(command);
       const afterExecution = Date.now();
 
-      expect(invitesRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          expiresAt: expect.any(Date),
-        }),
+      expect(invitesRepository.createMany).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            expiresAt: expect.any(Date),
+          }),
+        ]),
       );
 
-      const createdInvite = invitesRepository.create.mock.calls[0][0];
-      const expirationTime = createdInvite.expiresAt.getTime();
+      const createdInvites = invitesRepository.createMany.mock.calls[0][0];
+      const expirationTime = createdInvites[0].expiresAt.getTime();
       const expectedMin = beforeExecution + 24 * 60 * 60 * 1000;
       const expectedMax = afterExecution + 24 * 60 * 60 * 1000;
 
