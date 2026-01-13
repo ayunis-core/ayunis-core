@@ -23,7 +23,10 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
 
       {/* Content Area - takes up remaining space with scrollable content */}
       <div className="flex-1 overflow-hidden  w-full max-w-[800px] mx-auto">
-        <ScrollArea className="h-full">{contentArea}</ScrollArea>
+        <ScrollArea className="h-full">
+          {/* Padding ensures focus rings and hover effects aren't clipped by overflow-hidden */}
+          <div className="px-1">{contentArea}</div>
+        </ScrollArea>
       </div>
     </div>
   );
