@@ -27,6 +27,7 @@ import { ReplaceAgentWithDefaultModelUseCase } from './application/use-cases/rep
 import { FindAllThreadsByOrgWithSourcesUseCase } from './application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { AgentsModule } from '../agents/agents.module';
 import { StorageModule } from '../storage/storage.module';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { StorageModule } from '../storage/storage.module';
     SourcesModule,
     forwardRef(() => ModelsModule),
     forwardRef(() => AgentsModule),
+    MessagesModule,
     OrgsModule,
     StorageModule,
   ],
