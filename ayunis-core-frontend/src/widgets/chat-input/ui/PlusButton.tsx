@@ -21,6 +21,7 @@ import { usePrompts } from '../api/usePrompts';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
 import { useNavigate } from '@tanstack/react-router';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 interface PlusButtonProps {
   onFileUpload: (file: File) => void;
   onImageSelect?: (files: FileList | null) => void;
@@ -99,13 +100,18 @@ export default function PlusButton({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => documentInputRef.current?.click()}
-              disabled={isLoading || isFileSourceDisabled}
+            <TooltipIf
+              condition={isFileSourceDisabled || false}
+              tooltip={t('chatInput.fileSourceDisabled')}
             >
-              <FileText className="h-4 w-4" />
-              <span>{t('chatInput.uploadDocument')}</span>
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => documentInputRef.current?.click()}
+                disabled={isLoading || isFileSourceDisabled}
+              >
+                <FileText className="h-4 w-4" />
+                <span>{t('chatInput.uploadDocument')}</span>
+              </DropdownMenuItem>
+            </TooltipIf>
             <DropdownMenuItem
               onClick={() => imageInputRef.current?.click()}
               disabled={isLoading || isImageUploadDisabled}
