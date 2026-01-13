@@ -469,7 +469,7 @@ export default function ChatPage({
   );
 
   // Long chat warning banner
-  const longChatWarning = !thread.isLongChat && <LongChatWarning />;
+  const longChatWarning = thread.isLongChat && <LongChatWarning />;
 
   // Chat Input
   // Agent, model, and anonymous mode controls are always disabled on ChatPage
