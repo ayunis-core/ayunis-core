@@ -7,6 +7,7 @@ import {
   getAgentsControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
 } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -55,7 +56,21 @@ export function useDeletePermittedModel() {
       },
       onError: (error, _, context) => {
         console.error('Error deleting permitted model', error);
-        showError(t('models.deletePermittedModel.error'));
+        try {
+          const { code } = extractErrorData(error);
+          switch (code) {
+            case 'CANNOT_DELETE_DEFAULT_MODEL':
+              showError(t('models.deletePermittedModel.errorDefaultModel'));
+              break;
+            case 'CANNOT_DELETE_LAST_MODEL':
+              showError(t('models.deletePermittedModel.errorLastModel'));
+              break;
+            default:
+              showError(t('models.deletePermittedModel.error'));
+          }
+        } catch {
+          showError(t('models.deletePermittedModel.error'));
+        }
         if (context?.previousData && context?.queryKey) {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }

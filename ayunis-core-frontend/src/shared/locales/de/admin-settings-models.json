@@ -31,7 +31,9 @@
       "description": "Sind Sie sicher, dass Sie dieses Modell löschen möchten? Wenn Sie ein Embedding-Modell löschen, werden alle Quellen, die mit diesem Modell verknüpft sind, ebenfalls gelöscht. Wenn Sie ein Sprachmodell löschen, fallen alle Threads, die mit diesem Modell verknüpft sind, auf ein anderes Modell zurück.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen",
-      "error": "Modellzugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
+      "error": "Modellzugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+      "errorDefaultModel": "Das Standardmodell kann nicht gelöscht werden. Bitte legen Sie zuerst ein anderes Modell als Standard fest.",
+      "errorLastModel": "Das letzte freigeschaltete Sprachmodell in Ihrer Organisation kann nicht gelöscht werden."
     },
     "createPermittedModel": {
       "multipleEmbeddingModelsNotAllowed": "Es kann nur ein Embedding-Modell pro Organisation erstellt werden.",

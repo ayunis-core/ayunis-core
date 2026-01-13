@@ -23,6 +23,8 @@ export enum ModelErrorCode {
   INFERENCE_TIMEOUT = 'INFERENCE_TIMEOUT',
   MODEL_RATE_LIMIT_EXCEEDED = 'MODEL_RATE_LIMIT_EXCEEDED',
   MODEL_DELETION_FAILED = 'MODEL_DELETION_FAILED',
+  CANNOT_DELETE_DEFAULT_MODEL = 'CANNOT_DELETE_DEFAULT_MODEL',
+  CANNOT_DELETE_LAST_MODEL = 'CANNOT_DELETE_LAST_MODEL',
   MODEL_ALREADY_EXISTS = 'MODEL_ALREADY_EXISTS',
   MODEL_UPDATE_FAILED = 'MODEL_UPDATE_FAILED',
   MODEL_CREATION_FAILED = 'MODEL_CREATION_FAILED',
@@ -141,6 +143,30 @@ export class PermittedModelDeletionFailedError extends ModelError {
       `Permitted model deletion failed: ${reason}`,
       ModelErrorCode.MODEL_DELETION_FAILED,
       500,
+      metadata,
+    );
+  }
+}
+
+/** Error thrown when trying to delete the default model */
+export class CannotDeleteDefaultModelError extends ModelError {
+  constructor(modelId?: string, metadata?: ErrorMetadata) {
+    super(
+      `Cannot delete the default model. Please set another model as default first.`,
+      ModelErrorCode.CANNOT_DELETE_DEFAULT_MODEL,
+      400,
+      { ...metadata, modelId },
+    );
+  }
+}
+
+/** Error thrown when trying to delete the last permitted language model */
+export class CannotDeleteLastModelError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      `Cannot delete the last permitted language model in an organization.`,
+      ModelErrorCode.CANNOT_DELETE_LAST_MODEL,
+      400,
       metadata,
     );
   }
