@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { Tiktoken, encoding_for_model } from 'tiktoken';
+import { Tiktoken, get_encoding } from 'tiktoken';
 import {
   TokenCounterHandler,
   TokenCounterType,
@@ -27,7 +27,7 @@ export class TiktokenHandler
   private getEncoder(): Tiktoken {
     if (!this.encoder) {
       this.logger.debug('initializing tiktoken encoder (cl100k_base)');
-      this.encoder = encoding_for_model('gpt-4');
+      this.encoder = get_encoding('cl100k_base');
     }
     return this.encoder;
   }
