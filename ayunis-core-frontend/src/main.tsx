@@ -14,7 +14,7 @@ import { ErrorBoundary } from '@/shared/ui/error-boundary';
 // Import the generated route tree
 import { routeTree } from './app/routeTree.gen.ts';
 
-import './styles.css';
+import './styles/main.css';
 import './i18n.ts';
 import reportWebVitals from './reportWebVitals.ts';
 

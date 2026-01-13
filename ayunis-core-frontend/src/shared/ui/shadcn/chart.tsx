@@ -22,7 +22,7 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
-function useChart() {
+function useChart(): ChartContextProps {
   const context = React.useContext(ChartContext);
 
   if (!context) {
@@ -43,7 +43,7 @@ function ChartContainer({
   children: React.ComponentProps<
     typeof RechartsPrimitive.ResponsiveContainer
   >['children'];
-}) {
+}): React.ReactElement {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, '')}`;
 
@@ -67,7 +67,13 @@ function ChartContainer({
   );
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+const ChartStyle = ({
+  id,
+  config,
+}: {
+  id: string;
+  config: ChartConfig;
+}): React.ReactElement | null => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color,
   );
@@ -123,7 +129,7 @@ function ChartTooltipContent({
     indicator?: 'line' | 'dot' | 'dashed';
     nameKey?: string;
     labelKey?: string;
-  }) {
+  }): React.ReactElement | null {
   const { config } = useChart();
 
   const tooltipLabel = React.useMemo(() => {
@@ -197,7 +203,7 @@ function ChartTooltipContent({
                   formatter(
                     item.value,
                     item.name,
-                    item as never,
+                    item,
                     index,
                     item.payload as never,
                   )
@@ -235,7 +241,7 @@ function ChartTooltipContent({
                     >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground mr-4">
+                        <span className="text-muted-foreground">
                           {itemConfig?.label || item.name}
                         </span>
                       </div>
@@ -267,7 +273,7 @@ function ChartLegendContent({
   Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
     hideIcon?: boolean;
     nameKey?: string;
-  }) {
+  }): React.ReactElement | null {
   const { config } = useChart();
 
   if (!payload?.length) {
@@ -319,7 +325,7 @@ function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,
   key: string,
-) {
+): ChartConfig[string] | undefined {
   if (typeof payload !== 'object' || payload === null) {
     return undefined;
   }
