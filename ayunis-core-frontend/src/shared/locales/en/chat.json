@@ -57,7 +57,9 @@
     },
     "charts": {
       "emptyState": "No chart data available"
-    }
+    },
+    "longChatWarningTitle": "Conversation too long",
+    "longChatWarningDescription": "For better results, consider starting a new chat."
   },
   "newChat": {
     "newChat": "New Chat",

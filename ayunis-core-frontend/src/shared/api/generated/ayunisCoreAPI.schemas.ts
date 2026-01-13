@@ -1575,6 +1575,8 @@ export interface GetThreadResponseDto {
   updatedAt: string;
   /** Whether the thread is in anonymous mode (PII redaction enabled) */
   isAnonymous: boolean;
+  /** Whether the thread has exceeded the token threshold for optimal performance */
+  isLongChat: boolean;
 }
 
 export interface GetThreadsResponseDtoItem {

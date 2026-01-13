@@ -57,7 +57,9 @@
     },
     "charts": {
       "emptyState": "Keine Diagrammdaten verfügbar"
-    }
+    },
+    "longChatWarningTitle": "Konversation zu lang",
+    "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten."
   },
   "newChat": {
     "newChat": "Neuer Chat",

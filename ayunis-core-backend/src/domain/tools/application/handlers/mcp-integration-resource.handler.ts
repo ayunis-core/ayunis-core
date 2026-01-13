@@ -45,7 +45,7 @@ export class McpIntegrationResourceHandler implements ToolExecutionHandler {
           ),
         );
       const threadId = context.threadId;
-      const thread = await this.findThreadUseCase.execute(
+      const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(threadId),
       );
       if (mimeType === 'text/csv') {

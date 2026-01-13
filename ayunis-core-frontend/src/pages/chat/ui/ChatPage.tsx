@@ -6,6 +6,7 @@ import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
+import LongChatWarning from './LongChatWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
@@ -467,35 +468,41 @@ export default function ChatPage({
     </div>
   );
 
+  // Long chat warning banner
+  const longChatWarning = thread.isLongChat && <LongChatWarning />;
+
   // Chat Input
   // Agent, model, and anonymous mode controls are always disabled on ChatPage
   // because the thread already has messages (ChatPage is only shown after first message)
   const chatInput = (
-    <ChatInput
-      ref={chatInputRef}
-      modelId={
-        // If the thread has an agent, use the agent's model
-        thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
-      }
-      isModelChangeDisabled={true}
-      isAgentChangeDisabled={true}
-      isAnonymousChangeDisabled={true}
-      agentId={thread.agentId}
-      sources={thread.sources}
-      isAnonymous={thread.isAnonymous}
-      isStreaming={isStreaming}
-      isCreatingFileSource={isTotallyCreatingFileSource}
-      onModelChange={() => {}}
-      onAgentChange={() => {}}
-      onAgentRemove={() => {}}
-      onFileUpload={handleFileUpload}
-      onRemoveSource={deleteFileSource}
-      onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
-      onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
-      onSendCancelled={handleSendCancelled}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-      isVisionEnabled={isVisionEnabled}
-    />
+    <>
+      {longChatWarning}
+      <ChatInput
+        ref={chatInputRef}
+        modelId={
+          // If the thread has an agent, use the agent's model
+          thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
+        }
+        isModelChangeDisabled={true}
+        isAgentChangeDisabled={true}
+        isAnonymousChangeDisabled={true}
+        agentId={thread.agentId}
+        sources={thread.sources}
+        isAnonymous={thread.isAnonymous}
+        isStreaming={isStreaming}
+        isCreatingFileSource={isTotallyCreatingFileSource}
+        onModelChange={() => {}}
+        onAgentChange={() => {}}
+        onAgentRemove={() => {}}
+        onFileUpload={handleFileUpload}
+        onRemoveSource={deleteFileSource}
+        onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
+        onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
+        onSendCancelled={handleSendCancelled}
+        isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+        isVisionEnabled={isVisionEnabled}
+      />
+    </>
   );
 
   return (
