@@ -73,8 +73,11 @@ import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-c
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
+import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
+import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
+const MAX_CONTEXT_TOKENS = 80000;
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -99,6 +102,7 @@ export class ExecuteRunUseCase {
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly collectUsageUseCase: CollectUsageUseCase,
+    private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
   ) {}
 
   async execute(
@@ -115,7 +119,7 @@ export class ExecuteRunUseCase {
       if (!userId || !orgId) {
         throw new UnauthorizedException('User not authenticated');
       }
-      const thread = await this.findThreadUseCase.execute(
+      const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
       );
       // Fetch the agent separately to prevent accidental access of not-shared-anymore agents
@@ -476,6 +480,11 @@ export class ExecuteRunUseCase {
 
         let assistantMessage: AssistantMessage;
         try {
+          // Trim messages to fit within context window before inference
+          const trimmedMessages = this.trimMessagesForInference(
+            params.thread.messages,
+          );
+
           if (params.streaming) {
             // Streaming mode: yield partial messages as they come in
             let finalMessage: AssistantMessage | undefined;
@@ -483,12 +492,12 @@ export class ExecuteRunUseCase {
             const generation = params.trace.generation({
               name: 'completion_streaming',
               model: params.model.name,
-              input: params.thread.messages,
+              input: trimmedMessages,
               completionStartTime: new Date(),
             });
             for await (const partialMessage of this.executeStreamingInference({
               model: params.model,
-              messages: params.thread.messages,
+              messages: trimmedMessages,
               tools: params.tools,
               instructions: params.instructions,
               threadId: params.thread.id,
@@ -530,14 +539,14 @@ export class ExecuteRunUseCase {
             const generation = params.trace.generation({
               name: 'completion_non_streaming',
               model: params.model.name,
-              input: params.thread.messages,
+              input: trimmedMessages,
               completionStartTime: new Date(),
             });
             const inferenceResponse =
               await this.triggerInferenceUseCase.execute(
                 new GetInferenceCommand({
                   model: params.model,
-                  messages: params.thread.messages,
+                  messages: trimmedMessages,
                   tools: params.tools,
                   toolChoice: ModelToolChoice.AUTO,
                   instructions: params.instructions,
@@ -1143,7 +1152,7 @@ export class ExecuteRunUseCase {
   ): Promise<void> {
     try {
       // Re-fetch the thread to get the latest message state after save
-      const updatedThread = await this.findThreadUseCase.execute(
+      const { thread: updatedThread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(threadId),
       );
 
@@ -1341,5 +1350,15 @@ export class ExecuteRunUseCase {
     }
 
     return hasUsageData ? { inputTokens, outputTokens } : undefined;
+  }
+
+  /**
+   * Trims messages to fit within the context window before inference.
+   * Keeps the most recent messages up to MAX_CONTEXT_TOKENS.
+   */
+  private trimMessagesForInference(messages: Message[]): Message[] {
+    return this.trimMessagesForContextUseCase.execute(
+      new TrimMessagesForContextCommand(messages, MAX_CONTEXT_TOKENS),
+    );
   }
 }

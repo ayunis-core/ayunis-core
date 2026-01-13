@@ -138,7 +138,8 @@ export class ThreadsController {
         isAnonymous: createThreadDto.isAnonymous,
       }),
     );
-    return this.getThreadDtoMapper.toDto(thread);
+    // New threads are never long chats
+    return this.getThreadDtoMapper.toDto({ thread, isLongChat: false });
   }
 
   @Get()
@@ -215,10 +216,10 @@ export class ThreadsController {
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<GetThreadResponseDto> {
     this.logger.log('findOne', { id });
-    const thread = await this.findThreadUseCase.execute(
+    const result = await this.findThreadUseCase.execute(
       new FindThreadQuery(id),
     );
-    return this.getThreadDtoMapper.toDto(thread);
+    return this.getThreadDtoMapper.toDto(result);
   }
 
   @Delete(':id')
@@ -456,7 +457,7 @@ export class ThreadsController {
       }
 
       // Add all sources to the thread
-      const thread = await this.findThreadUseCase.execute(
+      const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(threadId),
       );
 
@@ -504,7 +505,7 @@ export class ThreadsController {
     this.logger.log('removeSource', { threadId, sourceId });
 
     // First get the thread
-    const thread = await this.findThreadUseCase.execute(
+    const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
     );
 

@@ -18,7 +18,7 @@ export class GetThreadSourcesUseCase {
     });
 
     try {
-      const thread = await this.findThreadUseCase.execute(
+      const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(query.threadId),
       );
       return (

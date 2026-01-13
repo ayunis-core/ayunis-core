@@ -4,7 +4,6 @@ import { ThreadsRepository } from './application/ports/threads.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
 import { SourcesModule } from '../sources/sources.module';
 import { ModelsModule } from '../models/models.module';
-import { MessagesModule } from '../messages/messages.module';
 import { SourceDtoMapper } from './presenters/http/mappers/source.mapper';
 import { GetThreadDtoMapper } from './presenters/http/mappers/get-thread.mapper';
 import { MessageDtoMapper } from './presenters/http/mappers/message.mapper';
@@ -35,7 +34,6 @@ import { StorageModule } from '../storage/storage.module';
     SourcesModule,
     forwardRef(() => ModelsModule),
     forwardRef(() => AgentsModule),
-    MessagesModule,
     OrgsModule,
     StorageModule,
   ],

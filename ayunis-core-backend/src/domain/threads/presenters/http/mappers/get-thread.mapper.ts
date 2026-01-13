@@ -3,6 +3,7 @@ import { Thread } from '../../../domain/thread.entity';
 import { GetThreadResponseDto } from '../dto/get-thread-response.dto';
 import { MessageDtoMapper } from './message.mapper';
 import { SourceDtoMapper } from './source.mapper';
+import { FindThreadResult } from '../../../application/use-cases/find-thread/find-thread.use-case';
 
 @Injectable()
 export class GetThreadDtoMapper {
@@ -11,7 +12,8 @@ export class GetThreadDtoMapper {
     private readonly sourceDtoMapper: SourceDtoMapper,
   ) {}
 
-  toDto(thread: Thread): GetThreadResponseDto {
+  toDto(result: FindThreadResult): GetThreadResponseDto {
+    const { thread, isLongChat } = result;
     return {
       id: thread.id,
       userId: thread.userId,
@@ -26,10 +28,11 @@ export class GetThreadDtoMapper {
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),
       isAnonymous: thread.isAnonymous,
+      isLongChat,
     };
   }
 
   toDtoArray(threads: Thread[]): GetThreadResponseDto[] {
-    return threads.map((thread) => this.toDto(thread));
+    return threads.map((thread) => this.toDto({ thread, isLongChat: false }));
   }
 }

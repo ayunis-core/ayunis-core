@@ -99,7 +99,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         Object.keys(response.output_files).length > 0
       ) {
         try {
-          const thread = await this.findThreadUseCase.execute(
+          const { thread } = await this.findThreadUseCase.execute(
             new FindThreadQuery(context.threadId),
           );
 

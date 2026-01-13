@@ -52,7 +52,7 @@ export class ExecuteRunAndSetTitleUseCase {
       };
       yield streamingStartResponse;
 
-      const thread = await this.findThreadUseCase.execute(
+      const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
       );
 

@@ -111,4 +111,11 @@ export class GetThreadResponseDto {
     example: false,
   })
   isAnonymous: boolean;
+
+  @ApiProperty({
+    description:
+      'Whether the thread has exceeded the token threshold for optimal performance',
+    example: false,
+  })
+  isLongChat: boolean;
 }

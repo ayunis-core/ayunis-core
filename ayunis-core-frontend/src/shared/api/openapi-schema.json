@@ -7490,6 +7490,11 @@
             "type": "boolean",
             "description": "Whether the thread is in anonymous mode (PII redaction enabled)",
             "example": false
+          },
+          "isLongChat": {
+            "type": "boolean",
+            "description": "Whether the thread has exceeded the token threshold for optimal performance",
+            "example": false
           }
         },
         "required": [
@@ -7501,7 +7506,8 @@
           "sources",
           "createdAt",
           "updatedAt",
-          "isAnonymous"
+          "isAnonymous",
+          "isLongChat"
         ]
       },
       "GetThreadsResponseDtoItem": {
