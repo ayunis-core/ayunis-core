@@ -3,6 +3,8 @@ import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
   PermittedModelDeletionFailedError,
+  CannotDeleteDefaultModelError,
+  CannotDeleteLastModelError,
   UnexpectedModelError,
 } from '../../models.errors';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
@@ -110,9 +112,7 @@ export class DeletePermittedModelUseCase {
       )
     ).filter((m) => m instanceof PermittedLanguageModel);
     if (permittedModels.length === 1 && permittedModels[0].id === model.id) {
-      throw new PermittedModelDeletionFailedError(
-        'Cannot delete the last permitted language model in an organization',
-      );
+      throw new CannotDeleteLastModelError();
     }
 
     // Check if the model is the default model in the organization
@@ -123,10 +123,7 @@ export class DeletePermittedModelUseCase {
       });
     }
     if (modelToDelete.isDefault) {
-      throw new PermittedModelDeletionFailedError(
-        'Cannot delete the default model in an organization',
-        { modelId: model.id },
-      );
+      throw new CannotDeleteDefaultModelError(model.id);
     }
     this.logger.debug(
       'Deleting user default models that reference this model',
