@@ -75,6 +75,7 @@ import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/coll
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
+import { SystemPromptBuilderService } from '../../services/system-prompt-builder.service';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const MAX_CONTEXT_TOKENS = 80000;
@@ -103,6 +104,7 @@ export class ExecuteRunUseCase {
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly collectUsageUseCase: CollectUsageUseCase,
     private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
+    private readonly systemPromptBuilderService: SystemPromptBuilderService,
   ) {}
 
   async execute(
@@ -140,7 +142,11 @@ export class ExecuteRunUseCase {
       const tools = model.model.canUseTools
         ? await this.assembleTools(thread, agent)
         : [];
-      const instructions = this.assemblySystemPrompt(agent);
+      const instructions = this.systemPromptBuilderService.build({
+        agent,
+        tools,
+        currentTime: new Date(),
+      });
 
       const trace = langfuse.trace({
         name: 'execute_run',
@@ -356,20 +362,6 @@ export class ExecuteRunUseCase {
       threadId: thread.id,
       userId: thread.userId,
     });
-  }
-
-  private assemblySystemPrompt(agent?: Agent): string {
-    const currentTime = new Date().toISOString();
-    const systemPrompt = `
-    !! IMPORTANT !! ALWAYS ANSWER IN THE SAME LANGUAGE AS THE USER'S MESSAGE !! NOT ANSWERING IN THE SAME LANGUAGE AS THE USER'S MESSAGE IS A CRITICAL ERROR !!
-	  IMPORTANT: Always output Markdown format, never HTML!
-      Current time: ${currentTime}
-    `.trim();
-    const agentInstructions = agent?.instructions;
-    if (!agentInstructions) {
-      return systemPrompt;
-    }
-    return `${systemPrompt}\n\n${agentInstructions}`;
   }
 
   private async *orchestrateRun(params: {

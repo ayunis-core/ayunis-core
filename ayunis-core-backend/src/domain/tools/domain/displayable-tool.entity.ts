@@ -8,6 +8,7 @@ export abstract class DisplayableTool extends Tool {
   constructor(params: {
     name: string;
     description: string;
+    descriptionLong?: string;
     parameters: JSONSchema;
     type: ToolType;
   }) {

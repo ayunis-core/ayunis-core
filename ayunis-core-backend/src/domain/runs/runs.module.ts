@@ -7,6 +7,7 @@ import { RunsController } from './presenters/http/runs.controller';
 import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
+import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
@@ -29,7 +30,11 @@ import { UsageModule } from 'src/domain/usage/usage.module';
     UsageModule,
   ],
   controllers: [RunsController],
-  providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
+  providers: [
+    ExecuteRunUseCase,
+    ExecuteRunAndSetTitleUseCase,
+    SystemPromptBuilderService,
+  ],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
 export class RunsModule {}

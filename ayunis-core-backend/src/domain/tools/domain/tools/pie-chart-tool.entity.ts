@@ -45,7 +45,7 @@ export class PieChartTool extends DisplayableTool {
     super({
       name: ToolType.PIE_CHART,
       description:
-        'Display a pie chart with the given data. Use this tool if the user asks for a statistical insight which is best explained with a pie chart and offer any additional textual explanation through the "insight" property. If necessary process data specifically to show the chart. If possible, offer insights alongside the chart even if the user didn\'t ask for them.',
+        'Display a pie chart. Best for showing proportions of a whole.',
       parameters: pieChartToolParameters,
       type: ToolType.PIE_CHART,
     });

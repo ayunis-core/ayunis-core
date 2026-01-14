@@ -20,7 +20,7 @@ export class WebsiteContentTool extends Tool {
   constructor() {
     super({
       name: ToolType.WEBSITE_CONTENT,
-      description: 'Get the content of a website through a URL',
+      description: 'Fetch content from a specific URL.',
       parameters: websiteContentToolParameters,
       type: ToolType.WEBSITE_CONTENT,
     });

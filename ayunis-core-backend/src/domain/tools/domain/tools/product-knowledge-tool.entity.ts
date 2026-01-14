@@ -34,9 +34,7 @@ export class ProductKnowledgeTool extends Tool {
     super({
       name: ToolType.PRODUCT_KNOWLEDGE,
       description:
-        'Retrieve product documentation and help content about Ayunis features. ' +
-        'Use this tool to answer questions about how to use agents, tools, prompts, sources, and models. ' +
-        'Available topics: getting_started, agents, tools, prompts, sources, models.',
+        'Retrieve Ayunis documentation. Topics: getting_started, agents, tools, prompts, sources, models.',
       parameters: productKnowledgeToolParameters,
       type: ToolType.PRODUCT_KNOWLEDGE,
     });

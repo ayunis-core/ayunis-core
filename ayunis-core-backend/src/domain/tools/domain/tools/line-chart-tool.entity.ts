@@ -56,7 +56,7 @@ export class LineChartTool extends DisplayableTool {
     super({
       name: ToolType.LINE_CHART,
       description:
-        'Display a line chart with the given data. Use this tool if the user asks for a statistical insight which is best explained with a line chart and offer any additional textual explanation through the "insight" property. If necessary process data specifically to show the chart. If possible, offer insights alongside the chart even if the user didn\'t ask for them. If you are showing time series data, make sure it is ordered by date.',
+        'Display a line chart. Best for showing trends over time. Ensure time series data is ordered chronologically.',
       parameters: lineChartToolParameters,
       type: ToolType.LINE_CHART,
     });

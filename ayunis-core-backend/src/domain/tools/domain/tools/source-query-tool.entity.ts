@@ -37,6 +37,11 @@ export class SourceQueryTool extends Tool {
         sources
           .map((source) => `- ID: ${source.id}, Name: ${source.name}`)
           .join('\n'),
+      descriptionLong: `
+<source_query>
+Query sources BEFORE answering questions about attached documents. If sources don't contain the answer, say so rather than guessing from general knowledge.
+</source_query>
+      `.trim(),
       parameters: sourceQueryToolParameters(sources),
       type: ToolType.SOURCE_QUERY,
     });

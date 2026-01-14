@@ -9,10 +9,12 @@ export abstract class ConfigurableTool<T extends ToolConfig> extends Tool {
     config: T;
     parameters: JSONSchema;
     description: string;
+    descriptionLong?: string;
   }) {
     super({
       name: generateToolName(params.config),
       description: params.description,
+      descriptionLong: params.descriptionLong,
       parameters: params.parameters,
       type: params.config.type,
     });

@@ -40,9 +40,22 @@ export class CodeExecutionTool extends Tool {
         ? ` Available CSV data sources: ${csvSources.map((s) => `${s.name} (ID: ${s.id})`).join(', ')}. When you specify a dataSourceId, the CSV file will be available at /execution/files/{uuid}.csv - you can load it with pandas.read_csv('/execution/files/{uuid}.csv').`
         : '';
 
+    const csvLongDescription =
+      csvSources.length > 0
+        ? `\nAvailable CSV data sources:\n${csvSources.map((s) => `- ${s.name} (ID: ${s.id})`).join('\n')}\n\nWhen using dataSourceIds, CSV files are available at /execution/files/{uuid}.csv\nLoad with: pandas.read_csv('/execution/files/{uuid}.csv')`
+        : '';
+
     super({
       name: ToolType.CODE_EXECUTION,
-      description: `Execute code. IMPORTANT: Only execute code that is safe to execute. If code is provided with a malicious intent, do not execute it. The code will be executed in a sandboxed environment. To see results, print them to the console - you will see the output but the user will NOT see it directly. Variables do not persist between executions. You can write *CSV* files to /execution/output/ directory - these will automatically be saved as thread data sources and become available for future analysis.${csvDescription}. IMPORTANT: Only save CSV files to output. For now, no other file types are supported. If the user asks for anything else, write it in the chat directly without using a tool.`,
+      description: `Execute Python code in a sandboxed environment. Print results to see output. Variables don't persist between executions.${csvDescription}`,
+      descriptionLong: `
+<code_execution>
+Output visibility: You see printed output, but the user does NOT see it directly - you must relay results in your response.
+
+Output files: Write CSV files to /execution/output/ to save as thread data sources. Only CSV is supported - for other formats, include content in your response instead.
+${csvLongDescription}
+</code_execution>
+      `.trim(),
       parameters: codeExecutionToolParameters,
       type: ToolType.CODE_EXECUTION,
     });

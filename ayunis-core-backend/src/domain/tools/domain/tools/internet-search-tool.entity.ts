@@ -20,8 +20,12 @@ export class InternetSearchTool extends Tool {
   constructor() {
     super({
       name: ToolType.INTERNET_SEARCH,
-      description:
-        'Search the internet for up to date information. Do not assume the current date if the user asks for "latest" information.',
+      description: 'Search the internet for current information.',
+      descriptionLong: `
+<internet_search>
+Use for information that may have changed since your knowledge cutoff. Don't assume the current date when user asks for "latest" - search to find out.
+</internet_search>
+      `.trim(),
       parameters: internetSearchToolParameters,
       type: ToolType.INTERNET_SEARCH,
     });
