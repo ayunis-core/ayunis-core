@@ -15,6 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useUserDefaultModel } from '../api/useUserDefaultModel';
+import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
 
 export function ChatSettingsCard() {
   const { t } = useTranslation('settings');
@@ -39,13 +40,37 @@ export function ChatSettingsCard() {
     }
   };
 
-  // Create options including null option and all permitted models
+  // Sort models by flag priority (DE → EU → US) then alphabetically
+  const flagPriority: Record<string, number> = {
+    '🇩🇪': 0,
+    '🇪🇺': 1,
+    '🇺🇸': 2,
+  };
+
+  const sortedModels = [...permittedModels].sort((a, b) => {
+    const flagA = getFlagByProvider(a.provider);
+    const flagB = getFlagByProvider(b.provider);
+    const priorityA = flagPriority[flagA] ?? 3;
+    const priorityB = flagPriority[flagB] ?? 3;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    return (a.displayName || a.name).localeCompare(b.displayName || b.name);
+  });
+
+  // Create options including null option and all sorted permitted models with flags
   const defaultSettingsOptions = [
     { id: 'null', label: t('general.none') },
-    ...permittedModels.map((model) => ({
-      id: model.id,
-      label: model.displayName || model.name,
-    })),
+    ...sortedModels.map((model) => {
+      const flag = getFlagByProvider(model.provider);
+      const displayName = model.displayName || model.name;
+      return {
+        id: model.id,
+        label: flag ? `${flag} ${displayName}` : displayName,
+      };
+    }),
   ];
 
   // Get current selected value
