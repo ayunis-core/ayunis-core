@@ -130,8 +130,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
 
-    // Order by most recent first
-    queryBuilder.orderBy('thread.updatedAt', 'DESC');
+    // Order by most recent first (by creation time)
+    queryBuilder.orderBy('thread.createdAt', 'DESC');
 
     // Apply messages ordering if needed
     if (options?.withMessages) {
