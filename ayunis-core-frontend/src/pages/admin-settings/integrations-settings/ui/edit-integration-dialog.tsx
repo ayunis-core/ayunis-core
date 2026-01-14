@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import { Button } from '@/shared/ui/shadcn/button';
 import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
 import { useUpdateIntegration } from '../api/useUpdateIntegration';
@@ -165,8 +166,7 @@ export function EditIntegrationDialog({
                           {t('integrations.editDialog.credentials')}
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
+                          <PasswordInput
                             placeholder={t(
                               'integrations.editDialog.credentialsPlaceholder',
                             )}
@@ -194,8 +194,7 @@ export function EditIntegrationDialog({
                         {t('integrations.editDialog.credentials')}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder={t(
                             'integrations.editDialog.credentialsPlaceholder',
                           )}

@@ -7,7 +7,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import { useResetPassword } from '../api/useResetPassword';
 import { useTranslation } from 'react-i18next';
@@ -47,9 +47,8 @@ export function ResetPasswordPage({ token }: { token: string }) {
               <FormItem>
                 <FormLabel>{t('resetPassword.newPassword')}</FormLabel>
                 <FormControl>
-                  <Input
+                  <PasswordInput
                     placeholder={t('resetPassword.newPasswordPlaceholder')}
-                    type="password"
                     {...field}
                   />
                 </FormControl>
@@ -64,9 +63,8 @@ export function ResetPasswordPage({ token }: { token: string }) {
               <FormItem>
                 <FormLabel>{t('resetPassword.confirmPassword')}</FormLabel>
                 <FormControl>
-                  <Input
+                  <PasswordInput
                     placeholder={t('resetPassword.confirmPasswordPlaceholder')}
-                    type="password"
                     {...field}
                   />
                 </FormControl>

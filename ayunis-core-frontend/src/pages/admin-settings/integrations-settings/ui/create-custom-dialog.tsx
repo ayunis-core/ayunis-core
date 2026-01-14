@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/shared/ui/shadcn/select';
 import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import { Button } from '@/shared/ui/shadcn/button';
 import type { CreateCustomIntegrationFormData } from '../model/types';
 import { useCreateCustomIntegration } from '../api/useCreateCustomIntegration';
@@ -267,8 +268,7 @@ export function CreateCustomDialog({
                         {t('integrations.createCustomDialog.credentials')}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           placeholder={t(
                             'integrations.createCustomDialog.credentialsPlaceholder',
                           )}
@@ -298,8 +298,7 @@ export function CreateCustomDialog({
                       {t('integrations.createCustomDialog.credentials')}
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         placeholder={t(
                           'integrations.createCustomDialog.credentialsPlaceholder',
                         )}
