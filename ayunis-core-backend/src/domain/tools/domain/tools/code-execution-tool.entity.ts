@@ -48,14 +48,11 @@ export class CodeExecutionTool extends Tool {
     super({
       name: ToolType.CODE_EXECUTION,
       description: `Execute Python code in a sandboxed environment. Print results to see output. Variables don't persist between executions.${csvDescription}`,
-      descriptionLong: `
-<code_execution>
-Output visibility: You see printed output, but the user does NOT see it directly - you must relay results in your response.
+      descriptionLong:
+        `Output visibility: You see printed output, but the user does NOT see it directly - you must relay results in your response.
 
 Output files: Write CSV files to /execution/output/ to save as thread data sources. Only CSV is supported - for other formats, include content in your response instead.
-${csvLongDescription}
-</code_execution>
-      `.trim(),
+${csvLongDescription}`.trim(),
       parameters: codeExecutionToolParameters,
       type: ToolType.CODE_EXECUTION,
     });

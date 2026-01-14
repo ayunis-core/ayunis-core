@@ -177,7 +177,7 @@ You are now ready to assist the user.`;
   private buildToolSpecificSections(tools: Tool[]): string {
     const toolSections = tools
       .filter((tool) => tool.descriptionLong)
-      .map((tool) => tool.descriptionLong)
+      .map((tool) => `<${tool.name}>\n${tool.descriptionLong}\n</${tool.name}>`)
       .join('\n\n');
 
     return toolSections;
