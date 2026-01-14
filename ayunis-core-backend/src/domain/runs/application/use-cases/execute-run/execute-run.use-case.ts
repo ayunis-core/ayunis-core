@@ -142,10 +142,18 @@ export class ExecuteRunUseCase {
       const tools = model.model.canUseTools
         ? await this.assembleTools(thread, agent)
         : [];
+
+      // Collect all sources from thread and agent for the system prompt
+      const allSources = [
+        ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
+        ...(agent?.sourceAssignments?.map((a) => a.source) ?? []),
+      ];
+
       const instructions = this.systemPromptBuilderService.build({
         agent,
         tools,
         currentTime: new Date(),
+        sources: allSources,
       });
 
       const trace = langfuse.trace({

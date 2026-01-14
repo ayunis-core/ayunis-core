@@ -1,26 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
+import { Source } from 'src/domain/sources/domain/source.entity';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import {
+  TextSource,
+  FileSource,
+  UrlSource,
+} from 'src/domain/sources/domain/sources/text-source.entity';
+import {
+  DataSource,
+  CSVDataSource,
+} from 'src/domain/sources/domain/sources/data-source.entity';
 
 export interface SystemPromptBuildParams {
   agent?: Agent;
   tools: Tool[];
   currentTime: Date;
+  sources?: Source[];
 }
 
 @Injectable()
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
-    const { agent, tools, currentTime } = params;
+    const { agent, tools, currentTime, sources } = params;
 
     const toolSpecificSections = this.buildToolSpecificSections(tools);
+    const filesSection = this.buildFilesSection(sources ?? []);
 
     const prompt = `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
 <application_details>
 Ayunis Core is an AI platform that enables intelligent conversations with customizable AI agents, advanced prompt management, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
-
-You are running as an agent within Ayunis Core. Users have configured you with specific instructions, assigned tools, and optionally connected data sources. Your capabilities depend on what has been enabled for this agent.
 </application_details>
 
 <context>
@@ -84,6 +95,8 @@ When using tools:
 ${toolSpecificSections}
 
 </tool_usage>
+
+${filesSection}
 
 <data_handling>
 
@@ -176,5 +189,83 @@ You are now ready to assist the user.`;
 ${instructions}
 </agent_instructions>
 `;
+  }
+
+  private buildFilesSection(sources: Source[]): string {
+    if (sources.length === 0) {
+      return '';
+    }
+
+    const userFiles = sources.filter((s) => s.createdBy === SourceCreator.USER);
+    const systemFiles = sources.filter(
+      (s) => s.createdBy === SourceCreator.SYSTEM,
+    );
+    const aiFiles = sources.filter((s) => s.createdBy === SourceCreator.LLM);
+
+    const formatFile = (source: Source): string => {
+      const type = this.getFileTypeLabel(source);
+      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+    };
+
+    let section = `<available_files>
+The following files are available for you to search using the source_query tool.
+`;
+
+    if (userFiles.length > 0) {
+      section += `
+<user_uploaded_files>
+${userFiles.map(formatFile).join('\n')}
+</user_uploaded_files>
+`;
+    }
+
+    if (aiFiles.length > 0) {
+      section += `
+<ai_generated_files>
+${aiFiles.map(formatFile).join('\n')}
+</ai_generated_files>
+`;
+    }
+
+    if (systemFiles.length > 0) {
+      section += `
+<system_files note="not visible to user">
+${systemFiles.map(formatFile).join('\n')}
+</system_files>
+`;
+    }
+
+    section += `
+</available_files>`;
+
+    return section;
+  }
+
+  private getFileTypeLabel(source: Source): string {
+    if (source instanceof FileSource) {
+      return source.fileType.toUpperCase();
+    }
+    if (source instanceof UrlSource) {
+      return 'Web URL';
+    }
+    if (source instanceof CSVDataSource) {
+      return 'CSV';
+    }
+    if (source instanceof TextSource) {
+      return 'Text';
+    }
+    if (source instanceof DataSource) {
+      return 'Data';
+    }
+    return 'Unknown';
+  }
+
+  private escapeXml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 }

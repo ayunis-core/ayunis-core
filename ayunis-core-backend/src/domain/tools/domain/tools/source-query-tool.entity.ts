@@ -15,12 +15,12 @@ function sourceQueryToolParameters(sources: Source[]): JSONSchema {
     properties: {
       sourceId: {
         type: 'string' as const,
-        description: 'The ID of the source to query',
+        description: 'The ID of the file to search',
         enum: sources.map((source) => source.id),
       },
       query: {
         type: 'string' as const,
-        description: 'The query to execute',
+        description: 'The semantic search query to find relevant content',
       },
     } as const,
     required: ['sourceId', 'query'],
@@ -33,13 +33,10 @@ export class SourceQueryTool extends Tool {
     super({
       name: ToolType.SOURCE_QUERY,
       description:
-        'Query a source through semantic search. Use the ID to select the source. Here are the available sources: \n' +
-        sources
-          .map((source) => `- ID: ${source.id}, Name: ${source.name}`)
-          .join('\n'),
+        'Query a file through semantic search. Use the file ID to select which file to search.',
       descriptionLong: `
 <source_query>
-Query sources BEFORE answering questions about attached documents. If sources don't contain the answer, say so rather than guessing from general knowledge.
+Query files BEFORE answering questions about attached documents. If files don't contain the answer, say so rather than guessing from general knowledge.
 </source_query>
       `.trim(),
       parameters: sourceQueryToolParameters(sources),
