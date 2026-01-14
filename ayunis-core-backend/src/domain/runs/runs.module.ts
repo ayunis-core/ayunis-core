@@ -13,6 +13,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { AnonymizationModule } from 'src/common/anonymization/anonymization.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UsageModule } from 'src/domain/usage/usage.module';
     SourcesModule,
     AnonymizationModule,
     UsageModule,
+    QuotasModule,
   ],
   controllers: [RunsController],
   providers: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],

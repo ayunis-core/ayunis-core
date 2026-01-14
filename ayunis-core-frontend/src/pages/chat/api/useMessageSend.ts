@@ -196,7 +196,18 @@ export function useMessageSend(params: UseMessageSendParams) {
           }
 
           // Handle specific error status codes
-          if (error.message.includes('403')) {
+          if (error.message.includes('429')) {
+            // Try to extract retry time from error response
+            const retryMatch = error.message.match(/retryAfterSeconds[":]+(\d+)/);
+            const retryMinutes = retryMatch
+              ? Math.ceil(parseInt(retryMatch[1], 10) / 60)
+              : null;
+            showError(
+              retryMinutes
+                ? t('chat.errorQuotaExceededWithTime', { minutes: retryMinutes })
+                : t('chat.errorQuotaExceeded'),
+            );
+          } else if (error.message.includes('403')) {
             showError(t('chat.upgradeToProError'));
           } else {
             params.onError?.(error);

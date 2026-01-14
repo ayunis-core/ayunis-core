@@ -18,6 +18,8 @@
     "errorMaxIterationsReached": "Maximal number of iterations reached",
     "errorToolNotFound": "Tool not found",
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
+    "errorQuotaExceeded": "You have reached the message limit. Please try again later.",
+    "errorQuotaExceededWithTime": "You have reached the message limit. Please try again in {{minutes}} minutes.",
     "errorDownloadSource": "Failed to download source. Please try again.",
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",
