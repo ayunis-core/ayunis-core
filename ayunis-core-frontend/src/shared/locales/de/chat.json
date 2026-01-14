@@ -27,7 +27,8 @@
     "tools": {
       "internet_search": "Im Internet suchen",
       "website_content": "Website abfragen",
-      "source_query": "Quelle durchsuchen",
+      "source_query": "Datei durchsuchen",
+      "source_get_text": "Datei durchsuchen",
       "code_execution": "Berechnung ausführen",
       "send_email": {
         "subject": "Betreff",

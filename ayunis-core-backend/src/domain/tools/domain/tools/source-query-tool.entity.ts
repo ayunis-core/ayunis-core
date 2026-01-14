@@ -34,8 +34,7 @@ export class SourceQueryTool extends Tool {
       name: ToolType.SOURCE_QUERY,
       description:
         'Query a file through semantic search. Use the file ID to select which file to search.',
-      descriptionLong:
-        "Query files BEFORE answering questions about attached documents. If files don't contain the answer, say so rather than guessing from general knowledge.",
+      descriptionLong: `Query files BEFORE answering questions about attached documents. If files don't contain the answer, say so rather than guessing from general knowledge. Results may include startLine and endLine metadata for each matched snippet. Use these line numbers with source_get_text to retrieve additional context around relevant sections if necessary.`,
       parameters: sourceQueryToolParameters(sources),
       type: ToolType.SOURCE_QUERY,
     });

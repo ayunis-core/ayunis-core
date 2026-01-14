@@ -43,11 +43,14 @@ export class RecursiveSplitterHandler extends SplitterHandler {
         chunkOverlap,
       );
 
-      return new SplitResult(chunks, {
+      // Add line number information to each chunk
+      const chunksWithLineNumbers = this.addLineNumbers(input.text, chunks);
+
+      return new SplitResult(chunksWithLineNumbers, {
         provider: this.PROVIDER_NAME,
         chunkSize,
         chunkOverlap,
-        totalChunks: chunks.length,
+        totalChunks: chunksWithLineNumbers.length,
       });
     } catch (error) {
       this.logger.error(
@@ -226,5 +229,185 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       return text;
     }
     return text.slice(-overlapSize);
+  }
+
+  /**
+   * Adds line number information to each chunk by finding its position in the original text.
+   * Line numbers are 1-based to match standard text editor conventions.
+   */
+  private addLineNumbers(
+    originalText: string,
+    chunks: TextChunk[],
+  ): TextChunk[] {
+    if (chunks.length === 0) {
+      return chunks;
+    }
+
+    // Build array of character offsets where each line starts
+    const lineStarts = this.buildLineStarts(originalText);
+
+    let searchStart = 0;
+    return chunks.map((chunk) => {
+      // Find this chunk's position in the original text
+      const position = this.findChunkPosition(
+        originalText,
+        chunk.text,
+        searchStart,
+      );
+
+      if (position === null) {
+        // Chunk text not found in original
+        this.logger.warn(
+          `Could not find chunk position in original text. Chunk index: ${String(chunk.metadata.index)}`,
+        );
+        return new TextChunk(chunk.text, { ...chunk.metadata });
+      }
+
+      const { startCharOffset, endCharOffset } = position;
+
+      // Advance search position for next chunk
+      searchStart = Math.max(searchStart, startCharOffset + 1);
+
+      // Calculate line numbers from character offsets
+      const startLine = this.getLineNumber(lineStarts, startCharOffset);
+      const endLine = this.getLineNumber(lineStarts, endCharOffset - 1);
+
+      return new TextChunk(chunk.text, {
+        ...chunk.metadata,
+        startCharOffset,
+        endCharOffset,
+        startLine,
+        endLine,
+      });
+    });
+  }
+
+  /**
+   * Finds the position of a chunk in the original text.
+   * When overlap is prepended to chunks, the full chunk text may not exist as a
+   * contiguous substring. This method tries multiple strategies to find the position.
+   */
+  private findChunkPosition(
+    originalText: string,
+    chunkText: string,
+    searchStart: number,
+  ): { startCharOffset: number; endCharOffset: number } | null {
+    // Strategy 1: Try finding the full chunk text
+    let startCharOffset = originalText.indexOf(chunkText, searchStart);
+    if (startCharOffset !== -1) {
+      return {
+        startCharOffset,
+        endCharOffset: startCharOffset + chunkText.length,
+      };
+    }
+
+    // Try from beginning as fallback
+    startCharOffset = originalText.indexOf(chunkText);
+    if (startCharOffset !== -1) {
+      return {
+        startCharOffset,
+        endCharOffset: startCharOffset + chunkText.length,
+      };
+    }
+
+    // Strategy 2: The chunk might have overlap prepended that doesn't match exactly.
+    // Try finding progressively smaller suffixes of the chunk.
+    // This handles cases where "overlapText + content" creates a string not in original.
+    const minSearchLength = Math.min(50, Math.floor(chunkText.length / 2));
+
+    for (
+      let suffixStart = 1;
+      suffixStart < chunkText.length - minSearchLength;
+      suffixStart++
+    ) {
+      const suffix = chunkText.slice(suffixStart);
+      const suffixOffset = originalText.indexOf(suffix, searchStart);
+
+      if (suffixOffset !== -1) {
+        // Found the suffix - calculate the approximate start position
+        // The chunk conceptually starts where the suffix starts
+        return {
+          startCharOffset: suffixOffset,
+          endCharOffset: suffixOffset + suffix.length,
+        };
+      }
+
+      // Also try from beginning
+      const suffixOffsetFromStart = originalText.indexOf(suffix);
+      if (suffixOffsetFromStart !== -1) {
+        return {
+          startCharOffset: suffixOffsetFromStart,
+          endCharOffset: suffixOffsetFromStart + suffix.length,
+        };
+      }
+    }
+
+    // Strategy 3: Try finding a significant middle portion
+    // Skip first 20% and last 20% which might have overlap artifacts
+    const skipPercent = 0.2;
+    const middleStart = Math.floor(chunkText.length * skipPercent);
+    const middleEnd = Math.floor(chunkText.length * (1 - skipPercent));
+
+    if (middleEnd > middleStart + minSearchLength) {
+      const middlePortion = chunkText.slice(middleStart, middleEnd);
+      const middleOffset = originalText.indexOf(middlePortion, searchStart);
+
+      if (middleOffset !== -1) {
+        // Found middle portion - adjust offsets
+        return {
+          startCharOffset: middleOffset - middleStart,
+          endCharOffset: middleOffset - middleStart + chunkText.length,
+        };
+      }
+
+      const middleOffsetFromStart = originalText.indexOf(middlePortion);
+      if (middleOffsetFromStart !== -1) {
+        return {
+          startCharOffset: Math.max(0, middleOffsetFromStart - middleStart),
+          endCharOffset: Math.min(
+            originalText.length,
+            middleOffsetFromStart - middleStart + chunkText.length,
+          ),
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Builds an array of character offsets where each line starts.
+   * Line 1 starts at offset 0.
+   */
+  private buildLineStarts(text: string): number[] {
+    const lineStarts: number[] = [0]; // Line 1 starts at offset 0
+
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === '\n') {
+        lineStarts.push(i + 1); // Next line starts after the newline
+      }
+    }
+
+    return lineStarts;
+  }
+
+  /**
+   * Returns the 1-based line number for a given character offset.
+   * Uses binary search for efficiency.
+   */
+  private getLineNumber(lineStarts: number[], charOffset: number): number {
+    let low = 0;
+    let high = lineStarts.length - 1;
+
+    while (low < high) {
+      const mid = Math.floor((low + high + 1) / 2);
+      if (lineStarts[mid] <= charOffset) {
+        low = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    return low + 1; // Convert to 1-based line number
   }
 }

@@ -43,11 +43,7 @@ export class SourceGetTextTool extends Tool {
       name: ToolType.SOURCE_GET_TEXT,
       description:
         'Read exact text content from a file by line range. Use this to read specific sections of a file.',
-      descriptionLong: `Read exact text content from a file. Unlike source_query (semantic search), this returns the raw text content.
-
-Use source_get_text when you need to read specific line ranges from a file, get exact content without semantic interpretation, or progressively read through a large file.
-
-Start with smaller ranges (50-100 lines) to avoid hitting size limits. The response includes total line count to help navigate large files.`,
+      descriptionLong: `Read exact text content from a file by line range. Recommended workflow: First use source_query to find relevant snippets - results include startLine and endLine metadata. Then use source_get_text with those line numbers to retrieve additional context around the matched sections. Start with smaller ranges (50-100 lines) to avoid hitting size limits. The response includes total line count to help navigate large files.`,
       parameters: sourceGetTextToolParameters(sources),
       type: ToolType.SOURCE_GET_TEXT,
     });
