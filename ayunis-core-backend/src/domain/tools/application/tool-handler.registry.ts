@@ -4,8 +4,10 @@ import { ToolExecutionHandler } from './ports/execution.handler';
 import { ToolHandlerNotFoundError } from './tools.errors';
 import { HttpToolHandler } from './handlers/http-tool.handler';
 import { SourceQueryToolHandler } from './handlers/source-query-tool.handler';
+import { SourceGetTextToolHandler } from './handlers/source-get-text-tool.handler';
 import { HttpTool } from '../domain/tools/http-tool.entity';
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
+import { SourceGetTextTool } from '../domain/tools/source-get-text-tool.entity';
 import { InternetSearchToolHandler } from './handlers/internet-search-tool.handler';
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { WebsiteContentToolHandler } from './handlers/website-content-tool.handler';
@@ -26,6 +28,7 @@ export class ToolHandlerRegistry {
   constructor(
     private readonly httpToolHandler: HttpToolHandler,
     private readonly sourceQueryToolHandler: SourceQueryToolHandler,
+    private readonly sourceGetTextToolHandler: SourceGetTextToolHandler,
     private readonly internetSearchToolHandler: InternetSearchToolHandler,
     private readonly websiteContentToolHandler: WebsiteContentToolHandler,
     private readonly codeExecutionToolHandler: CodeExecutionToolHandler,
@@ -41,6 +44,9 @@ export class ToolHandlerRegistry {
     }
     if (tool instanceof SourceQueryTool) {
       return this.sourceQueryToolHandler;
+    }
+    if (tool instanceof SourceGetTextTool) {
+      return this.sourceGetTextToolHandler;
     }
     if (tool instanceof InternetSearchTool) {
       return this.internetSearchToolHandler;

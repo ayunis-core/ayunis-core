@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ToolHandlerRegistry } from './application/tool-handler.registry';
 import { HttpToolHandler } from './application/handlers/http-tool.handler';
 import { SourceQueryToolHandler } from './application/handlers/source-query-tool.handler';
+import { SourceGetTextToolHandler } from './application/handlers/source-get-text-tool.handler';
 import { ToolConfigRepository } from './application/ports/tool-config.repository';
 import { LocalToolConfigRepository } from './infrastructure/persistence/local/local-tool-config.repository';
 import { ToolFactory } from './application/tool.factory';
@@ -40,6 +41,7 @@ import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/prod
     ToolHandlerRegistry,
     HttpToolHandler,
     SourceQueryToolHandler,
+    SourceGetTextToolHandler,
     InternetSearchToolHandler,
     WebsiteContentToolHandler,
     CodeExecutionToolHandler,

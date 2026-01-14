@@ -326,31 +326,33 @@ export class ExecuteRunUseCase {
       );
     }
 
-    // Source query tool is available if there are sources in the thread or agent
-    if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
+    // Collect text sources from both thread and agent
+    const threadTextSources = (thread.sourceAssignments ?? [])
+      .map((assignment) => assignment.source)
+      .filter((source): source is TextSource => source instanceof TextSource);
+
+    const agentTextSources = (agent?.sourceAssignments ?? [])
+      .map((assignment) => assignment.source)
+      .filter((source): source is TextSource => source instanceof TextSource);
+
+    const allTextSources = [...threadTextSources, ...agentTextSources];
+
+    // Source query and source get text tools are available if there are text sources
+    if (allTextSources.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
-            context: thread.sourceAssignments
-              .map((assignment) => assignment.source)
-              .filter((source) => source instanceof TextSource),
+            context: allTextSources,
           }),
         ),
       );
-    }
-    if (
-      agent &&
-      agent.sourceAssignments &&
-      agent.sourceAssignments.length > 0
-    ) {
+
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
-            type: ToolType.SOURCE_QUERY,
-            context: agent.sourceAssignments
-              .map((assignment) => assignment.source)
-              .filter((source) => source instanceof TextSource),
+            type: ToolType.SOURCE_GET_TEXT,
+            context: allTextSources,
           }),
         ),
       );
