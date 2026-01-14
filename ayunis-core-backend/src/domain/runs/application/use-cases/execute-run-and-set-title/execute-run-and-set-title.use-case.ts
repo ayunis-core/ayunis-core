@@ -121,6 +121,8 @@ export class ExecuteRunAndSetTitleUseCase {
         details: {
           error: error instanceof Error ? error.toString() : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'Unknown error',
+          // Include metadata from ApplicationError (e.g., retryAfterSeconds for quota errors)
+          ...(error instanceof ApplicationError && error.metadata),
         },
       };
 

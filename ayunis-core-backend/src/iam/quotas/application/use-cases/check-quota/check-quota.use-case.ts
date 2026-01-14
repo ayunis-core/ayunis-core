@@ -25,13 +25,17 @@ export class CheckQuotaUseCase {
       limit,
     });
 
-    const quota = await this.usageQuotaRepository.incrementAndGet(
-      query.userId,
-      query.quotaType,
-      windowMs,
-    );
+    // Use checkAndIncrement which atomically checks limit BEFORE incrementing
+    // This prevents counter inflation on rejected requests
+    const { quota, exceeded } =
+      await this.usageQuotaRepository.checkAndIncrement(
+        query.userId,
+        query.quotaType,
+        windowMs,
+        limit,
+      );
 
-    if (quota.count > limit) {
+    if (exceeded) {
       const retryAfterSeconds = Math.ceil(quota.getRemainingTime() / 1000);
 
       this.logger.warn('Quota exceeded', {

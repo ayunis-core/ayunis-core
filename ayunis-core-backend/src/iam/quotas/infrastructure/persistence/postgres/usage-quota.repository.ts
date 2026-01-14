@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { UUID } from 'crypto';
-import { UsageQuotaRepositoryPort } from '../../../application/ports/usage-quota.repository.port';
+import { randomUUID, UUID } from 'crypto';
+import {
+  UsageQuotaRepositoryPort,
+  CheckAndIncrementResult,
+} from '../../../application/ports/usage-quota.repository.port';
 import { UsageQuota } from '../../../domain/usage-quota.entity';
 import { QuotaType } from '../../../domain/quota-type.enum';
 import { UsageQuotaRecord } from './schema/usage-quota.record';
@@ -69,6 +72,80 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
       await repo.save(record);
 
       return UsageQuotaMapper.toDomain(record);
+    });
+  }
+
+  async checkAndIncrement(
+    userId: UUID,
+    quotaType: QuotaType,
+    windowDurationMs: number,
+    limit: number,
+  ): Promise<CheckAndIncrementResult> {
+    return await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(UsageQuotaRecord);
+      const now = new Date();
+
+      // Use upsert to handle race condition on first insert for new users
+      // This atomically creates a record if it doesn't exist, preventing
+      // concurrent requests from both trying to insert
+      await repo.upsert(
+        {
+          id: randomUUID(),
+          userId,
+          quotaType,
+          count: 0, // Start at 0, we'll increment conditionally below
+          windowStartAt: now,
+          windowDurationMs: String(windowDurationMs),
+        },
+        {
+          conflictPaths: ['userId', 'quotaType'],
+          skipUpdateIfNoValuesChanged: true,
+        },
+      );
+
+      // Now SELECT FOR UPDATE to lock the row for the remainder of this transaction
+      const record = await repo
+        .createQueryBuilder('quota')
+        .setLock('pessimistic_write')
+        .where('quota.userId = :userId', { userId })
+        .andWhere('quota.quotaType = :quotaType', { quotaType })
+        .getOne();
+
+      if (!record) {
+        // This should never happen after upsert, but handle defensively
+        throw new Error('Failed to get or create quota record');
+      }
+
+      // Check if window has expired and reset if needed
+      const windowEndAt = new Date(
+        record.windowStartAt.getTime() + Number(record.windowDurationMs),
+      );
+
+      if (now > windowEndAt) {
+        // Reset window
+        record.windowStartAt = now;
+        record.count = 0;
+        record.windowDurationMs = String(windowDurationMs);
+      }
+
+      // Check limit BEFORE incrementing - this is the key fix
+      // If at or over limit, return exceeded WITHOUT incrementing
+      if (record.count >= limit) {
+        return {
+          quota: UsageQuotaMapper.toDomain(record),
+          exceeded: true,
+        };
+      }
+
+      // Under limit - increment and save
+      record.count++;
+      record.updatedAt = now;
+      await repo.save(record);
+
+      return {
+        quota: UsageQuotaMapper.toDomain(record),
+        exceeded: false,
+      };
     });
   }
 }

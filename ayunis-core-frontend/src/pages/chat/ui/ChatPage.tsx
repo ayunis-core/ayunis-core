@@ -167,6 +167,17 @@ export default function ChatPage({
         case 'RUN_TOOL_NOT_FOUND':
           showError(t('chat.errorToolNotFound'));
           break;
+        case 'QUOTA_EXCEEDED': {
+          const retryMinutes = error.details?.retryAfterSeconds
+            ? Math.ceil(Number(error.details.retryAfterSeconds) / 60)
+            : null;
+          showError(
+            retryMinutes
+              ? t('chat.errorQuotaExceededWithTime', { minutes: retryMinutes })
+              : t('chat.errorQuotaExceeded'),
+          );
+          break;
+        }
         default:
           showError(t('chat.errorUnexpected'));
       }
