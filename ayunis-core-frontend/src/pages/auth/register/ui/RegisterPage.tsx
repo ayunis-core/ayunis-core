@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import { useRegister } from '../api';
 import { useTranslation, Trans } from 'react-i18next';
@@ -155,10 +156,9 @@ export function RegisterPage({
               <FormItem>
                 <FormLabel>{t('register.password')}</FormLabel>
                 <FormControl>
-                  <Input
+                  <PasswordInput
                     required
                     placeholder={t('register.passwordPlaceholder')}
-                    type="password"
                     {...field}
                   />
                 </FormControl>

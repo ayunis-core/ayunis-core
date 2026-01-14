@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import type { Invite } from '../model/openapi';
 import { useInviteAccept } from '../api';
@@ -82,9 +83,8 @@ export default function InviteAcceptPage({
               <FormItem>
                 <FormLabel>{t('inviteAccept.password')}</FormLabel>
                 <FormControl>
-                  <Input
+                  <PasswordInput
                     placeholder={t('inviteAccept.passwordPlaceholder')}
-                    type="password"
                     {...field}
                   />
                 </FormControl>

@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Separator } from '@/shared/ui/shadcn/separator';
 import { useTranslation } from 'react-i18next';
@@ -42,9 +42,8 @@ export default function PasswordSettingsPage() {
                 <FormItem>
                   <FormLabel>{t('account.currentPassword')}</FormLabel>
                   <FormControl>
-                    <Input
+                    <PasswordInput
                       {...field}
-                      type="password"
                       placeholder={t('account.currentPasswordPlaceholder')}
                     />
                   </FormControl>
@@ -62,9 +61,8 @@ export default function PasswordSettingsPage() {
                 <FormItem>
                   <FormLabel>{t('account.newPassword')}</FormLabel>
                   <FormControl>
-                    <Input
+                    <PasswordInput
                       {...field}
-                      type="password"
                       placeholder={t('account.newPasswordPlaceholder')}
                     />
                   </FormControl>
@@ -83,9 +81,8 @@ export default function PasswordSettingsPage() {
                 <FormItem>
                   <FormLabel>{t('account.confirmPassword')}</FormLabel>
                   <FormControl>
-                    <Input
+                    <PasswordInput
                       {...field}
-                      type="password"
                       placeholder={t('account.confirmPasswordPlaceholder')}
                     />
                   </FormControl>

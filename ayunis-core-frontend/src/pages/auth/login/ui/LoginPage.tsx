@@ -9,6 +9,7 @@ import {
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import { useLogin } from '../api/useLogin';
 import { useTranslation } from 'react-i18next';
@@ -80,9 +81,8 @@ export function LoginPage({
               <FormItem>
                 <FormLabel>{t('login.password')}</FormLabel>
                 <FormControl>
-                  <Input
+                  <PasswordInput
                     placeholder={t('login.passwordPlaceholder')}
-                    type="password"
                     data-testid="password"
                     {...field}
                   />
