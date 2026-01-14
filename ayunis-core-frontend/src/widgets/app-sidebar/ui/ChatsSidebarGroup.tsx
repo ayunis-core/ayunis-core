@@ -217,9 +217,7 @@ export function ChatsSidebarGroup() {
           <CollapsibleContent>
             <SidebarGroupContent>
               <SidebarMenu>
-                {threads
-                  .sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
-                  .map((thread) => (
+                {threads.map((thread) => (
                     <SidebarMenuItem key={thread.id} data-testid="chat">
                       <SidebarMenuButton asChild>
                         <Link
