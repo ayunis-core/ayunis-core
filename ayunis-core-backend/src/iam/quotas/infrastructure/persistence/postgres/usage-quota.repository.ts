@@ -85,23 +85,23 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
       const repo = manager.getRepository(UsageQuotaRecord);
       const now = new Date();
 
-      // Use upsert to handle race condition on first insert for new users
-      // This atomically creates a record if it doesn't exist, preventing
-      // concurrent requests from both trying to insert
-      await repo.upsert(
-        {
+      // Use INSERT ... ON CONFLICT DO NOTHING to handle race condition on first insert
+      // This atomically creates a record if it doesn't exist, without updating
+      // an existing row (which would reset the count in concurrent scenarios)
+      await repo
+        .createQueryBuilder()
+        .insert()
+        .into(UsageQuotaRecord)
+        .values({
           id: randomUUID(),
           userId,
           quotaType,
           count: 0, // Start at 0, we'll increment conditionally below
           windowStartAt: now,
           windowDurationMs: String(windowDurationMs),
-        },
-        {
-          conflictPaths: ['userId', 'quotaType'],
-          skipUpdateIfNoValuesChanged: true,
-        },
-      );
+        })
+        .orIgnore() // ON CONFLICT DO NOTHING - prevents resetting count on concurrent requests
+        .execute();
 
       // Now SELECT FOR UPDATE to lock the row for the remainder of this transaction
       const record = await repo
