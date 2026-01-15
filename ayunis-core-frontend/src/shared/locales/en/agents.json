@@ -2,9 +2,21 @@
   "page": {
     "title": "My Agents"
   },
+  "tabs": {
+    "personal": "Personal Agents",
+    "shared": "Shared Agents"
+  },
   "emptyState": {
     "title": "No agents yet",
-    "description": "Get started by creating your first AI agent. Agents help you set up specialized AI assistants for specific tasks and workflows."
+    "description": "Get started by creating your first AI agent. Agents help you set up specialized AI assistants for specific tasks and workflows.",
+    "personal": {
+      "title": "No personal agents yet",
+      "description": "Create your first AI agent. Agents help you set up specialized AI assistants for specific tasks and workflows."
+    },
+    "shared": {
+      "title": "No shared agents yet",
+      "description": "Agents shared with you by other members of your organization will appear here."
+    }
   },
   "badge": {
     "shared": "Shared"

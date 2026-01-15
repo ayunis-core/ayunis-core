@@ -7,6 +7,13 @@ import type { Agent } from '../model/openapi';
 import AgentsEmptyState from './AgentsEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/shared/ui/shadcn/tabs';
+import { EmptyState } from '@/widgets/empty-state';
 
 interface AgentsPageProps {
   agents: Agent[];
@@ -15,16 +22,16 @@ interface AgentsPageProps {
 export default function AgentsPage({ agents }: AgentsPageProps) {
   const { t } = useTranslation('agents');
 
-  // Sort agents: owned first, then shared; alphabetically within each group
-  const sortedAgents = [...agents].sort((a, b) => {
-    // Primary sort: owned agents first (isShared: false < true)
-    if (a.isShared !== b.isShared) {
-      return a.isShared ? 1 : -1;
-    }
-    // Secondary sort: alphabetically by name
-    return a.name.localeCompare(b.name);
-  });
+  // Separate agents into personal (owned) and shared
+  const personalAgents = agents
+    .filter((agent) => !agent.isShared)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
+  const sharedAgents = agents
+    .filter((agent) => agent.isShared)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  // If no agents at all, show full-screen empty state
   if (agents.length === 0) {
     return (
       <AppLayout>
@@ -41,6 +48,7 @@ export default function AgentsPage({ agents }: AgentsPageProps) {
       </AppLayout>
     );
   }
+
   return (
     <AppLayout>
       <ContentAreaLayout
@@ -51,15 +59,46 @@ export default function AgentsPage({ agents }: AgentsPageProps) {
           />
         }
         contentArea={
-          agents.length === 0 ? (
-            <AgentsEmptyState />
-          ) : (
-            <div className="space-y-3">
-              {sortedAgents.map((agent) => {
-                return <AgentCard key={agent.id} agent={agent} />;
-              })}
-            </div>
-          )
+          <Tabs defaultValue="personal" className="w-full">
+            <TabsList>
+              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
+              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="personal" className="mt-4">
+              {personalAgents.length === 0 ? (
+                <EmptyState
+                  title={t('emptyState.personal.title')}
+                  description={t('emptyState.personal.description')}
+                  action={
+                    <CreateAgentDialog
+                      buttonText={t('createDialog.buttonTextFirst')}
+                      showIcon={true}
+                    />
+                  }
+                />
+              ) : (
+                <div className="space-y-3">
+                  {personalAgents.map((agent) => (
+                    <AgentCard key={agent.id} agent={agent} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="shared" className="mt-4">
+              {sharedAgents.length === 0 ? (
+                <EmptyState
+                  title={t('emptyState.shared.title')}
+                  description={t('emptyState.shared.description')}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {sharedAgents.map((agent) => (
+                    <AgentCard key={agent.id} agent={agent} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         }
       />
     </AppLayout>

@@ -2,9 +2,21 @@
   "page": {
     "title": "Meine Agenten"
   },
+  "tabs": {
+    "personal": "Persönliche Agenten",
+    "shared": "Geteilte Agenten"
+  },
   "emptyState": {
     "title": "Noch keine Agenten",
-    "description": "Beginnen Sie mit der Erstellung Ihres ersten KI-Agenten. Agenten helfen Ihnen dabei, spezialisierte KI-Assistenten für bestimmte Aufgaben und Arbeitsabläufe zu erstellen."
+    "description": "Beginnen Sie mit der Erstellung Ihres ersten KI-Agenten. Agenten helfen Ihnen dabei, spezialisierte KI-Assistenten für bestimmte Aufgaben und Arbeitsabläufe zu erstellen.",
+    "personal": {
+      "title": "Noch keine persönlichen Agenten",
+      "description": "Erstellen Sie Ihren ersten KI-Agenten. Agenten helfen Ihnen dabei, spezialisierte KI-Assistenten für bestimmte Aufgaben und Arbeitsabläufe zu erstellen."
+    },
+    "shared": {
+      "title": "Noch keine geteilten Agenten",
+      "description": "Agenten, die von anderen Mitgliedern Ihrer Organisation mit Ihnen geteilt wurden, werden hier angezeigt."
+    }
   },
   "badge": {
     "shared": "Geteilt"
