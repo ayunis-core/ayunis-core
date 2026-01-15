@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import { ExecuteRunCommand } from '../execute-run/execute-run.command';
@@ -26,6 +26,10 @@ import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
+import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -38,12 +42,23 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly messageDtoMapper: MessageDtoMapper,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
+    private readonly contextService: ContextService,
+    private readonly checkQuotaUseCase: CheckQuotaUseCase,
   ) {}
 
   async *execute(
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunResponse> {
     try {
+      // Fair use quota check - throws QuotaExceededError if limit exceeded
+      const userId = this.contextService.get('userId');
+      if (!userId) {
+        throw new UnauthorizedException('User not authenticated');
+      }
+      await this.checkQuotaUseCase.execute(
+        new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
+      );
+
       const streamingStartResponse: RunSessionResponseDto = {
         type: 'session',
         streaming: true,
@@ -106,6 +121,8 @@ export class ExecuteRunAndSetTitleUseCase {
         details: {
           error: error instanceof Error ? error.toString() : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'Unknown error',
+          // Include metadata from ApplicationError (e.g., retryAfterSeconds for quota errors)
+          ...(error instanceof ApplicationError && error.metadata),
         },
       };
 
