@@ -44,7 +44,7 @@ jobs:
           script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
-            git fetch --tags
+            git fetch --all --tags
             git checkout "$RELEASE_TAG"
             docker compose down
             docker compose up -d --build
@@ -72,7 +72,7 @@ jobs:
           script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
-            git fetch --tags
+            git fetch --all --tags
             git checkout "$RELEASE_TAG"
             docker compose down
             docker compose up -d --build
