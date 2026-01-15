@@ -24,7 +24,8 @@ jobs:
           script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             docker compose down
             docker compose up -d --build
             sleep 60
