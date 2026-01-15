@@ -12,6 +12,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: internal
+    concurrency:
+      group: deploy-internal
+      cancel-in-progress: false
 
     steps:
       - name: Deploy to Internal
