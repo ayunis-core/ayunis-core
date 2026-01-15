@@ -85,6 +85,7 @@
     "success": "Invite created successfully!",
     "error": "Failed to create invite. Please try again.",
     "emailNotAvailable": "Invite not possible.",
+    "userAlreadyExists": "This email address is already registered as a user in your organization.",
     "emailProviderBlacklisted": "Email address from this provider is not allowed. Please use your company email address."
   },
   "inviteDelete": {

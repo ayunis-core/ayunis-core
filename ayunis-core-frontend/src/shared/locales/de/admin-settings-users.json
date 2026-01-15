@@ -86,6 +86,7 @@
     "success": "Einladung erfolgreich erstellt",
     "error": "Fehler beim Erstellen der Einladung. Bitte versuchen Sie es erneut.",
     "emailNotAvailable": "Einladung nicht möglich.",
+    "userAlreadyExists": "Diese E-Mail-Adresse ist bereits als Benutzer in Ihrer Organisation registriert.",
     "emailProviderBlacklisted": "E-Mail-Adresse von diesem Provider ist nicht erlaubt. Bitte verwenden Sie Ihr Firmen E-Mail-Adresse."
   },
   "inviteDelete": {

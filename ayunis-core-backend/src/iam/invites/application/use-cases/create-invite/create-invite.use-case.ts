@@ -12,6 +12,7 @@ import {
   EmailNotAvailableError,
   InvalidSeatsError,
   UnexpectedInviteError,
+  UserAlreadyExistsError,
 } from '../../invites.errors';
 import { SendInvitationEmailUseCase } from '../send-invitation-email/send-invitation-email.use-case';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -57,6 +58,9 @@ export class CreateInviteUseCase {
         new FindUserByEmailQuery(command.email),
       );
       if (existingUser) {
+        if (existingUser.orgId === command.orgId) {
+          throw new UserAlreadyExistsError();
+        }
         throw new EmailNotAvailableError();
       }
 
