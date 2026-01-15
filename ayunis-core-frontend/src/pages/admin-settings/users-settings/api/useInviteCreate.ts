@@ -27,6 +27,9 @@ export function useInviteCreate(
         try {
           const { code } = extractErrorData(error);
           switch (code) {
+            case 'USER_ALREADY_EXISTS':
+              showError(t('inviteCreate.userAlreadyExists'));
+              break;
             case 'EMAIL_NOT_AVAILABLE':
               showError(t('inviteCreate.emailNotAvailable'));
               break;
