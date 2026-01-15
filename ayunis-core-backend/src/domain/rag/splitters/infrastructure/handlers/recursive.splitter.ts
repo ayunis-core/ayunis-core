@@ -353,10 +353,13 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       const middleOffset = originalText.indexOf(middlePortion, searchStart);
 
       if (middleOffset !== -1) {
-        // Found middle portion - adjust offsets
+        // Found middle portion - adjust offsets with bounds checking
         return {
-          startCharOffset: middleOffset - middleStart,
-          endCharOffset: middleOffset - middleStart + chunkText.length,
+          startCharOffset: Math.max(0, middleOffset - middleStart),
+          endCharOffset: Math.min(
+            originalText.length,
+            middleOffset - middleStart + chunkText.length,
+          ),
         };
       }
 

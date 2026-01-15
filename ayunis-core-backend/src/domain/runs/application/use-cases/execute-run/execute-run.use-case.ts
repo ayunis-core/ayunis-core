@@ -144,16 +144,21 @@ export class ExecuteRunUseCase {
         : [];
 
       // Collect all sources from thread and agent for the system prompt
+      // Filter to only TextSources since DataSources (e.g., CSV) can only be used
+      // with code_execution tool, not source_query or source_get_text
       const allSources = [
         ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
         ...(agent?.sourceAssignments?.map((a) => a.source) ?? []),
       ];
+      const textSources = allSources.filter(
+        (s): s is TextSource => s instanceof TextSource,
+      );
 
       const instructions = this.systemPromptBuilderService.build({
         agent,
         tools,
         currentTime: new Date(),
-        sources: allSources,
+        sources: textSources,
       });
 
       const trace = langfuse.trace({

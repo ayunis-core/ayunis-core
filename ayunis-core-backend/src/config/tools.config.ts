@@ -7,12 +7,23 @@ export interface ToolsConfig {
   };
 }
 
+const parseIntWithDefault = (
+  value: string | undefined,
+  defaultValue: number,
+): number => {
+  const parsed = parseInt(value || String(defaultValue), 10);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
+};
+
 export default registerAs(
   'tools',
   (): ToolsConfig => ({
     sourceGetText: {
-      maxLines: parseInt(process.env.SOURCE_GET_TEXT_MAX_LINES || '200', 10),
-      maxChars: parseInt(process.env.SOURCE_GET_TEXT_MAX_CHARS || '5000', 10),
+      maxLines: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_LINES, 200),
+      maxChars: parseIntWithDefault(
+        process.env.SOURCE_GET_TEXT_MAX_CHARS,
+        5000,
+      ),
     },
   }),
 );
