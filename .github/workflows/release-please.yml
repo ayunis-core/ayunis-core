@@ -28,6 +28,9 @@ jobs:
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
     environment: internal
+    concurrency:
+      group: deploy-internal
+      cancel-in-progress: false
     steps:
       - name: Deploy to Internal
         uses: appleboy/ssh-action@v1.2.0
@@ -38,6 +41,7 @@ jobs:
           username: ${{ secrets.INTERNAL_USER }}
           key: ${{ secrets.INTERNAL_SSH_KEY }}
           envs: RELEASE_TAG
+          script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
             git fetch --tags
@@ -48,10 +52,13 @@ jobs:
             docker compose ps
 
   deploy-production:
-    needs: release-please
+    needs: [release-please, deploy-internal]
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
     environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@v1.2.0
@@ -62,6 +69,7 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           envs: RELEASE_TAG
+          script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
             git fetch --tags

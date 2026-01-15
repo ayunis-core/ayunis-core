@@ -23,6 +23,7 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           envs: RELEASE_TAG
+          script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
             git fetch --tags
