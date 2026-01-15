@@ -123,13 +123,13 @@ export default function PlusButton({
           <DropdownMenuGroup>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
+                <BookOpen className="h-4 w-4" />
                 {t('chatInput.addPrompt')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {isLoadingPrompts ? (
                   <DropdownMenuItem disabled>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     {t('common.loading')}
                   </DropdownMenuItem>
                 ) : promptsError ? (
