@@ -30,7 +30,12 @@ jobs:
           script: |
             cd /home/ayunis/apps/ayunis-core
             git fetch --all --tags
-            git checkout -f "$RELEASE_TAG"
+            if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
+              git checkout -f "$RELEASE_TAG"
+            else
+              git checkout -f "$RELEASE_TAG"
+              git reset --hard "origin/$RELEASE_TAG"
+            fi
             docker compose down
             docker compose up -d --build
             sleep 60
