@@ -24,7 +24,7 @@ export function useFileDrop({
   isImageUploadEnabled,
   acceptedDocumentExtensions,
 }: UseFileDropOptions): UseFileDropResult {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const [isDragging, setIsDragging] = useState(false);
   const [, setDragCounter] = useState(0);
 
@@ -79,6 +79,9 @@ export function useFileDrop({
       // Handle images
       if (isImageUploadEnabled && images.length > 0) {
         onImagesDrop(images);
+      } else if (!isImageUploadEnabled && images.length > 0) {
+        // If image upload is disabled but images were dropped
+        hasSkippedFiles = true;
       }
 
       // Handle documents (only first one, as per existing behavior)
