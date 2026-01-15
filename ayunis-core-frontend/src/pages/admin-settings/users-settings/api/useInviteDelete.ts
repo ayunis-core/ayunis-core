@@ -3,7 +3,7 @@ import {
   getSubscriptionsControllerGetSubscriptionQueryKey,
   useInvitesControllerDeleteInvite,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { Invite } from '../model/openapi';
+import type { PaginatedInvitesListResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';
@@ -26,8 +26,12 @@ export function useInviteDelete() {
 
         queryClient.setQueryData(
           getInvitesControllerGetInvitesQueryKey(),
-          (old: Invite[]) => {
-            return old.filter((invite: Invite) => invite.id !== id);
+          (old: PaginatedInvitesListResponseDto | undefined) => {
+            if (!old) return old;
+            return {
+              ...old,
+              data: old.data.filter((invite) => invite.id !== id),
+            };
           },
         );
         return { previousData };
