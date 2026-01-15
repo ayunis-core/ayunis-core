@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { separateFilesByType } from '../utils/fileHandlers';
 
 interface UseFileDropOptions {
@@ -22,6 +24,7 @@ export function useFileDrop({
   isImageUploadEnabled,
   acceptedDocumentExtensions,
 }: UseFileDropOptions): UseFileDropResult {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [, setDragCounter] = useState(0);
 
@@ -71,6 +74,7 @@ export function useFileDrop({
       if (!files || files.length === 0) return;
 
       const { images, regularFiles } = separateFilesByType(files);
+      let hasSkippedFiles = false;
 
       // Handle images
       if (isImageUploadEnabled && images.length > 0) {
@@ -83,6 +87,18 @@ export function useFileDrop({
         if (validDocuments.length > 0) {
           onDocumentDrop(validDocuments[0]);
         }
+        // Check if any documents were skipped due to invalid file type
+        if (validDocuments.length < regularFiles.length) {
+          hasSkippedFiles = true;
+        }
+      } else if (!isDocumentUploadEnabled && regularFiles.length > 0) {
+        // If document upload is disabled but documents were dropped
+        hasSkippedFiles = true;
+      }
+
+      // Show toast if any files were skipped
+      if (hasSkippedFiles) {
+        toast.error(t('chatInput.invalidDroppedFileType'));
       }
     };
 
@@ -104,6 +120,7 @@ export function useFileDrop({
     isDocumentUploadEnabled,
     isImageUploadEnabled,
     isValidDocumentFile,
+    t,
   ]);
 
   return { isDragging };
