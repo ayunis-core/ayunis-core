@@ -2,6 +2,7 @@
 export enum ToolType {
   HTTP = 'http',
   SOURCE_QUERY = 'source_query',
+  SOURCE_GET_TEXT = 'source_get_text',
   INTERNET_SEARCH = 'internet_search',
   WEBSITE_CONTENT = 'website_content',
   SEND_EMAIL = 'send_email',

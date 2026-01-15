@@ -31,7 +31,7 @@ export class SendEmailTool extends DisplayableTool {
     super({
       name: ToolType.SEND_EMAIL,
       description:
-        'Display a widget for the user to send an email. The widget will be displayed in the chat interface.',
+        'Display an email composition widget. The user reviews and controls the final send action.',
       parameters: sendEmailToolParameters,
       type: ToolType.SEND_EMAIL,
     });

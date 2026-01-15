@@ -160,9 +160,13 @@ export class CreateTextSourceUseCase {
 
     for (const contentBlock of contentBlocks.chunks) {
       // Create source content for each content block
+      // Merge source metadata (fileName, URL) with splitter metadata (index, line numbers)
       const chunk = new TextSourceContentChunk({
         content: contentBlock.text,
-        meta,
+        meta: {
+          ...meta,
+          ...contentBlock.metadata,
+        },
       });
 
       sourceContentChunks.push(chunk);

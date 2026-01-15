@@ -56,7 +56,7 @@ export class BarChartTool extends DisplayableTool {
     super({
       name: ToolType.BAR_CHART,
       description:
-        'Display a bar chart with the given data. Use this tool if the user asks for a statistical insight which is best explained with a bar chart and offer any additional textual explanation through the "insight" property. If necessary process data specifically to show the chart. If possible, offer insights alongside the chart even if the user didn\'t ask for them.',
+        'Display a bar chart. Best for comparing quantities across categories.',
       parameters: barChartToolParameters,
       type: ToolType.BAR_CHART,
     });

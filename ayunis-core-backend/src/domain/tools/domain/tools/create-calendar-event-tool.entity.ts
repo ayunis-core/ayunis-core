@@ -40,7 +40,7 @@ export class CreateCalendarEventTool extends DisplayableTool {
     super({
       name: ToolType.CREATE_CALENDAR_EVENT,
       description:
-        'Display a widget for the user to create a calendar event and open a calendar link.',
+        'Display a calendar event creation widget. The user reviews and adds to their calendar.',
       parameters: createCalendarEventParameters,
       type: ToolType.CREATE_CALENDAR_EVENT,
     });

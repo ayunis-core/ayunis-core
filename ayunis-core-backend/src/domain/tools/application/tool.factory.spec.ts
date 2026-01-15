@@ -78,6 +78,7 @@ describe('ToolFactory', () => {
 
       expect(types).toContain(ToolType.HTTP);
       expect(types).toContain(ToolType.SOURCE_QUERY);
+      expect(types).toContain(ToolType.SOURCE_GET_TEXT);
       expect(types).toContain(ToolType.INTERNET_SEARCH);
       expect(types).toContain(ToolType.WEBSITE_CONTENT);
       expect(types).toContain(ToolType.SEND_EMAIL);
@@ -91,7 +92,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.PIE_CHART);
       expect(types).toContain(ToolType.PRODUCT_KNOWLEDGE);
 
-      expect(types.length).toBe(14);
+      expect(types.length).toBe(15);
     });
   });
 });

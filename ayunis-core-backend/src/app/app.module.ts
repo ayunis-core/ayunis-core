@@ -41,6 +41,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
 import { mcpConfig } from '../config/mcp.config';
+import toolsConfig from '../config/tools.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { ClsModule } from 'nestjs-cls';
@@ -67,6 +68,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         emailsConfig,
         internetSearchConfig,
         mcpConfig,
+        toolsConfig,
       ],
     }),
     ClsModule.forRoot({

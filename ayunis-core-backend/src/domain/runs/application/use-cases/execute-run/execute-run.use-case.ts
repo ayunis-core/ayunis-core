@@ -75,6 +75,7 @@ import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/coll
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
+import { SystemPromptBuilderService } from '../../services/system-prompt-builder.service';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const MAX_CONTEXT_TOKENS = 80000;
@@ -103,6 +104,7 @@ export class ExecuteRunUseCase {
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly collectUsageUseCase: CollectUsageUseCase,
     private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
+    private readonly systemPromptBuilderService: SystemPromptBuilderService,
   ) {}
 
   async execute(
@@ -140,7 +142,24 @@ export class ExecuteRunUseCase {
       const tools = model.model.canUseTools
         ? await this.assembleTools(thread, agent)
         : [];
-      const instructions = this.assemblySystemPrompt(agent);
+
+      // Collect all sources from thread and agent for the system prompt
+      // Filter to only TextSources since DataSources (e.g., CSV) can only be used
+      // with code_execution tool, not source_query or source_get_text
+      const allSources = [
+        ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
+        ...(agent?.sourceAssignments?.map((a) => a.source) ?? []),
+      ];
+      const textSources = allSources.filter(
+        (s): s is TextSource => s instanceof TextSource,
+      );
+
+      const instructions = this.systemPromptBuilderService.build({
+        agent,
+        tools,
+        currentTime: new Date(),
+        sources: textSources,
+      });
 
       const trace = langfuse.trace({
         name: 'execute_run',
@@ -312,31 +331,33 @@ export class ExecuteRunUseCase {
       );
     }
 
-    // Source query tool is available if there are sources in the thread or agent
-    if (thread.sourceAssignments && thread.sourceAssignments.length > 0) {
+    // Collect text sources from both thread and agent
+    const threadTextSources = (thread.sourceAssignments ?? [])
+      .map((assignment) => assignment.source)
+      .filter((source): source is TextSource => source instanceof TextSource);
+
+    const agentTextSources = (agent?.sourceAssignments ?? [])
+      .map((assignment) => assignment.source)
+      .filter((source): source is TextSource => source instanceof TextSource);
+
+    const allTextSources = [...threadTextSources, ...agentTextSources];
+
+    // Source query and source get text tools are available if there are text sources
+    if (allTextSources.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
             type: ToolType.SOURCE_QUERY,
-            context: thread.sourceAssignments
-              .map((assignment) => assignment.source)
-              .filter((source) => source instanceof TextSource),
+            context: allTextSources,
           }),
         ),
       );
-    }
-    if (
-      agent &&
-      agent.sourceAssignments &&
-      agent.sourceAssignments.length > 0
-    ) {
+
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
-            type: ToolType.SOURCE_QUERY,
-            context: agent.sourceAssignments
-              .map((assignment) => assignment.source)
-              .filter((source) => source instanceof TextSource),
+            type: ToolType.SOURCE_GET_TEXT,
+            context: allTextSources,
           }),
         ),
       );
@@ -356,20 +377,6 @@ export class ExecuteRunUseCase {
       threadId: thread.id,
       userId: thread.userId,
     });
-  }
-
-  private assemblySystemPrompt(agent?: Agent): string {
-    const currentTime = new Date().toISOString();
-    const systemPrompt = `
-    !! IMPORTANT !! ALWAYS ANSWER IN THE SAME LANGUAGE AS THE USER'S MESSAGE !! NOT ANSWERING IN THE SAME LANGUAGE AS THE USER'S MESSAGE IS A CRITICAL ERROR !!
-	  IMPORTANT: Always output Markdown format, never HTML!
-      Current time: ${currentTime}
-    `.trim();
-    const agentInstructions = agent?.instructions;
-    if (!agentInstructions) {
-      return systemPrompt;
-    }
-    return `${systemPrompt}\n\n${agentInstructions}`;
   }
 
   private async *orchestrateRun(params: {

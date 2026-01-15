@@ -9,6 +9,7 @@ import {
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
+import { SourceGetTextTool } from '../domain/tools/source-get-text-tool.entity';
 import {
   ToolInvalidConfigError,
   ToolInvalidContextError,
@@ -53,6 +54,20 @@ export class ToolFactory {
           params.context.every((source: unknown) => source instanceof Source)
         ) {
           return new SourceQueryTool(params.context);
+        }
+        throw new ToolInvalidContextError({
+          toolType: params.type,
+          metadata: {
+            contextType: params.context?.constructor.name || 'null',
+          },
+        });
+      case ToolType.SOURCE_GET_TEXT:
+        if (
+          params.context &&
+          params.context instanceof Array &&
+          params.context.every((source: unknown) => source instanceof Source)
+        ) {
+          return new SourceGetTextTool(params.context);
         }
         throw new ToolInvalidContextError({
           toolType: params.type,
