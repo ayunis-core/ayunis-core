@@ -12,6 +12,9 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -19,3 +22,51 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  deploy-internal:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    environment: internal
+    steps:
+      - name: Deploy to Internal
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+        with:
+          host: ${{ secrets.INTERNAL_HOST }}
+          username: ${{ secrets.INTERNAL_USER }}
+          key: ${{ secrets.INTERNAL_SSH_KEY }}
+          envs: RELEASE_TAG
+          script: |
+            cd /home/ayunis/apps/ayunis-core
+            git fetch --tags
+            git checkout "$RELEASE_TAG"
+            docker compose down
+            docker compose up -d --build
+            sleep 60
+            docker compose ps
+
+  deploy-production:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          envs: RELEASE_TAG
+          script: |
+            cd /home/ayunis/apps/ayunis-core
+            git fetch --tags
+            git checkout "$RELEASE_TAG"
+            docker compose down
+            docker compose up -d --build
+            sleep 60
+            docker compose ps

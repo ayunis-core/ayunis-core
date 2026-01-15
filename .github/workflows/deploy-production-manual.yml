@@ -1,9 +1,12 @@
-name: Deploy to Production
+name: Deploy to Production (Manual)
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag or branch to deploy'
+        required: false
+        default: 'main'
 
 jobs:
   deploy:
@@ -13,14 +16,17 @@ jobs:
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          envs: RELEASE_TAG
           script: |
             cd /home/ayunis/apps/ayunis-core
             git fetch --tags
-            git checkout ${{ github.event.release.tag_name || 'main' }}
+            git checkout "$RELEASE_TAG"
             docker compose down
             docker compose up -d --build
             sleep 60
