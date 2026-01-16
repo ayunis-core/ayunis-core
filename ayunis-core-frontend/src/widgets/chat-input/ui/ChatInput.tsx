@@ -27,7 +27,9 @@ import {
   MAX_IMAGES,
 } from '../hooks/usePendingImages';
 import { useImagePaste } from '../hooks/useImagePaste';
+import { useFileDrop } from '../hooks/useFileDrop';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
+import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
 
@@ -124,6 +126,27 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onImagesPasted: handleImagesPasted,
     });
 
+    const { isDragging } = useFileDrop({
+      containerRef,
+      onDocumentDrop: onFileUpload,
+      onImagesDrop: (files) => {
+        const result = addImages(files);
+        if (result.limitExceeded) {
+          showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
+        }
+      },
+      isDocumentUploadEnabled: isEmbeddingModelEnabled && !isCreatingFileSource,
+      isImageUploadEnabled: isVisionEnabled,
+      acceptedDocumentExtensions: [
+        '.pdf',
+        '.csv',
+        '.xlsx',
+        '.xls',
+        '.docx',
+        '.pptx',
+      ],
+    });
+
     useImperativeHandle(ref, () => ({
       setMessage,
       sendMessage: (text: string) => {
@@ -218,7 +241,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         className="w-full space-y-2"
         data-testid="chat-input"
       >
-        <Card className="py-4">
+        <Card
+          className={cn(
+            'py-4',
+            isDragging && 'border-2 border-dashed border-primary bg-primary/5',
+          )}
+        >
           <CardContent className="px-4">
             <div className="flex flex-col gap-4">
               <SourcesList

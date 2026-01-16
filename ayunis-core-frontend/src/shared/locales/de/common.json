@@ -76,7 +76,9 @@
       "send_email": "E-Mails vorbereiten",
       "cannot_disable": "Diese Funktion kann nicht deaktiviert werden."
     },
-    "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
+    "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
+    "dropFilesHint": "Dateien hier ablegen",
+    "invalidDroppedFileType": "Einige Dateien wurden übersprungen, da sie nicht unterstützt werden."
   },
   "common": {
     "loading": "Laden...",

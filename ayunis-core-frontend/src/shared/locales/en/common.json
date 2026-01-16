@@ -76,7 +76,9 @@
       "send_email": "Prepare Emails",
       "cannot_disable": "This function cannot be disabled."
     },
-    "fileSourceDisabled": "To upload documents, an embedding model must be enabled."
+    "fileSourceDisabled": "To upload documents, an embedding model must be enabled.",
+    "dropFilesHint": "Drop files here",
+    "invalidDroppedFileType": "Some files were skipped because they are not supported."
   },
   "common": {
     "loading": "Loading...",
