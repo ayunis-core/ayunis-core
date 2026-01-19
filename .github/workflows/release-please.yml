@@ -106,7 +106,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ needs.release-please.outputs.body }}"
+                    "text": ${{ toJSON(needs.release-please.outputs.body) }}
                   }
                 },
                 {
