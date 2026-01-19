@@ -88,39 +88,50 @@ jobs:
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     steps:
       - name: Post to Slack
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          BODY: ${{ needs.release-please.outputs.body }}
+          HTML_URL: ${{ needs.release-please.outputs.html_url }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          # Build JSON payload using jq (properly escapes all special characters)
+          PAYLOAD=$(jq -n \
+            --arg tag "$TAG_NAME" \
+            --arg body "$BODY" \
+            --arg url "$HTML_URL" \
+            '{
+              blocks: [
                 {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "🎉 Ayunis Core ${{ needs.release-please.outputs.tag_name }} deployed"
+                  type: "header",
+                  text: {
+                    type: "plain_text",
+                    text: "🎉 Ayunis Core \($tag) deployed"
                   }
                 },
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ needs.release-please.outputs.body }}"
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: $body
                   }
                 },
                 {
-                  "type": "actions",
-                  "elements": [
+                  type: "actions",
+                  elements: [
                     {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Release"
+                      type: "button",
+                      text: {
+                        type: "plain_text",
+                        text: "View Release"
                       },
-                      "url": "${{ needs.release-please.outputs.html_url }}"
+                      url: $url
                     }
                   ]
                 }
               ]
-            }
+            }')
+
+          curl -sfS -X POST \
+            -H 'Content-Type: application/json' \
+            -d "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
