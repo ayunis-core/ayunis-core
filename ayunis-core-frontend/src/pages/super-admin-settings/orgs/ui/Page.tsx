@@ -3,6 +3,7 @@ import CreateOrgDialog from './CreateOrgDialog';
 import OrgsTable from './OrgsTable';
 import OrgsPagination from './OrgsPagination';
 import OrgsSearch from './OrgsSearch';
+import OrgsSubscriptionFilter from './OrgsSubscriptionFilter';
 import type { SuperAdminOrgResponseDto, PaginationDto } from '@/shared/api';
 
 interface SuperAdminOrgsPageProps {
@@ -10,6 +11,7 @@ interface SuperAdminOrgsPageProps {
   pagination?: PaginationDto;
   search?: string;
   currentPage: number;
+  hasActiveSubscription?: 'all' | 'true' | 'false';
 }
 
 export default function SuperAdminOrgsPage({
@@ -17,6 +19,7 @@ export default function SuperAdminOrgsPage({
   pagination,
   search,
   currentPage,
+  hasActiveSubscription,
 }: SuperAdminOrgsPageProps) {
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
@@ -25,11 +28,21 @@ export default function SuperAdminOrgsPage({
   return (
     <SuperAdminSettingsLayout action={<CreateOrgDialog />}>
       <div className="space-y-4">
-        <OrgsTable orgs={orgs} searchSlot={<OrgsSearch search={search} />} />
+        <OrgsTable
+          orgs={orgs}
+          searchSlot={<OrgsSearch search={search} />}
+          filterSlot={
+            <OrgsSubscriptionFilter
+              hasActiveSubscription={hasActiveSubscription}
+              search={search}
+            />
+          }
+        />
         <OrgsPagination
           currentPage={currentPage}
           totalPages={totalPages}
           search={search}
+          hasActiveSubscription={hasActiveSubscription}
         />
       </div>
     </SuperAdminSettingsLayout>

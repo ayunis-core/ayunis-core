@@ -14,12 +14,14 @@ interface OrgsPaginationProps {
   currentPage: number;
   totalPages: number;
   search?: string;
+  hasActiveSubscription?: 'all' | 'true' | 'false';
 }
 
 export default function OrgsPagination({
   currentPage,
   totalPages,
   search,
+  hasActiveSubscription,
 }: OrgsPaginationProps) {
   const { t } = useTranslation('common');
 
@@ -56,6 +58,8 @@ export default function OrgsPagination({
 
   const searchParams = {
     ...(search && { search }),
+    ...(hasActiveSubscription &&
+      hasActiveSubscription !== 'all' && { hasActiveSubscription }),
   };
 
   const isFirstPage = currentPage === 1;

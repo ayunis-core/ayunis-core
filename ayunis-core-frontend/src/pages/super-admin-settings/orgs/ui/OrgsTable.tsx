@@ -22,9 +22,14 @@ import type { ReactNode } from 'react';
 interface OrgsTableProps {
   orgs: SuperAdminOrgResponseDto[];
   searchSlot?: ReactNode;
+  filterSlot?: ReactNode;
 }
 
-export default function OrgsTable({ orgs, searchSlot }: OrgsTableProps) {
+export default function OrgsTable({
+  orgs,
+  searchSlot,
+  filterSlot,
+}: OrgsTableProps) {
   const { t } = useTranslation('super-admin-settings-orgs');
   const router = useRouter();
 
@@ -35,7 +40,12 @@ export default function OrgsTable({ orgs, searchSlot }: OrgsTableProps) {
         <CardDescription>{t('header.description')}</CardDescription>
       </CardHeader>
       <CardContent>
-        {searchSlot && <div className="mb-4">{searchSlot}</div>}
+        {(searchSlot || filterSlot) && (
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+            {searchSlot}
+            {filterSlot}
+          </div>
+        )}
         {orgs.length === 0 ? (
           <div className="flex flex-col items-center justify-center space-y-2 py-10 text-center">
             <h3 className="text-lg font-semibold">{t('empty.title')}</h3>

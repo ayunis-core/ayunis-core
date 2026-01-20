@@ -33,7 +33,13 @@ export default function OrgsSearch({ search }: OrgsSearchProps) {
       if (searchValue !== (search ?? '')) {
         void navigate({
           to: '/super-admin-settings/orgs',
-          search: (prev: { search?: string; page?: number }) => ({
+          search: (
+            prev: {
+              search?: string;
+              page?: number;
+              hasActiveSubscription?: string;
+            },
+          ) => ({
             ...prev,
             search: searchValue || undefined,
             page: undefined, // Reset to page 1 when search changes

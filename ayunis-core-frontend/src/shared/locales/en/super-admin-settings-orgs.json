@@ -43,5 +43,13 @@
   },
   "search": {
     "placeholder": "Search organizations..."
+  },
+  "filter": {
+    "subscription": {
+      "placeholder": "Subscription status",
+      "all": "All organizations",
+      "active": "With active subscription",
+      "inactive": "Without subscription"
+    }
   }
 }

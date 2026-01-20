@@ -2562,6 +2562,10 @@ export type SuperAdminOrgsControllerGetAllOrgsParams = {
  */
 search?: string;
 /**
+ * Filter organizations by active subscription status.
+ */
+hasActiveSubscription?: boolean;
+/**
  * Maximum number of organizations to return (default: 50).
  */
 limit?: number;
