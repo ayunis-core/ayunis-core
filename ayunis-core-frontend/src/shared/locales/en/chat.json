@@ -62,7 +62,8 @@
       "emptyState": "No chart data available"
     },
     "longChatWarningTitle": "Conversation too long",
-    "longChatWarningDescription": "For better results, consider starting a new chat."
+    "longChatWarningDescription": "For better results, consider starting a new chat.",
+    "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers."
   },
   "newChat": {
     "newChat": "New Chat",
