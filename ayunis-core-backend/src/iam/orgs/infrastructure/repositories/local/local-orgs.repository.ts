@@ -18,6 +18,7 @@ import {
   OrgRetrievalFailedError,
 } from '../../../application/orgs.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { SubscriptionRecord } from '../../../../subscriptions/infrastructure/persistence/local/schema/subscription.record';
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
@@ -87,6 +88,7 @@ export class LocalOrgsRepository extends OrgsRepository {
       limit: pagination.limit,
       offset: pagination.offset,
       search: filters?.search,
+      hasActiveSubscription: filters?.hasActiveSubscription,
     });
 
     try {
@@ -100,6 +102,26 @@ export class LocalOrgsRepository extends OrgsRepository {
         queryBuilder.andWhere('org.name ILIKE :search', {
           search: `%${filters.search}%`,
         });
+      }
+
+      // Apply active subscription filter
+      if (filters?.hasActiveSubscription !== undefined) {
+        // Create a subquery to find org IDs with active subscriptions
+        // A subscription is considered active if it's not cancelled (cancelledAt IS NULL)
+        const activeSubscriptionSubquery = queryBuilder
+          .subQuery()
+          .select('DISTINCT sub.orgId')
+          .from(SubscriptionRecord, 'sub')
+          .where('sub.cancelledAt IS NULL')
+          .getQuery();
+
+        if (filters.hasActiveSubscription === true) {
+          // Filter for orgs WITH an active subscription
+          queryBuilder.andWhere(`org.id IN ${activeSubscriptionSubquery}`);
+        } else {
+          // Filter for orgs WITHOUT an active subscription
+          queryBuilder.andWhere(`org.id NOT IN ${activeSubscriptionSubquery}`);
+        }
       }
 
       // Apply pagination and get data with count in one call

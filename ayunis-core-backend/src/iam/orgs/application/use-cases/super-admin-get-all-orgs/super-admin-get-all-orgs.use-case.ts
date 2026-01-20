@@ -21,6 +21,7 @@ export class SuperAdminGetAllOrgsUseCase {
       limit: query.limit,
       offset: query.offset,
       search: query.search,
+      hasActiveSubscription: query.hasActiveSubscription,
     });
 
     const systemRole = this.contextService.get('systemRole');
@@ -38,6 +39,7 @@ export class SuperAdminGetAllOrgsUseCase {
       },
       {
         search: query.search,
+        hasActiveSubscription: query.hasActiveSubscription,
       },
     );
   }

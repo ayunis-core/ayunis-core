@@ -9,6 +9,7 @@ export interface OrgsPagination {
 
 export interface OrgsFilters {
   search?: string;
+  hasActiveSubscription?: boolean;
 }
 
 export abstract class OrgsRepository {

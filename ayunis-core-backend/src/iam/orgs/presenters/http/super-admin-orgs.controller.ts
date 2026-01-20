@@ -103,6 +103,14 @@ export class SuperAdminOrgsController {
     example: 'Acme',
   })
   @ApiQuery({
+    name: 'hasActiveSubscription',
+    required: false,
+    type: Boolean,
+    description:
+      'Filter organizations by active subscription status. Set to true to show only orgs with active subscriptions, false to show only orgs without.',
+    example: true,
+  })
+  @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
@@ -122,6 +130,7 @@ export class SuperAdminOrgsController {
     const orgs = await this.superAdminGetAllOrgsUseCase.execute(
       new SuperAdminGetAllOrgsQuery({
         search: queryParams.search,
+        hasActiveSubscription: queryParams.hasActiveSubscription,
         pagination: {
           limit: queryParams.limit,
           offset: queryParams.offset,
