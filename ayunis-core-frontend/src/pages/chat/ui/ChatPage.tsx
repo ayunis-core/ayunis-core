@@ -479,18 +479,15 @@ export default function ChatPage({
     </div>
   );
 
-  // Long chat warning banner
-  const longChatWarning = thread.isLongChat && <LongChatWarning />;
-
   // Chat Input
   // Agent, model, and anonymous mode controls are always disabled on ChatPage
   // because the thread already has messages (ChatPage is only shown after first message)
   const chatInput = (
     <>
-      {longChatWarning}
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}
       </p>
+      {thread.isLongChat && <LongChatWarning />}
       <ChatInput
         ref={chatInputRef}
         modelId={
