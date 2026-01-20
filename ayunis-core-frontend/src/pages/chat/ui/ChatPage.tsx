@@ -488,6 +488,9 @@ export default function ChatPage({
   const chatInput = (
     <>
       {longChatWarning}
+      <p className="text-xs text-muted-foreground text-center mb-2">
+        {t('chat.inputDisclaimer')}
+      </p>
       <ChatInput
         ref={chatInputRef}
         modelId={

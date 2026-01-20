@@ -62,7 +62,8 @@
       "emptyState": "Keine Diagrammdaten verfügbar"
     },
     "longChatWarningTitle": "Konversation zu lang",
-    "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten."
+    "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
+    "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen."
   },
   "newChat": {
     "newChat": "Neuer Chat",
