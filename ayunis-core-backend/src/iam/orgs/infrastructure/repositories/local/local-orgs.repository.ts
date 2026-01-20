@@ -107,12 +107,32 @@ export class LocalOrgsRepository extends OrgsRepository {
       // Apply active subscription filter
       if (filters?.hasActiveSubscription !== undefined) {
         // Create a subquery to find org IDs with active subscriptions
-        // A subscription is considered active if it's not cancelled (cancelledAt IS NULL)
+        // A subscription is considered active if:
+        // 1. It's not cancelled (cancelledAt IS NULL), OR
+        // 2. It's cancelled but still in grace period (current date <= last billing date)
         const activeSubscriptionSubquery = queryBuilder
           .subQuery()
           .select('DISTINCT sub.orgId')
           .from(SubscriptionRecord, 'sub')
-          .where('sub.cancelledAt IS NULL')
+          .where(
+            `(sub.cancelledAt IS NULL OR 
+              (sub.renewalCycle = 'monthly' AND 
+               (sub.renewalCycleAnchor + 
+                (((EXTRACT(YEAR FROM sub.cancelledAt) - EXTRACT(YEAR FROM sub.renewalCycleAnchor)) * 12 +
+                  (EXTRACT(MONTH FROM sub.cancelledAt) - EXTRACT(MONTH FROM sub.renewalCycleAnchor)) +
+                  CASE WHEN EXTRACT(DAY FROM sub.cancelledAt) >= EXTRACT(DAY FROM sub.renewalCycleAnchor) THEN 1 ELSE 0 END
+                 ) || ' months')::INTERVAL
+               ) >= CURRENT_TIMESTAMP) OR
+              (sub.renewalCycle = 'yearly' AND
+               (sub.renewalCycleAnchor + 
+                (((EXTRACT(YEAR FROM sub.cancelledAt) - EXTRACT(YEAR FROM sub.renewalCycleAnchor)) +
+                  CASE WHEN (EXTRACT(MONTH FROM sub.cancelledAt) > EXTRACT(MONTH FROM sub.renewalCycleAnchor)) OR
+                            (EXTRACT(MONTH FROM sub.cancelledAt) = EXTRACT(MONTH FROM sub.renewalCycleAnchor) AND
+                             EXTRACT(DAY FROM sub.cancelledAt) >= EXTRACT(DAY FROM sub.renewalCycleAnchor))
+                       THEN 1 ELSE 0 END
+                 ) || ' years')::INTERVAL
+               ) >= CURRENT_TIMESTAMP))`,
+          )
           .getQuery();
 
         if (filters.hasActiveSubscription === true) {
