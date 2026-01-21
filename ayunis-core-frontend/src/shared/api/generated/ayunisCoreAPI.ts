@@ -49,6 +49,7 @@ import type {
   CreatePredefinedIntegrationDto,
   CreatePromptDto,
   CreateSubscriptionRequestDto,
+  CreateTeamDto,
   CreateThreadDto,
   CreateTrialRequestDto,
   CreateUserDto,
@@ -102,6 +103,7 @@ import type {
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
+  TeamResponseDto,
   ThreadsControllerAddFileSourceBody,
   ThreadsControllerFindAllParams,
   ThreadsControllerGetThreadSources200Item,
@@ -9574,6 +9576,159 @@ export const useAuthenticationControllerLogout = <TError = unknown,
       > => {
 
       const mutationOptions = getAuthenticationControllerLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary List all teams for the current organization
+ */
+export const teamsControllerListTeams = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<TeamResponseDto[]>(
+      {url: `/teams`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getTeamsControllerListTeamsQueryKey = () => {
+    return [`/teams`] as const;
+    }
+
+    
+export const getTeamsControllerListTeamsQueryOptions = <TData = Awaited<ReturnType<typeof teamsControllerListTeams>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerListTeams>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTeamsControllerListTeamsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof teamsControllerListTeams>>> = ({ signal }) => teamsControllerListTeams(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof teamsControllerListTeams>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TeamsControllerListTeamsQueryResult = NonNullable<Awaited<ReturnType<typeof teamsControllerListTeams>>>
+export type TeamsControllerListTeamsQueryError = void
+
+
+export function useTeamsControllerListTeams<TData = Awaited<ReturnType<typeof teamsControllerListTeams>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerListTeams>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamsControllerListTeams>>,
+          TError,
+          Awaited<ReturnType<typeof teamsControllerListTeams>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamsControllerListTeams<TData = Awaited<ReturnType<typeof teamsControllerListTeams>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerListTeams>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof teamsControllerListTeams>>,
+          TError,
+          Awaited<ReturnType<typeof teamsControllerListTeams>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTeamsControllerListTeams<TData = Awaited<ReturnType<typeof teamsControllerListTeams>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerListTeams>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all teams for the current organization
+ */
+
+export function useTeamsControllerListTeams<TData = Awaited<ReturnType<typeof teamsControllerListTeams>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof teamsControllerListTeams>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTeamsControllerListTeamsQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create a new team for the current organization
+ */
+export const teamsControllerCreateTeam = (
+    createTeamDto: CreateTeamDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<TeamResponseDto>(
+      {url: `/teams`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createTeamDto, signal
+    },
+      );
+    }
+  
+
+
+export const getTeamsControllerCreateTeamMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerCreateTeam>>, TError,{data: CreateTeamDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerCreateTeam>>, TError,{data: CreateTeamDto}, TContext> => {
+
+const mutationKey = ['teamsControllerCreateTeam'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerCreateTeam>>, {data: CreateTeamDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  teamsControllerCreateTeam(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerCreateTeamMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerCreateTeam>>>
+    export type TeamsControllerCreateTeamMutationBody = CreateTeamDto
+    export type TeamsControllerCreateTeamMutationError = void
+
+    /**
+ * @summary Create a new team for the current organization
+ */
+export const useTeamsControllerCreateTeam = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerCreateTeam>>, TError,{data: CreateTeamDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerCreateTeam>>,
+        TError,
+        {data: CreateTeamDto},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamsControllerCreateTeamMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

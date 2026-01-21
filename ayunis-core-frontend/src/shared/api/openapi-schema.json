@@ -5008,6 +5008,81 @@
         "tags": ["Authentication"]
       }
     },
+    "/teams": {
+      "get": {
+        "operationId": "TeamsController_listTeams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved teams",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view teams"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List all teams for the current organization",
+        "tags": ["teams"]
+      },
+      "post": {
+        "operationId": "TeamsController_createTeam",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid team data provided"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create teams"
+          },
+          "409": {
+            "description": "Team with this name already exists in the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new team for the current organization",
+        "tags": ["teams"]
+      }
+    },
     "/admin/models": {
       "get": {
         "operationId": "AdminController_getAllModels",
@@ -7585,6 +7660,7 @@
             "enum": [
               "http",
               "source_query",
+              "source_get_text",
               "internet_search",
               "website_content",
               "send_email",
@@ -7649,6 +7725,7 @@
             "enum": [
               "http",
               "source_query",
+              "source_get_text",
               "internet_search",
               "website_content",
               "send_email",
@@ -9027,6 +9104,50 @@
           }
         },
         "required": ["email", "role", "systemRole", "name"]
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          }
+        },
+        "required": ["name"]
+      },
+      "TeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "The organization ID the team belongs to",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was created",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was last updated",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "name", "orgId", "createdAt", "updatedAt"]
       },
       "CreateLanguageModelDto": {
         "type": "object",

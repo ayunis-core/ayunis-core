@@ -1,0 +1,28 @@
+{
+  "teams": {
+    "page": {
+      "add": "Team hinzufügen"
+    },
+    "list": {
+      "emptyTitle": "Noch keine Teams",
+      "emptyDescription": "Erstellen Sie Ihr erstes Team, um Ihre Benutzer zu organisieren.",
+      "createdAt": "Erstellt am {{date}}"
+    },
+    "createDialog": {
+      "title": "Team erstellen",
+      "description": "Erstellen Sie ein neues Team, um Ihre Benutzer zu organisieren.",
+      "nameLabel": "Teamname",
+      "namePlaceholder": "z.B. Engineering, Marketing, Vertrieb",
+      "nameRequired": "Teamname ist erforderlich",
+      "nameTooLong": "Teamname darf maximal 100 Zeichen lang sein",
+      "cancel": "Abbrechen",
+      "create": "Team erstellen",
+      "creating": "Erstellen..."
+    },
+    "createTeam": {
+      "success": "Team erfolgreich erstellt",
+      "error": "Team konnte nicht erstellt werden",
+      "duplicateName": "Ein Team mit diesem Namen existiert bereits"
+    }
+  }
+}

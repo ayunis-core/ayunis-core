@@ -1618,6 +1618,7 @@ export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof To
 export const ToolAssignmentDtoType = {
   http: 'http',
   source_query: 'source_query',
+  source_get_text: 'source_get_text',
   internet_search: 'internet_search',
   website_content: 'website_content',
   send_email: 'send_email',
@@ -1664,6 +1665,7 @@ export type ToolResponseDtoType = typeof ToolResponseDtoType[keyof typeof ToolRe
 export const ToolResponseDtoType = {
   http: 'http',
   source_query: 'source_query',
+  source_get_text: 'source_get_text',
   internet_search: 'internet_search',
   website_content: 'website_content',
   send_email: 'send_email',
@@ -2538,6 +2540,24 @@ export interface MeResponseDto {
   systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
+}
+
+export interface CreateTeamDto {
+  /** The name of the team */
+  name: string;
+}
+
+export interface TeamResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
 }
 
 export interface CreateLanguageModelDto { [key: string]: unknown }

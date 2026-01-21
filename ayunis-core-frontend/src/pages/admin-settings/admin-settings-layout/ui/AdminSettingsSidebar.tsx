@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   Users,
+  Users2,
   Brain,
   CreditCard,
   Plug,
@@ -57,6 +58,14 @@ export function AdminSettingsSidebar() {
                 <Link to={'/admin-settings/users'}>
                   <Users />
                   <span>{t('layout.users')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to={'/admin-settings/teams'}>
+                  <Users2 />
+                  <span>{t('layout.teams')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

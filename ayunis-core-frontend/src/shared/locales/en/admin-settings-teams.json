@@ -1,0 +1,28 @@
+{
+  "teams": {
+    "page": {
+      "add": "Add Team"
+    },
+    "list": {
+      "emptyTitle": "No teams yet",
+      "emptyDescription": "Create your first team to organize your users.",
+      "createdAt": "Created {{date}}"
+    },
+    "createDialog": {
+      "title": "Create Team",
+      "description": "Create a new team to organize your users.",
+      "nameLabel": "Team Name",
+      "namePlaceholder": "e.g., Engineering, Marketing, Sales",
+      "nameRequired": "Team name is required",
+      "nameTooLong": "Team name must be less than 100 characters",
+      "cancel": "Cancel",
+      "create": "Create Team",
+      "creating": "Creating..."
+    },
+    "createTeam": {
+      "success": "Team created successfully",
+      "error": "Failed to create team",
+      "duplicateName": "A team with this name already exists"
+    }
+  }
+}

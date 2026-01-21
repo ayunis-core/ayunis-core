@@ -19,6 +19,8 @@ import enAdminSettingsIntegrations from './shared/locales/en/admin-settings-inte
 import deAdminSettingsIntegrations from './shared/locales/de/admin-settings-integrations.json';
 import enAdminSettingsUsage from './shared/locales/en/admin-settings-usage.json';
 import deAdminSettingsUsage from './shared/locales/de/admin-settings-usage.json';
+import enAdminSettingsTeams from './shared/locales/en/admin-settings-teams.json';
+import deAdminSettingsTeams from './shared/locales/de/admin-settings-teams.json';
 import enSuperAdminSettingsLayout from './shared/locales/en/super-admin-settings-layout.json';
 import deSuperAdminSettingsLayout from './shared/locales/de/super-admin-settings-layout.json';
 import enSuperAdminSettingsOrgs from './shared/locales/en/super-admin-settings-orgs.json';
@@ -50,6 +52,7 @@ const resources = {
     'admin-settings-users': enAdminSettingsUsers,
     'admin-settings-integrations': enAdminSettingsIntegrations,
     'admin-settings-usage': enAdminSettingsUsage,
+    'admin-settings-teams': enAdminSettingsTeams,
     'super-admin-settings-layout': enSuperAdminSettingsLayout,
     'super-admin-settings-orgs': enSuperAdminSettingsOrgs,
     'super-admin-settings-org': enSuperAdminSettingsOrg,
@@ -70,6 +73,7 @@ const resources = {
     'admin-settings-users': deAdminSettingsUsers,
     'admin-settings-integrations': deAdminSettingsIntegrations,
     'admin-settings-usage': deAdminSettingsUsage,
+    'admin-settings-teams': deAdminSettingsTeams,
     'super-admin-settings-layout': deSuperAdminSettingsLayout,
     'super-admin-settings-orgs': deSuperAdminSettingsOrgs,
     'super-admin-settings-org': deSuperAdminSettingsOrg,

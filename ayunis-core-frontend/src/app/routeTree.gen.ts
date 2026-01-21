@@ -31,6 +31,7 @@ import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticat
 import { Route as AuthenticatedAgentsIdImport } from './routes/_authenticated/agents.$id'
 import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsUsageImport } from './routes/_authenticated/admin-settings.usage'
+import { Route as AuthenticatedAdminSettingsTeamsImport } from './routes/_authenticated/admin-settings.teams'
 import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
@@ -168,6 +169,13 @@ const AuthenticatedAdminSettingsUsageRoute =
   AuthenticatedAdminSettingsUsageImport.update({
     id: '/admin-settings/usage',
     path: '/admin-settings/usage',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
+const AuthenticatedAdminSettingsTeamsRoute =
+  AuthenticatedAdminSettingsTeamsImport.update({
+    id: '/admin-settings/teams',
+    path: '/admin-settings/teams',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -313,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsModelsImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/admin-settings/teams': {
+      id: '/_authenticated/admin-settings/teams'
+      path: '/admin-settings/teams'
+      fullPath: '/admin-settings/teams'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsTeamsImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/admin-settings/usage': {
       id: '/_authenticated/admin-settings/usage'
       path: '/admin-settings/usage'
@@ -434,6 +449,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
+  AuthenticatedAdminSettingsTeamsRoute: typeof AuthenticatedAdminSettingsTeamsRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
@@ -458,6 +474,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
+  AuthenticatedAdminSettingsTeamsRoute: AuthenticatedAdminSettingsTeamsRoute,
   AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
   AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
@@ -497,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
@@ -528,6 +546,7 @@ export interface FileRoutesByTo {
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
@@ -560,6 +579,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
+  '/_authenticated/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/_authenticated/agents/$id': typeof AuthenticatedAgentsIdRoute
@@ -593,6 +613,7 @@ export interface FileRouteTypes {
     | '/admin-settings/billing'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/teams'
     | '/admin-settings/usage'
     | '/admin-settings/users'
     | '/agents/$id'
@@ -623,6 +644,7 @@ export interface FileRouteTypes {
     | '/admin-settings/billing'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
+    | '/admin-settings/teams'
     | '/admin-settings/usage'
     | '/admin-settings/users'
     | '/agents/$id'
@@ -653,6 +675,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/billing'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
+    | '/_authenticated/admin-settings/teams'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
     | '/_authenticated/agents/$id'
@@ -726,6 +749,7 @@ export const routeTree = rootRoute
         "/_authenticated/admin-settings/billing",
         "/_authenticated/admin-settings/integrations",
         "/_authenticated/admin-settings/models",
+        "/_authenticated/admin-settings/teams",
         "/_authenticated/admin-settings/usage",
         "/_authenticated/admin-settings/users",
         "/_authenticated/agents/$id",
@@ -775,6 +799,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/admin-settings/models": {
       "filePath": "_authenticated/admin-settings.models.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/admin-settings/teams": {
+      "filePath": "_authenticated/admin-settings.teams.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/admin-settings/usage": {

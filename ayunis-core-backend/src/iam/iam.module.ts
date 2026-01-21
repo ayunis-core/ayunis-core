@@ -14,6 +14,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TrialsModule } from './trials/trials.module';
 import { LegalAcceptancesModule } from './legal-acceptances/legal-acceptances.module';
 import { QuotasModule } from './quotas/quotas.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({})
 export class IamModule {
@@ -34,6 +35,7 @@ export class IamModule {
         TrialsModule,
         LegalAcceptancesModule,
         QuotasModule,
+        TeamsModule,
       ],
       exports: [
         AuthenticationModule,
@@ -46,6 +48,7 @@ export class IamModule {
         TrialsModule,
         LegalAcceptancesModule,
         QuotasModule,
+        TeamsModule,
       ],
     };
   }
