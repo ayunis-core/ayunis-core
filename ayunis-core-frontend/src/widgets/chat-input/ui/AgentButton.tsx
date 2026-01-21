@@ -82,9 +82,11 @@ export default function AgentButton({
             <>
               {/* Personal Agents Group */}
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                  {tAgents('tabs.personal')}
-                </DropdownMenuLabel>
+                {sharedAgents.length > 0 && (
+                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                    {tAgents('tabs.personal')}
+                  </DropdownMenuLabel>
+                )}
                 {personalAgents.length > 0 ? (
                   personalAgents.map(renderAgentItem)
                 ) : (
@@ -94,22 +96,16 @@ export default function AgentButton({
                 )}
               </DropdownMenuGroup>
               {/* Shared Agents Group */}
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                  {tAgents('tabs.shared')}
-                </DropdownMenuLabel>
-                {sharedAgents.length > 0 ? (
-                  sharedAgents.map(renderAgentItem)
-                ) : (
-                  <DropdownMenuItem disabled className="text-muted-foreground">
-                    {tAgents('emptyState.shared.title')}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
+              {sharedAgents.length > 0 && (
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                    {tAgents('tabs.shared')}
+                  </DropdownMenuLabel>
+                  {sharedAgents.map(renderAgentItem)}
+                </DropdownMenuGroup>
+              )}
             </>
           )}
-          <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => void navigate({ to: '/agents' })}>
               <Plus /> {t('chatInput.createFirstAgent')}
