@@ -48,6 +48,8 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 - Admin can edit team name after creation
 - Admin can delete a team (see Scenario 4 for implications)
 
+**Note:** Team membership is NOT managed on this page. Users are assigned to teams via the Users table (see Scenario 2).
+
 #### Functional Requirements
 
 | ID | Requirement |
@@ -56,6 +58,7 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 | FR-1.2 | System shall allow org admins to edit team names |
 | FR-1.3 | System shall allow org admins to delete teams |
 | FR-1.4 | System shall display a list of all teams in the organization to admins |
+| FR-1.5 | Teams page shall NOT include user/member management functionality |
 
 #### Non-Functional Requirements
 
@@ -71,6 +74,7 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 - [ ] Admin can edit a team's name
 - [ ] Admin can delete a team
 - [ ] Non-admin users cannot access team management
+- [ ] Teams page does NOT show team members or allow adding/removing members
 
 #### Dependencies
 - Existing admin settings UI structure
@@ -81,57 +85,61 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 
 ---
 
-### Scenario 2: Admin Manages Team Membership
+### Scenario 2: Admin Manages Team Membership via Users Table
 
 **Actor:** Organization Admin
 
-**Goal:** Add and remove users from teams
+**Goal:** Assign users to teams via the Users management table
 
 #### User Flow
 
-1. Admin navigates to **Admin Settings > Teams**
-2. Admin selects a team from the list
-3. Admin sees team details with current members
-4. Admin clicks **Add Members**
-5. Admin selects users from the organization to add
-6. System adds selected users to the team
-7. Admin can remove existing members by clicking remove button next to each member
+1. Admin navigates to **Admin Settings > Users**
+2. Admin sees the existing users table with a new **Team** column
+3. Each user row displays their current team (or "No team") and a dropdown control
+4. Admin clicks the team dropdown for a specific user
+5. Dropdown shows all available teams plus a "No team" option
+6. Admin selects a team (or "No team" to remove assignment)
+7. System immediately updates the user's team assignment
 
 **Alternative Flows:**
-- Admin adds user who is already a member → System shows appropriate feedback (user already in team or prevents selection)
-- Admin removes the last member → Team becomes empty (allowed)
+- User has no team → Team column shows "No team" or empty state
+- No teams exist in the org → Dropdown shows empty state with hint to create teams first
 
 #### Functional Requirements
 
 | ID | Requirement |
 |----|-------------|
-| FR-2.1 | System shall allow org admins to add organization users to a team |
-| FR-2.2 | System shall allow org admins to remove users from a team |
-| FR-2.3 | System shall allow a user to be a member of multiple teams |
-| FR-2.4 | System shall display the list of current team members |
-| FR-2.5 | System shall prevent adding a user who is already a team member |
+| FR-2.1 | System shall display a Team column in the Users table showing each user's team assignment |
+| FR-2.2 | System shall provide a single-select dropdown on each user row to assign their team |
+| FR-2.3 | System shall allow org admins to assign a user to exactly one team |
+| FR-2.4 | System shall allow org admins to remove a user's team assignment (set to "No team") |
+| FR-2.5 | System shall enforce that a user belongs to at most one team |
 
 #### Non-Functional Requirements
 
 | ID | Requirement |
 |----|-------------|
 | NFR-2.1 | No limit on team members for MVP |
+| NFR-2.2 | Team membership changes should be reflected immediately in the UI |
 
 #### Acceptance Criteria
 
-- [ ] Admin can view members of a team
-- [ ] Admin can add one or more users to a team
-- [ ] Admin cannot add a user who is already a member
-- [ ] Admin can remove a user from a team
-- [ ] A user can be a member of multiple teams simultaneously
-- [ ] Removing a user from a team does not affect their membership in other teams
+- [ ] Users table shows a Team column for each user
+- [ ] Admin can see which team a user belongs to at a glance
+- [ ] Admin can open a dropdown to change a user's team assignment
+- [ ] Dropdown shows all org teams plus "No team" option
+- [ ] Admin can assign a user to one team
+- [ ] Admin can remove a user from their team (select "No team")
+- [ ] A user can only belong to zero or one team (not multiple)
+- [ ] Changes persist immediately
 
 #### Dependencies
 - Team entity from Scenario 1
-- Existing user repository
+- Existing Users table/page in Admin Settings
 
 #### Assumptions
-- Users see teams they belong to in some part of the UI (see Scenario 3)
+- The existing Users table can be extended with a new column
+- Single-select dropdown pattern is consistent with existing UI patterns
 
 ---
 
@@ -188,7 +196,7 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 - [ ] Non-team-members cannot see team-shared agents
 
 #### Dependencies
-- Team membership from Scenario 2
+- Team membership management from Scenario 2 (Users table)
 - Existing sharing infrastructure (`Share`, `ShareScope` entities)
 
 #### Assumptions
@@ -205,15 +213,14 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 #### User Flow
 
 1. Admin navigates to **Admin Settings > Teams**
-2. Admin selects a team to delete
-3. Admin clicks **Delete Team**
-4. System shows confirmation dialog explaining impact:
+2. Admin clicks delete button on a team row (or in team edit dialog)
+3. System shows confirmation dialog explaining impact:
    - "Deleting this team will make X agents private. Users with active threads using these agents will be switched to the default model."
-5. Admin confirms deletion
-6. System:
+4. Admin confirms deletion
+5. System:
    - Makes all agents shared with this team **private**
    - Updates affected threads to use the org's default model (existing behavior)
-   - Removes all team memberships
+   - Clears team assignment for all users in the team (sets to "No team")
    - Deletes the team
 
 #### Functional Requirements
@@ -238,7 +245,7 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 - [ ] After deletion, previously team-shared agents become private
 - [ ] After deletion, threads of non-owners using team-shared agents switch to default model
 - [ ] Agent owners' threads are unaffected
-- [ ] Team members are removed from the team (team membership records deleted)
+- [ ] Users in the deleted team have their team assignment cleared (set to "No team")
 
 #### Dependencies
 - Existing `ReplaceAgentWithDefaultModelUseCase` for thread fallback behavior
@@ -257,10 +264,11 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 
 #### User Flow
 
-1. Admin navigates to team management
-2. Admin removes a user from a team
-3. System:
-   - Removes the user's team membership
+1. Admin navigates to **Admin Settings > Users**
+2. Admin opens the team dropdown for a specific user
+3. Admin selects "No team" to remove the user from their current team
+4. System:
+   - Removes the user's team assignment
    - User loses access to agents shared with that team
    - User's threads using those agents fall back to the org's default model
 
@@ -279,6 +287,7 @@ A standard user who belongs to one or more teams. Can share their own agents wit
 
 #### Dependencies
 - Thread fallback mechanism from existing implementation
+- Team membership management from Scenario 2
 
 #### Assumptions
 - Behavior is consistent with existing org-share revocation
@@ -291,7 +300,8 @@ The following are explicitly **NOT** part of this MVP:
 
 | Item | Rationale |
 |------|-----------|
-| Multi-team sharing | Adds complexity; can be added later if needed |
+| Multi-team membership (user in multiple teams) | Simplifies model; users belong to 0 or 1 team |
+| Multi-team sharing (agent shared with multiple teams) | Adds complexity; can be added later if needed |
 | Team hierarchy (nested teams) | Over-engineering for MVP |
 | Team leads / team admin role | Only org admins manage teams for now |
 | User self-service (join/leave teams) | Simplifies authorization; admin-controlled only |
@@ -313,13 +323,10 @@ The following are explicitly **NOT** part of this MVP:
 - `createdAt`: Date
 - `updatedAt`: Date
 
-**TeamMembership** (join table)
-- `id`: UUID
-- `teamId`: UUID (FK to Team)
-- `userId`: UUID (FK to User)
-- `createdAt`: Date
-
 ### Extended Entities
+
+**User**
+- Add `teamId`: UUID (FK to Team, nullable) — user belongs to zero or one team
 
 **ShareScopeType** (enum)
 - Add `TEAM` value
@@ -351,3 +358,4 @@ None remaining - all requirements have been clarified.
 | Date | Author | Changes |
 |------|--------|---------|
 | 2025-12-05 | Claude | Initial PRD based on requirements clarification session |
+| 2026-01-21 | Claude | Moved team membership management from Teams page to Users table (per user dropdown); simplified to single-team membership (user belongs to 0 or 1 team) |
