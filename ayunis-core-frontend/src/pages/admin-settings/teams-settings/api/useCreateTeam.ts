@@ -7,17 +7,16 @@ import {
 import type { CreateTeamFormData } from '../model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { useRouter } from '@tanstack/react-router';
 
 export function useCreateTeam(onSuccess?: () => void) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { t } = useTranslation('admin-settings-teams');
 
   const mutation = useTeamsControllerCreateTeam({
     mutation: {
       onSuccess: () => {
-        void queryClient.invalidateQueries({
-          queryKey: getTeamsControllerListTeamsQueryKey(),
-        });
         showSuccess(t('teams.createTeam.success'));
         onSuccess?.();
       },
@@ -35,6 +34,12 @@ export function useCreateTeam(onSuccess?: () => void) {
         } catch {
           showError(t('teams.createTeam.error'));
         }
+      },
+      onSettled: () => {
+        void queryClient.invalidateQueries({
+          queryKey: getTeamsControllerListTeamsQueryKey(),
+        });
+        void router.invalidate();
       },
     },
   });

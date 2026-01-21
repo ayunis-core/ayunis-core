@@ -42,7 +42,7 @@ export class LocalTeamsRepository extends TeamsRepository {
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
       this.logger.error('Error finding team', { error: err, id });
-      throw new TeamNotFoundError(id);
+      throw new TeamRetrievalFailedError(err.message);
     }
   }
 
