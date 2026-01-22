@@ -6,6 +6,8 @@ import {
   modelsControllerIsEmbeddingModelEnabled,
   sharesControllerGetShares,
   getSharesControllerGetSharesQueryKey,
+  teamsControllerListMyTeams,
+  getTeamsControllerListMyTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { CreateAgentShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { createFileRoute } from '@tanstack/react-router';
@@ -40,6 +42,12 @@ const sharesQueryOptions = (agentId: string) =>
       }),
   });
 
+const userTeamsQueryOptions = () =>
+  queryOptions({
+    queryKey: getTeamsControllerListMyTeamsQueryKey(),
+    queryFn: () => teamsControllerListMyTeams(),
+  });
+
 export const Route = createFileRoute('/_authenticated/agents/$id')({
   component: RouteComponent,
   validateSearch: searchSchema,
@@ -48,21 +56,26 @@ export const Route = createFileRoute('/_authenticated/agents/$id')({
     const isEmbeddingModelEnabled = await queryClient.fetchQuery(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    // Only query shares if the user owns the agent (not shared)
+    // Only query shares and user teams if the user owns the agent (not shared)
     const shares = agent.isShared
       ? []
       : await queryClient.fetchQuery(sharesQueryOptions(id));
-    return { agent, isEmbeddingModelEnabled, shares };
+    const userTeams = agent.isShared
+      ? []
+      : await queryClient.fetchQuery(userTeamsQueryOptions());
+    return { agent, isEmbeddingModelEnabled, shares, userTeams };
   },
 });
 
 function RouteComponent() {
-  const { agent, isEmbeddingModelEnabled, shares } = Route.useLoaderData();
+  const { agent, isEmbeddingModelEnabled, shares, userTeams } =
+    Route.useLoaderData();
   const { tab } = Route.useSearch();
   return (
     <AgentPage
       agent={agent}
       shares={shares}
+      userTeams={userTeams}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled.isEmbeddingModelEnabled}
       initialTab={tab}
     />

@@ -4,6 +4,7 @@ import { Team } from 'src/iam/teams/domain/team.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TeamRecord } from './schema/team.record';
+import { TeamMemberRecord } from './schema/team-member.record';
 import { TeamMapper } from './mappers/team.mapper';
 import { UUID } from 'crypto';
 import {
@@ -86,6 +87,29 @@ export class LocalTeamsRepository extends TeamsRepository {
         name,
         orgId,
       });
+      throw new TeamRetrievalFailedError(err.message);
+    }
+  }
+
+  async findByUserId(userId: UUID): Promise<Team[]> {
+    this.logger.log('findByUserId', { userId });
+
+    try {
+      const teamRecords = await this.teamRepository
+        .createQueryBuilder('team')
+        .innerJoin(TeamMemberRecord, 'tm', 'tm.team_id = team.id')
+        .where('tm.user_id = :userId', { userId })
+        .orderBy('team.name', 'ASC')
+        .getMany();
+
+      this.logger.debug('Teams found for user', {
+        userId,
+        count: teamRecords.length,
+      });
+      return teamRecords.map((record) => TeamMapper.toDomain(record));
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Error finding teams by user', { error: err, userId });
       throw new TeamRetrievalFailedError(err.message);
     }
   }

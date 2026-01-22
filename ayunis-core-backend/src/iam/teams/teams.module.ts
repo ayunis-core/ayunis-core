@@ -13,6 +13,7 @@ import { CreateTeamUseCase } from './application/use-cases/create-team/create-te
 import { UpdateTeamUseCase } from './application/use-cases/update-team/update-team.use-case';
 import { DeleteTeamUseCase } from './application/use-cases/delete-team/delete-team.use-case';
 import { ListTeamsUseCase } from './application/use-cases/list-teams/list-teams.use-case';
+import { ListMyTeamsUseCase } from './application/use-cases/list-my-teams/list-my-teams.use-case';
 import { GetTeamUseCase } from './application/use-cases/get-team/get-team.use-case';
 import { ListTeamMembersUseCase } from './application/use-cases/list-team-members/list-team-members.use-case';
 import { AddTeamMemberUseCase } from './application/use-cases/add-team-member/add-team-member.use-case';
@@ -47,6 +48,7 @@ import { UsersModule } from '../users/users.module';
     UpdateTeamUseCase,
     DeleteTeamUseCase,
     ListTeamsUseCase,
+    ListMyTeamsUseCase,
     GetTeamUseCase,
     ListTeamMembersUseCase,
     AddTeamMemberUseCase,
@@ -60,6 +62,7 @@ import { UsersModule } from '../users/users.module';
     UpdateTeamUseCase,
     DeleteTeamUseCase,
     ListTeamsUseCase,
+    ListMyTeamsUseCase,
     GetTeamUseCase,
     ListTeamMembersUseCase,
     AddTeamMemberUseCase,

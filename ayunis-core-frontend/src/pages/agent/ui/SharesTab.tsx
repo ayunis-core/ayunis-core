@@ -1,23 +1,31 @@
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import type { ShareResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  ShareResponseDto,
+  TeamResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useCreateShare, useDeleteShare } from '../api';
 import {
   Item,
-  ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
+  ItemActions,
 } from '@/shared/ui/shadcn/item';
 
 interface SharesTabProps {
   agentId: string;
   shares: ShareResponseDto[];
+  userTeams: TeamResponseDto[];
 }
 
-export default function SharesTab({ agentId, shares }: SharesTabProps) {
+export default function SharesTab({
+  agentId,
+  shares,
+  userTeams,
+}: SharesTabProps) {
   const { t } = useTranslation('agent');
   const { confirm } = useConfirmation();
   const { createShare, isCreating } = useCreateShare(agentId);
@@ -72,6 +80,22 @@ export default function SharesTab({ agentId, shares }: SharesTabProps) {
           />
         </ItemActions>
       </Item>
+
+      {userTeams.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{t('shares.teams.title')}</h3>
+          {userTeams.map((team) => (
+            <Item key={team.id} variant="outline">
+              <ItemContent>
+                <ItemTitle>{team.name}</ItemTitle>
+                <ItemDescription>
+                  {t('shares.teams.description')}
+                </ItemDescription>
+              </ItemContent>
+            </Item>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

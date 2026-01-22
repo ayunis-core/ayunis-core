@@ -68,6 +68,10 @@
       "descriptionOn": "This agent is shared with all users of your organisation",
       "descriptionOff": "This agent is shared not with all users of your organisation"
     },
+    "teams": {
+      "title": "Teams",
+      "description": "Share with team members"
+    },
     "create": {
       "button": "Share Agent",
       "title": "Share Agent with Organization",

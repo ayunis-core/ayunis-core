@@ -27,6 +27,7 @@ import { UpdateTeamCommand } from '../../application/use-cases/update-team/updat
 import { DeleteTeamUseCase } from '../../application/use-cases/delete-team/delete-team.use-case';
 import { DeleteTeamCommand } from '../../application/use-cases/delete-team/delete-team.command';
 import { ListTeamsUseCase } from '../../application/use-cases/list-teams/list-teams.use-case';
+import { ListMyTeamsUseCase } from '../../application/use-cases/list-my-teams/list-my-teams.use-case';
 import { GetTeamUseCase } from '../../application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from '../../application/use-cases/get-team/get-team.query';
 import { ListTeamMembersUseCase } from '../../application/use-cases/list-team-members/list-team-members.use-case';
@@ -70,6 +71,7 @@ export class TeamsController {
     private readonly updateTeamUseCase: UpdateTeamUseCase,
     private readonly deleteTeamUseCase: DeleteTeamUseCase,
     private readonly listTeamsUseCase: ListTeamsUseCase,
+    private readonly listMyTeamsUseCase: ListMyTeamsUseCase,
     private readonly getTeamUseCase: GetTeamUseCase,
     private readonly listTeamMembersUseCase: ListTeamMembersUseCase,
     private readonly addTeamMemberUseCase: AddTeamMemberUseCase,
@@ -106,6 +108,32 @@ export class TeamsController {
     const teams = await this.listTeamsUseCase.execute();
 
     this.logger.log(`Successfully retrieved ${teams.length} teams`);
+    return this.teamDtoMapper.toDtoList(teams);
+  }
+
+  @Get('me')
+  @ApiOperation({
+    summary: 'List teams the current user is a member of',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved user teams',
+    type: [TeamResponseDto],
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'User is not authenticated',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async listMyTeams(): Promise<TeamResponseDto[]> {
+    this.logger.log('Listing teams for current user');
+
+    const teams = await this.listMyTeamsUseCase.execute();
+
+    this.logger.log(`Successfully retrieved ${teams.length} teams for user`);
     return this.teamDtoMapper.toDtoList(teams);
   }
 

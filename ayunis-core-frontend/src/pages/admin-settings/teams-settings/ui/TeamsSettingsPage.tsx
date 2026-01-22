@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Plus } from 'lucide-react';
 import { TeamsList } from './TeamsList';
 import { CreateTeamDialog } from './CreateTeamDialog';
 import { EditTeamDialog } from './EditTeamDialog';
@@ -20,7 +19,6 @@ export function TeamsSettingsPage({ teams }: TeamsSettingsPageProps) {
 
   const headerActions = (
     <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-      <Plus className="h-4 w-4" />
       {t('teams.page.add')}
     </Button>
   );

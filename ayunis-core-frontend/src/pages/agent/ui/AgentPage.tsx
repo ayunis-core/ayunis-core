@@ -1,6 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import type { AgentResponseDto } from '@/shared/api';
-import type { ShareResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  ShareResponseDto,
+  TeamResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import AgentKnowledgeBaseCard from './AgentKnowledgeBaseCard';
@@ -21,11 +24,13 @@ import { useTranslation } from 'react-i18next';
 export function AgentPage({
   agent,
   shares,
+  userTeams,
   isEmbeddingModelEnabled,
   initialTab = 'config',
 }: {
   agent: AgentResponseDto;
   shares: ShareResponseDto[];
+  userTeams: TeamResponseDto[];
   isEmbeddingModelEnabled: boolean;
   initialTab?: 'config' | 'share';
 }) {
@@ -95,7 +100,11 @@ export function AgentPage({
                 </div>
               </TabsContent>
               <TabsContent value="share" className="mt-4">
-                <SharesTab agentId={agent.id} shares={shares} />
+                <SharesTab
+                  agentId={agent.id}
+                  shares={shares}
+                  userTeams={userTeams}
+                />
               </TabsContent>
             </Tabs>
           )

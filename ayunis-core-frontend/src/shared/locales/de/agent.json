@@ -68,6 +68,10 @@
       "descriptionOn": "Dieser Agent ist für alle Nutzer Ihrer Organisation freigegeben",
       "descriptionOff": "Dieser Agent ist aktuell nicht für Nutzer Ihrer Organisation freigegeben"
     },
+    "teams": {
+      "title": "Teams",
+      "description": "Mit Teammitgliedern teilen"
+    },
     "create": {
       "button": "Agent teilen",
       "title": "Agent mit Organisation teilen",

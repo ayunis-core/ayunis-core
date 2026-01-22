@@ -18,7 +18,9 @@
           }
         },
         "summary": "Check if the deployment is running in a cloud environment",
-        "tags": ["app"]
+        "tags": [
+          "app"
+        ]
       }
     },
     "/health": {
@@ -31,7 +33,9 @@
           }
         },
         "summary": "Check if the deployment is healthy",
-        "tags": ["app"]
+        "tags": [
+          "app"
+        ]
       }
     },
     "/models/available": {
@@ -57,7 +61,9 @@
           }
         },
         "summary": "Get all available models",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/providers": {
@@ -80,7 +86,9 @@
           }
         },
         "summary": "Get all available model providers with their info",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/permitted": {
@@ -109,7 +117,9 @@
           }
         },
         "summary": "Create a permitted model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/permitted/{id}": {
@@ -134,7 +144,9 @@
           }
         },
         "summary": "Delete a permitted model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       },
       "patch": {
         "operationId": "ModelsController_updatePermittedModel",
@@ -177,7 +189,9 @@
           }
         },
         "summary": "Update a permitted model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/permitted/language-models": {
@@ -203,7 +217,9 @@
           }
         },
         "summary": "Get all permitted language models",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/default": {
@@ -227,7 +243,9 @@
           }
         },
         "summary": "Get the effective default model for the user",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/org/default": {
@@ -251,7 +269,9 @@
           }
         },
         "summary": "Get the organization default model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       },
       "put": {
         "description": "Sets the specified permitted model as the organization default. If a default already exists, it will be updated to the new model.",
@@ -286,7 +306,9 @@
           }
         },
         "summary": "Set or update the organization default model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/user/default": {
@@ -310,7 +332,9 @@
           }
         },
         "summary": "Get the user-specific default model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       },
       "put": {
         "description": "Sets the specified permitted model as the user default. If a default already exists, it will be updated to the new model.",
@@ -345,7 +369,9 @@
           }
         },
         "summary": "Set or update the user default model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       },
       "delete": {
         "operationId": "ModelsController_deleteUserDefaultModel",
@@ -359,7 +385,9 @@
           }
         },
         "summary": "Delete the user default model",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/provider/{provider}": {
@@ -395,7 +423,9 @@
           }
         },
         "summary": "Get model provider information",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/models/embedding/enabled": {
@@ -418,7 +448,9 @@
           }
         },
         "summary": "Check if an embedding model is enabled for this org",
-        "tags": ["models"]
+        "tags": [
+          "models"
+        ]
       }
     },
     "/super-admin/models/{orgId}/available": {
@@ -460,7 +492,9 @@
           }
         },
         "summary": "Get all available models",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/{orgId}/default-model": {
@@ -515,7 +549,9 @@
           }
         },
         "summary": "Set or update the organization default model",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/catalog/{id}": {
@@ -550,7 +586,9 @@
           }
         },
         "summary": "Delete a model from the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       },
       "get": {
         "description": "Retrieve a specific model from the master catalog by its ID. This endpoint is only accessible to super admins.",
@@ -597,7 +635,9 @@
           }
         },
         "summary": "Get a model by ID from the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/{orgId}/permitted-models": {
@@ -646,7 +686,9 @@
           }
         },
         "summary": "Get all permitted models for a specific organization",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       },
       "post": {
         "description": "Create a new permitted model for the specified organization. This endpoint is only accessible to super admins.",
@@ -692,7 +734,9 @@
           }
         },
         "summary": "Create a permitted model for a specific organization",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/{orgId}/permitted-models/{id}": {
@@ -741,7 +785,9 @@
           }
         },
         "summary": "Delete a permitted model for a specific organization",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       },
       "patch": {
         "description": "Update the settings of a permitted model for the specified organization. This endpoint is only accessible to super admins.",
@@ -812,7 +858,9 @@
           }
         },
         "summary": "Update a permitted model for a specific organization",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/catalog": {
@@ -849,7 +897,9 @@
           }
         },
         "summary": "Get all models in the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/catalog/language": {
@@ -892,7 +942,9 @@
           }
         },
         "summary": "Create a new language model in the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/catalog/language/{id}": {
@@ -947,7 +999,9 @@
           }
         },
         "summary": "Update a language model in the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/catalog/embedding": {
@@ -990,7 +1044,9 @@
           }
         },
         "summary": "Create a new embedding model in the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/models/catalog/embedding/{id}": {
@@ -1045,7 +1101,9 @@
           }
         },
         "summary": "Update an embedding model in the catalog",
-        "tags": ["Super Admin Models"]
+        "tags": [
+          "Super Admin Models"
+        ]
       }
     },
     "/super-admin/orgs": {
@@ -1083,7 +1141,9 @@
           }
         },
         "summary": "Create a new organization",
-        "tags": ["Super Admin Orgs"]
+        "tags": [
+          "Super Admin Orgs"
+        ]
       },
       "get": {
         "description": "Retrieve paginated organizations in the system. Only accessible to users with the super admin system role.",
@@ -1138,7 +1198,9 @@
           }
         },
         "summary": "List all organizations",
-        "tags": ["Super Admin Orgs"]
+        "tags": [
+          "Super Admin Orgs"
+        ]
       }
     },
     "/super-admin/orgs/{id}": {
@@ -1172,7 +1234,9 @@
           }
         },
         "summary": "Get an organization by ID",
-        "tags": ["Super Admin Orgs"]
+        "tags": [
+          "Super Admin Orgs"
+        ]
       }
     },
     "/users": {
@@ -1232,7 +1296,9 @@
           }
         },
         "summary": "Get users in current organization",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/{id}/role": {
@@ -1288,7 +1354,9 @@
           }
         },
         "summary": "Update user role",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/name": {
@@ -1332,7 +1400,9 @@
           }
         },
         "summary": "Update user name",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/password": {
@@ -1366,7 +1436,9 @@
           }
         },
         "summary": "Update user password",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/confirm-email": {
@@ -1400,7 +1472,9 @@
           }
         },
         "summary": "Confirm user email",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/resend-confirmation": {
@@ -1431,7 +1505,9 @@
           }
         },
         "summary": "Resend email confirmation",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/{id}": {
@@ -1466,7 +1542,9 @@
           }
         },
         "summary": "Delete a user",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/{id}/trigger-password-reset": {
@@ -1497,7 +1575,9 @@
           }
         },
         "summary": "Trigger password reset for a user",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/forgot-password": {
@@ -1528,7 +1608,9 @@
           }
         },
         "summary": "Trigger password reset",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/reset-password": {
@@ -1562,7 +1644,9 @@
           }
         },
         "summary": "Reset password with token",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/validate-reset-token": {
@@ -1606,7 +1690,9 @@
           }
         },
         "summary": "Validate password reset token",
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/super-admin/users/{orgId}": {
@@ -1680,7 +1766,9 @@
           }
         },
         "summary": "Get users by organization ID",
-        "tags": ["Super Admin Users"]
+        "tags": [
+          "Super Admin Users"
+        ]
       }
     },
     "/super-admin/users/{userId}": {
@@ -1715,7 +1803,9 @@
           }
         },
         "summary": "Delete a user",
-        "tags": ["Super Admin Users"]
+        "tags": [
+          "Super Admin Users"
+        ]
       }
     },
     "/super-admin/users/{userId}/trigger-password-reset": {
@@ -1750,7 +1840,9 @@
           }
         },
         "summary": "Trigger password reset for a user",
-        "tags": ["Super Admin Users"]
+        "tags": [
+          "Super Admin Users"
+        ]
       }
     },
     "/super-admin/users/{orgId}/create": {
@@ -1806,7 +1898,9 @@
           }
         },
         "summary": "Create a new user in an organization",
-        "tags": ["Super Admin Users"]
+        "tags": [
+          "Super Admin Users"
+        ]
       }
     },
     "/invites": {
@@ -1843,7 +1937,9 @@
           }
         },
         "summary": "Create a new invite",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       },
       "get": {
         "description": "Retrieve paginated invites with optional search",
@@ -1898,7 +1994,9 @@
           }
         },
         "summary": "Get all invites for current user's organization",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       }
     },
     "/invites/bulk": {
@@ -1935,7 +2033,9 @@
           }
         },
         "summary": "Create multiple invites in bulk",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       }
     },
     "/invites/{token}": {
@@ -1973,7 +2073,9 @@
           }
         },
         "summary": "Get a single invite by token",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       }
     },
     "/invites/accept": {
@@ -2013,7 +2115,9 @@
           }
         },
         "summary": "Accept an invite",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       }
     },
     "/invites/all": {
@@ -2040,7 +2144,9 @@
           }
         },
         "summary": "Delete all pending invites",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       }
     },
     "/invites/{id}": {
@@ -2074,7 +2180,9 @@
           }
         },
         "summary": "Delete an invite",
-        "tags": ["invites"]
+        "tags": [
+          "invites"
+        ]
       }
     },
     "/subscriptions": {
@@ -2103,7 +2211,9 @@
           }
         },
         "summary": "Get subscription details for the current organization",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       },
       "post": {
         "operationId": "SubscriptionsController_createSubscription",
@@ -2143,7 +2253,9 @@
           }
         },
         "summary": "Create a new subscription for the current organization",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       },
       "delete": {
         "operationId": "SubscriptionsController_cancelSubscription",
@@ -2166,7 +2278,9 @@
           }
         },
         "summary": "Cancel the subscription for the current organization",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       }
     },
     "/subscriptions/active": {
@@ -2189,7 +2303,9 @@
           }
         },
         "summary": "Check if the current organization has an active subscription",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       }
     },
     "/subscriptions/price": {
@@ -2215,7 +2331,9 @@
           }
         },
         "summary": "Get the current price per seat monthly",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       }
     },
     "/subscriptions/seats": {
@@ -2247,7 +2365,9 @@
           }
         },
         "summary": "Update the number of seats for the current organization",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       }
     },
     "/subscriptions/billing-info": {
@@ -2282,7 +2402,9 @@
           }
         },
         "summary": "Update the billing information for the current organization",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       }
     },
     "/subscriptions/uncancel": {
@@ -2307,7 +2429,9 @@
           }
         },
         "summary": "Uncancel the subscription for the current organization",
-        "tags": ["subscriptions"]
+        "tags": [
+          "subscriptions"
+        ]
       }
     },
     "/super-admin/subscriptions/{orgId}": {
@@ -2346,7 +2470,9 @@
           }
         },
         "summary": "Get subscription details for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
+        "tags": [
+          "Super Admin Subscriptions"
+        ]
       },
       "post": {
         "description": "Create a new subscription for the specified organization. This endpoint is only accessible to super admins.",
@@ -2399,7 +2525,9 @@
           }
         },
         "summary": "Create a new subscription for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
+        "tags": [
+          "Super Admin Subscriptions"
+        ]
       },
       "delete": {
         "description": "Cancel the subscription for the specified organization. This endpoint is only accessible to super admins.",
@@ -2435,7 +2563,9 @@
           }
         },
         "summary": "Cancel the subscription for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
+        "tags": [
+          "Super Admin Subscriptions"
+        ]
       }
     },
     "/super-admin/subscriptions/{orgId}/seats": {
@@ -2483,7 +2613,9 @@
           }
         },
         "summary": "Update the number of seats for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
+        "tags": [
+          "Super Admin Subscriptions"
+        ]
       }
     },
     "/super-admin/subscriptions/{orgId}/billing-info": {
@@ -2531,7 +2663,9 @@
           }
         },
         "summary": "Update the billing information for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
+        "tags": [
+          "Super Admin Subscriptions"
+        ]
       }
     },
     "/super-admin/subscriptions/{orgId}/uncancel": {
@@ -2569,7 +2703,9 @@
           }
         },
         "summary": "Uncancel the subscription for a specific organization",
-        "tags": ["Super Admin Subscriptions"]
+        "tags": [
+          "Super Admin Subscriptions"
+        ]
       }
     },
     "/storage/upload": {
@@ -2583,7 +2719,9 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["file"],
+                "required": [
+                  "file"
+                ],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -2611,7 +2749,9 @@
           }
         },
         "summary": "Upload a file to object storage",
-        "tags": ["storage"]
+        "tags": [
+          "storage"
+        ]
       }
     },
     "/storage/{objectName}": {
@@ -2633,7 +2773,9 @@
             "description": ""
           }
         },
-        "tags": ["storage"]
+        "tags": [
+          "storage"
+        ]
       },
       "delete": {
         "operationId": "StorageController_deleteFile",
@@ -2653,7 +2795,9 @@
             "description": ""
           }
         },
-        "tags": ["storage"]
+        "tags": [
+          "storage"
+        ]
       }
     },
     "/storage/url/{objectName}": {
@@ -2675,7 +2819,9 @@
             "description": ""
           }
         },
-        "tags": ["storage"]
+        "tags": [
+          "storage"
+        ]
       }
     },
     "/retrievers/url": {
@@ -2698,7 +2844,9 @@
           }
         },
         "summary": "Retrieve content from a URL",
-        "tags": ["retrievers"]
+        "tags": [
+          "retrievers"
+        ]
       }
     },
     "/threads": {
@@ -2734,7 +2882,9 @@
           }
         },
         "summary": "Create a new thread",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       },
       "get": {
         "operationId": "ThreadsController_findAll",
@@ -2793,7 +2943,9 @@
           }
         },
         "summary": "Get all threads for the current user",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}": {
@@ -2830,7 +2982,9 @@
           }
         },
         "summary": "Get a thread by ID",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       },
       "delete": {
         "operationId": "ThreadsController_delete",
@@ -2858,7 +3012,9 @@
           }
         },
         "summary": "Delete a thread",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}/title": {
@@ -2901,7 +3057,9 @@
           }
         },
         "summary": "Update a thread title",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}/sources": {
@@ -2951,7 +3109,9 @@
           }
         },
         "summary": "Get all sources for a thread",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}/sources/file": {
@@ -2990,7 +3150,9 @@
                     "description": "A description of the file source"
                   }
                 },
-                "required": ["file"]
+                "required": [
+                  "file"
+                ]
               }
             }
           }
@@ -3001,7 +3163,9 @@
           }
         },
         "summary": "Add a file source to a thread",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}/sources/{sourceId}": {
@@ -3038,7 +3202,9 @@
           }
         },
         "summary": "Remove a source from a thread",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/threads/{id}/sources/{sourceId}/download": {
@@ -3086,7 +3252,9 @@
           }
         },
         "summary": "Download a data source as CSV",
-        "tags": ["threads"]
+        "tags": [
+          "threads"
+        ]
       }
     },
     "/agents": {
@@ -3122,7 +3290,9 @@
           }
         },
         "summary": "Create a new agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       },
       "get": {
         "operationId": "AgentsController_findAll",
@@ -3146,7 +3316,9 @@
           }
         },
         "summary": "Get all agents for the current user",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/agents/{id}": {
@@ -3183,7 +3355,9 @@
           }
         },
         "summary": "Get an agent by ID",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       },
       "put": {
         "operationId": "AgentsController_update",
@@ -3231,7 +3405,9 @@
           }
         },
         "summary": "Update an agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       },
       "delete": {
         "operationId": "AgentsController_delete",
@@ -3259,7 +3435,9 @@
           }
         },
         "summary": "Delete an agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/agents/{id}/sources": {
@@ -3299,7 +3477,9 @@
           }
         },
         "summary": "Get all sources for an agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/agents/{id}/sources/file": {
@@ -3330,7 +3510,9 @@
                     "description": "The file to upload"
                   }
                 },
-                "required": ["file"]
+                "required": [
+                  "file"
+                ]
               }
             }
           }
@@ -3350,7 +3532,9 @@
           }
         },
         "summary": "Add a file source to an agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/agents/{id}/sources/{sourceAssignmentId}": {
@@ -3387,7 +3571,9 @@
           }
         },
         "summary": "Remove a source from an agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/agents/{agentId}/mcp-integrations/{integrationId}": {
@@ -3440,7 +3626,9 @@
           }
         },
         "summary": "Assign MCP integration to agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       },
       "delete": {
         "operationId": "AgentsController_unassignMcpIntegration",
@@ -3482,7 +3670,9 @@
           }
         },
         "summary": "Unassign MCP integration from agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/agents/{agentId}/mcp-integrations": {
@@ -3519,7 +3709,9 @@
           }
         },
         "summary": "List MCP integrations assigned to agent",
-        "tags": ["agents"]
+        "tags": [
+          "agents"
+        ]
       }
     },
     "/shares": {
@@ -3562,7 +3754,9 @@
           }
         },
         "summary": "Create a share for an agent",
-        "tags": ["shares"]
+        "tags": [
+          "shares"
+        ]
       },
       "get": {
         "operationId": "SharesController_getShares",
@@ -3583,7 +3777,10 @@
             "in": "query",
             "description": "Type of the entity",
             "schema": {
-              "enum": ["agent", "prompt"],
+              "enum": [
+                "agent",
+                "prompt"
+              ],
               "type": "string"
             }
           }
@@ -3613,7 +3810,9 @@
           }
         },
         "summary": "Get shares for an entity",
-        "tags": ["shares"]
+        "tags": [
+          "shares"
+        ]
       }
     },
     "/shares/{id}": {
@@ -3646,7 +3845,9 @@
           }
         },
         "summary": "Delete a share",
-        "tags": ["shares"]
+        "tags": [
+          "shares"
+        ]
       }
     },
     "/mcp-integrations/predefined": {
@@ -3682,7 +3883,9 @@
           }
         },
         "summary": "Create a new predefined MCP integration",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/custom": {
@@ -3715,7 +3918,9 @@
           }
         },
         "summary": "Create a new custom MCP integration",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations": {
@@ -3738,7 +3943,9 @@
           }
         },
         "summary": "List all MCP integrations for organization",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/predefined/available": {
@@ -3761,7 +3968,9 @@
           }
         },
         "summary": "List available predefined MCP integration configurations",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/available": {
@@ -3784,7 +3993,9 @@
           }
         },
         "summary": "List all available (enabled) MCP integrations for organization",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/{id}": {
@@ -3817,7 +4028,9 @@
           }
         },
         "summary": "Get MCP integration by ID",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       },
       "patch": {
         "operationId": "McpIntegrationsController_update",
@@ -3861,7 +4074,9 @@
           }
         },
         "summary": "Update MCP integration",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       },
       "delete": {
         "operationId": "McpIntegrationsController_delete",
@@ -3885,7 +4100,9 @@
           }
         },
         "summary": "Delete MCP integration",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/{id}/enable": {
@@ -3918,7 +4135,9 @@
           }
         },
         "summary": "Enable MCP integration",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/{id}/disable": {
@@ -3951,7 +4170,9 @@
           }
         },
         "summary": "Disable MCP integration",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/mcp-integrations/{id}/validate": {
@@ -3984,7 +4205,9 @@
           }
         },
         "summary": "Validate MCP integration connection",
-        "tags": ["mcp-integrations"]
+        "tags": [
+          "mcp-integrations"
+        ]
       }
     },
     "/runs/send-message": {
@@ -3998,7 +4221,9 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["threadId"],
+                "required": [
+                  "threadId"
+                ],
                 "properties": {
                   "threadId": {
                     "type": "string",
@@ -4152,7 +4377,9 @@
           }
         },
         "summary": "Send a message with optional images and receive streaming response",
-        "tags": ["runs"]
+        "tags": [
+          "runs"
+        ]
       }
     },
     "/super-admin/trials": {
@@ -4190,7 +4417,9 @@
           }
         },
         "summary": "Create a new trial",
-        "tags": ["Super Admin Trials"]
+        "tags": [
+          "Super Admin Trials"
+        ]
       }
     },
     "/super-admin/trials/{orgId}": {
@@ -4227,7 +4456,9 @@
           }
         },
         "summary": "Get a trial by organization ID",
-        "tags": ["Super Admin Trials"]
+        "tags": [
+          "Super Admin Trials"
+        ]
       },
       "put": {
         "description": "Update a trial for an organization. Can update maxMessages and/or messagesSent. Only accessible to users with the super admin system role.",
@@ -4273,7 +4504,9 @@
           }
         },
         "summary": "Update a trial",
-        "tags": ["Super Admin Trials"]
+        "tags": [
+          "Super Admin Trials"
+        ]
       }
     },
     "/usage/config": {
@@ -4294,7 +4527,9 @@
           }
         },
         "summary": "Get usage dashboard configuration",
-        "tags": ["Admin Usage"]
+        "tags": [
+          "Admin Usage"
+        ]
       }
     },
     "/usage/stats": {
@@ -4336,7 +4571,9 @@
           }
         },
         "summary": "Get overall usage statistics",
-        "tags": ["Admin Usage"]
+        "tags": [
+          "Admin Usage"
+        ]
       }
     },
     "/usage/providers": {
@@ -4408,7 +4645,9 @@
           }
         },
         "summary": "Get usage statistics by provider",
-        "tags": ["Admin Usage"]
+        "tags": [
+          "Admin Usage"
+        ]
       }
     },
     "/usage/providers/chart": {
@@ -4466,7 +4705,9 @@
           }
         },
         "summary": "Get provider usage time series aligned by date (chart-ready)",
-        "tags": ["Admin Usage"]
+        "tags": [
+          "Admin Usage"
+        ]
       }
     },
     "/usage/models": {
@@ -4528,7 +4769,9 @@
           }
         },
         "summary": "Get usage distribution by model",
-        "tags": ["Admin Usage"]
+        "tags": [
+          "Admin Usage"
+        ]
       }
     },
     "/usage/users": {
@@ -4592,7 +4835,12 @@
             "in": "query",
             "description": "Field to sort users by. Defaults to tokens.",
             "schema": {
-              "enum": ["tokens", "requests", "lastActivity", "userName"],
+              "enum": [
+                "tokens",
+                "requests",
+                "lastActivity",
+                "userName"
+              ],
               "type": "string"
             }
           },
@@ -4602,7 +4850,10 @@
             "in": "query",
             "description": "Sort order (ascending or descending). Defaults to desc.",
             "schema": {
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "type": "string"
             }
           }
@@ -4620,7 +4871,9 @@
           }
         },
         "summary": "Get usage statistics by user",
-        "tags": ["Admin Usage"]
+        "tags": [
+          "Admin Usage"
+        ]
       }
     },
     "/prompts": {
@@ -4656,7 +4909,9 @@
           }
         },
         "summary": "Create a new prompt",
-        "tags": ["prompts"]
+        "tags": [
+          "prompts"
+        ]
       },
       "get": {
         "operationId": "PromptsController_findAll",
@@ -4680,7 +4935,9 @@
           }
         },
         "summary": "Get all prompts for the current user",
-        "tags": ["prompts"]
+        "tags": [
+          "prompts"
+        ]
       }
     },
     "/prompts/{id}": {
@@ -4717,7 +4974,9 @@
           }
         },
         "summary": "Get a prompt by ID",
-        "tags": ["prompts"]
+        "tags": [
+          "prompts"
+        ]
       },
       "put": {
         "operationId": "PromptsController_update",
@@ -4765,7 +5024,9 @@
           }
         },
         "summary": "Update a prompt",
-        "tags": ["prompts"]
+        "tags": [
+          "prompts"
+        ]
       },
       "delete": {
         "operationId": "PromptsController_delete",
@@ -4793,7 +5054,9 @@
           }
         },
         "summary": "Delete a prompt",
-        "tags": ["prompts"]
+        "tags": [
+          "prompts"
+        ]
       }
     },
     "/auth/login": {
@@ -4845,7 +5108,9 @@
           }
         },
         "summary": "User login",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/register": {
@@ -4897,7 +5162,9 @@
           }
         },
         "summary": "User registration",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/refresh": {
@@ -4943,7 +5210,9 @@
           }
         ],
         "summary": "Refresh authentication tokens",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/me": {
@@ -4984,7 +5253,9 @@
           }
         },
         "summary": "Get current user information",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/auth/logout": {
@@ -5005,7 +5276,9 @@
           }
         },
         "summary": "User logout",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/teams": {
@@ -5037,7 +5310,9 @@
           }
         },
         "summary": "List all teams for the current organization",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       },
       "post": {
         "operationId": "TeamsController_createTeam",
@@ -5080,7 +5355,40 @@
           }
         },
         "summary": "Create a new team for the current organization",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
+      }
+    },
+    "/teams/me": {
+      "get": {
+        "operationId": "TeamsController_listMyTeams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved user teams",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List teams the current user is a member of",
+        "tags": [
+          "teams"
+        ]
       }
     },
     "/teams/{id}": {
@@ -5121,7 +5429,9 @@
           }
         },
         "summary": "Get a team by ID with member count",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       },
       "patch": {
         "operationId": "TeamsController_updateTeam",
@@ -5176,7 +5486,9 @@
           }
         },
         "summary": "Update a team in the current organization",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       },
       "delete": {
         "operationId": "TeamsController_deleteTeam",
@@ -5208,7 +5520,9 @@
           }
         },
         "summary": "Delete a team from the current organization",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       }
     },
     "/teams/{id}/members": {
@@ -5271,7 +5585,9 @@
           }
         },
         "summary": "List members of a team",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       },
       "post": {
         "operationId": "TeamsController_addTeamMember",
@@ -5326,7 +5642,9 @@
           }
         },
         "summary": "Add a user to a team",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       }
     },
     "/teams/{id}/members/{userId}": {
@@ -5368,7 +5686,9 @@
           }
         },
         "summary": "Remove a user from a team",
-        "tags": ["teams"]
+        "tags": [
+          "teams"
+        ]
       }
     },
     "/admin/models": {
@@ -5380,7 +5700,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/admin/model": {
@@ -5401,7 +5723,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/admin/language-models": {
@@ -5423,7 +5747,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/admin/embedding-models": {
@@ -5445,7 +5771,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/admin/language-models/{id}": {
@@ -5476,7 +5804,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/admin/embedding-models/{id}": {
@@ -5507,7 +5837,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/admin/models/{id}": {
@@ -5528,7 +5860,9 @@
             "description": ""
           }
         },
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     }
   },
@@ -5561,7 +5895,10 @@
             "example": false
           }
         },
-        "required": ["isCloud", "isRegistrationDisabled"]
+        "required": [
+          "isCloud",
+          "isRegistrationDisabled"
+        ]
       },
       "ModelWithConfigResponseDto": {
         "type": "object",
@@ -5674,12 +6011,22 @@
           },
           "hostedIn": {
             "type": "string",
-            "enum": ["DE", "EU", "US", "SELF_HOSTED", "AYUNIS"],
+            "enum": [
+              "DE",
+              "EU",
+              "US",
+              "SELF_HOSTED",
+              "AYUNIS"
+            ],
             "description": "The location where the provider hosts their services",
             "example": "US"
           }
         },
-        "required": ["provider", "displayName", "hostedIn"]
+        "required": [
+          "provider",
+          "displayName",
+          "hostedIn"
+        ]
       },
       "CreatePermittedModelDto": {
         "type": "object",
@@ -5696,7 +6043,9 @@
             "default": false
           }
         },
-        "required": ["modelId"]
+        "required": [
+          "modelId"
+        ]
       },
       "UpdatePermittedModelDto": {
         "type": "object",
@@ -5707,7 +6056,9 @@
             "example": true
           }
         },
-        "required": ["anonymousOnly"]
+        "required": [
+          "anonymousOnly"
+        ]
       },
       "PermittedLanguageModelResponseDto": {
         "type": "object",
@@ -5745,7 +6096,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["language"],
+            "enum": [
+              "language"
+            ],
             "description": "The type of the model (always language)"
           },
           "isArchived": {
@@ -5796,7 +6149,9 @@
             ]
           }
         },
-        "required": ["permittedLanguageModel"]
+        "required": [
+          "permittedLanguageModel"
+        ]
       },
       "SetUserDefaultModelDto": {
         "type": "object",
@@ -5807,7 +6162,9 @@
             "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         },
-        "required": ["permittedModelId"]
+        "required": [
+          "permittedModelId"
+        ]
       },
       "SetOrgDefaultModelDto": {
         "type": "object",
@@ -5818,7 +6175,9 @@
             "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         },
-        "required": ["permittedModelId"]
+        "required": [
+          "permittedModelId"
+        ]
       },
       "EmbeddingModelEnabledResponseDto": {
         "type": "object",
@@ -5829,7 +6188,9 @@
             "example": true
           }
         },
-        "required": ["isEmbeddingModelEnabled"]
+        "required": [
+          "isEmbeddingModelEnabled"
+        ]
       },
       "PermittedEmbeddingModelResponseDto": {
         "type": "object",
@@ -5867,7 +6228,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["embedding"],
+            "enum": [
+              "embedding"
+            ],
             "description": "The type of the model (always embedding)"
           },
           "isArchived": {
@@ -6055,7 +6418,11 @@
           "dimensions": {
             "type": "number",
             "description": "The dimensions of the embedding",
-            "enum": [1024, 1536, 2560],
+            "enum": [
+              1024,
+              1536,
+              2560
+            ],
             "example": 1536
           },
           "isArchived": {
@@ -6104,7 +6471,11 @@
           "dimensions": {
             "type": "number",
             "description": "The dimensions of the embedding",
-            "enum": [1024, 1536, 2560],
+            "enum": [
+              1024,
+              1536,
+              2560
+            ],
             "example": 1536
           },
           "isArchived": {
@@ -6158,7 +6529,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["language"],
+            "enum": [
+              "language"
+            ],
             "description": "The type of the model (always language)"
           },
           "isArchived": {
@@ -6249,7 +6622,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["embedding"],
+            "enum": [
+              "embedding"
+            ],
             "description": "The type of the model (always embedding)"
           },
           "isArchived": {
@@ -6302,7 +6677,9 @@
             "example": "Acme Corporation"
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       },
       "SuperAdminOrgResponseDto": {
         "type": "object",
@@ -6325,7 +6702,11 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": ["id", "name", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "createdAt"
+        ]
       },
       "PaginationDto": {
         "type": "object",
@@ -6346,7 +6727,10 @@
             "example": 150
           }
         },
-        "required": ["limit", "offset"]
+        "required": [
+          "limit",
+          "offset"
+        ]
       },
       "SuperAdminOrgListResponseDto": {
         "type": "object",
@@ -6367,7 +6751,10 @@
             ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": [
+          "data",
+          "pagination"
+        ]
       },
       "UserResponseDto": {
         "type": "object",
@@ -6391,7 +6778,10 @@
           "role": {
             "type": "string",
             "description": "User role",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "orgId": {
@@ -6407,7 +6797,14 @@
             "example": "2024-01-15T10:30:00Z"
           }
         },
-        "required": ["id", "name", "email", "role", "orgId", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "createdAt"
+        ]
       },
       "PaginatedUsersListResponseDto": {
         "type": "object",
@@ -6428,7 +6825,10 @@
             ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": [
+          "data",
+          "pagination"
+        ]
       },
       "UpdateUserRoleDto": {
         "type": "object",
@@ -6436,11 +6836,16 @@
           "role": {
             "type": "string",
             "description": "New role for the user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "admin"
           }
         },
-        "required": ["role"]
+        "required": [
+          "role"
+        ]
       },
       "UpdateUserNameDto": {
         "type": "object",
@@ -6453,7 +6858,9 @@
             "maxLength": 100
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       },
       "UpdatePasswordDto": {
         "type": "object",
@@ -6492,7 +6899,9 @@
             "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         },
-        "required": ["token"]
+        "required": [
+          "token"
+        ]
       },
       "ResendEmailConfirmationDto": {
         "type": "object",
@@ -6504,7 +6913,9 @@
             "format": "email"
           }
         },
-        "required": ["email"]
+        "required": [
+          "email"
+        ]
       },
       "ForgotPasswordDto": {
         "type": "object",
@@ -6515,7 +6926,9 @@
             "example": "user@example.com"
           }
         },
-        "required": ["email"]
+        "required": [
+          "email"
+        ]
       },
       "ResetPasswordDto": {
         "type": "object",
@@ -6538,7 +6951,11 @@
             "minLength": 8
           }
         },
-        "required": ["resetToken", "newPassword", "newPasswordConfirmation"]
+        "required": [
+          "resetToken",
+          "newPassword",
+          "newPasswordConfirmation"
+        ]
       },
       "CreateUserDto": {
         "type": "object",
@@ -6556,7 +6973,10 @@
           "role": {
             "type": "string",
             "description": "Role for the user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "sendPasswordResetEmail": {
@@ -6565,7 +6985,12 @@
             "example": true
           }
         },
-        "required": ["email", "name", "role", "sendPasswordResetEmail"]
+        "required": [
+          "email",
+          "name",
+          "role",
+          "sendPasswordResetEmail"
+        ]
       },
       "CreateInviteDto": {
         "type": "object",
@@ -6578,11 +7003,17 @@
           "role": {
             "type": "string",
             "description": "Role to assign to the invited user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           }
         },
-        "required": ["email", "role"]
+        "required": [
+          "email",
+          "role"
+        ]
       },
       "CreateInviteResponseDto": {
         "type": "object",
@@ -6594,7 +7025,9 @@
             "nullable": true
           }
         },
-        "required": ["url"]
+        "required": [
+          "url"
+        ]
       },
       "CreateBulkInviteItemDto": {
         "type": "object",
@@ -6607,11 +7040,17 @@
           "role": {
             "type": "string",
             "description": "Role to assign to the invited user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           }
         },
-        "required": ["email", "role"]
+        "required": [
+          "email",
+          "role"
+        ]
       },
       "CreateBulkInvitesDto": {
         "type": "object",
@@ -6626,7 +7065,9 @@
             }
           }
         },
-        "required": ["invites"]
+        "required": [
+          "invites"
+        ]
       },
       "BulkInviteResultDto": {
         "type": "object",
@@ -6639,7 +7080,10 @@
           "role": {
             "type": "string",
             "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "success": {
@@ -6701,7 +7145,12 @@
             }
           }
         },
-        "required": ["totalCount", "successCount", "failureCount", "results"]
+        "required": [
+          "totalCount",
+          "successCount",
+          "failureCount",
+          "results"
+        ]
       },
       "InviteResponseDto": {
         "type": "object",
@@ -6720,13 +7169,20 @@
           "role": {
             "type": "string",
             "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "status": {
             "type": "string",
             "description": "Current status of the invite",
-            "enum": ["pending", "accepted", "expired"],
+            "enum": [
+              "pending",
+              "accepted",
+              "expired"
+            ],
             "example": "pending"
           },
           "sentDate": {
@@ -6748,7 +7204,14 @@
             "example": "2023-12-02T15:30:00Z"
           }
         },
-        "required": ["id", "email", "role", "status", "sentDate", "expiresAt"]
+        "required": [
+          "id",
+          "email",
+          "role",
+          "status",
+          "sentDate",
+          "expiresAt"
+        ]
       },
       "PaginatedInvitesListResponseDto": {
         "type": "object",
@@ -6769,7 +7232,10 @@
             ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": [
+          "data",
+          "pagination"
+        ]
       },
       "InviteDetailResponseDto": {
         "type": "object",
@@ -6788,13 +7254,20 @@
           "role": {
             "type": "string",
             "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "status": {
             "type": "string",
             "description": "Current status of the invite",
-            "enum": ["pending", "accepted", "expired"],
+            "enum": [
+              "pending",
+              "accepted",
+              "expired"
+            ],
             "example": "pending"
           },
           "sentDate": {
@@ -6883,7 +7356,11 @@
             "format": "uuid"
           }
         },
-        "required": ["inviteId", "email", "orgId"]
+        "required": [
+          "inviteId",
+          "email",
+          "orgId"
+        ]
       },
       "DeleteAllPendingInvitesResponseDto": {
         "type": "object",
@@ -6893,7 +7370,9 @@
             "description": "Number of invites deleted"
           }
         },
-        "required": ["deletedCount"]
+        "required": [
+          "deletedCount"
+        ]
       },
       "SubscriptionBillingInfoResponseDto": {
         "type": "object",
@@ -6988,7 +7467,10 @@
           "renewalCycle": {
             "type": "string",
             "description": "Renewal cycle of the subscription",
-            "enum": ["monthly", "yearly"],
+            "enum": [
+              "monthly",
+              "yearly"
+            ],
             "example": "monthly"
           },
           "renewalCycleAnchor": {
@@ -7113,7 +7595,9 @@
             "example": true
           }
         },
-        "required": ["hasActiveSubscription"]
+        "required": [
+          "hasActiveSubscription"
+        ]
       },
       "UpdateBillingInfoDto": {
         "type": "object",
@@ -7172,7 +7656,9 @@
             "example": 29.99
           }
         },
-        "required": ["pricePerSeatMonthly"]
+        "required": [
+          "pricePerSeatMonthly"
+        ]
       },
       "UpdateSeatsDto": {
         "type": "object",
@@ -7208,7 +7694,11 @@
             "example": "2024-01-01T00:00:00.000Z"
           }
         },
-        "required": ["objectName", "size", "etag"]
+        "required": [
+          "objectName",
+          "size",
+          "etag"
+        ]
       },
       "RetrieveUrlDto": {
         "type": "object",
@@ -7219,7 +7709,9 @@
             "example": "https://example.com/article"
           }
         },
-        "required": ["url"]
+        "required": [
+          "url"
+        ]
       },
       "CreateThreadDto": {
         "type": "object",
@@ -7266,7 +7758,9 @@
             "type": "string",
             "description": "Role of the message sender",
             "example": "user",
-            "enum": ["user"]
+            "enum": [
+              "user"
+            ]
           },
           "content": {
             "type": "array",
@@ -7283,7 +7777,13 @@
             }
           }
         },
-        "required": ["id", "threadId", "createdAt", "role", "content"]
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
       },
       "SystemMessageResponseDto": {
         "type": "object",
@@ -7307,7 +7807,9 @@
             "type": "string",
             "description": "Role of the message sender",
             "example": "system",
-            "enum": ["system"]
+            "enum": [
+              "system"
+            ]
           },
           "content": {
             "type": "array",
@@ -7317,7 +7819,13 @@
             }
           }
         },
-        "required": ["id", "threadId", "createdAt", "role", "content"]
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
       },
       "AssistantMessageResponseDto": {
         "type": "object",
@@ -7341,7 +7849,9 @@
             "type": "string",
             "description": "Role of the message sender",
             "example": "assistant",
-            "enum": ["assistant"]
+            "enum": [
+              "assistant"
+            ]
           },
           "content": {
             "type": "array",
@@ -7361,7 +7871,13 @@
             }
           }
         },
-        "required": ["id", "threadId", "createdAt", "role", "content"]
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
       },
       "ToolResultMessageResponseDto": {
         "type": "object",
@@ -7385,7 +7901,9 @@
             "type": "string",
             "description": "Role of the message sender",
             "example": "tool",
-            "enum": ["tool"]
+            "enum": [
+              "tool"
+            ]
           },
           "content": {
             "type": "array",
@@ -7395,7 +7913,13 @@
             }
           }
         },
-        "required": ["id", "threadId", "createdAt", "role", "content"]
+        "required": [
+          "id",
+          "threadId",
+          "createdAt",
+          "role",
+          "content"
+        ]
       },
       "TextMessageContentResponseDto": {
         "type": "object",
@@ -7404,7 +7928,13 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking",
+              "image"
+            ]
           },
           "text": {
             "type": "string",
@@ -7412,7 +7942,10 @@
             "example": "Hello, how can I help you today?"
           }
         },
-        "required": ["type", "text"]
+        "required": [
+          "type",
+          "text"
+        ]
       },
       "ToolUseMessageContentResponseDto": {
         "type": "object",
@@ -7421,7 +7954,13 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking",
+              "image"
+            ]
           },
           "id": {
             "type": "string",
@@ -7442,7 +7981,12 @@
             }
           }
         },
-        "required": ["type", "id", "name", "params"]
+        "required": [
+          "type",
+          "id",
+          "name",
+          "params"
+        ]
       },
       "ToolResultMessageContentResponseDto": {
         "type": "object",
@@ -7451,7 +7995,13 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking",
+              "image"
+            ]
           },
           "toolId": {
             "type": "string",
@@ -7469,7 +8019,12 @@
             "example": "The current temperature in New York is 22°C with partly cloudy skies."
           }
         },
-        "required": ["type", "toolId", "toolName", "result"]
+        "required": [
+          "type",
+          "toolId",
+          "toolName",
+          "result"
+        ]
       },
       "ThinkingMessageContentResponseDto": {
         "type": "object",
@@ -7478,7 +8033,13 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking",
+              "image"
+            ]
           },
           "thinking": {
             "type": "string",
@@ -7486,7 +8047,10 @@
             "example": "I am thinking about the best way to help you."
           }
         },
-        "required": ["type", "thinking"]
+        "required": [
+          "type",
+          "thinking"
+        ]
       },
       "ImageMessageContentResponseDto": {
         "type": "object",
@@ -7495,7 +8059,13 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking",
+              "image"
+            ]
           },
           "imageUrl": {
             "type": "string",
@@ -7508,7 +8078,10 @@
             "example": "Screenshot of the reported issue"
           }
         },
-        "required": ["type", "imageUrl"]
+        "required": [
+          "type",
+          "imageUrl"
+        ]
       },
       "ModelResponseDto": {
         "type": "object",
@@ -7572,12 +8145,19 @@
           "type": {
             "type": "string",
             "description": "Type of source",
-            "enum": ["text", "data"]
+            "enum": [
+              "text",
+              "data"
+            ]
           },
           "createdBy": {
             "type": "string",
             "description": "Creator of the source",
-            "enum": ["user", "llm", "system"]
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -7616,12 +8196,19 @@
           "type": {
             "type": "string",
             "description": "Type of source",
-            "enum": ["text", "data"]
+            "enum": [
+              "text",
+              "data"
+            ]
           },
           "createdBy": {
             "type": "string",
             "description": "Creator of the source",
-            "enum": ["user", "llm", "system"]
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -7634,12 +8221,19 @@
           "textType": {
             "type": "string",
             "description": "Type of text",
-            "enum": ["file", "web"]
+            "enum": [
+              "file",
+              "web"
+            ]
           },
           "fileType": {
             "type": "string",
             "description": "Type of file",
-            "enum": ["pdf", "docx", "pptx"]
+            "enum": [
+              "pdf",
+              "docx",
+              "pptx"
+            ]
           }
         },
         "required": [
@@ -7672,12 +8266,19 @@
           "type": {
             "type": "string",
             "description": "Type of source",
-            "enum": ["text", "data"]
+            "enum": [
+              "text",
+              "data"
+            ]
           },
           "createdBy": {
             "type": "string",
             "description": "Creator of the source",
-            "enum": ["user", "llm", "system"]
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -7690,7 +8291,10 @@
           "textType": {
             "type": "string",
             "description": "Type of text",
-            "enum": ["file", "web"]
+            "enum": [
+              "file",
+              "web"
+            ]
           },
           "url": {
             "type": "string",
@@ -7727,12 +8331,19 @@
           "type": {
             "type": "string",
             "description": "Type of source",
-            "enum": ["text", "data"]
+            "enum": [
+              "text",
+              "data"
+            ]
           },
           "createdBy": {
             "type": "string",
             "description": "Creator of the source",
-            "enum": ["user", "llm", "system"]
+            "enum": [
+              "user",
+              "llm",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -7745,7 +8356,9 @@
           "dataType": {
             "type": "string",
             "description": "Type of data",
-            "enum": ["csv"]
+            "enum": [
+              "csv"
+            ]
           },
           "data": {
             "type": "object",
@@ -7902,7 +8515,12 @@
             "example": false
           }
         },
-        "required": ["id", "createdAt", "updatedAt", "isAnonymous"]
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "isAnonymous"
+        ]
       },
       "GetThreadsResponseDto": {
         "type": "object",
@@ -7923,7 +8541,10 @@
             ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": [
+          "data",
+          "pagination"
+        ]
       },
       "UpdateThreadTitleDto": {
         "type": "object",
@@ -7936,7 +8557,9 @@
             "maxLength": 200
           }
         },
-        "required": ["title"]
+        "required": [
+          "title"
+        ]
       },
       "ToolAssignmentDto": {
         "type": "object",
@@ -7970,7 +8593,9 @@
             "format": "uuid"
           }
         },
-        "required": ["type"]
+        "required": [
+          "type"
+        ]
       },
       "CreateAgentDto": {
         "type": "object",
@@ -8001,7 +8626,12 @@
             }
           }
         },
-        "required": ["name", "instructions", "modelId", "toolAssignments"]
+        "required": [
+          "name",
+          "instructions",
+          "modelId",
+          "toolAssignments"
+        ]
       },
       "ToolResponseDto": {
         "type": "object",
@@ -8029,7 +8659,9 @@
             ]
           }
         },
-        "required": ["type"]
+        "required": [
+          "type"
+        ]
       },
       "AgentSourceResponseDto": {
         "type": "object",
@@ -8055,10 +8687,18 @@
             "type": "string",
             "description": "The type of source",
             "example": "file",
-            "enum": ["file", "url"]
+            "enum": [
+              "file",
+              "url"
+            ]
           }
         },
-        "required": ["id", "sourceId", "name", "type"]
+        "required": [
+          "id",
+          "sourceId",
+          "name",
+          "type"
+        ]
       },
       "AgentResponseDto": {
         "type": "object",
@@ -8172,7 +8812,11 @@
             "format": "uuid"
           }
         },
-        "required": ["name", "instructions", "modelId"]
+        "required": [
+          "name",
+          "instructions",
+          "modelId"
+        ]
       },
       "McpIntegrationResponseDto": {
         "type": "object",
@@ -8190,7 +8834,10 @@
           "type": {
             "type": "string",
             "description": "Type of integration",
-            "enum": ["predefined", "custom"],
+            "enum": [
+              "predefined",
+              "custom"
+            ],
             "example": "predefined"
           },
           "slug": {
@@ -8216,7 +8863,12 @@
           "authMethod": {
             "type": "string",
             "description": "Authentication method used",
-            "enum": ["NO_AUTH", "BEARER_TOKEN", "CUSTOM_HEADER", "OAUTH"],
+            "enum": [
+              "NO_AUTH",
+              "BEARER_TOKEN",
+              "CUSTOM_HEADER",
+              "OAUTH"
+            ],
             "example": "BEARER_TOKEN"
           },
           "authHeaderName": {
@@ -8232,7 +8884,12 @@
           "connectionStatus": {
             "type": "string",
             "description": "Connection status of the integration",
-            "enum": ["connected", "disconnected", "error", "unknown"],
+            "enum": [
+              "connected",
+              "disconnected",
+              "error",
+              "unknown"
+            ],
             "example": "connected"
           },
           "lastConnectionError": {
@@ -8282,7 +8939,10 @@
           "entityType": {
             "type": "string",
             "description": "Type of entity being shared",
-            "enum": ["agent", "prompt"]
+            "enum": [
+              "agent",
+              "prompt"
+            ]
           },
           "agentId": {
             "type": "string",
@@ -8290,7 +8950,10 @@
             "format": "uuid"
           }
         },
-        "required": ["entityType", "agentId"]
+        "required": [
+          "entityType",
+          "agentId"
+        ]
       },
       "ShareResponseDto": {
         "type": "object",
@@ -8303,7 +8966,10 @@
           "entityType": {
             "type": "string",
             "description": "Type of entity being shared",
-            "enum": ["agent", "prompt"]
+            "enum": [
+              "agent",
+              "prompt"
+            ]
           },
           "entityId": {
             "type": "string",
@@ -8313,7 +8979,10 @@
           "scopeType": {
             "type": "string",
             "description": "Type of share scope (organization or user)",
-            "enum": ["org", "user"]
+            "enum": [
+              "org",
+              "user"
+            ]
           },
           "ownerId": {
             "type": "string",
@@ -8347,7 +9016,11 @@
           "name": {
             "type": "string",
             "description": "The name/type of the credential field",
-            "enum": ["token", "clientId", "clientSecret"],
+            "enum": [
+              "token",
+              "clientId",
+              "clientSecret"
+            ],
             "example": "token"
           },
           "value": {
@@ -8356,7 +9029,10 @@
             "example": "sk_test_123abc"
           }
         },
-        "required": ["name", "value"]
+        "required": [
+          "name",
+          "value"
+        ]
       },
       "CreatePredefinedIntegrationDto": {
         "type": "object",
@@ -8365,7 +9041,11 @@
             "type": "string",
             "description": "The predefined integration slug",
             "example": "TEST",
-            "enum": ["TEST", "LOCABOO", "LEGAL_CODES"]
+            "enum": [
+              "TEST",
+              "LOCABOO",
+              "LEGAL_CODES"
+            ]
           },
           "configValues": {
             "description": "List of config values for credential fields",
@@ -8387,7 +9067,10 @@
             "default": true
           }
         },
-        "required": ["slug", "configValues"]
+        "required": [
+          "slug",
+          "configValues"
+        ]
       },
       "CreateCustomIntegrationDto": {
         "type": "object",
@@ -8407,7 +9090,12 @@
           "authMethod": {
             "type": "string",
             "description": "Authentication method for the MCP server",
-            "enum": ["NO_AUTH", "BEARER_TOKEN", "CUSTOM_HEADER", "OAUTH"],
+            "enum": [
+              "NO_AUTH",
+              "BEARER_TOKEN",
+              "CUSTOM_HEADER",
+              "OAUTH"
+            ],
             "example": "CUSTOM_HEADER",
             "nullable": true
           },
@@ -8428,7 +9116,10 @@
             "default": true
           }
         },
-        "required": ["name", "serverUrl"]
+        "required": [
+          "name",
+          "serverUrl"
+        ]
       },
       "CredentialFieldDto": {
         "type": "object",
@@ -8441,7 +9132,11 @@
           "type": {
             "type": "string",
             "description": "Input type (text or password)",
-            "enum": ["token", "clientId", "clientSecret"],
+            "enum": [
+              "token",
+              "clientId",
+              "clientSecret"
+            ],
             "example": "token"
           },
           "required": {
@@ -8455,7 +9150,11 @@
             "example": "Your Locaboo 3 API token will be used to authenticate with Locaboo 4"
           }
         },
-        "required": ["label", "type", "required"]
+        "required": [
+          "label",
+          "type",
+          "required"
+        ]
       },
       "PredefinedConfigResponseDto": {
         "type": "object",
@@ -8478,7 +9177,12 @@
           "authType": {
             "type": "string",
             "description": "Authentication method for this integration",
-            "enum": ["NO_AUTH", "BEARER_TOKEN", "API_KEY", "OAUTH"],
+            "enum": [
+              "NO_AUTH",
+              "BEARER_TOKEN",
+              "API_KEY",
+              "OAUTH"
+            ],
             "example": "BEARER_TOKEN"
           },
           "authHeaderName": {
@@ -8494,7 +9198,12 @@
             }
           }
         },
-        "required": ["slug", "displayName", "description", "authType"]
+        "required": [
+          "slug",
+          "displayName",
+          "description",
+          "authType"
+        ]
       },
       "UpdateMcpIntegrationDto": {
         "type": "object",
@@ -8546,7 +9255,10 @@
             "example": "Connection timeout"
           }
         },
-        "required": ["valid", "capabilities"]
+        "required": [
+          "valid",
+          "capabilities"
+        ]
       },
       "MessageContentResponseDto": {
         "type": "object",
@@ -8555,10 +9267,18 @@
             "type": "string",
             "description": "Type of the message content",
             "example": "text",
-            "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
+            "enum": [
+              "text",
+              "tool_use",
+              "tool_result",
+              "thinking",
+              "image"
+            ]
           }
         },
-        "required": ["type"]
+        "required": [
+          "type"
+        ]
       },
       "RunSessionResponseDto": {
         "type": "object",
@@ -8567,7 +9287,9 @@
             "type": "string",
             "description": "Response type identifier",
             "example": "session",
-            "enum": ["session"]
+            "enum": [
+              "session"
+            ]
           },
           "success": {
             "type": "boolean",
@@ -8590,7 +9312,11 @@
             "example": "2024-01-01T12:00:00.000Z"
           }
         },
-        "required": ["type", "threadId", "timestamp"]
+        "required": [
+          "type",
+          "threadId",
+          "timestamp"
+        ]
       },
       "RunMessageResponseDto": {
         "type": "object",
@@ -8599,7 +9325,9 @@
             "type": "string",
             "description": "Response type identifier",
             "example": "message",
-            "enum": ["message"]
+            "enum": [
+              "message"
+            ]
           },
           "message": {
             "description": "The message data",
@@ -8629,7 +9357,12 @@
             "example": "2024-01-01T12:00:00.000Z"
           }
         },
-        "required": ["type", "message", "threadId", "timestamp"]
+        "required": [
+          "type",
+          "message",
+          "threadId",
+          "timestamp"
+        ]
       },
       "RunErrorResponseDto": {
         "type": "object",
@@ -8638,7 +9371,9 @@
             "type": "string",
             "description": "Response type identifier",
             "example": "error",
-            "enum": ["error"]
+            "enum": [
+              "error"
+            ]
           },
           "message": {
             "type": "string",
@@ -8668,7 +9403,12 @@
             }
           }
         },
-        "required": ["type", "message", "threadId", "timestamp"]
+        "required": [
+          "type",
+          "message",
+          "threadId",
+          "timestamp"
+        ]
       },
       "RunThreadResponseDto": {
         "type": "object",
@@ -8677,7 +9417,9 @@
             "type": "string",
             "description": "Response type identifier",
             "example": "thread",
-            "enum": ["thread"]
+            "enum": [
+              "thread"
+            ]
           },
           "threadId": {
             "type": "string",
@@ -8688,7 +9430,9 @@
             "type": "string",
             "description": "Type of thread update",
             "example": "title_updated",
-            "enum": ["title_updated"]
+            "enum": [
+              "title_updated"
+            ]
           },
           "title": {
             "type": "string",
@@ -8701,7 +9445,13 @@
             "example": "2024-01-01T12:00:00.000Z"
           }
         },
-        "required": ["type", "threadId", "updateType", "title", "timestamp"]
+        "required": [
+          "type",
+          "threadId",
+          "updateType",
+          "title",
+          "timestamp"
+        ]
       },
       "TextInput": {
         "type": "object",
@@ -8709,7 +9459,9 @@
           "type": {
             "type": "string",
             "description": "The type of input",
-            "enum": ["text"],
+            "enum": [
+              "text"
+            ],
             "example": "text"
           },
           "text": {
@@ -8718,7 +9470,10 @@
             "example": "What is the weather forecast for New York tomorrow?"
           }
         },
-        "required": ["type", "text"]
+        "required": [
+          "type",
+          "text"
+        ]
       },
       "ToolResultInput": {
         "type": "object",
@@ -8726,7 +9481,9 @@
           "type": {
             "type": "string",
             "description": "The type of input",
-            "enum": ["tool_result"],
+            "enum": [
+              "tool_result"
+            ],
             "example": "tool_result"
           },
           "toolId": {
@@ -8745,7 +9502,12 @@
             "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
           }
         },
-        "required": ["type", "toolId", "toolName", "result"]
+        "required": [
+          "type",
+          "toolId",
+          "toolName",
+          "result"
+        ]
       },
       "SendMessageDto": {
         "type": "object",
@@ -8787,7 +9549,9 @@
             "default": true
           }
         },
-        "required": ["threadId"]
+        "required": [
+          "threadId"
+        ]
       },
       "SuperAdminTrialResponseDto": {
         "type": "object",
@@ -8867,7 +9631,10 @@
             "minimum": 1
           }
         },
-        "required": ["orgId", "maxMessages"]
+        "required": [
+          "orgId",
+          "maxMessages"
+        ]
       },
       "UpdateTrialRequestDto": {
         "type": "object",
@@ -8895,7 +9662,9 @@
             "example": true
           }
         },
-        "required": ["isSelfHosted"]
+        "required": [
+          "isSelfHosted"
+        ]
       },
       "UsageStatsResponseDto": {
         "type": "object",
@@ -8922,7 +9691,11 @@
           },
           "topModels": {
             "description": "List of the most frequently used model names, ordered by usage",
-            "example": ["gpt-4", "claude-3-sonnet", "gpt-3.5-turbo"],
+            "example": [
+              "gpt-4",
+              "claude-3-sonnet",
+              "gpt-3.5-turbo"
+            ],
             "type": "array",
             "items": {
               "type": "string"
@@ -8954,7 +9727,11 @@
             "description": "Number of requests at this point"
           }
         },
-        "required": ["date", "tokens", "requests"]
+        "required": [
+          "date",
+          "tokens",
+          "requests"
+        ]
       },
       "ProviderUsageDto": {
         "type": "object",
@@ -9013,7 +9790,9 @@
             }
           }
         },
-        "required": ["providers"]
+        "required": [
+          "providers"
+        ]
       },
       "ProviderValuesDto": {
         "type": "object",
@@ -9061,7 +9840,10 @@
             ]
           }
         },
-        "required": ["date", "values"]
+        "required": [
+          "date",
+          "values"
+        ]
       },
       "ProviderUsageChartResponseDto": {
         "type": "object",
@@ -9074,7 +9856,9 @@
             }
           }
         },
-        "required": ["timeSeries"]
+        "required": [
+          "timeSeries"
+        ]
       },
       "ModelDistributionDto": {
         "type": "object",
@@ -9140,7 +9924,9 @@
             }
           }
         },
-        "required": ["models"]
+        "required": [
+          "models"
+        ]
       },
       "UserUsageDto": {
         "type": "object",
@@ -9205,7 +9991,10 @@
             ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": [
+          "data",
+          "pagination"
+        ]
       },
       "CreatePromptDto": {
         "type": "object",
@@ -9223,7 +10012,10 @@
             "example": "You are a helpful assistant that helps with project planning. Please provide detailed step-by-step guidance for managing projects effectively."
           }
         },
-        "required": ["title", "content"]
+        "required": [
+          "title",
+          "content"
+        ]
       },
       "PromptResponseDto": {
         "type": "object",
@@ -9288,7 +10080,10 @@
             "example": "You are an expert project planning assistant. Provide comprehensive guidance for project management, including risk assessment and timeline optimization."
           }
         },
-        "required": ["title", "content"]
+        "required": [
+          "title",
+          "content"
+        ]
       },
       "LoginDto": {
         "type": "object",
@@ -9304,7 +10099,10 @@
             "example": "password123"
           }
         },
-        "required": ["email", "password"]
+        "required": [
+          "email",
+          "password"
+        ]
       },
       "SuccessResponseDto": {
         "type": "object",
@@ -9315,7 +10113,9 @@
             "example": true
           }
         },
-        "required": ["success"]
+        "required": [
+          "success"
+        ]
       },
       "ErrorResponseDto": {
         "type": "object",
@@ -9326,7 +10126,9 @@
             "example": "Authentication failed"
           }
         },
-        "required": ["message"]
+        "required": [
+          "message"
+        ]
       },
       "RegisterDto": {
         "type": "object",
@@ -9376,13 +10178,19 @@
           "role": {
             "type": "string",
             "description": "User role",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "systemRole": {
             "type": "string",
             "description": "User system role",
-            "enum": ["customer", "super_admin"],
+            "enum": [
+              "customer",
+              "super_admin"
+            ],
             "example": "super_admin"
           },
           "name": {
@@ -9391,7 +10199,12 @@
             "example": "John Doe"
           }
         },
-        "required": ["email", "role", "systemRole", "name"]
+        "required": [
+          "email",
+          "role",
+          "systemRole",
+          "name"
+        ]
       },
       "CreateTeamDto": {
         "type": "object",
@@ -9402,7 +10215,9 @@
             "example": "Engineering"
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       },
       "UpdateTeamDto": {
         "type": "object",
@@ -9413,7 +10228,9 @@
             "example": "Engineering"
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       },
       "TeamResponseDto": {
         "type": "object",
@@ -9446,7 +10263,13 @@
             "example": "2024-01-15T10:30:00.000Z"
           }
         },
-        "required": ["id", "name", "orgId", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "name",
+          "orgId",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "TeamDetailResponseDto": {
         "type": "object",
@@ -9466,11 +10289,6 @@
             "description": "The organization ID the team belongs to",
             "example": "550e8400-e29b-41d4-a716-446655440001"
           },
-          "memberCount": {
-            "type": "number",
-            "description": "The number of members in the team",
-            "example": 5
-          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -9488,7 +10306,6 @@
           "id",
           "name",
           "orgId",
-          "memberCount",
           "createdAt",
           "updatedAt"
         ]
@@ -9519,7 +10336,10 @@
           "userRole": {
             "type": "string",
             "description": "The role of the team member in the organization",
-            "enum": ["admin", "user"],
+            "enum": [
+              "admin",
+              "user"
+            ],
             "example": "user"
           },
           "joinedAt": {
@@ -9557,7 +10377,10 @@
             ]
           }
         },
-        "required": ["data", "pagination"]
+        "required": [
+          "data",
+          "pagination"
+        ]
       },
       "AddTeamMemberDto": {
         "type": "object",
@@ -9568,7 +10391,9 @@
             "example": "550e8400-e29b-41d4-a716-446655440001"
           }
         },
-        "required": ["userId"]
+        "required": [
+          "userId"
+        ]
       },
       "ListTeamMembersQueryDto": {
         "type": "object",

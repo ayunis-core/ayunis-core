@@ -2572,8 +2572,6 @@ export interface TeamDetailResponseDto {
   name: string;
   /** The organization ID the team belongs to */
   orgId: string;
-  /** The number of members in the team */
-  memberCount: number;
   /** The date and time when the team was created */
   createdAt: string;
   /** The date and time when the team was last updated */
