@@ -3,6 +3,7 @@ import {
   getPromptsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -10,6 +11,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 export function useDeletePrompt() {
   const { t } = useTranslation('prompts');
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return usePromptsControllerDelete({
     mutation: {
@@ -37,6 +39,7 @@ export function useDeletePrompt() {
         void queryClient.invalidateQueries({
           queryKey: getPromptsControllerFindAllQueryKey(),
         });
+        void router.invalidate();
       },
     },
   });
