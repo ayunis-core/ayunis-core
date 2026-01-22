@@ -100,6 +100,6 @@ export class TeamDeletionFailedError extends TeamError {
 
 export class TeamUpdateFailedError extends TeamError {
   constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, TeamErrorCode.TEAM_UPDATE_FAILED, 500, metadata);
+    super(message, TeamErrorCode.TEAM_UPDATE_FAILED, 400, metadata);
   }
 }
