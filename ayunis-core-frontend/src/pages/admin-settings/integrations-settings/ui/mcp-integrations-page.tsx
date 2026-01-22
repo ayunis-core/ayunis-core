@@ -27,6 +27,7 @@ import { ComingSoonDialog } from './coming-soon-dialog';
 
 export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   const { t } = useTranslation('admin-settings-integrations');
+  const { t: tLayout } = useTranslation('admin-settings-layout');
 
   // Dialog states
   const [createPredefinedOpen, setCreatePredefinedOpen] = useState(false);
@@ -59,7 +60,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   // Loading state
   if (isLoadingIntegrations) {
     return (
-      <SettingsLayout>
+      <SettingsLayout title={tLayout('layout.integrations')}>
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
@@ -83,7 +84,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   // Error state
   if (integrationsError) {
     return (
-      <SettingsLayout>
+      <SettingsLayout title={tLayout('layout.integrations')}>
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
             <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-600" />
@@ -138,7 +139,10 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
   );
 
   return (
-    <SettingsLayout action={headerActions}>
+    <SettingsLayout
+      action={headerActions}
+      title={tLayout('layout.integrations')}
+    >
       <div className="space-y-4">
         <IntegrationsList
           integrations={integrations}

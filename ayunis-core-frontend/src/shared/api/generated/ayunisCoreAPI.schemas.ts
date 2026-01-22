@@ -2565,6 +2565,67 @@ export interface TeamResponseDto {
   updatedAt: string;
 }
 
+export interface TeamDetailResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The number of members in the team */
+  memberCount: number;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
+}
+
+/**
+ * The role of the team member in the organization
+ */
+export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TeamMemberResponseDtoUserRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface TeamMemberResponseDto {
+  /** The unique identifier of the team member */
+  id: string;
+  /** The user ID of the team member */
+  userId: string;
+  /** The name of the team member */
+  userName: string;
+  /** The email of the team member */
+  userEmail: string;
+  /** The role of the team member in the organization */
+  userRole: TeamMemberResponseDtoUserRole;
+  /** The date when the user joined the team */
+  joinedAt: string;
+}
+
+export interface PaginatedTeamMembersResponseDto {
+  /** Array of team members for the current page */
+  data: TeamMemberResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+export interface AddTeamMemberDto {
+  /** The user ID to add to the team */
+  userId: string;
+}
+
+export interface ListTeamMembersQueryDto {
+  /** Maximum number of items per page */
+  limit?: number;
+  /** Number of items to skip */
+  offset?: number;
+}
+
 export interface CreateLanguageModelDto { [key: string]: unknown }
 
 export interface CreateEmbeddingModelDto { [key: string]: unknown }
@@ -2843,6 +2904,17 @@ export const UsageControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
+
+export type TeamsControllerListTeamMembersParams = {
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Number of items to skip
+ */
+offset?: number;
+};
 
 export type AdminControllerGetModelParams = {
 name: string;

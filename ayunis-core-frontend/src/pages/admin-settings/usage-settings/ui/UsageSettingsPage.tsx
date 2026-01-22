@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import { UsageStatsCards } from './UsageStatsCards';
 import { ProviderConsumption } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart';
@@ -7,6 +8,7 @@ import { UsageFilters } from './UsageFilters';
 import { useState } from 'react';
 
 export default function UsageSettingsPage() {
+  const { t } = useTranslation('admin-settings-layout');
   const [dateRange, setDateRange] = useState<{
     startDate?: Date;
     endDate?: Date;
@@ -17,7 +19,7 @@ export default function UsageSettingsPage() {
   const [selectedModel, setSelectedModel] = useState<string | undefined>();
 
   return (
-    <SettingsLayout>
+    <SettingsLayout title={t('layout.usage')}>
       <div className="space-y-8">
         <UsageFilters
           dateRange={dateRange}

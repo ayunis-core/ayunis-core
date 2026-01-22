@@ -14,6 +14,7 @@ interface TeamsSettingsPageProps {
 
 export function TeamsSettingsPage({ teams }: TeamsSettingsPageProps) {
   const { t } = useTranslation('admin-settings-teams');
+  const { t: tLayout } = useTranslation('admin-settings-layout');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTeam, setEditTeam] = useState<Team | null>(null);
 
@@ -25,7 +26,7 @@ export function TeamsSettingsPage({ teams }: TeamsSettingsPageProps) {
   );
 
   return (
-    <SettingsLayout action={headerActions}>
+    <SettingsLayout action={headerActions} title={tLayout('layout.teams')}>
       <div className="space-y-4">
         <TeamsList teams={teams} onEditTeam={setEditTeam} />
 

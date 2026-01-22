@@ -5,7 +5,7 @@ import {
   getTeamsControllerListTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
-export const Route = createFileRoute('/_authenticated/admin-settings/teams')({
+export const Route = createFileRoute('/_authenticated/admin-settings/teams/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     const teams = await queryClient.fetchQuery({

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import LicenseSeatsSection from './LicenseSeatsSection';
 import BillingInfoSection from './BillingInfoSection';
@@ -14,6 +15,8 @@ export default function BillingSettingsPage({
   subscription = null,
   subscriptionPrice,
 }: BillingSettingsPageProps) {
+  const { t } = useTranslation('admin-settings-layout');
+
   const pageContentNoSubscription = (
     <SubscriptionGetStartedSection subscriptionPrice={subscriptionPrice} />
   );
@@ -27,7 +30,7 @@ export default function BillingSettingsPage({
   );
 
   return (
-    <SettingsLayout>
+    <SettingsLayout title={t('layout.billing')}>
       {subscription ? pageContentSubscription : pageContentNoSubscription}
     </SettingsLayout>
   );

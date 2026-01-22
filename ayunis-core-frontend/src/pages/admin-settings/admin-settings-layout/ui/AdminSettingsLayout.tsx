@@ -7,15 +7,17 @@ import { useTranslation } from 'react-i18next';
 interface SettingsLayoutProps {
   children: React.ReactNode;
   action?: React.ReactNode;
+  title?: string;
 }
 
 export default function SettingsLayout({
   children,
   action,
+  title,
 }: SettingsLayoutProps) {
   const { t } = useTranslation('admin-settings-layout');
   const contentHeader = (
-    <ContentAreaHeader title={t('layout.title')} action={action} />
+    <ContentAreaHeader title={title ?? t('layout.title')} action={action} />
   );
 
   return (

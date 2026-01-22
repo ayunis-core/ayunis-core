@@ -50,5 +50,41 @@
       "error": "Failed to delete team",
       "notFound": "Team not found"
     }
+  },
+  "teamDetail": {
+    "backToTeams": "Teams",
+    "members": {
+      "title": "Members",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "joinedAt": "Joined",
+      "emptyTitle": "No members yet",
+      "emptyDescription": "Add members to this team to get started."
+    },
+    "addMember": {
+      "button": "Add Member",
+      "title": "Add Team Member",
+      "description": "Select a user from your organization to add to this team.",
+      "selectUser": "Select a user",
+      "noUsersAvailable": "No users available to add",
+      "cancel": "Cancel",
+      "add": "Add Member",
+      "adding": "Adding...",
+      "success": "Member added successfully",
+      "error": "Failed to add member",
+      "alreadyMember": "This user is already a member of the team",
+      "notInSameOrg": "User must be in the same organization",
+      "userNotFound": "User not found"
+    },
+    "removeMember": {
+      "confirmTitle": "Remove Member",
+      "confirmDescription": "Are you sure you want to remove this member from the team?",
+      "confirmButton": "Remove",
+      "cancelButton": "Cancel",
+      "success": "Member removed successfully",
+      "error": "Failed to remove member",
+      "notFound": "Member not found"
+    }
   }
 }
