@@ -26,29 +26,31 @@ export class CreateTeamUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('createTeam', { name: command.name, orgId });
+    const trimmedName = command.name?.trim() || '';
 
-    if (!command.name || command.name.trim() === '') {
+    this.logger.log('createTeam', { name: trimmedName, orgId });
+
+    if (!trimmedName) {
       this.logger.warn('Attempted to create team with empty name');
       throw new TeamCreationFailedError('Team name cannot be empty');
     }
 
     try {
       const existingTeam = await this.teamsRepository.findByNameAndOrgId(
-        command.name,
+        trimmedName,
         orgId,
       );
 
       if (existingTeam) {
         this.logger.warn('Team with this name already exists', {
-          name: command.name,
+          name: trimmedName,
           orgId,
         });
-        throw new TeamNameAlreadyExistsError(command.name);
+        throw new TeamNameAlreadyExistsError(trimmedName);
       }
 
-      this.logger.debug('Creating new team', { name: command.name, orgId });
-      const team = new Team({ name: command.name, orgId });
+      this.logger.debug('Creating new team', { name: trimmedName, orgId });
+      const team = new Team({ name: trimmedName, orgId });
       const createdTeam = await this.teamsRepository.create(team);
       this.logger.debug('Team created successfully', {
         id: createdTeam.id,
