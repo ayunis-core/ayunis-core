@@ -68,10 +68,9 @@ export function CreateTeamDialog({
                 placeholder={t('teams.createDialog.namePlaceholder')}
                 {...register('name', {
                   required: t('teams.createDialog.nameRequired'),
-                  minLength: {
-                    value: 1,
-                    message: t('teams.createDialog.nameRequired'),
-                  },
+                  validate: (value) =>
+                    value.trim().length >= 1 ||
+                    t('teams.createDialog.nameRequired'),
                   maxLength: {
                     value: 100,
                     message: t('teams.createDialog.nameTooLong'),
