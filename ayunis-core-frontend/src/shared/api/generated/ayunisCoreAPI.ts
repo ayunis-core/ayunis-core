@@ -118,6 +118,7 @@ import type {
   UpdatePermittedModelDto,
   UpdatePromptDto,
   UpdateSeatsDto,
+  UpdateTeamDto,
   UpdateThreadTitleDto,
   UpdateTrialRequestDto,
   UpdateUserNameDto,
@@ -9729,6 +9730,71 @@ export const useTeamsControllerCreateTeam = <TError = void,
       > => {
 
       const mutationOptions = getTeamsControllerCreateTeamMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Update a team in the current organization
+ */
+export const teamsControllerUpdateTeam = (
+    id: string,
+    updateTeamDto: UpdateTeamDto,
+ ) => {
+      
+      
+      return customAxiosInstance<TeamResponseDto>(
+      {url: `/teams/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateTeamDto
+    },
+      );
+    }
+  
+
+
+export const getTeamsControllerUpdateTeamMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerUpdateTeam>>, TError,{id: string;data: UpdateTeamDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerUpdateTeam>>, TError,{id: string;data: UpdateTeamDto}, TContext> => {
+
+const mutationKey = ['teamsControllerUpdateTeam'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerUpdateTeam>>, {id: string;data: UpdateTeamDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  teamsControllerUpdateTeam(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerUpdateTeamMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerUpdateTeam>>>
+    export type TeamsControllerUpdateTeamMutationBody = UpdateTeamDto
+    export type TeamsControllerUpdateTeamMutationError = void
+
+    /**
+ * @summary Update a team in the current organization
+ */
+export const useTeamsControllerUpdateTeam = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerUpdateTeam>>, TError,{id: string;data: UpdateTeamDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerUpdateTeam>>,
+        TError,
+        {id: string;data: UpdateTeamDto},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamsControllerUpdateTeamMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

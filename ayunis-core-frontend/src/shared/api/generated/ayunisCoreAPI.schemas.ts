@@ -2547,6 +2547,11 @@ export interface CreateTeamDto {
   name: string;
 }
 
+export interface UpdateTeamDto {
+  /** The new name of the team */
+  name: string;
+}
+
 export interface TeamResponseDto {
   /** The unique identifier of the team */
   id: string;

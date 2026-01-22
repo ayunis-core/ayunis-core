@@ -5084,6 +5084,61 @@
       }
     },
     "/teams/{id}": {
+      "patch": {
+        "operationId": "TeamsController_updateTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid team data provided"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to update teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "409": {
+            "description": "Team with this name already exists in the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a team in the current organization",
+        "tags": ["teams"]
+      },
       "delete": {
         "operationId": "TeamsController_deleteTeam",
         "parameters": [
@@ -9145,6 +9200,17 @@
           "name": {
             "type": "string",
             "description": "The name of the team",
+            "example": "Engineering"
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name of the team",
             "example": "Engineering"
           }
         },

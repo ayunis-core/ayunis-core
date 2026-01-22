@@ -19,10 +19,27 @@
       "create": "Create Team",
       "creating": "Creating..."
     },
+    "editDialog": {
+      "title": "Edit Team",
+      "description": "Update the team name.",
+      "nameLabel": "Team Name",
+      "namePlaceholder": "e.g., Engineering, Marketing, Sales",
+      "nameRequired": "Team name is required",
+      "nameTooLong": "Team name must be less than 100 characters",
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "saving": "Saving..."
+    },
     "createTeam": {
       "success": "Team created successfully",
       "error": "Failed to create team",
       "duplicateName": "A team with this name already exists"
+    },
+    "updateTeam": {
+      "success": "Team updated successfully",
+      "error": "Failed to update team",
+      "duplicateName": "A team with this name already exists",
+      "notFound": "Team not found"
     },
     "deleteTeam": {
       "title": "Delete Team",

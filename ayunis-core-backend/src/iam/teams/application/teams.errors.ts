@@ -13,6 +13,7 @@ export enum TeamErrorCode {
   TEAM_NOT_FOUND = 'TEAM_NOT_FOUND',
   TEAM_NAME_ALREADY_EXISTS = 'TEAM_NAME_ALREADY_EXISTS',
   TEAM_CREATION_FAILED = 'TEAM_CREATION_FAILED',
+  TEAM_UPDATE_FAILED = 'TEAM_UPDATE_FAILED',
   TEAM_RETRIEVAL_FAILED = 'TEAM_RETRIEVAL_FAILED',
   TEAM_DELETION_FAILED = 'TEAM_DELETION_FAILED',
 }
@@ -94,5 +95,11 @@ export class TeamRetrievalFailedError extends TeamError {
 export class TeamDeletionFailedError extends TeamError {
   constructor(message: string, metadata?: ErrorMetadata) {
     super(message, TeamErrorCode.TEAM_DELETION_FAILED, 500, metadata);
+  }
+}
+
+export class TeamUpdateFailedError extends TeamError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(message, TeamErrorCode.TEAM_UPDATE_FAILED, 500, metadata);
   }
 }

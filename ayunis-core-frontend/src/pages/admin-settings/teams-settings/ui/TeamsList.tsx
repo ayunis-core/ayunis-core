@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Item,
@@ -14,9 +14,10 @@ import type { Team } from '../model/types';
 
 interface TeamsListProps {
   teams: Team[];
+  onEditTeam: (team: Team) => void;
 }
 
-export function TeamsList({ teams }: TeamsListProps) {
+export function TeamsList({ teams, onEditTeam }: TeamsListProps) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
 
@@ -37,6 +38,13 @@ export function TeamsList({ teams }: TeamsListProps) {
             </ItemDescription>
           </ItemContent>
           <ItemActions>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEditTeam(team)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

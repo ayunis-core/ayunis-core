@@ -10,6 +10,7 @@ import {
   TeamCreationFailedError,
   TeamDeletionFailedError,
   TeamRetrievalFailedError,
+  TeamUpdateFailedError,
 } from '../../../application/teams.errors';
 
 @Injectable()
@@ -117,6 +118,34 @@ export class LocalTeamsRepository extends TeamsRepository {
       throw new TeamCreationFailedError(
         `Failed to create team: ${err.message}`,
       );
+    }
+  }
+
+  async update(team: Team): Promise<Team> {
+    this.logger.log('update', {
+      id: team.id,
+      name: team.name,
+    });
+
+    try {
+      const teamRecord = TeamMapper.toRecord(team);
+      const savedRecord = await this.teamRepository.save(teamRecord);
+
+      this.logger.debug('Team updated successfully', {
+        id: savedRecord.id,
+        name: savedRecord.name,
+      });
+
+      return TeamMapper.toDomain(savedRecord);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Error updating team', {
+        error: err,
+        id: team.id,
+        name: team.name,
+      });
+
+      throw new TeamUpdateFailedError(`Failed to update team: ${err.message}`);
     }
   }
 
