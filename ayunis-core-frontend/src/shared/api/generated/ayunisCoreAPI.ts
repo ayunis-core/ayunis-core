@@ -9733,6 +9733,68 @@ export const useTeamsControllerCreateTeam = <TError = void,
       return useMutation(mutationOptions , queryClient);
     }
     
+/**
+ * @summary Delete a team from the current organization
+ */
+export const teamsControllerDeleteTeam = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/teams/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getTeamsControllerDeleteTeamMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerDeleteTeam>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof teamsControllerDeleteTeam>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['teamsControllerDeleteTeam'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teamsControllerDeleteTeam>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  teamsControllerDeleteTeam(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TeamsControllerDeleteTeamMutationResult = NonNullable<Awaited<ReturnType<typeof teamsControllerDeleteTeam>>>
+    
+    export type TeamsControllerDeleteTeamMutationError = void
+
+    /**
+ * @summary Delete a team from the current organization
+ */
+export const useTeamsControllerDeleteTeam = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teamsControllerDeleteTeam>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof teamsControllerDeleteTeam>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getTeamsControllerDeleteTeamMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 export const adminControllerGetAllModels = (
     
  signal?: AbortSignal

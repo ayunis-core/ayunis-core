@@ -23,6 +23,15 @@
       "success": "Team erfolgreich erstellt",
       "error": "Team konnte nicht erstellt werden",
       "duplicateName": "Ein Team mit diesem Namen existiert bereits"
+    },
+    "deleteTeam": {
+      "title": "Team löschen",
+      "description": "Sind Sie sicher, dass Sie dieses Team löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen",
+      "success": "Team erfolgreich gelöscht",
+      "error": "Team konnte nicht gelöscht werden",
+      "notFound": "Team nicht gefunden"
     }
   }
 }

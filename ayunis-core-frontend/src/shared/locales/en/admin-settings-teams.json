@@ -23,6 +23,15 @@
       "success": "Team created successfully",
       "error": "Failed to create team",
       "duplicateName": "A team with this name already exists"
+    },
+    "deleteTeam": {
+      "title": "Delete Team",
+      "description": "Are you sure you want to delete this team? This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel",
+      "success": "Team deleted successfully",
+      "error": "Failed to delete team",
+      "notFound": "Team not found"
     }
   }
 }

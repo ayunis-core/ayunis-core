@@ -7,8 +7,8 @@ import { TeamRecord } from './schema/team.record';
 import { TeamMapper } from './mappers/team.mapper';
 import { UUID } from 'crypto';
 import {
-  TeamNotFoundError,
   TeamCreationFailedError,
+  TeamDeletionFailedError,
   TeamRetrievalFailedError,
 } from '../../../application/teams.errors';
 
@@ -116,6 +116,21 @@ export class LocalTeamsRepository extends TeamsRepository {
 
       throw new TeamCreationFailedError(
         `Failed to create team: ${err.message}`,
+      );
+    }
+  }
+
+  async delete(id: UUID): Promise<void> {
+    this.logger.log('delete', { id });
+
+    try {
+      await this.teamRepository.delete(id);
+      this.logger.debug('Team deleted successfully', { id });
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      this.logger.error('Error deleting team', { error: err, id });
+      throw new TeamDeletionFailedError(
+        `Failed to delete team: ${err.message}`,
       );
     }
   }

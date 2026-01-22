@@ -7,6 +7,7 @@ import { LocalTeamsRepository } from './infrastructure/repositories/local/local-
 import { TeamRecord } from './infrastructure/repositories/local/schema/team.record';
 
 import { CreateTeamUseCase } from './application/use-cases/create-team/create-team.use-case';
+import { DeleteTeamUseCase } from './application/use-cases/delete-team/delete-team.use-case';
 import { ListTeamsUseCase } from './application/use-cases/list-teams/list-teams.use-case';
 
 import { TeamsController } from './presenters/http/teams.controller';
@@ -25,10 +26,16 @@ import { TeamDtoMapper } from './presenters/http/mappers/team-dto.mapper';
     },
     // Use cases
     CreateTeamUseCase,
+    DeleteTeamUseCase,
     ListTeamsUseCase,
     // Mappers
     TeamDtoMapper,
   ],
-  exports: [CreateTeamUseCase, ListTeamsUseCase, TeamsRepository],
+  exports: [
+    CreateTeamUseCase,
+    DeleteTeamUseCase,
+    ListTeamsUseCase,
+    TeamsRepository,
+  ],
 })
 export class TeamsModule {}

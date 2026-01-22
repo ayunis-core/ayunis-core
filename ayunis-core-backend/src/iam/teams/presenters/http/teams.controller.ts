@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,8 +17,11 @@ import {
   ApiExtraModels,
   getSchemaPath,
 } from '@nestjs/swagger';
+import { UUID } from 'crypto';
 import { CreateTeamUseCase } from '../../application/use-cases/create-team/create-team.use-case';
 import { CreateTeamCommand } from '../../application/use-cases/create-team/create-team.command';
+import { DeleteTeamUseCase } from '../../application/use-cases/delete-team/delete-team.use-case';
+import { DeleteTeamCommand } from '../../application/use-cases/delete-team/delete-team.command';
 import { ListTeamsUseCase } from '../../application/use-cases/list-teams/list-teams.use-case';
 import { CreateTeamDto } from './dtos/create-team.dto';
 import { TeamResponseDto } from './dtos/team-response.dto';
@@ -23,6 +37,7 @@ export class TeamsController {
 
   constructor(
     private readonly createTeamUseCase: CreateTeamUseCase,
+    private readonly deleteTeamUseCase: DeleteTeamUseCase,
     private readonly listTeamsUseCase: ListTeamsUseCase,
     private readonly teamDtoMapper: TeamDtoMapper,
   ) {}
@@ -100,5 +115,40 @@ export class TeamsController {
 
     this.logger.log(`Successfully created team with id: ${team.id}`);
     return this.teamDtoMapper.toDto(team);
+  }
+
+  @Roles(UserRole.ADMIN)
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete a team from the current organization',
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Team successfully deleted',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'User is not authenticated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'User is not authorized to delete teams',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Team not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async deleteTeam(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log(`Deleting team with id: ${id}`);
+
+    const command = new DeleteTeamCommand(id);
+    await this.deleteTeamUseCase.execute(command);
+
+    this.logger.log(`Successfully deleted team with id: ${id}`);
   }
 }

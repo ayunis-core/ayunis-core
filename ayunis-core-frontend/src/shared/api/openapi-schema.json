@@ -5083,6 +5083,40 @@
         "tags": ["teams"]
       }
     },
+    "/teams/{id}": {
+      "delete": {
+        "operationId": "TeamsController_deleteTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Team successfully deleted"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to delete teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a team from the current organization",
+        "tags": ["teams"]
+      }
+    },
     "/admin/models": {
       "get": {
         "operationId": "AdminController_getAllModels",
