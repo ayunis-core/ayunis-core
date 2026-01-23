@@ -15,7 +15,11 @@ import { UUID } from 'crypto';
 @Entity('shares')
 @TableInheritance({ column: { type: 'varchar', name: 'entity_type' } })
 export class ShareRecord extends BaseRecord {
-  @ManyToOne(() => ShareScopeRecord, { eager: true, cascade: true })
+  @ManyToOne(() => ShareScopeRecord, {
+    eager: true,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'scope_id' })
   scope: ShareScopeRecord;
 
