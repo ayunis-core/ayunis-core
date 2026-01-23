@@ -57,6 +57,11 @@ export abstract class ThreadsRepository {
     agentId: UUID;
     excludeUserId?: UUID;
   }): Promise<void>;
+  abstract replaceAgentWithModelForUser(params: {
+    modelId: UUID;
+    agentId: UUID;
+    userId: UUID;
+  }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
 }

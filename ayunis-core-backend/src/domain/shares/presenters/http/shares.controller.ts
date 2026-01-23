@@ -98,7 +98,7 @@ export class SharesController {
       const team = await this.getTeamUseCase.execute(
         new GetTeamQuery(teamScope.teamId),
       );
-      return this.shareDtoMapper.toDto(share, team?.name);
+      return this.shareDtoMapper.toDto(share, team.name);
     }
 
     return this.shareDtoMapper.toDto(share);
@@ -149,9 +149,7 @@ export class SharesController {
           const team = await this.getTeamUseCase.execute(
             new GetTeamQuery(teamScope.teamId),
           );
-          if (team) {
-            teamNamesMap.set(teamScope.teamId, team.name);
-          }
+          teamNamesMap.set(teamScope.teamId, team.name);
         }
       }
     }

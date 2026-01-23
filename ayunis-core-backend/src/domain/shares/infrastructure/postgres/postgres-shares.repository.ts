@@ -178,4 +178,18 @@ export class PostgresSharesRepository extends SharesRepository {
 
     return records.map((record) => this.mapper.toDomain(record));
   }
+
+  async findByTeamId(teamId: UUID): Promise<Share[]> {
+    const records = await this.shareRepository
+      .createQueryBuilder('share')
+      .leftJoinAndSelect('share.scope', 'scope')
+      .where('scope.scope_type = :scopeType', {
+        scopeType: ShareScopeType.TEAM,
+      })
+      .andWhere('scope.team_id = :teamId', { teamId })
+      .orderBy('share.createdAt', 'DESC')
+      .getMany();
+
+    return records.map((record) => this.mapper.toDomain(record));
+  }
 }

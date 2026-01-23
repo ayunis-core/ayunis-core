@@ -13,6 +13,7 @@ import { OrgShareScope } from '../../domain/share-scope.entity';
 import { CreateOrgAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 
 describe('SharesController', () => {
   let controller: SharesController;
@@ -53,6 +54,12 @@ describe('SharesController', () => {
           useValue: {
             toDto: jest.fn(),
             toDtoArray: jest.fn(),
+          },
+        },
+        {
+          provide: GetTeamUseCase,
+          useValue: {
+            execute: jest.fn(),
           },
         },
       ],
@@ -223,7 +230,10 @@ describe('SharesController', () => {
           entityType,
         }),
       );
-      expect(shareDtoMapper.toDtoArray).toHaveBeenCalledWith(mockShares);
+      expect(shareDtoMapper.toDtoArray).toHaveBeenCalledWith(
+        mockShares,
+        expect.any(Map),
+      );
       expect(result).toEqual(expectedResponseDtos);
     });
   });

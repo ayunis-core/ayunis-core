@@ -10,6 +10,7 @@ import { SharedEntityType } from '../../../domain/value-objects/shared-entity-ty
 import { AgentShare } from '../../../domain/share.entity';
 import { OrgShareScope } from '../../../domain/share-scope.entity';
 import { randomUUID } from 'crypto';
+import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 
 describe('CreateShareUseCase', () => {
   let useCase: CreateShareUseCase;
@@ -36,12 +37,19 @@ describe('CreateShareUseCase', () => {
           provide: SharesRepository,
           useValue: {
             create: jest.fn(),
+            findByEntityAndScope: jest.fn(),
           },
         },
         {
           provide: ShareAuthorizationFactory,
           useValue: {
             getStrategy: jest.fn(),
+          },
+        },
+        {
+          provide: CheckUserTeamMembershipUseCase,
+          useValue: {
+            execute: jest.fn(),
           },
         },
       ],
@@ -79,6 +87,7 @@ describe('CreateShareUseCase', () => {
       (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
         true,
       );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
       (repository.create as jest.Mock).mockResolvedValue(undefined);
 
       // Act
@@ -198,10 +207,43 @@ describe('CreateShareUseCase', () => {
       (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
         true,
       );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
       (repository.create as jest.Mock).mockRejectedValue(repositoryError);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(repositoryError);
+    });
+
+    it('should throw ShareAlreadyExistsError when share already exists for org scope', async () => {
+      // Arrange
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const existingShare = new AgentShare({
+        agentId: mockAgentId,
+        scope: new OrgShareScope({ orgId: mockOrgId }),
+        ownerId: mockUserId,
+      });
+
+      (contextService.get as jest.Mock).mockImplementation((key: string) => {
+        if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
+        return null;
+      });
+
+      (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
+        authorizationStrategy,
+      );
+      (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(
+        existingShare,
+      );
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        'A share already exists for this entity with org scope',
+      );
+      expect(repository.create).not.toHaveBeenCalled();
     });
   });
 });

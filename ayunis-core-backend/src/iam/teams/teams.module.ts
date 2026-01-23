@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -25,11 +25,15 @@ import { TeamDtoMapper } from './presenters/http/mappers/team-dto.mapper';
 import { TeamMemberDtoMapper } from './presenters/http/mappers/team-member-dto.mapper';
 
 import { UsersModule } from '../users/users.module';
+import { SharesModule } from 'src/domain/shares/shares.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([TeamRecord, TeamMemberRecord]),
     UsersModule,
+    forwardRef(() => SharesModule),
+    forwardRef(() => ThreadsModule),
   ],
   controllers: [TeamsController],
   providers: [

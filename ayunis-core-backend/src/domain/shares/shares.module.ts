@@ -15,6 +15,7 @@ import { DeleteShareUseCase } from './application/use-cases/delete-share/delete-
 import { GetSharesUseCase } from './application/use-cases/get-shares/get-shares.use-case';
 import { FindSharesByScopeUseCase } from './application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindShareByEntityUseCase } from './application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
+import { FindSharesByTeamUseCase } from './application/use-cases/find-shares-by-team/find-shares-by-team.use-case';
 
 // Factories
 import { ShareAuthorizationFactory } from './application/factories/share-authorization.factory';
@@ -52,6 +53,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     GetSharesUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    FindSharesByTeamUseCase,
 
     // Factories
     ShareAuthorizationFactory,
@@ -65,6 +67,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    FindSharesByTeamUseCase,
   ],
 })
 export class SharesModule {}

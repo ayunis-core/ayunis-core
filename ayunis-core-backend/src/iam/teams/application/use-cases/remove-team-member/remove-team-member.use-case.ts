@@ -7,6 +7,12 @@ import { TeamMemberNotFoundError } from '../../team-members.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { Transactional } from '@nestjs-cls/transactional';
+import { FindSharesByTeamUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-team/find-shares-by-team.use-case';
+import { FindSharesByTeamQuery } from 'src/domain/shares/application/use-cases/find-shares-by-team/find-shares-by-team.query';
+import { ReplaceAgentWithDefaultModelForUserUseCase } from 'src/domain/threads/application/use-cases/replace-agent-with-default-model-for-user/replace-agent-with-default-model-for-user.use-case';
+import { ReplaceAgentWithDefaultModelForUserCommand } from 'src/domain/threads/application/use-cases/replace-agent-with-default-model-for-user/replace-agent-with-default-model-for-user.command';
+import { AgentShare } from 'src/domain/shares/domain/share.entity';
 
 @Injectable()
 export class RemoveTeamMemberUseCase {
@@ -16,8 +22,11 @@ export class RemoveTeamMemberUseCase {
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
+    private readonly findSharesByTeamUseCase: FindSharesByTeamUseCase,
+    private readonly replaceAgentWithDefaultModelForUserUseCase: ReplaceAgentWithDefaultModelForUserUseCase,
   ) {}
 
+  @Transactional()
   async execute(command: RemoveTeamMemberCommand): Promise<void> {
     const orgId = this.contextService.get('orgId');
 
@@ -62,6 +71,32 @@ export class RemoveTeamMemberUseCase {
           userId: command.userId,
         });
         throw new TeamMemberNotFoundError(command.teamId, command.userId);
+      }
+
+      // Handle thread fallback for shared agents before removal
+      const teamShares = await this.findSharesByTeamUseCase.execute(
+        new FindSharesByTeamQuery({ teamId: command.teamId }),
+      );
+
+      // Process agent shares - replace agent with default model for the removed user
+      // Skip if the user is the owner of the agent (they still have access via ownership)
+      for (const share of teamShares) {
+        if (share instanceof AgentShare && share.ownerId !== command.userId) {
+          this.logger.debug(
+            'Replacing agent with default model for removed user',
+            {
+              agentId: share.agentId,
+              userId: command.userId,
+            },
+          );
+          await this.replaceAgentWithDefaultModelForUserUseCase.execute(
+            new ReplaceAgentWithDefaultModelForUserCommand({
+              agentId: share.agentId,
+              userId: command.userId,
+            }),
+          );
+        }
+        // Future: Add handlers for other share types (e.g., PromptShare)
       }
 
       // Remove team member
