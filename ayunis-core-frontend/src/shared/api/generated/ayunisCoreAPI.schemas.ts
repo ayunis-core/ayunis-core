@@ -1838,6 +1838,8 @@ export interface CreateAgentShareDto {
   entityType: CreateAgentShareDtoEntityType;
   /** ID of the agent to share */
   agentId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
 }
 
 /**
@@ -1853,7 +1855,7 @@ export const ShareResponseDtoEntityType = {
 } as const;
 
 /**
- * Type of share scope (organization or user)
+ * Type of share scope (organization, user, or team)
  */
 export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof typeof ShareResponseDtoScopeType];
 
@@ -1862,6 +1864,7 @@ export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof t
 export const ShareResponseDtoScopeType = {
   org: 'org',
   user: 'user',
+  team: 'team',
 } as const;
 
 export interface ShareResponseDto {
@@ -1871,10 +1874,14 @@ export interface ShareResponseDto {
   entityType: ShareResponseDtoEntityType;
   /** ID of the entity being shared */
   entityId: string;
-  /** Type of share scope (organization or user) */
+  /** Type of share scope (organization, user, or team) */
   scopeType: ShareResponseDtoScopeType;
   /** ID of the user who created the share */
   ownerId: string;
+  /** ID of the team (only present for team-scoped shares) */
+  teamId?: string;
+  /** Name of the team (only present for team-scoped shares) */
+  teamName?: string;
   /** When the share was created */
   createdAt: string;
   /** When the share was last updated */
@@ -2040,6 +2047,88 @@ export interface ValidationResponseDto {
   capabilities: ValidationResponseDtoCapabilities;
   /** Error message if validation failed */
   error?: string;
+}
+
+export interface CreateTeamDto {
+  /** The name of the team */
+  name: string;
+}
+
+export interface UpdateTeamDto {
+  /** The new name of the team */
+  name: string;
+}
+
+export interface TeamResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
+}
+
+export interface TeamDetailResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
+}
+
+/**
+ * The role of the team member in the organization
+ */
+export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TeamMemberResponseDtoUserRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface TeamMemberResponseDto {
+  /** The unique identifier of the team member */
+  id: string;
+  /** The user ID of the team member */
+  userId: string;
+  /** The name of the team member */
+  userName: string;
+  /** The email of the team member */
+  userEmail: string;
+  /** The role of the team member in the organization */
+  userRole: TeamMemberResponseDtoUserRole;
+  /** The date when the user joined the team */
+  joinedAt: string;
+}
+
+export interface PaginatedTeamMembersResponseDto {
+  /** Array of team members for the current page */
+  data: TeamMemberResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+export interface AddTeamMemberDto {
+  /** The user ID to add to the team */
+  userId: string;
+}
+
+export interface ListTeamMembersQueryDto {
+  /** Maximum number of items per page */
+  limit?: number;
+  /** Number of items to skip */
+  offset?: number;
 }
 
 /**
@@ -2542,88 +2631,6 @@ export interface MeResponseDto {
   name: string;
 }
 
-export interface CreateTeamDto {
-  /** The name of the team */
-  name: string;
-}
-
-export interface UpdateTeamDto {
-  /** The new name of the team */
-  name: string;
-}
-
-export interface TeamResponseDto {
-  /** The unique identifier of the team */
-  id: string;
-  /** The name of the team */
-  name: string;
-  /** The organization ID the team belongs to */
-  orgId: string;
-  /** The date and time when the team was created */
-  createdAt: string;
-  /** The date and time when the team was last updated */
-  updatedAt: string;
-}
-
-export interface TeamDetailResponseDto {
-  /** The unique identifier of the team */
-  id: string;
-  /** The name of the team */
-  name: string;
-  /** The organization ID the team belongs to */
-  orgId: string;
-  /** The date and time when the team was created */
-  createdAt: string;
-  /** The date and time when the team was last updated */
-  updatedAt: string;
-}
-
-/**
- * The role of the team member in the organization
- */
-export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TeamMemberResponseDtoUserRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface TeamMemberResponseDto {
-  /** The unique identifier of the team member */
-  id: string;
-  /** The user ID of the team member */
-  userId: string;
-  /** The name of the team member */
-  userName: string;
-  /** The email of the team member */
-  userEmail: string;
-  /** The role of the team member in the organization */
-  userRole: TeamMemberResponseDtoUserRole;
-  /** The date when the user joined the team */
-  joinedAt: string;
-}
-
-export interface PaginatedTeamMembersResponseDto {
-  /** Array of team members for the current page */
-  data: TeamMemberResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-export interface AddTeamMemberDto {
-  /** The user ID to add to the team */
-  userId: string;
-}
-
-export interface ListTeamMembersQueryDto {
-  /** Maximum number of items per page */
-  limit?: number;
-  /** Number of items to skip */
-  offset?: number;
-}
-
 export interface CreateLanguageModelDto { [key: string]: unknown }
 
 export interface CreateEmbeddingModelDto { [key: string]: unknown }
@@ -2771,6 +2778,17 @@ export const SharesControllerGetSharesEntityType = {
   prompt: 'prompt',
 } as const;
 
+export type TeamsControllerListTeamMembersParams = {
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Number of items to skip
+ */
+offset?: number;
+};
+
 export type RunsControllerSendMessageBody = {
   threadId: string;
   /** Message text (optional if images provided) */
@@ -2902,17 +2920,6 @@ export const UsageControllerGetUserUsageSortOrder = {
   asc: 'asc',
   desc: 'desc',
 } as const;
-
-export type TeamsControllerListTeamMembersParams = {
-/**
- * Maximum number of items per page
- */
-limit?: number;
-/**
- * Number of items to skip
- */
-offset?: number;
-};
 
 export type AdminControllerGetModelParams = {
 name: string;

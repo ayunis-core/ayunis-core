@@ -70,7 +70,19 @@
     },
     "teams": {
       "title": "Teams",
-      "description": "Share with team members"
+      "description": "Share with team members",
+      "create": {
+        "title": "Share Agent with Team",
+        "description": "This will make the agent available to all members of {{teamName}}",
+        "confirm": "Share",
+        "cancel": "Cancel"
+      },
+      "delete": {
+        "title": "Remove Team Share",
+        "description": "This will remove access to the agent for all members of {{teamName}}",
+        "confirm": "Remove",
+        "cancel": "Cancel"
+      }
     },
     "create": {
       "button": "Share Agent",

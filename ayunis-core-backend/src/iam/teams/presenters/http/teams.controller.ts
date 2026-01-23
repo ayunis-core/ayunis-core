@@ -39,7 +39,6 @@ import { RemoveTeamMemberCommand } from '../../application/use-cases/remove-team
 import { CreateTeamDto } from './dtos/create-team.dto';
 import { UpdateTeamDto } from './dtos/update-team.dto';
 import { TeamResponseDto } from './dtos/team-response.dto';
-import { TeamDetailResponseDto } from './dtos/team-detail-response.dto';
 import {
   TeamMemberResponseDto,
   PaginatedTeamMembersResponseDto,
@@ -57,7 +56,6 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
   CreateTeamDto,
   UpdateTeamDto,
   TeamResponseDto,
-  TeamDetailResponseDto,
   TeamMemberResponseDto,
   PaginatedTeamMembersResponseDto,
   AddTeamMemberDto,
@@ -140,13 +138,13 @@ export class TeamsController {
   @Roles(UserRole.ADMIN)
   @Get(':id')
   @ApiOperation({
-    summary: 'Get a team by ID with member count',
+    summary: 'Get a team by ID',
   })
   @ApiResponse({
     status: 200,
     description: 'Successfully retrieved team',
     schema: {
-      $ref: getSchemaPath(TeamDetailResponseDto),
+      $ref: getSchemaPath(TeamResponseDto),
     },
   })
   @ApiResponse({
@@ -167,14 +165,14 @@ export class TeamsController {
   })
   async getTeam(
     @Param('id', ParseUUIDPipe) id: UUID,
-  ): Promise<TeamDetailResponseDto> {
+  ): Promise<TeamResponseDto> {
     this.logger.log(`Getting team with id: ${id}`);
 
     const query = new GetTeamQuery(id);
     const response = await this.getTeamUseCase.execute(query);
 
     this.logger.log(`Successfully retrieved team with id: ${id}`);
-    return this.teamMemberDtoMapper.toDetailDto(response);
+    return this.teamDtoMapper.toDto(response);
   }
 
   @Roles(UserRole.ADMIN)

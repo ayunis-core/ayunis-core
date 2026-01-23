@@ -41,5 +41,6 @@ export function useDeleteShare(agentId: string) {
 
   return {
     deleteShare,
+    isDeleting: mutation.isPending,
   };
 }

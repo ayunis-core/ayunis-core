@@ -10,7 +10,7 @@ import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 import { AgentShare } from '../../domain/share.entity';
 import { OrgShareScope } from '../../domain/share-scope.entity';
-import { CreateAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
+import { CreateOrgAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
@@ -96,7 +96,7 @@ describe('SharesController', () => {
 
       // Assert
       expect(createShareUseCase.execute).toHaveBeenCalledWith(
-        expect.any(CreateAgentShareCommand),
+        expect.any(CreateOrgAgentShareCommand),
       );
       const command = (createShareUseCase.execute as jest.Mock).mock
         .calls[0][0];

@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { Plus } from 'lucide-react';
 import { TeamMembersList } from './TeamMembersList';
 import { AddTeamMemberDialog } from './AddTeamMemberDialog';
 import SettingsLayout from '../../admin-settings-layout';
@@ -24,7 +23,6 @@ export function TeamDetailPage({ team, membersResponse }: TeamDetailPageProps) {
 
   const headerActions = (
     <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
-      <Plus className="h-4 w-4" />
       {t('teamDetail.addMember.button')}
     </Button>
   );

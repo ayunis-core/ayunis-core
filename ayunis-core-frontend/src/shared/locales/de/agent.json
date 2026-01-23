@@ -70,7 +70,19 @@
     },
     "teams": {
       "title": "Teams",
-      "description": "Mit Teammitgliedern teilen"
+      "description": "Mit Teammitgliedern teilen",
+      "create": {
+        "title": "Agent mit Team teilen",
+        "description": "Dadurch wird der Agent für alle Mitglieder von {{teamName}} verfügbar",
+        "confirm": "Teilen",
+        "cancel": "Abbrechen"
+      },
+      "delete": {
+        "title": "Team-Freigabe entfernen",
+        "description": "Der Zugriff für alle Mitglieder von {{teamName}} wird entfernt",
+        "confirm": "Entfernen",
+        "cancel": "Abbrechen"
+      }
     },
     "create": {
       "button": "Agent teilen",

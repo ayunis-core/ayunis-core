@@ -18,6 +18,7 @@ import { GetTeamUseCase } from './application/use-cases/get-team/get-team.use-ca
 import { ListTeamMembersUseCase } from './application/use-cases/list-team-members/list-team-members.use-case';
 import { AddTeamMemberUseCase } from './application/use-cases/add-team-member/add-team-member.use-case';
 import { RemoveTeamMemberUseCase } from './application/use-cases/remove-team-member/remove-team-member.use-case';
+import { CheckUserTeamMembershipUseCase } from './application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 
 import { TeamsController } from './presenters/http/teams.controller';
 import { TeamDtoMapper } from './presenters/http/mappers/team-dto.mapper';
@@ -53,6 +54,7 @@ import { UsersModule } from '../users/users.module';
     ListTeamMembersUseCase,
     AddTeamMemberUseCase,
     RemoveTeamMemberUseCase,
+    CheckUserTeamMembershipUseCase,
     // Mappers
     TeamDtoMapper,
     TeamMemberDtoMapper,
@@ -67,6 +69,7 @@ import { UsersModule } from '../users/users.module';
     ListTeamMembersUseCase,
     AddTeamMemberUseCase,
     RemoveTeamMemberUseCase,
+    CheckUserTeamMembershipUseCase,
   ],
 })
 export class TeamsModule {}

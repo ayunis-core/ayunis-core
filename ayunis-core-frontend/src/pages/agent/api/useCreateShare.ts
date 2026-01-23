@@ -36,10 +36,11 @@ export function useCreateShare(agentId: string) {
     },
   });
 
-  function createShare() {
+  function createShare(teamId?: string) {
     const data: CreateAgentShareDto = {
       entityType: CreateAgentShareDtoEntityType.agent,
       agentId: agentId,
+      ...(teamId && { teamId }),
     };
     mutation.mutate({ data });
   }

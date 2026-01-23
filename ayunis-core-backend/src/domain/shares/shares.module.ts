@@ -26,12 +26,14 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 import { SharesController } from './presenters/http/shares.controller';
 import { AgentsModule } from '../agents/agents.module';
 import { ThreadsModule } from '../threads/threads.module';
+import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ShareRecord, ShareScopeRecord]),
     forwardRef(() => AgentsModule), // For AgentShareAuthorizationStrategy
     forwardRef(() => ThreadsModule), // For ReplaceAgentWithDefaultModelUseCase
+    TeamsModule, // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
   ],
   providers: [
     // Repository
