@@ -63,7 +63,10 @@ export default function InvitesPagination({
         <PaginationItem>
           <Link
             to="/admin-settings/users"
-            search={(prev: { invitesSearch?: string; invitesPage?: number }) => ({
+            search={(prev: {
+              invitesSearch?: string;
+              invitesPage?: number;
+            }) => ({
               ...prev,
               invitesSearch: search || undefined,
               invitesPage: currentPage - 1,
@@ -91,7 +94,10 @@ export default function InvitesPagination({
             <PaginationItem key={pageNum}>
               <Link
                 to="/admin-settings/users"
-                search={(prev: { invitesSearch?: string; invitesPage?: number }) => ({
+                search={(prev: {
+                  invitesSearch?: string;
+                  invitesPage?: number;
+                }) => ({
                   ...prev,
                   invitesSearch: search || undefined,
                   invitesPage: pageNum,
@@ -112,7 +118,10 @@ export default function InvitesPagination({
         <PaginationItem>
           <Link
             to="/admin-settings/users"
-            search={(prev: { invitesSearch?: string; invitesPage?: number }) => ({
+            search={(prev: {
+              invitesSearch?: string;
+              invitesPage?: number;
+            }) => ({
               ...prev,
               invitesSearch: search || undefined,
               invitesPage: currentPage + 1,

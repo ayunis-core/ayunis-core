@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { CreateShareUseCase } from './create-share.use-case';
-import { CreateAgentShareCommand } from './create-share.command';
+import { CreateOrgAgentShareCommand } from './create-share.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
@@ -10,6 +10,7 @@ import { SharedEntityType } from '../../../domain/value-objects/shared-entity-ty
 import { AgentShare } from '../../../domain/share.entity';
 import { OrgShareScope } from '../../../domain/share-scope.entity';
 import { randomUUID } from 'crypto';
+import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 
 describe('CreateShareUseCase', () => {
   let useCase: CreateShareUseCase;
@@ -36,12 +37,19 @@ describe('CreateShareUseCase', () => {
           provide: SharesRepository,
           useValue: {
             create: jest.fn(),
+            findByEntityAndScope: jest.fn(),
           },
         },
         {
           provide: ShareAuthorizationFactory,
           useValue: {
             getStrategy: jest.fn(),
+          },
+        },
+        {
+          provide: CheckUserTeamMembershipUseCase,
+          useValue: {
+            execute: jest.fn(),
           },
         },
       ],
@@ -65,7 +73,7 @@ describe('CreateShareUseCase', () => {
   describe('execute', () => {
     it('should create an org-scoped share when user owns the agent', async () => {
       // Arrange
-      const command = new CreateAgentShareCommand(mockAgentId);
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -79,6 +87,7 @@ describe('CreateShareUseCase', () => {
       (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
         true,
       );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
       (repository.create as jest.Mock).mockResolvedValue(undefined);
 
       // Act
@@ -107,7 +116,7 @@ describe('CreateShareUseCase', () => {
 
     it('should throw UnauthorizedException when user is not authenticated', async () => {
       // Arrange
-      const command = new CreateAgentShareCommand(mockAgentId);
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
 
       (contextService.get as jest.Mock).mockReturnValue(null);
 
@@ -122,7 +131,7 @@ describe('CreateShareUseCase', () => {
 
     it('should throw UnauthorizedException when org is not found', async () => {
       // Arrange
-      const command = new CreateAgentShareCommand(mockAgentId);
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -141,7 +150,7 @@ describe('CreateShareUseCase', () => {
 
     it('should throw ForbiddenException when user cannot create share for the agent', async () => {
       // Arrange
-      const command = new CreateAgentShareCommand(mockAgentId);
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -167,7 +176,7 @@ describe('CreateShareUseCase', () => {
 
     it('should throw Error for unsupported command type', async () => {
       // Arrange
-      const unsupportedCommand = {} as any; // Not an instance of CreateAgentShareCommand
+      const unsupportedCommand = {} as any; // Not an instance of CreateOrgAgentShareCommand
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
         if (key === 'userId') return mockUserId;
@@ -183,7 +192,7 @@ describe('CreateShareUseCase', () => {
 
     it('should handle repository errors', async () => {
       // Arrange
-      const command = new CreateAgentShareCommand(mockAgentId);
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
       const repositoryError = new Error('Database connection failed');
 
       (contextService.get as jest.Mock).mockImplementation((key: string) => {
@@ -198,10 +207,43 @@ describe('CreateShareUseCase', () => {
       (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
         true,
       );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(null);
       (repository.create as jest.Mock).mockRejectedValue(repositoryError);
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(repositoryError);
+    });
+
+    it('should throw ShareAlreadyExistsError when share already exists for org scope', async () => {
+      // Arrange
+      const command = new CreateOrgAgentShareCommand(mockAgentId);
+      const existingShare = new AgentShare({
+        agentId: mockAgentId,
+        scope: new OrgShareScope({ orgId: mockOrgId }),
+        ownerId: mockUserId,
+      });
+
+      (contextService.get as jest.Mock).mockImplementation((key: string) => {
+        if (key === 'userId') return mockUserId;
+        if (key === 'orgId') return mockOrgId;
+        return null;
+      });
+
+      (authorizationFactory.getStrategy as jest.Mock).mockReturnValue(
+        authorizationStrategy,
+      );
+      (authorizationStrategy.canCreateShare as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (repository.findByEntityAndScope as jest.Mock).mockResolvedValue(
+        existingShare,
+      );
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        'A share already exists for this entity with org scope',
+      );
+      expect(repository.create).not.toHaveBeenCalled();
     });
   });
 });

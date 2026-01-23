@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
@@ -27,7 +27,7 @@ export class ShareResponseDto {
   entityId: UUID;
 
   @ApiProperty({
-    description: 'Type of share scope (organization or user)',
+    description: 'Type of share scope (organization, user, or team)',
     enum: ShareScopeType,
   })
   scopeType: ShareScopeType;
@@ -37,6 +37,17 @@ export class ShareResponseDto {
     format: 'uuid',
   })
   ownerId: UUID;
+
+  @ApiPropertyOptional({
+    description: 'ID of the team (only present for team-scoped shares)',
+    format: 'uuid',
+  })
+  teamId?: UUID;
+
+  @ApiPropertyOptional({
+    description: 'Name of the team (only present for team-scoped shares)',
+  })
+  teamName?: string;
 
   @ApiProperty({
     description: 'When the share was created',

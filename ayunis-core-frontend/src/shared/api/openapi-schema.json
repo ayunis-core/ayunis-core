@@ -3987,6 +3987,398 @@
         "tags": ["mcp-integrations"]
       }
     },
+    "/teams": {
+      "get": {
+        "operationId": "TeamsController_listTeams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved teams",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view teams"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List all teams for the current organization",
+        "tags": ["teams"]
+      },
+      "post": {
+        "operationId": "TeamsController_createTeam",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid team data provided"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create teams"
+          },
+          "409": {
+            "description": "Team with this name already exists in the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new team for the current organization",
+        "tags": ["teams"]
+      }
+    },
+    "/teams/me": {
+      "get": {
+        "operationId": "TeamsController_listMyTeams",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved user teams",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List teams the current user is a member of",
+        "tags": ["teams"]
+      }
+    },
+    "/teams/{id}": {
+      "get": {
+        "operationId": "TeamsController_getTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamDetailResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a team by ID with member count",
+        "tags": ["teams"]
+      },
+      "patch": {
+        "operationId": "TeamsController_updateTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid team data provided"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to update teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "409": {
+            "description": "Team with this name already exists in the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a team in the current organization",
+        "tags": ["teams"]
+      },
+      "delete": {
+        "operationId": "TeamsController_deleteTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Team successfully deleted"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to delete teams"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a team from the current organization",
+        "tags": ["teams"]
+      }
+    },
+    "/teams/{id}/members": {
+      "get": {
+        "operationId": "TeamsController_listTeamMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of items per page",
+            "schema": {
+              "default": 50,
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of items to skip",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved team members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTeamMembersResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view team members"
+          },
+          "404": {
+            "description": "Team not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List members of a team",
+        "tags": ["teams"]
+      },
+      "post": {
+        "operationId": "TeamsController_addTeamMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTeamMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully added user to team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamMemberResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data provided or user not in same organization"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to add team members"
+          },
+          "404": {
+            "description": "Team or user not found"
+          },
+          "409": {
+            "description": "User is already a member of the team"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Add a user to a team",
+        "tags": ["teams"]
+      }
+    },
+    "/teams/{id}/members/{userId}": {
+      "delete": {
+        "operationId": "TeamsController_removeTeamMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User successfully removed from team"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to remove team members"
+          },
+          "404": {
+            "description": "Team not found or user is not a member of the team"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Remove a user from a team",
+        "tags": ["teams"]
+      }
+    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -7585,6 +7977,7 @@
             "enum": [
               "http",
               "source_query",
+              "source_get_text",
               "internet_search",
               "website_content",
               "send_email",
@@ -7649,6 +8042,7 @@
             "enum": [
               "http",
               "source_query",
+              "source_get_text",
               "internet_search",
               "website_content",
               "send_email",
@@ -7923,6 +8317,11 @@
             "type": "string",
             "description": "ID of the agent to share",
             "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "description": "ID of the team to share with (if not provided, shares with entire organization)",
+            "format": "uuid"
           }
         },
         "required": ["entityType", "agentId"]
@@ -7947,13 +8346,22 @@
           },
           "scopeType": {
             "type": "string",
-            "description": "Type of share scope (organization or user)",
-            "enum": ["org", "user"]
+            "description": "Type of share scope (organization, user, or team)",
+            "enum": ["org", "user", "team"]
           },
           "ownerId": {
             "type": "string",
             "description": "ID of the user who created the share",
             "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "description": "ID of the team (only present for team-scoped shares)",
+            "format": "uuid"
+          },
+          "teamName": {
+            "type": "string",
+            "description": "Name of the team (only present for team-scoped shares)"
           },
           "createdAt": {
             "format": "date-time",
@@ -8182,6 +8590,188 @@
           }
         },
         "required": ["valid", "capabilities"]
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name of the team",
+            "example": "Engineering"
+          }
+        },
+        "required": ["name"]
+      },
+      "TeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "The organization ID the team belongs to",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was created",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was last updated",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "name", "orgId", "createdAt", "updatedAt"]
+      },
+      "TeamDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "The organization ID the team belongs to",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was created",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was last updated",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "name", "orgId", "createdAt", "updatedAt"]
+      },
+      "TeamMemberResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team member",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "userId": {
+            "type": "string",
+            "description": "The user ID of the team member",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "userName": {
+            "type": "string",
+            "description": "The name of the team member",
+            "example": "John Doe"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "The email of the team member",
+            "example": "john.doe@example.com"
+          },
+          "userRole": {
+            "type": "string",
+            "description": "The role of the team member in the organization",
+            "enum": ["admin", "user"],
+            "example": "user"
+          },
+          "joinedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date when the user joined the team",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "userName",
+          "userEmail",
+          "userRole",
+          "joinedAt"
+        ]
+      },
+      "PaginatedTeamMembersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of team members for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberResponseDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "AddTeamMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user ID to add to the team",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        },
+        "required": ["userId"]
+      },
+      "ListTeamMembersQueryDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of items per page",
+            "example": 50,
+            "default": 50
+          },
+          "offset": {
+            "type": "number",
+            "description": "Number of items to skip",
+            "example": 0,
+            "default": 0
+          }
+        }
       },
       "MessageContentResponseDto": {
         "type": "object",

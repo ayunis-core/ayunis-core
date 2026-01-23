@@ -33,3 +33,17 @@ export class OrgShareScope extends ShareScope {
     this.orgId = params.orgId;
   }
 }
+
+export class TeamShareScope extends ShareScope {
+  teamId: UUID;
+
+  constructor(params: {
+    id?: UUID;
+    teamId: UUID;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, scopeType: ShareScopeType.TEAM });
+    this.teamId = params.teamId;
+  }
+}

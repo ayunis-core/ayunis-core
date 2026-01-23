@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../../admin-settings-layout';
 import InviteMenuButton from './InviteMenuButton';
 import InvitesSection from './InvitesSection';
@@ -33,6 +34,7 @@ export default function UsersSettingsPage({
   search,
   currentPage,
 }: UsersSettingsPageProps) {
+  const { t } = useTranslation('admin-settings-layout');
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
@@ -42,7 +44,7 @@ export default function UsersSettingsPage({
   const invitesTotalPages = Math.ceil(invitesTotal / invitesLimit);
 
   return (
-    <SettingsLayout action={<InviteMenuButton />}>
+    <SettingsLayout action={<InviteMenuButton />} title={t('layout.users')}>
       <div className="space-y-4">
         {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (
           <InvitesSection

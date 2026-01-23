@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import {
   agentsControllerCreate,
   getAgentsControllerFindAllQueryKey,
@@ -11,6 +10,7 @@ import {
 import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { showError } from '@/shared/lib/toast';
 
 const createAgentSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -67,11 +67,11 @@ export function useCreateAgent() {
         const { code } = extractErrorData(error);
         switch (code) {
           default:
-            toast.error(t('create.error'));
+            showError(t('create.error'));
         }
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)
-        toast.error(t('create.error'));
+        showError(t('create.error'));
       }
     },
     onSettled: () => {

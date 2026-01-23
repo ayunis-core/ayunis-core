@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 
 /**
@@ -16,7 +16,8 @@ export abstract class CreateShareDto {
 
 /**
  * DTO for creating agent shares
- * Shares are automatically scoped to the user's organization
+ * If teamId is provided, the share will be scoped to the team
+ * Otherwise, the share will be scoped to the user's organization
  */
 export class CreateAgentShareDto extends CreateShareDto {
   @ApiProperty({
@@ -25,6 +26,15 @@ export class CreateAgentShareDto extends CreateShareDto {
   })
   @IsUUID()
   agentId: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ID of the team to share with (if not provided, shares with entire organization)',
+    format: 'uuid',
+  })
+  @IsUUID()
+  @IsOptional()
+  teamId?: string;
 
   constructor() {
     super();

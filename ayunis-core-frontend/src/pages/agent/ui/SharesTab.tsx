@@ -1,34 +1,50 @@
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import type { ShareResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  ShareResponseDto,
+  TeamResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useCreateShare, useDeleteShare } from '../api';
 import {
   Item,
-  ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
+  ItemActions,
 } from '@/shared/ui/shadcn/item';
 
 interface SharesTabProps {
   agentId: string;
   shares: ShareResponseDto[];
+  userTeams: TeamResponseDto[];
 }
 
-export default function SharesTab({ agentId, shares }: SharesTabProps) {
+export default function SharesTab({
+  agentId,
+  shares,
+  userTeams,
+}: SharesTabProps) {
   const { t } = useTranslation('agent');
   const { confirm } = useConfirmation();
   const { createShare, isCreating } = useCreateShare(agentId);
-  const { deleteShare } = useDeleteShare(agentId);
+  const { deleteShare, isDeleting } = useDeleteShare(agentId);
 
   // Check if organization share exists
   const organizationShare = shares.find(
     (share) => share.scopeType === ShareResponseDtoScopeType.org,
   );
 
-  const handleToggleChange = (checked: boolean) => {
+  // Helper to find team share for a specific team
+  const getTeamShare = (teamId: string) =>
+    shares.find(
+      (share) =>
+        share.scopeType === ShareResponseDtoScopeType.team &&
+        share.teamId === teamId,
+    );
+
+  const handleOrgToggleChange = (checked: boolean) => {
     if (checked) {
       // Show create confirmation
       confirm({
@@ -57,6 +73,40 @@ export default function SharesTab({ agentId, shares }: SharesTabProps) {
     }
   };
 
+  const handleTeamToggleChange = (
+    teamId: string,
+    teamName: string,
+    checked: boolean,
+  ) => {
+    if (checked) {
+      // Show create confirmation for team share
+      confirm({
+        title: t('shares.teams.create.title'),
+        description: t('shares.teams.create.description', { teamName }),
+        confirmText: t('shares.teams.create.confirm'),
+        cancelText: t('shares.teams.create.cancel'),
+        onConfirm: () => {
+          createShare(teamId);
+        },
+      });
+    } else {
+      // Show delete confirmation for team share
+      const teamShare = getTeamShare(teamId);
+      if (teamShare) {
+        confirm({
+          title: t('shares.teams.delete.title'),
+          description: t('shares.teams.delete.description', { teamName }),
+          confirmText: t('shares.teams.delete.confirm'),
+          cancelText: t('shares.teams.delete.cancel'),
+          variant: 'destructive',
+          onConfirm: () => {
+            deleteShare(teamShare.id);
+          },
+        });
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Item variant="outline">
@@ -67,11 +117,39 @@ export default function SharesTab({ agentId, shares }: SharesTabProps) {
         <ItemActions>
           <Switch
             checked={!!organizationShare}
-            onCheckedChange={handleToggleChange}
-            disabled={isCreating}
+            onCheckedChange={handleOrgToggleChange}
+            disabled={isCreating || isDeleting}
           />
         </ItemActions>
       </Item>
+
+      {userTeams.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{t('shares.teams.title')}</h3>
+          {userTeams.map((team) => {
+            const teamShare = getTeamShare(team.id);
+            return (
+              <Item key={team.id} variant="outline">
+                <ItemContent>
+                  <ItemTitle>{team.name}</ItemTitle>
+                  <ItemDescription>
+                    {t('shares.teams.description')}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Switch
+                    checked={!!teamShare}
+                    onCheckedChange={(checked) =>
+                      handleTeamToggleChange(team.id, team.name, checked)
+                    }
+                    disabled={isCreating || isDeleting}
+                  />
+                </ItemActions>
+              </Item>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

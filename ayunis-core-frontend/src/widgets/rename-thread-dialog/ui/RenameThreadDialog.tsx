@@ -46,9 +46,12 @@ export function RenameThreadDialog({
 
   // Reset title when dialog opens with new thread
   useEffect(() => {
-    if (open) {
+    function resetForm() {
       setTitle(currentTitle || '');
       setError(null);
+    }
+    if (open) {
+      resetForm();
     }
   }, [open, currentTitle]);
 
@@ -62,7 +65,9 @@ export function RenameThreadDialog({
     }
 
     if (trimmedTitle.length > MAX_TITLE_LENGTH) {
-      setError(t('sidebar.renameThreadMaxLengthError', { max: MAX_TITLE_LENGTH }));
+      setError(
+        t('sidebar.renameThreadMaxLengthError', { max: MAX_TITLE_LENGTH }),
+      );
       return;
     }
 
@@ -81,7 +86,9 @@ export function RenameThreadDialog({
 
     // Show error if exceeding max length (use trimmed length for consistency)
     if (newTitle.trim().length > MAX_TITLE_LENGTH) {
-      setError(t('sidebar.renameThreadMaxLengthError', { max: MAX_TITLE_LENGTH }));
+      setError(
+        t('sidebar.renameThreadMaxLengthError', { max: MAX_TITLE_LENGTH }),
+      );
     }
   };
 
@@ -93,7 +100,10 @@ export function RenameThreadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]" onOpenAutoFocus={handleOpenAutoFocus}>
+      <DialogContent
+        className="sm:max-w-[425px]"
+        onOpenAutoFocus={handleOpenAutoFocus}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t('sidebar.renameThreadTitle')}</DialogTitle>
@@ -113,9 +123,7 @@ export function RenameThreadDialog({
                 maxLength={MAX_TITLE_LENGTH + 1}
                 aria-invalid={!!error}
               />
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <p className="text-xs text-muted-foreground text-right">
                 {title.trim().length}/{MAX_TITLE_LENGTH}
               </p>
@@ -132,9 +140,15 @@ export function RenameThreadDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isRenaming || !title.trim() || title.trim().length > MAX_TITLE_LENGTH}
+              disabled={
+                isRenaming ||
+                !title.trim() ||
+                title.trim().length > MAX_TITLE_LENGTH
+              }
             >
-              {isRenaming ? t('common.loading') : t('sidebar.renameThreadConfirm')}
+              {isRenaming
+                ? t('common.loading')
+                : t('sidebar.renameThreadConfirm')}
             </Button>
           </DialogFooter>
         </form>

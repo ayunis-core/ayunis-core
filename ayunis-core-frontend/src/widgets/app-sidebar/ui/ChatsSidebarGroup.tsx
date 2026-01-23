@@ -218,56 +218,56 @@ export function ChatsSidebarGroup() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {threads.map((thread) => (
-                    <SidebarMenuItem key={thread.id} data-testid="chat">
-                      <SidebarMenuButton asChild>
-                        <Link
-                          to={'/chats/$threadId'}
-                          params={{ threadId: thread.id }}
+                  <SidebarMenuItem key={thread.id} data-testid="chat">
+                    <SidebarMenuButton asChild>
+                      <Link
+                        to={'/chats/$threadId'}
+                        params={{ threadId: thread.id }}
+                      >
+                        <MessageCircle />
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate">
+                            {thread.title || t('sidebar.untitled')}
+                          </span>
+                        </div>
+                      </Link>
+                    </SidebarMenuButton>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        data-testid="dropdown-menu-trigger"
+                        asChild
+                      >
+                        <SidebarMenuAction showOnHover>
+                          <MoreHorizontal />
+                          <span className="sr-only">{t('sidebar.more')}</span>
+                        </SidebarMenuAction>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-48 rounded-lg"
+                        side="bottom"
+                        align="end"
+                        data-testid="chat-dropdown"
+                      >
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleRenameClick(thread.id, thread.title ?? null)
+                          }
+                          data-testid="rename"
                         >
-                          <MessageCircle />
-                          <div className="grid flex-1 text-left text-sm leading-tight">
-                            <span className="truncate">
-                              {thread.title || t('sidebar.untitled')}
-                            </span>
-                          </div>
-                        </Link>
-                      </SidebarMenuButton>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          data-testid="dropdown-menu-trigger"
-                          asChild
+                          <Pencil className="h-4 w-4" />
+                          <span>{t('sidebar.renameChat')}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteClick(thread.id)}
+                          data-testid="delete"
                         >
-                          <SidebarMenuAction showOnHover>
-                            <MoreHorizontal />
-                            <span className="sr-only">{t('sidebar.more')}</span>
-                          </SidebarMenuAction>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          className="w-48 rounded-lg"
-                          side="bottom"
-                          align="end"
-                          data-testid="chat-dropdown"
-                        >
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleRenameClick(thread.id, thread.title ?? null)
-                            }
-                            data-testid="rename"
-                          >
-                            <Pencil className="h-4 w-4" />
-                            <span>{t('sidebar.renameChat')}</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(thread.id)}
-                            data-testid="delete"
-                          >
-                            <Trash className="text-destructive" />
-                            <span>{t('sidebar.deleteChat')}</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </SidebarMenuItem>
-                  ))}
+                          <Trash className="text-destructive" />
+                          <span>{t('sidebar.deleteChat')}</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </SidebarMenuItem>
+                ))}
                 {hasMore && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>

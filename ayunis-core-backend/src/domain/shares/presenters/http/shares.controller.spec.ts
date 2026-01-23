@@ -10,9 +10,10 @@ import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 import { AgentShare } from '../../domain/share.entity';
 import { OrgShareScope } from '../../domain/share-scope.entity';
-import { CreateAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
+import { CreateOrgAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 
 describe('SharesController', () => {
   let controller: SharesController;
@@ -53,6 +54,12 @@ describe('SharesController', () => {
           useValue: {
             toDto: jest.fn(),
             toDtoArray: jest.fn(),
+          },
+        },
+        {
+          provide: GetTeamUseCase,
+          useValue: {
+            execute: jest.fn(),
           },
         },
       ],
@@ -96,7 +103,7 @@ describe('SharesController', () => {
 
       // Assert
       expect(createShareUseCase.execute).toHaveBeenCalledWith(
-        expect.any(CreateAgentShareCommand),
+        expect.any(CreateOrgAgentShareCommand),
       );
       const command = (createShareUseCase.execute as jest.Mock).mock
         .calls[0][0];
@@ -223,7 +230,10 @@ describe('SharesController', () => {
           entityType,
         }),
       );
-      expect(shareDtoMapper.toDtoArray).toHaveBeenCalledWith(mockShares);
+      expect(shareDtoMapper.toDtoArray).toHaveBeenCalledWith(
+        mockShares,
+        expect.any(Map),
+      );
       expect(result).toEqual(expectedResponseDtos);
     });
   });

@@ -1,26 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { queryOptions, useQuery } from '@tanstack/react-query';
 import { PromptsPage } from '@/pages/prompts';
 import {
   getPromptsControllerFindAllQueryKey,
   promptsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
-const promptQueryOptions = () =>
-  queryOptions({
-    queryKey: getPromptsControllerFindAllQueryKey(),
-    queryFn: () => promptsControllerFindAll(),
-  });
-
 export const Route = createFileRoute('/_authenticated/prompts/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
-    const prompts = await queryClient.fetchQuery(promptQueryOptions());
-    return prompts;
+    const prompts = await queryClient.fetchQuery({
+      queryKey: getPromptsControllerFindAllQueryKey(),
+      queryFn: () => promptsControllerFindAll(),
+    });
+    return { prompts };
   },
 });
 
 function RouteComponent() {
-  const { data: prompts } = useQuery(promptQueryOptions());
-  return <PromptsPage prompts={prompts || []} />;
+  const { prompts } = Route.useLoaderData();
+  return <PromptsPage prompts={prompts} />;
 }

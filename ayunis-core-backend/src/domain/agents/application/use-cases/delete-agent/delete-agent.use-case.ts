@@ -4,8 +4,6 @@ import { DeleteAgentCommand } from './delete-agent.command';
 import { AgentNotFoundError, UnexpectedAgentError } from '../../agents.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { ReplaceAgentWithDefaultModelUseCase } from 'src/domain/threads/application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
-import { ReplaceAgentWithDefaultModelCommand } from 'src/domain/threads/application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.command';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -16,7 +14,6 @@ export class DeleteAgentUseCase {
   constructor(
     private readonly agentRepository: AgentRepository,
     private readonly contextService: ContextService,
-    private readonly replaceAgentWithDefaultModel: ReplaceAgentWithDefaultModelUseCase,
   ) {}
 
   @Transactional()
@@ -34,12 +31,9 @@ export class DeleteAgentUseCase {
         throw new AgentNotFoundError(command.agentId);
       }
 
-      // Replace agent in threads BEFORE deletion (while threads still reference this agentId)
-      await this.replaceAgentWithDefaultModel.execute(
-        new ReplaceAgentWithDefaultModelCommand({
-          oldAgentId: command.agentId,
-        }),
-      );
+      // Note: Threads that used this agent will show a "conversation no longer
+      // accessible" disclaimer when the user tries to continue the chat.
+      // The history is preserved.
 
       // Delete the agent
       await this.agentRepository.delete(command.agentId, userId);

@@ -1,0 +1,90 @@
+{
+  "teams": {
+    "page": {
+      "add": "Team hinzufügen"
+    },
+    "list": {
+      "emptyTitle": "Noch keine Teams",
+      "emptyDescription": "Erstellen Sie Ihr erstes Team, um Ihre Benutzer zu organisieren.",
+      "createdAt": "Erstellt am {{date}}"
+    },
+    "createDialog": {
+      "title": "Team erstellen",
+      "description": "Erstellen Sie ein neues Team, um Ihre Benutzer zu organisieren.",
+      "nameLabel": "Teamname",
+      "namePlaceholder": "z.B. Bauamt, Sozialamt, Öffentlichkeitsarbeit",
+      "nameRequired": "Teamname ist erforderlich",
+      "nameTooLong": "Teamname darf maximal 100 Zeichen lang sein",
+      "cancel": "Abbrechen",
+      "create": "Team erstellen",
+      "creating": "Erstellen..."
+    },
+    "editDialog": {
+      "title": "Team bearbeiten",
+      "description": "Aktualisieren Sie den Teamnamen.",
+      "nameLabel": "Teamname",
+      "namePlaceholder": "z.B. Bauamt, Sozialamt, Öffentlichkeitsarbeit",
+      "nameRequired": "Teamname ist erforderlich",
+      "nameTooLong": "Teamname darf maximal 100 Zeichen lang sein",
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern",
+      "saving": "Speichern..."
+    },
+    "createTeam": {
+      "success": "Team erfolgreich erstellt",
+      "error": "Team konnte nicht erstellt werden",
+      "duplicateName": "Ein Team mit diesem Namen existiert bereits"
+    },
+    "updateTeam": {
+      "success": "Team erfolgreich aktualisiert",
+      "error": "Team konnte nicht aktualisiert werden",
+      "duplicateName": "Ein Team mit diesem Namen existiert bereits",
+      "notFound": "Team nicht gefunden"
+    },
+    "deleteTeam": {
+      "title": "Team löschen",
+      "description": "Sind Sie sicher, dass Sie dieses Team löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen",
+      "success": "Team erfolgreich gelöscht",
+      "error": "Team konnte nicht gelöscht werden",
+      "notFound": "Team nicht gefunden"
+    }
+  },
+  "teamDetail": {
+    "backToTeams": "Teams",
+    "members": {
+      "title": "Mitglieder",
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "joinedAt": "Beigetreten",
+      "emptyTitle": "Noch keine Mitglieder",
+      "emptyDescription": "Fügen Sie Mitglieder zu diesem Team hinzu, um loszulegen."
+    },
+    "addMember": {
+      "button": "Mitglied hinzufügen",
+      "title": "Teammitglied hinzufügen",
+      "description": "Wählen Sie einen Benutzer aus Ihrer Organisation, um ihn diesem Team hinzuzufügen.",
+      "selectUser": "Benutzer auswählen",
+      "noUsersAvailable": "Keine Benutzer zum Hinzufügen verfügbar",
+      "cancel": "Abbrechen",
+      "add": "Mitglied hinzufügen",
+      "adding": "Hinzufügen...",
+      "success": "Mitglied erfolgreich hinzugefügt",
+      "error": "Mitglied konnte nicht hinzugefügt werden",
+      "alreadyMember": "Dieser Benutzer ist bereits Mitglied des Teams",
+      "notInSameOrg": "Benutzer muss in derselben Organisation sein",
+      "userNotFound": "Benutzer nicht gefunden"
+    },
+    "removeMember": {
+      "confirmTitle": "Mitglied entfernen",
+      "confirmDescription": "Sind Sie sicher, dass Sie dieses Mitglied aus dem Team entfernen möchten?",
+      "confirmButton": "Entfernen",
+      "cancelButton": "Abbrechen",
+      "success": "Mitglied erfolgreich entfernt",
+      "error": "Mitglied konnte nicht entfernt werden",
+      "notFound": "Mitglied nicht gefunden"
+    }
+  }
+}

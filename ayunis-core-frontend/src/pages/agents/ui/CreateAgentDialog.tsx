@@ -58,7 +58,8 @@ export default function CreateAgentDialog({
   } = useCreateAgent();
 
   // Fetch the user's effective default model
-  const { data: defaultModelData } = useModelsControllerGetEffectiveDefaultModel();
+  const { data: defaultModelData } =
+    useModelsControllerGetEffectiveDefaultModel();
 
   // Pre-select the default model when the dialog opens
   useEffect(() => {
@@ -128,10 +129,7 @@ export default function CreateAgentDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('createDialog.form.modelLabel')}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue

@@ -23,7 +23,6 @@ import { LocalThreadsRepository } from './infrastructure/persistence/local/local
 import { GetThreadsDtoMapper } from './presenters/http/mappers/get-threads.mapper';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { ReplaceAgentWithDefaultModelUseCase } from './application/use-cases/replace-agent-with-default-model/replace-agent-with-default-model.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from './application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { AgentsModule } from '../agents/agents.module';
 import { StorageModule } from '../storage/storage.module';
@@ -57,7 +56,6 @@ import { MessagesModule } from '../messages/messages.module';
     UpdateThreadTitleUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
-    ReplaceAgentWithDefaultModelUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     // Mappers
     SourceDtoMapper,
@@ -76,7 +74,6 @@ import { MessagesModule } from '../messages/messages.module';
     UpdateThreadTitleUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
-    ReplaceAgentWithDefaultModelUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     // Export mappers
     GetThreadDtoMapper,

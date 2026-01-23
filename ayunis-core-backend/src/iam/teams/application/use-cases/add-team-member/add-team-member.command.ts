@@ -1,0 +1,11 @@
+import { UUID } from 'crypto';
+
+export class AddTeamMemberCommand {
+  public readonly teamId: UUID;
+  public readonly userId: UUID;
+
+  constructor(params: { teamId: UUID; userId: UUID }) {
+    this.teamId = params.teamId;
+    this.userId = params.userId;
+  }
+}

@@ -4,7 +4,6 @@ import { ToolsModule } from 'src/domain/tools/tools.module';
 import { SourcesModule } from '../sources/sources.module';
 import { McpModule } from '../mcp/mcp.module';
 import { SharesModule } from '../shares/shares.module';
-import { ThreadsModule } from '../threads/threads.module';
 import { LocalAgentsRepositoryModule } from './infrastructure/persistence/local/local-agent-repository.module';
 import { LocalAgentRepository } from './infrastructure/persistence/local/local-agent.repository';
 import { AgentRepository } from './application/ports/agent.repository';
@@ -47,7 +46,6 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     LocalAgentsRepositoryModule,
     forwardRef(() => ModelsModule),
     forwardRef(() => SharesModule),
-    forwardRef(() => ThreadsModule),
     SourcesModule,
     ToolsModule,
     McpModule,

@@ -23,16 +23,23 @@ import {
 
 // Import use cases
 import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
-import { CreateAgentShareCommand } from '../../application/use-cases/create-share/create-share.command';
+import {
+  CreateOrgAgentShareCommand,
+  CreateTeamAgentShareCommand,
+} from '../../application/use-cases/create-share/create-share.command';
 import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
 import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
 import { GetSharesQuery } from '../../application/use-cases/get-shares/get-shares.query';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
+import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 
 // Import DTOs and mappers
 import { ShareResponseDto } from './dto/share-response.dto';
 import { CreateAgentShareDto } from './dto/create-share.dto';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
+import { TeamShareScope } from '../../domain/share-scope.entity';
 
 @ApiTags('shares')
 @Controller('shares')
@@ -44,6 +51,7 @@ export class SharesController {
     private readonly deleteShareUseCase: DeleteShareUseCase,
     private readonly getSharesUseCase: GetSharesUseCase,
     private readonly shareDtoMapper: ShareDtoMapper,
+    private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
 
   @Post()
@@ -70,15 +78,29 @@ export class SharesController {
     this.logger.log('createShare', {
       entityType: createShareDto.entityType,
       agentId: createShareDto.agentId,
+      teamId: createShareDto.teamId,
     });
 
-    // Create command based on entity type
-    const command = new CreateAgentShareCommand(createShareDto.agentId as UUID);
+    // Create command based on whether teamId is provided
+    const command = createShareDto.teamId
+      ? new CreateTeamAgentShareCommand(
+          createShareDto.agentId as UUID,
+          createShareDto.teamId as UUID,
+        )
+      : new CreateOrgAgentShareCommand(createShareDto.agentId as UUID);
 
     // Execute use case
     const share = await this.createShareUseCase.execute(command);
 
-    // Map to response DTO
+    // Map to response DTO with team name if applicable
+    if (share.scope.scopeType === ShareScopeType.TEAM) {
+      const teamScope = share.scope as TeamShareScope;
+      const team = await this.getTeamUseCase.execute(
+        new GetTeamQuery(teamScope.teamId),
+      );
+      return this.shareDtoMapper.toDto(share, team.name);
+    }
+
     return this.shareDtoMapper.toDto(share);
   }
 
@@ -118,7 +140,21 @@ export class SharesController {
       new GetSharesQuery(entityId, entityType),
     );
 
-    return this.shareDtoMapper.toDtoArray(shares);
+    // Build team names map for team-scoped shares
+    const teamNamesMap = new Map<string, string>();
+    for (const share of shares) {
+      if (share.scope.scopeType === ShareScopeType.TEAM) {
+        const teamScope = share.scope as TeamShareScope;
+        if (!teamNamesMap.has(teamScope.teamId)) {
+          const team = await this.getTeamUseCase.execute(
+            new GetTeamQuery(teamScope.teamId),
+          );
+          teamNamesMap.set(teamScope.teamId, team.name);
+        }
+      }
+    }
+
+    return this.shareDtoMapper.toDtoArray(shares, teamNamesMap);
   }
 
   @Delete(':id')

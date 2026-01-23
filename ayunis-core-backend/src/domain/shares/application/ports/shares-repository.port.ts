@@ -62,4 +62,22 @@ export abstract class SharesRepository {
     scopeType: ShareScopeType,
     scopeId: UUID,
   ): Promise<Share | null>;
+
+  /**
+   * Finds all shares for a specific entity type that are scoped to any of the provided team IDs
+   * @param entityType - Type of the entity (agent, prompt, etc.)
+   * @param teamIds - Array of team IDs to search for
+   * @returns Array of shares matching the criteria
+   */
+  abstract findByEntityTypeAndTeamIds(
+    entityType: SharedEntityType,
+    teamIds: UUID[],
+  ): Promise<Share[]>;
+
+  /**
+   * Finds all shares scoped to a specific team (regardless of entity type)
+   * @param teamId - ID of the team
+   * @returns Array of all shares scoped to the team
+   */
+  abstract findByTeamId(teamId: UUID): Promise<Share[]>;
 }
