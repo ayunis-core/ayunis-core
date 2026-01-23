@@ -7,6 +7,7 @@ import { useMessageSend } from '../api/useMessageSend';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 import LongChatWarning from './LongChatWarning';
+import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
@@ -45,6 +46,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
+  getAgentsControllerFindAllQueryKey,
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -62,8 +64,8 @@ export default function ChatPage({
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
-  const { agents } = useAgents();
-  const { models } = usePermittedModels();
+  const { agents, isLoading: isLoadingAgents } = useAgents();
+  const { models, isLoading: isLoadingModels } = usePermittedModels();
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
     queryFn: () => threadsControllerFindOne(initialThread.id),
@@ -77,6 +79,32 @@ export default function ChatPage({
   const isVisionEnabled = thread.agentId
     ? (selectedAgent?.model.canVision ?? false)
     : (selectedModel?.canVision ?? false);
+
+  // Detect if the agent or model used in this thread is no longer accessible
+  // This happens when:
+  // - Thread has an agentId but agent is not found in user's accessible agents
+  // - Thread has a permittedModelId (and no agent) but model is not found in permitted models
+  // Note: We only consider the agent/model unavailable once loading has completed
+  // to avoid flashing the warning while data is still being fetched
+  const isAgentUnavailable = useMemo(() => {
+    if (thread.agentId) {
+      // Thread uses an agent - check if agent is accessible (only after loading)
+      return !isLoadingAgents && !selectedAgent;
+    }
+    if (thread.permittedModelId) {
+      // Thread uses a model directly - check if model is accessible (only after loading)
+      return !isLoadingModels && !selectedModel;
+    }
+    // No agent or model specified (shouldn't happen in practice)
+    return false;
+  }, [
+    thread.agentId,
+    thread.permittedModelId,
+    selectedAgent,
+    selectedModel,
+    isLoadingAgents,
+    isLoadingModels,
+  ]);
 
   const queryClient = useQueryClient();
   const processedPendingMessageRef = useRef<string | null>(null);
@@ -167,6 +195,16 @@ export default function ChatPage({
         case 'RUN_TOOL_NOT_FOUND':
           showError(t('chat.errorToolNotFound'));
           break;
+        case 'THREAD_AGENT_NO_LONGER_ACCESSIBLE':
+          // Refresh the agents list and thread to show the warning
+          void queryClient.invalidateQueries({
+            queryKey: getAgentsControllerFindAllQueryKey(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: getThreadsControllerFindOneQueryKey(thread.id),
+          });
+          showError(t('chat.unavailableAgentWarningTitle'));
+          break;
         case 'QUOTA_EXCEEDED': {
           const retryMinutes = error.details?.retryAfterSeconds
             ? Math.ceil(Number(error.details.retryAfterSeconds) / 60)
@@ -182,7 +220,7 @@ export default function ChatPage({
           showError(t('chat.errorUnexpected'));
       }
     },
-    [t],
+    [t, queryClient, thread.id],
   );
 
   const handleSession = useCallback((session: RunSessionResponseDto) => {
@@ -482,7 +520,9 @@ export default function ChatPage({
   // Chat Input
   // Agent, model, and anonymous mode controls are always disabled on ChatPage
   // because the thread already has messages (ChatPage is only shown after first message)
-  const chatInput = (
+  const chatInput = isAgentUnavailable ? (
+    <UnavailableAgentWarning />
+  ) : (
     <>
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}

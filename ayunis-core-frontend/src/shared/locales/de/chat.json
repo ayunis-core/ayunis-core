@@ -63,6 +63,8 @@
     },
     "longChatWarningTitle": "Konversation zu lang",
     "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
+    "unavailableAgentWarningTitle": "Agent nicht mehr verfügbar",
+    "unavailableAgentWarningDescription": "Der Agent oder das Modell dieser Unterhaltung ist nicht mehr verfügbar. Sie können die Nachrichtenhistorie noch einsehen, aber die Unterhaltung nicht fortsetzen.",
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen."
   },
   "newChat": {

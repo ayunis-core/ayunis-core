@@ -30,6 +30,7 @@ import {
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
   RunToolExecutionFailedError,
+  ThreadAgentNoLongerAccessibleError,
 } from '../../runs.errors';
 import {
   RunUserInput,
@@ -69,6 +70,7 @@ import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integr
 import { Agent } from 'src/domain/agents/domain/agent.entity';
 import { FindOneAgentUseCase } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.use-case';
 import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-one-agent/find-one-agent.query';
+import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
@@ -127,12 +129,24 @@ export class ExecuteRunUseCase {
       // Fetch the agent separately to prevent accidental access of not-shared-anymore agents
       let agent: Agent | undefined;
       if (thread.agentId) {
-        // This will fail if the agent is no longer accessible (not owned or shared)
-        agent = (
-          await this.findOneAgentUseCase.execute(
-            new FindOneAgentQuery(thread.agentId),
-          )
-        ).agent;
+        try {
+          // This will fail if the agent is no longer accessible (not owned or shared)
+          agent = (
+            await this.findOneAgentUseCase.execute(
+              new FindOneAgentQuery(thread.agentId),
+            )
+          ).agent;
+        } catch (error) {
+          // If agent is not found or not accessible, throw a specific error
+          // that the frontend can handle to show a disclaimer
+          if (error instanceof AgentNotFoundError) {
+            throw new ThreadAgentNoLongerAccessibleError(
+              command.threadId,
+              thread.agentId,
+            );
+          }
+          throw error;
+        }
       }
       const model = this.pickModel(thread, agent);
       // Effective anonymous mode: enabled if thread is anonymous OR model enforces it
