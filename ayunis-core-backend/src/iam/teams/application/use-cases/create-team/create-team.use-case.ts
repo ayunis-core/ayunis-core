@@ -3,8 +3,9 @@ import { CreateTeamCommand } from './create-team.command';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { Team } from '../../../domain/team.entity';
 import {
-  TeamCreationFailedError,
+  TeamInvalidInputError,
   TeamNameAlreadyExistsError,
+  UnexpectedTeamError,
 } from '../../teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -32,7 +33,7 @@ export class CreateTeamUseCase {
 
     if (!trimmedName) {
       this.logger.warn('Attempted to create team with empty name');
-      throw new TeamCreationFailedError('Team name cannot be empty');
+      throw new TeamInvalidInputError('Team name cannot be empty');
     }
 
     try {
@@ -67,7 +68,7 @@ export class CreateTeamUseCase {
         name: command.name,
         orgId,
       });
-      throw new TeamCreationFailedError('Failed to create team');
+      throw new UnexpectedTeamError(error);
     }
   }
 }

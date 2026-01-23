@@ -13,9 +13,7 @@ export enum TeamMemberErrorCode {
   TEAM_MEMBER_NOT_FOUND = 'TEAM_MEMBER_NOT_FOUND',
   USER_ALREADY_TEAM_MEMBER = 'USER_ALREADY_TEAM_MEMBER',
   USER_NOT_IN_SAME_ORG = 'USER_NOT_IN_SAME_ORG',
-  TEAM_MEMBER_CREATION_FAILED = 'TEAM_MEMBER_CREATION_FAILED',
-  TEAM_MEMBER_RETRIEVAL_FAILED = 'TEAM_MEMBER_RETRIEVAL_FAILED',
-  TEAM_MEMBER_DELETION_FAILED = 'TEAM_MEMBER_DELETION_FAILED',
+  UNEXPECTED_TEAM_MEMBER_ERROR = 'UNEXPECTED_TEAM_MEMBER_ERROR',
 }
 
 export abstract class TeamMemberError extends ApplicationError {
@@ -91,35 +89,16 @@ export class UserNotInSameOrgError extends TeamMemberError {
   }
 }
 
-export class TeamMemberCreationFailedError extends TeamMemberError {
-  constructor(message: string, metadata?: ErrorMetadata) {
+/**
+ * Error thrown when an unexpected error occurs
+ */
+export class UnexpectedTeamMemberError extends TeamMemberError {
+  constructor(error: unknown) {
     super(
-      message,
-      TeamMemberErrorCode.TEAM_MEMBER_CREATION_FAILED,
+      'Unexpected error occurred',
+      TeamMemberErrorCode.UNEXPECTED_TEAM_MEMBER_ERROR,
       500,
-      metadata,
-    );
-  }
-}
-
-export class TeamMemberRetrievalFailedError extends TeamMemberError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(
-      message,
-      TeamMemberErrorCode.TEAM_MEMBER_RETRIEVAL_FAILED,
-      500,
-      metadata,
-    );
-  }
-}
-
-export class TeamMemberDeletionFailedError extends TeamMemberError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(
-      message,
-      TeamMemberErrorCode.TEAM_MEMBER_DELETION_FAILED,
-      500,
-      metadata,
+      { error },
     );
   }
 }

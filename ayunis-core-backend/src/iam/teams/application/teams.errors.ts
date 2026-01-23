@@ -12,10 +12,8 @@ import {
 export enum TeamErrorCode {
   TEAM_NOT_FOUND = 'TEAM_NOT_FOUND',
   TEAM_NAME_ALREADY_EXISTS = 'TEAM_NAME_ALREADY_EXISTS',
-  TEAM_CREATION_FAILED = 'TEAM_CREATION_FAILED',
-  TEAM_UPDATE_FAILED = 'TEAM_UPDATE_FAILED',
-  TEAM_RETRIEVAL_FAILED = 'TEAM_RETRIEVAL_FAILED',
-  TEAM_DELETION_FAILED = 'TEAM_DELETION_FAILED',
+  TEAM_INVALID_INPUT = 'TEAM_INVALID_INPUT',
+  UNEXPECTED_TEAM_ERROR = 'UNEXPECTED_TEAM_ERROR',
 }
 
 export abstract class TeamError extends ApplicationError {
@@ -80,26 +78,30 @@ export class TeamNameAlreadyExistsError extends TeamError {
   }
 }
 
-export class TeamCreationFailedError extends TeamError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, TeamErrorCode.TEAM_CREATION_FAILED, 400, metadata);
+/**
+ * Error thrown when team input is invalid
+ */
+export class TeamInvalidInputError extends TeamError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid team input: ${reason}`,
+      TeamErrorCode.TEAM_INVALID_INPUT,
+      400,
+      metadata,
+    );
   }
 }
 
-export class TeamRetrievalFailedError extends TeamError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, TeamErrorCode.TEAM_RETRIEVAL_FAILED, 500, metadata);
-  }
-}
-
-export class TeamDeletionFailedError extends TeamError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, TeamErrorCode.TEAM_DELETION_FAILED, 500, metadata);
-  }
-}
-
-export class TeamUpdateFailedError extends TeamError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, TeamErrorCode.TEAM_UPDATE_FAILED, 500, metadata);
+/**
+ * Error thrown when an unexpected error occurs
+ */
+export class UnexpectedTeamError extends TeamError {
+  constructor(error: unknown) {
+    super(
+      'Unexpected error occurred',
+      TeamErrorCode.UNEXPECTED_TEAM_ERROR,
+      500,
+      { error },
+    );
   }
 }

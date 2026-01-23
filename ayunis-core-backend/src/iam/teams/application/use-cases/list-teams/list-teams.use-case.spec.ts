@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ListTeamsUseCase } from './list-teams.use-case';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { Team } from '../../../domain/team.entity';
-import { TeamRetrievalFailedError } from '../../teams.errors';
+import { UnexpectedTeamError } from '../../teams.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -72,20 +72,12 @@ describe('ListTeamsUseCase', () => {
       expect(mockTeamsRepository.findByOrgId).toHaveBeenCalledWith(mockOrgId);
     });
 
-    it('should throw TeamRetrievalFailedError when repository throws unexpected error', async () => {
+    it('should throw UnexpectedTeamError when repository throws unexpected error', async () => {
       jest
         .spyOn(mockTeamsRepository, 'findByOrgId')
         .mockRejectedValue(new Error('Database error'));
 
-      await expect(useCase.execute()).rejects.toThrow(TeamRetrievalFailedError);
-    });
-
-    it('should propagate TeamRetrievalFailedError from repository', async () => {
-      jest
-        .spyOn(mockTeamsRepository, 'findByOrgId')
-        .mockRejectedValue(new TeamRetrievalFailedError('Connection failed'));
-
-      await expect(useCase.execute()).rejects.toThrow(TeamRetrievalFailedError);
+      await expect(useCase.execute()).rejects.toThrow(UnexpectedTeamError);
     });
   });
 

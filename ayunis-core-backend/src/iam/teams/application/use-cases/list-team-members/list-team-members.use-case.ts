@@ -3,10 +3,7 @@ import { TeamsRepository } from '../../ports/teams.repository';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { ListTeamMembersQuery } from './list-team-members.query';
 import { TeamMember } from '../../../domain/team-member.entity';
-import {
-  TeamNotFoundError,
-  TeamRetrievalFailedError,
-} from '../../teams.errors';
+import { TeamNotFoundError, UnexpectedTeamError } from '../../teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -68,7 +65,7 @@ export class ListTeamMembersUseCase {
         error: error instanceof Error ? error.message : 'Unknown error',
         teamId: query.teamId,
       });
-      throw new TeamRetrievalFailedError('Failed to retrieve team members');
+      throw new UnexpectedTeamError(error);
     }
   }
 }

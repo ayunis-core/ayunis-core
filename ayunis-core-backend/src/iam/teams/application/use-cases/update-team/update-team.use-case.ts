@@ -3,9 +3,10 @@ import { UpdateTeamCommand } from './update-team.command';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { Team } from '../../../domain/team.entity';
 import {
+  TeamInvalidInputError,
   TeamNameAlreadyExistsError,
   TeamNotFoundError,
-  TeamUpdateFailedError,
+  UnexpectedTeamError,
 } from '../../teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -36,7 +37,7 @@ export class UpdateTeamUseCase {
 
     if (!trimmedName) {
       this.logger.warn('Attempted to update team with empty name');
-      throw new TeamUpdateFailedError('Team name cannot be empty');
+      throw new TeamInvalidInputError('Team name cannot be empty');
     }
 
     try {
@@ -93,7 +94,7 @@ export class UpdateTeamUseCase {
         name: command.name,
         orgId,
       });
-      throw new TeamUpdateFailedError('Failed to update team');
+      throw new UnexpectedTeamError(error);
     }
   }
 }

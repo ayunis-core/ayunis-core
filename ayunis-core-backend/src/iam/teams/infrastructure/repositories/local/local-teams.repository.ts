@@ -7,12 +7,6 @@ import { TeamRecord } from './schema/team.record';
 import { TeamMemberRecord } from './schema/team-member.record';
 import { TeamMapper } from './mappers/team.mapper';
 import { UUID } from 'crypto';
-import {
-  TeamCreationFailedError,
-  TeamDeletionFailedError,
-  TeamRetrievalFailedError,
-  TeamUpdateFailedError,
-} from '../../../application/teams.errors';
 
 @Injectable()
 export class LocalTeamsRepository extends TeamsRepository {
@@ -29,89 +23,61 @@ export class LocalTeamsRepository extends TeamsRepository {
   async findById(id: UUID): Promise<Team | null> {
     this.logger.log('findById', { id });
 
-    try {
-      const teamRecord = await this.teamRepository.findOne({
-        where: { id },
-      });
+    const teamRecord = await this.teamRepository.findOne({
+      where: { id },
+    });
 
-      if (!teamRecord) {
-        this.logger.debug('Team not found', { id });
-        return null;
-      }
-
-      this.logger.debug('Team found', { id, name: teamRecord.name });
-      return TeamMapper.toDomain(teamRecord);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding team', { error: err, id });
-      throw new TeamRetrievalFailedError(err.message);
+    if (!teamRecord) {
+      this.logger.debug('Team not found', { id });
+      return null;
     }
+
+    this.logger.debug('Team found', { id, name: teamRecord.name });
+    return TeamMapper.toDomain(teamRecord);
   }
 
   async findByOrgId(orgId: UUID): Promise<Team[]> {
     this.logger.log('findByOrgId', { orgId });
 
-    try {
-      const teamRecords = await this.teamRepository.find({
-        where: { orgId },
-        order: { createdAt: 'DESC' },
-      });
+    const teamRecords = await this.teamRepository.find({
+      where: { orgId },
+      order: { createdAt: 'DESC' },
+    });
 
-      this.logger.debug('Teams found', { orgId, count: teamRecords.length });
-      return teamRecords.map((record) => TeamMapper.toDomain(record));
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding teams by org', { error: err, orgId });
-      throw new TeamRetrievalFailedError(err.message);
-    }
+    this.logger.debug('Teams found', { orgId, count: teamRecords.length });
+    return teamRecords.map((record) => TeamMapper.toDomain(record));
   }
 
   async findByNameAndOrgId(name: string, orgId: UUID): Promise<Team | null> {
     this.logger.log('findByNameAndOrgId', { name, orgId });
 
-    try {
-      const teamRecord = await this.teamRepository.findOne({
-        where: { name, orgId },
-      });
+    const teamRecord = await this.teamRepository.findOne({
+      where: { name, orgId },
+    });
 
-      if (!teamRecord) {
-        this.logger.debug('Team not found', { name, orgId });
-        return null;
-      }
-
-      return TeamMapper.toDomain(teamRecord);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding team by name and org', {
-        error: err,
-        name,
-        orgId,
-      });
-      throw new TeamRetrievalFailedError(err.message);
+    if (!teamRecord) {
+      this.logger.debug('Team not found', { name, orgId });
+      return null;
     }
+
+    return TeamMapper.toDomain(teamRecord);
   }
 
   async findByUserId(userId: UUID): Promise<Team[]> {
     this.logger.log('findByUserId', { userId });
 
-    try {
-      const teamRecords = await this.teamRepository
-        .createQueryBuilder('team')
-        .innerJoin(TeamMemberRecord, 'tm', 'tm.team_id = team.id')
-        .where('tm.user_id = :userId', { userId })
-        .orderBy('team.name', 'ASC')
-        .getMany();
+    const teamRecords = await this.teamRepository
+      .createQueryBuilder('team')
+      .innerJoin(TeamMemberRecord, 'tm', 'tm.team_id = team.id')
+      .where('tm.user_id = :userId', { userId })
+      .orderBy('team.name', 'ASC')
+      .getMany();
 
-      this.logger.debug('Teams found for user', {
-        userId,
-        count: teamRecords.length,
-      });
-      return teamRecords.map((record) => TeamMapper.toDomain(record));
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding teams by user', { error: err, userId });
-      throw new TeamRetrievalFailedError(err.message);
-    }
+    this.logger.debug('Teams found for user', {
+      userId,
+      count: teamRecords.length,
+    });
+    return teamRecords.map((record) => TeamMapper.toDomain(record));
   }
 
   async create(team: Team): Promise<Team> {
@@ -121,28 +87,15 @@ export class LocalTeamsRepository extends TeamsRepository {
       orgId: team.orgId,
     });
 
-    try {
-      const teamRecord = TeamMapper.toRecord(team);
-      const savedRecord = await this.teamRepository.save(teamRecord);
+    const teamRecord = TeamMapper.toRecord(team);
+    const savedRecord = await this.teamRepository.save(teamRecord);
 
-      this.logger.debug('Team created successfully', {
-        id: savedRecord.id,
-        name: savedRecord.name,
-      });
+    this.logger.debug('Team created successfully', {
+      id: savedRecord.id,
+      name: savedRecord.name,
+    });
 
-      return TeamMapper.toDomain(savedRecord);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error creating team', {
-        error: err,
-        id: team.id,
-        name: team.name,
-      });
-
-      throw new TeamCreationFailedError(
-        `Failed to create team: ${err.message}`,
-      );
-    }
+    return TeamMapper.toDomain(savedRecord);
   }
 
   async update(team: Team): Promise<Team> {
@@ -151,40 +104,21 @@ export class LocalTeamsRepository extends TeamsRepository {
       name: team.name,
     });
 
-    try {
-      const teamRecord = TeamMapper.toRecord(team);
-      const savedRecord = await this.teamRepository.save(teamRecord);
+    const teamRecord = TeamMapper.toRecord(team);
+    const savedRecord = await this.teamRepository.save(teamRecord);
 
-      this.logger.debug('Team updated successfully', {
-        id: savedRecord.id,
-        name: savedRecord.name,
-      });
+    this.logger.debug('Team updated successfully', {
+      id: savedRecord.id,
+      name: savedRecord.name,
+    });
 
-      return TeamMapper.toDomain(savedRecord);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error updating team', {
-        error: err,
-        id: team.id,
-        name: team.name,
-      });
-
-      throw new TeamUpdateFailedError(`Failed to update team: ${err.message}`);
-    }
+    return TeamMapper.toDomain(savedRecord);
   }
 
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
 
-    try {
-      await this.teamRepository.delete(id);
-      this.logger.debug('Team deleted successfully', { id });
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error deleting team', { error: err, id });
-      throw new TeamDeletionFailedError(
-        `Failed to delete team: ${err.message}`,
-      );
-    }
+    await this.teamRepository.delete(id);
+    this.logger.debug('Team deleted successfully', { id });
   }
 }

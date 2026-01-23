@@ -4,8 +4,9 @@ import { CreateTeamCommand } from './create-team.command';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { Team } from '../../../domain/team.entity';
 import {
-  TeamCreationFailedError,
+  TeamInvalidInputError,
   TeamNameAlreadyExistsError,
+  UnexpectedTeamError,
 } from '../../teams.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UUID } from 'crypto';
@@ -88,27 +89,27 @@ describe('CreateTeamUseCase', () => {
       expect(mockTeamsRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should throw TeamCreationFailedError when name is empty', async () => {
+    it('should throw TeamInvalidInputError when name is empty', async () => {
       const command = new CreateTeamCommand('');
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        TeamCreationFailedError,
+        TeamInvalidInputError,
       );
       expect(mockTeamsRepository.findByNameAndOrgId).not.toHaveBeenCalled();
       expect(mockTeamsRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should throw TeamCreationFailedError when name is only whitespace', async () => {
+    it('should throw TeamInvalidInputError when name is only whitespace', async () => {
       const command = new CreateTeamCommand('   ');
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        TeamCreationFailedError,
+        TeamInvalidInputError,
       );
       expect(mockTeamsRepository.findByNameAndOrgId).not.toHaveBeenCalled();
       expect(mockTeamsRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should throw TeamCreationFailedError when repository throws unexpected error', async () => {
+    it('should throw UnexpectedTeamError when repository throws unexpected error', async () => {
       const command = new CreateTeamCommand('Engineering');
 
       jest
@@ -119,7 +120,7 @@ describe('CreateTeamUseCase', () => {
         .mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        TeamCreationFailedError,
+        UnexpectedTeamError,
       );
     });
   });

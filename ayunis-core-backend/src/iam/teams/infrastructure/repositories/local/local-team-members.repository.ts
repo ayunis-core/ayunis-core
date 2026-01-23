@@ -7,11 +7,6 @@ import { TeamMemberRecord } from './schema/team-member.record';
 import { TeamMemberMapper } from './mappers/team-member.mapper';
 import { UUID } from 'crypto';
 import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
-import {
-  TeamMemberCreationFailedError,
-  TeamMemberDeletionFailedError,
-  TeamMemberRetrievalFailedError,
-} from '../../../application/team-members.errors';
 
 @Injectable()
 export class LocalTeamMembersRepository extends TeamMembersRepository {
@@ -31,31 +26,25 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
   ): Promise<Paginated<TeamMember>> {
     this.logger.log('findByTeamId', { teamId, pagination });
 
-    try {
-      const [records, total] = await this.teamMemberRepository.findAndCount({
-        where: { teamId },
-        relations: ['user'],
-        order: { createdAt: 'DESC' },
-        skip: pagination.offset,
-        take: pagination.limit,
-      });
+    const [records, total] = await this.teamMemberRepository.findAndCount({
+      where: { teamId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      skip: pagination.offset,
+      take: pagination.limit,
+    });
 
-      this.logger.debug('Team members found', {
-        teamId,
-        count: records.length,
-      });
+    this.logger.debug('Team members found', {
+      teamId,
+      count: records.length,
+    });
 
-      return new Paginated({
-        data: records.map((record) => TeamMemberMapper.toDomain(record)),
-        limit: pagination.limit,
-        offset: pagination.offset,
-        total,
-      });
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding team members', { error: err, teamId });
-      throw new TeamMemberRetrievalFailedError(err.message);
-    }
+    return new Paginated({
+      data: records.map((record) => TeamMemberMapper.toDomain(record)),
+      limit: pagination.limit,
+      offset: pagination.offset,
+      total,
+    });
   }
 
   async findByTeamIdAndUserId(
@@ -64,28 +53,18 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
   ): Promise<TeamMember | null> {
     this.logger.log('findByTeamIdAndUserId', { teamId, userId });
 
-    try {
-      const record = await this.teamMemberRepository.findOne({
-        where: { teamId, userId },
-        relations: ['user'],
-      });
+    const record = await this.teamMemberRepository.findOne({
+      where: { teamId, userId },
+      relations: ['user'],
+    });
 
-      if (!record) {
-        this.logger.debug('Team member not found', { teamId, userId });
-        return null;
-      }
-
-      this.logger.debug('Team member found', { teamId, userId });
-      return TeamMemberMapper.toDomain(record);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding team member', {
-        error: err,
-        teamId,
-        userId,
-      });
-      throw new TeamMemberRetrievalFailedError(err.message);
+    if (!record) {
+      this.logger.debug('Team member not found', { teamId, userId });
+      return null;
     }
+
+    this.logger.debug('Team member found', { teamId, userId });
+    return TeamMemberMapper.toDomain(record);
   }
 
   async create(teamMember: TeamMember): Promise<TeamMember> {
@@ -95,65 +74,33 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
       userId: teamMember.userId,
     });
 
-    try {
-      const record = TeamMemberMapper.toRecord(teamMember);
-      const savedRecord = await this.teamMemberRepository.save(record);
+    const record = TeamMemberMapper.toRecord(teamMember);
+    const savedRecord = await this.teamMemberRepository.save(record);
 
-      // Reload with user relation
-      const reloadedRecord = await this.teamMemberRepository.findOne({
-        where: { id: savedRecord.id },
-        relations: ['user'],
-      });
+    // Reload with user relation
+    const reloadedRecord = await this.teamMemberRepository.findOne({
+      where: { id: savedRecord.id },
+      relations: ['user'],
+    });
 
-      this.logger.debug('Team member created successfully', {
-        id: savedRecord.id,
-      });
+    this.logger.debug('Team member created successfully', {
+      id: savedRecord.id,
+    });
 
-      return TeamMemberMapper.toDomain(reloadedRecord!);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error creating team member', {
-        error: err,
-        id: teamMember.id,
-      });
-
-      throw new TeamMemberCreationFailedError(
-        `Failed to create team member: ${err.message}`,
-      );
-    }
+    return TeamMemberMapper.toDomain(reloadedRecord!);
   }
 
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
 
-    try {
-      await this.teamMemberRepository.delete(id);
-      this.logger.debug('Team member deleted successfully', { id });
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error deleting team member', { error: err, id });
-      throw new TeamMemberDeletionFailedError(
-        `Failed to delete team member: ${err.message}`,
-      );
-    }
+    await this.teamMemberRepository.delete(id);
+    this.logger.debug('Team member deleted successfully', { id });
   }
 
   async deleteByTeamIdAndUserId(teamId: UUID, userId: UUID): Promise<void> {
     this.logger.log('deleteByTeamIdAndUserId', { teamId, userId });
 
-    try {
-      await this.teamMemberRepository.delete({ teamId, userId });
-      this.logger.debug('Team member deleted successfully', { teamId, userId });
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error deleting team member', {
-        error: err,
-        teamId,
-        userId,
-      });
-      throw new TeamMemberDeletionFailedError(
-        `Failed to delete team member: ${err.message}`,
-      );
-    }
+    await this.teamMemberRepository.delete({ teamId, userId });
+    this.logger.debug('Team member deleted successfully', { teamId, userId });
   }
 }

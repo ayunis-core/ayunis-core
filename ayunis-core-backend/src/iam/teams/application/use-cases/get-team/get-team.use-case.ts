@@ -2,10 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { GetTeamQuery } from './get-team.query';
 import { Team } from '../../../domain/team.entity';
-import {
-  TeamNotFoundError,
-  TeamRetrievalFailedError,
-} from '../../teams.errors';
+import { TeamNotFoundError, UnexpectedTeamError } from '../../teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -58,7 +55,7 @@ export class GetTeamUseCase {
         error: error instanceof Error ? error.message : 'Unknown error',
         teamId: query.teamId,
       });
-      throw new TeamRetrievalFailedError('Failed to retrieve team');
+      throw new UnexpectedTeamError(error);
     }
   }
 }
