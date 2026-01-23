@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/ayunis-core/ayunis-core/compare/v1.1.0...v1.2.0) (2026-01-23)
+
+
+### Features
+
+* Add disclaimer about AI accuracy and fact checking to chat page ([#76](https://github.com/ayunis-core/ayunis-core/issues/76)) ([1c4ecd9](https://github.com/ayunis-core/ayunis-core/commit/1c4ecd9c57a254ec0720aafbf5cfcfb39a85e7dd))
+* group agents in chat input ([#77](https://github.com/ayunis-core/ayunis-core/issues/77)) ([9aefbb8](https://github.com/ayunis-core/ayunis-core/commit/9aefbb828e9817dce053c26e4ea3005e31f160b4))
+* introduce 'teams' and make agents sharable to teams AYC-55 ([#27](https://github.com/ayunis-core/ayunis-core/issues/27)) ([b985aec](https://github.com/ayunis-core/ayunis-core/commit/b985aecf2b94931747fcb7d5a38b8c6a9a0eeec9))
+
+
+### Miscellaneous
+
+* remove unused folders AYC-000 ([#73](https://github.com/ayunis-core/ayunis-core/issues/73)) ([2369369](https://github.com/ayunis-core/ayunis-core/commit/236936947df481a6e308b4af6bd036a39e6f979e))
+
 ## [1.1.0](https://github.com/ayunis-core/ayunis-core/compare/v1.0.0...v1.1.0) (2026-01-19)
 
 
