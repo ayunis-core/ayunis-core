@@ -162,7 +162,7 @@ jobs:
   trigger-docs-update:
     name: Trigger Docs Update
     runs-on: ubuntu-latest
-    needs: [release-please, deploy-production, notify-slack]
+    needs: [release-please, deploy-production]
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     steps:
       - name: Trigger docs update workflow
