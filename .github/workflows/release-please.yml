@@ -158,3 +158,16 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "$PAYLOAD" \
             "$SLACK_WEBHOOK_URL"
+
+  trigger-docs-update:
+    name: Trigger Docs Update
+    runs-on: ubuntu-latest
+    needs: [release-please, deploy-production, notify-slack]
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    steps:
+      - name: Trigger docs update workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DOCS_REPO_PAT }}
+          repository: ayunis/ayunis-core-docs
+          event-type: release-published
