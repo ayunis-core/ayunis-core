@@ -33,7 +33,11 @@ export class SendPasswordResetEmailUseCase {
       const passwordResetEndpoint = this.configService.get<string>(
         'app.frontend.passwordResetEndpoint',
       );
+      const forgotPasswordEndpoint = this.configService.get<string>(
+        'app.frontend.forgotPasswordEndpoint',
+      );
       const resetUrl = `${frontendBaseUrl}${passwordResetEndpoint}?token=${command.resetToken}`;
+      const forgotPasswordUrl = `${frontendBaseUrl}${forgotPasswordEndpoint}`;
 
       // Create password reset email template
       this.logger.debug('Creating password reset email template', {
@@ -41,6 +45,7 @@ export class SendPasswordResetEmailUseCase {
       });
       const template = new PasswordResetTemplate({
         resetUrl,
+        forgotPasswordUrl,
         userEmail: command.userEmail,
         companyName: 'Ayunis',
         productName: 'Ayunis Core',
