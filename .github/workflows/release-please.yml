@@ -94,10 +94,23 @@ jobs:
           HTML_URL: ${{ needs.release-please.outputs.html_url }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
+          # Convert GitHub Markdown to Slack mrkdwn format
+          SLACK_BODY=$(echo "$BODY" | \
+            # Remove the version header line (## [x.x.x](url) (date)) - we show this in the header already
+            sed '/^## \[/d' | \
+            # Convert ### headers to bold
+            sed 's/^### \(.*\)/*\1*/g' | \
+            # Convert markdown links [text](url) to Slack format <url|text>
+            sed 's/\[\([^]]*\)\](\([^)]*\))/<\2|\1>/g' | \
+            # Convert bullet points to proper bullets
+            sed 's/^\* /• /g' | \
+            # Remove empty lines at the start
+            sed '/./,$!d')
+
           # Build JSON payload using jq (properly escapes all special characters)
           PAYLOAD=$(jq -n \
             --arg tag "$TAG_NAME" \
-            --arg body "$BODY" \
+            --arg body "$SLACK_BODY" \
             --arg url "$HTML_URL" \
             '{
               blocks: [
