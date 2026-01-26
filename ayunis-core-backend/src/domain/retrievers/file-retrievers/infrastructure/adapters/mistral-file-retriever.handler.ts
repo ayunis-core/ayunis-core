@@ -19,11 +19,14 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(MistralFileRetrieverHandler.name);
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
+  // 5 minutes timeout for large document OCR processing
+  private readonly TIMEOUT_MS = 5 * 60 * 1000;
 
   constructor(private readonly configService: ConfigService) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('retrieval.mistral.apiKey'),
+      timeoutMs: this.TIMEOUT_MS,
     });
   }
 
