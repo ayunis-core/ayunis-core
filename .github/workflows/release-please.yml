@@ -107,6 +107,16 @@ jobs:
             # Remove empty lines at the start
             sed '/./,$!d')
 
+          # Fallback if body is empty after processing
+          if [ -z "$SLACK_BODY" ]; then
+            SLACK_BODY="No changelog entries."
+          fi
+
+          # Truncate if exceeding Slack's 3000 char limit for section blocks
+          if [ ${#SLACK_BODY} -gt 2900 ]; then
+            SLACK_BODY="${SLACK_BODY:0:2900}..."
+          fi
+
           # Build JSON payload using jq (properly escapes all special characters)
           PAYLOAD=$(jq -n \
             --arg tag "$TAG_NAME" \
