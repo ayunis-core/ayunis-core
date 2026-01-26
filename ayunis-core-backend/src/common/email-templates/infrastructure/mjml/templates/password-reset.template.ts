@@ -16,15 +16,16 @@ export function passwordResetText(template: PasswordResetTemplateContent) {
 
   ${template.resetUrl}
 
+  Link abgelaufen? Neue E-Mail anfordern: ${template.forgotPasswordUrl}
+
   Dieser Link läuft in 24 Stunden ab. Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.
 
   Aus Sicherheitsgründen wird dieser Link nur einmal funktionieren. Nach dem Klicken können Sie ein neues Passwort festlegen.
 
-  Link abgelaufen? Falls der Link nicht mehr funktioniert, können Sie einfach eine neue E-Mail anfordern: ${template.forgotPasswordUrl}
-
   Diese E-Mail wurde gesendet an ${template.userEmail}
 
-  Bei Fragen wenden Sie sich bitte an unser Support-Team unter help@ayunis.com
+  Probleme beim Zurücksetzen? Versuchen Sie, eine neue E-Mail anzufordern: ${template.forgotPasswordUrl}
+  Falls das Problem weiterhin besteht, wenden Sie sich bitte an unser Support-Team unter help@ayunis.com
 
   ${template.currentYear} ${template.companyName} . Alle Rechte vorbehalten.
   `;
@@ -84,6 +85,10 @@ export function passwordResetHtml(template: PasswordResetTemplateContent) {
           Passwort zurücksetzen
         </mj-button>
 
+        <mj-text color="#6b7280" font-size="12px" align="center" padding-top="12px">
+          Link abgelaufen? <a href="${template.forgotPasswordUrl}" style="color: #7c3aed; text-decoration: underline;">Neue E-Mail anfordern</a>
+        </mj-text>
+
       </mj-column>
     </mj-section>
 
@@ -96,20 +101,11 @@ export function passwordResetHtml(template: PasswordResetTemplateContent) {
       </mj-column>
     </mj-section>
 
-    <!-- Expired Link Hint -->
-    <mj-section background-color="#f5f3ff" padding="20px 24px">
-      <mj-column>
-        <mj-text color="#5b21b6" font-size="14px" align="center">
-          <strong>Link abgelaufen?</strong> Falls der Link nicht mehr funktioniert, können Sie einfach <a href="${template.forgotPasswordUrl}" style="color: #7c3aed; text-decoration: underline;">eine neue E-Mail anfordern</a>.
-        </mj-text>
-      </mj-column>
-    </mj-section>
-
     <!-- Help Section -->
     <mj-section background-color="#f0f9ff" padding="20px 24px">
       <mj-column>
         <mj-text color="#1e40af" font-size="14px" align="center">
-          <strong>Probleme beim Zurücksetzen?</strong> Falls Sie weiterhin Schwierigkeiten haben, wenden Sie sich bitte an unser Support-Team unter help@ayunis.com
+          <strong>Probleme beim Zurücksetzen?</strong> Versuchen Sie, <a href="${template.forgotPasswordUrl}" style="color: #2563eb; text-decoration: underline;">eine neue E-Mail anzufordern</a>. Falls das Problem weiterhin besteht, wenden Sie sich bitte an unser Support-Team unter help@ayunis.com
         </mj-text>
       </mj-column>
     </mj-section>
