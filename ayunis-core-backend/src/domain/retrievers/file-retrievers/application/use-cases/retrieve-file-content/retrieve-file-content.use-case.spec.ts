@@ -56,8 +56,8 @@ describe('ProcessFileUseCase', () => {
   it('should process file successfully', async () => {
     const command = new RetrieveFileContentCommand({
       fileData: Buffer.from('test file content'),
-      fileName: 'test.txt',
-      fileType: 'text/plain',
+      fileName: 'test.pdf',
+      fileType: 'application/pdf',
     });
     const expectedResult = new FileRetrieverResult([
       new FileRetrieverPage('processed content', 1),

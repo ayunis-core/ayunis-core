@@ -43,19 +43,32 @@ export class RetrieveFileContentUseCase {
       let handler: FileRetrieverHandler;
       const fileType = detectFileType(command.fileType, command.fileName);
 
-      if (this.config.docling.serviceUrl) {
-        // Use Docling if service URL is configured (priority)
-        handler = this.fileRetrieverRegistry.getHandler(
-          FileRetrieverType.DOCLING,
-        );
+      if (fileType === 'pdf') {
+        // PDF: Prefer Mistral, fallback to Docling, then NPM PDF Parse
+        if (this.config.mistral.apiKey) {
+          handler = this.fileRetrieverRegistry.getHandler(
+            FileRetrieverType.MISTRAL,
+          );
+        } else if (this.config.docling.serviceUrl) {
+          handler = this.fileRetrieverRegistry.getHandler(
+            FileRetrieverType.DOCLING,
+          );
+        } else {
+          handler = this.fileRetrieverRegistry.getHandler(
+            FileRetrieverType.NPM_PDF_PARSE,
+          );
+        }
       } else if (fileType === 'docx' || fileType === 'pptx') {
-        // DOCX/PPTX require Docling - throw error if not available
-        throw new InvalidFileTypeError(fileType);
+        // DOCX/PPTX: Require Docling
+        if (this.config.docling.serviceUrl) {
+          handler = this.fileRetrieverRegistry.getHandler(
+            FileRetrieverType.DOCLING,
+          );
+        } else {
+          throw new InvalidFileTypeError(fileType);
+        }
       } else {
-        // Use NpmPdfParse as fallback (PDF only)
-        handler = this.fileRetrieverRegistry.getHandler(
-          FileRetrieverType.NPM_PDF_PARSE,
-        );
+        throw new InvalidFileTypeError(fileType);
       }
 
       const file = new File(

@@ -21,17 +21,22 @@ import retrievalConfig from 'src/config/retrieval.config';
       useFactory: (
         npmPdfParseHandler: NpmPdfParseFileRetrieverHandler,
         doclingHandler: DoclingFileRetrieverHandler,
+        mistralHandler: MistralFileRetrieverHandler,
       ) => {
         const registry = new FileRetrieverRegistry();
-        // Note: MistralFileRetrieverHandler not registered - requires permitted provider check
         registry.registerHandler(
           FileRetrieverType.NPM_PDF_PARSE,
           npmPdfParseHandler,
         );
         registry.registerHandler(FileRetrieverType.DOCLING, doclingHandler);
+        registry.registerHandler(FileRetrieverType.MISTRAL, mistralHandler);
         return registry;
       },
-      inject: [NpmPdfParseFileRetrieverHandler, DoclingFileRetrieverHandler],
+      inject: [
+        NpmPdfParseFileRetrieverHandler,
+        DoclingFileRetrieverHandler,
+        MistralFileRetrieverHandler,
+      ],
     },
   ],
   exports: [RetrieveFileContentUseCase, FileRetrieverRegistry],
