@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/ayunis-core/ayunis-core/compare/v1.2.0...v1.3.0) (2026-01-26)
+
+
+### Features
+
+* use mistral document ai for pdf parsind AYC-000 ([#81](https://github.com/ayunis-core/ayunis-core/issues/81)) ([1e9ec16](https://github.com/ayunis-core/ayunis-core/commit/1e9ec16f191126a7ae33120aae0b13c17409c308))
+
+
+### CI/CD
+
+* improve deployment slack message ([#82](https://github.com/ayunis-core/ayunis-core/issues/82)) ([757af45](https://github.com/ayunis-core/ayunis-core/commit/757af45b64bc228c3d2e08e26af856f214e9df8f))
+
 ## [1.2.0](https://github.com/ayunis-core/ayunis-core/compare/v1.1.0...v1.2.0) (2026-01-23)
 
 
