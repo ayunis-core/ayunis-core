@@ -11,6 +11,8 @@ export const appConfig = registerAs('app', () => ({
       process.env.EMAIL_CONFIRM_ENDPOINT || '/confirm-email',
     passwordResetEndpoint:
       process.env.PASSWORD_RESET_ENDPOINT || '/password/reset',
+    forgotPasswordEndpoint:
+      process.env.FORGOT_PASSWORD_ENDPOINT || '/password/forgot',
     inviteAcceptEndpoint:
       process.env.INVITE_ACCEPT_ENDPOINT || '/accept-invite',
   },
