@@ -20,6 +20,8 @@ export function passwordResetText(template: PasswordResetTemplateContent) {
 
   Aus Sicherheitsgründen wird dieser Link nur einmal funktionieren. Nach dem Klicken können Sie ein neues Passwort festlegen.
 
+  Link abgelaufen? Falls der Link nicht mehr funktioniert, können Sie einfach eine neue E-Mail anfordern: ${template.forgotPasswordUrl}
+
   Diese E-Mail wurde gesendet an ${template.userEmail}
 
   Bei Fragen wenden Sie sich bitte an unser Support-Team unter help@ayunis.com
@@ -90,6 +92,15 @@ export function passwordResetHtml(template: PasswordResetTemplateContent) {
       <mj-column>
         <mj-text color="#92400e" font-size="14px" align="center">
           <strong>Wichtiger Sicherheitshinweis:</strong> Dieser Link läuft in 24 Stunden ab und kann nur einmal verwendet werden. Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Expired Link Hint -->
+    <mj-section background-color="#f5f3ff" padding="20px 24px">
+      <mj-column>
+        <mj-text color="#5b21b6" font-size="14px" align="center">
+          <strong>Link abgelaufen?</strong> Falls der Link nicht mehr funktioniert, können Sie einfach <a href="${template.forgotPasswordUrl}" style="color: #7c3aed; text-decoration: underline;">eine neue E-Mail anfordern</a>.
         </mj-text>
       </mj-column>
     </mj-section>

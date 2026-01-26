@@ -25,6 +25,7 @@ export interface InvitationTemplateContent {
 
 export interface PasswordResetTemplateContent {
   resetUrl: string;
+  forgotPasswordUrl: string;
   userEmail: string;
   companyName: string;
   productName: string;
@@ -60,6 +61,7 @@ export class PasswordResetTemplate extends EmailTemplate {
   constructor(public readonly content: PasswordResetTemplateContent) {
     super(EmailTemplateType.PASSWORD_RESET, {
       resetUrl: content.resetUrl,
+      forgotPasswordUrl: content.forgotPasswordUrl,
       userEmail: content.userEmail,
       companyName: content.companyName,
       productName: content.productName,
