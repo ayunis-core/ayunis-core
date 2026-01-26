@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/ayunis-core/ayunis-core/compare/v1.3.0...v1.3.1) (2026-01-26)
+
+
+### Bug Fixes
+
+* improve help texts when password reset link expired ([#84](https://github.com/ayunis-core/ayunis-core/issues/84)) ([53f4e5f](https://github.com/ayunis-core/ayunis-core/commit/53f4e5ff6086233c32b77204529acd33d163a913))
+
 ## [1.3.0](https://github.com/ayunis-core/ayunis-core/compare/v1.2.0...v1.3.0) (2026-01-26)
 
 
