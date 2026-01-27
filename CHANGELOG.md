@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.2](https://github.com/ayunis-core/ayunis-core/compare/v1.3.1...v1.3.2) (2026-01-27)
+
+
+### Bug Fixes
+
+* remove user from table on deletion ([#91](https://github.com/ayunis-core/ayunis-core/issues/91)) ([43af864](https://github.com/ayunis-core/ayunis-core/commit/43af864e126c2aa487e0cf303664498da0712925))
+
+
+### CI/CD
+
+* trigger docs update after deploy ([#87](https://github.com/ayunis-core/ayunis-core/issues/87)) ([044c246](https://github.com/ayunis-core/ayunis-core/commit/044c246500155b5fbe94b257b8a9a533fdf795d7))
+
 ## [1.3.1](https://github.com/ayunis-core/ayunis-core/compare/v1.3.0...v1.3.1) (2026-01-26)
 
 
