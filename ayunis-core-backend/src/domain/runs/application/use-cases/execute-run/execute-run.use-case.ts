@@ -31,6 +31,7 @@ import {
   RunNoModelFoundError,
   RunToolExecutionFailedError,
   ThreadAgentNoLongerAccessibleError,
+  ThreadModelNoLongerAccessibleError,
 } from '../../runs.errors';
 import {
   RunUserInput,
@@ -73,6 +74,8 @@ import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-
 import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
+import { IsModelPermittedUseCase } from '../../../../models/application/use-cases/is-model-permitted/is-model-permitted.use-case';
+import { IsModelPermittedQuery } from '../../../../models/application/use-cases/is-model-permitted/is-model-permitted.query';
 import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
 import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
@@ -107,6 +110,7 @@ export class ExecuteRunUseCase {
     private readonly collectUsageUseCase: CollectUsageUseCase,
     private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
+    private readonly isModelPermittedUseCase: IsModelPermittedUseCase,
   ) {}
 
   async execute(
@@ -148,7 +152,7 @@ export class ExecuteRunUseCase {
           throw error;
         }
       }
-      const model = this.pickModel(thread, agent);
+      const model = await this.pickModel(thread, agent, orgId);
       // Effective anonymous mode: enabled if thread is anonymous OR model enforces it
       const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;
 
@@ -380,11 +384,28 @@ export class ExecuteRunUseCase {
     return tools;
   }
 
-  private pickModel(thread: Thread, agent?: Agent): PermittedLanguageModel {
+  private async pickModel(
+    thread: Thread,
+    agent: Agent | undefined,
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel> {
     if (agent) {
       return agent.model;
     }
     if (thread.model) {
+      // Verify the model is still permitted in the organization
+      const isPermitted = await this.isModelPermittedUseCase.execute(
+        new IsModelPermittedQuery({
+          modelId: thread.model.id,
+          orgId,
+        }),
+      );
+      if (!isPermitted) {
+        throw new ThreadModelNoLongerAccessibleError(
+          thread.id,
+          thread.model.id,
+        );
+      }
       return thread.model;
     }
     throw new RunNoModelFoundError({

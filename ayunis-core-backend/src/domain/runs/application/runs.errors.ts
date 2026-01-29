@@ -19,6 +19,7 @@ export enum RunErrorCode {
   RUN_TOOL_EXECUTION_FAILED = 'RUN_TOOL_EXECUTION_FAILED',
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
   THREAD_AGENT_NO_LONGER_ACCESSIBLE = 'THREAD_AGENT_NO_LONGER_ACCESSIBLE',
+  THREAD_MODEL_NO_LONGER_ACCESSIBLE = 'THREAD_MODEL_NO_LONGER_ACCESSIBLE',
 }
 
 /**
@@ -151,6 +152,21 @@ export class ThreadAgentNoLongerAccessibleError extends RunError {
       RunErrorCode.THREAD_AGENT_NO_LONGER_ACCESSIBLE,
       403,
       { threadId, agentId, ...metadata },
+    );
+  }
+}
+
+/**
+ * Error thrown when the model used in a thread is no longer accessible
+ * (e.g., model was removed from the organization's permitted models)
+ */
+export class ThreadModelNoLongerAccessibleError extends RunError {
+  constructor(threadId: string, modelId: string, metadata?: ErrorMetadata) {
+    super(
+      `The model used in this conversation is no longer accessible.`,
+      RunErrorCode.THREAD_MODEL_NO_LONGER_ACCESSIBLE,
+      403,
+      { threadId, modelId, ...metadata },
     );
   }
 }

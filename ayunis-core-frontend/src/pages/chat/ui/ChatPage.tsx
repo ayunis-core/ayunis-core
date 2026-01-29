@@ -47,6 +47,7 @@ import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
   getAgentsControllerFindAllQueryKey,
+  getModelsControllerGetPermittedLanguageModelsQueryKey,
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -199,6 +200,16 @@ export default function ChatPage({
           // Refresh the agents list and thread to show the warning
           void queryClient.invalidateQueries({
             queryKey: getAgentsControllerFindAllQueryKey(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: getThreadsControllerFindOneQueryKey(thread.id),
+          });
+          showError(t('chat.unavailableAgentWarningTitle'));
+          break;
+        case 'THREAD_MODEL_NO_LONGER_ACCESSIBLE':
+          // Refresh the models list and thread to show the warning
+          void queryClient.invalidateQueries({
+            queryKey: getModelsControllerGetPermittedLanguageModelsQueryKey(),
           });
           void queryClient.invalidateQueries({
             queryKey: getThreadsControllerFindOneQueryKey(thread.id),
