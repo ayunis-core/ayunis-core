@@ -18,7 +18,7 @@ export class ThreadMapper {
     const record = new ThreadRecord();
     record.id = thread.id;
     record.userId = thread.userId;
-    record.modelId = thread.modelId ?? thread.model?.id;
+    record.permittedModelId = thread.permittedModelId ?? thread.model?.id;
     record.model = thread.model
       ? this.permittedModelMapper.toRecord(thread.model)
       : undefined;
@@ -40,9 +40,9 @@ export class ThreadMapper {
     return new Thread({
       id: threadEntity.id,
       userId: threadEntity.userId,
-      modelId: threadEntity.modelId,
+      permittedModelId: threadEntity.permittedModelId,
       model:
-        threadEntity.modelId && threadEntity.model
+        threadEntity.permittedModelId && threadEntity.model
           ? (this.permittedModelMapper.toDomain(
               threadEntity.model,
             ) as PermittedLanguageModel)

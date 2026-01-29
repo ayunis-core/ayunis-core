@@ -161,12 +161,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
   }
 
   async findAllByModel(
-    modelId: UUID,
+    permittedModelId: UUID,
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]> {
-    this.logger.log('findAllByModel', { modelId });
+    this.logger.log('findAllByModel', { permittedModelId });
     const threadEntities = await this.threadRepository.find({
-      where: { modelId },
+      where: { permittedModelId },
       relations: this.getRelations(options),
       order: options?.withMessages
         ? {
@@ -291,7 +291,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .createQueryBuilder()
       .update(ThreadRecord)
       .set({
-        modelId: params.permittedModelId,
+        permittedModelId: params.permittedModelId,
         agentId: () => 'NULL',
       })
       .where('id = :threadId AND userId = :userId', {

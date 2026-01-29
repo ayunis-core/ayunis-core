@@ -29,7 +29,7 @@ export abstract class ThreadsRepository {
     pagination?: ThreadsPagination,
   ): Promise<Paginated<Thread>>;
   abstract findAllByModel(
-    modelId: UUID,
+    permittedModelId: UUID,
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]>;
   abstract findAllByAgent(

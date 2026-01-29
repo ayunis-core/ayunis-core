@@ -392,9 +392,12 @@ export class ExecuteRunUseCase {
     if (agent) {
       return agent.model;
     }
-    // Check if the thread had a model but it was deleted (modelId exists but model is undefined)
-    if (thread.modelId && !thread.model) {
-      throw new ThreadModelNoLongerAccessibleError(thread.id, thread.modelId);
+    // Check if the thread had a model but it was deleted (permittedModelId exists but model is undefined)
+    if (thread.permittedModelId && !thread.model) {
+      throw new ThreadModelNoLongerAccessibleError(
+        thread.id,
+        thread.permittedModelId,
+      );
     }
     if (thread.model) {
       // Verify the model is still permitted in the organization

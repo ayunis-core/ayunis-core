@@ -39,10 +39,10 @@ export class CreateThreadUseCase {
       let agent: Agent | undefined;
       let agentId: UUID | undefined;
 
-      if (command.modelId) {
+      if (command.permittedModelId) {
         model = await this.getPermittedLanguageModelUseCase.execute(
           new GetPermittedLanguageModelQuery({
-            id: command.modelId,
+            id: command.permittedModelId,
           }),
         );
       }
