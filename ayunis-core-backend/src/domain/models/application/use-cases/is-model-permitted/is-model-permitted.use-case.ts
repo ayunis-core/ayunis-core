@@ -16,13 +16,19 @@ export class IsModelPermittedUseCase {
     const permittedModel = await this.permittedModelsRepository.findOne({
       id: query.modelId,
     });
+
+    // If model doesn't exist, it's not permitted (model was deleted)
+    if (!permittedModel) {
+      return false;
+    }
+
     const orgId = this.contextService.get('orgId');
     const systemRole = this.contextService.get('systemRole');
     const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-    const isFromOrg = orgId === permittedModel?.orgId;
+    const isFromOrg = orgId === permittedModel.orgId;
     if (!isFromOrg && !isSuperAdmin) {
       throw new UnauthorizedAccessError();
     }
-    return !!permittedModel;
+    return true;
   }
 }

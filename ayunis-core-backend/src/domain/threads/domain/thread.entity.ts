@@ -6,6 +6,7 @@ import { SourceAssignment } from './thread-source-assignment.entity';
 export class Thread {
   id: UUID;
   userId: UUID;
+  modelId?: UUID;
   model?: PermittedLanguageModel;
   agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
@@ -18,6 +19,7 @@ export class Thread {
   constructor(params: {
     id?: UUID;
     userId: UUID;
+    modelId?: UUID;
     model?: PermittedLanguageModel;
     agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
@@ -29,6 +31,7 @@ export class Thread {
   }) {
     this.id = params.id ?? randomUUID();
     this.userId = params.userId;
+    this.modelId = params.modelId;
     this.model = params.model;
     this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
