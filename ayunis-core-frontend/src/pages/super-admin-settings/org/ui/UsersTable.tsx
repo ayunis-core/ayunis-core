@@ -96,7 +96,12 @@ export default function UsersTable({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>{t('header.title')}</CardTitle>
+            <CardTitle>
+              {t('header.title')}
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                {t('header.total', { count: total })}
+              </span>
+            </CardTitle>
             <CardDescription>{t('header.description')}</CardDescription>
           </div>
           <CreateUserDialog orgId={orgId} />

@@ -4,7 +4,8 @@
   },
   "header": {
     "title": "Benutzer",
-    "description": "Benutzer dieser Organisation anzeigen und verwalten."
+    "description": "Benutzer dieser Organisation anzeigen und verwalten.",
+    "total": "{{count}} gesamt"
   },
   "table": {
     "name": "Name",

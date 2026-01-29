@@ -4,7 +4,8 @@
   },
   "header": {
     "title": "Users",
-    "description": "View and manage users in this organization."
+    "description": "View and manage users in this organization.",
+    "total": "{{count}} total"
   },
   "table": {
     "name": "Name",

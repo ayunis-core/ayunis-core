@@ -31,7 +31,8 @@
     "user": "User",
     "admin": "Admin",
     "sendPasswordReset": "Send Password Reset",
-    "noInvitesFound": "No invites found"
+    "noInvitesFound": "No invites found",
+    "total": "{{count}} total"
   },
   "inviteDialog": {
     "inviteUser": "Invite User",
