@@ -214,7 +214,7 @@ export default function ChatPage({
           void queryClient.invalidateQueries({
             queryKey: getThreadsControllerFindOneQueryKey(thread.id),
           });
-          showError(t('chat.unavailableAgentWarningTitle'));
+          showError(t('chat.unavailableModelWarningTitle'));
           break;
         case 'QUOTA_EXCEEDED': {
           const retryMinutes = error.details?.retryAfterSeconds
