@@ -72,6 +72,7 @@ import { AzureInferenceHandler } from './infrastructure/inference/azure.inferenc
 import { AzureStreamInferenceHandler } from './infrastructure/stream-inference/azure.stream-inference';
 import { GeminiInferenceHandler } from './infrastructure/inference/gemini.inference';
 import { GeminiStreamInferenceHandler } from './infrastructure/stream-inference/gemini.stream-inference';
+import { GeminiConversionService } from './infrastructure/util/gemini-conversion.service';
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
@@ -117,6 +118,7 @@ import { MessagesModule } from '../messages/messages.module';
     BedrockStreamInferenceHandler,
     AzureInferenceHandler,
     AzureStreamInferenceHandler,
+    GeminiConversionService,
     GeminiInferenceHandler,
     GeminiStreamInferenceHandler,
     MockStreamInferenceHandler,
