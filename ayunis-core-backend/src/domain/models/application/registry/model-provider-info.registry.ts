@@ -66,6 +66,12 @@ const MODEL_PROVIDER_CONFIGS: ModelProviderConfig[] = [
     hostedIn: ModelProviderLocation.EU,
     configKey: 'models.azure.apiKey',
   },
+  {
+    provider: ModelProvider.GEMINI,
+    displayName: 'Google Gemini',
+    hostedIn: ModelProviderLocation.US,
+    configKey: 'models.gemini.apiKey',
+  },
 ];
 
 @Injectable()
