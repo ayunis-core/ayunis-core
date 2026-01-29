@@ -62,6 +62,7 @@ export default function UsersSettingsPage({
         )}
         <UsersSection
           users={users}
+          total={total}
           searchSlot={<UsersSearch search={search} />}
           paginationSlot={
             <UsersPagination

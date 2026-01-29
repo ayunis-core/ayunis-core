@@ -31,7 +31,8 @@
     "user": "Benutzer",
     "admin": "Administrator",
     "sendPasswordReset": "Passwort-Reset senden",
-    "noInvitesFound": "Keine Einladungen gefunden"
+    "noInvitesFound": "Keine Einladungen gefunden",
+    "total": "{{count}} gesamt"
   },
   "inviteDialog": {
     "inviteUser": "Benutzer einladen",

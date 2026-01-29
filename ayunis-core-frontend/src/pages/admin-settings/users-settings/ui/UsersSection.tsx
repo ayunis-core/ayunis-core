@@ -31,12 +31,14 @@ import { useTranslation } from 'react-i18next';
 
 interface UsersSectionProps {
   users: User[];
+  total: number;
   searchSlot?: ReactNode;
   paginationSlot?: ReactNode;
 }
 
 export default function UsersSection({
   users,
+  total,
   searchSlot,
   paginationSlot,
 }: UsersSectionProps) {
@@ -118,7 +120,12 @@ export default function UsersSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('users.users')}</CardTitle>
+        <CardTitle>
+          {t('users.users')}
+          <span className="ml-2 text-sm font-normal text-muted-foreground">
+            {t('users.total', { count: total })}
+          </span>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {searchSlot && <div className="mb-4">{searchSlot}</div>}
