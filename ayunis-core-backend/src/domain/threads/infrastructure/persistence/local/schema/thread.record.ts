@@ -24,7 +24,7 @@ export class ThreadRecord extends BaseRecord {
   permittedModelId?: UUID;
 
   @ManyToOne(() => PermittedModelRecord, {
-    onDelete: 'SET NULL',
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'permittedModelId' })
   model?: PermittedModelRecord;
