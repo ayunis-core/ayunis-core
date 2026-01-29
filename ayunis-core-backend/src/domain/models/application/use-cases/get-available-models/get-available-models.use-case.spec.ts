@@ -49,6 +49,7 @@ describe('GetAvailableModelsUseCase', () => {
           [ModelProvider.SYNAFORCE]: 'models.synaforce.baseURL',
           [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
           [ModelProvider.AZURE]: 'models.azure.apiKey',
+          [ModelProvider.GEMINI]: 'models.gemini.apiKey',
         };
         return configMap[provider];
       }),
