@@ -1,6 +1,13 @@
 import { UUID } from 'crypto';
 import { MessageRecord } from '../../../../../messages/infrastructure/persistence/local/schema/message.record';
-import { Column, Entity, OneToMany, Index, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  Index,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
@@ -14,9 +21,12 @@ export class ThreadRecord extends BaseRecord {
 
   @Column({ nullable: true })
   @Index()
-  modelId?: UUID;
+  permittedModelId?: UUID;
 
-  @ManyToOne(() => PermittedModelRecord, { onDelete: 'SET NULL' })
+  @ManyToOne(() => PermittedModelRecord, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'permittedModelId' })
   model?: PermittedModelRecord;
 
   @Column({ nullable: true })

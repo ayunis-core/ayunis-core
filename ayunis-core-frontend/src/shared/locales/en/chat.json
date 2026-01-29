@@ -65,6 +65,7 @@
     "longChatWarningDescription": "For better results, consider starting a new chat.",
     "unavailableAgentWarningTitle": "Agent no longer available",
     "unavailableAgentWarningDescription": "The agent or model used in this conversation is no longer accessible. You can still view your message history, but you cannot continue this conversation.",
+    "unavailableModelWarningTitle": "Model no longer available",
     "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers."
   },
   "newChat": {

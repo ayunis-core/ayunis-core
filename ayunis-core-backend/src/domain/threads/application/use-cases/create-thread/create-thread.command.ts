@@ -1,20 +1,20 @@
 import { UUID } from 'crypto';
 
 export class CreateThreadCommand {
-  modelId?: UUID;
+  permittedModelId?: UUID;
   agentId?: UUID;
   title?: string;
   instruction?: string;
   isAnonymous?: boolean;
 
   constructor(params: {
-    modelId?: UUID;
+    permittedModelId?: UUID;
     agentId?: UUID;
     title?: string;
     instruction?: string;
     isAnonymous?: boolean;
   }) {
-    this.modelId = params.modelId;
+    this.permittedModelId = params.permittedModelId;
     this.agentId = params.agentId;
     this.title = params.title;
     this.instruction = params.instruction;
