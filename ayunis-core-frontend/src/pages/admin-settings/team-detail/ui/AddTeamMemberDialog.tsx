@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,12 +11,19 @@ import {
 } from '@/shared/ui/shadcn/dialog';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/shadcn/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui/shadcn/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/shared/ui/shadcn/command';
+import { cn } from '@/shared/lib/shadcn/utils';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
 import { useAddTeamMember } from '../api/useAddTeamMember';
@@ -33,6 +41,7 @@ export function AddTeamMemberDialog({
 }: AddTeamMemberDialogProps) {
   const { t } = useTranslation('admin-settings-teams');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const { addTeamMember, isAdding } = useAddTeamMember(teamId, () => {
     setSelectedUserId('');
@@ -60,6 +69,10 @@ export function AddTeamMemberDialog({
     usersResponse?.data?.filter((user) => !existingMemberIds.has(user.id)) ??
     [];
 
+  const selectedUser = availableUsers.find(
+    (user) => user.id === selectedUserId,
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedUserId) {
@@ -78,26 +91,73 @@ export function AddTeamMemberDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t('teamDetail.addMember.selectUser')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableUsers.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    {t('teamDetail.addMember.noUsersAvailable')}
-                  </div>
-                ) : (
-                  availableUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={popoverOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  {selectedUser ? (
+                    <span className="truncate">
+                      {selectedUser.name} ({selectedUser.email})
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      {t('teamDetail.addMember.selectUser')}
+                    </span>
+                  )}
+                  <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <Command>
+                  <CommandInput
+                    placeholder={t('teamDetail.addMember.searchPlaceholder')}
+                  />
+                  <CommandList>
+                    {availableUsers.length === 0 ? (
+                      <CommandEmpty>
+                        {t('teamDetail.addMember.noUsersAvailable')}
+                      </CommandEmpty>
+                    ) : (
+                      <>
+                        <CommandEmpty>
+                          {t('teamDetail.addMember.noUsersFound')}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {availableUsers.map((user) => (
+                            <CommandItem
+                              key={user.id}
+                              value={`${user.name} ${user.email}`}
+                              onSelect={() => {
+                                setSelectedUserId(
+                                  user.id === selectedUserId ? '' : user.id,
+                                );
+                                setPopoverOpen(false);
+                              }}
+                            >
+                              <CheckIcon
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  selectedUserId === user.id
+                                    ? 'opacity-100'
+                                    : 'opacity-0',
+                                )}
+                              />
+                              <span className="truncate">
+                                {user.name} ({user.email})
+                              </span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <DialogFooter>
             <Button
