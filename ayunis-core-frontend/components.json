@@ -5,7 +5,7 @@
   "tsx": true,
   "registries": {
     "@ayunis": {
-      "url": "https://registry.ayunis.de/r/{name}.json",
+      "url": "http://localhost:1998/r/{name}.json",
       "headers": {
         "Authorization": "Bearer ${AYUNIS_REGISTRY_TOKEN}"
       }
