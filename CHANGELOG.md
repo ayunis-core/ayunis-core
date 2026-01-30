@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/ayunis-core/ayunis-core/compare/v1.4.0...v1.5.0) (2026-01-30)
+
+
+### Features
+
+* add gemini provider and handlers AYC-74 ([#92](https://github.com/ayunis-core/ayunis-core/issues/92)) ([25b4066](https://github.com/ayunis-core/ayunis-core/commit/25b4066c897b7fc44981691958c0adf8882c5865))
+
 ## [1.4.0](https://github.com/ayunis-core/ayunis-core/compare/v1.3.1...v1.4.0) (2026-01-29)
 
 
