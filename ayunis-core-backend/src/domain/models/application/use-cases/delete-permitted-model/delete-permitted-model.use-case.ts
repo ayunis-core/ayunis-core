@@ -7,8 +7,6 @@ import {
   CannotDeleteLastModelError,
   UnexpectedModelError,
 } from '../../models.errors';
-import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { ReplaceModelWithUserDefaultCommand } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
 import { ReplaceModelWithUserDefaultUseCase as ReplaceModelWithUserDefaultUseCaseAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultCommand as ReplaceModelWithUserDefaultCommandAgents } from 'src/domain/agents/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
 import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
@@ -39,7 +37,6 @@ export class DeletePermittedModelUseCase {
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
-    private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
     private readonly replaceModelWithUserDefaultUseCaseAgents: ReplaceModelWithUserDefaultUseCaseAgents,
     private readonly findAllThreadsByOrgWithSourcesUseCase: FindAllThreadsByOrgWithSourcesUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
@@ -137,19 +134,8 @@ export class DeletePermittedModelUseCase {
       new DeleteUserDefaultModelsByModelIdCommand(model.id),
     );
 
-    this.logger.debug('Replacing model in all threads that use it', {
-      modelId: model.id,
-    });
-
-    // Replace the model in all threads that use it
-    // Because the user default model is deleted, this will fall back
-    // to the org default model or the first available model
-    await this.replaceModelWithUserDefaultUseCase.execute(
-      new ReplaceModelWithUserDefaultCommand({
-        orgId,
-        oldPermittedModelId: model.id,
-      }),
-    );
+    // Threads that use this model will show a warning at runtime
+    // when the user tries to continue the conversation (see ExecuteRunUseCase.pickModel)
 
     this.logger.debug('Replacing model in all agents that use it', {
       modelId: model.id,

@@ -85,7 +85,7 @@ describe('CreateThreadUseCase', () => {
     it('should create a thread with model successfully', async () => {
       // Arrange
       const command = new CreateThreadCommand({
-        modelId: mockModelId,
+        permittedModelId: mockModelId,
       });
 
       const now = new Date();
@@ -134,7 +134,7 @@ describe('CreateThreadUseCase', () => {
       // Assert
       expect(getModelExecuteSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: command.modelId,
+          id: command.permittedModelId,
         }),
       );
       expect(getAgentExecuteSpy).not.toHaveBeenCalled();
@@ -165,7 +165,7 @@ describe('CreateThreadUseCase', () => {
     it('should log execution details', async () => {
       // Arrange
       const command = new CreateThreadCommand({
-        modelId: mockModelId,
+        permittedModelId: mockModelId,
       });
 
       const now = new Date();
@@ -219,7 +219,7 @@ describe('CreateThreadUseCase', () => {
     it('should handle repository creation errors', async () => {
       // Arrange
       const command = new CreateThreadCommand({
-        modelId: mockModelId,
+        permittedModelId: mockModelId,
       });
 
       const now = new Date();

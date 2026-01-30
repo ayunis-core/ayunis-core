@@ -129,11 +129,11 @@ export class ThreadsController {
     @Body() createThreadDto: CreateThreadDto,
   ): Promise<GetThreadResponseDto> {
     this.logger.log('create', {
-      modelId: createThreadDto.modelId,
+      permittedModelId: createThreadDto.permittedModelId,
     });
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
-        modelId: createThreadDto.modelId,
+        permittedModelId: createThreadDto.permittedModelId,
         agentId: createThreadDto.agentId,
         isAnonymous: createThreadDto.isAnonymous,
       }),
