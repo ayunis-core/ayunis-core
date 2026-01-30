@@ -1,6 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-'use client';
-
 import * as React from 'react';
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
