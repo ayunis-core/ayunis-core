@@ -30,6 +30,14 @@ import type {
 } from '@google/genai';
 import { FunctionCallingConfigMode } from '@google/genai';
 
+/**
+ * Extends the SDK's Part type with `thoughtSignature`, which Gemini returns
+ * on thinking-model responses but isn't yet in the official type definitions.
+ */
+interface GeminiPart extends Part {
+  thoughtSignature?: string;
+}
+
 @Injectable()
 export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(GeminiStreamInferenceHandler.name);
@@ -99,6 +107,11 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
 
       subscriber.complete();
     } catch (error) {
+      this.logger.error('Gemini streaming inference failed', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: (error as Record<string, unknown>)?.status,
+        contents: JSON.stringify(error).substring(0, 2000),
+      });
       subscriber.error(error);
     }
   }
@@ -176,16 +189,26 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
       const parts: Part[] = [];
       for (const content of message.content) {
         if (content instanceof TextMessageContent) {
-          parts.push({ text: content.text });
+          const textPart: GeminiPart = { text: content.text };
+          if (content.providerMetadata?.gemini?.thoughtSignature) {
+            textPart.thoughtSignature =
+              content.providerMetadata.gemini.thoughtSignature;
+          }
+          parts.push(textPart);
         }
         if (content instanceof ToolUseMessageContent) {
-          parts.push({
+          const fcPart: GeminiPart = {
             functionCall: {
               id: content.id,
               name: content.name,
               args: content.params as Record<string, unknown>,
             },
-          });
+          };
+          if (content.providerMetadata?.gemini?.thoughtSignature) {
+            fcPart.thoughtSignature =
+              content.providerMetadata.gemini.thoughtSignature;
+          }
+          parts.push(fcPart);
         }
       }
       return { role: 'model', parts };
@@ -226,11 +249,16 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
 
     if (candidate?.content?.parts) {
       for (const [index, part] of candidate.content.parts.entries()) {
+        const thoughtSignature = (part as GeminiPart).thoughtSignature;
+
         if (part.text) {
           results.push(
             new StreamInferenceResponseChunk({
               thinkingDelta: null,
               textContentDelta: part.text,
+              textProviderMetadata: thoughtSignature
+                ? { gemini: { thoughtSignature } }
+                : null,
               toolCallsDelta: [],
             }),
           );
@@ -248,6 +276,9 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
                   name: part.functionCall.name ?? null,
                   argumentsDelta: part.functionCall.args
                     ? JSON.stringify(part.functionCall.args)
+                    : null,
+                  providerMetadata: thoughtSignature
+                    ? { gemini: { thoughtSignature } }
                     : null,
                 }),
               ],

@@ -4110,7 +4110,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TeamDetailResponseDto"
+                  "$ref": "#/components/schemas/TeamResponseDto"
                 }
               }
             }
@@ -4128,7 +4128,7 @@
             "description": "Internal server error"
           }
         },
-        "summary": "Get a team by ID with member count",
+        "summary": "Get a team by ID",
         "tags": ["teams"]
       },
       "patch": {
@@ -5619,7 +5619,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "The provider of the model"
           },
@@ -5691,7 +5692,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -5760,7 +5762,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "The provider of the model"
           },
@@ -5882,7 +5885,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "The provider of the model"
           },
@@ -5940,7 +5944,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "example": "openai"
           },
@@ -6006,7 +6011,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "example": "openai"
           },
@@ -6072,7 +6078,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "example": "openai"
           },
@@ -6121,7 +6128,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "example": "openai"
           },
@@ -6175,7 +6183,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -6266,7 +6275,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -8347,7 +8357,7 @@
           "scopeType": {
             "type": "string",
             "description": "Type of share scope (organization, user, or team)",
-            "enum": ["org", "user", "team"]
+            "enum": ["org", "team"]
           },
           "ownerId": {
             "type": "string",
@@ -8614,39 +8624,6 @@
         "required": ["name"]
       },
       "TeamResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the team",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the team",
-            "example": "Engineering"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "The organization ID the team belongs to",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The date and time when the team was created",
-            "example": "2024-01-15T10:30:00.000Z"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The date and time when the team was last updated",
-            "example": "2024-01-15T10:30:00.000Z"
-          }
-        },
-        "required": ["id", "name", "orgId", "createdAt", "updatedAt"]
-      },
-      "TeamDetailResponseDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -9195,7 +9172,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "Model provider"
           },
@@ -9327,7 +9305,8 @@
               "synaforce",
               "ayunis",
               "otc",
-              "azure"
+              "azure",
+              "gemini"
             ],
             "description": "Model provider"
           },

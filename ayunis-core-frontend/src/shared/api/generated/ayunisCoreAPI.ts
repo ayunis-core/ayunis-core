@@ -105,7 +105,6 @@ import type {
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
-  TeamDetailResponseDto,
   TeamMemberResponseDto,
   TeamResponseDto,
   TeamsControllerListTeamMembersParams,
@@ -8268,7 +8267,7 @@ export function useTeamsControllerListMyTeams<TData = Awaited<ReturnType<typeof 
 
 
 /**
- * @summary Get a team by ID with member count
+ * @summary Get a team by ID
  */
 export const teamsControllerGetTeam = (
     id: string,
@@ -8276,7 +8275,7 @@ export const teamsControllerGetTeam = (
 ) => {
       
       
-      return customAxiosInstance<TeamDetailResponseDto>(
+      return customAxiosInstance<TeamResponseDto>(
       {url: `/teams/${id}`, method: 'GET', signal
     },
       );
@@ -8335,7 +8334,7 @@ export function useTeamsControllerGetTeam<TData = Awaited<ReturnType<typeof team
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get a team by ID with member count
+ * @summary Get a team by ID
  */
 
 export function useTeamsControllerGetTeam<TData = Awaited<ReturnType<typeof teamsControllerGetTeam>>, TError = void>(

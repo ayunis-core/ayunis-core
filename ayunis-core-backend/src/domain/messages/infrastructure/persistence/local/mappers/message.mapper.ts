@@ -26,6 +26,9 @@ export class MessageMapper {
         return {
           type: MessageContentType.TEXT,
           text: content.text,
+          ...(content.providerMetadata && {
+            providerMetadata: content.providerMetadata,
+          }),
         };
       }
       if (content instanceof ToolUseMessageContent) {
@@ -34,6 +37,9 @@ export class MessageMapper {
           id: content.id,
           name: content.name,
           params: content.params,
+          ...(content.providerMetadata && {
+            providerMetadata: content.providerMetadata,
+          }),
         };
       }
       if (content instanceof ToolResultMessageContent) {
@@ -48,6 +54,8 @@ export class MessageMapper {
         return {
           type: MessageContentType.THINKING,
           thinking: content.thinking,
+          ...(content.id && { id: content.id }),
+          ...(content.signature && { signature: content.signature }),
         };
       }
       if (content instanceof ImageMessageContent) {
@@ -91,17 +99,25 @@ export class MessageMapper {
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
             if (content.type === MessageContentType.TEXT) {
-              return new TextMessageContent(content.text);
+              return new TextMessageContent(
+                content.text,
+                content.providerMetadata ?? null,
+              );
             }
             if (content.type === MessageContentType.TOOL_USE) {
               return new ToolUseMessageContent(
                 content.id,
                 content.name,
                 content.params,
+                content.providerMetadata ?? null,
               );
             }
             if (content.type === MessageContentType.THINKING) {
-              return new ThinkingMessageContent(content.thinking);
+              return new ThinkingMessageContent(
+                content.thinking,
+                content.id ?? null,
+                content.signature ?? null,
+              );
             }
             throw new Error('Invalid message content');
           }),
