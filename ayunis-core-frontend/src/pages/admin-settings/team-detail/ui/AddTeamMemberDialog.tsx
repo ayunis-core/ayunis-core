@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,22 +10,23 @@ import {
 } from '@/shared/ui/shadcn/dialog';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/shared/ui/shadcn/command';
-import { cn } from '@/shared/lib/shadcn/utils';
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+  ComboboxValue,
+} from '@/shared/ui/shadcn/combobox';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
 import { useAddTeamMember } from '../api/useAddTeamMember';
+
+interface UserOption {
+  value: string;
+  label: string;
+}
 
 interface AddTeamMemberDialogProps {
   teamId: string;
@@ -40,11 +40,11 @@ export function AddTeamMemberDialog({
   onOpenChange,
 }: AddTeamMemberDialogProps) {
   const { t } = useTranslation('admin-settings-teams');
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { addTeamMember, isAdding } = useAddTeamMember(teamId, () => {
-    setSelectedUserId('');
+    setSelectedUser(null);
     onOpenChange(false);
   });
 
@@ -65,24 +65,24 @@ export function AddTeamMemberDialog({
     membersResponse?.data?.map((m) => m.userId) ?? [],
   );
 
-  const availableUsers =
-    usersResponse?.data?.filter((user) => !existingMemberIds.has(user.id)) ??
-    [];
-
-  const selectedUser = availableUsers.find(
-    (user) => user.id === selectedUserId,
-  );
+  const availableUsers: UserOption[] =
+    usersResponse?.data
+      ?.filter((user) => !existingMemberIds.has(user.id))
+      .map((user) => ({
+        value: user.id,
+        label: `${user.name} (${user.email})`,
+      })) ?? [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedUserId) {
-      addTeamMember(selectedUserId);
+    if (selectedUser) {
+      addTeamMember(selectedUser.value);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent ref={containerRef}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t('teamDetail.addMember.title')}</DialogTitle>
@@ -91,73 +91,41 @@ export function AddTeamMemberDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={popoverOpen}
-                  className="w-full justify-between font-normal"
-                >
-                  {selectedUser ? (
-                    <span className="truncate">
-                      {selectedUser.name} ({selectedUser.email})
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      {t('teamDetail.addMember.selectUser')}
-                    </span>
+            <Combobox
+              items={availableUsers}
+              value={selectedUser}
+              onValueChange={setSelectedUser}
+              isItemEqualToValue={(a, b) => a.value === b.value}
+            >
+              <ComboboxTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                  >
+                    <ComboboxValue
+                      placeholder={t('teamDetail.addMember.selectUser')}
+                    />
+                  </Button>
+                }
+              />
+              <ComboboxContent container={containerRef}>
+                <ComboboxInput
+                  showTrigger={false}
+                  placeholder={t('teamDetail.addMember.searchPlaceholder')}
+                />
+                <ComboboxEmpty>
+                  {t('teamDetail.addMember.noUsersFound')}
+                </ComboboxEmpty>
+                <ComboboxList>
+                  {(item: UserOption) => (
+                    <ComboboxItem key={item.value} value={item}>
+                      {item.label}
+                    </ComboboxItem>
                   )}
-                  <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <Command>
-                  <CommandInput
-                    placeholder={t('teamDetail.addMember.searchPlaceholder')}
-                  />
-                  <CommandList>
-                    {availableUsers.length === 0 ? (
-                      <CommandEmpty>
-                        {t('teamDetail.addMember.noUsersAvailable')}
-                      </CommandEmpty>
-                    ) : (
-                      <>
-                        <CommandEmpty>
-                          {t('teamDetail.addMember.noUsersFound')}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {availableUsers.map((user) => (
-                            <CommandItem
-                              key={user.id}
-                              value={`${user.name} ${user.email}`}
-                              onSelect={() => {
-                                setSelectedUserId(
-                                  user.id === selectedUserId ? '' : user.id,
-                                );
-                                setPopoverOpen(false);
-                              }}
-                            >
-                              <CheckIcon
-                                className={cn(
-                                  'mr-2 h-4 w-4',
-                                  selectedUserId === user.id
-                                    ? 'opacity-100'
-                                    : 'opacity-0',
-                                )}
-                              />
-                              <span className="truncate">
-                                {user.name} ({user.email})
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
           </div>
           <DialogFooter>
             <Button
@@ -167,7 +135,7 @@ export function AddTeamMemberDialog({
             >
               {t('teamDetail.addMember.cancel')}
             </Button>
-            <Button type="submit" disabled={!selectedUserId || isAdding}>
+            <Button type="submit" disabled={!selectedUser || isAdding}>
               {isAdding
                 ? t('teamDetail.addMember.adding')
                 : t('teamDetail.addMember.add')}
