@@ -8,4 +8,5 @@ export enum ModelProvider {
   AYUNIS = 'ayunis',
   OTC = 'otc',
   AZURE = 'azure',
+  GEMINI = 'gemini',
 }

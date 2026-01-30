@@ -20,6 +20,7 @@ import { UserMessage } from 'src/domain/messages/domain/messages/user-message.en
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 @Injectable()
 export class OpenAIInferenceHandler extends InferenceHandler {
@@ -145,12 +146,26 @@ export class OpenAIInferenceHandler extends InferenceHandler {
     }
 
     if (message instanceof AssistantMessage) {
-      const convertedMessages: Array<
-        | OpenAI.Responses.ResponseOutputMessage
-        | OpenAI.Responses.ResponseFunctionToolCallItem
-      > = [];
+      const convertedMessages: OpenAI.Responses.ResponseInputItem[] = [];
 
       for (const content of message.content) {
+        // Thinking / Reasoning Content
+        if (content instanceof ThinkingMessageContent) {
+          if (content.id || content.signature) {
+            const reasoningItem: Record<string, unknown> = {
+              type: 'reasoning',
+              id: content.id ?? undefined,
+              summary: [{ type: 'summary_text', text: content.thinking }],
+            };
+            if (content.signature) {
+              reasoningItem.encrypted_content = content.signature;
+            }
+            convertedMessages.push(
+              reasoningItem as unknown as OpenAI.Responses.ResponseInputItem,
+            );
+          }
+          continue;
+        }
         // Text Message Content
         if (content instanceof TextMessageContent) {
           convertedMessages.push({
@@ -243,10 +258,32 @@ export class OpenAIInferenceHandler extends InferenceHandler {
     }
 
     const modelResponseContent: Array<
-      TextMessageContent | ToolUseMessageContent
+      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
     > = [];
 
     for (const completionItem of completion) {
+      if (completionItem.type === 'reasoning') {
+        const reasoningItem = completionItem as unknown as {
+          type: 'reasoning';
+          id?: string;
+          encrypted_content?: string;
+          summary?: Array<{ type: string; text: string }>;
+        };
+        const summaryText =
+          reasoningItem.summary
+            ?.filter((s) => s.type === 'summary_text')
+            .map((s) => s.text)
+            .join('') ?? '';
+        if (summaryText) {
+          modelResponseContent.push(
+            new ThinkingMessageContent(
+              summaryText,
+              reasoningItem.id ?? null,
+              reasoningItem.encrypted_content ?? null,
+            ),
+          );
+        }
+      }
       if (completionItem.type === 'message') {
         for (const content of completionItem.content) {
           if (content.type === 'output_text') {

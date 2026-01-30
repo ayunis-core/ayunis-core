@@ -4,10 +4,12 @@ import { ThreadRecord } from '../../../../../threads/infrastructure/persistence/
 import { MessageRole } from '../../../../domain/value-objects/message-role.object';
 import { MessageContentType } from '../../../../domain/value-objects/message-content-type.object';
 import { UUID } from 'crypto';
+import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 
 interface TextMessageContentData {
   type: MessageContentType.TEXT;
   text: string;
+  providerMetadata?: ProviderMetadata;
 }
 
 interface ToolUseMessageContentData {
@@ -15,6 +17,7 @@ interface ToolUseMessageContentData {
   id: string;
   name: string;
   params: Record<string, any>;
+  providerMetadata?: ProviderMetadata;
 }
 
 interface ToolResultMessageContentData {
@@ -27,6 +30,8 @@ interface ToolResultMessageContentData {
 interface ThinkingMessageContentData {
   type: MessageContentType.THINKING;
   thinking: string;
+  id?: string;
+  signature?: string;
 }
 
 interface ImageMessageContentData {

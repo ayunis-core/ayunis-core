@@ -22,6 +22,7 @@ import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 @Injectable()
 export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
@@ -152,12 +153,26 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     if (message instanceof AssistantMessage) {
-      const convertedMessages: Array<
-        | OpenAI.Responses.ResponseOutputMessage
-        | OpenAI.Responses.ResponseFunctionToolCallItem
-      > = [];
+      const convertedMessages: OpenAI.Responses.ResponseInputItem[] = [];
 
       for (const content of message.content) {
+        // Thinking / Reasoning Content
+        if (content instanceof ThinkingMessageContent) {
+          if (content.id || content.signature) {
+            const reasoningItem: Record<string, unknown> = {
+              type: 'reasoning',
+              id: content.id ?? undefined,
+              summary: [{ type: 'summary_text', text: content.thinking }],
+            };
+            if (content.signature) {
+              reasoningItem.encrypted_content = content.signature;
+            }
+            convertedMessages.push(
+              reasoningItem as unknown as OpenAI.Responses.ResponseInputItem,
+            );
+          }
+          continue;
+        }
         // Text Message Content
         if (content instanceof TextMessageContent) {
           convertedMessages.push({
@@ -244,6 +259,12 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
     if (chunk.type !== 'response.output_text.delta')
       this.logger.debug('convertChunk', chunk);
     switch (chunk.type) {
+      case 'response.reasoning_summary_text.delta':
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: chunk.delta ?? null,
+          textContentDelta: null,
+          toolCallsDelta: [],
+        });
       case 'response.output_text.delta':
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
@@ -253,8 +274,23 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
       case 'response.completed': {
         const usage = chunk.response?.usage;
 
+        // Extract reasoning metadata (id, encrypted_content) from first reasoning output item
+        let thinkingId: string | null = null;
+        let thinkingSignature: string | null = null;
+        const reasoningItem = chunk.response?.output?.find(
+          (item) => item.type === 'reasoning',
+        );
+        if (reasoningItem && 'id' in reasoningItem) {
+          thinkingId = (reasoningItem as { id?: string }).id ?? null;
+          thinkingSignature =
+            (reasoningItem as { encrypted_content?: string })
+              .encrypted_content ?? null;
+        }
+
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
+          thinkingId,
+          thinkingSignature,
           textContentDelta: null,
           toolCallsDelta: [],
           finishReason: 'stop',

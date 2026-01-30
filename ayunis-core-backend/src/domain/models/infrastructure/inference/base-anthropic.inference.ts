@@ -25,6 +25,7 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
@@ -176,25 +177,36 @@ export abstract class BaseAnthropicInferenceHandler extends InferenceHandler {
       };
     }
     if (message instanceof AssistantMessage) {
-      return {
-        role: 'assistant',
-        content: message.content.map((content) => {
+      const contentBlocks = message.content
+        .map((content) => {
+          if (content instanceof ThinkingMessageContent) {
+            if (!content.signature) return null;
+            return {
+              type: 'thinking' as const,
+              thinking: content.thinking,
+              signature: content.signature,
+            };
+          }
           if (content instanceof TextMessageContent) {
             return {
-              type: 'text',
+              type: 'text' as const,
               text: content.text,
             };
           }
           if (content instanceof ToolUseMessageContent) {
             return {
-              type: 'tool_use',
+              type: 'tool_use' as const,
               id: content.id,
               name: content.name,
               input: content.params,
             };
           }
           throw new Error(`Unknown message content type`);
-        }),
+        })
+        .filter((block): block is NonNullable<typeof block> => block !== null);
+      return {
+        role: 'assistant',
+        content: contentBlocks,
       };
     }
     if (message instanceof ToolResultMessage) {
@@ -256,6 +268,9 @@ export abstract class BaseAnthropicInferenceHandler extends InferenceHandler {
     }
 
     const modelResponseContent = response.content.map((c) => {
+      if (c.type === 'thinking') {
+        return new ThinkingMessageContent(c.thinking, null, c.signature);
+      }
       if (c.type === 'tool_use') {
         return this.parseToolCall(c);
       } else if (c.type === 'text') {

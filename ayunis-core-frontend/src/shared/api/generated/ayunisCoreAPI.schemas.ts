@@ -29,6 +29,7 @@ export const ModelWithConfigResponseDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -83,6 +84,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -138,6 +140,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -222,6 +225,7 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -274,6 +278,7 @@ export const CreateLanguageModelRequestDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -312,6 +317,7 @@ export const UpdateLanguageModelRequestDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -350,6 +356,7 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -395,6 +402,7 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -440,6 +448,7 @@ export const LanguageModelResponseDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -497,6 +506,7 @@ export const EmbeddingModelResponseDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 /**
@@ -1863,7 +1873,6 @@ export type ShareResponseDtoScopeType = typeof ShareResponseDtoScopeType[keyof t
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ShareResponseDtoScopeType = {
   org: 'org',
-  user: 'user',
   team: 'team',
 } as const;
 
@@ -2060,19 +2069,6 @@ export interface UpdateTeamDto {
 }
 
 export interface TeamResponseDto {
-  /** The unique identifier of the team */
-  id: string;
-  /** The name of the team */
-  name: string;
-  /** The organization ID the team belongs to */
-  orgId: string;
-  /** The date and time when the team was created */
-  createdAt: string;
-  /** The date and time when the team was last updated */
-  updatedAt: string;
-}
-
-export interface TeamDetailResponseDto {
   /** The unique identifier of the team */
   id: string;
   /** The name of the team */
@@ -2414,6 +2410,7 @@ export const ProviderUsageDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 export interface ProviderUsageDto {
@@ -2478,6 +2475,7 @@ export const ModelDistributionDtoProvider = {
   ayunis: 'ayunis',
   otc: 'otc',
   azure: 'azure',
+  gemini: 'gemini',
 } as const;
 
 export interface ModelDistributionDto {

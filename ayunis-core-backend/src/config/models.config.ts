@@ -37,4 +37,7 @@ export const modelsConfig = registerAs('models', () => ({
     endpoint: process.env.AZURE_OPENAI_ENDPOINT,
     apiVersion: process.env.AZURE_OPENAI_API_VERSION,
   },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY,
+  },
 }));

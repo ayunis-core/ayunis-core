@@ -78,6 +78,7 @@ import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/coll
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 import { SystemPromptBuilderService } from '../../services/system-prompt-builder.service';
+import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const MAX_CONTEXT_TOKENS = 80000;
@@ -840,12 +841,20 @@ export class ExecuteRunUseCase {
     // Accumulate content for the message - use objects to allow mutation by reference
     const accumulatedText = { value: '' };
     const accumulatedThinking = { value: '' };
+    const accumulatedTextProviderMetadata: { value: ProviderMetadata } = {
+      value: null,
+    };
+    const accumulatedThinkingId: { value: string | null } = { value: null };
+    const accumulatedThinkingSignature: { value: string | null } = {
+      value: null,
+    };
     const accumulatedToolCalls = new Map<
       number,
       {
         id: string | null;
         name: string | null;
         arguments: string;
+        providerMetadata: ProviderMetadata;
       }
     >();
 
@@ -911,6 +920,9 @@ export class ExecuteRunUseCase {
         assistantMessage,
         accumulatedText,
         accumulatedThinking,
+        accumulatedTextProviderMetadata,
+        accumulatedThinkingId,
+        accumulatedThinkingSignature,
         accumulatedToolCalls,
       })) {
         yield message;
@@ -935,6 +947,9 @@ export class ExecuteRunUseCase {
           threadId,
           accumulatedText.value,
           accumulatedThinking.value,
+          accumulatedTextProviderMetadata.value,
+          accumulatedThinkingId.value,
+          accumulatedThinkingSignature.value,
           accumulatedToolCalls,
           assistantMessage,
           streamCompletedSuccessfully,
@@ -950,12 +965,16 @@ export class ExecuteRunUseCase {
     assistantMessage: AssistantMessage;
     accumulatedText: { value: string };
     accumulatedThinking: { value: string };
+    accumulatedTextProviderMetadata: { value: ProviderMetadata };
+    accumulatedThinkingId: { value: string | null };
+    accumulatedThinkingSignature: { value: string | null };
     accumulatedToolCalls: Map<
       number,
       {
         id: string | null;
         name: string | null;
         arguments: string;
+        providerMetadata: ProviderMetadata;
       }
     >;
   }): AsyncGenerator<AssistantMessage, void, void> {
@@ -964,6 +983,9 @@ export class ExecuteRunUseCase {
       assistantMessage,
       accumulatedText,
       accumulatedThinking,
+      accumulatedTextProviderMetadata,
+      accumulatedThinkingId,
+      accumulatedThinkingSignature,
       accumulatedToolCalls,
     } = params;
 
@@ -977,11 +999,20 @@ export class ExecuteRunUseCase {
         accumulatedThinking.value += chunk.thinkingDelta;
         shouldUpdate = true;
       }
+      if (chunk.thinkingId) {
+        accumulatedThinkingId.value = chunk.thinkingId;
+      }
+      if (chunk.thinkingSignature) {
+        accumulatedThinkingSignature.value = chunk.thinkingSignature;
+      }
 
       // Accumulate text content
       if (chunk.textContentDelta) {
         accumulatedText.value += chunk.textContentDelta;
         shouldUpdate = true;
+      }
+      if (chunk.textProviderMetadata) {
+        accumulatedTextProviderMetadata.value = chunk.textProviderMetadata;
       }
 
       // Accumulate tool calls
@@ -990,12 +1021,15 @@ export class ExecuteRunUseCase {
           id: null,
           name: null,
           arguments: '',
+          providerMetadata: null,
         };
 
         accumulatedToolCalls.set(toolCall.index, {
           id: toolCall.id || existing.id,
           name: toolCall.name || existing.name,
           arguments: existing.arguments + (toolCall.argumentsDelta || ''),
+          providerMetadata:
+            toolCall.providerMetadata || existing.providerMetadata,
         });
         shouldUpdate = true;
       });
@@ -1009,13 +1043,22 @@ export class ExecuteRunUseCase {
         // Add thinking content if present
         if (accumulatedThinking.value.trim()) {
           messageContent.push(
-            new ThinkingMessageContent(accumulatedThinking.value),
+            new ThinkingMessageContent(
+              accumulatedThinking.value,
+              accumulatedThinkingId.value,
+              accumulatedThinkingSignature.value,
+            ),
           );
         }
 
         // Add text content if present
         if (accumulatedText.value.trim()) {
-          messageContent.push(new TextMessageContent(accumulatedText.value));
+          messageContent.push(
+            new TextMessageContent(
+              accumulatedText.value,
+              accumulatedTextProviderMetadata.value,
+            ),
+          );
         }
 
         // Add tool calls (complete or in-progress)
@@ -1045,7 +1088,12 @@ export class ExecuteRunUseCase {
 
             // Add the tool call even if arguments are incomplete
             messageContent.push(
-              new ToolUseMessageContent(toolCall.id, toolCall.name, parsedArgs),
+              new ToolUseMessageContent(
+                toolCall.id,
+                toolCall.name,
+                parsedArgs,
+                toolCall.providerMetadata,
+              ),
             );
           }
         });
@@ -1066,12 +1114,16 @@ export class ExecuteRunUseCase {
     threadId: UUID,
     accumulatedText: string,
     accumulatedThinking: string,
+    accumulatedTextProviderMetadata: ProviderMetadata,
+    accumulatedThinkingId: string | null,
+    accumulatedThinkingSignature: string | null,
     accumulatedToolCalls: Map<
       number,
       {
         id: string | null;
         name: string | null;
         arguments: string;
+        providerMetadata: ProviderMetadata;
       }
     >,
     assistantMessage: AssistantMessage,
@@ -1094,12 +1146,23 @@ export class ExecuteRunUseCase {
 
     // Add thinking content if present
     if (accumulatedThinking.trim()) {
-      finalMessageContent.push(new ThinkingMessageContent(accumulatedThinking));
+      finalMessageContent.push(
+        new ThinkingMessageContent(
+          accumulatedThinking,
+          accumulatedThinkingId,
+          accumulatedThinkingSignature,
+        ),
+      );
     }
 
     // Add text content if present
     if (accumulatedText.trim()) {
-      finalMessageContent.push(new TextMessageContent(accumulatedText));
+      finalMessageContent.push(
+        new TextMessageContent(
+          accumulatedText,
+          accumulatedTextProviderMetadata,
+        ),
+      );
     }
 
     // Add tool calls only if streaming completed successfully
@@ -1115,6 +1178,7 @@ export class ExecuteRunUseCase {
                   toolCall.id,
                   toolCall.name,
                   parsedArgs,
+                  toolCall.providerMetadata,
                 ),
               );
             }

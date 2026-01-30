@@ -3,6 +3,7 @@ import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Model } from '../../domain/model.entity';
 import { Observable } from 'rxjs';
+import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 
 export class StreamInferenceInput {
   public readonly model: Model;
@@ -36,23 +37,29 @@ export class StreamInferenceResponseChunkToolCall {
   public readonly id: string | null;
   public readonly name: string | null;
   public readonly argumentsDelta: string | null;
+  public readonly providerMetadata: ProviderMetadata;
 
   constructor(params: {
     index: number;
     id: string | null;
     name: string | null;
     argumentsDelta: string | null;
+    providerMetadata?: ProviderMetadata;
   }) {
     this.index = params.index;
     this.id = params.id;
     this.name = params.name;
     this.argumentsDelta = params.argumentsDelta;
+    this.providerMetadata = params.providerMetadata ?? null;
   }
 }
 
 export class StreamInferenceResponseChunk {
   public readonly thinkingDelta: string | null;
+  public readonly thinkingId: string | null;
+  public readonly thinkingSignature: string | null;
   public readonly textContentDelta: string | null;
+  public readonly textProviderMetadata: ProviderMetadata;
   public readonly toolCallsDelta: StreamInferenceResponseChunkToolCall[];
   public readonly finishReason?: string | null;
   public readonly usage?: {
@@ -62,7 +69,10 @@ export class StreamInferenceResponseChunk {
 
   constructor(params: {
     thinkingDelta: string | null;
+    thinkingId?: string | null;
+    thinkingSignature?: string | null;
     textContentDelta: string | null;
+    textProviderMetadata?: ProviderMetadata;
     toolCallsDelta: StreamInferenceResponseChunkToolCall[];
     finishReason?: string | null;
     usage?: {
@@ -71,7 +81,10 @@ export class StreamInferenceResponseChunk {
     };
   }) {
     this.thinkingDelta = params.thinkingDelta;
+    this.thinkingId = params.thinkingId ?? null;
+    this.thinkingSignature = params.thinkingSignature ?? null;
     this.textContentDelta = params.textContentDelta;
+    this.textProviderMetadata = params.textProviderMetadata ?? null;
     this.toolCallsDelta = params.toolCallsDelta;
     this.finishReason = params.finishReason;
     this.usage = params.usage;

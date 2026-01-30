@@ -299,6 +299,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
             typeof toolCall.function?.arguments === 'string'
               ? toolCall.function?.arguments
               : JSON.stringify(toolCall.function?.arguments),
+          providerMetadata: null,
         }));
     }
 
