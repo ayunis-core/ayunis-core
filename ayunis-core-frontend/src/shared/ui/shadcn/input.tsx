@@ -2,11 +2,7 @@ import * as React from 'react';
 
 import { cn } from '@/shared/lib/shadcn/utils';
 
-function Input({
-  className,
-  type,
-  ...props
-}: React.ComponentProps<'input'>): React.ReactElement {
+function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
   return (
     <input
       type={type}

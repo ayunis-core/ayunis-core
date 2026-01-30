@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -10,15 +10,23 @@ import {
 } from '@/shared/ui/shadcn/dialog';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/shadcn/select';
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+  ComboboxValue,
+} from '@/shared/ui/shadcn/combobox';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
 import { useAddTeamMember } from '../api/useAddTeamMember';
+
+interface UserOption {
+  value: string;
+  label: string;
+}
 
 interface AddTeamMemberDialogProps {
   teamId: string;
@@ -32,10 +40,11 @@ export function AddTeamMemberDialog({
   onOpenChange,
 }: AddTeamMemberDialogProps) {
   const { t } = useTranslation('admin-settings-teams');
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { addTeamMember, isAdding } = useAddTeamMember(teamId, () => {
-    setSelectedUserId('');
+    setSelectedUser(null);
     onOpenChange(false);
   });
 
@@ -56,20 +65,24 @@ export function AddTeamMemberDialog({
     membersResponse?.data?.map((m) => m.userId) ?? [],
   );
 
-  const availableUsers =
-    usersResponse?.data?.filter((user) => !existingMemberIds.has(user.id)) ??
-    [];
+  const availableUsers: UserOption[] =
+    usersResponse?.data
+      ?.filter((user) => !existingMemberIds.has(user.id))
+      .map((user) => ({
+        value: user.id,
+        label: `${user.name} (${user.email})`,
+      })) ?? [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedUserId) {
-      addTeamMember(selectedUserId);
+    if (selectedUser) {
+      addTeamMember(selectedUser.value);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent ref={containerRef}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{t('teamDetail.addMember.title')}</DialogTitle>
@@ -78,26 +91,41 @@ export function AddTeamMemberDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t('teamDetail.addMember.selectUser')}
+            <Combobox
+              items={availableUsers}
+              value={selectedUser}
+              onValueChange={setSelectedUser}
+              isItemEqualToValue={(a, b) => a.value === b.value}
+            >
+              <ComboboxTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                  >
+                    <ComboboxValue
+                      placeholder={t('teamDetail.addMember.selectUser')}
+                    />
+                  </Button>
+                }
+              />
+              <ComboboxContent container={containerRef}>
+                <ComboboxInput
+                  showTrigger={false}
+                  placeholder={t('teamDetail.addMember.searchPlaceholder')}
                 />
-              </SelectTrigger>
-              <SelectContent>
-                {availableUsers.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    {t('teamDetail.addMember.noUsersAvailable')}
-                  </div>
-                ) : (
-                  availableUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                <ComboboxEmpty>
+                  {t('teamDetail.addMember.noUsersFound')}
+                </ComboboxEmpty>
+                <ComboboxList>
+                  {(item: UserOption) => (
+                    <ComboboxItem key={item.value} value={item}>
+                      {item.label}
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
           </div>
           <DialogFooter>
             <Button
@@ -107,7 +135,7 @@ export function AddTeamMemberDialog({
             >
               {t('teamDetail.addMember.cancel')}
             </Button>
-            <Button type="submit" disabled={!selectedUserId || isAdding}>
+            <Button type="submit" disabled={!selectedUser || isAdding}>
               {isAdding
                 ? t('teamDetail.addMember.adding')
                 : t('teamDetail.addMember.add')}
