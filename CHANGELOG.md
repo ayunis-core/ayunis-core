@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.1](https://github.com/ayunis-core/ayunis-core/compare/v1.5.0...v1.5.1) (2026-01-30)
+
+
+### Bug Fixes
+
+* improve user selection for teams ([#97](https://github.com/ayunis-core/ayunis-core/issues/97)) ([7a99e66](https://github.com/ayunis-core/ayunis-core/commit/7a99e66e2c24093fa674efca370584c3cd8bf764))
+* invalidate agents cache when team membership changes ([#96](https://github.com/ayunis-core/ayunis-core/issues/96)) ([81da345](https://github.com/ayunis-core/ayunis-core/commit/81da345190d103e184684263df47532ebbf6138a))
+* remove client directive AYC-000 ([#99](https://github.com/ayunis-core/ayunis-core/issues/99)) ([50e5d32](https://github.com/ayunis-core/ayunis-core/commit/50e5d325a4c51b334caa98b843e61f98f0d75fe1))
+
 ## [1.5.0](https://github.com/ayunis-core/ayunis-core/compare/v1.4.0...v1.5.0) (2026-01-30)
 
 
