@@ -7,7 +7,6 @@ import {
   LogOut,
   Plus,
   Bot,
-  Megaphone,
 } from 'lucide-react';
 
 import {
@@ -41,7 +40,7 @@ import { useTheme } from '@/features/theme';
 import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
-import { useReleaseNotes } from '@/features/useReleaseNotes';
+import { ReleaseNotesButton } from './ReleaseNotesButton';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -50,8 +49,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
-  useReleaseNotes();
-
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
@@ -81,15 +78,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link to="/">
-                <img
-                  src={theme === 'dark' ? brandFullDark : brandFullLight}
-                  alt="Ayunis Logo"
-                  className="w-full max-w-32"
-                />
-              </Link>
-            </SidebarMenuButton>
+            <div className="flex items-center justify-between w-full">
+              <SidebarMenuButton size="lg" asChild className="flex-1">
+                <Link to="/">
+                  <img
+                    src={theme === 'dark' ? brandFullDark : brandFullLight}
+                    alt="Ayunis Logo"
+                    className="w-full max-w-32"
+                  />
+                </Link>
+              </SidebarMenuButton>
+              {config.features.announcableOrgId && <ReleaseNotesButton />}
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -122,14 +122,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter>
         <SidebarMenu>
-          {config.features.announcableOrgId && (
-            <SidebarMenuItem>
-              <SidebarMenuButton id="updates-button">
-                <Megaphone />
-                <span>{t('sidebar.updates')}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -4,6 +4,7 @@ import config from '@/shared/config';
 interface AnnouncableInit {
   org_id: string;
   anchor_query_selector: string;
+  hide_indicator: boolean;
 }
 
 declare global {
@@ -45,6 +46,7 @@ export function useReleaseNotes(): void {
     window.announcable_init = {
       org_id: orgId,
       anchor_query_selector: '#updates-button',
+      hide_indicator: true,
     };
 
     // Dynamically load the widget script
