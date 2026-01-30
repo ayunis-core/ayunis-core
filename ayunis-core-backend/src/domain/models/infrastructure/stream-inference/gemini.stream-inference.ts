@@ -18,6 +18,7 @@ import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { GoogleGenAI } from '@google/genai';
 import type {
@@ -188,6 +189,12 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
     if (message instanceof AssistantMessage) {
       const parts: Part[] = [];
       for (const content of message.content) {
+        // Skip thinking content - Gemini doesn't support sending thinking blocks
+        // back in conversation history. Gemini's native thinking uses thoughtSignature
+        // on text/function parts instead.
+        if (content instanceof ThinkingMessageContent) {
+          continue;
+        }
         if (content instanceof TextMessageContent) {
           const textPart: GeminiPart = { text: content.text };
           if (content.providerMetadata?.gemini?.thoughtSignature) {
