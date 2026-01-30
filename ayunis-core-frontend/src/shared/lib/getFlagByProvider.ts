@@ -13,8 +13,8 @@ export function getFlagByProvider(provider: Provider): string {
     case 'bedrock':
       return `🇪🇺`;
     case 'openai':
-      return `🇺🇸`;
     case 'anthropic':
+    case 'gemini':
       return `🇺🇸`;
     case 'azure':
       return `🇪🇺`;
