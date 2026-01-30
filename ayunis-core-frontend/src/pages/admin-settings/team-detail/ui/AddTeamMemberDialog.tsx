@@ -91,41 +91,47 @@ export function AddTeamMemberDialog({
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Combobox
-              items={availableUsers}
-              value={selectedUser}
-              onValueChange={setSelectedUser}
-              isItemEqualToValue={(a, b) => a.value === b.value}
-            >
-              <ComboboxTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between font-normal"
-                  >
-                    <ComboboxValue
-                      placeholder={t('teamDetail.addMember.selectUser')}
-                    />
-                  </Button>
-                }
-              />
-              <ComboboxContent container={containerRef}>
-                <ComboboxInput
-                  showTrigger={false}
-                  placeholder={t('teamDetail.addMember.searchPlaceholder')}
+            {availableUsers.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-2">
+                {t('teamDetail.addMember.noUsersAvailable')}
+              </p>
+            ) : (
+              <Combobox
+                items={availableUsers}
+                value={selectedUser}
+                onValueChange={setSelectedUser}
+                isItemEqualToValue={(a, b) => a.value === b.value}
+              >
+                <ComboboxTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between font-normal"
+                    >
+                      <ComboboxValue
+                        placeholder={t('teamDetail.addMember.selectUser')}
+                      />
+                    </Button>
+                  }
                 />
-                <ComboboxEmpty>
-                  {t('teamDetail.addMember.noUsersFound')}
-                </ComboboxEmpty>
-                <ComboboxList>
-                  {(item: UserOption) => (
-                    <ComboboxItem key={item.value} value={item}>
-                      {item.label}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+                <ComboboxContent container={containerRef}>
+                  <ComboboxInput
+                    showTrigger={false}
+                    placeholder={t('teamDetail.addMember.searchPlaceholder')}
+                  />
+                  <ComboboxEmpty>
+                    {t('teamDetail.addMember.noUsersFound')}
+                  </ComboboxEmpty>
+                  <ComboboxList>
+                    {(item: UserOption) => (
+                      <ComboboxItem key={item.value} value={item}>
+                        {item.label}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            )}
           </div>
           <DialogFooter>
             <Button
