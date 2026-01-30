@@ -23,6 +23,7 @@ import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.en
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 interface AnthropicMessage {
   role: 'user' | 'assistant';
@@ -36,7 +37,8 @@ type AnthropicContent =
       source: { type: 'base64'; media_type: string; data: string };
     }
   | { type: 'tool_use'; id: string; name: string; input: object }
-  | { type: 'tool_result'; tool_use_id: string; content: string };
+  | { type: 'tool_result'; tool_use_id: string; content: string }
+  | { type: 'thinking'; thinking: string; signature: string };
 
 interface AnthropicTool {
   name: string;
@@ -69,10 +71,24 @@ interface BedrockInputJsonDelta {
   partial_json: string;
 }
 
+interface BedrockThinkingDelta {
+  type: 'thinking_delta';
+  thinking: string;
+}
+
+interface BedrockSignatureDelta {
+  type: 'signature_delta';
+  signature: string;
+}
+
 interface BedrockContentBlockDelta {
   type: 'content_block_delta';
   index: number;
-  delta: BedrockTextDelta | BedrockInputJsonDelta;
+  delta:
+    | BedrockTextDelta
+    | BedrockInputJsonDelta
+    | BedrockThinkingDelta
+    | BedrockSignatureDelta;
 }
 
 interface BedrockToolUseContentBlock {
@@ -81,10 +97,17 @@ interface BedrockToolUseContentBlock {
   name: string;
 }
 
+interface BedrockThinkingContentBlock {
+  type: 'thinking';
+}
+
 interface BedrockContentBlockStart {
   type: 'content_block_start';
   index: number;
-  content_block: BedrockToolUseContentBlock | { type: string };
+  content_block:
+    | BedrockToolUseContentBlock
+    | BedrockThinkingContentBlock
+    | { type: string };
 }
 
 interface BedrockMessageStart {
@@ -225,6 +248,21 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
     // Handle content_block_delta events
     if (chunk.type === 'content_block_delta') {
       const deltaChunk = chunk as BedrockContentBlockDelta;
+      if (deltaChunk.delta.type === 'thinking_delta') {
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: deltaChunk.delta.thinking,
+          textContentDelta: null,
+          toolCallsDelta: [],
+        });
+      }
+      if (deltaChunk.delta.type === 'signature_delta') {
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: null,
+          thinkingSignature: deltaChunk.delta.signature,
+          textContentDelta: null,
+          toolCallsDelta: [],
+        });
+      }
       if (deltaChunk.delta.type === 'text_delta') {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
@@ -248,9 +286,13 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
       }
     }
 
-    // Handle content_block_start events for tool use
+    // Handle content_block_start events
     if (chunk.type === 'content_block_start') {
       const startChunk = chunk as BedrockContentBlockStart;
+      if (startChunk.content_block.type === 'thinking') {
+        // Thinking block start — content arrives via thinking_delta events
+        return null;
+      }
       if (startChunk.content_block.type === 'tool_use') {
         const toolBlock =
           startChunk.content_block as BedrockToolUseContentBlock;
@@ -381,20 +423,30 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
     }
 
     if (message instanceof AssistantMessage) {
-      const content: AnthropicContent[] = message.content.map((c) => {
-        if (c instanceof TextMessageContent) {
-          return { type: 'text' as const, text: c.text };
-        }
-        if (c instanceof ToolUseMessageContent) {
-          return {
-            type: 'tool_use' as const,
-            id: c.id,
-            name: c.name,
-            input: c.params,
-          };
-        }
-        throw new Error('Unknown assistant content type');
-      });
+      const content: AnthropicContent[] = message.content
+        .map((c): AnthropicContent | null => {
+          if (c instanceof ThinkingMessageContent) {
+            if (!c.signature) return null;
+            return {
+              type: 'thinking' as const,
+              thinking: c.thinking,
+              signature: c.signature,
+            };
+          }
+          if (c instanceof TextMessageContent) {
+            return { type: 'text' as const, text: c.text };
+          }
+          if (c instanceof ToolUseMessageContent) {
+            return {
+              type: 'tool_use' as const,
+              id: c.id,
+              name: c.name,
+              input: c.params,
+            };
+          }
+          throw new Error('Unknown assistant content type');
+        })
+        .filter((block): block is AnthropicContent => block !== null);
       return { role: 'assistant', content };
     }
 

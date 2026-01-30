@@ -26,6 +26,7 @@ import {
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
 
@@ -181,25 +182,36 @@ export abstract class BaseAnthropicStreamInferenceHandler
       };
     }
     if (message instanceof AssistantMessage) {
-      return {
-        role: 'assistant',
-        content: message.content.map((content) => {
+      const contentBlocks = message.content
+        .map((content) => {
+          if (content instanceof ThinkingMessageContent) {
+            if (!content.signature) return null;
+            return {
+              type: 'thinking' as const,
+              thinking: content.thinking,
+              signature: content.signature,
+            };
+          }
           if (content instanceof TextMessageContent) {
             return {
-              type: 'text',
+              type: 'text' as const,
               text: content.text,
             };
           }
           if (content instanceof ToolUseMessageContent) {
             return {
-              type: 'tool_use',
+              type: 'tool_use' as const,
               id: content.id,
               name: content.name,
               input: content.params,
             };
           }
           throw new Error(`Unknown message content type`);
-        }),
+        })
+        .filter((block): block is NonNullable<typeof block> => block !== null);
+      return {
+        role: 'assistant',
+        content: contentBlocks,
       };
     }
     if (message instanceof ToolResultMessage) {
@@ -245,6 +257,21 @@ export abstract class BaseAnthropicStreamInferenceHandler
   ): StreamInferenceResponseChunk | null => {
     // Handle different types of streaming events
     if (chunk.type === 'content_block_delta') {
+      if (chunk.delta.type === 'thinking_delta') {
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: chunk.delta.thinking,
+          textContentDelta: null,
+          toolCallsDelta: [],
+        });
+      }
+      if (chunk.delta.type === 'signature_delta') {
+        return new StreamInferenceResponseChunk({
+          thinkingDelta: null,
+          thinkingSignature: chunk.delta.signature,
+          textContentDelta: null,
+          toolCallsDelta: [],
+        });
+      }
       if (chunk.delta.type === 'text_delta') {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
@@ -270,6 +297,10 @@ export abstract class BaseAnthropicStreamInferenceHandler
     }
 
     if (chunk.type === 'content_block_start') {
+      if (chunk.content_block.type === 'thinking') {
+        // Thinking block start — content arrives via thinking_delta events
+        return null;
+      }
       if (chunk.content_block.type === 'tool_use') {
         // Tool call start
         return new StreamInferenceResponseChunk({
