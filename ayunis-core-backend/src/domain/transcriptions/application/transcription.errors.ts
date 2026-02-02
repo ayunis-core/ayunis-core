@@ -7,6 +7,8 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
+  InternalServerErrorException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 
 /**
@@ -50,6 +52,18 @@ export abstract class TranscriptionError extends ApplicationError {
         });
       case 409:
         return new ConflictException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 500:
+        return new InternalServerErrorException({
+          code: this.code,
+          message: this.message,
+          ...(this.metadata && { metadata: this.metadata }),
+        });
+      case 503:
+        return new ServiceUnavailableException({
           code: this.code,
           message: this.message,
           ...(this.metadata && { metadata: this.metadata }),

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 type RecordingState = 'idle' | 'recording' | 'transcribing';
 
@@ -50,6 +50,13 @@ export function useVoiceRecording(
     chunksRef.current = [];
   }, []);
 
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
+
   const processRecording = useCallback(
     async (chunks: Blob[], mimeType: string) => {
       const blob = new Blob(chunks, { type: mimeType });
@@ -59,11 +66,14 @@ export function useVoiceRecording(
       setState('transcribing');
       const text = await transcribe(blob, fileName);
 
-      if (text) {
-        onTranscriptionComplete(text);
-      } else {
+      if (text === null) {
+        // API error
         onError('chatInput.transcriptionFailed');
+      } else if (text) {
+        // Successful transcription with content
+        onTranscriptionComplete(text);
       }
+      // Empty string means successful transcription with no detected speech - do nothing
       setState('idle');
     },
     [transcribe, onTranscriptionComplete, onError],
@@ -89,6 +99,12 @@ export function useVoiceRecording(
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
+      };
+
+      mediaRecorder.onerror = () => {
+        cleanup();
+        setState('idle');
+        onError('chatInput.transcriptionFailed');
       };
 
       mediaRecorder.onstop = () => {
