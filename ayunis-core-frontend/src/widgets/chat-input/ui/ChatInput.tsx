@@ -1,7 +1,5 @@
 import { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
-import { Button } from '@/shared/ui/shadcn/button';
-import { ArrowUp, Square } from 'lucide-react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import AgentButton from './AgentButton';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
@@ -14,11 +12,7 @@ import PlusButton from './PlusButton';
 import ModelSelector from './ModelSelector';
 import { useAgents } from '../../../features/useAgents';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+import { SendButton } from './SendButton';
 import { AnonymousButton } from './AnonymousButton';
 import { AgentBadge } from './AgentBadge';
 import {
@@ -32,6 +26,7 @@ import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
+import { MicrophoneButton } from './MicrophoneButton';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -108,6 +103,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { t } = useTranslation('common');
     const { agents } = useAgents();
     const containerRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const { pendingImages, addImages, removeImage, clearImages } =
       usePendingImages();
@@ -268,6 +264,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               )}
 
               <TextareaAutosize
+                ref={textareaRef}
                 maxRows={10}
                 value={message}
                 autoFocus
@@ -323,43 +320,26 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       onModelChange={onModelChange}
                     />
                   </TooltipIf>
-                  {isStreaming ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <Button
-                            size="icon"
-                            className="rounded-full"
-                            onClick={onSendCancelled}
-                          >
-                            <Square className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t('chatInput.cancelTooltip')}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <Button
-                            disabled={!canSend}
-                            className="rounded-full"
-                            size="icon"
-                            data-testid="send"
-                            onClick={handleSend}
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t('chatInput.sendTooltip')}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  <MicrophoneButton
+                    onTranscriptionComplete={(text) => {
+                      setMessage((prev) => (prev ? `${prev} ${text}` : text));
+                      // Focus textarea and place cursor at end after transcription
+                      setTimeout(() => {
+                        const textarea = textareaRef.current;
+                        if (textarea) {
+                          textarea.focus();
+                          const length = textarea.value.length;
+                          textarea.setSelectionRange(length, length);
+                        }
+                      }, 0);
+                    }}
+                  />
+                  <SendButton
+                    isStreaming={!!isStreaming}
+                    canSend={!!canSend}
+                    onSend={handleSend}
+                    onCancel={onSendCancelled}
+                  />
                 </div>
               </div>
             </div>

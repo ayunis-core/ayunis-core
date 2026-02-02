@@ -78,7 +78,12 @@
     },
     "fileSourceDisabled": "To upload documents, an embedding model must be enabled.",
     "dropFilesHint": "Drop files here",
-    "invalidDroppedFileType": "Some files were skipped because they are not supported."
+    "invalidDroppedFileType": "Some files were skipped because they are not supported.",
+    "microphoneTooltip": "Dictate",
+    "microphoneRecording": "Recording... Click to stop",
+    "transcribing": "Transcribing...",
+    "microphonePermissionDenied": "Microphone access denied",
+    "transcriptionFailed": "Transcription failed"
   },
   "common": {
     "loading": "Loading...",

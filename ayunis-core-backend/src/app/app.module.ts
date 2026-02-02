@@ -18,6 +18,7 @@ import { PromptsModule } from '../domain/prompts/prompts.module';
 import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
 import { UsageModule } from '../domain/usage/usage.module';
+import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { IamModule } from '../iam/iam.module';
 import { AdminModule } from '../admin/admin.module';
 import { modelsConfig } from '../config/models.config';
@@ -120,6 +121,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     SharesModule,
     McpModule,
     UsageModule,
+    TranscriptionsModule,
     IamModule.register({
       authProvider:
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,

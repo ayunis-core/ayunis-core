@@ -1,0 +1,113 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Mistral } from '@mistralai/mistralai';
+import { TranscriptionPort } from '../application/ports/transcription.port';
+import {
+  TranscriptionFailedError,
+  TranscriptionServiceUnavailableError,
+} from '../application/transcription.errors';
+
+@Injectable()
+export class MistralTranscriptionService extends TranscriptionPort {
+  private readonly logger = new Logger(MistralTranscriptionService.name);
+  private readonly client: Mistral;
+
+  constructor(private readonly configService: ConfigService) {
+    super();
+    this.client = new Mistral({
+      apiKey: this.configService.get('models.mistral.apiKey'),
+    });
+  }
+
+  async transcribe(
+    file: Buffer,
+    fileName: string,
+    language?: string,
+  ): Promise<string> {
+    this.logger.log('Starting transcription', {
+      fileName,
+      fileSize: file.length,
+      language,
+    });
+
+    try {
+      // Create a File object from the buffer for the Mistral API
+      const audioFile = new File([new Uint8Array(file)], fileName, {
+        type: this.getMimeTypeFromFileName(fileName),
+      });
+
+      const transcriptionRequest = {
+        file: audioFile,
+        model: 'voxtral-mini-latest',
+        ...(language && { language }),
+      };
+
+      this.logger.log('Sending transcription request to Mistral', {
+        model: 'voxtral-mini-latest',
+        language,
+      });
+
+      const response =
+        await this.client.audio.transcriptions.complete(transcriptionRequest);
+
+      const transcriptedText = response.text?.trim() || '';
+
+      this.logger.log('Transcription completed successfully', {
+        fileName,
+        textLength: transcriptedText.length,
+      });
+
+      return transcriptedText;
+    } catch (error) {
+      this.logger.error('Transcription failed', {
+        fileName,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      // Check if it's a service availability issue
+      if (this.isServiceUnavailableError(error)) {
+        throw new TranscriptionServiceUnavailableError(
+          'Mistral transcription service is currently unavailable',
+        );
+      }
+
+      throw new TranscriptionFailedError(
+        `Mistral transcription failed: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    }
+  }
+
+  private getMimeTypeFromFileName(fileName: string): string {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'webm':
+        return 'audio/webm';
+      case 'mp4':
+      case 'm4a':
+        return 'audio/mp4';
+      case 'mp3':
+        return 'audio/mpeg';
+      case 'wav':
+        return 'audio/wav';
+      default:
+        return 'audio/webm'; // Default fallback
+    }
+  }
+
+  private isServiceUnavailableError(error: unknown): boolean {
+    // Check for common service unavailable indicators
+    const err = error as { status?: number; message?: string } | undefined;
+    if (err?.status === 503 || err?.status === 502) {
+      return true;
+    }
+    if (
+      err?.message?.includes('service unavailable') ||
+      err?.message?.includes('timeout')
+    ) {
+      return true;
+    }
+    return false;
+  }
+}
