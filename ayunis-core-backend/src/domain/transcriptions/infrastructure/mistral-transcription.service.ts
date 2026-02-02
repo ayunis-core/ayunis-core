@@ -16,6 +16,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('models.mistral.apiKey'),
+      timeoutMs: 30_000,
     });
   }
 
@@ -98,8 +99,17 @@ export class MistralTranscriptionService extends TranscriptionPort {
 
   private isServiceUnavailableError(error: unknown): boolean {
     // Check for common service unavailable indicators
-    const err = error as { status?: number; message?: string } | undefined;
+    const err = error as
+      | {
+          status?: number;
+          message?: string;
+          name?: string;
+        }
+      | undefined;
     if (err?.status === 503 || err?.status === 502) {
+      return true;
+    }
+    if (err?.name === 'RequestTimeoutError' || err?.name === 'TimeoutError') {
       return true;
     }
     if (
