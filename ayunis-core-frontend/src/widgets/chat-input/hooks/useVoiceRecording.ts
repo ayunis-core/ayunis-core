@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
-type RecordingState = 'idle' | 'recording' | 'transcribing';
+type RecordingState = 'idle' | 'starting' | 'recording' | 'transcribing';
 
 const MAX_RECORDING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MIN_RECORDING_DURATION_MS = 1000; // 1 second
@@ -36,8 +36,10 @@ export function useVoiceRecording(
   const startTimeRef = useRef<number>(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cancelledRef = useRef<boolean>(false);
 
   const cleanup = useCallback(() => {
+    cancelledRef.current = true;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -85,6 +87,14 @@ export function useVoiceRecording(
       return;
     }
 
+    // Prevent multiple concurrent startRecording calls
+    if (state !== 'idle') {
+      return;
+    }
+
+    setState('starting');
+    cancelledRef.current = false;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -108,6 +118,11 @@ export function useVoiceRecording(
       };
 
       mediaRecorder.onstop = () => {
+        // If cleanup was called, skip processing entirely
+        if (cancelledRef.current) {
+          return;
+        }
+
         const duration = Date.now() - startTimeRef.current;
         const chunks = [...chunksRef.current];
 
@@ -143,9 +158,10 @@ export function useVoiceRecording(
       }, MAX_RECORDING_DURATION_MS);
     } catch {
       cleanup();
+      setState('idle');
       onError('chatInput.microphonePermissionDenied');
     }
-  }, [onError, processRecording, cleanup]);
+  }, [state, onError, processRecording, cleanup]);
 
   const stopRecording = useCallback(() => {
     if (
@@ -163,6 +179,7 @@ export function useVoiceRecording(
 
   return {
     state,
+    isStarting: state === 'starting',
     isRecording: state === 'recording',
     isTranscribing: state === 'transcribing',
     startRecording,
