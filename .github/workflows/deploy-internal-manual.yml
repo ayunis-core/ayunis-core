@@ -37,9 +37,9 @@ jobs:
               git reset --hard "origin/$RELEASE_TAG"
             fi
             docker compose down
-            docker compose up -d --build
-            # Clean up old images and build cache (keep only what's currently used)
+            # Clean up old images and build cache before building new ones
             docker image prune -af
             docker builder prune -af
+            docker compose up -d --build
             sleep 60
             docker compose ps
