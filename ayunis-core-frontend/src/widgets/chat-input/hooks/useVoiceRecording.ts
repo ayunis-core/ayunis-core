@@ -5,15 +5,14 @@ type RecordingState = 'idle' | 'starting' | 'recording' | 'transcribing';
 const MAX_RECORDING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MIN_RECORDING_DURATION_MS = 1000; // 1 second
 
-function getSupportedMimeType(): string {
+function getSupportedMimeType(): string | null {
   if (MediaRecorder.isTypeSupported('audio/webm')) {
     return 'audio/webm';
   }
   if (MediaRecorder.isTypeSupported('audio/mp4')) {
     return 'audio/mp4';
   }
-  // Fallback
-  return 'audio/webm';
+  return null;
 }
 
 function getFileExtension(mimeType: string): string {
@@ -100,6 +99,14 @@ export function useVoiceRecording(
       streamRef.current = stream;
 
       const mimeType = getSupportedMimeType();
+      if (!mimeType) {
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setState('idle');
+        onError('chatInput.recordingNotSupported');
+        return;
+      }
+
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -156,10 +163,15 @@ export function useVoiceRecording(
           mediaRecorderRef.current.stop();
         }
       }, MAX_RECORDING_DURATION_MS);
-    } catch {
+    } catch (error) {
       cleanup();
       setState('idle');
-      onError('chatInput.microphonePermissionDenied');
+      // NotAllowedError is thrown when microphone permission is denied
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        onError('chatInput.microphonePermissionDenied');
+      } else {
+        onError('chatInput.recordingNotSupported');
+      }
     }
   }, [state, onError, processRecording, cleanup]);
 

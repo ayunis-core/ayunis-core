@@ -83,6 +83,7 @@
     "microphoneRecording": "Recording... Click to stop",
     "transcribing": "Transcribing...",
     "microphonePermissionDenied": "Microphone access denied",
+    "recordingNotSupported": "Voice recording is not supported in this browser",
     "transcriptionFailed": "Transcription failed"
   },
   "common": {
