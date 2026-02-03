@@ -28,5 +28,8 @@ jobs:
             git reset --hard origin/main
             docker compose down
             docker compose up -d --build
+            # Clean up old images and build cache (keep only what's currently used)
+            docker image prune -af
+            docker builder prune -af
             sleep 60
             docker compose ps
