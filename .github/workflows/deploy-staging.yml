@@ -27,9 +27,9 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             docker compose down
-            # Clean up old images and build cache before building new ones
-            docker image prune -af
-            docker builder prune -af
             docker compose up -d --build
             sleep 60
             docker compose ps
+            # Clean up old images and build cache only after successful deployment
+            docker image prune -af
+            docker builder prune -af
