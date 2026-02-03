@@ -67,6 +67,11 @@ export function useVoiceRecording(
       setState('transcribing');
       const text = await transcribe(blob, fileName);
 
+      // Check if cancelled during transcription (e.g., component unmounted)
+      if (cancelledRef.current) {
+        return;
+      }
+
       if (text === null) {
         // API error
         onError('chatInput.transcriptionFailed');
