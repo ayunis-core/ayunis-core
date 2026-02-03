@@ -9,6 +9,9 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
+// 25 MB - matches Mistral's API limit for audio transcription
+const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
 @Injectable()
 export class TranscribeUseCase {
   private readonly logger = new Logger(TranscribeUseCase.name);
@@ -36,6 +39,14 @@ export class TranscribeUseCase {
         throw new InvalidAudioFileError('Empty audio file');
       }
 
+      // Validate file size
+      if (command.file.length > MAX_AUDIO_FILE_SIZE_BYTES) {
+        const maxSizeMB = MAX_AUDIO_FILE_SIZE_BYTES / (1024 * 1024);
+        throw new InvalidAudioFileError(
+          `Audio file size exceeds maximum allowed size of ${maxSizeMB} MB`,
+        );
+      }
+
       // Basic MIME type validation
       const supportedMimeTypes = [
         'audio/webm',
@@ -54,6 +65,7 @@ export class TranscribeUseCase {
       const transcriptedText = await this.transcriptionPort.transcribe(
         command.file,
         command.fileName,
+        command.mimeType,
         command.language,
       );
 

@@ -26,6 +26,7 @@ export function MicrophoneButton({
   };
 
   const {
+    isStarting,
     isRecording,
     isTranscribing,
     startRecording,
@@ -37,7 +38,7 @@ export function MicrophoneButton({
     return null;
   }
 
-  const busy = isTranscribing || isApiTranscribing;
+  const busy = isStarting || isTranscribing || isApiTranscribing;
 
   const handleClick = () => {
     if (busy) return;

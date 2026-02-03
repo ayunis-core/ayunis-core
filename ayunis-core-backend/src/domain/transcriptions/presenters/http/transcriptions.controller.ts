@@ -29,7 +29,11 @@ export class TranscriptionsController {
   constructor(private readonly transcribeUseCase: TranscribeUseCase) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB limit
+    }),
+  )
   @ApiOperation({
     summary: 'Transcribe audio file to text',
     description:

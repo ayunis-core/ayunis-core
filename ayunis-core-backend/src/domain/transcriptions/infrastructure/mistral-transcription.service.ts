@@ -23,18 +23,20 @@ export class MistralTranscriptionService extends TranscriptionPort {
   async transcribe(
     file: Buffer,
     fileName: string,
+    mimeType: string,
     language?: string,
   ): Promise<string> {
     this.logger.log('Starting transcription', {
       fileName,
       fileSize: file.length,
+      mimeType,
       language,
     });
 
     try {
       // Create a File object from the buffer for the Mistral API
       const audioFile = new File([new Uint8Array(file)], fileName, {
-        type: this.getMimeTypeFromFileName(fileName),
+        type: mimeType,
       });
 
       const transcriptionRequest = {
@@ -77,23 +79,6 @@ export class MistralTranscriptionService extends TranscriptionPort {
           error instanceof Error ? error.message : 'Unknown error'
         }`,
       );
-    }
-  }
-
-  private getMimeTypeFromFileName(fileName: string): string {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    switch (extension) {
-      case 'webm':
-        return 'audio/webm';
-      case 'mp4':
-      case 'm4a':
-        return 'audio/mp4';
-      case 'mp3':
-        return 'audio/mpeg';
-      case 'wav':
-        return 'audio/wav';
-      default:
-        return 'audio/webm'; // Default fallback
     }
   }
 
