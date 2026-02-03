@@ -28,8 +28,8 @@ jobs:
             git reset --hard origin/main
             docker compose down
             docker compose up -d --build
-            # Clean up old images and build cache (keep only what's currently used)
-            docker image prune -af
+            # Clean up old images and build cache (keep images from last hour to preserve python-sandbox)
+            docker image prune -af --filter "until=1h"
             docker builder prune -af
             sleep 60
             docker compose ps
