@@ -82,7 +82,7 @@ export function useVoiceRecording(
 
   const startRecording = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      onError('chatInput.microphonePermissionDenied');
+      onError('chatInput.recordingNotSupported');
       return;
     }
 
@@ -96,6 +96,13 @@ export function useVoiceRecording(
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // If cancelled during getUserMedia (e.g., component unmounted), clean up and return
+      if (cancelledRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       streamRef.current = stream;
 
       const mimeType = getSupportedMimeType();
