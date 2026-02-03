@@ -8,6 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       'eslint.config.mjs',
+      'jest.setup.js',
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',

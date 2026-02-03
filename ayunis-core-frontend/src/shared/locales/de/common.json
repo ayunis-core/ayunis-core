@@ -78,7 +78,13 @@
     },
     "fileSourceDisabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
     "dropFilesHint": "Dateien hier ablegen",
-    "invalidDroppedFileType": "Einige Dateien wurden übersprungen, da sie nicht unterstützt werden."
+    "invalidDroppedFileType": "Einige Dateien wurden übersprungen, da sie nicht unterstützt werden.",
+    "microphoneTooltip": "Diktieren",
+    "microphoneRecording": "Aufnahme... Klicken zum Stoppen",
+    "transcribing": "Wird transkribiert...",
+    "microphonePermissionDenied": "Mikrofonzugriff verweigert",
+    "recordingNotSupported": "Sprachaufnahme wird in diesem Browser nicht unterstützt",
+    "transcriptionFailed": "Transkription fehlgeschlagen"
   },
   "common": {
     "loading": "Laden...",
