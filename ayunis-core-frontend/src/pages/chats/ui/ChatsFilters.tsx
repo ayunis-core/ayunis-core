@@ -2,14 +2,16 @@ import { Input } from '@/shared/ui/shadcn/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/shadcn/select';
 import { useNavigate } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Agent } from '../model/types';
 
 interface ChatsFiltersProps {
@@ -24,9 +26,21 @@ export default function ChatsFilters({
   agentId,
 }: ChatsFiltersProps) {
   const { t } = useTranslation('chats');
+  const { t: tAgents } = useTranslation('agents');
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(search ?? '');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Separate agents into personal (owned) and shared, sorted alphabetically
+  const { personalAgents, sharedAgents } = useMemo(() => {
+    const personal = agents
+      .filter((agent) => !agent.isShared)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const shared = agents
+      .filter((agent) => agent.isShared)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { personalAgents: personal, sharedAgents: shared };
+  }, [agents]);
 
   // Auto-focus search input on mount
   useEffect(() => {
@@ -93,11 +107,32 @@ export default function ChatsFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{t('filters.agentFilterAll')}</SelectItem>
-          {agents.map((agent) => (
-            <SelectItem key={agent.id} value={agent.id}>
-              {agent.name}
-            </SelectItem>
-          ))}
+          {agents.length > 0 && (
+            <>
+              {/* Personal Agents Group */}
+              <SelectGroup>
+                {sharedAgents.length > 0 && (
+                  <SelectLabel>{tAgents('tabs.personal')}</SelectLabel>
+                )}
+                {personalAgents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              {/* Shared Agents Group */}
+              {sharedAgents.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>{tAgents('tabs.shared')}</SelectLabel>
+                  {sharedAgents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
+            </>
+          )}
         </SelectContent>
       </Select>
     </div>
