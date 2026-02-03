@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.6.0](https://github.com/ayunis-core/ayunis-core/compare/v1.5.0...v1.6.0) (2026-02-03)
+
+
+### Features
+
+* add voice dictation ([#102](https://github.com/ayunis-core/ayunis-core/issues/102)) ([75a5f9c](https://github.com/ayunis-core/ayunis-core/commit/75a5f9c9f1ec80a6eb6c08f713cad4e8a9180c43))
+* integrate new release notes widget ([60a6f5c](https://github.com/ayunis-core/ayunis-core/commit/60a6f5c56368e01f9f8113c61dc0918755170800))
+
+
+### Bug Fixes
+
+* improve user selection for teams ([#97](https://github.com/ayunis-core/ayunis-core/issues/97)) ([7a99e66](https://github.com/ayunis-core/ayunis-core/commit/7a99e66e2c24093fa674efca370584c3cd8bf764))
+* invalidate agents cache when team membership changes ([#96](https://github.com/ayunis-core/ayunis-core/issues/96)) ([81da345](https://github.com/ayunis-core/ayunis-core/commit/81da345190d103e184684263df47532ebbf6138a))
+* remove client directive AYC-000 ([#99](https://github.com/ayunis-core/ayunis-core/issues/99)) ([50e5d32](https://github.com/ayunis-core/ayunis-core/commit/50e5d325a4c51b334caa98b843e61f98f0d75fe1))
+
+
+### CI/CD
+
+* clean up after deploy ([#103](https://github.com/ayunis-core/ayunis-core/issues/103)) ([9aae6ab](https://github.com/ayunis-core/ayunis-core/commit/9aae6ab1aefa64743d1992ad8502817160b393fe))
+
 ## [1.5.0](https://github.com/ayunis-core/ayunis-core/compare/v1.4.0...v1.5.0) (2026-01-30)
 
 
