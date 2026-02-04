@@ -37,8 +37,7 @@ import {
   ToolAssignmentDtoType,
   type TextMessageContentResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { useLoadingSnippet } from '../model/useLoadingSnippet';
 
 interface ChatMessageProps {
   message?: Message;
@@ -105,8 +104,18 @@ export default function ChatMessage({
   isLoading = false,
   isStreaming = false,
 }: ChatMessageProps) {
-  const { t } = useTranslation('chat');
   const { theme } = useTheme();
+
+  // Determine if we should show a loading state
+  const isEmptyAssistantMessage =
+    message?.role === 'assistant' &&
+    (!message.content || message.content.length === 0);
+  const shouldShowLoading =
+    (isLoading && !message) || (isStreaming && isEmptyAssistantMessage);
+
+  // Get a funny loading snippet that rotates every 2 seconds
+  const loadingSnippet = useLoadingSnippet(shouldShowLoading);
+
   // Show loading indicator when isLoading is true and no message
   if (isLoading && !message) {
     return (
@@ -119,7 +128,7 @@ export default function ChatMessage({
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span className="text-sm text-muted-foreground">
-            {t('chat.thinking')}
+            {loadingSnippet}...
           </span>
         </div>
       </div>
@@ -171,7 +180,7 @@ export default function ChatMessage({
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
-            {renderMessageContent(message, isStreaming)}
+            {renderMessageContent(message, isStreaming, loadingSnippet)}
           </div>
           <CopyMessageButton message={message} />
         </div>
@@ -223,7 +232,11 @@ function ImageThumbnail({
   );
 }
 
-function renderMessageContent(message: Message, isStreaming?: boolean) {
+function renderMessageContent(
+  message: Message,
+  isStreaming?: boolean,
+  loadingSnippet?: string,
+) {
   switch (message.role) {
     case 'user':
     case 'system': {
@@ -260,13 +273,12 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
       // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
       if (!message.content || message.content.length === 0) {
         return (
-          <AgentActivityHint
-            open={false}
-            onOpenChange={() => {}}
-            icon={<Loader2 className="h-4 w-4 animate-spin" />}
-            hint={<Skeleton className="h-4 w-16" />}
-            input={''}
-          />
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">
+              {loadingSnippet || 'Akten durchforsten'}...
+            </span>
+          </div>
         );
       }
 
