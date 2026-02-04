@@ -64,7 +64,7 @@ export default function StreamingLoadingIndicator() {
         setSnippetIndex((prev) => getRandomSnippetIndex(prev));
         setIsVisible(true);
       }, 150);
-    }, 2000);
+    }, 4000);
     return () => {
       clearInterval(interval);
       if (timeoutRef.current) {
