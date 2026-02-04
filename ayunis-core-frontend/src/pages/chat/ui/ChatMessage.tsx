@@ -39,6 +39,17 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useLoadingSnippet } from '../model/useLoadingSnippet';
 
+function LoadingIndicator({ snippet }: { snippet?: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      <span className="text-sm text-muted-foreground">
+        {snippet || 'Akten durchforsten'}...
+      </span>
+    </div>
+  );
+}
+
 interface ChatMessageProps {
   message?: Message;
   isLoading?: boolean;
@@ -125,12 +136,7 @@ export default function ChatMessage({
             <Bot className="h-4 w-4" />
           </AvatarFallback>
         </Avatar>
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm text-muted-foreground">
-            {loadingSnippet}...
-          </span>
-        </div>
+        <LoadingIndicator snippet={loadingSnippet} />
       </div>
     );
   }
@@ -272,14 +278,7 @@ function renderMessageContent(
     case 'assistant':
       // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
       if (!message.content || message.content.length === 0) {
-        return (
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">
-              {loadingSnippet || 'Akten durchforsten'}...
-            </span>
-          </div>
-        );
+        return <LoadingIndicator snippet={loadingSnippet} />;
       }
 
       return message.content.map((content: AssistantMessageContent, index) => {
