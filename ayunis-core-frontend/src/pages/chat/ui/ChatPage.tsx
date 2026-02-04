@@ -501,10 +501,18 @@ export default function ChatPage({
   );
 
   // Chat Content (Messages only)
-  // Show loading indicator when streaming but assistant message hasn't arrived yet
+  // Show loading indicator when streaming and either:
+  // - No assistant message has arrived yet, OR
+  // - The last assistant message has empty content (still waiting for content to stream in)
   const lastMessage = sortedMessages[sortedMessages.length - 1];
+  const lastAssistantHasEmptyContent =
+    lastMessage?.role === 'assistant' &&
+    (!lastMessage.content || lastMessage.content.length === 0);
   const showLoadingMessage =
-    isStreaming && (!lastMessage || lastMessage.role !== 'assistant');
+    isStreaming &&
+    (!lastMessage ||
+      lastMessage.role !== 'assistant' ||
+      lastAssistantHasEmptyContent);
 
   const chatContent = (
     <div className="p-4 pb-8">
