@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
-import { Bot, Loader2, Copy, Check } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -37,11 +37,9 @@ import {
   ToolAssignmentDtoType,
   type TextMessageContentResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useLoadingSnippet } from '../model/useLoadingSnippet';
 
 interface ChatMessageProps {
-  message?: Message;
-  isLoading?: boolean;
+  message: Message;
   hideAvatar?: boolean;
   isStreaming?: boolean;
 }
@@ -101,44 +99,9 @@ function CopyMessageButton({ message }: { message: Message }) {
 export default function ChatMessage({
   hideAvatar = false,
   message,
-  isLoading = false,
   isStreaming = false,
 }: ChatMessageProps) {
   const { theme } = useTheme();
-
-  // Determine if we should show a loading state
-  const isEmptyAssistantMessage =
-    message?.role === 'assistant' &&
-    (!message.content || message.content.length === 0);
-  const shouldShowLoading =
-    (isLoading && !message) || (isStreaming && isEmptyAssistantMessage);
-
-  // Get a funny loading snippet that rotates every 2 seconds
-  const loadingSnippet = useLoadingSnippet(shouldShowLoading);
-
-  // Show loading indicator when isLoading is true and no message
-  if (isLoading && !message) {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <Bot className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm text-muted-foreground">
-            {loadingSnippet}...
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // Return null if no message and not loading
-  if (!message) {
-    return null;
-  }
 
   const isUserMessage = message.role === 'user';
   const isAssistantMessage = message.role === 'assistant';
@@ -180,7 +143,7 @@ export default function ChatMessage({
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
-            {renderMessageContent(message, isStreaming, loadingSnippet)}
+            {renderMessageContent(message, isStreaming)}
           </div>
           <CopyMessageButton message={message} />
         </div>
@@ -232,11 +195,7 @@ function ImageThumbnail({
   );
 }
 
-function renderMessageContent(
-  message: Message,
-  isStreaming?: boolean,
-  loadingSnippet?: string,
-) {
+function renderMessageContent(message: Message, isStreaming?: boolean) {
   switch (message.role) {
     case 'user':
     case 'system': {
@@ -270,16 +229,9 @@ function renderMessageContent(
     }
 
     case 'assistant':
-      // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
+      // Empty content shouldn't happen - StreamingLoadingIndicator handles the loading state
       if (!message.content || message.content.length === 0) {
-        return (
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">
-              {loadingSnippet || 'Akten durchforsten'}...
-            </span>
-          </div>
-        );
+        return null;
       }
 
       return message.content.map((content: AssistantMessageContent, index) => {
