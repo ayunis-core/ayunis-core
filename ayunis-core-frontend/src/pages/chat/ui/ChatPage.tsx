@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
+import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator';
 import ChatInput from '@/widgets/chat-input';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
@@ -500,6 +501,19 @@ export default function ChatPage({
   );
 
   // Chat Content (Messages only)
+  // Show loading indicator when streaming and either:
+  // - No assistant message has arrived yet, OR
+  // - The last assistant message has empty content (still waiting for content to stream in)
+  const lastMessage = sortedMessages[sortedMessages.length - 1];
+  const lastAssistantHasEmptyContent =
+    lastMessage?.role === 'assistant' &&
+    (!lastMessage.content || lastMessage.content.length === 0);
+  const showLoadingMessage =
+    isStreaming &&
+    (!lastMessage ||
+      lastMessage.role !== 'assistant' ||
+      lastAssistantHasEmptyContent);
+
   const chatContent = (
     <div className="p-4 pb-8">
       {sortedMessages.map((message, i) => (
@@ -514,6 +528,7 @@ export default function ChatPage({
           }
         />
       ))}
+      {showLoadingMessage && <StreamingLoadingIndicator />}
     </div>
   );
 

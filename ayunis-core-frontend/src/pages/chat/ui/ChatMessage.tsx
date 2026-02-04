@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
-import { Bot, Loader2, Copy, Check } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -37,12 +37,9 @@ import {
   ToolAssignmentDtoType,
   type TextMessageContentResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import AgentActivityHint from '@/widgets/agent-activity-hint/ui/AgentActivityHint';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 
 interface ChatMessageProps {
-  message?: Message;
-  isLoading?: boolean;
+  message: Message;
   hideAvatar?: boolean;
   isStreaming?: boolean;
 }
@@ -102,34 +99,9 @@ function CopyMessageButton({ message }: { message: Message }) {
 export default function ChatMessage({
   hideAvatar = false,
   message,
-  isLoading = false,
   isStreaming = false,
 }: ChatMessageProps) {
-  const { t } = useTranslation('chat');
   const { theme } = useTheme();
-  // Show loading indicator when isLoading is true and no message
-  if (isLoading && !message) {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <Bot className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm text-muted-foreground">
-            {t('chat.thinking')}
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  // Return null if no message and not loading
-  if (!message) {
-    return null;
-  }
 
   const isUserMessage = message.role === 'user';
   const isAssistantMessage = message.role === 'assistant';
@@ -257,17 +229,9 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
     }
 
     case 'assistant':
-      // If streaming yielded an empty assistant message (no text/tool yet), show a placeholder
+      // Empty content shouldn't happen - StreamingLoadingIndicator handles the loading state
       if (!message.content || message.content.length === 0) {
-        return (
-          <AgentActivityHint
-            open={false}
-            onOpenChange={() => {}}
-            icon={<Loader2 className="h-4 w-4 animate-spin" />}
-            hint={<Skeleton className="h-4 w-16" />}
-            input={''}
-          />
-        );
+        return null;
       }
 
       return message.content.map((content: AssistantMessageContent, index) => {
