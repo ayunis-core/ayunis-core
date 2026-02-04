@@ -110,20 +110,24 @@ export default function ChatsFilters({
           {agents.length > 0 && (
             <>
               {/* Personal Agents Group */}
-              <SelectGroup>
-                {sharedAgents.length > 0 && (
-                  <SelectLabel>{tAgents('tabs.personal')}</SelectLabel>
-                )}
-                {personalAgents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+              {personalAgents.length > 0 && (
+                <SelectGroup>
+                  {sharedAgents.length > 0 && (
+                    <SelectLabel>{tAgents('tabs.personal')}</SelectLabel>
+                  )}
+                  {personalAgents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
               {/* Shared Agents Group */}
               {sharedAgents.length > 0 && (
                 <SelectGroup>
-                  <SelectLabel>{tAgents('tabs.shared')}</SelectLabel>
+                  {personalAgents.length > 0 && (
+                    <SelectLabel>{tAgents('tabs.shared')}</SelectLabel>
+                  )}
                   {sharedAgents.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       {agent.name}

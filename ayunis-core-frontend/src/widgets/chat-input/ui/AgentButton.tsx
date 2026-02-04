@@ -82,7 +82,7 @@ export default function AgentButton({
             <>
               {/* Personal Agents Group */}
               <DropdownMenuGroup>
-                {sharedAgents.length > 0 && (
+                {sharedAgents.length > 0 && personalAgents.length > 0 && (
                   <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
                     {tAgents('tabs.personal')}
                   </DropdownMenuLabel>
@@ -98,9 +98,11 @@ export default function AgentButton({
               {/* Shared Agents Group */}
               {sharedAgents.length > 0 && (
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                    {tAgents('tabs.shared')}
-                  </DropdownMenuLabel>
+                  {personalAgents.length > 0 && (
+                    <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                      {tAgents('tabs.shared')}
+                    </DropdownMenuLabel>
+                  )}
                   {sharedAgents.map(renderAgentItem)}
                 </DropdownMenuGroup>
               )}
