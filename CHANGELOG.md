@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.7.0](https://github.com/ayunis-core/ayunis-core/compare/v1.6.0...v1.7.0) (2026-02-04)
+
+
+### Features
+
+* show funny loading indicator until first assistant message ([#106](https://github.com/ayunis-core/ayunis-core/issues/106)) ([936b1d2](https://github.com/ayunis-core/ayunis-core/commit/936b1d2a2edc29b2f507566b2e3e3c1481767bb3))
+
+
+### Bug Fixes
+
+* group agents in chats filter ([#105](https://github.com/ayunis-core/ayunis-core/issues/105)) ([3cacac0](https://github.com/ayunis-core/ayunis-core/commit/3cacac0278587d48014d3d616b5975f411c8972a))
+
+
+### Code Refactoring
+
+* update LongChatWarning component and add Alert component ([#100](https://github.com/ayunis-core/ayunis-core/issues/100)) ([cc24d27](https://github.com/ayunis-core/ayunis-core/commit/cc24d2721159da40c66bfe4baeacd70bc3b484a0))
+
 ## [1.6.0](https://github.com/ayunis-core/ayunis-core/compare/v1.5.0...v1.6.0) (2026-02-03)
 
 
