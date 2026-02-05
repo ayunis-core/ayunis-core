@@ -64,9 +64,9 @@
     "modelChangeDisabledTooltip": "Das Modell kann nicht geändert werden, wenn ein Agent ausgewählt ist.",
     "cancelTooltip": "Abbrechen",
     "sendTooltip": "Senden",
-    "anonymousModeEnabled": "Anonymer Modus aktiviert - Personenbezogene Daten werden entfernt",
-    "anonymousModeDisabled": "Klicken Sie, um den anonymen Modus zu aktivieren (entfernt persönliche Daten)",
-    "anonymousModeEnforced": "Anonymer Modus ist für dieses Modell erforderlich",
+    "anonymousModeEnabled": "Anonymer Modus",
+    "anonymousModeDisabled": "Anonymer Modus",
+    "anonymousModeEnforced": "Anonymer Modus",
     "agents": {
       "title": "Agenten"
     },

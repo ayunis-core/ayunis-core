@@ -64,9 +64,9 @@
     "modelChangeDisabledTooltip": "The model cannot be changed when an agent is selected.",
     "cancelTooltip": "Cancel",
     "sendTooltip": "Send",
-    "anonymousModeEnabled": "Anonymous mode enabled - PII will be redacted",
-    "anonymousModeDisabled": "Click to enable anonymous mode (redacts personal data)",
-    "anonymousModeEnforced": "Anonymous mode is required by this model",
+    "anonymousModeEnabled": "Anonymous Mode",
+    "anonymousModeDisabled": "Anonymous Mode",
+    "anonymousModeEnforced": "Anonymous Mode",
     "agents": {
       "title": "Agents"
     },
