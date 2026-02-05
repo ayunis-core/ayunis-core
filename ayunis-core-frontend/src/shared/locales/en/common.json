@@ -66,7 +66,7 @@
     "sendTooltip": "Send",
     "anonymousModeEnabled": "Anonymous mode enabled - PII will be redacted",
     "anonymousModeDisabled": "Click to enable anonymous mode (redacts personal data)",
-    "anonymousModeEnforced": "Privacy mode is required by this model",
+    "anonymousModeEnforced": "Anonymous mode is required by this model",
     "agents": {
       "title": "Agents"
     },
