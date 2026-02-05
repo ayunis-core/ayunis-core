@@ -11,6 +11,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { ToolAssignmentDtoType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { useRouter } from '@tanstack/react-router';
 
 const updateAgentSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -44,6 +45,7 @@ export function useUpdateAgent({
 }: UseUpdateAgentProps) {
   const { t } = useTranslation('agents');
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const form = useForm<UpdateAgentData>({
     resolver: zodResolver(updateAgentSchema),
@@ -61,11 +63,12 @@ export function useUpdateAgent({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: [getAgentsControllerFindAllQueryKey()],
+        queryKey: getAgentsControllerFindAllQueryKey(),
       });
       void queryClient.invalidateQueries({
-        queryKey: [getAgentsControllerFindOneQueryKey(agentId)],
+        queryKey: getAgentsControllerFindOneQueryKey(agentId),
       });
+      void router.invalidate();
       toast.success(t('update.success'));
       onSuccessCallback?.();
     },
