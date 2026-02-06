@@ -327,6 +327,7 @@ export class InvitesController {
 
   @Post(':id/resend')
   @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 })
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Resend an expired invite',
     description:

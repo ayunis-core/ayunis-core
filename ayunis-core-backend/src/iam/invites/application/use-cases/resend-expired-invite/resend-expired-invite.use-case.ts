@@ -7,9 +7,11 @@ import { InviteJwtService } from '../../services/invite-jwt.service';
 import {
   InviteNotFoundError,
   InviteNotExpiredError,
+  InviteAlreadyAcceptedError,
   UnexpectedInviteError,
 } from '../../invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { getInviteExpiresAt } from '../../services/invite-expiration.util';
 
 interface ResendExpiredInviteResult {
   token: string;
@@ -40,20 +42,25 @@ export class ResendExpiredInviteUseCase {
         throw new InviteNotFoundError(command.inviteId);
       }
 
-      // 2. Verify it is actually expired
+      // 2. Verify invite is not already accepted
+      if (existingInvite.acceptedAt) {
+        throw new InviteAlreadyAcceptedError();
+      }
+
+      // 3. Verify it is actually expired
       if (existingInvite.expiresAt >= new Date()) {
         throw new InviteNotExpiredError(command.inviteId);
       }
 
-      // 3. Delete the expired invite
+      // 4. Delete the expired invite
       await this.invitesRepository.delete(command.inviteId);
 
-      // 4. Create a new invite with the same data
+      // 5. Create a new invite with the same data
       const validDuration = this.configService.get<string>(
         'auth.jwt.inviteExpiresIn',
         '7d',
       );
-      const inviteExpiresAt = this.getInviteExpiresAt(validDuration);
+      const inviteExpiresAt = getInviteExpiresAt(validDuration);
 
       const newInvite = new Invite({
         email: existingInvite.email,
@@ -65,7 +72,7 @@ export class ResendExpiredInviteUseCase {
 
       await this.invitesRepository.create(newInvite);
 
-      // 5. Generate JWT token for the new invite
+      // 6. Generate JWT token for the new invite
       const inviteToken = this.inviteJwtService.generateInviteToken({
         inviteId: newInvite.id,
       });
@@ -89,38 +96,5 @@ export class ResendExpiredInviteUseCase {
       });
       throw new UnexpectedInviteError(error as Error);
     }
-  }
-
-  private getInviteExpiresAt(inviteExpiresIn: string): Date {
-    const match = inviteExpiresIn.match(/^(\d+)([dhms])$/);
-
-    if (!match) {
-      throw new Error(
-        `Invalid invite expires in format: ${inviteExpiresIn}. Expected format: number + d/h/m/s (e.g., "7d", "24h")`,
-      );
-    }
-
-    const [, amountStr, unit] = match;
-    const amount = parseInt(amountStr, 10);
-
-    let multiplier: number;
-    switch (unit) {
-      case 'd':
-        multiplier = 24 * 60 * 60 * 1000;
-        break;
-      case 'h':
-        multiplier = 60 * 60 * 1000;
-        break;
-      case 'm':
-        multiplier = 60 * 1000;
-        break;
-      case 's':
-        multiplier = 1000;
-        break;
-      default:
-        throw new Error(`Unsupported time unit: ${unit}`);
-    }
-
-    return new Date(Date.now() + amount * multiplier);
   }
 }

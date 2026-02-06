@@ -20,15 +20,18 @@ function resendExpiredInvite(inviteId: string): Promise<ResendInviteResponse> {
   });
 }
 
-export function useInviteResend() {
+export function useInviteResend(
+  onInviteResent?: (response: ResendInviteResponse) => void,
+) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { t } = useTranslation('admin-settings-users');
 
   const mutation = useMutation({
     mutationFn: (inviteId: string) => resendExpiredInvite(inviteId),
-    onSuccess: () => {
+    onSuccess: (response: ResendInviteResponse) => {
       showSuccess(t('inviteResend.success'));
+      onInviteResent?.(response);
     },
     onError: (error) => {
       try {
