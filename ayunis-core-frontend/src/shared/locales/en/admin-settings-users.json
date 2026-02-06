@@ -30,6 +30,7 @@
     "changeRole": "Change to role '{{role}}'",
     "user": "User",
     "admin": "Admin",
+    "resend": "Resend Invite",
     "sendPasswordReset": "Send Password Reset",
     "noInvitesFound": "No invites found",
     "total": "{{count}} total"
@@ -76,7 +77,10 @@
     "changeRoleText": "Change Role",
     "cancelText": "Cancel",
     "deleteAllInvitesTitle": "Delete All Pending Invites",
-    "deleteAllInvitesDescription": "Are you sure you want to delete all {{count}} pending invites? This action cannot be undone."
+    "deleteAllInvitesDescription": "Are you sure you want to delete all {{count}} pending invites? This action cannot be undone.",
+    "resendInviteTitle": "Resend Invite",
+    "resendInviteDescription": "Are you sure you want to resend the invite for {{email}}? The expired invite will be deleted and a new one will be created.",
+    "resendText": "Resend"
   },
   "deleteAllInvites": {
     "success": "{{count}} pending invite(s) deleted successfully",
@@ -88,6 +92,14 @@
     "emailNotAvailable": "Invite not possible.",
     "userAlreadyExists": "This email address is already registered as a user in your organization.",
     "emailProviderBlacklisted": "Email address from this provider is not allowed. Please use your company email address."
+  },
+  "inviteResend": {
+    "success": "Invite resent successfully!",
+    "error": {
+      "inviteNotFound": "Invite not found",
+      "inviteNotExpired": "This invite has not expired yet.",
+      "unexpectedError": "Failed to resend invite. Please try again."
+    }
   },
   "inviteDelete": {
     "error": {

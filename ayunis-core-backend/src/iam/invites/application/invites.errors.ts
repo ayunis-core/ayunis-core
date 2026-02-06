@@ -7,6 +7,7 @@ import {
 export enum InvitesErrorCode {
   INVITE_NOT_FOUND = 'INVITE_NOT_FOUND',
   INVITE_EXPIRED = 'INVITE_EXPIRED',
+  INVITE_NOT_EXPIRED = 'INVITE_NOT_EXPIRED',
   INVITE_ALREADY_ACCEPTED = 'INVITE_ALREADY_ACCEPTED',
   INVALID_INVITE_TOKEN = 'INVALID_INVITE_TOKEN',
   INVITE_EMAIL_MISMATCH = 'INVITE_EMAIL_MISMATCH',
@@ -58,6 +59,23 @@ export class InviteNotFoundError extends InviteError {
 export class InviteExpiredError extends InviteError {
   constructor(metadata?: ErrorMetadata) {
     super('Invite has expired', InvitesErrorCode.INVITE_EXPIRED, 400, metadata);
+  }
+}
+
+/**
+ * Error thrown when trying to resend an invite that has not expired yet
+ */
+export class InviteNotExpiredError extends InviteError {
+  constructor(inviteId: string, metadata?: ErrorMetadata) {
+    super(
+      `Invite with ID '${inviteId}' has not expired yet`,
+      InvitesErrorCode.INVITE_NOT_EXPIRED,
+      400,
+      {
+        inviteId,
+        ...metadata,
+      },
+    );
   }
 }
 
