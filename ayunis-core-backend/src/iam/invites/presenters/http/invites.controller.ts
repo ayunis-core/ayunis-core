@@ -44,6 +44,7 @@ import { AcceptInviteUseCase } from '../../application/use-cases/accept-invite/a
 import { DeleteInviteUseCase } from '../../application/use-cases/delete-invite/delete-invite.use-case';
 import { GetInvitesByOrgUseCase } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
 import { GetInviteByTokenUseCase } from '../../application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
+import { ResendExpiredInviteUseCase } from '../../application/use-cases/resend-expired-invite/resend-expired-invite.use-case';
 
 // Import Commands and Queries
 import { CreateInviteCommand } from '../../application/use-cases/create-invite/create-invite.command';
@@ -52,6 +53,7 @@ import { AcceptInviteCommand } from '../../application/use-cases/accept-invite/a
 import { DeleteInviteCommand } from '../../application/use-cases/delete-invite/delete-invite.command';
 import { GetInvitesByOrgQuery } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.query';
 import { GetInviteByTokenQuery } from '../../application/use-cases/get-invite-by-token/get-invite-by-token.query';
+import { ResendExpiredInviteCommand } from '../../application/use-cases/resend-expired-invite/resend-expired-invite.command';
 
 // Import Mappers
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
@@ -80,6 +82,7 @@ export class InvitesController {
     private readonly deleteAllPendingInvitesUseCase: DeleteAllPendingInvitesUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly getInviteByTokenUseCase: GetInviteByTokenUseCase,
+    private readonly resendExpiredInviteUseCase: ResendExpiredInviteUseCase,
     private readonly inviteResponseMapper: InviteResponseMapper,
     private readonly configService: ConfigService,
     private readonly sendInvitationEmailUseCase: SendInvitationEmailUseCase,
@@ -320,6 +323,75 @@ export class InvitesController {
     );
 
     return this.inviteResponseMapper.toAcceptResponseDto(result);
+  }
+
+  @Post(':id/resend')
+  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 })
+  @ApiOperation({
+    summary: 'Resend an expired invite',
+    description:
+      'Delete the expired invite and create a new one with the same details, then send the invitation email',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the expired invite to resend',
+    type: 'string',
+    format: 'uuid',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: 200,
+    description: 'The invite has been successfully resent',
+    type: CreateInviteResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invite has not expired yet or invalid data',
+  })
+  @ApiResponse({ status: 404, description: 'Invite not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async resendExpiredInvite(
+    @Param('id', ParseUUIDPipe) inviteId: UUID,
+  ): Promise<CreateInviteResponseDto> {
+    this.logger.log('resendExpiredInvite', { inviteId });
+
+    const { invite, token } = await this.resendExpiredInviteUseCase.execute(
+      new ResendExpiredInviteCommand(inviteId),
+    );
+
+    // Build invitation link
+    const frontendBaseUrl = this.configService.get<string>(
+      'app.frontend.baseUrl',
+    );
+    const inviteAcceptEndpoint = this.configService.get<string>(
+      'app.frontend.inviteAcceptEndpoint',
+    );
+    const inviteAcceptUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${token}`;
+
+    // Send invitation email if email configuration is available
+    const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
+    if (hasEmailConfig) {
+      this.logger.debug('Sending invitation email for resent invite', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+
+      await this.sendInvitationEmailUseCase.execute(
+        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
+      );
+
+      this.logger.debug('Invitation email sent successfully', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+      return { url: null };
+    } else {
+      this.logger.debug('Email configuration not available, returning URL', {
+        inviteId: invite.id,
+        email: invite.email,
+      });
+      return { url: inviteAcceptUrl };
+    }
   }
 
   @Delete('all')
