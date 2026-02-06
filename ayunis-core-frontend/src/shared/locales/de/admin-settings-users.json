@@ -30,6 +30,7 @@
     "changeRole": "Zu Rolle '{{role}}' ändern",
     "user": "Benutzer",
     "admin": "Administrator",
+    "resend": "Einladung erneut senden",
     "sendPasswordReset": "Passwort-Reset senden",
     "noInvitesFound": "Keine Einladungen gefunden",
     "total": "{{count}} gesamt"
@@ -77,7 +78,10 @@
     "changeRoleText": "Rolle ändern",
     "cancelText": "Abbrechen",
     "deleteAllInvitesTitle": "Alle ausstehenden Einladungen löschen",
-    "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+    "deleteAllInvitesDescription": "Sind Sie sicher, dass Sie alle {{count}} ausstehenden Einladungen löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "resendInviteTitle": "Einladung erneut senden",
+    "resendInviteDescription": "Sind Sie sicher, dass Sie die Einladung für {{email}} erneut senden möchten? Die abgelaufene Einladung wird gelöscht und eine neue erstellt.",
+    "resendText": "Erneut senden"
   },
   "deleteAllInvites": {
     "success": "{{count}} ausstehende Einladung(en) erfolgreich gelöscht",
@@ -89,6 +93,14 @@
     "emailNotAvailable": "Einladung nicht möglich.",
     "userAlreadyExists": "Diese E-Mail-Adresse ist bereits als Benutzer in Ihrer Organisation registriert.",
     "emailProviderBlacklisted": "E-Mail-Adresse von diesem Provider ist nicht erlaubt. Bitte verwenden Sie Ihr Firmen E-Mail-Adresse."
+  },
+  "inviteResend": {
+    "success": "Einladung erfolgreich erneut gesendet!",
+    "error": {
+      "inviteNotFound": "Einladung nicht gefunden",
+      "inviteNotExpired": "Diese Einladung ist noch nicht abgelaufen.",
+      "unexpectedError": "Fehler beim erneuten Senden der Einladung. Bitte versuchen Sie es erneut."
+    }
   },
   "inviteDelete": {
     "error": {

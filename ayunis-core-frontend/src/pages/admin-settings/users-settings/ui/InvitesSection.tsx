@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Button } from '@/shared/ui/shadcn/button';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, RefreshCw, Trash2 } from 'lucide-react';
 import {
   Card,
   CardAction,
@@ -19,6 +19,7 @@ import {
 import { Table, TableHeader } from '@/shared/ui/shadcn/table';
 import { useInviteDelete } from '../api/useInviteDelete';
 import { useDeleteAllInvites } from '../api/useDeleteAllInvites';
+import { useInviteResend } from '../api/useInviteResend';
 import type { Invite } from '../model/openapi';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +40,7 @@ export default function InvitesSection({
   const { t } = useTranslation('admin-settings-users');
   const { deleteInvite, isLoading: isDeletingInvite } = useInviteDelete();
   const { deleteAllInvites, isDeleting } = useDeleteAllInvites();
+  const { resendInvite, isResending } = useInviteResend();
   const { confirm } = useConfirmation();
 
   const handleDeleteInvite = (invite: Invite) => {
@@ -51,6 +53,18 @@ export default function InvitesSection({
       cancelText: t('confirmations.cancelText'),
       variant: 'destructive',
       onConfirm: () => deleteInvite({ id: invite.id }),
+    });
+  };
+
+  const handleResendInvite = (invite: Invite) => {
+    confirm({
+      title: t('confirmations.resendInviteTitle'),
+      description: t('confirmations.resendInviteDescription', {
+        email: invite.email,
+      }),
+      confirmText: t('confirmations.resendText'),
+      cancelText: t('confirmations.cancelText'),
+      onConfirm: () => resendInvite(invite.id),
     });
   };
 
@@ -129,6 +143,15 @@ export default function InvitesSection({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {invite.status === 'expired' && (
+                          <DropdownMenuItem
+                            onClick={() => handleResendInvite(invite)}
+                            disabled={isResending}
+                          >
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            {t('users.resend')}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => handleDeleteInvite(invite)}
