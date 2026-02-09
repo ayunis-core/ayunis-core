@@ -20,7 +20,7 @@ import { McpModule } from '../domain/mcp/mcp.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { IamModule } from '../iam/iam.module';
-import { AdminModule } from '../admin/admin.module';
+
 import { modelsConfig } from '../config/models.config';
 import {
   AuthProvider,
@@ -31,7 +31,6 @@ import { embeddingsConfig } from '../config/embeddings.config';
 import storageConfig from '../config/storage.config';
 import { webConfig } from '../config/web.config';
 import { appConfig } from '../config/app.config';
-import { adminConfig } from '../config/admin.config';
 import { legalConfig } from '../config/legal.config';
 import { subscriptionsConfig } from '../config/subscriptions.config';
 import { emailsConfig } from '../config/emails.config';
@@ -63,7 +62,6 @@ import { SentryModule } from '@sentry/nestjs/setup';
         storageConfig,
         webConfig,
         appConfig,
-        adminConfig,
         legalConfig,
         subscriptionsConfig,
         emailsConfig,
@@ -126,7 +124,6 @@ import { SentryModule } from '@sentry/nestjs/setup';
       authProvider:
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
-    AdminModule,
   ],
   controllers: [AppController],
   providers: [

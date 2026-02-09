@@ -1,0 +1,6 @@
+Token Counting
+Count LLM tokens using tiktoken or simple character-based fallback.
+
+The token-counter module estimates token counts for text strings, used by the RAG pipeline and usage tracking. It provides a registry pattern with two handlers: `TiktokenHandler` (accurate, OpenAI-compatible) and `SimpleHandler` (lightweight fallback). The `CountTokensUseCase` selects the appropriate handler automatically.
+
+The token-counter module provides LLM token estimation through a pluggable handler registry. The `TokenCounterHandler` abstract port defines the interface with `type`, `isAvailable()`, and `countTokens()` methods. Two implementations exist: `TiktokenHandler` uses OpenAI's tiktoken library for accurate BPE token counting, while `SimpleHandler` offers a character-ratio heuristic fallback when tiktoken is unavailable. The `TokenCounterRegistry` manages handler registration and selection — it prefers tiktoken when available and falls back to the simple handler automatically via `getDefaultHandler()`. The `CountTokensUseCase` accepts a `CountTokensCommand` with text and optional counter type, delegating to the registry. The module factory registers both handlers at startup and exports both the registry and use case. This is consumed by RAG chunking to enforce token-based size limits and by usage tracking to calculate input/output token costs for billing.

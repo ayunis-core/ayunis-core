@@ -1,0 +1,62 @@
+name: Complexity Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+
+jobs:
+  lizard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for diff
+
+      - name: Get changed TypeScript files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+
+      - name: Install Lizard
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: pip install lizard
+
+      - name: Check complexity of changed files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "Checking complexity for changed files:"
+          echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | sed 's/^/  - /'
+          echo ""
+          
+          # Thresholds (from Tweag/Modus experiment)
+          CCN_THRESHOLD=10      # Cyclomatic complexity
+          LENGTH_THRESHOLD=50   # Function length in lines
+          ARGS_THRESHOLD=5      # Number of arguments
+          
+          # Run lizard with warnings only
+          RESULT=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | xargs lizard \
+            --CCN $CCN_THRESHOLD \
+            --length $LENGTH_THRESHOLD \
+            --arguments $ARGS_THRESHOLD \
+            --warnings_only \
+            2>&1) || true
+          
+          if [ -n "$RESULT" ]; then
+            echo "❌ Complexity thresholds exceeded:"
+            echo "$RESULT"
+            echo ""
+            echo "Thresholds: CCN≤$CCN_THRESHOLD, length≤$LENGTH_THRESHOLD lines, args≤$ARGS_THRESHOLD"
+            echo "Consider refactoring these functions into smaller units."
+            exit 1
+          else
+            echo "✅ All functions within complexity thresholds"
+          fi
+
+      - name: No TypeScript files changed
+        if: steps.changed-files.outputs.any_changed != 'true'
+        run: echo "No TypeScript files changed, skipping complexity check."

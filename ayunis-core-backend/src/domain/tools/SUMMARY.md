@@ -1,0 +1,6 @@
+Extensible Tools
+Pluggable tool system with JSON schema validation and execution
+
+Tools provide an extensible capability system where AI agents invoke typed actions—HTTP calls, code execution, chart generation, source queries, internet search, email, calendar, and MCP operations—during conversations.
+
+The tools module implements a polymorphic tool system with JSON schema-based parameter validation. The abstract `Tool` entity specializes into 15+ concrete types: `HttpTool`, `CodeExecutionTool`, `InternetSearchTool`, `WebsiteContentTool`, `SourceQueryTool`, `SourceGetTextTool`, `SendEmailTool`, `CreateCalendarEventTool`, chart tools (bar, line, pie), `McpIntegrationTool`, `McpIntegrationResource`, `McpIntegrationPrompt`, and `ProductKnowledgeTool`. `ToolBox` groups tools by type, and `DisplayableTool`/`ConfigurableTool` add UI and configuration capabilities. Each tool type has a dedicated handler for execution. Key use cases include assembling tools for agents, executing tool calls, and checking tool capabilities. The module integrates with **agents** for tool assignment, **runs** for runtime tool execution, **sources** and **rag** for knowledge retrieval tools, **mcp** for protocol-bridged tools, and **retrievers** for search and content tools.

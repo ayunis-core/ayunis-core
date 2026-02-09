@@ -1,0 +1,6 @@
+CLI Commands
+Administrative command-line interface for user management and seeding.
+
+The CLI module provides terminal commands for platform administration using `nest-commander`. It supports user operations: `users:delete`, `users:get`, `users:make-super-admin`, and `users:remove-super-admin`. Seed commands have been moved to lightweight scripts in `db/scripts/` to reduce memory usage.
+
+The CLI module bootstraps a standalone NestJS application context via `CommandFactory.run()` in `cli/main.ts`, loading only the modules needed for administrative operations: `UsersModule`, `InvitesModule`, `ContextModule`, and database configuration. Four user management commands are registered: `DeleteUserCommand` removes a user and their associated invite by user ID; `GetUserCommand` retrieves user details; `MakeSuperAdminCommand` promotes a user to `SystemRole.SUPER_ADMIN`; and `RemoveSuperAdminCommand` revokes super-admin status. Each command extends `CommandRunner` from `nest-commander` and accepts a `--userId` flag. The `CliModule` configures its own `TypeOrmModule` and `ClsModule` with transactional support independently of the main `AppModule`, enabling it to run as a separate process. Database seeding was originally part of the CLI but has been extracted to standalone TypeScript scripts in `src/db/scripts/` for reduced memory footprint.

@@ -1,0 +1,6 @@
+Email Delivery
+Send transactional emails through SMTP using hexagonal architecture pattern.
+
+The emails module provides a port/adapter abstraction for sending emails. It defines an `Email` domain entity, an `EmailHandlerPort` interface, and a `SendEmailUseCase` that delegates to the SMTP adapter. Other modules import `SendEmailUseCase` to dispatch emails without coupling to transport details.
+
+The emails module follows hexagonal architecture with clear separation between domain, application, and infrastructure layers. The `Email` entity holds recipient, subject, text, and optional HTML content. The `EmailHandlerPort` abstract class defines the `sendEmail` contract, implemented by `SmptHandler` in the infrastructure layer using Nodemailer with SMTP configuration from environment variables. The `SendEmailUseCase` orchestrates email creation and dispatch, catching transport errors and wrapping them as `EmailSendFailedError` domain errors. The module is registered in `EmailsModule` and exports `SendEmailUseCase` for use by authentication (verification, password reset) and invitation flows. It pairs with the sibling `email-templates/` module, which renders MJML templates into HTML before passing them to this module for delivery.

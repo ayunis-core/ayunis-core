@@ -1,0 +1,6 @@
+Request Context
+Provide request-scoped user identity via continuation-local storage service.
+
+The context module wraps `nestjs-cls` to expose a `ContextService` that stores and retrieves the current user's `userId`, `orgId`, `systemRole`, and `role` throughout a request lifecycle. It is globally available and used by all use cases to access authentication context without parameter passing.
+
+The context module is a thin global wrapper around the `nestjs-cls` `ClsService`, typed with `MyClsStore` interface containing `userId`, `orgId`, `systemRole`, and `role` fields. The `ContextModule` is decorated `@Global()` and provides `ContextService` by aliasing it to `ClsService` via `useExisting`. Authentication middleware populates the store early in the request pipeline after JWT validation. Every use case then injects `ContextService` and calls `contextService.get('userId')` or `contextService.get('orgId')` to retrieve the authenticated user's identity — this is the standard pattern throughout the codebase, eliminating the need to pass user context through controller parameters, commands, or queries. The store also carries `systemRole` for super-admin checks and `role` for organization-level authorization decisions.

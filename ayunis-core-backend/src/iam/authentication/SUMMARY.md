@@ -1,0 +1,6 @@
+User Authentication
+Handles login, registration, JWT tokens, and session management.
+
+Manages user authentication flows including login with email/password, new user registration, JWT access/refresh token issuance, and current user retrieval. Uses Passport strategies (local and JWT) with guards protecting routes globally.
+
+This module is the entry point for all identity verification in Ayunis. Key entities include `AuthTokens` (access/refresh token pairs) and `ActiveUser` (authenticated session representation with role, org, and email verification status). Main use cases are login (credential validation and token generation), register-user (account creation with org provisioning), refresh-token (session extension), and get-current-user (profile retrieval). It integrates with the **users** module for credential storage and lookup, **hashing** for password verification, **orgs** for organization creation during registration, and **authorization** for role-based guard enforcement. The `UserContextInterceptor` populates `ContextService` with the authenticated user's ID and org ID for downstream use cases. A global `JwtAuthGuard` secures all routes by default unless explicitly marked `@Public()`.

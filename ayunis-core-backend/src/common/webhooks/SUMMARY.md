@@ -1,0 +1,6 @@
+Event Webhooks
+Deliver lifecycle webhook events to external systems via HTTP.
+
+The webhooks module dispatches domain lifecycle events (user created/deleted, org created, subscription changes) to a configured external URL. It uses a port/adapter pattern with `WebhookHandler` interface and `HttpWebhookHandler` implementation. Failures are logged but never block the primary business operation.
+
+The webhooks module enables external system integration by broadcasting lifecycle events as HTTP webhook calls. The `WebhookEvent` abstract entity carries a UUID, event type enum, data payload, and timestamp. Nine concrete event types are defined covering organization, user, and subscription lifecycle events (`ORG_CREATED`, `USER_CREATED`, `USER_UPDATED`, `USER_DELETED`, `SUBSCRIPTION_CREATED`, `SUBSCRIPTION_CANCELLED`, `SUBSCRIPTION_UNCANCELLED`, `SUBSCRIPTION_SEATS_UPDATED`, `SUBSCRIPTION_BILLING_INFO_UPDATED`). The `SendWebhookUseCase` receives a `SendWebhookCommand` and delegates to the `WebhookHandler` port. The `HttpWebhookHandler` infrastructure adapter performs the actual HTTP POST to the configured webhook URL. Error handling is intentionally lenient — delivery failures are logged as warnings but never re-thrown, ensuring webhook issues cannot disrupt core business operations. The module exports `SendWebhookUseCase` for use by IAM and subscription modules.
