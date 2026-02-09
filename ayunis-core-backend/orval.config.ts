@@ -55,4 +55,22 @@ export default defineConfig({
       },
     },
   },
+  marketplace: {
+    input: {
+      target: 'http://localhost:3002/api/docs-json',
+    },
+    output: {
+      target: './src/common/clients/marketplace/generated',
+      client: 'axios',
+      mode: 'split',
+      mock: false,
+      clean: true,
+      override: {
+        mutator: {
+          path: 'src/common/clients/marketplace/client.ts',
+          name: 'marketplaceAxiosInstance',
+        },
+      },
+    },
+  },
 });
