@@ -87,9 +87,12 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     const where =
       'id' in params
         ? { id: params.id }
-        : { name: params.name, provider: params.provider };
+        : { model: { name: params.name, provider: params.provider } };
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
+      relations: {
+        model: true,
+      },
     });
     if (!permittedModel) {
       return null;
@@ -103,7 +106,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     const where =
       'id' in params
         ? { id: params.id }
-        : { name: params.name, provider: params.provider };
+        : { model: { name: params.name, provider: params.provider } };
     const permittedModel = await this.permittedModelRepository.findOne({
       where,
       relations: {
