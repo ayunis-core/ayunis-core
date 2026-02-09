@@ -174,7 +174,6 @@ run_be_tsc() {
 run_complexity() {
   STATUS_FILE="$1"
   print_section "Complexity • Lizard (staged TS)"
-  ALL_TS_STAGED=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
   printf "%s\n" "$ALL_TS_STAGED" | sed 's#^# - #'
   set +e
   printf "%s" "$ALL_TS_STAGED" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh
@@ -260,8 +259,7 @@ if [ -n "$BE_TS_STAGED" ]; then
 fi
 
 # Complexity check result (runs on both backend + frontend TS files)
-ALL_TS_STAGED_CHECK=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
-if [ -n "$ALL_TS_STAGED_CHECK" ]; then
+if [ -n "$ALL_TS_STAGED" ]; then
   if [ "$COMPLEXITY_STATUS" -ne 0 ]; then
     printf "%b\n" "${RED}❌ Complexity check failed (CCN>10, length>50, or args>5)${NC}"
     FAILED=1
