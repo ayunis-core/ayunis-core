@@ -1,0 +1,6 @@
+Trial Management
+Manages organization free trial periods with message usage tracking.
+
+Tracks free trial status for organizations, enforcing message limits before requiring a paid subscription. Supports creating, updating, and querying trials with message count tracking.
+
+This module governs the freemium onboarding experience in Ayunis. The core entity is `Trial`, scoped to an organization, tracking `messagesSent` against a configurable `maxMessages` limit. Key use cases include `CreateTrialUseCase` (provisions a trial for a new org, typically during registration), `GetTrialUseCase` (retrieves trial status for the current org), `UpdateTrialUseCase` (adjusts trial parameters like max messages), and `IncrementTrialMessagesUseCase` (atomically increments the message counter after each AI interaction). The HTTP layer exposes a `SuperAdminTrialsController` for platform-wide trial management with DTOs for creation and updates. It integrates with **orgs** (each trial belongs to one org), **subscriptions** (trial expiration triggers subscription requirement), and the **domain/runs** module which calls increment after successful AI executions. The `TrialRepositoryPort` abstracts persistence with a PostgreSQL implementation.

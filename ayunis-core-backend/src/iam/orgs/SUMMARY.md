@@ -1,0 +1,6 @@
+Organization Management
+Creates, updates, deletes, and queries multi-tenant organization entities.
+
+Manages organizations as the top-level multi-tenancy boundary in Ayunis. Supports CRUD operations, super-admin listing of all organizations, and lookup by ID. Each user belongs to exactly one organization.
+
+This module defines the `Org` entity—the fundamental tenant unit containing a name, associated users, and timestamps. Key use cases include `CreateOrgUseCase` (provisions a new organization, typically during registration), `UpdateOrgUseCase` (renames an organization), `DeleteOrgUseCase` (removes an organization and cascades cleanup), `FindOrgByIdUseCase` (single org lookup), `FindAllOrgIdsUseCase` (batch ID retrieval), and `SuperAdminGetAllOrgsUseCase` (paginated listing for platform administration). The HTTP layer includes a `SuperAdminOrgsController` for admin-only endpoints. It integrates with **users** (each user references an orgId), **subscriptions** and **trials** (org-scoped billing), **invites** (org-scoped invitations), **teams** (org-scoped team grouping), and **authentication** (org creation during registration). The `OrgsRepositoryPort` abstracts persistence with a PostgreSQL implementation.

@@ -1,0 +1,6 @@
+Protocol Integrations
+Model Context Protocol server connections and capability discovery
+
+MCP integrations connect external tool servers to the platform using the Model Context Protocol. Organizations configure predefined or custom integrations with authentication, then discover available tools, resources, and prompts.
+
+The MCP module manages connections to external Model Context Protocol servers at the organization level. Core entities include `McpIntegration` (abstract base with predefined and custom subtypes), `McpTool`, `McpResource`, and `McpPrompt`—the latter three are ephemeral entities fetched from remote servers, not persisted locally. Authentication is handled through a hierarchy supporting bearer tokens, custom headers, OAuth, and no-auth. Key use cases include creating, updating, deleting, and validating integrations, plus discovering server capabilities. The `McpClientService` handles actual server communication. The module integrates with **agents** for MCP integration assignment and **tools** for wrapping discovered MCP tools, resources, and prompts as executable tool entities within the platform.

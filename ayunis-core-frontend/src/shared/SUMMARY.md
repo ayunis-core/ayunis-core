@@ -1,0 +1,7 @@
+# Shared Primitives
+
+Foundation layer with UI components, generated API client, and utilities.
+
+The shared layer provides framework-level primitives: 37 shadcn/ui components, an Orval-generated TypeScript API client with TanStack Query hooks (~13,600 lines), Axios HTTP client configuration, i18n locale files for German and English, chat context provider, error boundary components, and utility libraries.
+
+The `api/` directory contains the Orval-generated client in `generated/ayunisCoreAPI.ts` (~10,700 lines of typed React Query hooks for every backend endpoint) and `generated/ayunisCoreAPI.schemas.ts` (~2,900 lines of TypeScript interfaces matching backend DTOs). The `client.ts` file configures the shared Axios instance with base URL and authentication interceptors, while `extract-error-data.ts` provides error response parsing. The `ui/shadcn/` directory houses 37 component primitives (button, dialog, form, table, select, sidebar, card, tabs, etc.) built on Radix UI. The `ui/error-boundary/` provides React error boundary with fallback UI. The `contexts/chat/` implements a chat context provider for sharing conversation state across components. The `hooks/` directory includes shadcn's `use-mobile` responsive hook. The `locales/` directory contains German and English translation JSON files organized by feature area. The `lib/` directory provides DOM patch utilities and shadcn's `cn()` class merging helper. The `config/` directory exports environment-based application configuration. The `assets/brand/` directory contains branding resources.

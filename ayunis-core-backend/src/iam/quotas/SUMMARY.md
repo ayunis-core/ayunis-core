@@ -1,0 +1,6 @@
+Usage Quotas
+Tracks and enforces per-user usage limits with sliding windows.
+
+Implements a quota enforcement system that tracks user resource consumption within configurable time windows. Currently supports fair-use message limits, preventing abuse while allowing reasonable platform usage.
+
+This module provides rate-based usage control for Ayunis. The core entity is `UsageQuota`, which tracks a user's consumption count for a specific `QuotaType` (currently `FAIR_USE_MESSAGES`) within a sliding time window defined by `windowStartAt` and `windowDurationMs`. The entity includes business logic methods like `isWindowExpired()` to detect when a window has elapsed. Key components are `CheckQuotaUseCase` for verifying whether a user has remaining quota before allowing an operation, and `QuotaLimitResolverService` for determining the applicable limit based on subscription tier or configuration. It integrates with **subscriptions** for tier-aware limit resolution, **users** for user identification, and the **domain/runs** module which checks quotas before executing AI model calls. The `UsageQuotaRepositoryPort` abstracts persistence with a PostgreSQL implementation that supports atomic increment operations.

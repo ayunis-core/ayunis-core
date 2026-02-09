@@ -1,0 +1,6 @@
+Usage Analytics
+Token consumption and cost tracking across AI model providers
+
+Usage tracks every AI inference request—recording tokens consumed, costs incurred, and models used—then aggregates this data into dashboards showing provider distribution, model popularity, and per-user consumption.
+
+The usage module provides comprehensive analytics for AI resource consumption. The `Usage` entity records each inference request with user, organization, model, provider, token counts (input/output/total), cost, and currency. Supporting entities include `ProviderUsage` (aggregated provider stats with time series), `ModelDistribution` (model popularity breakdown), `UsageStats` (aggregate metrics like active users and request counts), `UserUsageItem` (per-user consumption), and `TimeSeriesPoint` (temporal data). Key use cases include collecting usage after each run, querying provider-level usage, model distribution analytics, aggregate stats, and per-user usage reports. Complex SQL queries handle time-series aggregation and ranking. The module integrates with **runs** which trigger usage collection after inference, **models** for model and provider metadata resolution, and the **IAM** context for organization-scoped reporting and admin dashboards.

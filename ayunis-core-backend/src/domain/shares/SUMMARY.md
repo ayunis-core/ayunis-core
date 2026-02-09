@@ -1,0 +1,6 @@
+Resource Sharing
+Share agents and prompts across organizations and teams
+
+Shares enable users to publish owned resources (agents, prompts) to scoped audiences within their organization or team, allowing colleagues to discover and use shared AI configurations.
+
+The shares module implements a generic sharing system for platform resources. The abstract `Share` entity specializes into `AgentShare` and other entity-specific types, each linked to a `ShareScope` (organization or team level). Key use cases include creating shares with scope validation, deleting shares, finding shares by entity or scope, and listing all shares for a user. The `ShareAuthorizationFactory` delegates ownership verification to entity-specific strategies (e.g., `AgentShareAuthorizationStrategy`), ensuring users can only share resources they own. The module integrates with **agents** which registers its authorization strategy and whose entities can be shared, **prompts** for prompt sharing, and the **IAM** bounded context for organization membership and role verification during scope validation.
