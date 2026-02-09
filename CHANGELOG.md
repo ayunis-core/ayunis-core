@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.0](https://github.com/ayunis-core/ayunis-core/compare/v1.7.0...v1.8.0) (2026-02-09)
+
+
+### Features
+
+* resend expired invites ([#112](https://github.com/ayunis-core/ayunis-core/issues/112)) ([b22324a](https://github.com/ayunis-core/ayunis-core/commit/b22324af0995e6a2435b4e68940f589b95ffeb9f))
+
+
+### Bug Fixes
+
+* invalidate router cache when agent model is updated ([#109](https://github.com/ayunis-core/ayunis-core/issues/109)) ([446394d](https://github.com/ayunis-core/ayunis-core/commit/446394d8d5512d361d3af298dc6cc7a98339554d))
+* make tooltip for anonymous mode shorter ([#111](https://github.com/ayunis-core/ayunis-core/issues/111)) ([74c0bed](https://github.com/ayunis-core/ayunis-core/commit/74c0bedfd3eeccff53fe4ee5cc53017a06972c41))
+
+
+### Miscellaneous
+
+* add pyramid summaries and improve AGENTS.md ([#113](https://github.com/ayunis-core/ayunis-core/issues/113)) ([1580177](https://github.com/ayunis-core/ayunis-core/commit/158017767def22488e187a8c428ad1a96bb7044e))
+
 ## [1.7.0](https://github.com/ayunis-core/ayunis-core/compare/v1.6.0...v1.7.0) (2026-02-04)
 
 
