@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/shared/ui/shadcn/card';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { Download, Bot } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import type { MarketplaceAgentResponseDto } from '../api/useFetchMarketplaceAgent';
@@ -41,9 +41,7 @@ export function InstallAgentCard({
           )}
         </div>
         <CardTitle className="text-xl">{agent.name}</CardTitle>
-        <CardDescription className="mt-2">
-          {agent.briefDescription}
-        </CardDescription>
+        <CardDescription>{agent.briefDescription}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -68,7 +66,6 @@ export function InstallAgentCard({
           <Link to="/agents">{t('action.cancel')}</Link>
         </Button>
         <Button className="flex-1" onClick={onInstall} disabled={isInstalling}>
-          <Download className="mr-2 h-4 w-4" />
           {isInstalling ? t('action.installing') : t('action.install')}
         </Button>
       </CardFooter>
