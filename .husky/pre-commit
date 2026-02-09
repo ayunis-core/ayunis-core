@@ -50,6 +50,7 @@ FE_ESLINT_STATUS_FILE="$STATUS_DIR/fe_eslint.status"
 BE_ESLINT_STATUS_FILE="$STATUS_DIR/be_eslint.status"
 BE_PRETTIER_STATUS_FILE="$STATUS_DIR/be_prettier.status"
 BE_TSC_STATUS_FILE="$STATUS_DIR/be_tsc.status"
+COMPLEXITY_STATUS_FILE="$STATUS_DIR/complexity.status"
 
 # Jobs
 run_fe_prettier() {
@@ -170,6 +171,18 @@ run_be_tsc() {
   printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
+run_complexity() {
+  STATUS_FILE="$1"
+  print_section "Complexity • Lizard (staged TS)"
+  ALL_TS_STAGED=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
+  printf "%s\n" "$ALL_TS_STAGED" | sed 's#^# - #'
+  set +e
+  printf "%s" "$ALL_TS_STAGED" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
 # Launch jobs in parallel where possible
 if [ -n "$FE_STAGED" ]; then
   run_fe_prettier "$FE_PRETTIER_STATUS_FILE" &
@@ -184,6 +197,12 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_tsc "$BE_TSC_STATUS_FILE" &
 fi
 
+# Complexity check runs on all staged TS files (backend + frontend)
+ALL_TS_STAGED=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
+if [ -n "$ALL_TS_STAGED" ]; then
+  run_complexity "$COMPLEXITY_STATUS_FILE" &
+fi
+
 wait
 
 # Read statuses (default 0 when not run)
@@ -193,6 +212,7 @@ FE_ESLINT_STATUS=$(cat "$FE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
 ESLINT_STATUS=$(cat "$BE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
 PRETTIER_STATUS=$(cat "$BE_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
 BE_TSC_STATUS=$(cat "$BE_TSC_STATUS_FILE" 2>/dev/null || printf "0")
+COMPLEXITY_STATUS=$(cat "$COMPLEXITY_STATUS_FILE" 2>/dev/null || printf "0")
 
 # Summary and exit code
 FAILED=0
@@ -236,6 +256,17 @@ if [ -n "$BE_TS_STAGED" ]; then
     FAILED=1
   else
     printf "%b\n" "${GREEN}✅ Backend TypeScript typecheck passed${NC}"
+  fi
+fi
+
+# Complexity check result (runs on both backend + frontend TS files)
+ALL_TS_STAGED_CHECK=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
+if [ -n "$ALL_TS_STAGED_CHECK" ]; then
+  if [ "$COMPLEXITY_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Complexity check failed (CCN>10, length>50, or args>5)${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Complexity check passed${NC}"
   fi
 fi
 

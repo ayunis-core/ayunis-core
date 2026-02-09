@@ -27,6 +27,19 @@ npm run build                  # Must succeed
 npm run lint                   # Must pass
 ```
 
+```bash
+# Complexity check (both backend + frontend, from repo root)
+./scripts/check-complexity.sh path/to/file.ts   # Check specific file
+./scripts/check-complexity.sh                   # Check all staged files
+```
+
+**Complexity thresholds** (enforced by Husky pre-commit and CI):
+- Cyclomatic complexity (CCN) ≤ 10
+- Function length ≤ 50 lines
+- Arguments ≤ 5
+
+If a function exceeds these limits, **refactor it** into smaller units.
+
 ### 2. Incremental Progress
 
 - Make one change at a time
@@ -206,6 +219,7 @@ Before considering any change complete:
 | Pass userId through commands | Breaks ContextService pattern | Use `contextService.get()` |
 | Import across module boundaries | Circular dependencies | Use ports/adapters |
 | Edit generated API client | Will be overwritten | Run `openapi:update` |
+| Write complex functions | CCN>10 triggers CI failure | Split into smaller functions |
 
 ---
 
