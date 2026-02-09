@@ -30,7 +30,7 @@ export function useInstallFromMarketplace() {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MARKETPLACE_AGENT_NOT_FOUND':
-              showError(t('error.notFound'));
+              showError(t('error.notFound.description'));
               break;
             case 'MARKETPLACE_UNAVAILABLE':
               showError(t('error.unavailable'));

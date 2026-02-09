@@ -1,7 +1,29 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import axios from 'axios';
-import type { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig, AxiosError } from 'axios';
+
+/**
+ * Custom error class that preserves HTTP status information from Axios errors.
+ * This enables downstream code to distinguish between "not found" (404) and
+ * "service unavailable" (5xx, network errors, timeouts, etc.).
+ */
+export class MarketplaceHttpError extends Error {
+  readonly status: number | undefined;
+  readonly isNetworkError: boolean;
+
+  constructor(message: string, status?: number, isNetworkError = false) {
+    super(message);
+    this.name = 'MarketplaceHttpError';
+    this.status = status;
+    this.isNetworkError = isNetworkError;
+  }
+
+  static fromAxiosError(error: AxiosError): MarketplaceHttpError {
+    const status = error.response?.status;
+    const isNetworkError = !error.response && !!error.request;
+    const message = error.message || 'Marketplace request failed';
+    return new MarketplaceHttpError(message, status, isNetworkError);
+  }
+}
 
 // Create axios instance for marketplace service with all configuration
 const marketplaceAxios = axios.create({
@@ -20,7 +42,9 @@ marketplaceAxios.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(
-      new Error(error instanceof Error ? error.message : 'Request error'),
+      new MarketplaceHttpError(
+        error instanceof Error ? error.message : 'Request error',
+      ),
     );
   },
 );
@@ -30,14 +54,12 @@ marketplaceAxios.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  (error: AxiosError) => {
     // Handle common errors
     if (error.response?.status === 500) {
       console.error('Marketplace service error:', error.response.data);
     }
-    return Promise.reject(
-      new Error(error instanceof Error ? error.message : 'Response error'),
-    );
+    return Promise.reject(MarketplaceHttpError.fromAxiosError(error));
   },
 );
 

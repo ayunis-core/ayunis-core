@@ -5,11 +5,8 @@ import { Agent } from '../../../domain/agent.entity';
 import { GetPreInstalledAgentsUseCase } from 'src/domain/marketplace/application/use-cases/get-pre-installed-agents/get-pre-installed-agents.use-case';
 import { GetMarketplaceAgentUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-agent/get-marketplace-agent.use-case';
 import { GetMarketplaceAgentQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-agent/get-marketplace-agent.query';
-import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { ModelResolverService } from '../../services/model-resolver.service';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { UUID } from 'crypto';
 
 @Injectable()
 export class ProvisionPreInstalledAgentsUseCase {
@@ -19,8 +16,7 @@ export class ProvisionPreInstalledAgentsUseCase {
     private readonly agentRepository: AgentRepository,
     private readonly getPreInstalledAgentsUseCase: GetPreInstalledAgentsUseCase,
     private readonly getMarketplaceAgentUseCase: GetMarketplaceAgentUseCase,
-    private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
+    private readonly modelResolverService: ModelResolverService,
   ) {}
 
   async execute(command: ProvisionPreInstalledAgentsCommand): Promise<Agent[]> {
@@ -48,7 +44,7 @@ export class ProvisionPreInstalledAgentsUseCase {
       // 2. Resolve a default model for the user
       let defaultModel: PermittedLanguageModel | null;
       try {
-        defaultModel = await this.resolveDefaultModel(
+        defaultModel = await this.modelResolverService.resolveFallbackOrNull(
           command.orgId,
           command.userId,
         );
@@ -76,11 +72,11 @@ export class ProvisionPreInstalledAgentsUseCase {
           );
 
           // Try to match recommended model, fall back to default
-          const model = await this.resolveModelForAgent(
+          const model = await this.modelResolverService.resolve(
             command.orgId,
+            command.userId,
             fullAgent.recommendedModelName,
             fullAgent.recommendedModelProvider,
-            defaultModel,
           );
 
           const agent = new Agent({
@@ -123,59 +119,5 @@ export class ProvisionPreInstalledAgentsUseCase {
     });
 
     return createdAgents;
-  }
-
-  private async resolveDefaultModel(
-    orgId: UUID,
-    userId: UUID,
-  ): Promise<PermittedLanguageModel | null> {
-    // Try user default
-    const userDefault =
-      await this.userDefaultModelsRepository.findByUserId(userId);
-    if (userDefault) return userDefault;
-
-    // Try org default
-    const orgDefault =
-      await this.permittedModelsRepository.findOrgDefaultLanguage(orgId);
-    if (orgDefault) return orgDefault;
-
-    // First available
-    const allModels =
-      await this.permittedModelsRepository.findManyLanguage(orgId);
-    return allModels.length > 0 ? allModels[0] : null;
-  }
-
-  private async resolveModelForAgent(
-    orgId: UUID,
-    recommendedModelName: string | null,
-    recommendedModelProvider: string | null,
-    fallbackModel: PermittedLanguageModel,
-  ): Promise<PermittedLanguageModel> {
-    if (recommendedModelName && recommendedModelProvider) {
-      try {
-        const providerEnum =
-          recommendedModelProvider.toLowerCase() as ModelProvider;
-        if (Object.values(ModelProvider).includes(providerEnum)) {
-          const exactMatch =
-            await this.permittedModelsRepository.findOneLanguage({
-              name: recommendedModelName,
-              provider: providerEnum,
-            });
-          if (exactMatch && exactMatch.orgId === orgId) {
-            return exactMatch;
-          }
-        }
-      } catch (error) {
-        this.logger.warn(
-          'Failed to resolve recommended model, using fallback',
-          {
-            recommendedModelName,
-            recommendedModelProvider,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-        );
-      }
-    }
-    return fallbackModel;
   }
 }
