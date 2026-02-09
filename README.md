@@ -74,7 +74,6 @@ Change `HOST_PORT` in the `.env` file in the project root
 
 - Application: http://localhost:3000
 - Backend Base URL: http://localhost:3000/api
-- Admin Base URL: http://localhost:3000/api/admin
 - SwaggerUI: http://localhost:3000/api/docs
 - OpenAPI JSON: http://localhost:3000/api/docs-json
 
@@ -158,144 +157,38 @@ For API-based creation, see the MCP integration endpoints in the OpenAPI documen
 
 ### Model Configuration
 
-Before you can access models as a user inside the product, you must create them from outside the product via HTTP requests (the experience of this will get better as soon as we have an admin UI). Models you create will be available for admin users to enable for their particular organisation.
+Models are managed through the **Super Admin Models** API, accessible to users with the `SUPER_ADMIN` system role. The API is available at `/api/super-admin/models/` and documented in the SwaggerUI.
 
-In other words:
+The model management workflow:
 
-- The models your create are the pool of models available inside the product in general
-- Each admin can pick and choose models from that pool for their particular organisation
-- Users of an organisation can choose models from the ones the admin selected
+1. **Super admins** create models in the **catalog** — the master pool of all available models
+2. **Super admins** then **permit** specific models for each organization
+3. **Organization admins** can pick from the permitted models for their users
+4. **Users** choose from the models their organization admin has enabled
 
-#### Request to add language models
+#### Creating models via the Super Admin API
 
-This will allow users to chat with these models.
-
-> [!ATTENTION] You must restart the docker containers for changes to take effect
-
-```bash
-curl -X POST http://localhost:3000/api/admin/language-models \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
-  -d '{
-    "name": "mistral-large-latest", # the exact string identifying the model at the provider side
-    "provider": "mistral", # mistral, openai, anthropic or ollama
-    "displayName": "Mistral Large", # the name displayed to the user
-    "canStream": true, # true if the model can stream its response
-    "isReasoning": false, # true if the model has reasoning capabilities
-    "canUseTools": true, # true if the model can use tools / function calling
-    "isArchived": false, # model will be hidden everywhere if true
-    "inputTokenCost": 1,
-    "outputTokenCost": 1,
-    "currency": "EUR"
-  }'
-```
-
-See also `/src/domain/models/domain/models/language.model.ts`
-
-#### Request to add embedding models:
-
-This will enable RAG use cases.
+All super admin endpoints require JWT authentication with a user that has the `SUPER_ADMIN` system role. You can promote a user to super admin using the CLI:
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/embedding-models \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
-  -d '{
-    "name": "mistral-large-latest", # the exact string identifying the model at the provider side
-    "provider": "mistral", # mistral, openai, anthropic or ollama
-    "displayName": "Mistral Large", # the name displayed to the user
-    "dimensions": 1024, # 1024 or 1536, see /src/domain/models/domain/value-objects/embedding-dimensions.enum.ts
-    "inputTokenCost": 1,
-    "outputTokenCost": 1,
-    "currency": "EUR"
-  }'
+cd ayunis-core-backend
+npx nestjs-command make:super-admin <email>
 ```
 
-> [!ATTENTION] The dimension must match the model's required dimensions. If you need other dimensions, create a Github Issue and we will take care of it.
+Then use the authenticated API to manage the model catalog. See the full endpoint documentation at `/api/docs` under the **Super Admin Models** tag.
 
-See also `/src/domain/models/domain/models/embedding.model.ts`
+> [!ATTENTION] The embedding model dimension must match the model's required dimensions. If you need other dimensions, create a Github Issue and we will take care of it.
 
-#### Other methods
-
-```bash
-# Get models
-curl -X GET http://localhost:3000/api/admin/models/ \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE"
-```
-
-```bash
-# Update model
-curl -X PUT http://localhost:3000/api/admin/language-models/:id \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Token: YOUR_ADMIN_TOKEN_HERE" \
-  -d '{
-    "name": "mistral-large-latest",
-    "provider": "mistral",
-    "displayName": "Mistral Large",
-    "canStream": true,
-    "canUseTools": true,
-    "isReasoning": false,
-    "isArchived": false,
-    "inputTokenCost": 1,
-    "outputTokenCost": 1,
-    "currency": "EUR"
-  }'
-```
-
-```bash
-# Delete model
-curl -X DELETE http://localhost:3000/api/admin/models/:id
-```
-
-Examples
-
-```json
-{
-  "id": "123",
-  "name": "mistral-large-latest",
-  "provider": "mistral",
-  "displayName": "Mistral Large",
-  "canStream": true,
-  "isReasoning": false,
-  "isArchived": false
-},
-{
-  "id": "123",
-  "name": "claude-sonnet-4-20250514",
-  "provider": "anthropic",
-  "displayName": "Claude 4 Sonnet",
-  "canStream": true,
-  "isReasoning": false,
-  "isArchived": false
-},
-{
-  "id": "123",
-  "name": "gpt-4.1",
-  "provider": "openai",
-  "displayName": "GPT 4.1",
-  "canStream": true,
-  "isReasoning": false,
-  "isArchived": false
-},
-{
-  "id": "123",
-  "name": "text-embedding-3-large",
-  "provider": "openai",
-  "createdAt": "2025-08-08T09:55:52.980Z",
-  "updatedAt": "2025-08-08T09:55:52.980Z",
-  "displayName": "Text Embedding 3 Large",
-  "type": "embedding",
-  "isArchived": false,
-  "dimensions": 1536
-  },
-```
+See also:
+- `/src/domain/models/domain/models/language.model.ts`
+- `/src/domain/models/domain/models/embedding.model.ts`
+- `/src/domain/models/domain/value-objects/embedding-dimensions.enum.ts`
 
 ## 🎯 First steps
 
 - Create an account
-- Go to Admin Settings -> Models and enable some models (only those created through the admin interface will be visible here)
-  - Enable at least one language model and one embedding model
+- As a super admin, add models to the catalog and permit them for your organization (see [Model Configuration](#model-configuration))
+- Go to Admin Settings → Models and enable at least one language model and one embedding model
 - Invite users
 - Go to the Prompt Library and add some prompts for easy access
 - Create some agents for your most important use cases
