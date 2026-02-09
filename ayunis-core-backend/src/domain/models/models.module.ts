@@ -284,6 +284,7 @@ import { MessagesModule } from '../messages/messages.module';
     // TODO: These modules should be part of this module and not separate
     LocalModelsRepositoryModule, // Export repository for seeding
     LocalPermittedModelsRepositoryModule, // Export repository for seeding
+    LocalUserDefaultModelsRepositoryModule, // Export for AgentsModule (marketplace install)
   ],
 })
 export class ModelsModule {}

@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as AuthenticatedInstallImport } from './routes/_authenticated/install'
 import { Route as onboardingRegisterImport } from './routes/(onboarding)/register'
 import { Route as onboardingLoginImport } from './routes/(onboarding)/login'
 import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/email-confirm'
@@ -53,6 +54,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AuthenticatedInstallRoute = AuthenticatedInstallImport.update({
+  id: '/install',
+  path: '/install',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
 const onboardingRegisterRoute = onboardingRegisterImport.update({
@@ -294,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingRegisterImport
       parentRoute: typeof rootRoute
     }
+    '/_authenticated/install': {
+      id: '/_authenticated/install'
+      path: '/install'
+      fullPath: '/install'
+      preLoaderRoute: typeof AuthenticatedInstallImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/(onboarding)/password/forgot': {
       id: '/(onboarding)/password/forgot'
       path: '/password/forgot'
@@ -461,6 +475,7 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
@@ -485,6 +500,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedInstallRoute: AuthenticatedInstallRoute,
   AuthenticatedAdminSettingsBillingRoute:
     AuthenticatedAdminSettingsBillingRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:
@@ -528,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/email-confirm': typeof onboardingEmailConfirmRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/install': typeof AuthenticatedInstallRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
@@ -561,6 +578,7 @@ export interface FileRoutesByTo {
   '/email-confirm': typeof onboardingEmailConfirmRoute
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
+  '/install': typeof AuthenticatedInstallRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
@@ -595,6 +613,7 @@ export interface FileRoutesById {
   '/(onboarding)/email-confirm': typeof onboardingEmailConfirmRoute
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
+  '/_authenticated/install': typeof AuthenticatedInstallRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
@@ -630,6 +649,7 @@ export interface FileRouteTypes {
     | '/email-confirm'
     | '/login'
     | '/register'
+    | '/install'
     | '/password/forgot'
     | '/password/reset'
     | '/admin-settings/billing'
@@ -662,6 +682,7 @@ export interface FileRouteTypes {
     | '/email-confirm'
     | '/login'
     | '/register'
+    | '/install'
     | '/password/forgot'
     | '/password/reset'
     | '/admin-settings/billing'
@@ -694,6 +715,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/email-confirm'
     | '/(onboarding)/login'
     | '/(onboarding)/register'
+    | '/_authenticated/install'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
     | '/_authenticated/admin-settings/billing'
@@ -771,6 +793,7 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
+        "/_authenticated/install",
         "/_authenticated/admin-settings/billing",
         "/_authenticated/admin-settings/integrations",
         "/_authenticated/admin-settings/models",
@@ -808,6 +831,10 @@ export const routeTree = rootRoute
     },
     "/(onboarding)/register": {
       "filePath": "(onboarding)/register.tsx"
+    },
+    "/_authenticated/install": {
+      "filePath": "_authenticated/install.tsx",
+      "parent": "/_authenticated"
     },
     "/(onboarding)/password/forgot": {
       "filePath": "(onboarding)/password.forgot.tsx"

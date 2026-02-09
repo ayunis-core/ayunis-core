@@ -2016,6 +2016,47 @@
         "tags": ["invites"]
       }
     },
+    "/invites/{id}/resend": {
+      "post": {
+        "description": "Delete the expired invite and create a new one with the same details, then send the invitation email",
+        "operationId": "InvitesController_resendExpiredInvite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the expired invite to resend",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invite has been successfully resent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInviteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invite has not expired yet or invalid data"
+          },
+          "404": {
+            "description": "Invite not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Resend an expired invite",
+        "tags": ["invites"]
+      }
+    },
     "/invites/all": {
       "delete": {
         "description": "Delete all pending invitations for the organization (Admin only)",
@@ -3089,6 +3130,39 @@
         "tags": ["threads"]
       }
     },
+    "/agents/install-from-marketplace": {
+      "post": {
+        "operationId": "AgentsController_installFromMarketplace",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstallAgentFromMarketplaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The agent has been successfully installed from marketplace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marketplace agent not found"
+          }
+        },
+        "summary": "Install an agent from the marketplace",
+        "tags": ["agents"]
+      }
+    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -3647,6 +3721,39 @@
         },
         "summary": "Delete a share",
         "tags": ["shares"]
+      }
+    },
+    "/marketplace/agents/{identifier}": {
+      "get": {
+        "operationId": "MarketplaceController_getAgent",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "description": "The unique identifier slug of the marketplace agent",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the marketplace agent details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceAgentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marketplace agent not found"
+          }
+        },
+        "summary": "Preview a marketplace agent before installation",
+        "tags": ["marketplace"]
       }
     },
     "/mcp-integrations/predefined": {
@@ -5188,6 +5295,64 @@
         "tags": ["prompts"]
       }
     },
+    "/transcriptions": {
+      "post": {
+        "description": "Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.",
+        "operationId": "TranscriptionsController_transcribe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The audio file to transcribe"
+                  },
+                  "language": {
+                    "type": "string",
+                    "description": "Optional language hint (e.g., \"en\", \"de\")",
+                    "example": "en"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audio successfully transcribed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported audio format"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Transcription failed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Transcribe audio file to text",
+        "tags": ["transcriptions"]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -5398,166 +5563,6 @@
         },
         "summary": "User logout",
         "tags": ["Authentication"]
-      }
-    },
-    "/admin/models": {
-      "get": {
-        "operationId": "AdminController_getAllModels",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
-      }
-    },
-    "/admin/model": {
-      "get": {
-        "operationId": "AdminController_getModel",
-        "parameters": [
-          {
-            "name": "name",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
-      }
-    },
-    "/admin/language-models": {
-      "post": {
-        "operationId": "AdminController_createLanguageModel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLanguageModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
-      }
-    },
-    "/admin/embedding-models": {
-      "post": {
-        "operationId": "AdminController_createEmbeddingModel",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateEmbeddingModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
-      }
-    },
-    "/admin/language-models/{id}": {
-      "put": {
-        "operationId": "AdminController_updateLanguageModel",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLanguageModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
-      }
-    },
-    "/admin/embedding-models/{id}": {
-      "put": {
-        "operationId": "AdminController_updateEmbeddingModel",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateEmbeddingModelDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
-      }
-    },
-    "/admin/models/{id}": {
-      "delete": {
-        "operationId": "AdminController_deleteModel",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["Admin"]
       }
     }
   },
@@ -7977,70 +7982,16 @@
         },
         "required": ["title"]
       },
-      "ToolAssignmentDto": {
+      "InstallAgentFromMarketplaceDto": {
         "type": "object",
         "properties": {
-          "type": {
+          "identifier": {
             "type": "string",
-            "description": "The type of tool to assign",
-            "example": "internet_search",
-            "enum": [
-              "http",
-              "source_query",
-              "source_get_text",
-              "internet_search",
-              "website_content",
-              "send_email",
-              "create_calendar_event",
-              "code_execution",
-              "bar_chart",
-              "line_chart",
-              "pie_chart",
-              "mcp_tool",
-              "mcp_resource",
-              "mcp_prompt",
-              "product_knowledge"
-            ]
-          },
-          "toolConfigId": {
-            "type": "string",
-            "description": "The ID of the tool configuration to assign",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
+            "description": "The unique identifier (slug) of the marketplace agent",
+            "example": "meeting-summarizer"
           }
         },
-        "required": ["type"]
-      },
-      "CreateAgentDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the agent",
-            "example": "Customer Support Assistant",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "instructions": {
-            "type": "string",
-            "description": "The instructions for the agent",
-            "example": "You are a helpful customer support assistant. Always be polite and professional."
-          },
-          "modelId": {
-            "type": "string",
-            "description": "The ID of the permitted model to use for this agent",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "toolAssignments": {
-            "description": "The tools to assign to the agent",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ToolAssignmentDto"
-            }
-          }
-        },
-        "required": ["name", "instructions", "modelId", "toolAssignments"]
+        "required": ["identifier"]
       },
       "ToolResponseDto": {
         "type": "object",
@@ -8163,6 +8114,12 @@
               "$ref": "#/components/schemas/AgentSourceResponseDto"
             }
           },
+          "marketplaceIdentifier": {
+            "type": "string",
+            "description": "The marketplace identifier if this agent was installed from the marketplace",
+            "example": "meeting-summarizer",
+            "nullable": true
+          },
           "isShared": {
             "type": "boolean",
             "description": "Whether this agent is shared with the current user (vs. owned by them)",
@@ -8188,6 +8145,71 @@
           "isShared",
           "ownerId"
         ]
+      },
+      "ToolAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The type of tool to assign",
+            "example": "internet_search",
+            "enum": [
+              "http",
+              "source_query",
+              "source_get_text",
+              "internet_search",
+              "website_content",
+              "send_email",
+              "create_calendar_event",
+              "code_execution",
+              "bar_chart",
+              "line_chart",
+              "pie_chart",
+              "mcp_tool",
+              "mcp_resource",
+              "mcp_prompt",
+              "product_knowledge"
+            ]
+          },
+          "toolConfigId": {
+            "type": "string",
+            "description": "The ID of the tool configuration to assign",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": ["type"]
+      },
+      "CreateAgentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the agent",
+            "example": "Customer Support Assistant",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "instructions": {
+            "type": "string",
+            "description": "The instructions for the agent",
+            "example": "You are a helpful customer support assistant. Always be polite and professional."
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The ID of the permitted model to use for this agent",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "toolAssignments": {
+            "description": "The tools to assign to the agent",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolAssignmentDto"
+            }
+          }
+        },
+        "required": ["name", "instructions", "modelId", "toolAssignments"]
       },
       "UpdateAgentDto": {
         "type": "object",
@@ -8390,6 +8412,83 @@
           "entityId",
           "scopeType",
           "ownerId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MarketplaceAgentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Agent UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "briefDescription": {
+            "type": "string",
+            "description": "Short description"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Full system instructions"
+          },
+          "recommendedModelName": {
+            "type": "string",
+            "description": "Recommended model name",
+            "nullable": true
+          },
+          "recommendedModelProvider": {
+            "type": "string",
+            "description": "Recommended model provider",
+            "nullable": true
+          },
+          "agentCategoryId": {
+            "type": "string",
+            "description": "Agent category ID",
+            "nullable": true
+          },
+          "iconUrl": {
+            "type": "string",
+            "description": "Icon URL",
+            "nullable": true
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the agent is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the agent is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the agent is pre-installed"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "briefDescription",
+          "instructions",
+          "featured",
+          "published",
+          "preInstalled",
           "createdAt",
           "updatedAt"
         ]
@@ -9494,6 +9593,17 @@
         },
         "required": ["title", "content"]
       },
+      "TranscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The transcribed text from the audio file",
+            "example": "Hello, this is a test transcription."
+          }
+        },
+        "required": ["text"]
+      },
       "LoginDto": {
         "type": "object",
         "properties": {
@@ -9596,22 +9706,6 @@
           }
         },
         "required": ["email", "role", "systemRole", "name"]
-      },
-      "CreateLanguageModelDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateEmbeddingModelDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateLanguageModelDto": {
-        "type": "object",
-        "properties": {}
-      },
-      "UpdateEmbeddingModelDto": {
-        "type": "object",
-        "properties": {}
       }
     }
   }

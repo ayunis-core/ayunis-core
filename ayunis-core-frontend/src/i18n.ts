@@ -41,6 +41,8 @@ import enQuickActions from './shared/locales/en/quickActions.json';
 import deQuickActions from './shared/locales/de/quickActions.json';
 import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
+import enInstall from './shared/locales/en/install.json';
+import deInstall from './shared/locales/de/install.json';
 
 const resources = {
   en: {
@@ -63,6 +65,7 @@ const resources = {
     agents: enAgents,
     agent: enAgent,
     quickActions: enQuickActions,
+    install: enInstall,
   },
   de: {
     auth: deAuth,
@@ -84,6 +87,7 @@ const resources = {
     agents: deAgents,
     agent: deAgent,
     quickActions: deQuickActions,
+    install: deInstall,
   },
 };
 

@@ -2,7 +2,7 @@ import { Controller, Get, Logger, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { GetMarketplaceAgentUseCase } from '../../application/use-cases/get-marketplace-agent/get-marketplace-agent.use-case';
 import { GetMarketplaceAgentQuery } from '../../application/use-cases/get-marketplace-agent/get-marketplace-agent.query';
-import { AgentResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import { MarketplaceAgentResponseDto } from './dto/marketplace-agent-response.dto';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -23,11 +23,12 @@ export class MarketplaceController {
   @ApiResponse({
     status: 200,
     description: 'Returns the marketplace agent details',
+    type: MarketplaceAgentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Marketplace agent not found' })
   async getAgent(
     @Param('identifier') identifier: string,
-  ): Promise<AgentResponseDto> {
+  ): Promise<MarketplaceAgentResponseDto> {
     this.logger.log('getAgent', { identifier });
 
     return this.getMarketplaceAgentUseCase.execute(
