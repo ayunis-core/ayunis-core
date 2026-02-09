@@ -12,6 +12,7 @@ export class Agent {
   public readonly toolAssignments: Array<AgentToolAssignment>;
   public readonly sourceAssignments: Array<AgentSourceAssignment>;
   public readonly mcpIntegrationIds: UUID[];
+  public readonly marketplaceIdentifier: string | null;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
   public readonly userId: UUID;
@@ -24,6 +25,7 @@ export class Agent {
     toolAssignments?: Array<AgentToolAssignment>;
     sourceAssignments?: Array<AgentSourceAssignment>;
     mcpIntegrationIds?: UUID[];
+    marketplaceIdentifier?: string | null;
     userId: UUID;
     createdAt?: Date;
     updatedAt?: Date;
@@ -35,6 +37,7 @@ export class Agent {
     this.toolAssignments = params.toolAssignments ?? [];
     this.sourceAssignments = params.sourceAssignments ?? [];
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
+    this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
     this.userId = params.userId;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

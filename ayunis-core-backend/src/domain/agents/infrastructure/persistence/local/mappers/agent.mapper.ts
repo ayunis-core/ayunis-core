@@ -30,6 +30,7 @@ export class AgentMapper {
       ),
       mcpIntegrationIds:
         record.mcpIntegrations?.map((integration) => integration.id) ?? [],
+      marketplaceIdentifier: record.marketplaceIdentifier ?? null,
       userId: record.userId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -43,6 +44,7 @@ export class AgentMapper {
     entity.instructions = domain.instructions;
     entity.modelId = domain.model.id;
     entity.model = this.permittedModelMapper.toRecord(domain.model);
+    entity.marketplaceIdentifier = domain.marketplaceIdentifier;
     entity.userId = domain.userId;
     entity.agentTools = domain.toolAssignments.map((toolAssignment) =>
       this.agentToolMapper.toRecord(toolAssignment, domain.id),

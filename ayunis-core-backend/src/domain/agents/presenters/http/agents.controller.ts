@@ -29,6 +29,8 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 
 // Import use cases
+import { InstallAgentFromMarketplaceUseCase } from '../../application/use-cases/install-agent-from-marketplace/install-agent-from-marketplace.use-case';
+import { InstallAgentFromMarketplaceCommand } from '../../application/use-cases/install-agent-from-marketplace/install-agent-from-marketplace.command';
 import { CreateAgentUseCase } from '../../application/use-cases/create-agent/create-agent.use-case';
 import { UpdateAgentUseCase } from '../../application/use-cases/update-agent/update-agent.use-case';
 import { DeleteAgentUseCase } from '../../application/use-cases/delete-agent/delete-agent.use-case';
@@ -61,6 +63,7 @@ import {
   ModelResponseDto,
 } from './dto/agent-response.dto';
 import { AgentDtoMapper } from './mappers/agent.mapper';
+import { InstallAgentFromMarketplaceDto } from './dto/install-agent-from-marketplace.dto';
 import { AddFileSourceToAgentDto } from './dto/add-file-source-to-agent.dto';
 import { AgentSourceResponseDto } from './dto/agent-source-assignment-response.dto';
 import { AgentSourceDtoMapper } from './mappers/agent-source.mapper';
@@ -98,6 +101,7 @@ export class AgentsController {
   private readonly logger = new Logger(AgentsController.name);
 
   constructor(
+    private readonly installAgentFromMarketplaceUseCase: InstallAgentFromMarketplaceUseCase,
     private readonly createAgentUseCase: CreateAgentUseCase,
     private readonly updateAgentUseCase: UpdateAgentUseCase,
     private readonly deleteAgentUseCase: DeleteAgentUseCase,
@@ -114,6 +118,34 @@ export class AgentsController {
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
   ) {}
+
+  @Post('install-from-marketplace')
+  @ApiOperation({ summary: 'Install an agent from the marketplace' })
+  @ApiBody({ type: InstallAgentFromMarketplaceDto })
+  @ApiResponse({
+    status: 201,
+    description: 'The agent has been successfully installed from marketplace',
+    type: AgentResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Marketplace agent not found',
+  })
+  async installFromMarketplace(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() dto: InstallAgentFromMarketplaceDto,
+  ): Promise<AgentResponseDto> {
+    this.logger.log('installFromMarketplace', {
+      userId,
+      identifier: dto.identifier,
+    });
+
+    const agent = await this.installAgentFromMarketplaceUseCase.execute(
+      new InstallAgentFromMarketplaceCommand(dto.identifier),
+    );
+
+    return this.agentDtoMapper.toDto(agent);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new agent' })

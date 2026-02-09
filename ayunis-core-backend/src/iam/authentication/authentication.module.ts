@@ -28,6 +28,7 @@ import { HashingModule } from '../hashing/hashing.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { WebhooksModule } from 'src/common/webhooks/webhooks.module';
+import { AgentsModule } from 'src/domain/agents/agents.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 
@@ -51,6 +52,7 @@ export class AuthenticationModule {
         SubscriptionsModule,
         TrialsModule,
         WebhooksModule,
+        AgentsModule,
         JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],
