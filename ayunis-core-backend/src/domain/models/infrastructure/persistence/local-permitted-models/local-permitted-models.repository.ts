@@ -108,9 +108,17 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   ): Promise<PermittedLanguageModel | null> {
     const where =
       'id' in params
-        ? { id: params.id, ...(params.orgId && { orgId: params.orgId }) }
+        ? {
+            id: params.id,
+            ...(params.orgId && { orgId: params.orgId }),
+            model: { isArchived: false },
+          }
         : {
-            model: { name: params.name, provider: params.provider },
+            model: {
+              name: params.name,
+              provider: params.provider,
+              isArchived: false,
+            },
             ...(params.orgId && { orgId: params.orgId }),
           };
     const permittedModel = await this.permittedModelRepository.findOne({
