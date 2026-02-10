@@ -347,7 +347,7 @@ crontab -e
 Add this line (adjust the path to your checkout):
 
 ```
-0 3 * * * . /opt/ayunis/ayunis-core/ayunis-core-backend/.env && /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
+0 3 * * * set -a && . /opt/ayunis/ayunis-core/ayunis-core-backend/.env && set +a && /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
 ```
 
 **2. (Recommended) Off-site copies with Hetzner Storage Box:**
@@ -355,7 +355,7 @@ Add this line (adjust the path to your checkout):
 Order a [Storage Box](https://www.hetzner.com/storage/storage-box/) and configure SSH key access, then set `BACKUP_REMOTE` in your cron entry:
 
 ```
-0 3 * * * . /opt/ayunis/ayunis-core/ayunis-core-backend/.env && BACKUP_REMOTE="u123456@u123456.your-storagebox.de:backups/" /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
+0 3 * * * set -a && . /opt/ayunis/ayunis-core/ayunis-core-backend/.env && set +a && BACKUP_REMOTE="u123456@u123456.your-storagebox.de:backups/" /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
 ```
 
 **3. Verify backups are running:**
