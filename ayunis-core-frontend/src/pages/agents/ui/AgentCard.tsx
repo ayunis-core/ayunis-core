@@ -52,6 +52,11 @@ export default function AgentCard({ agent }: AgentCardProps) {
       <ItemContent>
         <ItemTitle>
           <span>{agent.name}</span>
+          {agent.marketplaceIdentifier && (
+            <Badge variant="secondary" className="ml-2 text-xs">
+              {t('badge.marketplace')}
+            </Badge>
+          )}
           {agent.isShared && (
             <Badge variant="outline" className="ml-2 text-xs">
               {t('badge.shared')}

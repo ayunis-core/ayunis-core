@@ -38,8 +38,20 @@ jobs:
           LENGTH_THRESHOLD=50   # Function length in lines
           ARGS_THRESHOLD=5      # Number of arguments
           
+          # Filter out generated code and entity files (same as pre-commit hook)
+          FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | grep -v '/generated/' | grep -v '\.entity\.ts$' || true)
+          
+          if [ -z "$FILTERED" ]; then
+            echo "✅ No non-generated TypeScript files to check"
+            exit 0
+          fi
+          
+          echo "After filtering:"
+          echo "$FILTERED" | sed 's/^/  - /'
+          echo ""
+          
           # Run lizard with warnings only
-          RESULT=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | xargs lizard \
+          RESULT=$(echo "$FILTERED" | tr '\n' ' ' | xargs lizard \
             --CCN $CCN_THRESHOLD \
             --length $LENGTH_THRESHOLD \
             --arguments $ARGS_THRESHOLD \

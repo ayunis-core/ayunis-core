@@ -19,7 +19,8 @@
     }
   },
   "badge": {
-    "shared": "Geteilt"
+    "shared": "Geteilt",
+    "marketplace": "Marktplatz"
   },
   "card": {
     "startChatButton": "Chat starten",

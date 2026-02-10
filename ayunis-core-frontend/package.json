@@ -10,7 +10,9 @@
     "test": "vitest run",
     "openapi:fetch": "node --env-file .env src/shared/scripts/fetch-openapi-schema.js",
     "openapi:generate": "orval --config orval.config.ts",
-    "openapi:update": "npm run openapi:fetch && npm run openapi:generate"
+    "openapi:update": "npm run openapi:fetch && npm run openapi:generate",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

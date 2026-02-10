@@ -1,0 +1,30 @@
+{
+  "detail": {
+    "recommendedModel": "Empfohlenes Modell",
+    "installNote": "Dieser Agent wird Ihrem Konto hinzugefügt. Ein passendes Modell aus Ihrer Organisation wird automatisch zugewiesen. Sie können die Einstellungen des Agenten nach der Installation anpassen."
+  },
+  "action": {
+    "install": "Agent installieren",
+    "installing": "Wird installiert…",
+    "cancel": "Abbrechen",
+    "backToAgents": "Zurück zu Agenten"
+  },
+  "success": "Agent erfolgreich installiert!",
+  "error": {
+    "missingIdentifier": {
+      "title": "Fehlende Agent-Kennung",
+      "description": "Es wurde keine Agent-Kennung angegeben. Bitte verwenden Sie einen gültigen Installationslink aus dem Marktplatz."
+    },
+    "notFound": {
+      "title": "Agent nicht gefunden",
+      "description": "Der angeforderte Agent konnte im Marktplatz nicht gefunden werden. Er wurde möglicherweise entfernt oder deaktiviert."
+    },
+    "fetchFailed": {
+      "title": "Agent konnte nicht geladen werden",
+      "description": "Die Agent-Details konnten nicht vom Marktplatz geladen werden. Bitte versuchen Sie es später erneut."
+    },
+    "unavailable": "Der Marktplatz ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
+    "noModel": "In Ihrer Organisation ist kein kompatibles Modell verfügbar. Bitte kontaktieren Sie Ihren Administrator.",
+    "generic": "Beim Installieren des Agenten ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+  }
+}

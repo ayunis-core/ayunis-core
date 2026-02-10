@@ -17,6 +17,7 @@ import { StorageModule } from '../domain/storage/storage.module';
 import { PromptsModule } from '../domain/prompts/prompts.module';
 import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
+import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { IamModule } from '../iam/iam.module';
@@ -41,6 +42,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import internetSearchConfig from 'src/config/internet-search.config';
 import { mcpConfig } from '../config/mcp.config';
+import { marketplaceConfig } from '../config/marketplace.config';
 import toolsConfig from '../config/tools.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
@@ -67,6 +69,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         emailsConfig,
         internetSearchConfig,
         mcpConfig,
+        marketplaceConfig,
         toolsConfig,
       ],
     }),
@@ -118,6 +121,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     PromptsModule,
     SharesModule,
     McpModule,
+    MarketplaceModule,
     UsageModule,
     TranscriptionsModule,
     IamModule.register({
