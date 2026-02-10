@@ -81,12 +81,21 @@ docker compose stop app 2>/dev/null || true
 
 # --- Restore Postgres ---
 # pg_restore --clean returns non-zero for non-fatal warnings (e.g., "role does not exist"),
-# so we allow it to fail and verify the restore by checking the database has tables.
+# but with --single-transaction, a real failure causes a rollback and non-zero exit.
+# We capture the exit code to distinguish warnings from actual failures.
 echo "[$(date)] Restoring Postgres..."
+PG_RESTORE_EXIT=0
 docker exec -i ayunis-postgres-prod \
   pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
     --clean --if-exists --single-transaction \
-  < "$PG_DUMP" 2>&1 || true
+  < "$PG_DUMP" 2>&1 || PG_RESTORE_EXIT=$?
+
+# Exit code 1 typically means warnings (e.g., "role does not exist") which are non-fatal.
+# Exit codes >= 2 indicate actual failures that would have caused a rollback.
+if [ "$PG_RESTORE_EXIT" -ge 2 ]; then
+  echo "[$(date)] ERROR: Postgres restore failed with exit code $PG_RESTORE_EXIT (transaction rolled back)" >&2
+  exit 1
+fi
 
 # Verify restore produced tables
 TABLE_COUNT=$(docker exec ayunis-postgres-prod \
@@ -99,12 +108,19 @@ fi
 echo "[$(date)] Postgres restore verified ($TABLE_COUNT tables)"
 
 # --- Restore MinIO ---
+# Extract to a temporary location first, then swap to prevent data loss if extraction fails.
 echo "[$(date)] Restoring MinIO data..."
 docker compose stop minio 2>/dev/null || true
 docker run --rm \
   -v "${COMPOSE_PROJECT_NAME}_minio-data:/data" \
   -v "$BACKUP_DIR":/backup \
-  alpine sh -c "find /data -mindepth 1 -delete && tar xzf /backup/minio_${TIMESTAMP}.tar.gz -C /data"
+  alpine sh -c "
+    mkdir -p /data/.restore-tmp && \
+    tar xzf /backup/minio_${TIMESTAMP}.tar.gz -C /data/.restore-tmp && \
+    find /data -mindepth 1 -maxdepth 1 ! -name '.restore-tmp' -exec rm -rf {} + && \
+    mv /data/.restore-tmp/* /data/ 2>/dev/null || true && \
+    rmdir /data/.restore-tmp
+  "
 
 # --- Restart services ---
 echo "[$(date)] Starting services..."

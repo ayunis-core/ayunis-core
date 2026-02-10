@@ -86,11 +86,14 @@ echo "[$(date)] Pruning backups older than ${RETENTION_DAYS} days..."
 find "$BACKUP_DIR" -name "postgres_*.dump" -mtime +"$RETENTION_DAYS" -delete
 find "$BACKUP_DIR" -name "minio_*.tar.gz" -mtime +"$RETENTION_DAYS" -delete
 
+# Mark backup as complete before optional rsync, so local backups are preserved
+# even if the optional remote sync fails.
+BACKUP_COMPLETE="true"
+echo "[$(date)] Local backup completed: postgres_${TIMESTAMP}.dump, minio_${TIMESTAMP}.tar.gz"
+
 # --- Off-site copy (optional) ---
 if [ -n "${BACKUP_REMOTE:-}" ]; then
   echo "[$(date)] Syncing to remote: $BACKUP_REMOTE"
   rsync -az "$BACKUP_DIR/" "$BACKUP_REMOTE"
+  echo "[$(date)] Remote sync completed."
 fi
-
-BACKUP_COMPLETE="true"
-echo "[$(date)] Backup completed: postgres_${TIMESTAMP}.dump, minio_${TIMESTAMP}.tar.gz"
