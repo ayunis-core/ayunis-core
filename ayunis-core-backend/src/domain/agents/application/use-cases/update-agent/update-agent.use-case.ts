@@ -58,6 +58,7 @@ export class UpdateAgentUseCase {
       toolAssignments: existingAgent.toolAssignments,
       sourceAssignments: existingAgent.sourceAssignments,
       mcpIntegrationIds: existingAgent.mcpIntegrationIds,
+      marketplaceIdentifier: existingAgent.marketplaceIdentifier,
       createdAt: existingAgent.createdAt,
       updatedAt: new Date(),
     });

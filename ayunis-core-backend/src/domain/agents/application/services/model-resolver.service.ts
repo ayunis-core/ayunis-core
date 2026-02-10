@@ -39,9 +39,10 @@ export class ModelResolverService {
           {
             name: recommendedModelName,
             provider: providerEnum,
+            orgId,
           },
         );
-        if (exactMatch && exactMatch.orgId === orgId) {
+        if (exactMatch) {
           this.logger.debug('Found exact model match', {
             name: recommendedModelName,
             provider: recommendedModelProvider,
