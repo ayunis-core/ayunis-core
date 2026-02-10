@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { NoPermittedModelError } from '../agents.errors';
+import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
+import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
+import { DefaultModelNotFoundError } from 'src/domain/models/application/models.errors';
 
 @Injectable()
 export class ModelResolverService {
@@ -12,7 +14,7 @@ export class ModelResolverService {
 
   constructor(
     private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
+    private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
   ) {}
 
   /**
@@ -63,31 +65,16 @@ export class ModelResolverService {
     orgId: UUID,
     userId: UUID,
   ): Promise<PermittedLanguageModel | null> {
-    // Try user default
-    const userDefault =
-      await this.userDefaultModelsRepository.findByUserId(userId);
-    if (userDefault) {
-      this.logger.debug('Using user default model');
-      return userDefault;
+    try {
+      return await this.getDefaultModelUseCase.execute(
+        new GetDefaultModelQuery({ orgId, userId }),
+      );
+    } catch (error) {
+      if (error instanceof DefaultModelNotFoundError) {
+        return null;
+      }
+      throw error;
     }
-
-    // Try org default
-    const orgDefault =
-      await this.permittedModelsRepository.findOrgDefaultLanguage(orgId);
-    if (orgDefault) {
-      this.logger.debug('Using org default model');
-      return orgDefault;
-    }
-
-    // First available
-    const allModels =
-      await this.permittedModelsRepository.findManyLanguage(orgId);
-    if (allModels.length > 0) {
-      this.logger.debug('Using first available permitted model');
-      return allModels[0];
-    }
-
-    return null;
   }
 
   /**
