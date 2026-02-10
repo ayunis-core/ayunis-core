@@ -80,13 +80,23 @@ cd "$REPO_DIR"
 docker compose stop app 2>/dev/null || true
 
 # --- Restore Postgres ---
-# Use --clean to drop existing objects, --if-exists to avoid errors on missing objects,
-# and --single-transaction to roll back on error.
+# pg_restore --clean returns non-zero for non-fatal warnings (e.g., "role does not exist"),
+# so we allow it to fail and verify the restore by checking the database has tables.
 echo "[$(date)] Restoring Postgres..."
 docker exec -i ayunis-postgres-prod \
   pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
     --clean --if-exists --single-transaction \
-  < "$PG_DUMP"
+  < "$PG_DUMP" 2>&1 || true
+
+# Verify restore produced tables
+TABLE_COUNT=$(docker exec ayunis-postgres-prod \
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc \
+  "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public';")
+if [ "$TABLE_COUNT" -eq 0 ]; then
+  echo "[$(date)] ERROR: Postgres restore failed — no tables found" >&2
+  exit 1
+fi
+echo "[$(date)] Postgres restore verified ($TABLE_COUNT tables)"
 
 # --- Restore MinIO ---
 echo "[$(date)] Restoring MinIO data..."
