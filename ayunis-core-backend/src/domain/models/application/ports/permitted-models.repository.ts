@@ -9,10 +9,12 @@ import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 export type FindOneParams =
   | {
       id: UUID;
+      orgId?: UUID;
     }
   | {
       name: string;
       provider: ModelProvider;
+      orgId?: UUID;
     };
 
 export abstract class PermittedModelsRepository {
