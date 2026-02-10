@@ -28,7 +28,6 @@ import { UnassignMcpIntegrationFromAgentUseCase } from './application/use-cases/
 import { ListAgentMcpIntegrationsUseCase } from './application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.use-case';
 import { ListAvailableMcpIntegrationsUseCase } from '../mcp/application/use-cases/list-available-mcp-integrations/list-available-mcp-integrations.use-case';
 import { InstallAgentFromMarketplaceUseCase } from './application/use-cases/install-agent-from-marketplace/install-agent-from-marketplace.use-case';
-import { ProvisionPreInstalledAgentsUseCase } from './application/use-cases/provision-pre-installed-agents/provision-pre-installed-agents.use-case';
 import { ModelResolverService } from './application/services/model-resolver.service';
 
 // Strategies
@@ -75,7 +74,6 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     ListAgentMcpIntegrationsUseCase,
     ListAvailableMcpIntegrationsUseCase,
     InstallAgentFromMarketplaceUseCase,
-    ProvisionPreInstalledAgentsUseCase,
     ModelResolverService,
 
     // Strategies
@@ -100,7 +98,6 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     AssignMcpIntegrationToAgentUseCase,
     UnassignMcpIntegrationFromAgentUseCase,
     InstallAgentFromMarketplaceUseCase,
-    ProvisionPreInstalledAgentsUseCase,
     // Export strategy for shares module to use
     AgentShareAuthorizationStrategy,
   ],

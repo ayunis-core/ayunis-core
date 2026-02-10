@@ -30,8 +30,6 @@ import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/se
 import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.command';
 import { OrgCreatedWebhookEvent } from 'src/common/webhooks/domain/webhook-events/org-created.webhook-event';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ProvisionPreInstalledAgentsUseCase } from 'src/domain/agents/application/use-cases/provision-pre-installed-agents/provision-pre-installed-agents.use-case';
-import { ProvisionPreInstalledAgentsCommand } from 'src/domain/agents/application/use-cases/provision-pre-installed-agents/provision-pre-installed-agents.command';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -47,7 +45,6 @@ export class RegisterUserUseCase {
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly configService: ConfigService,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
-    private readonly provisionPreInstalledAgentsUseCase: ProvisionPreInstalledAgentsUseCase,
   ) {}
 
   @Transactional()
@@ -140,18 +137,6 @@ export class RegisterUserUseCase {
       void this.sendWebhookUseCase.execute(
         new SendWebhookCommand(new OrgCreatedWebhookEvent(org, user)),
       );
-
-      // Provision pre-installed marketplace agents asynchronously
-      // Graceful degradation: if marketplace is unreachable, registration still succeeds
-      void this.provisionPreInstalledAgentsUseCase
-        .execute(new ProvisionPreInstalledAgentsCommand(user.id, org.id))
-        .catch((error: unknown) => {
-          this.logger.warn('Failed to provision pre-installed agents', {
-            userId: user.id,
-            orgId: org.id,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        });
 
       this.logger.debug('Registration successful, logging in user', {
         userId: user.id,
