@@ -4,7 +4,7 @@ import {
   ValidationOptions,
   ValidationArguments,
 } from 'class-validator';
-import Ajv from 'ajv';
+import { createAjv } from './ajv.factory';
 
 // Basic validation that a value is a JSON Schema object
 export function IsJsonSchema(validationOptions?: ValidationOptions) {
@@ -20,7 +20,7 @@ export function IsJsonSchema(validationOptions?: ValidationOptions) {
             return false;
           }
 
-          const ajv = new Ajv();
+          const ajv = createAjv();
           return ajv.validateSchema(value) === true;
         },
         defaultMessage(args: ValidationArguments) {

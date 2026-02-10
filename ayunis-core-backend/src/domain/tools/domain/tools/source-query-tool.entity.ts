@@ -1,5 +1,5 @@
 import { JSONSchema } from 'json-schema-to-ts';
-import Ajv from 'ajv';
+import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { Tool } from '../tool.entity';
@@ -41,7 +41,7 @@ export class SourceQueryTool extends Tool {
   }
 
   validateParams(params: Record<string, any>): SourceQueryToolParameters {
-    const ajv = new Ajv();
+    const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);
     if (!valid) {
