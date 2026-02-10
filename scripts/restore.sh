@@ -80,13 +80,19 @@ cd "$REPO_DIR"
 docker compose stop app 2>/dev/null || true
 
 # --- Restore Postgres ---
-# pg_restore --clean returns non-zero for non-fatal warnings (e.g., "role does not exist"),
-# so we allow it to fail and verify the restore by checking the database has tables.
+# Drop and recreate the database to ensure a clean slate, then restore.
+# This avoids --clean which returns non-zero for non-fatal warnings and
+# masks failures when --single-transaction rolls back (old tables survive).
+echo "[$(date)] Recreating database..."
+docker exec ayunis-postgres-prod \
+  psql -U "$POSTGRES_USER" -c "DROP DATABASE IF EXISTS \"$POSTGRES_DB\";"
+docker exec ayunis-postgres-prod \
+  psql -U "$POSTGRES_USER" -c "CREATE DATABASE \"$POSTGRES_DB\";"
+
 echo "[$(date)] Restoring Postgres..."
 docker exec -i ayunis-postgres-prod \
   pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-    --clean --if-exists --single-transaction \
-  < "$PG_DUMP" 2>&1 || true
+  < "$PG_DUMP"
 
 # Verify restore produced tables
 TABLE_COUNT=$(docker exec ayunis-postgres-prod \
@@ -99,12 +105,20 @@ fi
 echo "[$(date)] Postgres restore verified ($TABLE_COUNT tables)"
 
 # --- Restore MinIO ---
+# Extract to a staging directory first, then swap — so existing data is
+# preserved if tar extraction fails (corrupted archive, disk full, etc.)
 echo "[$(date)] Restoring MinIO data..."
 docker compose stop minio 2>/dev/null || true
 docker run --rm \
   -v "${COMPOSE_PROJECT_NAME}_minio-data:/data" \
   -v "$BACKUP_DIR":/backup \
-  alpine sh -c "find /data -mindepth 1 -delete && tar xzf /backup/minio_${TIMESTAMP}.tar.gz -C /data"
+  alpine sh -c "
+    mkdir -p /data/_restore_staging &&
+    tar xzf /backup/minio_${TIMESTAMP}.tar.gz -C /data/_restore_staging &&
+    find /data -mindepth 1 -maxdepth 1 ! -name _restore_staging -exec rm -rf {} + &&
+    mv /data/_restore_staging/* /data/_restore_staging/.[!.]* /data/ 2>/dev/null;
+    rmdir /data/_restore_staging
+  "
 
 # --- Restart services ---
 echo "[$(date)] Starting services..."
