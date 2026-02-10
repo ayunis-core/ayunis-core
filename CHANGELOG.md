@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/ayunis-core/ayunis-core/compare/v1.8.0...v1.9.0) (2026-02-10)
+
+
+### Features
+
+* install agent from marketplace ([#116](https://github.com/ayunis-core/ayunis-core/issues/116)) ([a7bddb5](https://github.com/ayunis-core/ayunis-core/commit/a7bddb55da4954679cf719c7de28401c0116bf7f))
+
+
+### Bug Fixes
+
+* **AYC-51:** fix tool schema validation ([#117](https://github.com/ayunis-core/ayunis-core/issues/117)) ([a0a8e34](https://github.com/ayunis-core/ayunis-core/commit/a0a8e34d39c794decbae04c18f3091be34012e6a))
+
+
+### Miscellaneous
+
+* add dev skills ([#114](https://github.com/ayunis-core/ayunis-core/issues/114)) ([45c5d1a](https://github.com/ayunis-core/ayunis-core/commit/45c5d1a7e6d61f582dd96bce59f9c79a1a3dde04))
+
 ## [1.8.0](https://github.com/ayunis-core/ayunis-core/compare/v1.7.0...v1.8.0) (2026-02-09)
 
 
