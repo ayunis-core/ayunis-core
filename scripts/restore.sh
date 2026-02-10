@@ -53,8 +53,13 @@ fi
 
 # --- Restore Postgres ---
 echo "[$(date)] Restoring Postgres..."
+pg_restore_exit=0
 docker exec -i ayunis-postgres-prod \
-  pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists < "$PG_DUMP"
+  pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists < "$PG_DUMP" || pg_restore_exit=$?
+
+if [ $pg_restore_exit -ne 0 ]; then
+  echo "[$(date)] WARNING: pg_restore exited with code $pg_restore_exit (this may be due to non-fatal warnings such as extension or role issues)"
+fi
 
 # --- Restore MinIO ---
 echo "[$(date)] Restoring MinIO data..."
