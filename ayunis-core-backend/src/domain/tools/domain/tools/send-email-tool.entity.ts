@@ -1,4 +1,4 @@
-import Ajv from 'ajv';
+import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { DisplayableTool } from '../displayable-tool.entity';
@@ -38,7 +38,7 @@ export class SendEmailTool extends DisplayableTool {
   }
 
   validateParams(params: Record<string, any>): SendEmailToolParameters {
-    const ajv = new Ajv();
+    const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);
     if (!valid) {

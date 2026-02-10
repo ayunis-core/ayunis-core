@@ -1,4 +1,4 @@
-import Ajv from 'ajv';
+import { createAjv } from 'src/common/validators/ajv.factory';
 import { ConfigurableTool } from '../configurable-tool.entity';
 import { ToolConfig } from '../tool-config.entity';
 import { UUID } from 'crypto';
@@ -64,7 +64,7 @@ export class HttpTool extends ConfigurableTool<HttpToolConfig> {
   }
 
   validateParams(params: Record<string, any>): HttpToolParameters {
-    const ajv = new Ajv();
+    const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);
     if (!valid) {
