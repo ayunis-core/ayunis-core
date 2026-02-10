@@ -62,7 +62,7 @@ docker compose stop minio
 docker run --rm \
   -v ayunis-core_minio-data:/data \
   -v "$BACKUP_DIR":/backup \
-  alpine sh -c "rm -rf /data/* && tar xzf /backup/minio_${TIMESTAMP}.tar.gz -C /data"
+  alpine sh -c "find /data -mindepth 1 -delete && tar xzf /backup/minio_${TIMESTAMP}.tar.gz -C /data"
 docker compose start minio
 
 echo "[$(date)] Restore completed. Verify the application is working correctly."

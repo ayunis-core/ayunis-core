@@ -41,7 +41,7 @@ find "$BACKUP_DIR" -name "minio_*.tar.gz" -mtime +"$RETENTION_DAYS" -delete
 # --- Off-site copy (optional) ---
 if [ -n "${BACKUP_REMOTE:-}" ]; then
   echo "[$(date)] Syncing to remote: $BACKUP_REMOTE"
-  rsync -az --delete "$BACKUP_DIR/" "$BACKUP_REMOTE"
+  rsync -az "$BACKUP_DIR/" "$BACKUP_REMOTE"
 fi
 
 echo "[$(date)] Backup completed: postgres_${TIMESTAMP}.dump, minio_${TIMESTAMP}.tar.gz"
