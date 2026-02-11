@@ -11,6 +11,9 @@
     "name": "Name",
     "createdAt": "Erstellt am",
     "email": "E-Mail",
+    "role": "Rolle",
+    "roleAdmin": "Administrator",
+    "roleUser": "Benutzer",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
     "delete": "Löschen"

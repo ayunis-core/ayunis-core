@@ -126,6 +126,7 @@ export default function UsersTable({
                   <TableHead>{t('table.name')}</TableHead>
                   <TableHead>{t('table.createdAt')}</TableHead>
                   <TableHead>{t('table.email')}</TableHead>
+                  <TableHead>{t('table.role')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}
                   </TableHead>
@@ -137,6 +138,11 @@ export default function UsersTable({
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell className="capitalize">
+                      {user.role === 'admin'
+                        ? t('table.roleAdmin')
+                        : t('table.roleUser')}
+                    </TableCell>
                     <TableCell className="w-[100px]">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
