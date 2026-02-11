@@ -273,6 +273,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={t('chatInput.placeholder')}
+                aria-label={t('chatInput.placeholder')}
                 className="border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0"
                 data-testid="input"
               />

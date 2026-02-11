@@ -44,6 +44,7 @@ export function AnonymousButton({
           size="icon"
           disabled={effectiveIsDisabled}
           onClick={() => onAnonymousChange?.(!isAnonymous)}
+          aria-label={getTooltipContent()}
         >
           <ShieldCheck className="h-4 w-4" />
         </Button>

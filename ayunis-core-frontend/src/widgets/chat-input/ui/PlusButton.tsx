@@ -89,7 +89,11 @@ export default function PlusButton({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <TooltipTrigger asChild>
-            <Button size="icon" variant="outline">
+            <Button
+              size="icon"
+              variant="outline"
+              aria-label={t('chatInput.addButtonTooltip')}
+            >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

@@ -173,11 +173,10 @@ run_be_tsc() {
 
 run_complexity() {
   STATUS_FILE="$1"
-  print_section "Complexity • Lizard (staged TS)"
-  ALL_TS_STAGED=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
-  printf "%s\n" "$ALL_TS_STAGED" | sed 's#^# - #'
+  print_section "Complexity • Lizard (staged backend TS)"
+  printf "%s\n" "$BE_TS_STAGED" | sed 's#^# - #'
   set +e
-  printf "%s" "$ALL_TS_STAGED" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh
+  printf "%s" "$BE_TS_STAGED" | tr '\n' ' ' | xargs ./scripts/check-complexity.sh
   STATUS=$?
   set -e
   printf "%s" "$STATUS" > "$STATUS_FILE"
@@ -197,9 +196,8 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_tsc "$BE_TSC_STATUS_FILE" &
 fi
 
-# Complexity check runs on all staged TS files (backend + frontend)
-ALL_TS_STAGED=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
-if [ -n "$ALL_TS_STAGED" ]; then
+# Complexity check runs on backend TS files only (lizard doesn't handle React/JSX well)
+if [ -n "$BE_TS_STAGED" ]; then
   run_complexity "$COMPLEXITY_STATUS_FILE" &
 fi
 
@@ -259,9 +257,8 @@ if [ -n "$BE_TS_STAGED" ]; then
   fi
 fi
 
-# Complexity check result (runs on both backend + frontend TS files)
-ALL_TS_STAGED_CHECK=$(printf "%s\n%s" "$BE_TS_STAGED" "$FE_TS_STAGED" | sed '/^$/d')
-if [ -n "$ALL_TS_STAGED_CHECK" ]; then
+# Complexity check result (backend only)
+if [ -n "$BE_TS_STAGED" ]; then
   if [ "$COMPLEXITY_STATUS" -ne 0 ]; then
     printf "%b\n" "${RED}❌ Complexity check failed (CCN>10, length>50, or args>5)${NC}"
     FAILED=1
