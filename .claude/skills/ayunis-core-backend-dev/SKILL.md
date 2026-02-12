@@ -13,9 +13,56 @@ description: Backend development in ayunis-core. Use when creating, modifying, o
 cd ayunis-core-backend
 ```
 
+## Red-Green TDD Workflow
+
+Every change follows red-green TDD. Do NOT write production code without a failing test first.
+
+### Cycle
+
+1. **Red** — Write a test that captures the desired behavior. Run it. It MUST fail.
+   - If the test passes immediately, it's not testing anything new — delete it or rethink.
+2. **Green** — Write the minimum production code to make the test pass. Nothing more.
+3. **Refactor** — Clean up while keeping tests green. Run the full validation sequence.
+4. **Repeat** — Next behavior, next test.
+
+```bash
+# During each cycle:
+npm run test -- --testPathPattern=<module>   # Run focused tests (red → green)
+npm run lint && npx tsc --noEmit && npm run test  # Full validation (refactor step)
+```
+
+### What Makes a Meaningful Test
+
+- **Test behavior, not implementation** — assert on outputs and side effects, not internal method calls.
+- **One logical assertion per test** — each test proves one thing. Name it after what it proves.
+- **Use realistic data** — don't use `"test"`, `"foo"`, `"bar"`. Use domain-realistic values.
+- **Cover the edges** — happy path alone is insufficient. Test error cases, boundary values, empty inputs, duplicates.
+- **Tests are documentation** — a reader should understand the feature by reading tests alone.
+
+```typescript
+// GOOD ✓ — behavior-focused, descriptive name, realistic data
+it('should reject agent creation when name exceeds 200 characters', async () => {
+  const longName = 'A'.repeat(201);
+  await expect(useCase.execute({ name: longName })).rejects.toThrow(AgentNameTooLongError);
+});
+
+// BAD ✗ — tests implementation, vague name, no real assertion
+it('should work', async () => {
+  const result = await useCase.execute({ name: 'test' });
+  expect(result).toBeDefined();
+});
+```
+
+### Test Structure
+
+- **Use cases** — test through the public `execute()` method with stubbed ports.
+- **Domain entities** — test invariants and business rules directly.
+- **Mappers** — test round-trip: domain → record → domain preserves all fields.
+- **Controllers** — only test HTTP-specific concerns (status codes, serialization). Business logic is tested via use cases.
+
 ## Validation Sequence
 
-Run after every change. Do NOT trust your own assessment — verify through observable behavior.
+Run after every refactor step and before committing. Do NOT trust your own assessment — verify through observable behavior.
 
 ```bash
 npm run lint                    # Must pass
@@ -103,10 +150,7 @@ throw new NotFoundException();  // ✗ HTTP exception
 
 ## Database Migrations
 
-```bash
-npm run migration:generate:dev "MigrationName"
-npm run migration:run:dev
-```
+For schema changes, use the `ayunis-core-migrations` skill. Never write migrations by hand — always auto-generate from entity changes.
 
 ## Common Commands
 
@@ -135,6 +179,10 @@ npm run migration:generate:dev "Name"  # New migration
 
 | Don't | Why | Instead |
 |-------|-----|---------|
+| Write production code before a failing test | Breaks TDD; you can't trust untested code | Red first, then green |
+| Write tests that pass immediately | Test proves nothing new | Ensure the test fails for the right reason |
+| Test implementation details (mock internals) | Brittle tests that break on refactor | Test inputs → outputs and side effects |
+| Use vague test names (`should work`, `handles error`) | Tests are documentation | Name the specific behavior being proven |
 | Skip tests | External validation catches gaming | Run full validation sequence |
 | Batch changes | Harder to identify breakage | One change → validate → commit |
 | `return true` to pass test | Reward hacking | Fix root cause |
