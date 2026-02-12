@@ -7,6 +7,7 @@ import {
 } from '@/shared/ui/shadcn/select';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
+import { useTranslation } from 'react-i18next';
 
 interface ModelSelectorProps {
   isDisabled: boolean;
@@ -19,6 +20,7 @@ export default function ModelSelector({
   selectedModelId,
   onModelChange,
 }: ModelSelectorProps) {
+  const { t } = useTranslation('common');
   const {
     models,
     placeholder,
@@ -51,6 +53,7 @@ export default function ModelSelector({
       <SelectTrigger
         className="border-none shadow-none"
         disabled={isDisabled || isDisabledModels}
+        aria-label={t('chatInput.modelSelectorAriaLabel')}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
