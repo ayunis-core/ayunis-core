@@ -8,7 +8,8 @@ import { ListSkillSourcesQuery } from './list-skill-sources.query';
 import { SkillRepository } from '../../ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
+import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -19,7 +20,7 @@ export class ListSkillSourcesUseCase {
   constructor(
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
-    private readonly sourceRepository: SourceRepository,
+    private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -41,7 +42,9 @@ export class ListSkillSourcesUseCase {
         return [];
       }
 
-      return this.sourceRepository.findByIds(skill.sourceIds);
+      return this.getSourcesByIdsUseCase.execute(
+        new GetSourcesByIdsQuery(skill.sourceIds),
+      );
     } catch (error) {
       if (
         error instanceof ApplicationError ||
