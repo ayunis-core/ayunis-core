@@ -17,17 +17,8 @@ export default function GlobalUsagePage() {
   const [selectedModel, setSelectedModel] = useState<string | undefined>();
 
   return (
-    <SuperAdminSettingsLayout>
+    <SuperAdminSettingsLayout pageTitle={t('layout.usage')}>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            {t('globalUsage.title')}
-          </h2>
-          <p className="text-muted-foreground">
-            {t('globalUsage.description')}
-          </p>
-        </div>
-
         <GlobalUsageFilters
           dateRange={dateRange}
           onDateRangeChange={setDateRange}

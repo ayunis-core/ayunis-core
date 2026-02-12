@@ -7,9 +7,5 @@
     "orgs": "Organisationen",
     "modelsCatalog": "Model-Katalog",
     "usage": "Nutzung"
-  },
-  "globalUsage": {
-    "title": "Globale Nutzung",
-    "description": "Nutzungsanalysen über alle Organisationen hinweg"
   }
 }
