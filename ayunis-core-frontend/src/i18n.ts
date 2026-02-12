@@ -43,6 +43,8 @@ import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
 import enInstall from './shared/locales/en/install.json';
 import deInstall from './shared/locales/de/install.json';
+import enSkills from './shared/locales/en/skills.json';
+import deSkills from './shared/locales/de/skills.json';
 
 const resources = {
   en: {
@@ -66,6 +68,7 @@ const resources = {
     agent: enAgent,
     quickActions: enQuickActions,
     install: enInstall,
+    skills: enSkills,
   },
   de: {
     auth: deAuth,
@@ -88,6 +91,7 @@ const resources = {
     agent: deAgent,
     quickActions: deQuickActions,
     install: deInstall,
+    skills: deSkills,
   },
 };
 

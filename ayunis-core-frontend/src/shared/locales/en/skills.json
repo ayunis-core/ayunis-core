@@ -1,0 +1,50 @@
+{
+  "page": {
+    "title": "Skills"
+  },
+  "emptyState": {
+    "title": "No skills yet",
+    "description": "Get started by creating your first skill. Skills are modular knowledge bundles that the AI can activate on-demand during conversations."
+  },
+  "card": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "confirmDelete": {
+      "title": "Delete Skill",
+      "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Add Skill",
+    "buttonTextFirst": "Create your first skill",
+    "title": "Add New Skill",
+    "description": "Create a new skill with knowledge and integrations that the AI can activate during conversations.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter skill name...",
+      "shortDescriptionLabel": "Short Description",
+      "shortDescriptionPlaceholder": "Brief description for the AI to decide when to activate this skill...",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Detailed instructions injected when the skill is activated..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Skill",
+      "creating": "Creating..."
+    }
+  },
+  "create": {
+    "success": "Skill created successfully!",
+    "error": "Failed to create skill. Please try again."
+  },
+  "delete": {
+    "success": "Skill deleted successfully!",
+    "error": "Failed to delete skill. Please try again.",
+    "notFound": "Skill not found. It may have been deleted."
+  },
+  "toggleActive": {
+    "error": "Failed to toggle skill status. Please try again."
+  }
+}

@@ -20,6 +20,7 @@ import { Route as onboardingEmailConfirmImport } from './routes/(onboarding)/ema
 import { Route as onboardingConfirmEmailImport } from './routes/(onboarding)/confirm-email'
 import { Route as onboardingAcceptInviteImport } from './routes/(onboarding)/accept-invite'
 import { Route as AuthenticatedSuperAdminSettingsIndexImport } from './routes/_authenticated/super-admin-settings.index'
+import { Route as AuthenticatedSkillsIndexImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticated/prompts.index'
 import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats.index'
@@ -98,6 +99,12 @@ const AuthenticatedSuperAdminSettingsIndexRoute =
     path: '/super-admin-settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+
+const AuthenticatedSkillsIndexRoute = AuthenticatedSkillsIndexImport.update({
+  id: '/skills/',
+  path: '/skills/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
   {
@@ -427,6 +434,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/skills/': {
+      id: '/_authenticated/skills/'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof AuthenticatedSkillsIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/super-admin-settings/': {
       id: '/_authenticated/super-admin-settings/'
       path: '/super-admin-settings'
@@ -491,6 +505,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
   AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -518,6 +533,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedPromptsIndexRoute: AuthenticatedPromptsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
     AuthenticatedSuperAdminSettingsIndexRoute,
   AuthenticatedAdminSettingsTeamsIdRoute:
@@ -562,6 +578,7 @@ export interface FileRoutesByFullPath {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -596,6 +613,7 @@ export interface FileRoutesByTo {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -631,6 +649,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/prompts/': typeof AuthenticatedPromptsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -667,6 +686,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/prompts'
     | '/settings'
+    | '/skills'
     | '/super-admin-settings'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -700,6 +720,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/prompts'
     | '/settings'
+    | '/skills'
     | '/super-admin-settings'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -733,6 +754,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/'
     | '/_authenticated/prompts/'
     | '/_authenticated/settings/'
+    | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
@@ -809,6 +831,7 @@ export const routeTree = rootRoute
         "/_authenticated/chats/",
         "/_authenticated/prompts/",
         "/_authenticated/settings/",
+        "/_authenticated/skills/",
         "/_authenticated/super-admin-settings/",
         "/_authenticated/admin-settings/teams/$id",
         "/_authenticated/super-admin-settings/orgs/$id",
@@ -900,6 +923,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/settings/": {
       "filePath": "_authenticated/settings.index.ts",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/skills/": {
+      "filePath": "_authenticated/skills.index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/super-admin-settings/": {

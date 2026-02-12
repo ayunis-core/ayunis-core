@@ -7,6 +7,7 @@ import {
   LogOut,
   Plus,
   Bot,
+  Sparkles,
 } from 'lucide-react';
 
 import {
@@ -70,6 +71,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('sidebar.agents'),
       url: '/agents',
       icon: Bot,
+    },
+    {
+      title: t('sidebar.skills'),
+      url: '/skills',
+      icon: Sparkles,
     },
   ];
 

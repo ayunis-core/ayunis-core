@@ -1,0 +1,50 @@
+{
+  "page": {
+    "title": "Fähigkeiten"
+  },
+  "emptyState": {
+    "title": "Noch keine Fähigkeiten",
+    "description": "Beginnen Sie mit der Erstellung Ihrer ersten Fähigkeit. Fähigkeiten sind modulare Wissenspakete, die die KI bei Bedarf während Gesprächen aktivieren kann."
+  },
+  "card": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "confirmDelete": {
+      "title": "Fähigkeit löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Fähigkeit hinzufügen",
+    "buttonTextFirst": "Erstellen Sie Ihre erste Fähigkeit",
+    "title": "Neue Fähigkeit hinzufügen",
+    "description": "Erstellen Sie eine neue Fähigkeit mit Wissen und Integrationen, die die KI während Gesprächen aktivieren kann.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Name der Fähigkeit eingeben...",
+      "shortDescriptionLabel": "Kurzbeschreibung",
+      "shortDescriptionPlaceholder": "Kurze Beschreibung, damit die KI entscheiden kann, wann diese Fähigkeit aktiviert werden soll...",
+      "instructionsLabel": "Anweisungen",
+      "instructionsPlaceholder": "Detaillierte Anweisungen, die eingefügt werden, wenn die Fähigkeit aktiviert wird..."
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "create": "Fähigkeit erstellen",
+      "creating": "Wird erstellt..."
+    }
+  },
+  "create": {
+    "success": "Fähigkeit erfolgreich erstellt!",
+    "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+  },
+  "delete": {
+    "success": "Fähigkeit erfolgreich gelöscht!",
+    "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
+  "toggleActive": {
+    "error": "Status der Fähigkeit konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+  }
+}
