@@ -15,6 +15,7 @@ import NoSubscriptionSection from './NoSubscriptionSection';
 import ModelsSection from './ModelsSection';
 import TrialSection from './TrialSection';
 import NoTrialSection from './NoTrialSection';
+import UsageTab from './UsageTab';
 import {
   Tabs,
   TabsList,
@@ -33,7 +34,13 @@ interface SuperAdminSettingsOrgPageProps {
   usersCurrentPage: number;
   subscription: SubscriptionResponseDto | null;
   trial: SuperAdminTrialResponseDto | null;
-  initialTab?: 'org' | 'users' | 'subscriptions' | 'models' | 'trials';
+  initialTab?:
+    | 'org'
+    | 'users'
+    | 'subscriptions'
+    | 'models'
+    | 'trials'
+    | 'usage';
 }
 export default function SuperAdminSettingsOrgPage({
   org,
@@ -57,7 +64,13 @@ export default function SuperAdminSettingsOrgPage({
         to: '/super-admin-settings/orgs/$id',
         params: { id },
         search: {
-          tab: value as 'org' | 'users' | 'subscriptions' | 'models' | 'trials',
+          tab: value as
+            | 'org'
+            | 'users'
+            | 'subscriptions'
+            | 'models'
+            | 'trials'
+            | 'usage',
         },
       });
     },
@@ -79,6 +92,7 @@ export default function SuperAdminSettingsOrgPage({
           </TabsTrigger>
           <TabsTrigger value="trials">{t('tabs.trials')}</TabsTrigger>
           <TabsTrigger value="models">{t('tabs.models')}</TabsTrigger>
+          <TabsTrigger value="usage">{t('tabs.usage')}</TabsTrigger>
         </TabsList>
         <TabsContent value="org" className="mt-4">
           <OrgDetails org={org} />
@@ -115,6 +129,9 @@ export default function SuperAdminSettingsOrgPage({
         </TabsContent>
         <TabsContent value="models" className="mt-4">
           <ModelsSection orgId={org.id} />
+        </TabsContent>
+        <TabsContent value="usage" className="mt-4">
+          <UsageTab orgId={org.id} />
         </TabsContent>
       </Tabs>
     </SuperAdminSettingsLayout>

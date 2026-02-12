@@ -1,15 +1,10 @@
-// Utils
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-// Features
-import { useModelDistribution } from '@/pages/admin-settings/usage-settings/api';
-
-// UI
-import { ModelDistributionLoading } from './ModelDistributionLoading';
-import { ModelDistributionError } from './ModelDistributionError';
-import { ModelDistributionEmpty } from './ModelDistributionEmpty';
-import { ModelDistributionChart } from './ModelDistributionChart';
+import { useSuperAdminModelDistribution } from '../api/useSuperAdminModelDistribution';
+import { ModelDistributionLoading } from '@/pages/admin-settings/usage-settings/ui/model-distribution-chart/ModelDistributionLoading';
+import { ModelDistributionError } from '@/pages/admin-settings/usage-settings/ui/model-distribution-chart/ModelDistributionError';
+import { ModelDistributionEmpty } from '@/pages/admin-settings/usage-settings/ui/model-distribution-chart/ModelDistributionEmpty';
+import { ModelDistributionChart } from '@/pages/admin-settings/usage-settings/ui/model-distribution-chart/ModelDistributionChart';
 
 const CHART_COLORS = [
   'var(--chart-1)',
@@ -19,46 +14,44 @@ const CHART_COLORS = [
   'var(--chart-5)',
 ];
 
-const MAX_DISPLAY_MODELS = 10; // Number of individual models to show before grouping into "Others"
+const MAX_DISPLAY_MODELS = 10;
 
-interface ModelDistributionProps {
+interface SuperAdminModelDistributionProps {
+  orgId: string;
   startDate?: Date;
   endDate?: Date;
   selectedModel?: string;
 }
 
-export function ModelDistribution({
+export function SuperAdminModelDistribution({
+  orgId,
   startDate,
   endDate,
   selectedModel,
-}: ModelDistributionProps) {
+}: SuperAdminModelDistributionProps) {
   const { t } = useTranslation('admin-settings-usage');
   const {
     data: modelDistribution,
     isLoading,
     error,
-  } = useModelDistribution({
+  } = useSuperAdminModelDistribution(orgId, {
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
     modelId: selectedModel,
   });
 
-  // Prepare all chart data structures with frontend-side "Others" aggregation
   const { chartData, chartConfig, modelBreakdown } = useMemo(() => {
     if (!modelDistribution?.models || modelDistribution.models.length === 0) {
       return { chartData: [], chartConfig: {}, modelBreakdown: [] };
     }
 
     const models = modelDistribution.models;
-
-    // Calculate total tokens for percentage recalculation
     const totalTokens = models.reduce((sum, model) => sum + model.tokens, 0);
 
     if (totalTokens === 0) {
       return { chartData: [], chartConfig: {}, modelBreakdown: [] };
     }
 
-    // Models are already sorted by tokens (descending) from backend
     const topModels = models.slice(0, MAX_DISPLAY_MODELS);
     const otherModels = models.slice(MAX_DISPLAY_MODELS);
 
@@ -71,7 +64,6 @@ export function ModelDistribution({
     const configMap: Record<string, { label: string; color: string }> = {};
     const breakdownItems: Array<(typeof models)[0] & { color: string }> = [];
 
-    // Add top models
     topModels.forEach((model, index) => {
       const color = CHART_COLORS[index % CHART_COLORS.length];
       const percentage = (model.tokens / totalTokens) * 100;
@@ -82,20 +74,10 @@ export function ModelDistribution({
         tokens: model.tokens,
         fill: color,
       });
-
-      configMap[model.displayName] = {
-        label: model.displayName,
-        color: color,
-      };
-
-      breakdownItems.push({
-        ...model,
-        percentage,
-        color: color,
-      });
+      configMap[model.displayName] = { label: model.displayName, color };
+      breakdownItems.push({ ...model, percentage, color });
     });
 
-    // Aggregate remaining models into "Others" if there are any
     if (otherModels.length > 0) {
       const othersTokens = otherModels.reduce(
         (sum, model) => sum + model.tokens,
@@ -106,37 +88,31 @@ export function ModelDistribution({
         0,
       );
       const othersPercentage = (othersTokens / totalTokens) * 100;
-
-      // Use the next color for "Others"
       const othersColor = CHART_COLORS[topModels.length % CHART_COLORS.length];
+      const othersDisplayName = t('charts.modelDistribution.othersWithCount', {
+        count: otherModels.length,
+      });
 
-      const othersLabel = t('charts.modelDistribution.others');
-      const othersEntry = {
+      chartDataItems.push({
+        name: othersDisplayName,
+        value: othersPercentage,
+        tokens: othersTokens,
+        fill: othersColor,
+      });
+      configMap[othersDisplayName] = {
+        label: othersDisplayName,
+        color: othersColor,
+      };
+      breakdownItems.push({
         modelId: 'others',
-        modelName: othersLabel,
-        displayName: t('charts.modelDistribution.othersWithCount', {
-          count: otherModels.length,
-        }),
+        modelName: t('charts.modelDistribution.others'),
+        displayName: othersDisplayName,
         provider: otherModels[0]?.provider || ('openai' as const),
         tokens: othersTokens,
         requests: othersRequests,
         percentage: othersPercentage,
         color: othersColor,
-      };
-
-      chartDataItems.push({
-        name: othersEntry.displayName,
-        value: othersPercentage,
-        tokens: othersTokens,
-        fill: othersColor,
       });
-
-      configMap[othersEntry.displayName] = {
-        label: othersEntry.displayName,
-        color: othersColor,
-      };
-
-      breakdownItems.push(othersEntry);
     }
 
     return {
@@ -146,14 +122,8 @@ export function ModelDistribution({
     };
   }, [modelDistribution?.models, t]);
 
-  if (isLoading) {
-    return <ModelDistributionLoading />;
-  }
-
-  if (error) {
-    return <ModelDistributionError error={error} />;
-  }
-
+  if (isLoading) return <ModelDistributionLoading />;
+  if (error) return <ModelDistributionError error={error} />;
   if (chartData.length === 0 || modelBreakdown.length === 0) {
     return <ModelDistributionEmpty />;
   }

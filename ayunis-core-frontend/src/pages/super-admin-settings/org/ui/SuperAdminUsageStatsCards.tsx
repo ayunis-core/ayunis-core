@@ -1,7 +1,4 @@
-// Utils
 import { useTranslation } from 'react-i18next';
-
-// Ui
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import {
   Card,
@@ -9,27 +6,27 @@ import {
   CardTitle,
   CardContent,
 } from '@/shared/ui/shadcn/card';
+import { useSuperAdminUsageStats } from '../api/useSuperAdminUsageStats';
 
-// Api
-import { useUsageStats } from '@/pages/admin-settings/usage-settings/api';
-
-interface UsageStatsCardsProps {
+interface SuperAdminUsageStatsCardsProps {
+  orgId: string;
   startDate?: Date;
   endDate?: Date;
 }
 
-export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
+export function SuperAdminUsageStatsCards({
+  orgId,
+  startDate,
+  endDate,
+}: SuperAdminUsageStatsCardsProps) {
   const { t, i18n } = useTranslation('admin-settings-usage');
-  const { data: stats, isLoading } = useUsageStats({
+  const { data: stats, isLoading } = useSuperAdminUsageStats(orgId, {
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
   });
 
   const formatCompact = (value?: number) => {
-    if (value === undefined) {
-      return '-';
-    }
-
+    if (value === undefined) return '-';
     return new Intl.NumberFormat(i18n.language, {
       notation: 'compact',
       maximumFractionDigits: 1,
@@ -54,9 +51,7 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
     );
   }
 
-  if (!stats) {
-    return null;
-  }
+  if (!stats) return null;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -70,7 +65,6 @@ export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
           </p>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>{t('stats.activeUsers')}</CardTitle>

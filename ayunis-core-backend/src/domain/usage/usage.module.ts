@@ -5,6 +5,8 @@ import { GetModelDistributionUseCase } from './application/use-cases/get-model-d
 import { GetUserUsageUseCase } from './application/use-cases/get-user-usage/get-user-usage.use-case';
 import { GetUsageStatsUseCase } from './application/use-cases/get-usage-stats/get-usage-stats.use-case';
 import { UsageController } from './presenters/http/usage.controller';
+import { SuperAdminUsageController } from './presenters/http/super-admin-usage.controller';
+import { SuperAdminUsageDataController } from './presenters/http/super-admin-usage-data.controller';
 import { LocalUsageRepositoryModule } from './infrastructure/persistence/local-usage/local-usage-repository.module';
 import { UsageStatsResponseDtoMapper } from './presenters/http/mappers/usage-stats-response-dto.mapper';
 import { ProviderUsageResponseDtoMapper } from './presenters/http/mappers/provider-usage-response-dto.mapper';
@@ -14,7 +16,11 @@ import { UserUsageResponseDtoMapper } from './presenters/http/mappers/user-usage
 
 @Module({
   imports: [LocalUsageRepositoryModule],
-  controllers: [UsageController],
+  controllers: [
+    UsageController,
+    SuperAdminUsageController,
+    SuperAdminUsageDataController,
+  ],
   providers: [
     // Use Cases
     CollectUsageUseCase,

@@ -1,47 +1,48 @@
-// Utils
 import { useMemo } from 'react';
+import { useSuperAdminProviderUsageChart } from '../api/useSuperAdminProviderUsageChart';
+import { useSuperAdminModelsControllerGetPermittedModels } from '@/shared/api';
+import { ProviderConsumptionLoading } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart/ProviderConsumptionLoading';
+import { ProviderConsumptionError } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart/ProviderConsumptionError';
+import { ProviderConsumptionEmpty } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart/ProviderConsumptionEmpty';
+import { ProviderConsumptionChart } from '@/pages/admin-settings/usage-settings/ui/provider-consumption-chart/ProviderConsumptionChart';
 
-// Features
-import { useProviderUsageChart } from '@/pages/admin-settings/usage-settings/api';
-import { useProviders } from '@/features/models';
-
-// UI
-import { ProviderConsumptionLoading } from './ProviderConsumptionLoading';
-import { ProviderConsumptionError } from './ProviderConsumptionError';
-import { ProviderConsumptionEmpty } from './ProviderConsumptionEmpty';
-import { ProviderConsumptionChart } from './ProviderConsumptionChart';
-
-interface ProviderConsumptionProps {
+interface SuperAdminProviderConsumptionProps {
+  orgId: string;
   startDate?: Date;
   endDate?: Date;
   selectedProvider?: string;
 }
 
-export function ProviderConsumption({
+export function SuperAdminProviderConsumption({
+  orgId,
   startDate,
   endDate,
   selectedProvider,
-}: ProviderConsumptionProps) {
+}: SuperAdminProviderConsumptionProps) {
   const {
     data: chartResp,
     isLoading,
     error,
-  } = useProviderUsageChart({
+  } = useSuperAdminProviderUsageChart(orgId, {
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
     provider: selectedProvider,
-  } as Parameters<typeof useProviderUsageChart>[0]);
+  });
 
-  const { providers } = useProviders();
+  const { data: permittedModels } =
+    useSuperAdminModelsControllerGetPermittedModels(orgId);
 
-  // Create a map from technical provider name to display name
   const providerDisplayNames = useMemo(() => {
     const map: Record<string, string> = {};
-    providers.forEach((p) => {
-      map[p.provider] = p.displayName;
-    });
+    if (permittedModels) {
+      permittedModels.forEach((m) => {
+        if (!map[m.provider]) {
+          map[m.provider] = m.providerDisplayName;
+        }
+      });
+    }
     return map;
-  }, [providers]);
+  }, [permittedModels]);
 
   const { chartData, chartConfig } = useMemo(() => {
     const empty = {
@@ -72,17 +73,9 @@ export function ProviderConsumption({
     return { chartData, chartConfig };
   }, [chartResp?.timeSeries, providerDisplayNames]);
 
-  if (isLoading) {
-    return <ProviderConsumptionLoading />;
-  }
-
-  if (error) {
-    return <ProviderConsumptionError error={error} />;
-  }
-
-  if (!chartData || chartData.length === 0) {
-    return <ProviderConsumptionEmpty />;
-  }
+  if (isLoading) return <ProviderConsumptionLoading />;
+  if (error) return <ProviderConsumptionError error={error} />;
+  if (!chartData || chartData.length === 0) return <ProviderConsumptionEmpty />;
 
   return (
     <ProviderConsumptionChart chartData={chartData} chartConfig={chartConfig} />

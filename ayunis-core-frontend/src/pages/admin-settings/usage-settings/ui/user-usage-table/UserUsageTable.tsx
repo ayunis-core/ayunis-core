@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 
 // Features
-import { useUserUsage } from '@/features/usage';
+import { useUserUsage } from '@/pages/admin-settings/usage-settings/api';
 
 // UI
 import { UserUsageTableLoading } from './UserUsageTableLoading';

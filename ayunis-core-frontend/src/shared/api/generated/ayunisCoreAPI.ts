@@ -103,6 +103,11 @@ import type {
   SuperAdminOrgsControllerGetAllOrgsParams,
   SuperAdminTrialResponseDto,
   SuperAdminTrialResponseDtoNullable,
+  SuperAdminUsageControllerGetModelDistributionParams,
+  SuperAdminUsageControllerGetUsageStatsParams,
+  SuperAdminUsageDataControllerGetProviderUsageChartParams,
+  SuperAdminUsageDataControllerGetProviderUsageParams,
+  SuperAdminUsageDataControllerGetUserUsageParams,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
   TeamMemberResponseDto,
   TeamResponseDto,
@@ -9754,6 +9759,574 @@ export function useUsageControllerGetUserUsage<TData = Awaited<ReturnType<typeof
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getUsageControllerGetUserUsageQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get usage dashboard configuration for an organization
+ */
+export const superAdminUsageControllerGetUsageConfig = (
+    orgId: unknown,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UsageConfigResponseDto>(
+      {url: `/super-admin/usage/${orgId}/config`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsageControllerGetUsageConfigQueryKey = (orgId: unknown,) => {
+    return [`/super-admin/usage/${orgId}/config`] as const;
+    }
+
+    
+export const getSuperAdminUsageControllerGetUsageConfigQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetUsageConfigQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>> = ({ signal }) => superAdminUsageControllerGetUsageConfig(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetUsageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>>
+export type SuperAdminUsageControllerGetUsageConfigQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage dashboard configuration for an organization
+ */
+
+export function useSuperAdminUsageControllerGetUsageConfig<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError = unknown>(
+ orgId: unknown, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetUsageConfigQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get overall usage statistics for an organization
+ */
+export const superAdminUsageControllerGetUsageStats = (
+    orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UsageStatsResponseDto>(
+      {url: `/super-admin/usage/${orgId}/stats`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsageControllerGetUsageStatsQueryKey = (orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams,) => {
+    return [`/super-admin/usage/${orgId}/stats`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminUsageControllerGetUsageStatsQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetUsageStatsQueryKey(orgId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>> = ({ signal }) => superAdminUsageControllerGetUsageStats(orgId,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetUsageStatsQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>>
+export type SuperAdminUsageControllerGetUsageStatsQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageControllerGetUsageStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get overall usage statistics for an organization
+ */
+
+export function useSuperAdminUsageControllerGetUsageStats<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetUsageStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetUsageStats>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetUsageStatsQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get usage distribution by model for an organization
+ */
+export const superAdminUsageControllerGetModelDistribution = (
+    orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelDistributionResponseDto>(
+      {url: `/super-admin/usage/${orgId}/models`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsageControllerGetModelDistributionQueryKey = (orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams,) => {
+    return [`/super-admin/usage/${orgId}/models`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminUsageControllerGetModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageControllerGetModelDistributionQueryKey(orgId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>> = ({ signal }) => superAdminUsageControllerGetModelDistribution(orgId,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageControllerGetModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>>
+export type SuperAdminUsageControllerGetModelDistributionQueryError = unknown
+
+
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageControllerGetModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage distribution by model for an organization
+ */
+
+export function useSuperAdminUsageControllerGetModelDistribution<TData = Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageControllerGetModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageControllerGetModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageControllerGetModelDistributionQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get usage statistics by provider for an organization
+ */
+export const superAdminUsageDataControllerGetProviderUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ProviderUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/providers`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsageDataControllerGetProviderUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams,) => {
+    return [`/super-admin/usage/${orgId}/providers`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminUsageDataControllerGetProviderUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetProviderUsageQueryKey(orgId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>> = ({ signal }) => superAdminUsageDataControllerGetProviderUsage(orgId,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetProviderUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>>
+export type SuperAdminUsageDataControllerGetProviderUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetProviderUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by provider for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetProviderUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetProviderUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get provider usage time series for an organization (chart-ready)
+ */
+export const superAdminUsageDataControllerGetProviderUsageChart = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ProviderUsageChartResponseDto>(
+      {url: `/super-admin/usage/${orgId}/providers/chart`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams,) => {
+    return [`/super-admin/usage/${orgId}/providers/chart`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminUsageDataControllerGetProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetProviderUsageChartQueryKey(orgId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>> = ({ signal }) => superAdminUsageDataControllerGetProviderUsageChart(orgId,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>>
+export type SuperAdminUsageDataControllerGetProviderUsageChartQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get provider usage time series for an organization (chart-ready)
+ */
+
+export function useSuperAdminUsageDataControllerGetProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetProviderUsageChartQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get usage statistics by user for an organization
+ */
+export const superAdminUsageDataControllerGetUserUsage = (
+    orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserUsageResponseDto>(
+      {url: `/super-admin/usage/${orgId}/users`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminUsageDataControllerGetUserUsageQueryKey = (orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams,) => {
+    return [`/super-admin/usage/${orgId}/users`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminUsageDataControllerGetUserUsageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUsageDataControllerGetUserUsageQueryKey(orgId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>> = ({ signal }) => superAdminUsageDataControllerGetUserUsage(orgId,params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUsageDataControllerGetUserUsageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>>
+export type SuperAdminUsageDataControllerGetUserUsageQueryError = unknown
+
+
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params: undefined |  SuperAdminUsageDataControllerGetUserUsageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get usage statistics by user for an organization
+ */
+
+export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError = unknown>(
+ orgId: string,
+    params?: SuperAdminUsageDataControllerGetUserUsageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUsageDataControllerGetUserUsage>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUsageDataControllerGetUserUsageQueryOptions(orgId,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
