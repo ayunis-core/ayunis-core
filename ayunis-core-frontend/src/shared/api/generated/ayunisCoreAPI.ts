@@ -94,6 +94,8 @@ import type {
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
+  SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams,
+  SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams,
   SuperAdminModelsControllerGetAllCatalogModels200Item,
   SuperAdminModelsControllerGetCatalogModelById200,
   SuperAdminModelsControllerGetPermittedModels200Item,
@@ -10327,6 +10329,184 @@ export function useSuperAdminUsageDataControllerGetUserUsage<TData = Awaited<Ret
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSuperAdminUsageDataControllerGetUserUsageQueryOptions(orgId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get global provider usage time series across all organizations (chart-ready)
+ */
+export const superAdminGlobalUsageControllerGetGlobalProviderUsageChart = (
+    params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ProviderUsageChartResponseDto>(
+      {url: `/super-admin/global-usage/providers/chart`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams,) => {
+    return [`/super-admin/global-usage/providers/chart`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryOptions = <TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError = unknown>(params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>> = ({ signal }) => superAdminGlobalUsageControllerGetGlobalProviderUsageChart(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>>
+export type SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryError = unknown
+
+
+export function useSuperAdminGlobalUsageControllerGetGlobalProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError = unknown>(
+ params: undefined |  SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminGlobalUsageControllerGetGlobalProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminGlobalUsageControllerGetGlobalProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get global provider usage time series across all organizations (chart-ready)
+ */
+
+export function useSuperAdminGlobalUsageControllerGetGlobalProviderUsageChart<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalProviderUsageChart>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminGlobalUsageControllerGetGlobalProviderUsageChartQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get global model distribution across all organizations
+ */
+export const superAdminGlobalUsageControllerGetGlobalModelDistribution = (
+    params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ModelDistributionResponseDto>(
+      {url: `/super-admin/global-usage/models`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+export const getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryKey = (params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams,) => {
+    return [`/super-admin/global-usage/models`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryOptions = <TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError = unknown>(params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>> = ({ signal }) => superAdminGlobalUsageControllerGetGlobalModelDistribution(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>>
+export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryError = unknown
+
+
+export function useSuperAdminGlobalUsageControllerGetGlobalModelDistribution<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError = unknown>(
+ params: undefined |  SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminGlobalUsageControllerGetGlobalModelDistribution<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminGlobalUsageControllerGetGlobalModelDistribution<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get global model distribution across all organizations
+ */
+
+export function useSuperAdminGlobalUsageControllerGetGlobalModelDistribution<TData = Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError = unknown>(
+ params?: SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminGlobalUsageControllerGetGlobalModelDistribution>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminGlobalUsageControllerGetGlobalModelDistributionQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

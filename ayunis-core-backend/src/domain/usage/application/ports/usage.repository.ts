@@ -3,6 +3,8 @@ import { Usage } from '../../domain/usage.entity';
 import { GetUserUsageQuery } from '../use-cases/get-user-usage/get-user-usage.query';
 import { GetProviderUsageQuery } from '../use-cases/get-provider-usage/get-provider-usage.query';
 import { GetModelDistributionQuery } from '../use-cases/get-model-distribution/get-model-distribution.query';
+import { GetGlobalProviderUsageQuery } from '../use-cases/get-global-provider-usage/get-global-provider-usage.query';
+import { GetGlobalModelDistributionQuery } from '../use-cases/get-global-model-distribution/get-global-model-distribution.query';
 import { GetUsageStatsQuery } from '../use-cases/get-usage-stats/get-usage-stats.query';
 import { Paginated } from 'src/common/pagination';
 import { UsageStats } from '../../domain/usage-stats.entity';
@@ -51,4 +53,12 @@ export abstract class UsageRepository {
     startDate?: Date,
     endDate?: Date,
   ): Promise<number>;
+
+  abstract getGlobalProviderUsage(
+    query: GetGlobalProviderUsageQuery,
+  ): Promise<ProviderUsage[]>;
+
+  abstract getGlobalModelDistribution(
+    query: GetGlobalModelDistributionQuery,
+  ): Promise<ModelDistribution[]>;
 }

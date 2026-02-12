@@ -3026,6 +3026,19 @@ export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
   desc: 'desc',
 } as const;
 
+export type SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+provider?: string;
+modelId?: string;
+};
+
+export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams = {
+startDate?: string;
+endDate?: string;
+modelId?: string;
+};
+
 export type TranscriptionsControllerTranscribeBody = {
   /** The audio file to transcribe */
   file: Blob;
