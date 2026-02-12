@@ -31,7 +31,7 @@ if [ -z "${POSTGRES_USER:-}" ]; then
 fi
 
 BACKUP_DIR="${BACKUP_DIR:-/opt/ayunis/backups}"
-RETENTION_DAYS="${BACKUP_RETENTION:-30}"
+RETENTION_DAYS="${BACKUP_RETENTION:-5}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Resolve the Docker Compose volume prefix
