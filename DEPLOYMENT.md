@@ -332,6 +332,60 @@ MCP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes). Generate a key 
    docker compose restart ayunis-core-backend
    ```
 
+## Backups
+
+### Setup
+
+Backups are handled by `scripts/backup.sh`, which dumps Postgres and tars the MinIO volume. Run it on the host via cron.
+
+**1. Configure cron (daily at 3 AM):**
+
+```bash
+crontab -e
+```
+
+Add this line (adjust the path to your checkout):
+
+```
+0 3 * * * /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
+```
+
+**2. (Recommended) Off-site copies with Hetzner Storage Box:**
+
+Order a [Storage Box](https://www.hetzner.com/storage/storage-box/) and configure SSH key access, then set `BACKUP_REMOTE` in your cron entry:
+
+```
+0 3 * * * BACKUP_REMOTE="u123456@u123456.your-storagebox.de:backups/" /opt/ayunis/ayunis-core/scripts/backup.sh >> /var/log/ayunis-backup.log 2>&1
+```
+
+**3. Verify backups are running:**
+
+```bash
+# Check the log
+tail -20 /var/log/ayunis-backup.log
+
+# List local backups
+ls -lh /opt/ayunis/backups/
+```
+
+### Restore
+
+```bash
+# Source your env vars
+source /opt/ayunis/ayunis-core/ayunis-core-backend/.env
+
+# List available backups and restore interactively
+./scripts/restore.sh
+```
+
+### Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `BACKUP_DIR` | `/opt/ayunis/backups` | Local backup directory |
+| `BACKUP_RETENTION` | `30` | Days to keep old backups |
+| `BACKUP_REMOTE` | (none) | rsync target for off-site copies |
+
 ## Monitoring and Maintenance
 
 ### Health Checks
