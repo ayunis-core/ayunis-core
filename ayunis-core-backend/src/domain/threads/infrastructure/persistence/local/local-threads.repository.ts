@@ -304,6 +304,35 @@ export class LocalThreadsRepository extends ThreadsRepository {
     }
   }
 
+  async updateMcpIntegrations(params: {
+    threadId: UUID;
+    userId: UUID;
+    mcpIntegrationIds: UUID[];
+  }): Promise<void> {
+    this.logger.log('updateMcpIntegrations', {
+      threadId: params.threadId,
+      mcpIntegrationIds: params.mcpIntegrationIds,
+    });
+
+    const threadEntity = await this.threadRepository.findOne({
+      where: { id: params.threadId, userId: params.userId },
+      relations: ['mcpIntegrations'],
+    });
+
+    if (!threadEntity) {
+      throw new ThreadNotFoundError(params.threadId, params.userId);
+    }
+
+    threadEntity.mcpIntegrations = params.mcpIntegrationIds.map(
+      (id) =>
+        ({
+          id,
+        }) as import('src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record').McpIntegrationRecord,
+    );
+
+    await this.threadRepository.save(threadEntity);
+  }
+
   async delete(id: UUID, userId: UUID): Promise<void> {
     this.logger.log('delete', { id, userId });
     await this.threadRepository.delete({ id, userId });

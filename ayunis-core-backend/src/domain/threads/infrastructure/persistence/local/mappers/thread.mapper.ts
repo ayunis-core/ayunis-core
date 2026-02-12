@@ -5,6 +5,7 @@ import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/lo
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { ThreadSourceAssignmentMapper } from './thread-source-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 
 @Injectable()
 export class ThreadMapper {
@@ -31,6 +32,9 @@ export class ThreadMapper {
     record.sourceAssignments = thread.sourceAssignments?.map((assignment) =>
       this.sourceAssignmentMapper.toRecord(assignment, thread.id),
     );
+    record.mcpIntegrations = thread.mcpIntegrationIds.map(
+      (id) => ({ id }) as McpIntegrationRecord,
+    );
     record.createdAt = thread.createdAt;
     record.updatedAt = thread.updatedAt;
     return record;
@@ -51,6 +55,9 @@ export class ThreadMapper {
         threadEntity.sourceAssignments?.map((assignment) =>
           this.sourceAssignmentMapper.toDomain(assignment),
         ) || [],
+      mcpIntegrationIds:
+        threadEntity.mcpIntegrations?.map((integration) => integration.id) ??
+        [],
       title: threadEntity.title,
       isAnonymous: threadEntity.isAnonymous,
       messages:
