@@ -78,6 +78,12 @@ export class BaseOpenAIChatStreamInferenceHandler
         delay: 1000,
       });
 
+      // With stream_options.include_usage, OpenAI may send usage in a
+      // separate final chunk after the finish_reason chunk.  We must not
+      // break out of the loop on finish_reason alone — instead we continue
+      // until we have received the usage data (or the stream ends).
+      let receivedFinishReason = false;
+
       for await (const chunk of response) {
         this.logger.debug('chunk', chunk);
         const delta = this.convertChunk(chunk);
@@ -89,7 +95,8 @@ export class BaseOpenAIChatStreamInferenceHandler
         ) {
           subscriber.next(delta);
         }
-        if (delta.finishReason) break;
+        if (delta.finishReason) receivedFinishReason = true;
+        if (receivedFinishReason && delta.usage) break;
       }
 
       subscriber.complete();

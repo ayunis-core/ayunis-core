@@ -98,11 +98,32 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
         delay: 1000,
       });
 
+      // Gemini sends usageMetadata on every streaming chunk:
+      // promptTokenCount is repeated on each chunk, candidatesTokenCount
+      // only appears on the final chunk.  Summing across chunks would
+      // over-count promptTokenCount.  We take only the last values.
+      let lastUsage: { inputTokens?: number; outputTokens?: number } | null =
+        null;
+
       for await (const chunk of stream) {
-        const deltas = this.convertChunk(chunk);
-        for (const delta of deltas) {
+        const { contentChunks, usage } = this.convertChunk(chunk);
+        for (const delta of contentChunks) {
           subscriber.next(delta);
         }
+        if (usage) {
+          lastUsage = usage;
+        }
+      }
+
+      if (lastUsage) {
+        subscriber.next(
+          new StreamInferenceResponseChunk({
+            thinkingDelta: null,
+            textContentDelta: null,
+            toolCallsDelta: [],
+            usage: lastUsage,
+          }),
+        );
       }
 
       subscriber.complete();
@@ -241,68 +262,80 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
     return null;
   };
 
+  /**
+   * Converts a Gemini streaming chunk into content deltas and usage.
+   * Usage is returned separately because Gemini reports cumulative totals
+   * on every chunk — the caller must buffer and emit only the final values.
+   */
   private convertChunk = (
     chunk: GenerateContentResponse,
+  ): {
+    contentChunks: StreamInferenceResponseChunk[];
+    usage: { inputTokens?: number; outputTokens?: number } | null;
+  } => {
+    const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+    const contentChunks = parts.flatMap((part, index) =>
+      this.convertPart(part, index),
+    );
+
+    const usageMetadata = chunk.usageMetadata;
+    const usage = usageMetadata
+      ? {
+          inputTokens: usageMetadata.promptTokenCount,
+          outputTokens: usageMetadata.candidatesTokenCount,
+        }
+      : null;
+
+    return { contentChunks, usage };
+  };
+
+  private convertPart = (
+    part: Part,
+    index: number,
   ): StreamInferenceResponseChunk[] => {
-    const results: StreamInferenceResponseChunk[] = [];
-    const candidate = chunk.candidates?.[0];
-
-    if (candidate?.content?.parts) {
-      for (const [index, part] of candidate.content.parts.entries()) {
-        const thoughtSignature = (part as GeminiPart).thoughtSignature;
-
-        if (part.text) {
-          results.push(
-            new StreamInferenceResponseChunk({
-              thinkingDelta: null,
-              textContentDelta: part.text,
-              textProviderMetadata: thoughtSignature
-                ? { gemini: { thoughtSignature } }
-                : null,
-              toolCallsDelta: [],
-            }),
-          );
-        }
-
-        if (part.functionCall) {
-          results.push(
-            new StreamInferenceResponseChunk({
-              thinkingDelta: null,
-              textContentDelta: null,
-              toolCallsDelta: [
-                new StreamInferenceResponseChunkToolCall({
-                  index,
-                  id: part.functionCall.id ?? part.functionCall.name ?? null,
-                  name: part.functionCall.name ?? null,
-                  argumentsDelta: part.functionCall.args
-                    ? JSON.stringify(part.functionCall.args)
-                    : null,
-                  providerMetadata: thoughtSignature
-                    ? { gemini: { thoughtSignature } }
-                    : null,
-                }),
-              ],
-            }),
-          );
-        }
-      }
+    const chunks: StreamInferenceResponseChunk[] = [];
+    if (part.text) {
+      chunks.push(this.convertTextPart(part));
     }
+    if (part.functionCall) {
+      chunks.push(this.convertFunctionCallPart(part, index));
+    }
+    return chunks;
+  };
 
-    const usage = chunk.usageMetadata;
-    if (usage) {
-      results.push(
-        new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          textContentDelta: null,
-          toolCallsDelta: [],
-          usage: {
-            inputTokens: usage.promptTokenCount,
-            outputTokens: usage.candidatesTokenCount,
-          },
+  private convertTextPart = (part: Part): StreamInferenceResponseChunk => {
+    const providerMetadata = this.extractProviderMetadata(part);
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: part.text ?? null,
+      textProviderMetadata: providerMetadata,
+      toolCallsDelta: [],
+    });
+  };
+
+  private convertFunctionCallPart = (
+    part: Part,
+    index: number,
+  ): StreamInferenceResponseChunk => {
+    const providerMetadata = this.extractProviderMetadata(part);
+    const fc = part.functionCall!;
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: null,
+      toolCallsDelta: [
+        new StreamInferenceResponseChunkToolCall({
+          index,
+          id: fc.id ?? fc.name ?? null,
+          name: fc.name ?? null,
+          argumentsDelta: fc.args ? JSON.stringify(fc.args) : null,
+          providerMetadata,
         }),
-      );
-    }
+      ],
+    });
+  };
 
-    return results;
+  private extractProviderMetadata = (part: Part) => {
+    const sig = (part as GeminiPart).thoughtSignature;
+    return sig ? { gemini: { thoughtSignature: sig } } : null;
   };
 }
