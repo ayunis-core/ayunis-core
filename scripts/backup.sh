@@ -7,7 +7,8 @@
 #
 # Optional environment variables:
 #   BACKUP_DIR           — where to store backups (default: /opt/ayunis/backups)
-#   BACKUP_RETENTION     — days to keep old backups (default: 30)
+#   BACKUP_RETENTION     — days to keep old backups (default: 5)
+#   BACKUP_TIMEOUT       — timeout in seconds for docker commands (default: 3600)
 #   BACKUP_REMOTE        — rsync target for off-site copy (e.g. u123456@u123456.your-storagebox.de:backups/)
 #   COMPOSE_PROJECT_NAME — override if different from directory name
 
@@ -32,6 +33,7 @@ fi
 
 BACKUP_DIR="${BACKUP_DIR:-/opt/ayunis/backups}"
 RETENTION_DAYS="${BACKUP_RETENTION:-5}"
+TIMEOUT="${BACKUP_TIMEOUT:-3600}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Resolve the Docker Compose volume prefix
@@ -52,7 +54,7 @@ echo "[$(date)] Starting backup..."
 # --- Postgres ---
 echo "[$(date)] Dumping Postgres..."
 PG_DUMP="$BACKUP_DIR/postgres_${TIMESTAMP}.dump"
-docker exec ayunis-postgres-prod \
+timeout "$TIMEOUT" docker exec ayunis-postgres-prod \
   pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom \
   > "$PG_DUMP"
 
@@ -63,17 +65,22 @@ if [ ! -s "$PG_DUMP" ]; then
   exit 1
 fi
 # Quick validation — pg_restore can list the TOC
-docker exec -i ayunis-postgres-prod pg_restore --list < "$PG_DUMP" > /dev/null 2>&1 || {
+timeout "$TIMEOUT" docker exec -i ayunis-postgres-prod pg_restore --list < "$PG_DUMP" > /dev/null 2>&1 || {
   echo "[$(date)] ERROR: Postgres dump is corrupted!" >&2
   exit 1
 }
 echo "[$(date)] Postgres dump verified ($(du -h "$PG_DUMP" | cut -f1))"
 
 # --- MinIO (object storage) ---
+MINIO_VOLUME="${COMPOSE_PROJECT_NAME}_minio-data"
 echo "[$(date)] Backing up MinIO data..."
+docker volume inspect "$MINIO_VOLUME" > /dev/null 2>&1 || {
+  echo "[$(date)] ERROR: MinIO volume '$MINIO_VOLUME' not found!" >&2
+  exit 1
+}
 MINIO_TAR="$BACKUP_DIR/minio_${TIMESTAMP}.tar.gz"
-docker run --rm \
-  -v "${COMPOSE_PROJECT_NAME}_minio-data:/data:ro" \
+timeout "$TIMEOUT" docker run --rm \
+  -v "${MINIO_VOLUME}:/data:ro" \
   -v "$BACKUP_DIR":/backup \
   alpine tar czf "/backup/minio_${TIMESTAMP}.tar.gz" -C /data .
 
