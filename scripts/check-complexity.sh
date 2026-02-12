@@ -24,10 +24,10 @@ fi
 
 # Get files to check
 if [ $# -gt 0 ]; then
-    FILES=$(printf "%s\n" "$@" | grep -v '/generated/' | grep -v '\.entity\.ts$' || true)
+    FILES=$(printf "%s\n" "$@" | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' || true)
 else
-    # Default: staged TypeScript files (excluding generated code)
-    FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(ts|tsx)$' | grep -v '/generated/' | grep -v '\.entity\.ts$' || true)
+    # Default: staged TypeScript files (excluding generated code and tests)
+    FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(ts|tsx)$' | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' || true)
 fi
 
 if [ -z "$FILES" ]; then

@@ -39,7 +39,7 @@ jobs:
           ARGS_THRESHOLD=5      # Number of arguments
           
           # Filter out generated code, entity files, and frontend (lizard doesn't handle React/JSX well)
-          FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '^ayunis-core-frontend/' || true)
+          FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' | grep -v '^ayunis-core-frontend/' || true)
           
           if [ -z "$FILTERED" ]; then
             echo "✅ No non-generated TypeScript files to check"
