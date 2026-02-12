@@ -15,8 +15,10 @@ interface SkillsPageProps {
 export default function SkillsPage({ skills }: SkillsPageProps) {
   const { t } = useTranslation('skills');
 
-  const sortedSkills = [...skills].sort((a, b) => a.name.localeCompare(b.name));
+  // Sort skills by name
+  const sortedSkills = skills.sort((a, b) => a.name.localeCompare(b.name));
 
+  // If no skills at all, show full-screen empty state
   if (skills.length === 0) {
     return (
       <AppLayout>

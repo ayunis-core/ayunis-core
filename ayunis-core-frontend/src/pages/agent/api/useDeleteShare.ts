@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSharesControllerDeleteShare,
   getSharesControllerGetSharesQueryKey,
@@ -16,10 +16,10 @@ export function useDeleteShare(agentId: string) {
   const mutation = useSharesControllerDeleteShare({
     mutation: {
       onSuccess: () => {
-        toast.success(t('shares.success.deleted'));
+        showSuccess(t('shares.success.deleted'));
       },
       onError: () => {
-        toast.error(t('shares.error.delete'));
+        showError(t('shares.error.delete'));
       },
       onSettled: () => {
         // Invalidate shares query to refetch

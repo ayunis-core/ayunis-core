@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSuperAdminModelsControllerCreateLanguageModel,
   getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
@@ -18,7 +18,7 @@ export function useCreateLanguageModel(onSuccess?: () => void) {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
         });
-        toast.success(t('models.createSuccess'));
+        showSuccess(t('models.createSuccess'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
@@ -27,14 +27,14 @@ export function useCreateLanguageModel(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MODEL_ALREADY_EXISTS':
-              toast.error(t('models.alreadyExists'));
+              showError(t('models.alreadyExists'));
               break;
             default:
-              toast.error(t('models.createError'));
+              showError(t('models.createError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('models.createError'));
+          showError(t('models.createError'));
         }
       },
       onSettled: async () => {

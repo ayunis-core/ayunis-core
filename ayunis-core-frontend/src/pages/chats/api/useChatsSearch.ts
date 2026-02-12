@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useThreadsControllerDelete,
   getThreadsControllerFindAllQueryKey,
@@ -15,11 +15,11 @@ export function useDeleteChat(onSuccess?: () => void) {
   const mutation = useThreadsControllerDelete({
     mutation: {
       onSuccess: () => {
-        toast.success(t('delete.success'));
+        showSuccess(t('delete.success'));
         onSuccess?.();
       },
       onError: () => {
-        toast.error(t('delete.error'));
+        showError(t('delete.error'));
       },
       onSettled: () => {
         void queryClient.invalidateQueries({

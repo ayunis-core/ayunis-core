@@ -1,33 +1,31 @@
 import {
-  useAgentsControllerAddFileSource,
-  useAgentsControllerGetAgentSources,
-  useAgentsControllerRemoveSource,
-  type AgentResponseDto,
-} from '@/shared/api';
+  useSkillsControllerAddFileSource,
+  useSkillsControllerGetSkillSources,
+  useSkillsControllerRemoveSource,
+} from '@/shared/api/generated/ayunisCoreAPI';
+import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 
-export default function useAgentSources({
-  agent,
+export default function useSkillSources({
+  skill,
 }: {
-  agent: AgentResponseDto;
+  skill: SkillResponseDto;
 }) {
-  const { t } = useTranslation('agent');
+  const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
 
-  // Fetch existing sources
   const { data: sources = [], isLoading: isLoadingSources } =
-    useAgentsControllerGetAgentSources(agent.id);
+    useSkillsControllerGetSkillSources(skill.id);
 
-  // Add file source mutation
-  const addFileSourceMutation = useAgentsControllerAddFileSource({
+  const addFileSourceMutation = useSkillsControllerAddFileSource({
     mutation: {
       retry: 0,
       onSuccess: () => {
         void queryClient.invalidateQueries({
-          queryKey: [`/agents/${agent.id}/sources`],
+          queryKey: [`/skills/${skill.id}/sources`],
         });
         showSuccess(t('sources.addedSuccessfully'));
       },
@@ -64,12 +62,11 @@ export default function useAgentSources({
     },
   });
 
-  // Remove source mutation
-  const removeSourceMutation = useAgentsControllerRemoveSource({
+  const removeSourceMutation = useSkillsControllerRemoveSource({
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({
-          queryKey: [`/agents/${agent.id}/sources`],
+          queryKey: [`/skills/${skill.id}/sources`],
         });
         showSuccess(t('sources.removedSuccessfully'));
       },
@@ -81,8 +78,8 @@ export default function useAgentSources({
 
   function removeFileSource(sourceId: string) {
     removeSourceMutation.mutate({
-      id: agent.id,
-      sourceAssignmentId: sourceId,
+      id: skill.id,
+      sourceId,
     });
   }
 

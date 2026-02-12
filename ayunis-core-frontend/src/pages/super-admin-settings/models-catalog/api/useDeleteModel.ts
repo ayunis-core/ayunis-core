@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
   useSuperAdminModelsControllerDeleteCatalogModel,
@@ -18,7 +18,7 @@ export function useDeleteModel() {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
         });
-        toast.success(t('models.deleteSuccess'));
+        showSuccess(t('models.deleteSuccess'));
       },
       onError: (error: unknown) => {
         console.error('Delete model failed:', error);
@@ -26,14 +26,14 @@ export function useDeleteModel() {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MODEL_NOT_FOUND':
-              toast.error(t('models.notFound'));
+              showError(t('models.notFound'));
               break;
             default:
-              toast.error(t('models.deleteError'));
+              showError(t('models.deleteError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('models.deleteError'));
+          showError(t('models.deleteError'));
         }
       },
       onSettled: async () => {

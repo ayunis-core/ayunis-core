@@ -1,14 +1,18 @@
 {
   "page": {
-    "title": "Skills"
+    "title": "My Skills"
   },
   "emptyState": {
     "title": "No skills yet",
-    "description": "Get started by creating your first skill. Skills are modular knowledge bundles that the AI can activate on-demand during conversations."
+    "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations."
+  },
+  "badge": {
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "card": {
-    "active": "Active",
-    "inactive": "Inactive",
+    "activeLabel": "Active",
+    "inactiveLabel": "Inactive",
     "confirmDelete": {
       "title": "Delete Skill",
       "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
@@ -20,14 +24,14 @@
     "buttonText": "Add Skill",
     "buttonTextFirst": "Create your first skill",
     "title": "Add New Skill",
-    "description": "Create a new skill with knowledge and integrations that the AI can activate during conversations.",
+    "description": "Create a new skill with specific knowledge and capabilities. Fill in the details below.",
     "form": {
       "nameLabel": "Name",
       "namePlaceholder": "Enter skill name...",
       "shortDescriptionLabel": "Short Description",
-      "shortDescriptionPlaceholder": "Brief description for the AI to decide when to activate this skill...",
-      "instructionsLabel": "Instructions",
-      "instructionsPlaceholder": "Detailed instructions injected when the skill is activated..."
+      "shortDescriptionPlaceholder": "Brief description of what this skill does...",
+      "instructionsLabel": "Detailed Instructions",
+      "instructionsPlaceholder": "Enter detailed instructions for this skill..."
     },
     "buttons": {
       "cancel": "Cancel",
@@ -39,12 +43,14 @@
     "success": "Skill created successfully!",
     "error": "Failed to create skill. Please try again."
   },
+  "toggleActive": {
+    "success": "Skill status updated successfully!",
+    "error": "Failed to update skill status. Please try again.",
+    "notFound": "Skill not found. It may have been deleted."
+  },
   "delete": {
     "success": "Skill deleted successfully!",
     "error": "Failed to delete skill. Please try again.",
     "notFound": "Skill not found. It may have been deleted."
-  },
-  "toggleActive": {
-    "error": "Failed to toggle skill status. Please try again."
   }
 }

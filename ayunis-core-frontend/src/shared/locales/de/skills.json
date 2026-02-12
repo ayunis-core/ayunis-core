@@ -1,50 +1,56 @@
 {
   "page": {
-    "title": "Fähigkeiten"
+    "title": "Meine Skills"
   },
   "emptyState": {
-    "title": "Noch keine Fähigkeiten",
-    "description": "Beginnen Sie mit der Erstellung Ihrer ersten Fähigkeit. Fähigkeiten sind modulare Wissenspakete, die die KI bei Bedarf während Gesprächen aktivieren kann."
+    "title": "Noch keine Skills",
+    "description": "Erstellen Sie Ihren ersten Skill. Skills sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
+  },
+  "badge": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
   },
   "card": {
-    "active": "Aktiv",
-    "inactive": "Inaktiv",
+    "activeLabel": "Aktiv",
+    "inactiveLabel": "Inaktiv",
     "confirmDelete": {
-      "title": "Fähigkeit löschen",
+      "title": "Skill löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
     }
   },
   "createDialog": {
-    "buttonText": "Fähigkeit hinzufügen",
-    "buttonTextFirst": "Erstellen Sie Ihre erste Fähigkeit",
-    "title": "Neue Fähigkeit hinzufügen",
-    "description": "Erstellen Sie eine neue Fähigkeit mit Wissen und Integrationen, die die KI während Gesprächen aktivieren kann.",
+    "buttonText": "Skill hinzufügen",
+    "buttonTextFirst": "Erstellen Sie Ihren ersten Skill",
+    "title": "Neuen Skill hinzufügen",
+    "description": "Erstellen Sie einen neuen Skill mit spezifischem Wissen und Funktionen. Füllen Sie die Details unten aus.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "Name der Fähigkeit eingeben...",
+      "namePlaceholder": "Skill-Name eingeben...",
       "shortDescriptionLabel": "Kurzbeschreibung",
-      "shortDescriptionPlaceholder": "Kurze Beschreibung, damit die KI entscheiden kann, wann diese Fähigkeit aktiviert werden soll...",
-      "instructionsLabel": "Anweisungen",
-      "instructionsPlaceholder": "Detaillierte Anweisungen, die eingefügt werden, wenn die Fähigkeit aktiviert wird..."
+      "shortDescriptionPlaceholder": "Kurze Beschreibung dessen, was dieser Skill macht...",
+      "instructionsLabel": "Detaillierte Anweisungen",
+      "instructionsPlaceholder": "Detaillierte Anweisungen für diesen Skill eingeben..."
     },
     "buttons": {
       "cancel": "Abbrechen",
-      "create": "Fähigkeit erstellen",
+      "create": "Skill erstellen",
       "creating": "Wird erstellt..."
     }
   },
   "create": {
-    "success": "Fähigkeit erfolgreich erstellt!",
-    "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
-  },
-  "delete": {
-    "success": "Fähigkeit erfolgreich gelöscht!",
-    "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
-    "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
+    "success": "Skill erfolgreich erstellt!",
+    "error": "Skill konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },
   "toggleActive": {
-    "error": "Status der Fähigkeit konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+    "success": "Skill-Status erfolgreich aktualisiert!",
+    "error": "Skill-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Skill nicht gefunden. Er wurde möglicherweise gelöscht."
+  },
+  "delete": {
+    "success": "Skill erfolgreich gelöscht!",
+    "error": "Skill konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Skill nicht gefunden. Er wurde möglicherweise gelöscht."
   }
 }

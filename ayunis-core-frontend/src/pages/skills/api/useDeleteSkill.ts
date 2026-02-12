@@ -40,6 +40,7 @@ export function useDeleteSkill() {
             showError(t('delete.error'));
         }
       } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
         showError(t('delete.error'));
       }
     },

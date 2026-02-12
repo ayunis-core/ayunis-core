@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSuperAdminModelsControllerUpdateEmbeddingModel,
   getSuperAdminModelsControllerGetAllCatalogModelsQueryKey,
@@ -18,7 +18,7 @@ export function useUpdateEmbeddingModel(onSuccess?: () => void) {
         await queryClient.invalidateQueries({
           queryKey: getSuperAdminModelsControllerGetAllCatalogModelsQueryKey(),
         });
-        toast.success(t('models.updateSuccess'));
+        showSuccess(t('models.updateSuccess'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
@@ -27,14 +27,14 @@ export function useUpdateEmbeddingModel(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MODEL_NOT_FOUND':
-              toast.error(t('models.notFound'));
+              showError(t('models.notFound'));
               break;
             default:
-              toast.error(t('models.updateError'));
+              showError(t('models.updateError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('models.updateError'));
+          showError(t('models.updateError'));
         }
       },
       onSettled: async () => {

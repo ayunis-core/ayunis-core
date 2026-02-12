@@ -37,11 +37,16 @@ export function useCreateSkill() {
     mutationFn: async (data: CreateSkillData) => {
       return await skillsControllerCreate(data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindAllQueryKey(),
       });
-      void router.navigate({ to: '/skills' });
+      if (data && data.id) {
+        void router.navigate({
+          to: '/skills/$id',
+          params: { id: data.id },
+        });
+      }
     },
     onError: (error) => {
       console.error('Create skill failed:', error);
@@ -52,6 +57,7 @@ export function useCreateSkill() {
             showError(t('create.error'));
         }
       } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
         showError(t('create.error'));
       }
     },

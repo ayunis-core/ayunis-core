@@ -20,7 +20,7 @@ import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { useCreateSkill } from '../api/useCreateSkill';
+import { type CreateSkillData, useCreateSkill } from '../api/useCreateSkill';
 import { useTranslation } from 'react-i18next';
 
 interface CreateSkillDialogProps {
@@ -36,12 +36,15 @@ export default function CreateSkillDialog({
 }: CreateSkillDialogProps) {
   const { t } = useTranslation('skills');
   const [isOpen, setIsOpen] = useState(false);
-  const { form, onSubmit, resetForm, isLoading } = useCreateSkill();
+  const {
+    form,
+    onSubmit: originalOnSubmit,
+    resetForm,
+    isLoading,
+  } = useCreateSkill();
 
-  const handleSubmit = (data: Parameters<typeof onSubmit>[0]) => {
-    onSubmit(data);
-    resetForm();
-    setIsOpen(false);
+  const handleSubmit = (data: CreateSkillData) => {
+    originalOnSubmit(data);
   };
 
   const handleCancel = () => {
@@ -70,43 +73,44 @@ export default function CreateSkillDialog({
             onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
             className="space-y-6"
           >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('createDialog.form.nameLabel')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t('createDialog.form.namePlaceholder')}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="shortDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('createDialog.form.shortDescriptionLabel')}
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t(
-                        'createDialog.form.shortDescriptionPlaceholder',
-                      )}
-                      className="min-h-[80px] max-h-[120px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('createDialog.form.nameLabel')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t('createDialog.form.namePlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="shortDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t('createDialog.form.shortDescriptionLabel')}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t(
+                          'createDialog.form.shortDescriptionPlaceholder',
+                        )}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="instructions"

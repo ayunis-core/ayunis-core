@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { showError } from '@/shared/lib/toast';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   skillsControllerToggleActive,
   getSkillsControllerFindAllQueryKey,
@@ -26,16 +26,21 @@ export function useToggleSkillActive() {
         queryKey: getSkillsControllerFindAllQueryKey(),
       });
       void router.invalidate();
+      showSuccess(t('toggleActive.success'));
     },
     onError: (error) => {
       console.error('Toggle skill active failed:', error);
       try {
         const { code } = extractErrorData(error);
         switch (code) {
+          case 'SKILL_NOT_FOUND':
+            showError(t('toggleActive.notFound'));
+            break;
           default:
             showError(t('toggleActive.error'));
         }
       } catch {
+        // Non-AxiosError (network failure, request cancellation, etc.)
         showError(t('toggleActive.error'));
       }
     },

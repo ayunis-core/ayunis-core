@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   agentsControllerUpdate,
   getAgentsControllerFindAllQueryKey,
@@ -69,7 +69,7 @@ export function useUpdateAgent({
         queryKey: getAgentsControllerFindOneQueryKey(agentId),
       });
       void router.invalidate();
-      toast.success(t('update.success'));
+      showSuccess(t('update.success'));
       onSuccessCallback?.();
     },
     onError: (error) => {
@@ -78,14 +78,14 @@ export function useUpdateAgent({
         const { code } = extractErrorData(error);
         switch (code) {
           case 'AGENT_NOT_FOUND':
-            toast.error(t('update.notFound'));
+            showError(t('update.notFound'));
             break;
           default:
-            toast.error(t('update.error'));
+            showError(t('update.error'));
         }
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)
-        toast.error(t('update.error'));
+        showError(t('update.error'));
       }
     },
   });

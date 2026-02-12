@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { showError } from '@/shared/lib/toast';
 import { separateFilesByType } from '../utils/fileHandlers';
 
 interface UseFileDropOptions {
@@ -101,7 +101,7 @@ export function useFileDrop({
 
       // Show toast if any files were skipped
       if (hasSkippedFiles) {
-        toast.error(t('chatInput.invalidDroppedFileType'));
+        showError(t('chatInput.invalidDroppedFileType'));
       }
     };
 
