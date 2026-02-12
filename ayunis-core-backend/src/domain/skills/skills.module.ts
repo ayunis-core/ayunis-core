@@ -22,6 +22,7 @@ import { ListSkillSourcesUseCase } from './application/use-cases/list-skill-sour
 import { AssignMcpIntegrationToSkillUseCase } from './application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
 import { UnassignMcpIntegrationFromSkillUseCase } from './application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
 import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
+import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
@@ -54,6 +55,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     AssignMcpIntegrationToSkillUseCase,
     UnassignMcpIntegrationFromSkillUseCase,
     ListSkillMcpIntegrationsUseCase,
+    FindSkillByNameUseCase,
 
     // Presenters
     SkillDtoMapper,
@@ -64,6 +66,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,
     AddSourceToSkillUseCase,
+    FindSkillByNameUseCase,
   ],
 })
 export class SkillsModule {}

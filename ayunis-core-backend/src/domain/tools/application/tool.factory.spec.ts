@@ -92,7 +92,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.PIE_CHART);
       expect(types).toContain(ToolType.PRODUCT_KNOWLEDGE);
 
-      expect(types.length).toBe(15);
+      expect(types).toContain(ToolType.ACTIVATE_SKILL);
+
+      expect(types.length).toBe(16);
     });
   });
 });

@@ -20,6 +20,8 @@ import { McpIntegrationTool } from '../domain/tools/mcp-integration-tool.entity'
 import { McpIntegrationResource } from '../domain/tools/mcp-integration-resource.entity';
 import { ProductKnowledgeToolHandler } from './handlers/product-knowledge-tool.handler';
 import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
+import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler';
+import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
 
 @Injectable()
 export class ToolHandlerRegistry {
@@ -35,6 +37,7 @@ export class ToolHandlerRegistry {
     private readonly mcpIntegrationToolHandler: McpIntegrationToolHandler,
     private readonly mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
     private readonly productKnowledgeToolHandler: ProductKnowledgeToolHandler,
+    private readonly activateSkillToolHandler: ActivateSkillToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -65,6 +68,9 @@ export class ToolHandlerRegistry {
     }
     if (tool instanceof ProductKnowledgeTool) {
       return this.productKnowledgeToolHandler;
+    }
+    if (tool instanceof ActivateSkillTool) {
+      return this.activateSkillToolHandler;
     }
     throw new ToolHandlerNotFoundError({
       toolType: tool.name,
