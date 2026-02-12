@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import CreateOrgDialog from './CreateOrgDialog';
 import OrgsTable from './OrgsTable';
@@ -18,12 +19,16 @@ export default function SuperAdminOrgsPage({
   search,
   currentPage,
 }: SuperAdminOrgsPageProps) {
+  const { t } = useTranslation('super-admin-settings-layout');
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <SuperAdminSettingsLayout action={<CreateOrgDialog />}>
+    <SuperAdminSettingsLayout
+      pageTitle={t('layout.orgs')}
+      action={<CreateOrgDialog />}
+    >
       <div className="space-y-4">
         <OrgsTable orgs={orgs} searchSlot={<OrgsSearch search={search} />} />
         <OrgsPagination

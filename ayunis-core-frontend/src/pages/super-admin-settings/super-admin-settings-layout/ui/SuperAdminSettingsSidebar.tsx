@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2, Brain } from 'lucide-react';
+import { ArrowLeft, Building2, Brain, BarChart3 } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -55,6 +55,14 @@ export function SuperAdminSettingsSidebar() {
                 <Link to="/super-admin-settings/models-catalog">
                   <Brain />
                   <span>{t('layout.modelsCatalog')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to="/super-admin-settings/usage">
+                  <BarChart3 />
+                  <span>{t('layout.usage')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

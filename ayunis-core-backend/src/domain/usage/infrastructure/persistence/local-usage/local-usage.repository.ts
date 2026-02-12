@@ -23,6 +23,9 @@ import { getProviderStats } from './queries/get-provider-stats.db-query';
 import { getModelStats } from './queries/get-model-stats.db-query';
 import { getTopModels } from './queries/get-top-models.db-query';
 import { getProviderTimeSeries as queryProviderTimeSeries } from './queries/get-provider-time-series.db-query';
+import { getGlobalProviderStats } from './queries/get-global-provider-stats.db-query';
+import { getGlobalProviderTimeSeries } from './queries/get-global-provider-time-series.db-query';
+import { getGlobalModelStats } from './queries/get-global-model-stats.db-query';
 import { getUserUsageRows } from './queries/get-user-usage-rows.db-query';
 import { countUsersForUserUsage } from './queries/count-users-for-user-usage.db-query';
 import { findUsageRecordsByOrganization } from './queries/find-usage-records-by-organization.db-query';
@@ -32,6 +35,8 @@ import { getUsageAggregateStats } from './queries/get-usage-aggregate-stats.db-q
 import { countActiveUsersSince } from './queries/count-active-users-since.db-query';
 import { countUsagesInRange } from './queries/count-usages-in-range.db-query';
 import { UsageQueryMapper } from './mappers/usage-query.mapper';
+import { GetGlobalProviderUsageQuery } from '../../../application/use-cases/get-global-provider-usage/get-global-provider-usage.query';
+import { GetGlobalModelDistributionQuery } from '../../../application/use-cases/get-global-model-distribution/get-global-model-distribution.query';
 
 @Injectable()
 export class LocalUsageRepository extends UsageRepository {
@@ -267,6 +272,55 @@ export class LocalUsageRepository extends UsageRepository {
       startDate,
       endDate,
     );
+  }
+
+  async getGlobalProviderUsage(
+    query: GetGlobalProviderUsageQuery,
+  ): Promise<ProviderUsage[]> {
+    const providerStats = await getGlobalProviderStats(
+      this.usageRepository,
+      query.startDate,
+      query.endDate,
+      query.provider,
+      query.modelId,
+    );
+
+    const totalTokens = providerStats.reduce(
+      (sum, stat) => sum + parseInt(stat.tokens),
+      0,
+    );
+
+    const results: ProviderUsage[] = [];
+    for (const stat of providerStats) {
+      const timeSeriesRows = query.includeTimeSeriesData
+        ? await getGlobalProviderTimeSeries(
+            this.usageRepository,
+            String(stat.provider),
+            query.startDate,
+            query.endDate,
+            query.modelId,
+          )
+        : [];
+      const timeSeries =
+        this.usageQueryMapper.mapTimeSeriesRows(timeSeriesRows);
+      results.push(
+        this.usageQueryMapper.mapProviderRow(stat, totalTokens, timeSeries),
+      );
+    }
+    return results.sort((a, b) => b.tokens - a.tokens);
+  }
+
+  async getGlobalModelDistribution(
+    query: GetGlobalModelDistributionQuery,
+  ): Promise<ModelDistribution[]> {
+    const modelStats = await getGlobalModelStats(
+      this.usageRepository,
+      query.startDate,
+      query.endDate,
+      query.modelId,
+    );
+
+    return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
   private getActiveThresholdDate(): Date {

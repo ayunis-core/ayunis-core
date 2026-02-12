@@ -191,7 +191,8 @@
     "users": "Benutzer",
     "subscriptions": "Abonnement",
     "trials": "Trial",
-    "models": "Modelle"
+    "models": "Modelle",
+    "usage": "Nutzung"
   },
   "trial": {
     "title": "Trial-Informationen",

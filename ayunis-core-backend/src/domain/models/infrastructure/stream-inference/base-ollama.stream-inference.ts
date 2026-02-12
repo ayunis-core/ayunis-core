@@ -56,32 +56,11 @@ export class BaseOllamaStreamInferenceHandler
     subscriber: Subscriber<StreamInferenceResponseChunk>,
   ): Promise<void> => {
     try {
-      // Reset thinking parser for new stream
       this.thinkingParser.reset();
-
-      const { messages, tools, orgId } = input;
-      const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
-        ...tool,
-        function: { ...tool.function, strict: true },
-      }));
-      const ollamaMessages = await this.convertMessages(messages, orgId);
-      const systemPrompt = input.systemPrompt
-        ? this.convertSystemPrompt(input.systemPrompt)
-        : undefined;
-      const completionOptions: ChatRequest & { stream: true } = {
-        model: input.model.name,
-        messages: systemPrompt
-          ? [systemPrompt, ...ollamaMessages]
-          : ollamaMessages,
-        tools: ollamaTools.length > 0 ? ollamaTools : undefined,
-        stream: true,
-        options: {
-          num_ctx: 30000,
-        },
-      };
+      const completionOptions = await this.buildCompletionOptions(input);
       this.logger.debug('completionOptions', completionOptions);
-      const completionFn = () => this.client.chat(completionOptions);
 
+      const completionFn = () => this.client.chat(completionOptions);
       const response = await retryWithBackoff({
         fn: completionFn,
         maxRetries: 3,
@@ -90,13 +69,12 @@ export class BaseOllamaStreamInferenceHandler
 
       for await (const chunk of response) {
         const delta = this.convertChunk(chunk);
-        if (
+        const hasContent =
           delta.textContentDelta ||
           delta.thinkingDelta ||
-          delta.toolCallsDelta.length > 0
-        ) {
-          subscriber.next(delta);
-        }
+          delta.toolCallsDelta.length > 0 ||
+          delta.usage;
+        if (hasContent) subscriber.next(delta);
         if (delta.finishReason) break;
       }
 
@@ -104,6 +82,30 @@ export class BaseOllamaStreamInferenceHandler
     } catch (error) {
       subscriber.error(error);
     }
+  };
+
+  private buildCompletionOptions = async (
+    input: StreamInferenceInput,
+  ): Promise<ChatRequest & { stream: true }> => {
+    const { messages, tools, orgId } = input;
+    const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
+      ...tool,
+      function: { ...tool.function, strict: true },
+    }));
+    const ollamaMessages = await this.convertMessages(messages, orgId);
+    const systemPrompt = input.systemPrompt
+      ? this.convertSystemPrompt(input.systemPrompt)
+      : undefined;
+
+    return {
+      model: input.model.name,
+      messages: systemPrompt
+        ? [systemPrompt, ...ollamaMessages]
+        : ollamaMessages,
+      tools: ollamaTools.length > 0 ? ollamaTools : undefined,
+      stream: true as const,
+      options: { num_ctx: 30000 },
+    };
   };
 
   private convertTool = (tool: Tool): OllamaTool => {
@@ -139,152 +141,142 @@ export class BaseOllamaStreamInferenceHandler
     message: Message,
     orgId: string,
   ): Promise<OllamaMessage[]> => {
-    const convertedMessages: OllamaMessage[] = [];
-    // User Message
     if (message.role === MessageRole.USER) {
-      const textParts: string[] = [];
-      const images: string[] = [];
+      return this.convertUserMessage(message, orgId);
+    }
+    if (message.role === MessageRole.ASSISTANT) {
+      return [this.convertAssistantMessage(message)];
+    }
+    if (message.role === MessageRole.SYSTEM) {
+      return this.convertSystemMessage(message);
+    }
+    if (message.role === MessageRole.TOOL) {
+      return this.convertToolMessage(message);
+    }
+    return [];
+  };
 
-      for (const content of message.content) {
-        // Text Message Content
-        if (content instanceof TextMessageContent) {
-          textParts.push(content.text);
-        }
-        // Image Message Content
-        if (content instanceof ImageMessageContent) {
-          if (!this.imageContentService) {
-            throw new InferenceFailedError(
-              'Image converter not configured for image support',
-              {
-                source: 'ollama',
-              },
-            );
-          }
-          const imageData = await this.convertImageContent(content, {
-            orgId,
-            threadId: message.threadId,
-            messageId: message.id,
-          });
-          images.push(imageData);
-        }
+  private convertUserMessage = async (
+    message: Message,
+    orgId: string,
+  ): Promise<OllamaMessage[]> => {
+    const textParts: string[] = [];
+    const images: string[] = [];
+
+    for (const content of message.content) {
+      if (content instanceof TextMessageContent) {
+        textParts.push(content.text);
       }
+      if (content instanceof ImageMessageContent) {
+        if (!this.imageContentService) {
+          throw new InferenceFailedError(
+            'Image converter not configured for image support',
+            { source: 'ollama' },
+          );
+        }
+        const imageData = await this.convertImageContent(content, {
+          orgId,
+          threadId: message.threadId,
+          messageId: message.id,
+        });
+        images.push(imageData);
+      }
+    }
 
-      // Combine text and images
-      if (textParts.length > 0 || images.length > 0) {
-        const combinedContent = textParts.join('\n');
-        convertedMessages.push({
-          role: 'user' as const,
-          content: combinedContent || '',
-          images: images.length > 0 ? images : undefined,
+    if (textParts.length === 0 && images.length === 0) return [];
+    return [
+      {
+        role: 'user' as const,
+        content: textParts.join('\n') || '',
+        images: images.length > 0 ? images : undefined,
+      },
+    ];
+  };
+
+  private convertAssistantMessage = (message: Message): OllamaMessage => {
+    let text: string | undefined;
+    let thinking: string | undefined;
+    const toolCalls: OllamaToolCall[] = [];
+
+    for (const content of message.content) {
+      if (content instanceof TextMessageContent) text = content.text;
+      if (content instanceof ThinkingMessageContent)
+        thinking = content.thinking;
+      if (content instanceof ToolUseMessageContent) {
+        toolCalls.push({
+          function: { name: content.name, arguments: content.params },
         });
       }
     }
 
-    if (message.role === MessageRole.ASSISTANT) {
-      let assistantTextMessageContent: string | undefined = undefined;
-      let assistantToolUseMessageContent: OllamaToolCall[] | undefined =
-        undefined;
-      let assistantThinkingMessageContent: string | undefined = undefined;
-      for (const content of message.content) {
-        // Text Message Content
-        if (content instanceof TextMessageContent) {
-          assistantTextMessageContent = content.text;
-        }
-        // Thinking Message Content
-        if (content instanceof ThinkingMessageContent) {
-          assistantThinkingMessageContent = content.thinking;
-        }
-        // Tool Use Message Content
-        if (content instanceof ToolUseMessageContent) {
-          if (!assistantToolUseMessageContent) {
-            assistantToolUseMessageContent = [
-              {
-                function: {
-                  name: content.name,
-                  arguments: content.params,
-                },
-              },
-            ];
-          } else {
-            assistantToolUseMessageContent.push({
-              function: {
-                name: content.name,
-                arguments: content.params,
-              },
-            });
-          }
-        }
-      }
-      convertedMessages.push({
-        role: 'assistant' as const,
-        content: assistantTextMessageContent ?? '',
-        thinking: assistantThinkingMessageContent,
-        tool_calls: assistantToolUseMessageContent,
-      });
-    }
-
-    if (message.role === MessageRole.SYSTEM) {
-      for (const content of message.content) {
-        if (content instanceof TextMessageContent) {
-          convertedMessages.push({
-            role: 'system' as const,
-            content: content.text,
-          });
-        }
-      }
-    }
-
-    if (message.role === MessageRole.TOOL) {
-      for (const content of message.content) {
-        if (content instanceof ToolResultMessageContent) {
-          convertedMessages.push({
-            role: 'tool' as const,
-            content: content.result,
-          });
-        }
-      }
-    }
-
-    return convertedMessages;
+    return {
+      role: 'assistant' as const,
+      content: text ?? '',
+      thinking,
+      tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+    };
   };
+
+  private convertSystemMessage = (message: Message): OllamaMessage[] =>
+    message.content
+      .filter((c): c is TextMessageContent => c instanceof TextMessageContent)
+      .map((c) => ({ role: 'system' as const, content: c.text }));
+
+  private convertToolMessage = (message: Message): OllamaMessage[] =>
+    message.content
+      .filter(
+        (c): c is ToolResultMessageContent =>
+          c instanceof ToolResultMessageContent,
+      )
+      .map((c) => ({ role: 'tool' as const, content: c.result }));
 
   private convertChunk = (
     chunk: ChatResponse,
   ): StreamInferenceResponseChunk => {
     const delta = chunk.message;
-    const textContent = delta.content ?? null;
+    const { thinkingDelta, textContentDelta } = this.parseChunkContent(delta);
     const thinkingContent = delta.thinking ?? null;
-    // Parse thinking content from text
-    const { thinkingDelta, textContentDelta } = textContent
-      ? this.thinkingParser.parse(textContent)
-      : { thinkingDelta: null, textContentDelta: null };
-    const finishReason = chunk.done ? chunk.done_reason : null;
-
-    const usage =
-      chunk.done &&
-      (chunk.prompt_eval_count !== undefined || chunk.eval_count !== undefined)
-        ? {
-            inputTokens: chunk.prompt_eval_count,
-            outputTokens: chunk.eval_count,
-          }
-        : undefined;
 
     return new StreamInferenceResponseChunk({
       thinkingDelta: thinkingContent ?? thinkingDelta,
       textContentDelta,
-      toolCallsDelta:
-        delta.tool_calls?.map(
-          (toolCall) =>
-            new StreamInferenceResponseChunkToolCall({
-              index: 0,
-              id: randomUUID(),
-              name: toolCall.function?.name,
-              argumentsDelta: JSON.stringify(toolCall.function?.arguments),
-            }),
-        ) ?? [],
-      finishReason,
-      usage,
+      toolCallsDelta: this.convertToolCalls(delta.tool_calls),
+      finishReason: chunk.done ? chunk.done_reason : null,
+      usage: this.extractChunkUsage(chunk),
     });
+  };
+
+  private parseChunkContent = (
+    delta: ChatResponse['message'],
+  ): { thinkingDelta: string | null; textContentDelta: string | null } => {
+    const textContent = delta.content ?? null;
+    return textContent
+      ? this.thinkingParser.parse(textContent)
+      : { thinkingDelta: null, textContentDelta: null };
+  };
+
+  private convertToolCalls = (
+    toolCalls: OllamaToolCall[] | undefined,
+  ): StreamInferenceResponseChunkToolCall[] =>
+    toolCalls?.map(
+      (toolCall) =>
+        new StreamInferenceResponseChunkToolCall({
+          index: 0,
+          id: randomUUID(),
+          name: toolCall.function?.name,
+          argumentsDelta: JSON.stringify(toolCall.function?.arguments),
+        }),
+    ) ?? [];
+
+  private extractChunkUsage = (chunk: ChatResponse) => {
+    if (!chunk.done) return undefined;
+    const hasUsage =
+      chunk.prompt_eval_count !== undefined || chunk.eval_count !== undefined;
+    if (!hasUsage) return undefined;
+    return {
+      inputTokens: chunk.prompt_eval_count,
+      outputTokens: chunk.eval_count,
+    };
   };
 
   private async convertImageContent(

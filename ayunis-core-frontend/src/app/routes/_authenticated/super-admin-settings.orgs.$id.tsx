@@ -15,7 +15,9 @@ import { z } from 'zod';
 const USERS_PER_PAGE = 25;
 
 const searchSchema = z.object({
-  tab: z.enum(['org', 'users', 'subscriptions', 'models', 'trials']).optional(),
+  tab: z
+    .enum(['org', 'users', 'subscriptions', 'models', 'trials', 'usage'])
+    .optional(),
   usersSearch: z.string().optional(),
   usersPage: z.number().min(1).optional().catch(1),
 });

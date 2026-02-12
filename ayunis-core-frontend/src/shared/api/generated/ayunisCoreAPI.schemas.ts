@@ -2969,6 +2969,76 @@ export const UsageControllerGetUserUsageSortOrder = {
   desc: 'desc',
 } as const;
 
+export type SuperAdminUsageControllerGetUsageStatsParams = {
+startDate?: string;
+endDate?: string;
+};
+
+export type SuperAdminUsageControllerGetModelDistributionParams = {
+startDate?: string;
+endDate?: string;
+maxModels?: number;
+modelId?: string;
+};
+
+export type SuperAdminUsageDataControllerGetProviderUsageParams = {
+startDate?: string;
+endDate?: string;
+includeTimeSeries?: boolean;
+provider?: string;
+modelId?: string;
+};
+
+export type SuperAdminUsageDataControllerGetProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+provider?: string;
+modelId?: string;
+};
+
+export type SuperAdminUsageDataControllerGetUserUsageParams = {
+startDate?: string;
+endDate?: string;
+limit?: number;
+offset?: number;
+search?: string;
+sortBy?: SuperAdminUsageDataControllerGetUserUsageSortBy;
+sortOrder?: SuperAdminUsageDataControllerGetUserUsageSortOrder;
+};
+
+export type SuperAdminUsageDataControllerGetUserUsageSortBy = typeof SuperAdminUsageDataControllerGetUserUsageSortBy[keyof typeof SuperAdminUsageDataControllerGetUserUsageSortBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUsageDataControllerGetUserUsageSortBy = {
+  tokens: 'tokens',
+  requests: 'requests',
+  lastActivity: 'lastActivity',
+  userName: 'userName',
+} as const;
+
+export type SuperAdminUsageDataControllerGetUserUsageSortOrder = typeof SuperAdminUsageDataControllerGetUserUsageSortOrder[keyof typeof SuperAdminUsageDataControllerGetUserUsageSortOrder];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUsageDataControllerGetUserUsageSortOrder = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
+
+export type SuperAdminGlobalUsageControllerGetGlobalProviderUsageChartParams = {
+startDate?: string;
+endDate?: string;
+provider?: string;
+modelId?: string;
+};
+
+export type SuperAdminGlobalUsageControllerGetGlobalModelDistributionParams = {
+startDate?: string;
+endDate?: string;
+modelId?: string;
+};
+
 export type TranscriptionsControllerTranscribeBody = {
   /** The audio file to transcribe */
   file: Blob;

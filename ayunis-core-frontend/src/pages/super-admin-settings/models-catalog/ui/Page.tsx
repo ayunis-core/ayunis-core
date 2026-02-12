@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
 import ModelsCatalogList from './ModelsCatalogList';
 import { ModelsCatalogTabs } from './ModelsCatalogTabs';
@@ -26,6 +27,7 @@ export default function ModelsCatalogPage({
 }: {
   models: SuperAdminModelsControllerGetAllCatalogModels200Item[];
 }) {
+  const { t } = useTranslation('super-admin-settings-layout');
   const [createLanguageDialogOpen, setCreateLanguageDialogOpen] =
     useState(false);
   const [createEmbeddingDialogOpen, setCreateEmbeddingDialogOpen] =
@@ -57,6 +59,7 @@ export default function ModelsCatalogPage({
 
   return (
     <SuperAdminSettingsLayout
+      pageTitle={t('layout.modelsCatalog')}
       action={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
