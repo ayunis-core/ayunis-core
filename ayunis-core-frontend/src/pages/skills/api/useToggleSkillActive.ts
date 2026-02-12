@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { showError } from '@/shared/lib/toast';
 import {
   skillsControllerToggleActive,
   getSkillsControllerFindAllQueryKey,
@@ -33,10 +33,10 @@ export function useToggleSkillActive() {
         const { code } = extractErrorData(error);
         switch (code) {
           default:
-            toast.error(t('toggleActive.error'));
+            showError(t('toggleActive.error'));
         }
       } catch {
-        toast.error(t('toggleActive.error'));
+        showError(t('toggleActive.error'));
       }
     },
   });

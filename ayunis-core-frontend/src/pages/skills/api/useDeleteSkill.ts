@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   skillsControllerDelete,
   getSkillsControllerFindAllQueryKey,
@@ -26,7 +26,7 @@ export function useDeleteSkill() {
         queryKey: getSkillsControllerFindAllQueryKey(),
       });
       void router.invalidate();
-      toast.success(t('delete.success'));
+      showSuccess(t('delete.success'));
     },
     onError: (error) => {
       console.error('Delete skill failed:', error);
@@ -34,13 +34,13 @@ export function useDeleteSkill() {
         const { code } = extractErrorData(error);
         switch (code) {
           case 'SKILL_NOT_FOUND':
-            toast.error(t('delete.notFound'));
+            showError(t('delete.notFound'));
             break;
           default:
-            toast.error(t('delete.error'));
+            showError(t('delete.error'));
         }
       } catch {
-        toast.error(t('delete.error'));
+        showError(t('delete.error'));
       }
     },
   });

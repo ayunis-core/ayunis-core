@@ -38,6 +38,12 @@ export default function CreateSkillDialog({
   const [isOpen, setIsOpen] = useState(false);
   const { form, onSubmit, resetForm, isLoading } = useCreateSkill();
 
+  const handleSubmit = (data: Parameters<typeof onSubmit>[0]) => {
+    onSubmit(data);
+    resetForm();
+    setIsOpen(false);
+  };
+
   const handleCancel = () => {
     resetForm();
     setIsOpen(false);
@@ -61,7 +67,7 @@ export default function CreateSkillDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
+            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
             className="space-y-6"
           >
             <FormField
