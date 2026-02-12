@@ -1,24 +1,16 @@
-// Utils
 import { useState, useMemo } from 'react';
-
-// Features
 import { useUserUsage } from '@/pages/admin-settings/usage-settings/api';
-
-// UI
-import { UserUsageTableLoading } from './UserUsageTableLoading';
-import { UserUsageTableError } from './UserUsageTableError';
-import { UserUsageTableEmpty } from './UserUsageTableEmpty';
-import { UserUsageTableContent } from './UserUsageTableContent';
+import {
+  UserUsageTableWidget,
+  DEFAULT_PAGE_SIZE,
+} from '@/widgets/user-usage-table';
 
 interface UserUsageTableProps {
   startDate?: Date;
   endDate?: Date;
 }
 
-const DEFAULT_PAGE_SIZE = 10;
-
 export function UserUsageTable({ startDate, endDate }: UserUsageTableProps) {
-  // Create a filter key that changes when filters change
   const filterKey = useMemo(
     () => `${startDate?.toISOString() ?? ''}-${endDate?.toISOString() ?? ''}`,
     [startDate, endDate],
@@ -35,8 +27,7 @@ export function UserUsageTable({ startDate, endDate }: UserUsageTableProps) {
 
 function UserUsageTableInner({ startDate, endDate }: UserUsageTableProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = DEFAULT_PAGE_SIZE;
-  const offset = currentPage * pageSize;
+  const offset = currentPage * DEFAULT_PAGE_SIZE;
 
   const {
     data: userUsageResponse,
@@ -45,32 +36,18 @@ function UserUsageTableInner({ startDate, endDate }: UserUsageTableProps) {
   } = useUserUsage({
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
-    limit: pageSize,
-    offset: offset,
+    limit: DEFAULT_PAGE_SIZE,
+    offset,
   });
 
-  const users = userUsageResponse?.data ?? [];
-  const total = userUsageResponse?.pagination?.total ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
-
-  if (isLoading) {
-    return <UserUsageTableLoading />;
-  }
-
-  if (error) {
-    return <UserUsageTableError error={error} />;
-  }
-
-  if (total === 0) {
-    return <UserUsageTableEmpty />;
-  }
-
   return (
-    <UserUsageTableContent
-      users={users}
+    <UserUsageTableWidget
+      users={userUsageResponse?.data ?? []}
+      total={userUsageResponse?.pagination?.total ?? 0}
       currentPage={currentPage}
-      totalPages={totalPages}
       onPageChange={setCurrentPage}
+      isLoading={isLoading}
+      error={error}
     />
   );
 }

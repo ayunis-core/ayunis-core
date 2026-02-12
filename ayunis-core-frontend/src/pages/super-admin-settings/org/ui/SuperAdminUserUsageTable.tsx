@@ -1,17 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useSuperAdminUserUsage } from '../api/useSuperAdminUserUsage';
-import { UserUsageTableLoading } from '@/pages/admin-settings/usage-settings/ui/user-usage-table/UserUsageTableLoading';
-import { UserUsageTableError } from '@/pages/admin-settings/usage-settings/ui/user-usage-table/UserUsageTableError';
-import { UserUsageTableEmpty } from '@/pages/admin-settings/usage-settings/ui/user-usage-table/UserUsageTableEmpty';
-import { UserUsageTableContent } from '@/pages/admin-settings/usage-settings/ui/user-usage-table/UserUsageTableContent';
+import {
+  UserUsageTableWidget,
+  DEFAULT_PAGE_SIZE,
+} from '@/widgets/user-usage-table';
 
 interface SuperAdminUserUsageTableProps {
   orgId: string;
   startDate?: Date;
   endDate?: Date;
 }
-
-const DEFAULT_PAGE_SIZE = 10;
 
 export function SuperAdminUserUsageTable({
   orgId,
@@ -39,8 +37,7 @@ function SuperAdminUserUsageTableInner({
   endDate,
 }: SuperAdminUserUsageTableProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = DEFAULT_PAGE_SIZE;
-  const offset = currentPage * pageSize;
+  const offset = currentPage * DEFAULT_PAGE_SIZE;
 
   const {
     data: userUsageResponse,
@@ -49,24 +46,18 @@ function SuperAdminUserUsageTableInner({
   } = useSuperAdminUserUsage(orgId, {
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
-    limit: pageSize,
+    limit: DEFAULT_PAGE_SIZE,
     offset,
   });
 
-  const users = userUsageResponse?.data ?? [];
-  const total = userUsageResponse?.pagination?.total ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
-
-  if (isLoading) return <UserUsageTableLoading />;
-  if (error) return <UserUsageTableError error={error} />;
-  if (total === 0) return <UserUsageTableEmpty />;
-
   return (
-    <UserUsageTableContent
-      users={users}
+    <UserUsageTableWidget
+      users={userUsageResponse?.data ?? []}
+      total={userUsageResponse?.pagination?.total ?? 0}
       currentPage={currentPage}
-      totalPages={totalPages}
       onPageChange={setCurrentPage}
+      isLoading={isLoading}
+      error={error}
     />
   );
 }
