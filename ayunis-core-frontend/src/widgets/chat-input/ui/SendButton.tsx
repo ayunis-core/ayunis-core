@@ -31,6 +31,7 @@ export function SendButton({
               size="icon"
               className="rounded-full border border-transparent"
               onClick={onCancel}
+              aria-label={t('chatInput.cancelTooltip')}
             >
               <Square className="h-4 w-4" />
             </Button>
@@ -51,6 +52,7 @@ export function SendButton({
             size="icon"
             data-testid="send"
             onClick={onSend}
+            aria-label={t('chatInput.sendTooltip')}
           >
             <ArrowUp className="h-4 w-4" />
           </Button>

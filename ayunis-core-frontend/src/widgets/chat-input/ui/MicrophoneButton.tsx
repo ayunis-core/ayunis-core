@@ -65,6 +65,7 @@ export function MicrophoneButton({
             className={cn('rounded-full', isRecording && 'animate-pulse')}
             onClick={handleClick}
             disabled={busy}
+            aria-label={tooltipText}
           >
             {busy ? (
               <Loader2 className="h-4 w-4 animate-spin" />

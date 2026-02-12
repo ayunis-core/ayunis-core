@@ -65,7 +65,12 @@ export default function AgentButton({
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={isDisabled}>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" disabled={isDisabled}>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={isDisabled}
+              aria-label={t('chatInput.agentButtonTooltip')}
+            >
               <Bot className="h-4 w-4" />
             </Button>
           </TooltipTrigger>

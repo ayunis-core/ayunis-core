@@ -84,7 +84,8 @@
     "transcribing": "Wird transkribiert...",
     "microphonePermissionDenied": "Mikrofonzugriff verweigert",
     "recordingNotSupported": "Sprachaufnahme wird in diesem Browser nicht unterstützt",
-    "transcriptionFailed": "Transkription fehlgeschlagen"
+    "transcriptionFailed": "Transkription fehlgeschlagen",
+    "modelSelectorAriaLabel": "KI-Modell auswählen"
   },
   "common": {
     "loading": "Laden...",

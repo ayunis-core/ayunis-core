@@ -84,7 +84,8 @@
     "transcribing": "Transcribing...",
     "microphonePermissionDenied": "Microphone access denied",
     "recordingNotSupported": "Voice recording is not supported in this browser",
-    "transcriptionFailed": "Transcription failed"
+    "transcriptionFailed": "Transcription failed",
+    "modelSelectorAriaLabel": "Select AI model"
   },
   "common": {
     "loading": "Loading...",
