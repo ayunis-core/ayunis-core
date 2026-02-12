@@ -53,8 +53,8 @@ export function GlobalUsageFilters({
     if (!catalogModels?.length) return [];
     const modelMap = new Map<string, string>();
     catalogModels.forEach((m) => {
-      if (!modelMap.has(m.name)) {
-        modelMap.set(m.name, m.displayName);
+      if (!modelMap.has(m.id)) {
+        modelMap.set(m.id, m.displayName);
       }
     });
     return Array.from(modelMap.entries()).map(([value, label]) => ({
