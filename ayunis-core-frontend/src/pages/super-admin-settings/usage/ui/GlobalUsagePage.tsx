@@ -6,7 +6,7 @@ import { GlobalProviderConsumption } from './GlobalProviderConsumption';
 import { GlobalModelDistribution } from './GlobalModelDistribution';
 
 export default function GlobalUsagePage() {
-  const { t } = useTranslation('admin-settings-usage');
+  const { t } = useTranslation('super-admin-settings-layout');
   const [dateRange, setDateRange] = useState<{
     startDate?: Date;
     endDate?: Date;
@@ -20,8 +20,12 @@ export default function GlobalUsagePage() {
     <SuperAdminSettingsLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
-          <p className="text-muted-foreground">{t('description')}</p>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t('globalUsage.title')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('globalUsage.description')}
+          </p>
         </div>
 
         <GlobalUsageFilters
@@ -33,7 +37,7 @@ export default function GlobalUsagePage() {
           onModelChange={setSelectedModel}
         />
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6">
           <GlobalProviderConsumption
             startDate={dateRange.startDate}
             endDate={dateRange.endDate}

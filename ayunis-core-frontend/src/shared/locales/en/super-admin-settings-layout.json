@@ -7,5 +7,9 @@
     "orgs": "Organizations",
     "modelsCatalog": "Models Catalog",
     "usage": "Usage"
+  },
+  "globalUsage": {
+    "title": "Global Usage",
+    "description": "Usage analytics across all organizations"
   }
 }
