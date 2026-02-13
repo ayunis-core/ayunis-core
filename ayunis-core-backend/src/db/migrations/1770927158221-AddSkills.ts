@@ -8,6 +8,9 @@ export class AddSkills1770927158221 implements MigrationInterface {
       `CREATE TABLE "skills" ("id" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "shortDescription" character varying NOT NULL, "instructions" character varying NOT NULL, "isActive" boolean NOT NULL DEFAULT false, "userId" character varying NOT NULL, CONSTRAINT "PK_0d3212120f4ecedf90864d7e298" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
+      `CREATE UNIQUE INDEX "IDX_skills_name_userId" ON "skills" ("name", "userId")`,
+    );
+    await queryRunner.query(
       `CREATE TABLE "skill_sources" ("skillsId" character varying NOT NULL, "sourcesId" character varying NOT NULL, CONSTRAINT "PK_a4be28ee6cc5fac99de849cce7e" PRIMARY KEY ("skillsId", "sourcesId"))`,
     );
     await queryRunner.query(
@@ -72,6 +75,7 @@ export class AddSkills1770927158221 implements MigrationInterface {
       `DROP INDEX "public"."IDX_c0a68476f77289d586efb303a4"`,
     );
     await queryRunner.query(`DROP TABLE "skill_sources"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_skills_name_userId"`);
     await queryRunner.query(`DROP TABLE "skills"`);
   }
 }

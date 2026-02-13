@@ -27,6 +27,7 @@ skills/
 │       ├── delete-skill/
 │       ├── find-one-skill/
 │       ├── find-all-skills/
+│       ├── find-skill-by-name/
 │       ├── toggle-skill-active/
 │       ├── find-active-skills/
 │       ├── add-source-to-skill/

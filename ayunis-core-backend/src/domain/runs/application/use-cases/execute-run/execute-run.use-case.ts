@@ -452,13 +452,11 @@ export class ExecuteRunUseCase {
         error instanceof Error ? error.message : 'Unknown error',
         { originalError: error as Error },
       );
-    } finally {
-      // Ensure thread ends with an assistant message by cleaning up any trailing messages
-      await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
-        params.thread.id,
-        null,
-      );
     }
+    // Note: We do NOT clean up trailing messages on error paths.
+    // When inference fails after persisting a user message, we preserve that message
+    // so users can see what they sent and retry. Cleanup only happens via explicit
+    // stream interruption handlers that pass a valid savedMessageId.
     return;
   }
 
