@@ -55,14 +55,15 @@ export class ToolAssemblyService {
       (s): s is TextSource => s instanceof TextSource,
     );
 
+    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
     const instructions = this.systemPromptBuilderService.build({
       agent,
       tools,
       currentTime: new Date(),
       sources: textSources,
-      // Only include skills in prompt when tools are enabled, otherwise the prompt
-      // would instruct the model to use activate_skill which isn't available
-      skills: canUseTools ? activeSkills : [],
+      // Only include skills in prompt when tools are enabled and not cloud-hosted,
+      // otherwise the prompt would instruct the model to use activate_skill which isn't available
+      skills: canUseTools && !isCloudHosted ? activeSkills : [],
     });
 
     return { tools, instructions };
@@ -201,14 +202,16 @@ export class ToolAssemblyService {
       ),
     );
 
-    // Create skill tool is always available
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({
-          type: ToolType.CREATE_SKILL,
-        }),
-      ),
-    );
+    // Create skill tool is available for non-cloud deployments
+    if (!isCloudHosted) {
+      tools.push(
+        await this.assembleToolsUseCase.execute(
+          new AssembleToolCommand({
+            type: ToolType.CREATE_SKILL,
+          }),
+        ),
+      );
+    }
 
     // Internet search tool is always available
     if (
@@ -257,8 +260,8 @@ export class ToolAssemblyService {
       );
     }
 
-    // Activate skill tool is available if there are active skills
-    if (activeSkills.length > 0) {
+    // Activate skill tool is available if there are active skills (non-cloud only)
+    if (!isCloudHosted && activeSkills.length > 0) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
