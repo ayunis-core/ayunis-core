@@ -40,7 +40,6 @@ function SystemPromptForm({
   };
 
   const handleDelete = () => {
-    setLocalValue('');
     onDelete();
   };
 

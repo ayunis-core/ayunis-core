@@ -35,11 +35,18 @@ export class LocalUserSystemPromptsRepository extends UserSystemPromptsRepositor
   async upsert(userSystemPrompt: UserSystemPrompt): Promise<UserSystemPrompt> {
     this.logger.log('upsert', { userId: userSystemPrompt.userId });
 
-    // Delete existing prompt for this user, then insert new one
-    await this.repository.delete({ userId: userSystemPrompt.userId });
-
     const record = this.mapper.toRecord(userSystemPrompt);
-    const savedRecord = await this.repository.save(record);
+
+    // Use atomic upsert with conflict resolution on userId
+    await this.repository.upsert(record, {
+      conflictPaths: ['userId'],
+      skipUpdateIfNoValuesChanged: true,
+    });
+
+    // Fetch the saved record to get the actual id (may be existing or new)
+    const savedRecord = await this.repository.findOneOrFail({
+      where: { userId: userSystemPrompt.userId },
+    });
 
     this.logger.debug('User system prompt upserted', {
       userId: userSystemPrompt.userId,
