@@ -24,93 +24,96 @@ import { LineChartTool } from '../domain/tools/line-chart-tool.entity';
 import { PieChartTool } from '../domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
+import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
+
+type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
+
+const SIMPLE_TOOLS: Record<string, () => Tool> = {
+  [ToolType.INTERNET_SEARCH]: () => new InternetSearchTool(),
+  [ToolType.WEBSITE_CONTENT]: () => new WebsiteContentTool(),
+  [ToolType.SEND_EMAIL]: () => new SendEmailTool(),
+  [ToolType.CREATE_CALENDAR_EVENT]: () => new CreateCalendarEventTool(),
+  [ToolType.BAR_CHART]: () => new BarChartTool(),
+  [ToolType.LINE_CHART]: () => new LineChartTool(),
+  [ToolType.PIE_CHART]: () => new PieChartTool(),
+  [ToolType.PRODUCT_KNOWLEDGE]: () => new ProductKnowledgeTool(),
+};
 
 @Injectable()
 export class ToolFactory {
+  private readonly creators: Record<string, ToolCreator>;
+
+  constructor() {
+    this.creators = {
+      ...SIMPLE_TOOLS,
+      [ToolType.HTTP]: (p) => this.createHttpTool(p.config),
+      [ToolType.SOURCE_QUERY]: (p) =>
+        new SourceQueryTool(
+          requireArrayContext(p.context, Source, ToolType.SOURCE_QUERY),
+        ),
+      [ToolType.SOURCE_GET_TEXT]: (p) =>
+        new SourceGetTextTool(
+          requireArrayContext(p.context, Source, ToolType.SOURCE_GET_TEXT),
+        ),
+      [ToolType.CODE_EXECUTION]: (p) =>
+        new CodeExecutionTool(
+          requireArrayContext(p.context, DataSource, ToolType.CODE_EXECUTION),
+        ),
+      [ToolType.ACTIVATE_SKILL]: (p) =>
+        new ActivateSkillTool(
+          requireArrayContext(p.context, Skill, ToolType.ACTIVATE_SKILL),
+        ),
+    };
+  }
+
   createTool(params: {
     type: ToolType;
     config?: ToolConfig;
     context?: unknown;
   }): Tool {
-    switch (params.type) {
-      case ToolType.HTTP:
-        if (params.config && params.config instanceof HttpToolConfig) {
-          return new HttpTool(params.config);
-        }
-        throw new ToolInvalidConfigError({
-          toolName: 'HTTP',
-          metadata: {
-            configType: params.config?.constructor.name || 'null',
-          },
-        });
-      case ToolType.INTERNET_SEARCH:
-        return new InternetSearchTool();
-      case ToolType.WEBSITE_CONTENT:
-        return new WebsiteContentTool();
-      case ToolType.SOURCE_QUERY:
-        if (
-          params.context &&
-          params.context instanceof Array &&
-          params.context.every((source: unknown) => source instanceof Source)
-        ) {
-          return new SourceQueryTool(params.context);
-        }
-        throw new ToolInvalidContextError({
-          toolType: params.type,
-          metadata: {
-            contextType: params.context?.constructor.name || 'null',
-          },
-        });
-      case ToolType.SOURCE_GET_TEXT:
-        if (
-          params.context &&
-          params.context instanceof Array &&
-          params.context.every((source: unknown) => source instanceof Source)
-        ) {
-          return new SourceGetTextTool(params.context);
-        }
-        throw new ToolInvalidContextError({
-          toolType: params.type,
-          metadata: {
-            contextType: params.context?.constructor.name || 'null',
-          },
-        });
-      case ToolType.SEND_EMAIL:
-        return new SendEmailTool();
-      case ToolType.CREATE_CALENDAR_EVENT:
-        return new CreateCalendarEventTool();
-      case ToolType.BAR_CHART:
-        return new BarChartTool();
-      case ToolType.LINE_CHART:
-        return new LineChartTool();
-      case ToolType.PIE_CHART:
-        return new PieChartTool();
-      case ToolType.CODE_EXECUTION:
-        if (
-          params.context &&
-          params.context instanceof Array &&
-          params.context.every(
-            (source: unknown) => source instanceof DataSource,
-          )
-        ) {
-          return new CodeExecutionTool(params.context);
-        }
-        throw new ToolInvalidContextError({
-          toolType: params.type,
-          metadata: {
-            contextType: params.context?.constructor.name || 'null',
-          },
-        });
-      case ToolType.PRODUCT_KNOWLEDGE:
-        return new ProductKnowledgeTool();
-      default:
-        throw new ToolInvalidTypeError({
-          toolType: params.type,
-        });
+    const creator = this.creators[params.type];
+    if (!creator) {
+      throw new ToolInvalidTypeError({ toolType: params.type });
     }
+    return creator(params);
   }
 
   supportedToolTypes(): string[] {
     return Object.values(ToolType);
   }
+
+  private createHttpTool(config?: ToolConfig): HttpTool {
+    if (config && config instanceof HttpToolConfig) {
+      return new HttpTool(config);
+    }
+    throw new ToolInvalidConfigError({
+      toolName: 'HTTP',
+      metadata: {
+        configType: config?.constructor.name || 'null',
+      },
+    });
+  }
+}
+
+function requireArrayContext<T>(
+  context: unknown,
+  itemType: abstract new (...args: unknown[]) => T,
+  toolType: ToolType,
+): T[] {
+  if (
+    context &&
+    context instanceof Array &&
+    context.every((item: unknown) => item instanceof itemType)
+  ) {
+    return context as T[];
+  }
+  throw new ToolInvalidContextError({
+    toolType,
+    metadata: {
+      contextType:
+        (context as { constructor?: { name?: string } })?.constructor?.name ||
+        'null',
+    },
+  });
 }

@@ -12,23 +12,41 @@ import {
   DataSource,
   CSVDataSource,
 } from 'src/domain/sources/domain/sources/data-source.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 export interface SystemPromptBuildParams {
   agent?: Agent;
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
+  skills?: Skill[];
 }
 
 @Injectable()
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
-    const { agent, tools, currentTime, sources } = params;
+    const { agent, tools, currentTime, sources, skills } = params;
 
-    const toolSpecificSections = this.buildToolSpecificSections(tools);
-    const filesSection = this.buildFilesSection(sources ?? []);
+    const sections = [
+      this.buildPreamble(currentTime),
+      this.buildBehaviorInstructions(),
+      this.buildToolUsageSection(tools),
+      this.buildSkillsSection(skills ?? []),
+      this.buildFilesSection(sources ?? []),
+      this.buildDataHandlingSection(),
+      this.buildResponseGuidelines(),
+      this.buildPlatformSection(),
+      agent?.instructions
+        ? this.buildAgentInstructionsSection(agent.instructions)
+        : '',
+      'You are now ready to assist the user.',
+    ];
 
-    const prompt = `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
+    return sections.filter(Boolean).join('\n\n').trim();
+  }
+
+  private buildPreamble(currentTime: Date): string {
+    return `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
 
 <application_details>
 Ayunis Core is an AI platform that enables intelligent conversations with customizable AI agents, advanced prompt management, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
@@ -36,9 +54,11 @@ Ayunis Core is an AI platform that enables intelligent conversations with custom
 
 <context>
 Current time: ${currentTime.toISOString()}
-</context>
+</context>`;
+  }
 
-<behavior_instructions>
+  private buildBehaviorInstructions(): string {
+    return `<behavior_instructions>
 
 <core_principles>
 You are a helpful assistant focused on serving users in public administration contexts. Your responses should be:
@@ -75,9 +95,13 @@ Be honest about what you know and don't know. If asked about information that re
 When tools are available (such as source queries or web access), use them to provide accurate, up-to-date information rather than relying on training data alone.
 </knowledge_boundaries>
 
-</behavior_instructions>
+</behavior_instructions>`;
+  }
 
-<tool_usage>
+  private buildToolUsageSection(tools: Tool[]): string {
+    const toolSpecificSections = this.buildToolSpecificSections(tools);
+
+    return `<tool_usage>
 
 <available_tools>
 Your capabilities depend on which tools have been assigned to this agent. Use tools when they help answer the user's question or complete their task. Don't use tools unnecessarily.
@@ -94,11 +118,11 @@ When using tools:
 
 ${toolSpecificSections}
 
-</tool_usage>
+</tool_usage>`;
+  }
 
-${filesSection}
-
-<data_handling>
+  private buildDataHandlingSection(): string {
+    return `<data_handling>
 
 <privacy_principles>
 Public administration data is sensitive. When handling user data or documents:
@@ -123,9 +147,11 @@ When working with uploaded documents:
 Ayunis Core is multi-tenant. You operate within the context of a specific organization. Your knowledge of other organizations, users, or data outside your current context is intentionally limited.
 
 If users ask about platform-wide information you don't have access to, explain that your context is scoped to their organization.
-</multi_tenant_context>
+</multi_tenant_context>`;
+  }
 
-<response_guidelines>
+  private buildResponseGuidelines(): string {
+    return `<response_guidelines>
 
 <clarity>
 Structure responses for clarity:
@@ -151,9 +177,11 @@ Express appropriate uncertainty:
 - Don't present speculation as fact
 </uncertainty>
 
-</response_guidelines>
+</response_guidelines>`;
+  }
 
-<platform_information>
+  private buildPlatformSection(): string {
+    return `<platform_information>
 If users ask about Ayunis Core itself:
 
 Ayunis Core is an open-source AI gateway platform. Key features include:
@@ -165,13 +193,7 @@ Ayunis Core is an open-source AI gateway platform. Key features include:
 - Multi-tenant organization management
 
 For technical questions about the platform, configuration, or deployment, users should consult the platform administrator or documentation.
-</platform_information>
-
-${agent?.instructions ? this.buildAgentInstructionsSection(agent.instructions) : ''}
-
-You are now ready to assist the user.`;
-
-    return prompt.trim();
+</platform_information>`;
   }
 
   private buildToolSpecificSections(tools: Tool[]): string {
@@ -189,6 +211,26 @@ You are now ready to assist the user.`;
 ${instructions}
 </agent_instructions>
 `;
+  }
+
+  private buildSkillsSection(skills: Skill[]): string {
+    if (skills.length === 0) {
+      return '';
+    }
+
+    const skillEntries = skills
+      .map(
+        (skill) =>
+          `  <skill>\n    <name>${this.escapeXml(skill.name)}</name>\n    <description>${this.escapeXml(skill.shortDescription)}</description>\n  </skill>`,
+      )
+      .join('\n');
+
+    return `<available_skills>
+The following skills provide specialized instructions for specific tasks.
+Use the activate_skill tool to load a skill when the task matches its description.
+
+${skillEntries}
+</available_skills>`;
   }
 
   private buildFilesSection(sources: Source[]): string {
