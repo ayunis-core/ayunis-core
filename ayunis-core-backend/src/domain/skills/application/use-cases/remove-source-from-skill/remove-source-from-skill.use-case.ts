@@ -6,10 +6,6 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
 import { Skill } from '../../../domain/skill.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
-import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
-import { GetTextSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
-import { GetTextSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-text-source-by-id/get-text-source-by-id.query';
 
 @Injectable()
 export class RemoveSourceFromSkillUseCase {
@@ -18,8 +14,6 @@ export class RemoveSourceFromSkillUseCase {
   constructor(
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
-    private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
-    private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
 
   @Transactional()
@@ -48,11 +42,6 @@ export class RemoveSourceFromSkillUseCase {
         sourceIds: skill.sourceIds.filter((id) => id !== command.sourceId),
       });
 
-      const source = await this.getSourceByIdUseCase.execute(
-        new GetTextSourceByIdQuery(command.sourceId),
-      );
-
-      await this.deleteSourceUseCase.execute(new DeleteSourceCommand(source));
       await this.skillRepository.update(updatedSkill);
     } catch (error) {
       if (
