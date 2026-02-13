@@ -40,6 +40,7 @@ export class CreateSkillUseCase {
         name: command.name,
         shortDescription: command.shortDescription,
         instructions: command.instructions,
+        isActive: command.isActive,
         userId,
       });
 

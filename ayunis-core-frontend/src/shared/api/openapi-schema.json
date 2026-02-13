@@ -9086,7 +9086,9 @@
               "mcp_tool",
               "mcp_resource",
               "mcp_prompt",
-              "product_knowledge"
+              "product_knowledge",
+              "activate_skill",
+              "create_skill"
             ]
           }
         },
@@ -9249,7 +9251,9 @@
               "mcp_tool",
               "mcp_resource",
               "mcp_prompt",
-              "product_knowledge"
+              "product_knowledge",
+              "activate_skill",
+              "create_skill"
             ]
           },
           "toolConfigId": {
@@ -10046,6 +10050,11 @@
             "type": "string",
             "description": "Detailed instructions for the skill (injected when the skill is activated)",
             "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the skill is active (defaults to false)",
+            "example": true
           }
         },
         "required": [

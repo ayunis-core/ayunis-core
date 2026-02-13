@@ -142,6 +142,7 @@ export class SkillsController {
         name: dto.name,
         shortDescription: dto.shortDescription,
         instructions: dto.instructions,
+        isActive: dto.isActive,
       }),
     );
 

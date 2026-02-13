@@ -99,6 +99,22 @@ describe('CreateSkillUseCase', () => {
     expect(skillRepository.create).not.toHaveBeenCalled();
   });
 
+  it('should create a skill with isActive true when explicitly set', async () => {
+    const command = new CreateSkillCommand({
+      name: 'Active Skill',
+      shortDescription: 'An active skill.',
+      instructions: 'You are an active assistant.',
+      isActive: true,
+    });
+
+    skillRepository.findByNameAndOwner.mockResolvedValue(null);
+    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
+
+    const result = await useCase.execute(command);
+
+    expect(result.isActive).toBe(true);
+  });
+
   it('should set isActive to false by default', async () => {
     const command = new CreateSkillCommand({
       name: 'Data Analysis',

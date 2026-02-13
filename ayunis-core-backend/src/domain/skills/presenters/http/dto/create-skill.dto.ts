@@ -1,5 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNotEmpty,
+  Length,
+  IsBoolean,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateSkillDto {
   @ApiProperty({
@@ -32,4 +38,12 @@ export class CreateSkillDto {
   @IsString()
   @IsNotEmpty()
   instructions: string;
+
+  @ApiPropertyOptional({
+    description: 'Whether the skill is active (defaults to false)',
+    example: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }

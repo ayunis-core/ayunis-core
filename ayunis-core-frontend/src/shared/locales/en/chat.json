@@ -32,6 +32,7 @@
       "source_query": "Query file",
       "source_get_text": "Query file",
       "code_execution": "Calculate",
+      "activate_skill": "Activate skill",
       "send_email": {
         "subject": "Subject",
         "body": "Body",
@@ -42,6 +43,20 @@
         "open": "Open in email app",
         "copyBody": "Copy body",
         "copied": "Copied"
+      },
+      "create_skill": {
+        "name": "Name",
+        "namePlaceholder": "Enter skill name",
+        "shortDescription": "Short Description",
+        "shortDescriptionPlaceholder": "Brief description of what the skill does",
+        "instructions": "Instructions",
+        "instructionsPlaceholder": "Detailed instructions for the skill",
+        "active": "Active",
+        "create": "Create Skill",
+        "created": "Skill Created",
+        "success": "Skill created successfully",
+        "error": "Failed to create skill",
+        "errorDuplicate": "A skill with this name already exists"
       },
       "create_calendar_event": {
         "title": "Title",

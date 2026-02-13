@@ -199,6 +199,15 @@ export class ToolAssemblyService {
       ),
     );
 
+    // Create skill tool is always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.CREATE_SKILL,
+        }),
+      ),
+    );
+
     // Internet search tool is always available
     if (
       isCloudHosted ||

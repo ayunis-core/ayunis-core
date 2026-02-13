@@ -32,6 +32,7 @@
       "source_query": "Datei durchsuchen",
       "source_get_text": "Datei durchsuchen",
       "code_execution": "Berechnung ausführen",
+      "activate_skill": "Fähigkeit aktivieren",
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",
@@ -42,6 +43,20 @@
         "open": "In E-Mail App öffnen",
         "copyBody": "Text kopieren",
         "copied": "Kopiert"
+      },
+      "create_skill": {
+        "name": "Name",
+        "namePlaceholder": "Skill-Name eingeben",
+        "shortDescription": "Kurzbeschreibung",
+        "shortDescriptionPlaceholder": "Kurze Beschreibung der Skill-Funktion",
+        "instructions": "Anweisungen",
+        "instructionsPlaceholder": "Detaillierte Anweisungen für den Skill",
+        "active": "Aktiv",
+        "create": "Skill erstellen",
+        "created": "Skill erstellt",
+        "success": "Skill erfolgreich erstellt",
+        "error": "Skill konnte nicht erstellt werden",
+        "errorDuplicate": "Ein Skill mit diesem Namen existiert bereits"
       },
       "create_calendar_event": {
         "title": "Titel",

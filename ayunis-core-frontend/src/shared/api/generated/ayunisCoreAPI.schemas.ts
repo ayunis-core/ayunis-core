@@ -1646,6 +1646,8 @@ export const ToolResponseDtoType = {
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
   product_knowledge: 'product_knowledge',
+  activate_skill: 'activate_skill',
+  create_skill: 'create_skill',
 } as const;
 
 export interface ToolResponseDto {
@@ -1729,6 +1731,8 @@ export const ToolAssignmentDtoType = {
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
   product_knowledge: 'product_knowledge',
+  activate_skill: 'activate_skill',
+  create_skill: 'create_skill',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -2191,6 +2195,8 @@ export interface CreateSkillDto {
   shortDescription: string;
   /** Detailed instructions for the skill (injected when the skill is activated) */
   instructions: string;
+  /** Whether the skill is active (defaults to false) */
+  isActive?: boolean;
 }
 
 export interface SkillResponseDto {
