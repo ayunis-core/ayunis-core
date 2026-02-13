@@ -4,6 +4,7 @@
     "returnToMainApp": "Zur Anwendung zurückkehren",
     "settings": "Einstellungen",
     "general": "Allgemein",
+    "chat": "Chat",
     "account": "Konto"
   },
   "account": {
@@ -46,8 +47,11 @@
     "languageRegion": "Sprache & Region",
     "displayLanguage": "Anzeigesprache",
     "displayLanguageDescription": "Wählen Sie die Sprache für Menüs und Nachrichten",
-    "selectLanguage": "Sprache auswählen",
-    "chat": "Chat",
+    "selectLanguage": "Sprache auswählen"
+  },
+  "chat": {
+    "title": "Chat-Einstellungen",
+    "defaultModel": "Standardmodell",
     "defaultModelSelection": "Standardmodell",
     "defaultModelDescription": "Wählen Sie das Standard-KI-Modell für neue Gespräche",
     "selectDefaultModel": "Standardmodell auswählen",

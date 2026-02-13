@@ -4,6 +4,7 @@
     "returnToMainApp": "Return to main app",
     "settings": "Settings",
     "general": "General",
+    "chat": "Chat",
     "account": "Account"
   },
   "account": {
@@ -46,8 +47,11 @@
     "languageRegion": "Language & Region",
     "displayLanguage": "Display language",
     "displayLanguageDescription": "Choose the language for menus and messages",
-    "selectLanguage": "Select language",
-    "chat": "Chat",
+    "selectLanguage": "Select language"
+  },
+  "chat": {
+    "title": "Chat Settings",
+    "defaultModel": "Default Model",
     "defaultModelSelection": "Default model",
     "defaultModelDescription": "Choose the default AI model for new conversations",
     "selectDefaultModel": "Select default model",

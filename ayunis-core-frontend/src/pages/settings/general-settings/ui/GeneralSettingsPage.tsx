@@ -2,7 +2,6 @@ import { SettingsLayout } from '../../settings-layout';
 import { useTranslation } from 'react-i18next';
 import { ThemeSettingsCard } from './ThemeSettingsCard';
 import { LanguageSettingsCard } from './LanguageSettingsCard';
-import { ChatSettingsCard } from './ChatSettingsCard';
 
 export default function GeneralSettingsPage() {
   const { t } = useTranslation('settings');
@@ -12,7 +11,6 @@ export default function GeneralSettingsPage() {
       <div className="space-y-4">
         <ThemeSettingsCard />
         <LanguageSettingsCard />
-        <ChatSettingsCard />
       </div>
     </SettingsLayout>
   );

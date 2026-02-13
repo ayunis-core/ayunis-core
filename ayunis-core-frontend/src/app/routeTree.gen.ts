@@ -29,6 +29,7 @@ import { Route as AuthenticatedAgentsIndexImport } from './routes/_authenticated
 import { Route as AuthenticatedAdminSettingsIndexImport } from './routes/_authenticated/admin-settings.index'
 import { Route as AuthenticatedSkillsIdImport } from './routes/_authenticated/skills.$id'
 import { Route as AuthenticatedSettingsGeneralImport } from './routes/_authenticated/settings.general'
+import { Route as AuthenticatedSettingsChatImport } from './routes/_authenticated/settings.chat'
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedChatsThreadIdImport } from './routes/_authenticated/chats.$threadId'
 import { Route as AuthenticatedAgentsIdImport } from './routes/_authenticated/agents.$id'
@@ -159,6 +160,12 @@ const AuthenticatedSettingsGeneralRoute =
     path: '/settings/general',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+
+const AuthenticatedSettingsChatRoute = AuthenticatedSettingsChatImport.update({
+  id: '/settings/chat',
+  path: '/settings/chat',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 const AuthenticatedSettingsAccountRoute =
   AuthenticatedSettingsAccountImport.update({
@@ -400,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/settings/chat': {
+      id: '/_authenticated/settings/chat'
+      path: '/settings/chat'
+      fullPath: '/settings/chat'
+      preLoaderRoute: typeof AuthenticatedSettingsChatImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/settings/general': {
       id: '/_authenticated/settings/general'
       path: '/settings/general'
@@ -527,6 +541,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
+  AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
@@ -557,6 +572,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
+  AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
   AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
@@ -605,6 +621,7 @@ export interface FileRoutesByFullPath {
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
@@ -642,6 +659,7 @@ export interface FileRoutesByTo {
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
@@ -680,6 +698,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
@@ -719,6 +738,7 @@ export interface FileRouteTypes {
     | '/agents/$id'
     | '/chats/$threadId'
     | '/settings/account'
+    | '/settings/chat'
     | '/settings/general'
     | '/skills/$id'
     | '/admin-settings'
@@ -755,6 +775,7 @@ export interface FileRouteTypes {
     | '/agents/$id'
     | '/chats/$threadId'
     | '/settings/account'
+    | '/settings/chat'
     | '/settings/general'
     | '/skills/$id'
     | '/admin-settings'
@@ -791,6 +812,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/$id'
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/settings/account'
+    | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
     | '/_authenticated/skills/$id'
     | '/_authenticated/admin-settings/'
@@ -870,6 +892,7 @@ export const routeTree = rootRoute
         "/_authenticated/agents/$id",
         "/_authenticated/chats/$threadId",
         "/_authenticated/settings/account",
+        "/_authenticated/settings/chat",
         "/_authenticated/settings/general",
         "/_authenticated/skills/$id",
         "/_authenticated/admin-settings/",
@@ -943,6 +966,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/settings/account": {
       "filePath": "_authenticated/settings.account.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/settings/chat": {
+      "filePath": "_authenticated/settings.chat.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/settings/general": {

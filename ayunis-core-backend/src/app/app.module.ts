@@ -21,6 +21,7 @@ import { McpModule } from '../domain/mcp/mcp.module';
 import { MarketplaceModule } from '../domain/marketplace/marketplace.module';
 import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
+import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
 import { IamModule } from '../iam/iam.module';
 
 import { modelsConfig } from '../config/models.config';
@@ -126,6 +127,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     MarketplaceModule,
     UsageModule,
     TranscriptionsModule,
+    ChatSettingsModule,
     IamModule.register({
       authProvider:
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
