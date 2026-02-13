@@ -20,12 +20,14 @@ export interface SystemPromptBuildParams {
   currentTime: Date;
   sources?: Source[];
   skills?: Skill[];
+  userSystemPrompt?: string;
 }
 
 @Injectable()
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
-    const { agent, tools, currentTime, sources, skills } = params;
+    const { agent, tools, currentTime, sources, skills, userSystemPrompt } =
+      params;
 
     const sections = [
       this.buildPreamble(currentTime),
@@ -38,6 +40,9 @@ export class SystemPromptBuilderService {
       this.buildPlatformSection(),
       agent?.instructions
         ? this.buildAgentInstructionsSection(agent.instructions)
+        : '',
+      userSystemPrompt
+        ? this.buildUserInstructionsSection(userSystemPrompt)
         : '',
       'You are now ready to assist the user.',
     ];
@@ -210,6 +215,14 @@ For technical questions about the platform, configuration, or deployment, users 
 <agent_instructions>
 ${instructions}
 </agent_instructions>
+`;
+  }
+
+  private buildUserInstructionsSection(userSystemPrompt: string): string {
+    return `
+<user_instructions>
+${userSystemPrompt}
+</user_instructions>
 `;
   }
 

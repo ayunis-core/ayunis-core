@@ -69,7 +69,77 @@ describe('SystemPromptBuilderService', () => {
 
       expect(result).not.toContain('<available_skills>');
     });
+  });
 
+  describe('user instructions section', () => {
+    it('should include user_instructions section when userSystemPrompt is provided', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        userSystemPrompt:
+          'Always respond in bullet points. I work in the finance department.',
+      });
+
+      expect(result).toContain('<user_instructions>');
+      expect(result).toContain(
+        'Always respond in bullet points. I work in the finance department.',
+      );
+      expect(result).toContain('</user_instructions>');
+    });
+
+    it('should not include user_instructions section when userSystemPrompt is undefined', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(result).not.toContain('<user_instructions>');
+    });
+
+    it('should not include user_instructions section when userSystemPrompt is empty', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        userSystemPrompt: '',
+      });
+
+      expect(result).not.toContain('<user_instructions>');
+    });
+
+    it('should place user_instructions after agent_instructions', () => {
+      const agent = {
+        instructions: 'Agent-level instructions here',
+      } as any;
+
+      const result = service.build({
+        agent,
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        userSystemPrompt: 'User-level preferences here',
+      });
+
+      const agentPos = result.indexOf('<agent_instructions>');
+      const userPos = result.indexOf('<user_instructions>');
+      expect(agentPos).toBeGreaterThan(-1);
+      expect(userPos).toBeGreaterThan(-1);
+      expect(userPos).toBeGreaterThan(agentPos);
+    });
+
+    it('should place user_instructions before the closing ready message', () => {
+      const result = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+        userSystemPrompt: 'My custom instructions',
+      });
+
+      const userPos = result.indexOf('<user_instructions>');
+      const readyPos = result.indexOf('You are now ready to assist the user.');
+      expect(userPos).toBeGreaterThan(-1);
+      expect(readyPos).toBeGreaterThan(userPos);
+    });
+  });
+
+  describe('skills section (continued)', () => {
     it('should escape XML characters in skill names and descriptions', () => {
       const skills: Skill[] = [
         new Skill({

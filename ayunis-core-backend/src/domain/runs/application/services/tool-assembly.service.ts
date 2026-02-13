@@ -17,6 +17,7 @@ import { SystemPromptBuilderService } from './system-prompt-builder.service';
 import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.use-case';
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -28,6 +29,7 @@ export class ToolAssemblyService {
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
+    private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -56,6 +58,12 @@ export class ToolAssemblyService {
     );
 
     const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
+
+    // Fetch user's custom system prompt (returns null if not configured)
+    const userSystemPromptEntity =
+      await this.getUserSystemPromptUseCase.execute();
+    const userSystemPrompt = userSystemPromptEntity?.systemPrompt ?? undefined;
+
     const instructions = this.systemPromptBuilderService.build({
       agent,
       tools,
@@ -64,6 +72,7 @@ export class ToolAssemblyService {
       // Only include skills in prompt when tools are enabled and not cloud-hosted,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && !isCloudHosted ? activeSkills : [],
+      userSystemPrompt,
     });
 
     return { tools, instructions };

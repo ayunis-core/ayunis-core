@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, User } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Settings, User } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -47,6 +47,14 @@ export function SettingsSidebar() {
                 <Link to={'/settings/general'}>
                   <Settings />
                   <span>{t('layout.general')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link to={'/settings/chat'}>
+                  <MessageSquare />
+                  <span>{t('layout.chat')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

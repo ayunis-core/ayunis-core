@@ -2186,7 +2186,7 @@ export interface ListTeamMembersQueryDto {
 
 export interface CreateSkillDto {
   /**
-   * The name of the skill (must be unique per user)
+   * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
    * @minLength 1
    * @maxLength 255
    */
@@ -2220,7 +2220,7 @@ export interface SkillResponseDto {
 
 export interface UpdateSkillDto {
   /**
-   * The name of the skill (must be unique per user)
+   * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
    * @minLength 1
    * @maxLength 255
    */
@@ -2680,6 +2680,22 @@ export interface UpdatePromptDto {
 export interface TranscriptionResponseDto {
   /** The transcribed text from the audio file */
   text: string;
+}
+
+export interface UserSystemPromptResponseDto {
+  /**
+   * The custom system prompt for the user, or null if not set
+   * @nullable
+   */
+  systemPrompt: string | null;
+}
+
+export interface UpsertUserSystemPromptDto {
+  /**
+   * The custom system prompt for the user
+   * @maxLength 10000
+   */
+  systemPrompt: string;
 }
 
 export interface LoginDto {

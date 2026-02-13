@@ -62,7 +62,7 @@ export function ChatSettingsCard() {
 
   // Create options including null option and all sorted permitted models with flags
   const defaultSettingsOptions = [
-    { id: 'null', label: t('general.none') },
+    { id: 'null', label: t('chat.none') },
     ...sortedModels.map((model) => {
       const flag = getFlagByProvider(model.provider);
       const displayName = model.displayName || model.name;
@@ -79,16 +79,16 @@ export function ChatSettingsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('general.chat')}</CardTitle>
+        <CardTitle>{t('chat.defaultModel')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="default-settings-select">
-              {t('general.defaultModelSelection')}
+              {t('chat.defaultModelSelection')}
             </Label>
             <div className="text-sm text-muted-foreground">
-              {t('general.defaultModelDescription')}
+              {t('chat.defaultModelDescription')}
             </div>
           </div>
           <Select
@@ -99,7 +99,7 @@ export function ChatSettingsCard() {
             <SelectTrigger id="default-settings-select" className="w-[180px]">
               <SelectValue
                 placeholder={
-                  modelsLoading ? 'Loading...' : t('general.selectDefaultModel')
+                  modelsLoading ? 'Loading...' : t('chat.selectDefaultModel')
                 }
               />
             </SelectTrigger>

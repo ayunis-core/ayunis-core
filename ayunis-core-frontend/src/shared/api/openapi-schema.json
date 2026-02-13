@@ -5905,7 +5905,9 @@
           }
         },
         "summary": "Get usage dashboard configuration for an organization",
-        "tags": ["Super Admin Usage"]
+        "tags": [
+          "Super Admin Usage"
+        ]
       }
     },
     "/super-admin/usage/{orgId}/stats": {
@@ -5952,7 +5954,9 @@
           }
         },
         "summary": "Get overall usage statistics for an organization",
-        "tags": ["Super Admin Usage"]
+        "tags": [
+          "Super Admin Usage"
+        ]
       }
     },
     "/super-admin/usage/{orgId}/models": {
@@ -6015,7 +6019,9 @@
           }
         },
         "summary": "Get usage distribution by model for an organization",
-        "tags": ["Super Admin Usage"]
+        "tags": [
+          "Super Admin Usage"
+        ]
       }
     },
     "/super-admin/usage/{orgId}/providers": {
@@ -6086,7 +6092,9 @@
           }
         },
         "summary": "Get usage statistics by provider for an organization",
-        "tags": ["Super Admin Usage"]
+        "tags": [
+          "Super Admin Usage"
+        ]
       }
     },
     "/super-admin/usage/{orgId}/providers/chart": {
@@ -6149,7 +6157,9 @@
           }
         },
         "summary": "Get provider usage time series for an organization (chart-ready)",
-        "tags": ["Super Admin Usage"]
+        "tags": [
+          "Super Admin Usage"
+        ]
       }
     },
     "/super-admin/usage/{orgId}/users": {
@@ -6211,7 +6221,12 @@
             "required": false,
             "in": "query",
             "schema": {
-              "enum": ["tokens", "requests", "lastActivity", "userName"],
+              "enum": [
+                "tokens",
+                "requests",
+                "lastActivity",
+                "userName"
+              ],
               "type": "string"
             }
           },
@@ -6220,7 +6235,10 @@
             "required": false,
             "in": "query",
             "schema": {
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "type": "string"
             }
           }
@@ -6238,7 +6256,9 @@
           }
         },
         "summary": "Get usage statistics by user for an organization",
-        "tags": ["Super Admin Usage"]
+        "tags": [
+          "Super Admin Usage"
+        ]
       }
     },
     "/super-admin/global-usage/providers/chart": {
@@ -6291,7 +6311,9 @@
           }
         },
         "summary": "Get global provider usage time series across all organizations (chart-ready)",
-        "tags": ["Super Admin Global Usage"]
+        "tags": [
+          "Super Admin Global Usage"
+        ]
       }
     },
     "/super-admin/global-usage/models": {
@@ -6336,7 +6358,9 @@
           }
         },
         "summary": "Get global model distribution across all organizations",
-        "tags": ["Super Admin Global Usage"]
+        "tags": [
+          "Super Admin Global Usage"
+        ]
       }
     },
     "/prompts": {
@@ -6581,6 +6605,77 @@
         "summary": "Transcribe audio file to text",
         "tags": [
           "transcriptions"
+        ]
+      }
+    },
+    "/chat-settings/system-prompt": {
+      "get": {
+        "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
+        "operationId": "ChatSettingsController_getSystemPrompt",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The user system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSystemPromptResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the user system prompt",
+        "tags": [
+          "Chat Settings"
+        ]
+      },
+      "put": {
+        "description": "Creates or replaces the custom system prompt for the authenticated user.",
+        "operationId": "ChatSettingsController_upsertSystemPrompt",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertUserSystemPromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the user system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSystemPromptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          }
+        },
+        "summary": "Set or update the user system prompt",
+        "tags": [
+          "Chat Settings"
+        ]
+      },
+      "delete": {
+        "description": "Deletes the custom system prompt for the authenticated user.",
+        "operationId": "ChatSettingsController_deleteSystemPrompt",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user system prompt"
+          }
+        },
+        "summary": "Delete the user system prompt",
+        "tags": [
+          "Chat Settings"
         ]
       }
     },
@@ -10497,7 +10592,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user)",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.",
             "example": "Legal Research",
             "minLength": 1,
             "maxLength": 255
@@ -10588,7 +10683,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the skill (must be unique per user)",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.",
             "example": "Legal Research",
             "minLength": 1,
             "maxLength": 255
@@ -11474,6 +11569,34 @@
         },
         "required": [
           "text"
+        ]
+      },
+      "UserSystemPromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The custom system prompt for the user, or null if not set",
+            "example": "Always respond in bullet points. I work in the finance department.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "systemPrompt"
+        ]
+      },
+      "UpsertUserSystemPromptDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The custom system prompt for the user",
+            "example": "Always respond in bullet points. I work in the finance department.",
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "systemPrompt"
         ]
       },
       "LoginDto": {

@@ -20,6 +20,7 @@ import { AnonymizationModule } from 'src/common/anonymization/anonymization.modu
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
+import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SkillsModule } from 'src/domain/skills/skills.module';
     UsageModule,
     QuotasModule,
     SkillsModule,
+    ChatSettingsModule,
   ],
   controllers: [RunsController],
   providers: [

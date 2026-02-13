@@ -13,4 +13,4 @@ The runs module is the central orchestrator for AI conversation execution. The `
 - **MessageCleanupService** — Ensures threads end with an assistant message after a run completes or is interrupted by deleting trailing non-assistant messages.
 - **SystemPromptBuilderService** — Builds system prompts from agent configuration, thread context, and active skills.
 
-The module integrates with **threads** for conversation context, **messages** for creating and reading conversation history, **models** for inference routing, **tools** for executing tool calls during runs, **agents** for loading agent configurations, **skills** for on-demand skill activation and source/MCP injection, and **usage** for tracking token consumption.
+The module integrates with **threads** for conversation context, **messages** for creating and reading conversation history, **models** for inference routing, **tools** for executing tool calls during runs, **agents** for loading agent configurations, **skills** for on-demand skill activation and source/MCP injection, **usage** for tracking token consumption, and **chat-settings** for user-level system prompt injection.

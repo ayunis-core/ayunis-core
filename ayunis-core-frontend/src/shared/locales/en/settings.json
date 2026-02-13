@@ -4,6 +4,7 @@
     "returnToMainApp": "Return to main app",
     "settings": "Settings",
     "general": "General",
+    "chat": "Chat",
     "account": "Account"
   },
   "account": {
@@ -46,11 +47,22 @@
     "languageRegion": "Language & Region",
     "displayLanguage": "Display language",
     "displayLanguageDescription": "Choose the language for menus and messages",
-    "selectLanguage": "Select language",
-    "chat": "Chat",
+    "selectLanguage": "Select language"
+  },
+  "chat": {
+    "title": "Chat Settings",
+    "defaultModel": "Default Model",
     "defaultModelSelection": "Default model",
     "defaultModelDescription": "Choose the default AI model for new conversations",
     "selectDefaultModel": "Select default model",
-    "none": "No model selected"
+    "none": "No model selected",
+    "systemPromptTitle": "System Prompt",
+    "systemPromptDescription": "Define a personal system prompt that gets injected into every AI conversation. Use this to customize AI behavior to your preferences.",
+    "systemPromptPlaceholder": "e.g. Always respond in bullet points. I work in the finance department.",
+    "systemPromptSaved": "System prompt saved successfully",
+    "systemPromptDeleted": "System prompt removed",
+    "systemPromptError": "Failed to update system prompt",
+    "saveSystemPrompt": "Save",
+    "deleteSystemPrompt": "Remove"
   }
 }
