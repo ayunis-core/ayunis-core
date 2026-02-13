@@ -87,6 +87,7 @@ import {
 import {
   UnsupportedFileTypeError,
   EmptyFileDataError,
+  MissingFileError,
 } from '../../application/agents.errors';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
@@ -394,6 +395,10 @@ export class AgentsController {
       path: string;
     },
   ): Promise<AgentSourceResponseDto[]> {
+    if (!file) {
+      throw new MissingFileError();
+    }
+
     this.logger.log('addFileSource', {
       agentId,
       userId,

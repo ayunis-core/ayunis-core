@@ -90,6 +90,7 @@ import {
 import {
   UnsupportedFileTypeError,
   EmptyFileDataError,
+  MissingFileError,
 } from '../../application/skills.errors';
 import { parseCSV } from 'src/common/util/csv';
 import { parseExcel } from 'src/common/util/excel';
@@ -370,6 +371,10 @@ export class SkillsController {
       path: string;
     },
   ): Promise<SkillResponseDto> {
+    if (!file) {
+      throw new MissingFileError();
+    }
+
     this.logger.log('addFileSource', {
       skillId,
       userId,

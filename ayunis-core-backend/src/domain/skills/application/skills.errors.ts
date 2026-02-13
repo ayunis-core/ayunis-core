@@ -19,6 +19,7 @@ export enum SkillErrorCode {
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_INTEGRATION_WRONG_ORGANIZATION = 'MCP_INTEGRATION_WRONG_ORGANIZATION',
   MCP_INTEGRATION_NOT_ASSIGNED = 'MCP_INTEGRATION_NOT_ASSIGNED',
+  MISSING_FILE = 'MISSING_FILE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
@@ -158,6 +159,17 @@ export class SkillMcpIntegrationNotAssignedError extends SkillError {
       `MCP integration with ID ${integrationId} is not assigned to this skill`,
       SkillErrorCode.MCP_INTEGRATION_NOT_ASSIGNED,
       404,
+      metadata,
+    );
+  }
+}
+
+export class MissingFileError extends SkillError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No file was provided in the request',
+      SkillErrorCode.MISSING_FILE,
+      400,
       metadata,
     );
   }
