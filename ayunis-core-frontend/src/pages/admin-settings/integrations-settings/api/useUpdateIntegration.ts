@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerUpdate,
@@ -18,7 +18,7 @@ export function useUpdateIntegration(onSuccess?: () => void) {
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t('integrations.updateIntegration.success'));
+        showSuccess(t('integrations.updateIntegration.success'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
@@ -27,17 +27,17 @@ export function useUpdateIntegration(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MCP_INTEGRATION_NOT_FOUND':
-              toast.error(t('integrations.updateIntegration.notFound'));
+              showError(t('integrations.updateIntegration.notFound'));
               break;
             case 'INVALID_SERVER_URL':
-              toast.error(t('integrations.updateIntegration.invalidServerUrl'));
+              showError(t('integrations.updateIntegration.invalidServerUrl'));
               break;
             default:
-              toast.error(t('integrations.updateIntegration.error'));
+              showError(t('integrations.updateIntegration.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.updateIntegration.error'));
+          showError(t('integrations.updateIntegration.error'));
         }
       },
     },

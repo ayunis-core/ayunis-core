@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerCreatePredefined,
@@ -18,7 +18,7 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t('integrations.createPredefinedIntegration.success'));
+        showSuccess(t('integrations.createPredefinedIntegration.success'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
@@ -27,23 +27,23 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'INVALID_PREDEFINED_SLUG':
-              toast.error(
+              showError(
                 t('integrations.createPredefinedIntegration.invalidSlug'),
               );
               break;
             case 'DUPLICATE_MCP_INTEGRATION':
-              toast.error(
+              showError(
                 t(
                   'integrations.createPredefinedIntegration.duplicateIntegration',
                 ),
               );
               break;
             default:
-              toast.error(t('integrations.createPredefinedIntegration.error'));
+              showError(t('integrations.createPredefinedIntegration.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.createPredefinedIntegration.error'));
+          showError(t('integrations.createPredefinedIntegration.error'));
         }
       },
     },

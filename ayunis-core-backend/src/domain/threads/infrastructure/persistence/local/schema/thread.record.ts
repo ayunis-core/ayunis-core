@@ -1,10 +1,19 @@
 import { UUID } from 'crypto';
 import { MessageRecord } from '../../../../../messages/infrastructure/persistence/local/schema/message.record';
-import { Column, Entity, OneToMany, Index, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  Index,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
+import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -43,4 +52,8 @@ export class ThreadRecord extends BaseRecord {
     },
   )
   sourceAssignments?: ThreadSourceAssignmentRecord[];
+
+  @ManyToMany(() => McpIntegrationRecord)
+  @JoinTable({ name: 'thread_mcp_integrations' })
+  mcpIntegrations?: McpIntegrationRecord[];
 }

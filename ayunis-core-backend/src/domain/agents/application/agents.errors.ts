@@ -24,6 +24,7 @@ export enum AgentErrorCode {
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_INTEGRATION_WRONG_ORGANIZATION = 'MCP_INTEGRATION_WRONG_ORGANIZATION',
   MCP_INTEGRATION_NOT_ASSIGNED = 'MCP_INTEGRATION_NOT_ASSIGNED',
+  MISSING_FILE = 'MISSING_FILE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   NO_PERMITTED_MODEL = 'NO_PERMITTED_MODEL',
@@ -233,6 +234,17 @@ export class McpIntegrationNotAssignedError extends AgentError {
 /**
  * Error thrown when an unsupported file type is uploaded to an agent
  */
+export class MissingFileError extends AgentError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No file was provided in the request',
+      AgentErrorCode.MISSING_FILE,
+      400,
+      metadata,
+    );
+  }
+}
+
 export class UnsupportedFileTypeError extends AgentError {
   constructor(
     fileType: string,

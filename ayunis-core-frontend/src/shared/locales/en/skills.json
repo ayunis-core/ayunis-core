@@ -1,0 +1,56 @@
+{
+  "page": {
+    "title": "My Skills"
+  },
+  "emptyState": {
+    "title": "No skills yet",
+    "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations."
+  },
+  "badge": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "card": {
+    "activeLabel": "Active",
+    "inactiveLabel": "Inactive",
+    "confirmDelete": {
+      "title": "Delete Skill",
+      "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Add Skill",
+    "buttonTextFirst": "Create your first skill",
+    "title": "Add New Skill",
+    "description": "Create a new skill with specific knowledge and capabilities. Fill in the details below.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter skill name...",
+      "shortDescriptionLabel": "Short Description",
+      "shortDescriptionPlaceholder": "Brief description of what this skill does...",
+      "instructionsLabel": "Detailed Instructions",
+      "instructionsPlaceholder": "Enter detailed instructions for this skill..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Skill",
+      "creating": "Creating..."
+    }
+  },
+  "create": {
+    "success": "Skill created successfully!",
+    "error": "Failed to create skill. Please try again."
+  },
+  "toggleActive": {
+    "success": "Skill status updated successfully!",
+    "error": "Failed to update skill status. Please try again.",
+    "notFound": "Skill not found. It may have been deleted."
+  },
+  "delete": {
+    "success": "Skill deleted successfully!",
+    "error": "Failed to delete skill. Please try again.",
+    "notFound": "Skill not found. It may have been deleted."
+  }
+}

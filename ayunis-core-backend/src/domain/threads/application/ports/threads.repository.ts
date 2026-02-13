@@ -52,6 +52,11 @@ export abstract class ThreadsRepository {
     userId: UUID;
     sourceAssignments: SourceAssignment[];
   }): Promise<void>;
+  abstract updateMcpIntegrations(params: {
+    threadId: UUID;
+    userId: UUID;
+    mcpIntegrationIds: UUID[];
+  }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
 }

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerDelete,
@@ -17,7 +17,7 @@ export function useDeleteIntegration(onSuccess?: () => void) {
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t('integrations.deleteIntegration.success'));
+        showSuccess(t('integrations.deleteIntegration.success'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
@@ -26,14 +26,14 @@ export function useDeleteIntegration(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MCP_INTEGRATION_NOT_FOUND':
-              toast.error(t('integrations.deleteIntegration.notFound'));
+              showError(t('integrations.deleteIntegration.notFound'));
               break;
             default:
-              toast.error(t('integrations.deleteIntegration.error'));
+              showError(t('integrations.deleteIntegration.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.deleteIntegration.error'));
+          showError(t('integrations.deleteIntegration.error'));
         }
       },
     },

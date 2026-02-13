@@ -1,0 +1,69 @@
+{
+  "properties": {
+    "title": "Fähigkeit bearbeiten",
+    "description": "Nehmen Sie hier Änderungen an Ihrer Fähigkeit vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Name der Fähigkeit eingeben...",
+      "shortDescriptionLabel": "Kurzbeschreibung",
+      "shortDescriptionPlaceholder": "Kurze Beschreibung, damit die KI entscheiden kann, wann diese Fähigkeit aktiviert werden soll...",
+      "instructionsLabel": "Anweisungen",
+      "instructionsPlaceholder": "Detaillierte Anweisungen, die eingefügt werden, wenn die Fähigkeit aktiviert wird..."
+    },
+    "buttons": {
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert..."
+    }
+  },
+  "knowledgeBase": {
+    "title": "Wissensbasis",
+    "description": "Konfigurieren Sie, auf welches Wissen die Fähigkeit Zugriff hat",
+    "adding": "Wird hinzugefügt...",
+    "addSource": "Quelle hinzufügen",
+    "disabledTooltip": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein."
+  },
+  "sources": {
+    "addedSuccessfully": "Quelle erfolgreich hinzugefügt",
+    "removedSuccessfully": "Quelle erfolgreich entfernt",
+    "failedToRemove": "Quelle konnte nicht entfernt werden",
+    "failedToAdd": "Quelle konnte nicht hinzugefügt werden",
+    "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
+    "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
+    "fileSourceTooLargeError": "Datei ist zu groß. Maximale Dateigröße beträgt 50 MB.",
+    "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
+    "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
+    "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex."
+  },
+  "mcpIntegrations": {
+    "title": "Integrationen",
+    "description": "Verbinden Sie externe MCP-Server, um die Fähigkeiten zu erweitern",
+    "toggleAriaLabel": "{{name}} Integration umschalten",
+    "retryButton": "Erneut versuchen",
+    "success": {
+      "connected": "Integration verbunden",
+      "disconnected": "Integration getrennt"
+    },
+    "errors": {
+      "failedToConnect": "Integration konnte nicht verbunden werden. Bitte versuchen Sie es erneut.",
+      "failedToDisconnect": "Integration konnte nicht getrennt werden. Bitte versuchen Sie es erneut.",
+      "failedToLoad": "Integrationen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "integrationNotFound": "Integration nicht gefunden. Sie wurde möglicherweise entfernt.",
+      "alreadyAssigned": "Diese Integration ist bereits mit dieser Fähigkeit verbunden.",
+      "integrationDisabled": "Diese Integration ist deaktiviert. Bitte aktivieren Sie sie zuerst.",
+      "notAssigned": "Diese Integration ist nicht mit dieser Fähigkeit verbunden."
+    }
+  },
+  "update": {
+    "success": "Fähigkeit erfolgreich aktualisiert!",
+    "error": "Fähigkeit konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+  },
+  "delete": {
+    "success": "Fähigkeit erfolgreich gelöscht!",
+    "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht.",
+    "confirmTitle": "Fähigkeit löschen",
+    "confirmDescription": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmText": "Löschen",
+    "cancelText": "Abbrechen"
+  }
+}

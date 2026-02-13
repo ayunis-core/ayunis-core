@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useMcpIntegrationsControllerValidate } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegration } from '../model/types';
@@ -13,7 +13,7 @@ export function useValidateIntegration() {
     mutation: {
       onSuccess: (data) => {
         if (!data.valid) {
-          toast.error(
+          showError(
             t('integrations.validateIntegration.error', {
               message: data.error,
             }),
@@ -25,7 +25,7 @@ export function useValidateIntegration() {
           resources: 0,
           tools: 0,
         };
-        toast.success(
+        showSuccess(
           t('integrations.validateIntegration.success', {
             prompts: capabilities.prompts,
             resources: capabilities.resources,
@@ -39,24 +39,24 @@ export function useValidateIntegration() {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MCP_CONNECTION_TIMEOUT':
-              toast.error(
+              showError(
                 t('integrations.validateIntegration.connectionTimeout'),
               );
               break;
             case 'MCP_AUTHENTICATION_FAILED':
-              toast.error(
+              showError(
                 t('integrations.validateIntegration.authenticationFailed'),
               );
               break;
             case 'MCP_INTEGRATION_NOT_FOUND':
-              toast.error(t('integrations.validateIntegration.notFound'));
+              showError(t('integrations.validateIntegration.notFound'));
               break;
             default:
-              toast.error(t('integrations.validateIntegration.error'));
+              showError(t('integrations.validateIntegration.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.validateIntegration.error'));
+          showError(t('integrations.validateIntegration.error'));
         }
         setValidatingIds((prev) => {
           const next = new Set(prev);

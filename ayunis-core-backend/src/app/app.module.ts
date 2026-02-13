@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from '../domain/models/models.module';
 import { AgentsModule } from '../domain/agents/agents.module';
+import { SkillsModule } from '../domain/skills/skills.module';
 import { MessagesModule } from '../domain/messages/messages.module';
 import { ToolsModule } from '../domain/tools/tools.module';
 import { ThreadsModule } from '../domain/threads/threads.module';
@@ -109,6 +110,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     ContextModule, // Global
     ModelsModule,
     AgentsModule,
+    SkillsModule,
     MessagesModule,
     ToolsModule,
     ThreadsModule,

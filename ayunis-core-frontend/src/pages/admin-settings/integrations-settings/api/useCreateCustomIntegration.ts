@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerCreateCustom,
@@ -18,7 +18,7 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t('integrations.createCustomIntegration.success'));
+        showSuccess(t('integrations.createCustomIntegration.success'));
         onSuccess?.();
       },
       onError: (error: unknown) => {
@@ -27,21 +27,21 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'INVALID_SERVER_URL':
-              toast.error(
+              showError(
                 t('integrations.createCustomIntegration.invalidServerUrl'),
               );
               break;
             case 'DUPLICATE_MCP_INTEGRATION':
-              toast.error(
+              showError(
                 t('integrations.createCustomIntegration.duplicateIntegration'),
               );
               break;
             default:
-              toast.error(t('integrations.createCustomIntegration.error'));
+              showError(t('integrations.createCustomIntegration.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.createCustomIntegration.error'));
+          showError(t('integrations.createCustomIntegration.error'));
         }
       },
     },

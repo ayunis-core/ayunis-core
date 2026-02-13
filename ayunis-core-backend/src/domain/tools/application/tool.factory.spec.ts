@@ -9,6 +9,7 @@ import { UUID } from 'crypto';
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
+import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
 
 describe('ToolFactory', () => {
   let factory: ToolFactory;
@@ -55,6 +56,11 @@ describe('ToolFactory', () => {
       expect(tool).toBeInstanceOf(WebsiteContentTool);
     });
 
+    it('should create a CreateSkillTool', () => {
+      const tool = factory.createTool({ type: ToolType.CREATE_SKILL });
+      expect(tool).toBeInstanceOf(CreateSkillTool);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -92,7 +98,10 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.PIE_CHART);
       expect(types).toContain(ToolType.PRODUCT_KNOWLEDGE);
 
-      expect(types.length).toBe(15);
+      expect(types).toContain(ToolType.ACTIVATE_SKILL);
+      expect(types).toContain(ToolType.CREATE_SKILL);
+
+      expect(types.length).toBe(17);
     });
   });
 });

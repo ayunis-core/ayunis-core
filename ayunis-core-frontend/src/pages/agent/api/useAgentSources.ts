@@ -6,7 +6,7 @@ import {
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 
 export default function useAgentSources({
@@ -29,7 +29,7 @@ export default function useAgentSources({
         void queryClient.invalidateQueries({
           queryKey: [`/agents/${agent.id}/sources`],
         });
-        toast.success(t('sources.addedSuccessfully'));
+        showSuccess(t('sources.addedSuccessfully'));
       },
       onError: (error: unknown) => {
         try {
@@ -37,28 +37,28 @@ export default function useAgentSources({
           switch (code) {
             case 'INVALID_FILE_TYPE':
             case 'UNSUPPORTED_FILE_TYPE':
-              toast.error(t('sources.invalidFileTypeError'));
+              showError(t('sources.invalidFileTypeError'));
               break;
             case 'EMPTY_FILE_DATA':
-              toast.error(t('sources.fileSourceEmptyDataError'));
+              showError(t('sources.fileSourceEmptyDataError'));
               break;
             case 'FILE_TOO_LARGE':
-              toast.error(t('sources.fileSourceTooLargeError'));
+              showError(t('sources.fileSourceTooLargeError'));
               break;
             case 'TOO_MANY_PAGES':
-              toast.error(t('sources.fileSourceTooManyPagesError'));
+              showError(t('sources.fileSourceTooManyPagesError'));
               break;
             case 'SERVICE_BUSY':
-              toast.error(t('sources.fileSourceServiceBusyError'));
+              showError(t('sources.fileSourceServiceBusyError'));
               break;
             case 'SERVICE_TIMEOUT':
-              toast.error(t('sources.fileSourceTimeoutError'));
+              showError(t('sources.fileSourceTimeoutError'));
               break;
             default:
-              toast.error(t('sources.failedToAdd'));
+              showError(t('sources.failedToAdd'));
           }
         } catch {
-          toast.error(t('sources.failedToAdd'));
+          showError(t('sources.failedToAdd'));
         }
       },
     },
@@ -71,10 +71,10 @@ export default function useAgentSources({
         void queryClient.invalidateQueries({
           queryKey: [`/agents/${agent.id}/sources`],
         });
-        toast.success(t('sources.removedSuccessfully'));
+        showSuccess(t('sources.removedSuccessfully'));
       },
       onError: () => {
-        toast.error(t('sources.failedToRemove'));
+        showError(t('sources.failedToRemove'));
       },
     },
   });

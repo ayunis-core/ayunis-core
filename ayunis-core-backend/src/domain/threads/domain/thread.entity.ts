@@ -9,6 +9,7 @@ export class Thread {
   model?: PermittedLanguageModel;
   agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
+  mcpIntegrationIds: UUID[];
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
@@ -21,6 +22,7 @@ export class Thread {
     model?: PermittedLanguageModel;
     agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
+    mcpIntegrationIds?: UUID[];
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
@@ -32,6 +34,7 @@ export class Thread {
     this.model = params.model;
     this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
+    this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.title = params.title;
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;

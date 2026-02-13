@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   agentsControllerDelete,
   getAgentsControllerFindAllQueryKey,
@@ -25,7 +25,7 @@ export function useDeleteAgent() {
         queryKey: getAgentsControllerFindAllQueryKey(),
       });
       void router.invalidate();
-      toast.success(t('delete.success'));
+      showSuccess(t('delete.success'));
     },
     onError: (error) => {
       console.error('Delete agent failed:', error);
@@ -33,14 +33,14 @@ export function useDeleteAgent() {
         const { code } = extractErrorData(error);
         switch (code) {
           case 'AGENT_NOT_FOUND':
-            toast.error(t('delete.notFound'));
+            showError(t('delete.notFound'));
             break;
           default:
-            toast.error(t('delete.error'));
+            showError(t('delete.error'));
         }
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)
-        toast.error(t('delete.error'));
+        showError(t('delete.error'));
       }
     },
   });

@@ -28,6 +28,7 @@ import SendEmailWidget from './chat-widgets/SendEmailWidget';
 import ExecutableToolWidget from './chat-widgets/ExecutableToolWidget';
 import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
 import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
+import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -279,6 +280,17 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
               return (
                 <CreateCalendarEventWidget
                   key={`create-calendar-event-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name === ToolAssignmentDtoType.create_skill
+            ) {
+              return (
+                <CreateSkillWidget
+                  key={`create-skill-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
                 />

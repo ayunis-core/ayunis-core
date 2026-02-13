@@ -12,6 +12,7 @@ import { DeleteSourcesUseCase } from './application/use-cases/delete-sources/del
 import { CreateTextSourceUseCase } from './application/use-cases/create-text-source/create-text-source.use-case';
 import { QueryTextSourceUseCase } from './application/use-cases/query-text-source/query-text-source.use-case';
 import { CreateDataSourceUseCase } from './application/use-cases/create-data-source/create-data-source.use-case';
+import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CreateDataSourceUseCase } from './application/use-cases/create-data-sou
     DeleteSourcesUseCase,
     CreateTextSourceUseCase,
     CreateDataSourceUseCase,
+    GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
   ],
   exports: [
@@ -36,6 +38,7 @@ import { CreateDataSourceUseCase } from './application/use-cases/create-data-sou
     DeleteSourcesUseCase,
     CreateTextSourceUseCase,
     CreateDataSourceUseCase,
+    GetSourcesByIdsUseCase,
     QueryTextSourceUseCase,
   ],
 })

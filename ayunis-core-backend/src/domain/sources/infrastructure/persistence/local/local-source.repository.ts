@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { TextSource } from '../../../domain/sources/text-source.entity';
 import { DataSource } from '../../../domain/sources/data-source.entity';
@@ -69,6 +69,17 @@ export class LocalSourceRepository extends SourceRepository {
     }
 
     return null;
+  }
+
+  async findByIds(ids: UUID[]): Promise<Source[]> {
+    this.logger.log('findByIds', { count: ids.length });
+    if (ids.length === 0) {
+      return [];
+    }
+    const records = await this.sourceRepository.find({
+      where: { id: In(ids) },
+    });
+    return records.map((record) => this.mapper.toDomain(record));
   }
 
   async save(source: TextSource): Promise<TextSource>;

@@ -23,6 +23,8 @@ import { McpIntegrationResourceHandler } from './application/handlers/mcp-integr
 import { ProductKnowledgeToolHandler } from './application/handlers/product-knowledge-tool.handler';
 import { ProductKnowledgePort } from './application/ports/product-knowledge.port';
 import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/product-knowledge.adapter';
+import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
+import { SkillsModule } from '../skills/skills.module';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/prod
     LocalToolConfigRepositoryModule,
     RetrieverModule,
     McpModule,
+    SkillsModule,
   ],
   providers: [
     // Use cases
@@ -48,6 +51,7 @@ import { ProductKnowledgeAdapter } from './infrastructure/product-knowledge/prod
     McpIntegrationToolHandler,
     McpIntegrationResourceHandler,
     ProductKnowledgeToolHandler,
+    ActivateSkillToolHandler,
     {
       provide: ProductKnowledgePort,
       useClass: ProductKnowledgeAdapter,

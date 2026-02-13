@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerEnable,
@@ -21,7 +21,7 @@ export function useToggleIntegration() {
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
-        toast.success(t('integrations.toggleIntegration.enableSuccess'));
+        showSuccess(t('integrations.toggleIntegration.enableSuccess'));
       },
       onError: (error: unknown, variables) => {
         console.error('Enable integration failed:', error);
@@ -29,14 +29,14 @@ export function useToggleIntegration() {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MCP_INTEGRATION_NOT_FOUND':
-              toast.error(t('integrations.toggleIntegration.notFound'));
+              showError(t('integrations.toggleIntegration.notFound'));
               break;
             default:
-              toast.error(t('integrations.toggleIntegration.enableError'));
+              showError(t('integrations.toggleIntegration.enableError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.toggleIntegration.enableError'));
+          showError(t('integrations.toggleIntegration.enableError'));
         }
         setTogglingIds((prev) => {
           const next = new Set(prev);
@@ -60,7 +60,7 @@ export function useToggleIntegration() {
         void queryClient.invalidateQueries({
           queryKey: ['useMcpIntegrationsControllerList'],
         });
-        toast.success(t('integrations.toggleIntegration.disableSuccess'));
+        showSuccess(t('integrations.toggleIntegration.disableSuccess'));
       },
       onError: (error: unknown, variables) => {
         console.error('Disable integration failed:', error);
@@ -68,14 +68,14 @@ export function useToggleIntegration() {
           const { code } = extractErrorData(error);
           switch (code) {
             case 'MCP_INTEGRATION_NOT_FOUND':
-              toast.error(t('integrations.toggleIntegration.notFound'));
+              showError(t('integrations.toggleIntegration.notFound'));
               break;
             default:
-              toast.error(t('integrations.toggleIntegration.disableError'));
+              showError(t('integrations.toggleIntegration.disableError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
-          toast.error(t('integrations.toggleIntegration.disableError'));
+          showError(t('integrations.toggleIntegration.disableError'));
         }
         setTogglingIds((prev) => {
           const next = new Set(prev);

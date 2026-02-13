@@ -1646,6 +1646,8 @@ export const ToolResponseDtoType = {
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
   product_knowledge: 'product_knowledge',
+  activate_skill: 'activate_skill',
+  create_skill: 'create_skill',
 } as const;
 
 export interface ToolResponseDto {
@@ -1729,6 +1731,8 @@ export const ToolAssignmentDtoType = {
   mcp_resource: 'mcp_resource',
   mcp_prompt: 'mcp_prompt',
   product_knowledge: 'product_knowledge',
+  activate_skill: 'activate_skill',
+  create_skill: 'create_skill',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -2178,6 +2182,62 @@ export interface ListTeamMembersQueryDto {
   limit?: number;
   /** Number of items to skip */
   offset?: number;
+}
+
+export interface CreateSkillDto {
+  /**
+   * The name of the skill (must be unique per user)
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+  /** Whether the skill is active (defaults to false) */
+  isActive?: boolean;
+}
+
+export interface SkillResponseDto {
+  /** The unique identifier of the skill */
+  id: string;
+  /** The name of the skill */
+  name: string;
+  /** A short description of the skill */
+  shortDescription: string;
+  /** Detailed instructions for the skill */
+  instructions: string;
+  /** Whether the skill is active and available for use in chats */
+  isActive: boolean;
+  /** The unique identifier of the user who owns this skill */
+  userId: string;
+  /** The date and time when the skill was created */
+  createdAt: string;
+  /** The date and time when the skill was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateSkillDto {
+  /**
+   * The name of the skill (must be unique per user)
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+}
+
+export interface SkillSourceResponseDto {
+  /** The unique identifier of the source */
+  id: string;
+  /** The name of the source */
+  name: string;
+  /** The type of source */
+  type: string;
 }
 
 /**
@@ -2835,6 +2895,11 @@ limit?: number;
  * Number of items to skip
  */
 offset?: number;
+};
+
+export type SkillsControllerAddFileSourceBody = {
+  /** The file to upload */
+  file: Blob;
 };
 
 export type RunsControllerSendMessageBody = {

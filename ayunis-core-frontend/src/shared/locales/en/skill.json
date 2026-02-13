@@ -1,0 +1,69 @@
+{
+  "properties": {
+    "title": "Edit skill",
+    "description": "Make changes to your skill here. Click save when you're done.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter skill name...",
+      "shortDescriptionLabel": "Short Description",
+      "shortDescriptionPlaceholder": "Brief description for the AI to decide when to activate this skill...",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Detailed instructions injected when the skill is activated..."
+    },
+    "buttons": {
+      "save": "Save changes",
+      "saving": "Saving..."
+    }
+  },
+  "knowledgeBase": {
+    "title": "Knowledge Base",
+    "description": "Configure which knowledge the skill has access to",
+    "adding": "Adding...",
+    "addSource": "Add Source",
+    "disabledTooltip": "To upload documents, an embedding model must be enabled."
+  },
+  "sources": {
+    "addedSuccessfully": "Source added successfully",
+    "removedSuccessfully": "Source removed successfully",
+    "failedToRemove": "Failed to remove source",
+    "failedToAdd": "Failed to add source",
+    "invalidFileTypeError": "This file type is currently not supported.",
+    "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB.",
+    "fileSourceTooManyPagesError": "Document has too many pages to process.",
+    "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex."
+  },
+  "mcpIntegrations": {
+    "title": "Integrations",
+    "description": "Connect external MCP servers to extend skill capabilities",
+    "toggleAriaLabel": "Toggle {{name}} integration",
+    "retryButton": "Retry",
+    "success": {
+      "connected": "Integration connected",
+      "disconnected": "Integration disconnected"
+    },
+    "errors": {
+      "failedToConnect": "Failed to connect integration. Please try again.",
+      "failedToDisconnect": "Failed to disconnect integration. Please try again.",
+      "failedToLoad": "Failed to load integrations. Please try again.",
+      "integrationNotFound": "Integration not found. It may have been removed.",
+      "alreadyAssigned": "This integration is already connected to this skill.",
+      "integrationDisabled": "This integration is disabled. Please enable it first.",
+      "notAssigned": "This integration is not connected to this skill."
+    }
+  },
+  "update": {
+    "success": "Skill updated successfully!",
+    "error": "Failed to update skill. Please try again."
+  },
+  "delete": {
+    "success": "Skill deleted successfully!",
+    "error": "Failed to delete skill. Please try again.",
+    "notFound": "Skill not found. It may have been deleted.",
+    "confirmTitle": "Delete Skill",
+    "confirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "confirmText": "Delete",
+    "cancelText": "Cancel"
+  }
+}
