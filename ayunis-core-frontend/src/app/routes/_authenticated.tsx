@@ -8,6 +8,10 @@ import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,
 } from '@/shared/api';
+import {
+  appControllerIsCloud,
+  getAppControllerIsCloudQueryKey,
+} from '@/shared/api/generated/ayunisCoreAPI';
 import { queryOptions } from '@tanstack/react-query';
 import extractErrorData from '@/shared/api/extract-error-data';
 
@@ -26,6 +30,10 @@ export const Route = createFileRoute('/_authenticated')({
         throw new Error('User not found');
       }
       context.user = response;
+      await queryClient.fetchQuery({
+        queryKey: getAppControllerIsCloudQueryKey(),
+        queryFn: () => appControllerIsCloud(),
+      });
     } catch (error) {
       try {
         const { code } = extractErrorData(error);
