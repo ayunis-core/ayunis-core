@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length } from 'class-validator';
+import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 
 export class UpdateSkillDto {
   @ApiProperty({
-    description: 'The name of the skill (must be unique per user)',
+    description:
+      'The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.',
     example: 'Legal Research',
     minLength: 1,
     maxLength: 255,
@@ -11,6 +12,13 @@ export class UpdateSkillDto {
   @IsString()
   @IsNotEmpty()
   @Length(1, 255)
+  @Matches(/^[a-zA-Z0-9]([a-zA-Z0-9 -]*[a-zA-Z0-9])?$/, {
+    message:
+      'Name must contain only letters, numbers, hyphens, and spaces, and must start and end with a letter or number',
+  })
+  @Matches(/^(?!.* {2})/, {
+    message: 'Name must not contain consecutive spaces',
+  })
   name: string;
 
   @ApiProperty({

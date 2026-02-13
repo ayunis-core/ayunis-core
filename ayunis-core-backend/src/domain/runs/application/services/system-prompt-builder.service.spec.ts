@@ -74,7 +74,7 @@ describe('SystemPromptBuilderService', () => {
       const skills: Skill[] = [
         new Skill({
           id: randomUUID(),
-          name: 'Q&A Helper',
+          name: 'QA Helper',
           shortDescription: 'Handles <special> "quoted" queries & more',
           instructions: 'Instructions...',
           isActive: true,
@@ -88,7 +88,7 @@ describe('SystemPromptBuilderService', () => {
         skills,
       });
 
-      expect(result).toContain('<name>Q&amp;A Helper</name>');
+      expect(result).toContain('<name>QA Helper</name>');
       expect(result).toContain(
         '<description>Handles &lt;special&gt; &quot;quoted&quot; queries &amp; more</description>',
       );

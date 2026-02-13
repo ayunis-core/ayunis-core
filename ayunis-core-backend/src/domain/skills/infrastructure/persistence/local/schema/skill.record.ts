@@ -1,4 +1,11 @@
-import { Column, Entity, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  Unique,
+} from 'typeorm';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { UUID } from 'crypto';
 import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
@@ -6,6 +13,7 @@ import { SourceRecord } from '../../../../../sources/infrastructure/persistence/
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 
 @Entity({ name: 'skills' })
+@Unique('UQ_skill_name_userId', ['name', 'userId'])
 export class SkillRecord extends BaseRecord {
   @Column({ nullable: false })
   name: string;
