@@ -260,7 +260,7 @@ export class ExecuteRunUseCase {
               refreshedThread,
               params.agent,
               params.activeSkills,
-              true,
+              params.model.canUseTools,
             );
             params.tools = refreshed.tools;
             params.instructions = refreshed.instructions;
