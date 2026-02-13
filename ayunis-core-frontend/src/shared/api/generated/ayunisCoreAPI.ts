@@ -139,6 +139,7 @@ import type {
   UpdateUserNameDto,
   UpdateUserRoleDto,
   UploadFileResponseDto,
+  UpsertUserSystemPromptDto,
   UsageConfigResponseDto,
   UsageControllerGetModelDistributionParams,
   UsageControllerGetProviderUsageChartParams,
@@ -150,6 +151,7 @@ import type {
   UserControllerValidateResetToken200,
   UserControllerValidateResetTokenParams,
   UserResponseDto,
+  UserSystemPromptResponseDto,
   UserUsageResponseDto,
   ValidationResponseDto
 } from './ayunisCoreAPI.schemas';
@@ -11822,6 +11824,223 @@ export const useTranscriptionsControllerTranscribe = <TError = void,
       > => {
 
       const mutationOptions = getTranscriptionsControllerTranscribeMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Returns the custom system prompt for the authenticated user, or null if not set.
+ * @summary Get the user system prompt
+ */
+export const chatSettingsControllerGetSystemPrompt = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserSystemPromptResponseDto>(
+      {url: `/chat-settings/system-prompt`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+export const getChatSettingsControllerGetSystemPromptQueryKey = () => {
+    return [`/chat-settings/system-prompt`] as const;
+    }
+
+    
+export const getChatSettingsControllerGetSystemPromptQueryOptions = <TData = Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getChatSettingsControllerGetSystemPromptQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>> = ({ signal }) => chatSettingsControllerGetSystemPrompt(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ChatSettingsControllerGetSystemPromptQueryResult = NonNullable<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>>
+export type ChatSettingsControllerGetSystemPromptQueryError = unknown
+
+
+export function useChatSettingsControllerGetSystemPrompt<TData = Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>,
+          TError,
+          Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useChatSettingsControllerGetSystemPrompt<TData = Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>,
+          TError,
+          Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useChatSettingsControllerGetSystemPrompt<TData = Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the user system prompt
+ */
+
+export function useChatSettingsControllerGetSystemPrompt<TData = Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof chatSettingsControllerGetSystemPrompt>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getChatSettingsControllerGetSystemPromptQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Creates or replaces the custom system prompt for the authenticated user.
+ * @summary Set or update the user system prompt
+ */
+export const chatSettingsControllerUpsertSystemPrompt = (
+    upsertUserSystemPromptDto: UpsertUserSystemPromptDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserSystemPromptResponseDto>(
+      {url: `/chat-settings/system-prompt`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertUserSystemPromptDto
+    },
+      );
+    }
+  
+
+
+export const getChatSettingsControllerUpsertSystemPromptMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerUpsertSystemPrompt>>, TError,{data: UpsertUserSystemPromptDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerUpsertSystemPrompt>>, TError,{data: UpsertUserSystemPromptDto}, TContext> => {
+
+const mutationKey = ['chatSettingsControllerUpsertSystemPrompt'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatSettingsControllerUpsertSystemPrompt>>, {data: UpsertUserSystemPromptDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatSettingsControllerUpsertSystemPrompt(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatSettingsControllerUpsertSystemPromptMutationResult = NonNullable<Awaited<ReturnType<typeof chatSettingsControllerUpsertSystemPrompt>>>
+    export type ChatSettingsControllerUpsertSystemPromptMutationBody = UpsertUserSystemPromptDto
+    export type ChatSettingsControllerUpsertSystemPromptMutationError = void
+
+    /**
+ * @summary Set or update the user system prompt
+ */
+export const useChatSettingsControllerUpsertSystemPrompt = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerUpsertSystemPrompt>>, TError,{data: UpsertUserSystemPromptDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatSettingsControllerUpsertSystemPrompt>>,
+        TError,
+        {data: UpsertUserSystemPromptDto},
+        TContext
+      > => {
+
+      const mutationOptions = getChatSettingsControllerUpsertSystemPromptMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Deletes the custom system prompt for the authenticated user.
+ * @summary Delete the user system prompt
+ */
+export const chatSettingsControllerDeleteSystemPrompt = (
+    
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/chat-settings/system-prompt`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getChatSettingsControllerDeleteSystemPromptMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerDeleteSystemPrompt>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerDeleteSystemPrompt>>, TError,void, TContext> => {
+
+const mutationKey = ['chatSettingsControllerDeleteSystemPrompt'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatSettingsControllerDeleteSystemPrompt>>, void> = () => {
+          
+
+          return  chatSettingsControllerDeleteSystemPrompt()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatSettingsControllerDeleteSystemPromptMutationResult = NonNullable<Awaited<ReturnType<typeof chatSettingsControllerDeleteSystemPrompt>>>
+    
+    export type ChatSettingsControllerDeleteSystemPromptMutationError = unknown
+
+    /**
+ * @summary Delete the user system prompt
+ */
+export const useChatSettingsControllerDeleteSystemPrompt = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatSettingsControllerDeleteSystemPrompt>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatSettingsControllerDeleteSystemPrompt>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getChatSettingsControllerDeleteSystemPromptMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

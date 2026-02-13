@@ -55,6 +55,14 @@
     "defaultModelSelection": "Standardmodell",
     "defaultModelDescription": "Wählen Sie das Standard-KI-Modell für neue Gespräche",
     "selectDefaultModel": "Standardmodell auswählen",
-    "none": "Kein Modell ausgewählt"
+    "none": "Kein Modell ausgewählt",
+    "systemPromptTitle": "System-Prompt",
+    "systemPromptDescription": "Definieren Sie einen persönlichen System-Prompt, der in jede KI-Unterhaltung eingefügt wird. Verwenden Sie dies, um das KI-Verhalten an Ihre Präferenzen anzupassen.",
+    "systemPromptPlaceholder": "z.B. Antworten Sie immer in Stichpunkten. Ich arbeite in der Finanzabteilung.",
+    "systemPromptSaved": "System-Prompt erfolgreich gespeichert",
+    "systemPromptDeleted": "System-Prompt entfernt",
+    "systemPromptError": "System-Prompt konnte nicht aktualisiert werden",
+    "saveSystemPrompt": "Speichern",
+    "deleteSystemPrompt": "Entfernen"
   }
 }
