@@ -91,6 +91,10 @@ export class AddSkills1770977593092 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "skills" DROP CONSTRAINT "FK_ee1265e76ea0b8c5f7daa85e817"`,
     );
+    // Delete rows with new enum values before recreating old enum to prevent cast failure
+    await queryRunner.query(
+      `DELETE FROM "agent_tools" WHERE "toolType" IN ('activate_skill', 'create_skill')`,
+    );
     await queryRunner.query(
       `CREATE TYPE "public"."agent_tools_tooltype_enum_old" AS ENUM('http', 'source_query', 'source_get_text', 'internet_search', 'website_content', 'send_email', 'create_calendar_event', 'code_execution', 'bar_chart', 'line_chart', 'pie_chart', 'mcp_tool', 'mcp_resource', 'mcp_prompt', 'product_knowledge')`,
     );

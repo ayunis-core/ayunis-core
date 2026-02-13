@@ -60,7 +60,9 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: textSources,
-      skills: activeSkills,
+      // Only include skills in prompt when tools are enabled, otherwise the prompt
+      // would instruct the model to use activate_skill which isn't available
+      skills: canUseTools ? activeSkills : [],
     });
 
     return { tools, instructions };
