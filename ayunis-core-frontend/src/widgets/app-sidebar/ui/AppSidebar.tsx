@@ -42,6 +42,7 @@ import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
+import { useAppControllerIsCloud } from '@/shared/api/generated/ayunisCoreAPI';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -50,6 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
+  const { data: cloudStatus } = useAppControllerIsCloud();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
@@ -72,11 +74,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/agents',
       icon: Bot,
     },
-    {
-      title: t('sidebar.skills'),
-      url: '/skills',
-      icon: Sparkles,
-    },
+    ...(!cloudStatus?.isCloud
+      ? [
+          {
+            title: t('sidebar.skills'),
+            url: '/skills',
+            icon: Sparkles,
+          },
+        ]
+      : []),
   ];
 
   return (
