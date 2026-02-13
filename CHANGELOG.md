@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.10.0](https://github.com/ayunis-core/ayunis-core/compare/v1.9.0...v1.10.0) (2026-02-13)
+
+
+### Features
+
+* add role column to super-admin org detail users table ([#119](https://github.com/ayunis-core/ayunis-core/issues/119)) ([96fe58f](https://github.com/ayunis-core/ayunis-core/commit/96fe58f42c5340e4a71f7dfd3e3f4534b876e7a1))
+* add skills ([#124](https://github.com/ayunis-core/ayunis-core/issues/124)) ([2883323](https://github.com/ayunis-core/ayunis-core/commit/2883323eab30b12c6676f00503c241ca03c93f9e))
+* disable skill tools and prompt hints for cloud instances ([#125](https://github.com/ayunis-core/ayunis-core/issues/125)) ([6d21613](https://github.com/ayunis-core/ayunis-core/commit/6d21613ce88bf7b709530f8bfeb38c4b03a96846))
+* improve usage display ([#122](https://github.com/ayunis-core/ayunis-core/issues/122)) ([bdd6cd0](https://github.com/ayunis-core/ayunis-core/commit/bdd6cd0f5141197fbdb1f1500f938d07d714b79c))
+
+
+### Bug Fixes
+
+* improve chat input accessibility ([#121](https://github.com/ayunis-core/ayunis-core/issues/121)) ([35d7d9e](https://github.com/ayunis-core/ayunis-core/commit/35d7d9ec419d09d4ce2274533d8246b66fe6ad77))
+
+
+### Miscellaneous
+
+* add migration AI skill ([#123](https://github.com/ayunis-core/ayunis-core/issues/123)) ([acf0692](https://github.com/ayunis-core/ayunis-core/commit/acf0692edfb67f0199576cf2314d729404113648))
+* add scripts for db backup ([#118](https://github.com/ayunis-core/ayunis-core/issues/118)) ([e27c180](https://github.com/ayunis-core/ayunis-core/commit/e27c180fecc5e381f3f741d2e54ad86a565f5427))
+
 ## [1.9.0](https://github.com/ayunis-core/ayunis-core/compare/v1.8.0...v1.9.0) (2026-02-10)
 
 
