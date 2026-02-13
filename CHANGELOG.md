@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/ayunis-core/ayunis-core/compare/v1.10.0...v1.11.0) (2026-02-13)
+
+
+### Features
+
+* allow personal system prompt ([#126](https://github.com/ayunis-core/ayunis-core/issues/126)) ([a79b19b](https://github.com/ayunis-core/ayunis-core/commit/a79b19b2b554688e64e4f796d3e18d7e18638a3f))
+
 ## [1.10.0](https://github.com/ayunis-core/ayunis-core/compare/v1.9.0...v1.10.0) (2026-02-13)
 
 
