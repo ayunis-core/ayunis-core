@@ -238,8 +238,9 @@ services:
       - "127.0.0.1:8888:8080" # localhost only for security
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - ayunis-network
+    # No network needed - Dozzle only requires the Docker socket.
+    # Keeping it off ayunis-network ensures the 127.0.0.1 port binding
+    # is the only access path (other containers cannot reach dozzle:8080).
     logging:
       driver: json-file
       options:
