@@ -42,3 +42,19 @@ export class AgentShare extends Share {
     this.agentId = params.agentId;
   }
 }
+
+export class SkillShare extends Share {
+  skillId: UUID;
+
+  constructor(params: {
+    id?: UUID;
+    scope: ShareScope;
+    skillId: UUID;
+    ownerId: UUID;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, entityType: SharedEntityType.SKILL });
+    this.skillId = params.skillId;
+  }
+}

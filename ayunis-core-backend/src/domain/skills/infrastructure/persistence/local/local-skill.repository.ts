@@ -247,6 +247,19 @@ export class LocalSkillRepository implements SkillRepository {
     return count > 0;
   }
 
+  async findByIds(ids: UUID[]): Promise<Skill[]> {
+    this.logger.log('findByIds', { count: ids.length });
+
+    if (ids.length === 0) return [];
+
+    const records = await this.skillRepository.find({
+      where: { id: In(ids) },
+      relations: ['sources', 'mcpIntegrations'],
+    });
+
+    return records.map((r) => this.skillMapper.toDomain(r));
+  }
+
   async getActiveSkillIds(userId: UUID): Promise<Set<UUID>> {
     this.logger.log('getActiveSkillIds', { userId });
 
