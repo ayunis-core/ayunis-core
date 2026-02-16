@@ -7,9 +7,10 @@ Skills are reusable knowledge + integration bundles that an AI assistant can act
 ## Key Concepts
 
 - **Skill**: A named bundle with a short description (shown in system prompt), long description (instructions, returned on activation), sources, and MCP integrations.
-- **Activation**: Skill activation is tracked in a separate `skill_activations` table (via `SkillActivationRecord`). Only active skills are surfaced in the system prompt as available for the LLM to activate. The repository provides `activateSkill`, `deactivateSkill`, `isSkillActive`, and `getActiveSkillIds` methods to manage activation state.
+- **Activation**: Skill activation is tracked in a separate `skill_activations` table (via `SkillActivationRecord`). Only active skills are surfaced in the system prompt as available for the LLM to activate. The repository provides `activateSkill`, `deactivateSkill`, `isSkillActive`, `getActiveSkillIds`, and `deactivateAllExceptOwner` methods to manage activation state.
 - **On-demand injection**: The LLM activates a skill via the `activate_skill` tool, which injects the skill's instructions and attaches its sources/MCP integrations to the thread.
 - **Name uniqueness**: Skill names must be unique per user (enforced at repository level) because the `activate_skill` tool uses the name as the identifier.
+- **Sharing**: Skills can be shared with organizations or teams via the shares module. When all shares for a skill are deleted, the `ShareDeletedListener` cleans up non-owner activations.
 
 ## Structure
 
@@ -21,6 +22,10 @@ skills/
 ├── application/
 │   ├── ports/skill.repository.ts          # Abstract repository (includes activation methods)
 │   ├── skills.errors.ts                   # Domain errors
+│   ├── listeners/
+│   │   └── share-deleted.listener.ts      # Handles ShareDeletedEvent to cleanup activations
+│   ├── strategies/
+│   │   └── skill-share-authorization.strategy.ts  # Validates skill ownership for sharing
 │   └── use-cases/
 │       ├── create-skill/
 │       ├── update-skill/
@@ -60,11 +65,27 @@ Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` patt
 
 Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
 
+### Sharing Integration
+
+The module integrates with the **SharesModule** for skill sharing:
+
+- **SkillShareAuthorizationStrategy** — Validates that users own the skill before allowing them to share it. Registered with the `ShareAuthorizationFactory` via a token-based provider (`getShareAuthStrategyToken(SharedEntityType.SKILL)`).
+- **ShareDeletedListener** — Listens for `ShareDeletedEvent` and cleans up non-owner skill activations when all shares for a skill have been deleted. Before deactivating, it queries `SharesRepository` to verify no remaining shares exist, preventing premature deactivation when multiple shares exist across different scopes.
+
 ## Dependencies
 
 - **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
 - **McpModule** — for MCP integration validation and batch fetch
+- **SharesModule** — for skill sharing (SkillShareAuthorizationStrategy, ShareDeletedListener)
 - **ContextService** — for user context (userId, orgId)
+
+## Exports
+
+- `FindActiveSkillsUseCase`
+- `FindOneSkillUseCase`
+- `AddSourceToSkillUseCase`
+- `FindSkillByNameUseCase`
+- `SkillShareAuthorizationStrategy` — exported for SharesModule integration
 
 ## API Endpoints
 

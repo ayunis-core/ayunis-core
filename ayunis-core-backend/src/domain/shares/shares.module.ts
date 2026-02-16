@@ -60,6 +60,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
   ],
   controllers: [SharesController],
   exports: [
+    SharesRepository,
     CreateShareUseCase,
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
