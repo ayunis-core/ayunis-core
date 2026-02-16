@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useTeamsControllerUpdateTeam,
   getTeamsControllerListTeamsQueryKey,
+  getTeamsControllerListMyTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { UpdateTeamFormData } from '../model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -41,6 +42,9 @@ export function useUpdateTeam(onSuccess?: () => void) {
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerListTeamsQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getTeamsControllerListMyTeamsQueryKey(),
         });
         void router.invalidate();
       },
