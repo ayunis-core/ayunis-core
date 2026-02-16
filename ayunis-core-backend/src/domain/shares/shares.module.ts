@@ -2,7 +2,10 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // Infrastructure
-import { ShareRecord } from './infrastructure/postgres/schema/share.record';
+import {
+  ShareRecord,
+  SkillShareRecord,
+} from './infrastructure/postgres/schema/share.record';
 import { ShareScopeRecord } from './infrastructure/postgres/schema/share-scope.record';
 import { PostgresSharesRepository } from './infrastructure/postgres/postgres-shares.repository';
 import { SharesRepository } from './application/ports/shares-repository.port';
@@ -25,12 +28,14 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 // Presenters
 import { SharesController } from './presenters/http/shares.controller';
 import { AgentsModule } from '../agents/agents.module';
+import { SkillsModule } from '../skills/skills.module';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ShareRecord, ShareScopeRecord]),
+    TypeOrmModule.forFeature([ShareRecord, ShareScopeRecord, SkillShareRecord]),
     forwardRef(() => AgentsModule), // For AgentShareAuthorizationStrategy
+    forwardRef(() => SkillsModule), // For SkillShareAuthorizationStrategy
     forwardRef(() => TeamsModule), // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
   ],
   providers: [

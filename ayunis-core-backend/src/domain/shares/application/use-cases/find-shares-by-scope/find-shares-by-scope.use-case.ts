@@ -7,7 +7,7 @@ import {
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeQuery } from './find-shares-by-scope.query';
-import { AgentShare, Share } from '../../../domain/share.entity';
+import { AgentShare, SkillShare, Share } from '../../../domain/share.entity';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
 import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
@@ -82,8 +82,12 @@ export class FindSharesByScopeUseCase {
         share instanceof AgentShare
       ) {
         entityId = share.agentId;
+      } else if (
+        entityType === SharedEntityType.SKILL &&
+        share instanceof SkillShare
+      ) {
+        entityId = share.skillId;
       }
-      // Future: Add other entity types
 
       if (entityId && !seenEntityIds.has(entityId)) {
         seenEntityIds.add(entityId);

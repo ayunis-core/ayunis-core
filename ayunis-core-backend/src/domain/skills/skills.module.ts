@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SourcesModule } from '../sources/sources.module';
 import { McpModule } from '../mcp/mcp.module';
@@ -25,6 +25,12 @@ import { UnassignMcpIntegrationFromSkillUseCase } from './application/use-cases/
 import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 
+// Strategies
+import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
+
+// Shares
+import { SharesModule } from '../shares/shares.module';
+
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
@@ -40,6 +46,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     LocalSkillRepositoryModule,
     SourcesModule,
     McpModule,
+    forwardRef(() => SharesModule),
   ],
   providers: [
     {
@@ -62,6 +69,9 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     ListSkillMcpIntegrationsUseCase,
     FindSkillByNameUseCase,
 
+    // Strategies
+    SkillShareAuthorizationStrategy,
+
     // Presenters
     SkillDtoMapper,
     McpIntegrationDtoMapper,
@@ -72,6 +82,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     FindOneSkillUseCase,
     AddSourceToSkillUseCase,
     FindSkillByNameUseCase,
+    SkillShareAuthorizationStrategy,
   ],
 })
 export class SkillsModule {}
