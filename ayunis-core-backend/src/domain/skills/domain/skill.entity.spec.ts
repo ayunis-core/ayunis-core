@@ -19,7 +19,6 @@ describe('Skill Entity', () => {
     );
     expect(skill.instructions).toBe('You are a legal research assistant...');
     expect(skill.userId).toBe(mockUserId);
-    expect(skill.isActive).toBe(false);
     expect(skill.sourceIds).toEqual([]);
     expect(skill.mcpIntegrationIds).toEqual([]);
     expect(skill.createdAt).toBeInstanceOf(Date);
@@ -38,18 +37,6 @@ describe('Skill Entity', () => {
     });
 
     expect(skill.id).toBe(explicitId);
-  });
-
-  it('should respect isActive when explicitly set to true', () => {
-    const skill = new Skill({
-      name: 'Active Skill',
-      shortDescription: 'An active skill.',
-      instructions: 'Instructions here.',
-      userId: mockUserId,
-      isActive: true,
-    });
-
-    expect(skill.isActive).toBe(true);
   });
 
   it('should preserve source IDs and MCP integration IDs when provided', () => {

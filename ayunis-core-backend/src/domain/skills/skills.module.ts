@@ -6,6 +6,7 @@ import { LocalSkillRepositoryModule } from './infrastructure/persistence/local/l
 import { LocalSkillRepository } from './infrastructure/persistence/local/local-skill.repository';
 import { SkillRepository } from './application/ports/skill.repository';
 import { SkillRecord } from './infrastructure/persistence/local/schema/skill.record';
+import { SkillActivationRecord } from './infrastructure/persistence/local/schema/skill-activation.record';
 import { McpIntegrationRecord } from '../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 
 // Use Cases
@@ -31,7 +32,11 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SkillRecord, McpIntegrationRecord]),
+    TypeOrmModule.forFeature([
+      SkillRecord,
+      SkillActivationRecord,
+      McpIntegrationRecord,
+    ]),
     LocalSkillRepositoryModule,
     SourcesModule,
     McpModule,

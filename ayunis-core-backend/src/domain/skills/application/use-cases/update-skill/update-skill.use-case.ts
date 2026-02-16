@@ -54,7 +54,6 @@ export class UpdateSkillUseCase {
         name: command.name,
         shortDescription: command.shortDescription,
         instructions: command.instructions,
-        isActive: existingSkill.isActive,
         sourceIds: existingSkill.sourceIds,
         mcpIntegrationIds: existingSkill.mcpIntegrationIds,
         userId,

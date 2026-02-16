@@ -83,6 +83,36 @@ Do NOT trust your own assessment of code correctness. Verify through observable 
 
 ---
 
+## Forbidden Actions
+
+These rules exist because an agent violated them and caused data loss. They are non-negotiable.
+
+### Never kill processes
+
+You do not understand what is running on the host machine. Processes that look like "just postgres" or "just ssh" may be Colima's infrastructure, SSH tunnels, or other critical services. If a port is occupied or a process is blocking something, **describe the problem and ask** — never `kill`, `pkill`, or `killall`.
+
+### Never use destructive Docker flags
+
+Never use `docker compose down -v`, `docker volume rm`, `docker system prune`, or any command that deletes volumes. Volumes contain database data that cannot be restored. The only safe Docker commands are:
+
+- `docker compose up` / `docker compose down` (without `-v`)
+- `docker compose ps` / `docker compose logs`
+- `docker compose exec` (to run commands inside containers)
+
+### Never modify system or infrastructure state
+
+Do not stop/restart Colima, edit Docker configs, change network settings, modify `/etc/hosts`, or touch anything outside the repository that isn't a source file.
+
+### When the environment is broken, stop and ask
+
+If Docker won't start, ports are occupied, containers won't come up, or anything infrastructure-related is failing: **describe what you see and ask for instructions.** Do not attempt to diagnose or fix environment issues autonomously. Every escalating "fix" risks making things worse.
+
+### General rule
+
+If an action is irreversible and isn't writing/editing source code, **ask first**.
+
+---
+
 ## Development Skills
 
 For detailed development workflows, patterns, and validation checklists, use the appropriate skill:

@@ -12,4 +12,8 @@ export abstract class SkillRepository {
     name: string,
     userId: UUID,
   ): Promise<Skill | null>;
+  abstract activateSkill(skillId: UUID, userId: UUID): Promise<void>;
+  abstract deactivateSkill(skillId: UUID, userId: UUID): Promise<void>;
+  abstract isSkillActive(skillId: UUID, userId: UUID): Promise<boolean>;
+  abstract getActiveSkillIds(userId: UUID): Promise<Set<UUID>>;
 }

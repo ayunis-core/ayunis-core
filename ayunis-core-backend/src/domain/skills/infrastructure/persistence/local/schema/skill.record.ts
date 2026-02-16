@@ -24,9 +24,6 @@ export class SkillRecord extends BaseRecord {
   @Column({ nullable: false })
   instructions: string;
 
-  @Column({ default: false })
-  isActive: boolean;
-
   @Column({ nullable: false })
   userId: UUID;
 

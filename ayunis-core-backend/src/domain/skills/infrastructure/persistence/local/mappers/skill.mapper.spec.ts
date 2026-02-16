@@ -22,7 +22,6 @@ describe('SkillMapper', () => {
       record.name = 'Legal Research';
       record.shortDescription = 'Research legal topics.';
       record.instructions = 'You are a legal research assistant.';
-      record.isActive = true;
       record.userId = mockUserId;
       record.sources = [{ id: mockSourceId } as any];
       record.mcpIntegrations = [{ id: mockMcpId } as any];
@@ -35,7 +34,6 @@ describe('SkillMapper', () => {
       expect(domain.name).toBe('Legal Research');
       expect(domain.shortDescription).toBe('Research legal topics.');
       expect(domain.instructions).toBe('You are a legal research assistant.');
-      expect(domain.isActive).toBe(true);
       expect(domain.userId).toBe(mockUserId);
       expect(domain.sourceIds).toEqual([mockSourceId]);
       expect(domain.mcpIntegrationIds).toEqual([mockMcpId]);
@@ -49,7 +47,6 @@ describe('SkillMapper', () => {
       record.name = 'Minimal Skill';
       record.shortDescription = 'Short.';
       record.instructions = 'Instructions.';
-      record.isActive = false;
       record.userId = mockUserId;
       record.createdAt = new Date('2026-01-01');
       record.updatedAt = new Date('2026-01-02');
@@ -68,7 +65,6 @@ describe('SkillMapper', () => {
         name: 'Legal Research',
         shortDescription: 'Research legal topics.',
         instructions: 'You are a legal research assistant.',
-        isActive: true,
         userId: mockUserId,
         sourceIds: [mockSourceId],
         mcpIntegrationIds: [mockMcpId],
@@ -80,7 +76,6 @@ describe('SkillMapper', () => {
       expect(record.name).toBe('Legal Research');
       expect(record.shortDescription).toBe('Research legal topics.');
       expect(record.instructions).toBe('You are a legal research assistant.');
-      expect(record.isActive).toBe(true);
       expect(record.userId).toBe(mockUserId);
     });
   });

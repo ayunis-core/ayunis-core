@@ -18,7 +18,9 @@ export class ToggleSkillActiveUseCase {
   ) {}
 
   @Transactional()
-  async execute(command: ToggleSkillActiveCommand): Promise<Skill> {
+  async execute(
+    command: ToggleSkillActiveCommand,
+  ): Promise<{ skill: Skill; isActive: boolean }> {
     this.logger.log('Toggling skill active', { skillId: command.skillId });
     try {
       const userId = this.contextService.get('userId');
@@ -31,13 +33,18 @@ export class ToggleSkillActiveUseCase {
         throw new SkillNotFoundError(command.skillId);
       }
 
-      const updatedSkill = new Skill({
-        ...skill,
-        isActive: !skill.isActive,
-        updatedAt: new Date(),
-      });
+      const currentlyActive = await this.skillRepository.isSkillActive(
+        command.skillId,
+        userId,
+      );
 
-      return this.skillRepository.update(updatedSkill);
+      if (currentlyActive) {
+        await this.skillRepository.deactivateSkill(command.skillId, userId);
+      } else {
+        await this.skillRepository.activateSkill(command.skillId, userId);
+      }
+
+      return { skill, isActive: !currentlyActive };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error toggling skill active', {

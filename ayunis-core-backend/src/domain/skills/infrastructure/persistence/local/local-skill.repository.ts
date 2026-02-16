@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
-import { UUID } from 'crypto';
+import { EntityManager, In, Repository } from 'typeorm';
+import { randomUUID, UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 import { SkillRepository } from '../../../application/ports/skill.repository';
 import { Skill } from '../../../domain/skill.entity';
 import { SkillRecord } from './schema/skill.record';
+import { SkillActivationRecord } from './schema/skill-activation.record';
 import { SkillMapper } from './mappers/skill.mapper';
 import { SkillNotFoundError } from '../../../application/skills.errors';
 
@@ -18,6 +19,8 @@ export class LocalSkillRepository implements SkillRepository {
   constructor(
     @InjectRepository(SkillRecord)
     private readonly skillRepository: Repository<SkillRecord>,
+    @InjectRepository(SkillActivationRecord)
+    private readonly activationRepository: Repository<SkillActivationRecord>,
     private readonly skillMapper: SkillMapper,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
@@ -178,8 +181,16 @@ export class LocalSkillRepository implements SkillRepository {
   async findActiveByOwner(userId: UUID): Promise<Skill[]> {
     this.logger.log('findActiveByOwner', { userId });
 
+    const activations = await this.activationRepository.find({
+      where: { userId },
+      select: ['skillId'],
+    });
+
+    if (activations.length === 0) return [];
+
+    const activeSkillIds = activations.map((a) => a.skillId);
     const records = await this.skillRepository.find({
-      where: { userId, isActive: true },
+      where: { id: In(activeSkillIds), userId },
       relations: ['sources', 'mcpIntegrations'],
     });
 
@@ -196,5 +207,50 @@ export class LocalSkillRepository implements SkillRepository {
 
     if (!record) return null;
     return this.skillMapper.toDomain(record);
+  }
+
+  async activateSkill(skillId: UUID, userId: UUID): Promise<void> {
+    this.logger.log('activateSkill', { skillId, userId });
+
+    const manager = this.getManager();
+    const existing = await manager.findOne(SkillActivationRecord, {
+      where: { skillId, userId },
+    });
+
+    if (existing) return;
+
+    const activation = new SkillActivationRecord();
+    activation.id = randomUUID();
+    activation.skillId = skillId;
+    activation.userId = userId;
+    await manager.save(SkillActivationRecord, activation);
+  }
+
+  async deactivateSkill(skillId: UUID, userId: UUID): Promise<void> {
+    this.logger.log('deactivateSkill', { skillId, userId });
+
+    const manager = this.getManager();
+    await manager.delete(SkillActivationRecord, { skillId, userId });
+  }
+
+  async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
+    this.logger.log('isSkillActive', { skillId, userId });
+
+    const count = await this.activationRepository.count({
+      where: { skillId, userId },
+    });
+
+    return count > 0;
+  }
+
+  async getActiveSkillIds(userId: UUID): Promise<Set<UUID>> {
+    this.logger.log('getActiveSkillIds', { userId });
+
+    const activations = await this.activationRepository.find({
+      where: { userId },
+      select: ['skillId'],
+    });
+
+    return new Set(activations.map((a) => a.skillId));
   }
 }

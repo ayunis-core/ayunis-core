@@ -157,7 +157,7 @@ describe('UpdateSkillUseCase', () => {
     expect(skillRepository.findByNameAndOwner).not.toHaveBeenCalled();
   });
 
-  it('should preserve isActive and mcpIntegrationIds on update', async () => {
+  it('should preserve mcpIntegrationIds on update', async () => {
     const mcpIds = ['aaa00000-0000-0000-0000-000000000000' as UUID];
     const existingSkill = new Skill({
       id: mockSkillId,
@@ -165,7 +165,6 @@ describe('UpdateSkillUseCase', () => {
       shortDescription: 'Research legal topics.',
       instructions: 'Original instructions.',
       userId: mockUserId,
-      isActive: true,
       mcpIntegrationIds: mcpIds,
     });
 
@@ -181,7 +180,6 @@ describe('UpdateSkillUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result.isActive).toBe(true);
     expect(result.mcpIntegrationIds).toEqual(mcpIds);
   });
 });
