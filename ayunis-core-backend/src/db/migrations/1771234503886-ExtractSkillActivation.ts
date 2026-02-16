@@ -30,6 +30,10 @@ export class ExtractSkillActivation1771234503886 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "skills" ADD "isActive" boolean NOT NULL DEFAULT false`,
     );
+    // Restore activation state from skill_activations back to skills.isActive
+    await queryRunner.query(
+      `UPDATE "skills" SET "isActive" = true WHERE "id" IN (SELECT "skillId" FROM "skill_activations")`,
+    );
     await queryRunner.query(`DROP TABLE "skill_activations"`);
   }
 }

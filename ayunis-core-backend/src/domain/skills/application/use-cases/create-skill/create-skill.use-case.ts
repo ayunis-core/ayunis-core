@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { CreateSkillCommand } from './create-skill.command';
 import { Skill } from '../../../domain/skill.entity';
@@ -19,6 +20,7 @@ export class CreateSkillUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: CreateSkillCommand): Promise<Skill> {
     this.logger.log('Creating skill', { name: command.name });
     try {
