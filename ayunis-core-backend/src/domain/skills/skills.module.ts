@@ -25,6 +25,9 @@ import { UnassignMcpIntegrationFromSkillUseCase } from './application/use-cases/
 import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 
+// Listeners
+import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
+
 // Strategies
 import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
 import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
@@ -70,6 +73,9 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     UnassignMcpIntegrationFromSkillUseCase,
     ListSkillMcpIntegrationsUseCase,
     FindSkillByNameUseCase,
+
+    // Listeners
+    ShareDeletedListener,
 
     // Strategies
     SkillShareAuthorizationStrategy,

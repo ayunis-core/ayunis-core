@@ -237,6 +237,19 @@ export class LocalSkillRepository implements SkillRepository {
     await manager.delete(SkillActivationRecord, { skillId, userId });
   }
 
+  async deactivateAllExceptOwner(skillId: UUID, ownerId: UUID): Promise<void> {
+    this.logger.log('deactivateAllExceptOwner', { skillId, ownerId });
+
+    const manager = this.getManager();
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from(SkillActivationRecord)
+      .where('skillId = :skillId', { skillId })
+      .andWhere('userId != :ownerId', { ownerId })
+      .execute();
+  }
+
   async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
     this.logger.log('isSkillActive', { skillId, userId });
 
