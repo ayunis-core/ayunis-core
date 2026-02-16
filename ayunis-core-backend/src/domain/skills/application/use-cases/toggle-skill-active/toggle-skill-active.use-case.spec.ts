@@ -27,6 +27,9 @@ describe('ToggleSkillActiveUseCase', () => {
     const mockSkillRepository = {
       findOne: jest.fn(),
       update: jest.fn(),
+      isSkillActive: jest.fn(),
+      activateSkill: jest.fn(),
+      deactivateSkill: jest.fn(),
     };
 
     const mockContextService = {
@@ -55,44 +58,54 @@ describe('ToggleSkillActiveUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should toggle inactive skill to active', async () => {
-    const inactiveSkill = new Skill({
+  it('should activate an inactive skill', async () => {
+    const skill = new Skill({
       id: mockSkillId,
       name: 'Legal Research',
       shortDescription: 'Research legal topics.',
       instructions: 'Instructions.',
       userId: mockUserId,
-      isActive: false,
     });
 
-    skillRepository.findOne.mockResolvedValue(inactiveSkill);
-    skillRepository.update.mockImplementation(async (skill: Skill) => skill);
+    skillRepository.findOne.mockResolvedValue(skill);
+    skillRepository.isSkillActive.mockResolvedValue(false);
+    skillRepository.activateSkill.mockResolvedValue(undefined);
 
     const result = await useCase.execute(
       new ToggleSkillActiveCommand({ skillId: mockSkillId }),
     );
 
     expect(result.isActive).toBe(true);
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      mockSkillId,
+      mockUserId,
+    );
+    expect(skillRepository.deactivateSkill).not.toHaveBeenCalled();
   });
 
-  it('should toggle active skill to inactive', async () => {
-    const activeSkill = new Skill({
+  it('should deactivate an active skill', async () => {
+    const skill = new Skill({
       id: mockSkillId,
       name: 'Legal Research',
       shortDescription: 'Research legal topics.',
       instructions: 'Instructions.',
       userId: mockUserId,
-      isActive: true,
     });
 
-    skillRepository.findOne.mockResolvedValue(activeSkill);
-    skillRepository.update.mockImplementation(async (skill: Skill) => skill);
+    skillRepository.findOne.mockResolvedValue(skill);
+    skillRepository.isSkillActive.mockResolvedValue(true);
+    skillRepository.deactivateSkill.mockResolvedValue(undefined);
 
     const result = await useCase.execute(
       new ToggleSkillActiveCommand({ skillId: mockSkillId }),
     );
 
     expect(result.isActive).toBe(false);
+    expect(skillRepository.deactivateSkill).toHaveBeenCalledWith(
+      mockSkillId,
+      mockUserId,
+    );
+    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
   });
 
   it('should throw SkillNotFoundError when skill does not exist', async () => {

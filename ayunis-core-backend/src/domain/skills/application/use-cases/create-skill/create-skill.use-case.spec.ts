@@ -18,6 +18,7 @@ describe('CreateSkillUseCase', () => {
     const mockSkillRepository = {
       create: jest.fn(),
       findByNameAndOwner: jest.fn(),
+      activateSkill: jest.fn(),
     };
 
     const mockContextService = {
@@ -99,7 +100,7 @@ describe('CreateSkillUseCase', () => {
     expect(skillRepository.create).not.toHaveBeenCalled();
   });
 
-  it('should create a skill with isActive true when explicitly set', async () => {
+  it('should activate the skill when isActive is true in command', async () => {
     const command = new CreateSkillCommand({
       name: 'Active Skill',
       shortDescription: 'An active skill.',
@@ -107,26 +108,44 @@ describe('CreateSkillUseCase', () => {
       isActive: true,
     });
 
+    const createdSkill = new Skill({
+      name: command.name,
+      shortDescription: command.shortDescription,
+      instructions: command.instructions,
+      userId: mockUserId,
+    });
+
     skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
+    skillRepository.create.mockResolvedValue(createdSkill);
+    skillRepository.activateSkill.mockResolvedValue(undefined);
 
-    const result = await useCase.execute(command);
+    await useCase.execute(command);
 
-    expect(result.isActive).toBe(true);
+    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+      createdSkill.id,
+      mockUserId,
+    );
   });
 
-  it('should set isActive to false by default', async () => {
+  it('should not activate the skill when isActive is not set', async () => {
     const command = new CreateSkillCommand({
       name: 'Data Analysis',
       shortDescription: 'Analyze data.',
       instructions: 'You are a data analysis expert.',
     });
 
+    const createdSkill = new Skill({
+      name: command.name,
+      shortDescription: command.shortDescription,
+      instructions: command.instructions,
+      userId: mockUserId,
+    });
+
     skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
+    skillRepository.create.mockResolvedValue(createdSkill);
 
-    const result = await useCase.execute(command);
+    await useCase.execute(command);
 
-    expect(result.isActive).toBe(false);
+    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
   });
 });

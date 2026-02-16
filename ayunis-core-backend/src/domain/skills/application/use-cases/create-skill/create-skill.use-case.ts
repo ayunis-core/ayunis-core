@@ -40,11 +40,16 @@ export class CreateSkillUseCase {
         name: command.name,
         shortDescription: command.shortDescription,
         instructions: command.instructions,
-        isActive: command.isActive,
         userId,
       });
 
-      return this.skillRepository.create(skill);
+      const created = await this.skillRepository.create(skill);
+
+      if (command.isActive) {
+        await this.skillRepository.activateSkill(created.id, userId);
+      }
+
+      return created;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error creating skill', { error: error as Error });

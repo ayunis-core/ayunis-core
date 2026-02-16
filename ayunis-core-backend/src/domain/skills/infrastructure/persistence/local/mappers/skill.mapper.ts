@@ -10,7 +10,6 @@ export class SkillMapper {
       name: record.name,
       shortDescription: record.shortDescription,
       instructions: record.instructions,
-      isActive: record.isActive,
       sourceIds: record.sources?.map((source) => source.id) ?? [],
       mcpIntegrationIds:
         record.mcpIntegrations?.map((integration) => integration.id) ?? [],
@@ -26,7 +25,6 @@ export class SkillMapper {
     record.name = domain.name;
     record.shortDescription = domain.shortDescription;
     record.instructions = domain.instructions;
-    record.isActive = domain.isActive;
     record.userId = domain.userId;
     return record;
   }

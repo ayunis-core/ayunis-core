@@ -56,6 +56,9 @@ import { AssignMcpIntegrationToSkillCommand } from '../../application/use-cases/
 import { UnassignMcpIntegrationFromSkillCommand } from '../../application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.command';
 import { ListSkillMcpIntegrationsQuery } from '../../application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.query';
 
+// Ports
+import { SkillRepository } from '../../application/ports/skill.repository';
+
 // DTOs & Mappers
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
@@ -114,6 +117,7 @@ export class SkillsController {
     private readonly unassignMcpIntegrationFromSkillUseCase: UnassignMcpIntegrationFromSkillUseCase,
     private readonly listSkillMcpIntegrationsUseCase: ListSkillMcpIntegrationsUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
+    private readonly skillRepository: SkillRepository,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
@@ -147,7 +151,7 @@ export class SkillsController {
       }),
     );
 
-    return this.skillDtoMapper.toDto(skill);
+    return this.skillDtoMapper.toDto(skill, dto.isActive ?? false);
   }
 
   @Get()
@@ -166,7 +170,9 @@ export class SkillsController {
       new FindAllSkillsQuery(),
     );
 
-    return this.skillDtoMapper.toDtoArray(skills);
+    const activeSkillIds = await this.skillRepository.getActiveSkillIds(userId);
+
+    return this.skillDtoMapper.toDtoArray(skills, activeSkillIds);
   }
 
   @Get(':id')
@@ -193,7 +199,9 @@ export class SkillsController {
       new FindOneSkillQuery(id),
     );
 
-    return this.skillDtoMapper.toDto(skill);
+    const isActive = await this.skillRepository.isSkillActive(id, userId);
+
+    return this.skillDtoMapper.toDto(skill, isActive);
   }
 
   @Put(':id')
@@ -232,7 +240,9 @@ export class SkillsController {
       }),
     );
 
-    return this.skillDtoMapper.toDto(skill);
+    const isActive = await this.skillRepository.isSkillActive(id, userId);
+
+    return this.skillDtoMapper.toDto(skill, isActive);
   }
 
   @Delete(':id')
@@ -277,11 +287,11 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     this.logger.log('toggleActive', { id, userId });
 
-    const skill = await this.toggleSkillActiveUseCase.execute(
+    const { skill, isActive } = await this.toggleSkillActiveUseCase.execute(
       new ToggleSkillActiveCommand({ skillId: id }),
     );
 
-    return this.skillDtoMapper.toDto(skill);
+    return this.skillDtoMapper.toDto(skill, isActive);
   }
 
   // Source Management
@@ -445,7 +455,11 @@ export class SkillsController {
       }
 
       fs.unlinkSync(file.path);
-      return this.skillDtoMapper.toDto(updatedSkill!);
+      const isActive = await this.skillRepository.isSkillActive(
+        skillId,
+        userId,
+      );
+      return this.skillDtoMapper.toDto(updatedSkill!, isActive);
     } catch (error: unknown) {
       this.logger.error('addFileSource', { error: error as Error });
       fs.unlinkSync(file.path);
@@ -513,6 +527,7 @@ export class SkillsController {
   @ApiResponse({ status: 409, description: 'Integration already assigned' })
   @HttpCode(HttpStatus.CREATED)
   async assignMcpIntegration(
+    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
@@ -522,7 +537,9 @@ export class SkillsController {
       new AssignMcpIntegrationToSkillCommand(skillId, integrationId),
     );
 
-    return this.skillDtoMapper.toDto(skill);
+    const isActive = await this.skillRepository.isSkillActive(skillId, userId);
+
+    return this.skillDtoMapper.toDto(skill, isActive);
   }
 
   @Delete(':skillId/mcp-integrations/:integrationId')
@@ -549,6 +566,7 @@ export class SkillsController {
     description: 'Skill not found or integration not assigned',
   })
   async unassignMcpIntegration(
+    @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
@@ -558,7 +576,9 @@ export class SkillsController {
       new UnassignMcpIntegrationFromSkillCommand(skillId, integrationId),
     );
 
-    return this.skillDtoMapper.toDto(skill);
+    const isActive = await this.skillRepository.isSkillActive(skillId, userId);
+
+    return this.skillDtoMapper.toDto(skill, isActive);
   }
 
   @Get(':skillId/mcp-integrations')

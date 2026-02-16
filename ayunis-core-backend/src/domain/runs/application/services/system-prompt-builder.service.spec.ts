@@ -18,7 +18,6 @@ describe('SystemPromptBuilderService', () => {
           shortDescription:
             'Knowledge about German administrative law procedures',
           instructions: 'Full instructions here...',
-          isActive: true,
           userId: randomUUID(),
         }),
         new Skill({
@@ -27,7 +26,6 @@ describe('SystemPromptBuilderService', () => {
           shortDescription:
             'Analyze datasets and produce statistical summaries',
           instructions: 'Full data analysis instructions...',
-          isActive: true,
           userId: randomUUID(),
         }),
       ];
@@ -147,7 +145,6 @@ describe('SystemPromptBuilderService', () => {
           name: 'QA Helper',
           shortDescription: 'Handles <special> "quoted" queries & more',
           instructions: 'Instructions...',
-          isActive: true,
           userId: randomUUID(),
         }),
       ];
