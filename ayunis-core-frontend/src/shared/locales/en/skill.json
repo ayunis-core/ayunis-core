@@ -1,4 +1,60 @@
 {
+  "shared": {
+    "badge": "Shared"
+  },
+  "tabs": {
+    "configuration": "Configuration",
+    "shares": "Share"
+  },
+  "shares": {
+    "org": {
+      "title": "Share with organisation",
+      "descriptionOn": "This skill is shared with all users of your organisation",
+      "descriptionOff": "This skill is not shared with all users of your organisation"
+    },
+    "teams": {
+      "title": "Teams",
+      "description": "Share with team members",
+      "create": {
+        "title": "Share Skill with Team",
+        "description": "This will make the skill available to all members of {{teamName}}",
+        "confirm": "Share",
+        "cancel": "Cancel"
+      },
+      "delete": {
+        "title": "Remove Team Share",
+        "description": "This will remove access to the skill for all members of {{teamName}}",
+        "confirm": "Remove",
+        "cancel": "Cancel"
+      }
+    },
+    "create": {
+      "button": "Share Skill",
+      "title": "Share Skill with Organization",
+      "description": "This will make the skill available to all members of your organization",
+      "confirm": "Share",
+      "cancel": "Cancel"
+    },
+    "delete": {
+      "tooltip": "Remove share",
+      "title": "Remove Share",
+      "description": "This will remove access to the skill for all members of your organization",
+      "confirm": "Remove",
+      "cancel": "Cancel"
+    },
+    "scope": {
+      "org": "Organization"
+    },
+    "sharedOn": "Shared on",
+    "success": {
+      "created": "Skill shared successfully",
+      "deleted": "Share removed successfully"
+    },
+    "error": {
+      "create": "Failed to share skill",
+      "delete": "Failed to remove share"
+    }
+  },
   "properties": {
     "title": "Edit skill",
     "description": "Make changes to your skill here. Click save when you're done.",

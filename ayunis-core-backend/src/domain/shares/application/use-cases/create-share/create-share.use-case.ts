@@ -43,23 +43,39 @@ export class CreateShareUseCase {
 
     if (command instanceof CreateOrgAgentShareCommand) {
       return this.createOrgShare(
-        SharedEntityType.AGENT, command.agentId, userId, orgId,
-        (ownerId, scope) => new AgentShare({ agentId: command.agentId, scope, ownerId }),
+        SharedEntityType.AGENT,
+        command.agentId,
+        userId,
+        orgId,
+        (ownerId, scope) =>
+          new AgentShare({ agentId: command.agentId, scope, ownerId }),
       );
     } else if (command instanceof CreateTeamAgentShareCommand) {
       return this.createTeamShare(
-        SharedEntityType.AGENT, command.agentId, command.teamId, userId,
-        (ownerId, scope) => new AgentShare({ agentId: command.agentId, scope, ownerId }),
+        SharedEntityType.AGENT,
+        command.agentId,
+        command.teamId,
+        userId,
+        (ownerId, scope) =>
+          new AgentShare({ agentId: command.agentId, scope, ownerId }),
       );
     } else if (command instanceof CreateOrgSkillShareCommand) {
       return this.createOrgShare(
-        SharedEntityType.SKILL, command.skillId, userId, orgId,
-        (ownerId, scope) => new SkillShare({ skillId: command.skillId, scope, ownerId }),
+        SharedEntityType.SKILL,
+        command.skillId,
+        userId,
+        orgId,
+        (ownerId, scope) =>
+          new SkillShare({ skillId: command.skillId, scope, ownerId }),
       );
     } else if (command instanceof CreateTeamSkillShareCommand) {
       return this.createTeamShare(
-        SharedEntityType.SKILL, command.skillId, command.teamId, userId,
-        (ownerId, scope) => new SkillShare({ skillId: command.skillId, scope, ownerId }),
+        SharedEntityType.SKILL,
+        command.skillId,
+        command.teamId,
+        userId,
+        (ownerId, scope) =>
+          new SkillShare({ skillId: command.skillId, scope, ownerId }),
       );
     } else {
       throw new Error('Unsupported share command type');

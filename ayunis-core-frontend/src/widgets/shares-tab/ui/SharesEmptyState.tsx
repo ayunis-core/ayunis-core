@@ -4,13 +4,15 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Share2 } from 'lucide-react';
 
 interface SharesEmptyStateProps {
+  translationNs: string;
   onCreateClick: () => void;
 }
 
 export default function SharesEmptyState({
+  translationNs,
   onCreateClick,
 }: SharesEmptyStateProps) {
-  const { t } = useTranslation('agent');
+  const { t } = useTranslation(translationNs);
 
   return (
     <EmptyState

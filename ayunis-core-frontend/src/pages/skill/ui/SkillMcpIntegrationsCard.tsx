@@ -21,7 +21,11 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { cn } from '@/shared/lib/shadcn/utils';
 
-export default function SkillMcpIntegrationsCard() {
+export default function SkillMcpIntegrationsCard({
+  disabled = false,
+}: {
+  disabled?: boolean;
+} = {}) {
   const { t } = useTranslation('skill');
   const { id: skillId } = useParams({ from: '/_authenticated/skills/$id' });
 
@@ -127,7 +131,7 @@ export default function SkillMcpIntegrationsCard() {
                     <Switch
                       checked={assigned}
                       onCheckedChange={() => void handleToggle(integration.id)}
-                      disabled={isPending}
+                      disabled={isPending || disabled}
                       aria-label={t('mcpIntegrations.toggleAriaLabel', {
                         name: integration.name,
                       })}

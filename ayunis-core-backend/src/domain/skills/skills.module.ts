@@ -27,6 +27,8 @@ import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-na
 
 // Strategies
 import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
+import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
+import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
 
 // Shares
 import { SharesModule } from '../shares/shares.module';
@@ -71,6 +73,10 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
 
     // Strategies
     SkillShareAuthorizationStrategy,
+    {
+      provide: getShareAuthStrategyToken(SharedEntityType.SKILL),
+      useExisting: SkillShareAuthorizationStrategy,
+    },
 
     // Presenters
     SkillDtoMapper,
@@ -83,6 +89,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     AddSourceToSkillUseCase,
     FindSkillByNameUseCase,
     SkillShareAuthorizationStrategy,
+    getShareAuthStrategyToken(SharedEntityType.SKILL),
   ],
 })
 export class SkillsModule {}

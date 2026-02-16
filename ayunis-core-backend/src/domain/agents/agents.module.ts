@@ -32,6 +32,8 @@ import { ModelResolverService } from './application/services/model-resolver.serv
 
 // Strategies
 import { AgentShareAuthorizationStrategy } from './application/strategies/agent-share-authorization.strategy';
+import { getShareAuthStrategyToken } from '../shares/application/factories/share-authorization.factory';
+import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-type.enum';
 
 // Presenters
 import { AgentsController } from './presenters/http/agents.controller';
@@ -78,6 +80,10 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
 
     // Strategies
     AgentShareAuthorizationStrategy,
+    {
+      provide: getShareAuthStrategyToken(SharedEntityType.AGENT),
+      useExisting: AgentShareAuthorizationStrategy,
+    },
 
     // Presenters
     AgentDtoMapper,
@@ -100,6 +106,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     InstallAgentFromMarketplaceUseCase,
     // Export strategy for shares module to use
     AgentShareAuthorizationStrategy,
+    getShareAuthStrategyToken(SharedEntityType.AGENT),
   ],
 })
 export class AgentsModule {}

@@ -3857,7 +3857,8 @@
             "schema": {
               "enum": [
                 "agent",
-                "prompt"
+                "prompt",
+                "skill"
               ],
               "type": "string"
             }
@@ -3888,6 +3889,48 @@
           }
         },
         "summary": "Get shares for an entity",
+        "tags": [
+          "shares"
+        ]
+      }
+    },
+    "/shares/skills": {
+      "post": {
+        "operationId": "SharesController_createSkillShare",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Skill share creation data",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillShareDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Share created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "403": {
+            "description": "User cannot create share for this skill"
+          }
+        },
+        "summary": "Create a share for a skill",
         "tags": [
           "shares"
         ]
@@ -3925,401 +3968,6 @@
         "summary": "Delete a share",
         "tags": [
           "shares"
-        ]
-      }
-    },
-    "/marketplace/agents/{identifier}": {
-      "get": {
-        "operationId": "MarketplaceController_getAgent",
-        "parameters": [
-          {
-            "name": "identifier",
-            "required": true,
-            "in": "path",
-            "description": "The unique identifier slug of the marketplace agent",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the marketplace agent details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarketplaceAgentResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Marketplace agent not found"
-          }
-        },
-        "summary": "Preview a marketplace agent before installation",
-        "tags": [
-          "marketplace"
-        ]
-      }
-    },
-    "/mcp-integrations/predefined": {
-      "post": {
-        "operationId": "McpIntegrationsController_createPredefined",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePredefinedIntegrationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Integration created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid slug or missing required fields"
-          },
-          "404": {
-            "description": "Predefined integration slug not found"
-          }
-        },
-        "summary": "Create a new predefined MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/custom": {
-      "post": {
-        "operationId": "McpIntegrationsController_createCustom",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCustomIntegrationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Integration created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid data"
-          }
-        },
-        "summary": "Create a new custom MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations": {
-      "get": {
-        "operationId": "McpIntegrationsController_list",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of integrations",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List all MCP integrations for organization",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/predefined/available": {
-      "get": {
-        "operationId": "McpIntegrationsController_listPredefinedConfigs",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of available predefined integrations",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PredefinedConfigResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List available predefined MCP integration configurations",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/available": {
-      "get": {
-        "operationId": "McpIntegrationsController_listAvailable",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of available enabled integrations",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List all available (enabled) MCP integrations for organization",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/{id}": {
-      "get": {
-        "operationId": "McpIntegrationsController_getById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Integration found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Get MCP integration by ID",
-        "tags": [
-          "mcp-integrations"
-        ]
-      },
-      "patch": {
-        "operationId": "McpIntegrationsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateMcpIntegrationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Integration updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid data"
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Update MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      },
-      "delete": {
-        "operationId": "McpIntegrationsController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Integration deleted successfully"
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Delete MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/{id}/enable": {
-      "post": {
-        "operationId": "McpIntegrationsController_enable",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Integration enabled successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Enable MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/{id}/disable": {
-      "post": {
-        "operationId": "McpIntegrationsController_disable",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Integration disabled successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Disable MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/{id}/validate": {
-      "post": {
-        "operationId": "McpIntegrationsController_validate",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Validation result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Validate MCP integration connection",
-        "tags": [
-          "mcp-integrations"
         ]
       }
     },
@@ -4730,6 +4378,401 @@
         "summary": "Remove a user from a team",
         "tags": [
           "teams"
+        ]
+      }
+    },
+    "/marketplace/agents/{identifier}": {
+      "get": {
+        "operationId": "MarketplaceController_getAgent",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "description": "The unique identifier slug of the marketplace agent",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the marketplace agent details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceAgentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marketplace agent not found"
+          }
+        },
+        "summary": "Preview a marketplace agent before installation",
+        "tags": [
+          "marketplace"
+        ]
+      }
+    },
+    "/mcp-integrations/predefined": {
+      "post": {
+        "operationId": "McpIntegrationsController_createPredefined",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePredefinedIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Integration created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid slug or missing required fields"
+          },
+          "404": {
+            "description": "Predefined integration slug not found"
+          }
+        },
+        "summary": "Create a new predefined MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/custom": {
+      "post": {
+        "operationId": "McpIntegrationsController_createCustom",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Integration created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          }
+        },
+        "summary": "Create a new custom MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations": {
+      "get": {
+        "operationId": "McpIntegrationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all MCP integrations for organization",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/predefined/available": {
+      "get": {
+        "operationId": "McpIntegrationsController_listPredefinedConfigs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of available predefined integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredefinedConfigResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List available predefined MCP integration configurations",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/available": {
+      "get": {
+        "operationId": "McpIntegrationsController_listAvailable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of available enabled integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all available (enabled) MCP integrations for organization",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}": {
+      "get": {
+        "operationId": "McpIntegrationsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Get MCP integration by ID",
+        "tags": [
+          "mcp-integrations"
+        ]
+      },
+      "patch": {
+        "operationId": "McpIntegrationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMcpIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Integration updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Update MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      },
+      "delete": {
+        "operationId": "McpIntegrationsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Integration deleted successfully"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Delete MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/enable": {
+      "post": {
+        "operationId": "McpIntegrationsController_enable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration enabled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Enable MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/disable": {
+      "post": {
+        "operationId": "McpIntegrationsController_disable",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration disabled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Disable MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/validate": {
+      "post": {
+        "operationId": "McpIntegrationsController_validate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Validate MCP integration connection",
+        "tags": [
+          "mcp-integrations"
         ]
       }
     },
@@ -6363,6 +6406,77 @@
         ]
       }
     },
+    "/chat-settings/system-prompt": {
+      "get": {
+        "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
+        "operationId": "ChatSettingsController_getSystemPrompt",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The user system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSystemPromptResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the user system prompt",
+        "tags": [
+          "Chat Settings"
+        ]
+      },
+      "put": {
+        "description": "Creates or replaces the custom system prompt for the authenticated user.",
+        "operationId": "ChatSettingsController_upsertSystemPrompt",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertUserSystemPromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully set or updated the user system prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSystemPromptResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload"
+          }
+        },
+        "summary": "Set or update the user system prompt",
+        "tags": [
+          "Chat Settings"
+        ]
+      },
+      "delete": {
+        "description": "Deletes the custom system prompt for the authenticated user.",
+        "operationId": "ChatSettingsController_deleteSystemPrompt",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user system prompt"
+          }
+        },
+        "summary": "Delete the user system prompt",
+        "tags": [
+          "Chat Settings"
+        ]
+      }
+    },
     "/prompts": {
       "post": {
         "operationId": "PromptsController_create",
@@ -6605,77 +6719,6 @@
         "summary": "Transcribe audio file to text",
         "tags": [
           "transcriptions"
-        ]
-      }
-    },
-    "/chat-settings/system-prompt": {
-      "get": {
-        "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
-        "operationId": "ChatSettingsController_getSystemPrompt",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "The user system prompt",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserSystemPromptResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get the user system prompt",
-        "tags": [
-          "Chat Settings"
-        ]
-      },
-      "put": {
-        "description": "Creates or replaces the custom system prompt for the authenticated user.",
-        "operationId": "ChatSettingsController_upsertSystemPrompt",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpsertUserSystemPromptDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully set or updated the user system prompt",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserSystemPromptResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          }
-        },
-        "summary": "Set or update the user system prompt",
-        "tags": [
-          "Chat Settings"
-        ]
-      },
-      "delete": {
-        "description": "Deletes the custom system prompt for the authenticated user.",
-        "operationId": "ChatSettingsController_deleteSystemPrompt",
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted the user system prompt"
-          }
-        },
-        "summary": "Delete the user system prompt",
-        "tags": [
-          "Chat Settings"
         ]
       }
     },
@@ -10010,7 +10053,8 @@
             "description": "Type of entity being shared",
             "enum": [
               "agent",
-              "prompt"
+              "prompt",
+              "skill"
             ]
           },
           "agentId": {
@@ -10042,7 +10086,8 @@
             "description": "Type of entity being shared",
             "enum": [
               "agent",
-              "prompt"
+              "prompt",
+              "skill"
             ]
           },
           "entityId": {
@@ -10092,6 +10137,201 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "CreateSkillShareDto": {
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "type": "string",
+            "description": "Type of entity being shared",
+            "enum": [
+              "agent",
+              "prompt",
+              "skill"
+            ]
+          },
+          "skillId": {
+            "type": "string",
+            "description": "ID of the skill to share",
+            "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "description": "ID of the team to share with (if not provided, shares with entire organization)",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "entityType",
+          "skillId"
+        ]
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name of the team",
+            "example": "Engineering"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "TeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the team",
+            "example": "Engineering"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "The organization ID the team belongs to",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was created",
+            "example": "2024-01-15T10:30:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date and time when the team was last updated",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "orgId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "TeamMemberResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the team member",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "userId": {
+            "type": "string",
+            "description": "The user ID of the team member",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "userName": {
+            "type": "string",
+            "description": "The name of the team member",
+            "example": "John Doe"
+          },
+          "userEmail": {
+            "type": "string",
+            "description": "The email of the team member",
+            "example": "john.doe@example.com"
+          },
+          "userRole": {
+            "type": "string",
+            "description": "The role of the team member in the organization",
+            "enum": [
+              "admin",
+              "user"
+            ],
+            "example": "user"
+          },
+          "joinedAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "The date when the user joined the team",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "userName",
+          "userEmail",
+          "userRole",
+          "joinedAt"
+        ]
+      },
+      "PaginatedTeamMembersResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of team members for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberResponseDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ]
+      },
+      "AddTeamMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The user ID to add to the team",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "ListTeamMembersQueryDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of items per page",
+            "example": 50,
+            "default": 50
+          },
+          "offset": {
+            "type": "number",
+            "description": "Number of items to skip",
+            "example": 0,
+            "default": 0
+          }
+        }
       },
       "MarketplaceAgentResponseDto": {
         "type": "object",
@@ -10420,173 +10660,6 @@
           "capabilities"
         ]
       },
-      "CreateTeamDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the team",
-            "example": "Engineering"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "UpdateTeamDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The new name of the team",
-            "example": "Engineering"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "TeamResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the team",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the team",
-            "example": "Engineering"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "The organization ID the team belongs to",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The date and time when the team was created",
-            "example": "2024-01-15T10:30:00.000Z"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The date and time when the team was last updated",
-            "example": "2024-01-15T10:30:00.000Z"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "orgId",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "TeamMemberResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the team member",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "userId": {
-            "type": "string",
-            "description": "The user ID of the team member",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          },
-          "userName": {
-            "type": "string",
-            "description": "The name of the team member",
-            "example": "John Doe"
-          },
-          "userEmail": {
-            "type": "string",
-            "description": "The email of the team member",
-            "example": "john.doe@example.com"
-          },
-          "userRole": {
-            "type": "string",
-            "description": "The role of the team member in the organization",
-            "enum": [
-              "admin",
-              "user"
-            ],
-            "example": "user"
-          },
-          "joinedAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "The date when the user joined the team",
-            "example": "2024-01-15T10:30:00.000Z"
-          }
-        },
-        "required": [
-          "id",
-          "userId",
-          "userName",
-          "userEmail",
-          "userRole",
-          "joinedAt"
-        ]
-      },
-      "PaginatedTeamMembersResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Array of team members for the current page",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TeamMemberResponseDto"
-            }
-          },
-          "pagination": {
-            "description": "Pagination metadata",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PaginationDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "pagination"
-        ]
-      },
-      "AddTeamMemberDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "The user ID to add to the team",
-            "example": "550e8400-e29b-41d4-a716-446655440001"
-          }
-        },
-        "required": [
-          "userId"
-        ]
-      },
-      "ListTeamMembersQueryDto": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "number",
-            "description": "Maximum number of items per page",
-            "example": 50,
-            "default": 50
-          },
-          "offset": {
-            "type": "number",
-            "description": "Number of items to skip",
-            "example": 0,
-            "default": 0
-          }
-        }
-      },
       "CreateSkillDto": {
         "type": "object",
         "properties": {
@@ -10665,6 +10738,11 @@
             "description": "The date and time when the skill was last updated",
             "example": "2023-12-01T10:00:00.000Z",
             "format": "date-time"
+          },
+          "isShared": {
+            "type": "boolean",
+            "description": "Whether the skill is shared with the current user (not owned)",
+            "example": false
           }
         },
         "required": [
@@ -10675,7 +10753,8 @@
           "isActive",
           "userId",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "isShared"
         ]
       },
       "UpdateSkillDto": {
@@ -11469,6 +11548,34 @@
           "pagination"
         ]
       },
+      "UserSystemPromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The custom system prompt for the user, or null if not set",
+            "example": "Always respond in bullet points. I work in the finance department.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "systemPrompt"
+        ]
+      },
+      "UpsertUserSystemPromptDto": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The custom system prompt for the user",
+            "example": "Always respond in bullet points. I work in the finance department.",
+            "maxLength": 10000
+          }
+        },
+        "required": [
+          "systemPrompt"
+        ]
+      },
       "CreatePromptDto": {
         "type": "object",
         "properties": {
@@ -11569,34 +11676,6 @@
         },
         "required": [
           "text"
-        ]
-      },
-      "UserSystemPromptResponseDto": {
-        "type": "object",
-        "properties": {
-          "systemPrompt": {
-            "type": "string",
-            "description": "The custom system prompt for the user, or null if not set",
-            "example": "Always respond in bullet points. I work in the finance department.",
-            "nullable": true
-          }
-        },
-        "required": [
-          "systemPrompt"
-        ]
-      },
-      "UpsertUserSystemPromptDto": {
-        "type": "object",
-        "properties": {
-          "systemPrompt": {
-            "type": "string",
-            "description": "The custom system prompt for the user",
-            "example": "Always respond in bullet points. I work in the finance department.",
-            "maxLength": 10000
-          }
-        },
-        "required": [
-          "systemPrompt"
         ]
       },
       "LoginDto": {

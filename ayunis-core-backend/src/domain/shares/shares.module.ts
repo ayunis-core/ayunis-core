@@ -27,15 +27,11 @@ import { ShareDtoMapper } from './presenters/http/mappers/share-dto.mapper';
 
 // Presenters
 import { SharesController } from './presenters/http/shares.controller';
-import { AgentsModule } from '../agents/agents.module';
-import { SkillsModule } from '../skills/skills.module';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ShareRecord, ShareScopeRecord, SkillShareRecord]),
-    forwardRef(() => AgentsModule), // For AgentShareAuthorizationStrategy
-    forwardRef(() => SkillsModule), // For SkillShareAuthorizationStrategy
     forwardRef(() => TeamsModule), // For CheckUserTeamMembershipUseCase, ListMyTeamsUseCase, GetTeamUseCase
   ],
   providers: [

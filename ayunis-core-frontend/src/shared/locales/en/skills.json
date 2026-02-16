@@ -1,4 +1,7 @@
 {
+  "shared": {
+    "badge": "Shared"
+  },
   "page": {
     "title": "My Skills"
   },

@@ -9,7 +9,7 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import AgentKnowledgeBaseCard from './AgentKnowledgeBaseCard';
 import AgentPropertiesCard from './AgentPropertiesCard';
 import AgentMcpIntegrationsCard from './AgentMcpIntegrationsCard';
-import SharesTab from './SharesTab';
+import { SharesTab } from '@/widgets/shares-tab';
 import {
   Tabs,
   TabsList,
@@ -101,7 +101,8 @@ export function AgentPage({
               </TabsContent>
               <TabsContent value="share" className="mt-4">
                 <SharesTab
-                  agentId={agent.id}
+                  entityType="agent"
+                  entityId={agent.id}
                   shares={shares}
                   userTeams={userTeams}
                 />

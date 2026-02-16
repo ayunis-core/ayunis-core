@@ -1855,6 +1855,7 @@ export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType
 export const CreateAgentShareDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
+  skill: 'skill',
 } as const;
 
 export interface CreateAgentShareDto {
@@ -1876,6 +1877,7 @@ export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof
 export const ShareResponseDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
+  skill: 'skill',
 } as const;
 
 /**
@@ -1909,6 +1911,97 @@ export interface ShareResponseDto {
   createdAt: string;
   /** When the share was last updated */
   updatedAt: string;
+}
+
+/**
+ * Type of entity being shared
+ */
+export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSkillShareDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+  skill: 'skill',
+} as const;
+
+export interface CreateSkillShareDto {
+  /** Type of entity being shared */
+  entityType: CreateSkillShareDtoEntityType;
+  /** ID of the skill to share */
+  skillId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+export interface CreateTeamDto {
+  /** The name of the team */
+  name: string;
+}
+
+export interface UpdateTeamDto {
+  /** The new name of the team */
+  name: string;
+}
+
+export interface TeamResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
+  createdAt: string;
+  /** The date and time when the team was last updated */
+  updatedAt: string;
+}
+
+/**
+ * The role of the team member in the organization
+ */
+export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TeamMemberResponseDtoUserRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface TeamMemberResponseDto {
+  /** The unique identifier of the team member */
+  id: string;
+  /** The user ID of the team member */
+  userId: string;
+  /** The name of the team member */
+  userName: string;
+  /** The email of the team member */
+  userEmail: string;
+  /** The role of the team member in the organization */
+  userRole: TeamMemberResponseDtoUserRole;
+  /** The date when the user joined the team */
+  joinedAt: string;
+}
+
+export interface PaginatedTeamMembersResponseDto {
+  /** Array of team members for the current page */
+  data: TeamMemberResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+export interface AddTeamMemberDto {
+  /** The user ID to add to the team */
+  userId: string;
+}
+
+export interface ListTeamMembersQueryDto {
+  /** Maximum number of items per page */
+  limit?: number;
+  /** Number of items to skip */
+  offset?: number;
 }
 
 export interface MarketplaceAgentResponseDto {
@@ -2115,75 +2208,6 @@ export interface ValidationResponseDto {
   error?: string;
 }
 
-export interface CreateTeamDto {
-  /** The name of the team */
-  name: string;
-}
-
-export interface UpdateTeamDto {
-  /** The new name of the team */
-  name: string;
-}
-
-export interface TeamResponseDto {
-  /** The unique identifier of the team */
-  id: string;
-  /** The name of the team */
-  name: string;
-  /** The organization ID the team belongs to */
-  orgId: string;
-  /** The date and time when the team was created */
-  createdAt: string;
-  /** The date and time when the team was last updated */
-  updatedAt: string;
-}
-
-/**
- * The role of the team member in the organization
- */
-export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TeamMemberResponseDtoUserRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface TeamMemberResponseDto {
-  /** The unique identifier of the team member */
-  id: string;
-  /** The user ID of the team member */
-  userId: string;
-  /** The name of the team member */
-  userName: string;
-  /** The email of the team member */
-  userEmail: string;
-  /** The role of the team member in the organization */
-  userRole: TeamMemberResponseDtoUserRole;
-  /** The date when the user joined the team */
-  joinedAt: string;
-}
-
-export interface PaginatedTeamMembersResponseDto {
-  /** Array of team members for the current page */
-  data: TeamMemberResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-export interface AddTeamMemberDto {
-  /** The user ID to add to the team */
-  userId: string;
-}
-
-export interface ListTeamMembersQueryDto {
-  /** Maximum number of items per page */
-  limit?: number;
-  /** Number of items to skip */
-  offset?: number;
-}
-
 export interface CreateSkillDto {
   /**
    * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
@@ -2216,6 +2240,8 @@ export interface SkillResponseDto {
   createdAt: string;
   /** The date and time when the skill was last updated */
   updatedAt: string;
+  /** Whether the skill is shared with the current user (not owned) */
+  isShared: boolean;
 }
 
 export interface UpdateSkillDto {
@@ -2640,6 +2666,22 @@ export interface UserUsageResponseDto {
   pagination: PaginationDto;
 }
 
+export interface UserSystemPromptResponseDto {
+  /**
+   * The custom system prompt for the user, or null if not set
+   * @nullable
+   */
+  systemPrompt: string | null;
+}
+
+export interface UpsertUserSystemPromptDto {
+  /**
+   * The custom system prompt for the user
+   * @maxLength 10000
+   */
+  systemPrompt: string;
+}
+
 export interface CreatePromptDto {
   /**
    * The title of the prompt
@@ -2680,22 +2722,6 @@ export interface UpdatePromptDto {
 export interface TranscriptionResponseDto {
   /** The transcribed text from the audio file */
   text: string;
-}
-
-export interface UserSystemPromptResponseDto {
-  /**
-   * The custom system prompt for the user, or null if not set
-   * @nullable
-   */
-  systemPrompt: string | null;
-}
-
-export interface UpsertUserSystemPromptDto {
-  /**
-   * The custom system prompt for the user
-   * @maxLength 10000
-   */
-  systemPrompt: string;
 }
 
 export interface LoginDto {
@@ -2900,6 +2926,7 @@ export type SharesControllerGetSharesEntityType = typeof SharesControllerGetShar
 export const SharesControllerGetSharesEntityType = {
   agent: 'agent',
   prompt: 'prompt',
+  skill: 'skill',
 } as const;
 
 export type TeamsControllerListTeamMembersParams = {
