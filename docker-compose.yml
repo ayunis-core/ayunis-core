@@ -19,6 +19,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1"
+        reservations:
+          memory: 512M
 
   minio:
     image: quay.io/minio/minio:latest
@@ -39,6 +51,18 @@ services:
     # Only expose console port externally if needed
     ports:
       - "9001:9001"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
 
   docker-socket-proxy:
     image: tecnativa/docker-socket-proxy:latest
@@ -73,6 +97,16 @@ services:
     networks:
       - docker-proxy-network
     # No need to expose ports - only accessed internally
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
 
   code-execution:
     build:
@@ -101,6 +135,16 @@ services:
       retries: 3
       start_period: 10s
     # Now running with restricted Docker access through proxy
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
 
   anonymize:
     build:
@@ -120,6 +164,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s # Longer start period for model loading
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2"
+        reservations:
+          memory: 1G
 
   app:
     build:
@@ -161,6 +217,40 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2"
+        reservations:
+          memory: 512M
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: ayunis-dozzle-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8888:8080" # localhost only for security
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # No network needed - Dozzle only requires the Docker socket.
+    # Keeping it off ayunis-network ensures the 127.0.0.1 port binding
+    # is the only access path (other containers cannot reach dozzle:8080).
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
 
 volumes:
   postgres-data:
