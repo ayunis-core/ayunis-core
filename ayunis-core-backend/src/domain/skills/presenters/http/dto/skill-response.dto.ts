@@ -59,6 +59,13 @@ export class SkillResponseDto {
     format: 'date-time',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description:
+      'Whether the skill is shared with the current user (not owned)',
+    example: false,
+  })
+  isShared: boolean;
 }
 
 export class SkillSourceResponseDto {

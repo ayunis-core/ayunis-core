@@ -166,13 +166,22 @@ export class SkillsController {
   ): Promise<SkillResponseDto[]> {
     this.logger.log('findAll', { userId });
 
-    const skills = await this.findAllSkillsUseCase.execute(
+    const results = await this.findAllSkillsUseCase.execute(
       new FindAllSkillsQuery(),
     );
 
     const activeSkillIds = await this.skillRepository.getActiveSkillIds(userId);
 
-    return this.skillDtoMapper.toDtoArray(skills, activeSkillIds);
+    const skills = results.map((r) => r.skill);
+    const sharedSkillIds = new Set<string>(
+      results.filter((r) => r.isShared).map((r) => r.skill.id),
+    );
+
+    return this.skillDtoMapper.toDtoArray(
+      skills,
+      activeSkillIds,
+      sharedSkillIds,
+    );
   }
 
   @Get(':id')
@@ -195,13 +204,13 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     this.logger.log('findOne', { id, userId });
 
-    const skill = await this.findOneSkillUseCase.execute(
+    const { skill, isShared } = await this.findOneSkillUseCase.execute(
       new FindOneSkillQuery(id),
     );
 
     const isActive = await this.skillRepository.isSkillActive(id, userId);
 
-    return this.skillDtoMapper.toDto(skill, isActive);
+    return this.skillDtoMapper.toDto(skill, isActive, isShared);
   }
 
   @Put(':id')

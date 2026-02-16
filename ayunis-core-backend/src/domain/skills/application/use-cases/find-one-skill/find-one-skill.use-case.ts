@@ -6,6 +6,14 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
+import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+
+export interface SkillWithShareStatus {
+  skill: Skill;
+  isShared: boolean;
+}
 
 @Injectable()
 export class FindOneSkillUseCase {
@@ -13,10 +21,11 @@ export class FindOneSkillUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
+    private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(query: FindOneSkillQuery): Promise<Skill> {
+  async execute(query: FindOneSkillQuery): Promise<SkillWithShareStatus> {
     this.logger.log('Finding skill', { id: query.id });
     try {
       const userId = this.contextService.get('userId');
@@ -24,12 +33,25 @@ export class FindOneSkillUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      const skill = await this.skillRepository.findOne(query.id, userId);
-      if (!skill) {
-        throw new SkillNotFoundError(query.id);
+      // Try owned skill first
+      const ownedSkill = await this.skillRepository.findOne(query.id, userId);
+      if (ownedSkill) {
+        return { skill: ownedSkill, isShared: false };
       }
 
-      return skill;
+      // Check if skill is shared with user
+      const share = await this.findShareByEntityUseCase.execute(
+        new FindShareByEntityQuery(SharedEntityType.SKILL, query.id),
+      );
+
+      if (share) {
+        const sharedSkills = await this.skillRepository.findByIds([query.id]);
+        if (sharedSkills.length > 0) {
+          return { skill: sharedSkills[0], isShared: true };
+        }
+      }
+
+      throw new SkillNotFoundError(query.id);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error finding skill', { error: error as Error });

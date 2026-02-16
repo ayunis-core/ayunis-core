@@ -1,7 +1,10 @@
 import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
 import { SkillRepository } from '../../ports/skill.repository';
+import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { Skill } from '../../../domain/skill.entity';
+import { SkillShare } from 'src/domain/shares/domain/share.entity';
+import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SkillNotFoundError } from '../../skills.errors';
@@ -10,29 +13,50 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 describe('FindSkillByNameUseCase', () => {
   let useCase: FindSkillByNameUseCase;
   let skillRepository: jest.Mocked<SkillRepository>;
+  let findSharesByScopeUseCase: jest.Mocked<FindSharesByScopeUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const userId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' as UUID;
+  const orgId = 'org-00000-0000-0000-000000000001' as UUID;
+
+  const makeSkill = (name: string, owner: UUID = userId) =>
+    new Skill({
+      name,
+      shortDescription: 'desc',
+      instructions: 'instructions',
+      userId: owner,
+    });
+
+  const makeSkillShare = (skillId: UUID) =>
+    new SkillShare({
+      skillId,
+      scope: new OrgShareScope({ orgId }),
+      ownerId: 'other-user' as UUID,
+    });
 
   beforeEach(() => {
     skillRepository = {
       findByNameAndOwner: jest.fn(),
+      findByIds: jest.fn(),
     } as unknown as jest.Mocked<SkillRepository>;
+
+    findSharesByScopeUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<FindSharesByScopeUseCase>;
 
     contextService = {
       get: jest.fn().mockReturnValue(userId),
     } as unknown as jest.Mocked<ContextService>;
 
-    useCase = new FindSkillByNameUseCase(skillRepository, contextService);
+    useCase = new FindSkillByNameUseCase(
+      skillRepository,
+      findSharesByScopeUseCase,
+      contextService,
+    );
   });
 
-  it('should return the skill when found by name', async () => {
-    const skill = new Skill({
-      name: 'ayunis-core-backend-dev',
-      shortDescription: 'Backend development skill',
-      instructions: 'Detailed instructions for backend development',
-      userId,
-    });
+  it('should return the owned skill when found by name', async () => {
+    const skill = makeSkill('ayunis-core-backend-dev');
     skillRepository.findByNameAndOwner.mockResolvedValue(skill);
 
     const result = await useCase.execute(
@@ -44,10 +68,37 @@ describe('FindSkillByNameUseCase', () => {
       'ayunis-core-backend-dev',
       userId,
     );
+    expect(findSharesByScopeUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should throw SkillNotFoundError when skill does not exist', async () => {
+  it('should find owned skill first on name collision with shared skill', async () => {
+    const ownedSkill = makeSkill('my-skill');
+    skillRepository.findByNameAndOwner.mockResolvedValue(ownedSkill);
+
+    const result = await useCase.execute(new FindSkillByNameQuery('my-skill'));
+
+    expect(result).toBe(ownedSkill);
+    expect(findSharesByScopeUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('should find shared skill when no owned match', async () => {
+    const sharedSkill = makeSkill('shared-skill', 'other-user' as UUID);
     skillRepository.findByNameAndOwner.mockResolvedValue(null);
+    findSharesByScopeUseCase.execute.mockResolvedValue([
+      makeSkillShare(sharedSkill.id),
+    ]);
+    skillRepository.findByIds.mockResolvedValue([sharedSkill]);
+
+    const result = await useCase.execute(
+      new FindSkillByNameQuery('shared-skill'),
+    );
+
+    expect(result).toBe(sharedSkill);
+  });
+
+  it('should throw SkillNotFoundError when neither owned nor shared exists', async () => {
+    skillRepository.findByNameAndOwner.mockResolvedValue(null);
+    findSharesByScopeUseCase.execute.mockResolvedValue([]);
 
     await expect(
       useCase.execute(new FindSkillByNameQuery('nonexistent-skill')),

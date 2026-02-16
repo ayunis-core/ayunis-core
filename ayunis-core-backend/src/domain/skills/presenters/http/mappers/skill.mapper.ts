@@ -8,22 +8,35 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 
 @Injectable()
 export class SkillDtoMapper {
-  toDto(skill: Skill, isActive: boolean): SkillResponseDto {
+  toDto(
+    skill: Skill,
+    isActive: boolean,
+    isShared: boolean = false,
+  ): SkillResponseDto {
     return {
       id: skill.id,
       name: skill.name,
       shortDescription: skill.shortDescription,
       instructions: skill.instructions,
       isActive,
+      isShared,
       userId: skill.userId,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
     };
   }
 
-  toDtoArray(skills: Skill[], activeSkillIds: Set<string>): SkillResponseDto[] {
+  toDtoArray(
+    skills: Skill[],
+    activeSkillIds: Set<string>,
+    sharedSkillIds: Set<string> = new Set(),
+  ): SkillResponseDto[] {
     return skills.map((skill) =>
-      this.toDto(skill, activeSkillIds.has(skill.id)),
+      this.toDto(
+        skill,
+        activeSkillIds.has(skill.id),
+        sharedSkillIds.has(skill.id),
+      ),
     );
   }
 

@@ -7,6 +7,9 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
+import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 
 @Injectable()
 export class ToggleSkillActiveUseCase {
@@ -14,6 +17,7 @@ export class ToggleSkillActiveUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
+    private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -28,7 +32,23 @@ export class ToggleSkillActiveUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      const skill = await this.skillRepository.findOne(command.skillId, userId);
+      // Try owned skill first
+      let skill = await this.skillRepository.findOne(command.skillId, userId);
+
+      // If not owned, check if shared with user
+      if (!skill) {
+        const share = await this.findShareByEntityUseCase.execute(
+          new FindShareByEntityQuery(SharedEntityType.SKILL, command.skillId),
+        );
+
+        if (share) {
+          const sharedSkills = await this.skillRepository.findByIds([
+            command.skillId,
+          ]);
+          skill = sharedSkills.length > 0 ? sharedSkills[0] : null;
+        }
+      }
+
       if (!skill) {
         throw new SkillNotFoundError(command.skillId);
       }
