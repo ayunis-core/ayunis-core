@@ -213,17 +213,21 @@ export class LocalSkillRepository implements SkillRepository {
     this.logger.log('activateSkill', { skillId, userId });
 
     const manager = this.getManager();
-    const existing = await manager.findOne(SkillActivationRecord, {
-      where: { skillId, userId },
-    });
 
-    if (existing) return;
-
-    const activation = new SkillActivationRecord();
-    activation.id = randomUUID();
-    activation.skillId = skillId;
-    activation.userId = userId;
-    await manager.save(SkillActivationRecord, activation);
+    // Use upsert to atomically insert or ignore if already exists.
+    // This avoids race conditions where concurrent requests both pass
+    // an existence check and then one fails on the unique constraint.
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(SkillActivationRecord)
+      .values({
+        id: randomUUID(),
+        skillId,
+        userId,
+      })
+      .orIgnore()
+      .execute();
   }
 
   async deactivateSkill(skillId: UUID, userId: UUID): Promise<void> {
