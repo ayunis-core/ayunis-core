@@ -25,8 +25,13 @@ export class DeleteShareUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  @Transactional()
   async execute(id: UUID): Promise<void> {
+    const event = await this.executeTransaction(id);
+    this.eventEmitter.emit(ShareDeletedEvent.EVENT_NAME, event);
+  }
+
+  @Transactional()
+  private async executeTransaction(id: UUID): Promise<ShareDeletedEvent> {
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -53,14 +58,11 @@ export class DeleteShareUseCase {
         this.toRemainingScope(s),
       );
 
-      this.eventEmitter.emit(
-        ShareDeletedEvent.EVENT_NAME,
-        new ShareDeletedEvent(
-          share.entityType,
-          entityId,
-          share.ownerId,
-          remainingScopes,
-        ),
+      return new ShareDeletedEvent(
+        share.entityType,
+        entityId,
+        share.ownerId,
+        remainingScopes,
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;

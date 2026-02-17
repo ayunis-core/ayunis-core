@@ -11,6 +11,7 @@ export abstract class TeamMembersRepository {
     teamId: UUID,
     userId: UUID,
   ): Promise<TeamMember | null>;
+  abstract findAllUserIdsByTeamId(teamId: UUID): Promise<UUID[]>;
   abstract create(teamMember: TeamMember): Promise<TeamMember>;
   abstract delete(id: UUID): Promise<void>;
   abstract deleteByTeamIdAndUserId(teamId: UUID, userId: UUID): Promise<void>;
