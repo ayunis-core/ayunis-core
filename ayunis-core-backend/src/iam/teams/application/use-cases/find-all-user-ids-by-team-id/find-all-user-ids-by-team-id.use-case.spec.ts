@@ -43,9 +43,9 @@ describe('FindAllUserIdsByTeamIdUseCase', () => {
     );
 
     expect(result).toEqual([userId1, userId2]);
-    expect(
-      teamMembersRepository.findAllUserIdsByTeamId,
-    ).toHaveBeenCalledWith(teamId);
+    expect(teamMembersRepository.findAllUserIdsByTeamId).toHaveBeenCalledWith(
+      teamId,
+    );
   });
 
   it('should return empty array when team has no members', async () => {

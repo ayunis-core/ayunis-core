@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { UUID } from 'crypto';
 import { SkillRepository } from '../../ports/skill.repository';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
@@ -19,6 +20,7 @@ export class InstallSkillFromMarketplaceUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: InstallSkillFromMarketplaceCommand): Promise<Skill> {
     this.logger.log('execute', { identifier: command.identifier });
 
