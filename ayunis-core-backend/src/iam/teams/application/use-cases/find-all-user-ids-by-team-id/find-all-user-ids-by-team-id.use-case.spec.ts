@@ -3,16 +3,14 @@ import { FindAllUserIdsByTeamIdUseCase } from './find-all-user-ids-by-team-id.us
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.query';
 import { randomUUID } from 'crypto';
-import { Paginated } from 'src/common/pagination';
-import { TeamMember } from '../../../domain/team-member.entity';
 
 describe('FindAllUserIdsByTeamIdUseCase', () => {
   let useCase: FindAllUserIdsByTeamIdUseCase;
-  let teamMembersRepository: { findByTeamId: jest.Mock };
+  let teamMembersRepository: { findAllUserIdsByTeamId: jest.Mock };
 
   beforeEach(async () => {
     teamMembersRepository = {
-      findByTeamId: jest.fn(),
+      findAllUserIdsByTeamId: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -35,32 +33,25 @@ describe('FindAllUserIdsByTeamIdUseCase', () => {
     const userId1 = randomUUID();
     const userId2 = randomUUID();
 
-    const members = [
-      new TeamMember({ teamId, userId: userId1 }),
-      new TeamMember({ teamId, userId: userId2 }),
-    ];
-
-    teamMembersRepository.findByTeamId.mockResolvedValue(
-      new Paginated({ data: members, total: 2, limit: 1000, offset: 0 }),
-    );
+    teamMembersRepository.findAllUserIdsByTeamId.mockResolvedValue([
+      userId1,
+      userId2,
+    ]);
 
     const result = await useCase.execute(
       new FindAllUserIdsByTeamIdQuery(teamId),
     );
 
     expect(result).toEqual([userId1, userId2]);
-    expect(teamMembersRepository.findByTeamId).toHaveBeenCalledWith(teamId, {
-      limit: 1000,
-      offset: 0,
-    });
+    expect(teamMembersRepository.findAllUserIdsByTeamId).toHaveBeenCalledWith(
+      teamId,
+    );
   });
 
   it('should return empty array when team has no members', async () => {
     const teamId = randomUUID();
 
-    teamMembersRepository.findByTeamId.mockResolvedValue(
-      new Paginated({ data: [], total: 0, limit: 1000, offset: 0 }),
-    );
+    teamMembersRepository.findAllUserIdsByTeamId.mockResolvedValue([]);
 
     const result = await useCase.execute(
       new FindAllUserIdsByTeamIdQuery(teamId),
