@@ -18,6 +18,7 @@ export class SkillDtoMapper {
       name: skill.name,
       shortDescription: skill.shortDescription,
       instructions: skill.instructions,
+      marketplaceIdentifier: skill.marketplaceIdentifier,
       isActive,
       isShared,
       userId: skill.userId,

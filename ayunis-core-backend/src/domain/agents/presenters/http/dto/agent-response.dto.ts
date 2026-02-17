@@ -122,16 +122,6 @@ export class AgentResponseDto {
 
   @ApiProperty({
     description:
-      'The marketplace identifier if this agent was installed from the marketplace',
-    example: 'meeting-summarizer',
-    type: 'string',
-    nullable: true,
-    required: false,
-  })
-  marketplaceIdentifier: string | null;
-
-  @ApiProperty({
-    description:
       'Whether this agent is shared with the current user (vs. owned by them)',
     example: false,
   })

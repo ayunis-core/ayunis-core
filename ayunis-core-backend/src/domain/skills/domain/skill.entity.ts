@@ -31,6 +31,7 @@ export class Skill {
   public readonly instructions: string;
   public readonly sourceIds: UUID[];
   public readonly mcpIntegrationIds: UUID[];
+  public readonly marketplaceIdentifier: string | null;
   public readonly userId: UUID;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
@@ -42,6 +43,7 @@ export class Skill {
     instructions: string;
     sourceIds?: UUID[];
     mcpIntegrationIds?: UUID[];
+    marketplaceIdentifier?: string | null;
     userId: UUID;
     createdAt?: Date;
     updatedAt?: Date;
@@ -53,6 +55,7 @@ export class Skill {
     this.instructions = params.instructions;
     this.sourceIds = params.sourceIds ?? [];
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
+    this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
     this.userId = params.userId;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

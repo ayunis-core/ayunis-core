@@ -24,6 +24,9 @@ export class SkillRecord extends BaseRecord {
   @Column({ nullable: false })
   instructions: string;
 
+  @Column({ nullable: true, type: 'varchar', length: 255 })
+  marketplaceIdentifier: string | null;
+
   @Column({ nullable: false })
   userId: UUID;
 

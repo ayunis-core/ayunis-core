@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SourcesModule } from '../sources/sources.module';
 import { McpModule } from '../mcp/mcp.module';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 import { LocalSkillRepositoryModule } from './infrastructure/persistence/local/local-skill-repository.module';
 import { LocalSkillRepository } from './infrastructure/persistence/local/local-skill.repository';
 import { SkillRepository } from './application/ports/skill.repository';
@@ -24,6 +25,7 @@ import { AssignMcpIntegrationToSkillUseCase } from './application/use-cases/assi
 import { UnassignMcpIntegrationFromSkillUseCase } from './application/use-cases/unassign-mcp-integration-from-skill/unassign-mcp-integration-from-skill.use-case';
 import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-skill-mcp-integrations/list-skill-mcp-integrations.use-case';
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
+import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
@@ -55,6 +57,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     LocalSkillRepositoryModule,
     SourcesModule,
     McpModule,
+    MarketplaceModule,
     forwardRef(() => SharesModule),
     UsersModule,
     TeamsModule,
@@ -79,6 +82,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     UnassignMcpIntegrationFromSkillUseCase,
     ListSkillMcpIntegrationsUseCase,
     FindSkillByNameUseCase,
+    InstallSkillFromMarketplaceUseCase,
 
     // Listeners
     ShareDeletedListener,

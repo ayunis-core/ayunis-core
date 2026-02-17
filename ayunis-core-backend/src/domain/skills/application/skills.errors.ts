@@ -22,6 +22,7 @@ export enum SkillErrorCode {
   MISSING_FILE = 'MISSING_FILE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
+  MARKETPLACE_INSTALL_FAILED = 'MARKETPLACE_INSTALL_FAILED',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -197,6 +198,17 @@ export class EmptyFileDataError extends SkillError {
       SkillErrorCode.EMPTY_FILE_DATA,
       400,
       { fileName, ...metadata },
+    );
+  }
+}
+
+export class MarketplaceInstallFailedError extends SkillError {
+  constructor(identifier: string, metadata?: ErrorMetadata) {
+    super(
+      `Failed to install marketplace skill: ${identifier}`,
+      SkillErrorCode.MARKETPLACE_INSTALL_FAILED,
+      500,
+      { identifier, ...metadata },
     );
   }
 }
