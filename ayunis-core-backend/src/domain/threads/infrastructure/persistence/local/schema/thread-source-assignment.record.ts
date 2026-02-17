@@ -14,6 +14,10 @@ export class ThreadSourceAssignmentRecord extends BaseRecord {
   @JoinColumn({ name: 'threadId' })
   thread: ThreadRecord;
 
+  @Column({ type: 'uuid', nullable: true })
+  @Index()
+  originSkillId: UUID | null;
+
   @Column()
   @Index()
   sourceId: UUID;

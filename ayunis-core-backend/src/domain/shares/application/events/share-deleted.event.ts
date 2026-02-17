@@ -14,6 +14,7 @@ export class ShareDeletedEvent {
     public readonly entityType: SharedEntityType,
     public readonly entityId: UUID,
     public readonly ownerId: UUID,
+    public readonly orgId: UUID,
     public readonly remainingScopes: RemainingShareScope[] = [],
   ) {}
 }

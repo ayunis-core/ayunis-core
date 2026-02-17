@@ -53,12 +53,18 @@ export class DeleteShareUseCase {
         this.toRemainingScope(s),
       );
 
+      const orgId = this.contextService.get('orgId');
+      if (!orgId) {
+        throw new UnauthorizedAccessError();
+      }
+
       this.eventEmitter.emit(
         ShareDeletedEvent.EVENT_NAME,
         new ShareDeletedEvent(
           share.entityType,
           entityId,
           share.ownerId,
+          orgId,
           remainingScopes,
         ),
       );

@@ -25,9 +25,13 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from './application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { AddMcpIntegrationToThreadUseCase } from './application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
+import { RemoveSkillSourcesFromThreadsUseCase } from './application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
+import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { AgentsModule } from '../agents/agents.module';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
@@ -38,6 +42,8 @@ import { MessagesModule } from '../messages/messages.module';
     MessagesModule,
     OrgsModule,
     StorageModule,
+    UsersModule,
+    TeamsModule,
   ],
   controllers: [ThreadsController],
   providers: [
@@ -59,6 +65,9 @@ import { MessagesModule } from '../messages/messages.module';
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     AddMcpIntegrationToThreadUseCase,
+    RemoveSkillSourcesFromThreadsUseCase,
+    // Listeners
+    ShareDeletedListener,
     // Mappers
     SourceDtoMapper,
     GetThreadDtoMapper,
@@ -78,6 +87,7 @@ import { MessagesModule } from '../messages/messages.module';
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     AddMcpIntegrationToThreadUseCase,
+    RemoveSkillSourcesFromThreadsUseCase,
     // Export mappers
     GetThreadDtoMapper,
     GetThreadsDtoMapper,

@@ -69,7 +69,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
       // Copy skill's sources to the thread
       for (const source of sources) {
         await this.addSourceToThreadUseCase.execute(
-          new AddSourceCommand(threadResult.thread, source),
+          new AddSourceCommand(threadResult.thread, source, skill.id),
         );
       }
 

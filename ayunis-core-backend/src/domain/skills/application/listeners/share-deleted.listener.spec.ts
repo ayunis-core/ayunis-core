@@ -52,10 +52,12 @@ describe('ShareDeletedListener', () => {
   it('should deactivate all non-owner activations when no remaining scopes exist', async () => {
     const skillId = randomUUID();
     const ownerId = randomUUID();
+    const orgId = randomUUID();
     const event = new ShareDeletedEvent(
       SharedEntityType.SKILL,
       skillId,
       ownerId,
+      orgId,
       [],
     );
 
@@ -71,6 +73,7 @@ describe('ShareDeletedListener', () => {
   it('should deactivate only users not covered by remaining team scope', async () => {
     const skillId = randomUUID();
     const ownerId = randomUUID();
+    const orgId = randomUUID();
     const teamId = randomUUID();
     const coveredUserId = randomUUID();
 
@@ -81,6 +84,7 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.SKILL,
       skillId,
       ownerId,
+      orgId,
       remainingScopes,
     );
 
@@ -108,6 +112,7 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.SKILL,
       skillId,
       ownerId,
+      orgId,
       remainingScopes,
     );
 
@@ -137,6 +142,7 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.SKILL,
       skillId,
       ownerId,
+      orgId,
       [
         { scopeType: ShareScopeType.ORG, scopeId: orgId },
         { scopeType: ShareScopeType.TEAM, scopeId: teamId },
@@ -166,6 +172,7 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.AGENT,
       randomUUID(),
       randomUUID(),
+      randomUUID(),
       [],
     );
 
@@ -178,6 +185,7 @@ describe('ShareDeletedListener', () => {
   it('should not deactivate anything when a prompt share is deleted', async () => {
     const event = new ShareDeletedEvent(
       SharedEntityType.PROMPT,
+      randomUUID(),
       randomUUID(),
       randomUUID(),
       [],

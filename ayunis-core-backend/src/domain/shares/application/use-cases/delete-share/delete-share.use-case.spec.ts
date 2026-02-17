@@ -71,7 +71,9 @@ describe('DeleteShareUseCase', () => {
       ownerId: mockUserId,
     });
 
-    (contextService.get as jest.Mock).mockReturnValue(mockUserId);
+    (contextService.get as jest.Mock).mockImplementation((key: string) =>
+      key === 'orgId' ? mockOrgId : mockUserId,
+    );
     (repository.findById as jest.Mock).mockResolvedValue(share);
     (repository.delete as jest.Mock).mockResolvedValue(undefined);
     (repository.findByEntityIdAndType as jest.Mock).mockResolvedValue([]);
@@ -88,6 +90,7 @@ describe('DeleteShareUseCase', () => {
     expect(emittedEvent.entityType).toBe(SharedEntityType.SKILL);
     expect(emittedEvent.entityId).toBe(skillId);
     expect(emittedEvent.ownerId).toBe(mockUserId);
+    expect(emittedEvent.orgId).toBe(mockOrgId);
     expect(emittedEvent.remainingScopes).toEqual([]);
   });
 
@@ -106,7 +109,9 @@ describe('DeleteShareUseCase', () => {
       ownerId: mockUserId,
     });
 
-    (contextService.get as jest.Mock).mockReturnValue(mockUserId);
+    (contextService.get as jest.Mock).mockImplementation((key: string) =>
+      key === 'orgId' ? mockOrgId : mockUserId,
+    );
     (repository.findById as jest.Mock).mockResolvedValue(share);
     (repository.delete as jest.Mock).mockResolvedValue(undefined);
     (repository.findByEntityIdAndType as jest.Mock).mockResolvedValue([
@@ -129,7 +134,9 @@ describe('DeleteShareUseCase', () => {
       ownerId: mockUserId,
     });
 
-    (contextService.get as jest.Mock).mockReturnValue(mockUserId);
+    (contextService.get as jest.Mock).mockImplementation((key: string) =>
+      key === 'orgId' ? mockOrgId : mockUserId,
+    );
     (repository.findById as jest.Mock).mockResolvedValue(share);
     (repository.delete as jest.Mock).mockResolvedValue(undefined);
     (repository.findByEntityIdAndType as jest.Mock).mockResolvedValue([]);
