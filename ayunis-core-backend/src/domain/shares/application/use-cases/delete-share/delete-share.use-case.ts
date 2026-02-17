@@ -27,7 +27,12 @@ export class DeleteShareUseCase {
 
   async execute(id: UUID): Promise<void> {
     const event = await this.executeTransaction(id);
-    this.eventEmitter.emit(ShareDeletedEvent.EVENT_NAME, event);
+    try {
+      this.eventEmitter.emit(ShareDeletedEvent.EVENT_NAME, event);
+    } catch (error) {
+      // Log but don't rethrow - the delete has already been committed
+      this.logger.error('Error emitting ShareDeletedEvent', { error });
+    }
   }
 
   @Transactional()

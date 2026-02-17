@@ -101,12 +101,6 @@ export function SkillPage({
           isReadOnly ? (
             <div className="grid gap-4">
               <SkillPropertiesCard skill={skill} disabled />
-              <SkillKnowledgeBaseCard
-                skill={skill}
-                isEnabled={isEmbeddingModelEnabled}
-                disabled
-              />
-              <SkillMcpIntegrationsCard disabled />
             </div>
           ) : (
             <Tabs
