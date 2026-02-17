@@ -1,7 +1,7 @@
-import { AgentResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 
 export abstract class MarketplaceClient {
-  abstract getAgentByIdentifier(
+  abstract getSkillByIdentifier(
     identifier: string,
-  ): Promise<AgentResponseDto | null>;
+  ): Promise<SkillResponseDto | null>;
 }

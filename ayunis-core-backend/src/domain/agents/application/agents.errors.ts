@@ -27,8 +27,6 @@ export enum AgentErrorCode {
   MISSING_FILE = 'MISSING_FILE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
-  NO_PERMITTED_MODEL = 'NO_PERMITTED_MODEL',
-  MARKETPLACE_INSTALL_FAILED = 'MARKETPLACE_INSTALL_FAILED',
 }
 
 /**
@@ -273,34 +271,6 @@ export class EmptyFileDataError extends AgentError {
         fileName,
         ...metadata,
       },
-    );
-  }
-}
-
-/**
- * Error thrown when no permitted language model is available for the organization
- */
-export class NoPermittedModelError extends AgentError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'No permitted language model found for this organization. Cannot install marketplace agent.',
-      AgentErrorCode.NO_PERMITTED_MODEL,
-      400,
-      metadata,
-    );
-  }
-}
-
-/**
- * Error thrown when installing an agent from the marketplace fails unexpectedly
- */
-export class MarketplaceInstallFailedError extends AgentError {
-  constructor(identifier: string, metadata?: ErrorMetadata) {
-    super(
-      `Failed to install marketplace agent: ${identifier}`,
-      AgentErrorCode.MARKETPLACE_INSTALL_FAILED,
-      500,
-      { identifier, ...metadata },
     );
   }
 }
