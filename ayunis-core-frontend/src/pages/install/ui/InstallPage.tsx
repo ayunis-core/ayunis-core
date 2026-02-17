@@ -1,20 +1,20 @@
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
-import { useMarketplaceControllerGetAgent } from '../api/useFetchMarketplaceAgent';
+import { useMarketplaceControllerGetSkill } from '../api/useFetchMarketplaceSkill';
 import { useInstallFromMarketplace } from '../api/useInstallFromMarketplace';
 import { InstallErrorState } from './InstallErrorState';
 import { InstallLoadingSkeleton } from './InstallLoadingSkeleton';
-import { InstallAgentCard } from './InstallAgentCard';
+import { InstallSkillCard } from './InstallSkillCard';
 
 interface InstallPageProps {
-  agentIdentifier: string | undefined;
+  skillIdentifier: string | undefined;
 }
 
-export default function InstallPage({ agentIdentifier }: InstallPageProps) {
+export default function InstallPage({ skillIdentifier }: InstallPageProps) {
   const { t } = useTranslation('install');
 
-  if (!agentIdentifier) {
+  if (!skillIdentifier) {
     return (
       <AppLayout>
         <FullScreenMessageLayout>
@@ -30,26 +30,26 @@ export default function InstallPage({ agentIdentifier }: InstallPageProps) {
   return (
     <AppLayout>
       <FullScreenMessageLayout>
-        <InstallPageContent agentIdentifier={agentIdentifier} />
+        <InstallPageContent skillIdentifier={skillIdentifier} />
       </FullScreenMessageLayout>
     </AppLayout>
   );
 }
 
-function InstallPageContent({ agentIdentifier }: { agentIdentifier: string }) {
+function InstallPageContent({ skillIdentifier }: { skillIdentifier: string }) {
   const { t } = useTranslation('install');
   const {
-    data: agent,
+    data: skill,
     isLoading,
     isError,
-  } = useMarketplaceControllerGetAgent(agentIdentifier);
+  } = useMarketplaceControllerGetSkill(skillIdentifier);
   const installMutation = useInstallFromMarketplace();
 
   if (isLoading) {
     return <InstallLoadingSkeleton />;
   }
 
-  if (isError || !agent) {
+  if (isError || !skill) {
     return (
       <InstallErrorState
         title={t('error.fetchFailed.title')}
@@ -59,10 +59,10 @@ function InstallPageContent({ agentIdentifier }: { agentIdentifier: string }) {
   }
 
   return (
-    <InstallAgentCard
-      agent={agent}
+    <InstallSkillCard
+      skill={skill}
       onInstall={() =>
-        installMutation.mutate({ data: { identifier: agentIdentifier } })
+        installMutation.mutate({ data: { identifier: skillIdentifier } })
       }
       isInstalling={installMutation.isPending}
     />

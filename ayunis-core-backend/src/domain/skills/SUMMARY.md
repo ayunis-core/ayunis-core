@@ -37,7 +37,8 @@ skills/
 │       ├── list-skill-sources/
 │       ├── assign-mcp-integration-to-skill/
 │       ├── unassign-mcp-integration-from-skill/
-│       └── list-skill-mcp-integrations/
+│       ├── list-skill-mcp-integrations/
+│       └── install-skill-from-marketplace/
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/
@@ -71,12 +72,20 @@ When a skill share is deleted, the `ShareDeletedListener` handles cleanup of act
 - **SharesModule** — for share authorization strategy registration
 - **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
 - **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
+- **MarketplaceModule** — for fetching marketplace skill definitions (`GetMarketplaceSkillUseCase`)
 - **ContextService** — for user context (userId, orgId)
+
+## Marketplace Integration
+
+The skills module supports installing skills from the external Ayunis Marketplace. The `InstallSkillFromMarketplaceUseCase` fetches a skill definition from the marketplace (via `GetMarketplaceSkillUseCase` from the **MarketplaceModule**) and creates a local `Skill` entity with the marketplace skill's name, short description, and instructions. The `marketplaceIdentifier` field on the `Skill` entity tracks which skills were installed from the marketplace.
+
+Error handling: `MarketplaceInstallFailedError` is raised when the installation process fails unexpectedly.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
+| POST | `/skills/install-from-marketplace` | Install a skill from the marketplace |
 | POST | `/skills` | Create a skill |
 | GET | `/skills` | List all skills for current user |
 | GET | `/skills/:id` | Get a skill by ID |

@@ -32,7 +32,7 @@ export function InstallErrorState({
       </CardHeader>
       <CardFooter className="justify-center">
         <Button variant="outline" asChild>
-          <Link to="/agents">{t('action.backToAgents')}</Link>
+          <Link to="/skills">{t('action.backToSkills')}</Link>
         </Button>
       </CardFooter>
     </Card>
