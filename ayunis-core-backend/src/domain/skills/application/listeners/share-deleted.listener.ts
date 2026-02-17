@@ -2,14 +2,24 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import {
+  OrgShareScope,
+  TeamShareScope,
+} from 'src/domain/shares/domain/share-scope.entity';
+import { Share } from 'src/domain/shares/domain/share.entity';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByOrgIdQuery } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.query';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
 import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.query';
-import { RemainingShareScope } from 'src/domain/shares/application/events/share-deleted.event';
 import { SkillRepository } from '../ports/skill.repository';
+
+interface ResolvedScope {
+  scopeType: ShareScopeType;
+  scopeId: UUID;
+}
 
 @Injectable()
 export class ShareDeletedListener {
@@ -18,6 +28,7 @@ export class ShareDeletedListener {
   constructor(
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
+    private readonly sharesRepository: SharesRepository,
     private readonly findAllUserIdsByOrgId: FindAllUserIdsByOrgIdUseCase,
     private readonly findAllUserIdsByTeamId: FindAllUserIdsByTeamIdUseCase,
   ) {}
@@ -28,13 +39,24 @@ export class ShareDeletedListener {
       return;
     }
 
+    // Query current remaining shares from database to ensure we see committed data
+    // This avoids stale data issues with concurrent deletions
+    const remainingShares = await this.sharesRepository.findByEntityIdAndType(
+      event.entityId,
+      event.entityType,
+    );
+
+    const remainingScopes = remainingShares.map((share) =>
+      this.toResolvedScope(share),
+    );
+
     this.logger.log('Cleaning up skill activations after share deletion', {
       skillId: event.entityId,
       ownerId: event.ownerId,
-      remainingScopeCount: event.remainingScopes.length,
+      remainingScopeCount: remainingScopes.length,
     });
 
-    if (event.remainingScopes.length === 0) {
+    if (remainingScopes.length === 0) {
       await this.skillRepository.deactivateAllExceptOwner(
         event.entityId,
         event.ownerId,
@@ -42,7 +64,7 @@ export class ShareDeletedListener {
       return;
     }
 
-    const retainUserIds = await this.resolveUserIds(event.remainingScopes);
+    const retainUserIds = await this.resolveUserIds(remainingScopes);
 
     await this.skillRepository.deactivateUsersNotInSet(
       event.entityId,
@@ -51,9 +73,18 @@ export class ShareDeletedListener {
     );
   }
 
-  private async resolveUserIds(
-    scopes: RemainingShareScope[],
-  ): Promise<Set<UUID>> {
+  private toResolvedScope(share: Share): ResolvedScope {
+    const scope = share.scope;
+    if (scope instanceof OrgShareScope) {
+      return { scopeType: scope.scopeType, scopeId: scope.orgId };
+    }
+    if (scope instanceof TeamShareScope) {
+      return { scopeType: scope.scopeType, scopeId: scope.teamId };
+    }
+    throw new Error(`Unknown scope type: ${scope.scopeType}`);
+  }
+
+  private async resolveUserIds(scopes: ResolvedScope[]): Promise<Set<UUID>> {
     const userIds = new Set<UUID>();
 
     for (const scope of scopes) {
@@ -66,9 +97,7 @@ export class ShareDeletedListener {
     return userIds;
   }
 
-  private async resolveScopeUserIds(
-    scope: RemainingShareScope,
-  ): Promise<UUID[]> {
+  private async resolveScopeUserIds(scope: ResolvedScope): Promise<UUID[]> {
     switch (scope.scopeType) {
       case ShareScopeType.ORG:
         return this.findAllUserIdsByOrgId.execute(

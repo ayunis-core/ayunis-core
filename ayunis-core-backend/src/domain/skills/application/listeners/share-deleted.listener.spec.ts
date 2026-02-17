@@ -1,11 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ShareDeletedListener } from './share-deleted.listener';
 import { SkillRepository } from '../ports/skill.repository';
+import { SharesRepository } from 'src/domain/shares/application/ports/shares-repository.port';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { SkillShare } from 'src/domain/shares/domain/share.entity';
+import {
+  OrgShareScope,
+  TeamShareScope,
+} from 'src/domain/shares/domain/share-scope.entity';
 import { randomUUID } from 'crypto';
 
 describe('ShareDeletedListener', () => {
@@ -14,6 +19,7 @@ describe('ShareDeletedListener', () => {
     deactivateAllExceptOwner: jest.Mock;
     deactivateUsersNotInSet: jest.Mock;
   };
+  let sharesRepository: { findByEntityIdAndType: jest.Mock };
   let findAllUserIdsByOrgId: { execute: jest.Mock };
   let findAllUserIdsByTeamId: { execute: jest.Mock };
 
@@ -21,6 +27,10 @@ describe('ShareDeletedListener', () => {
     skillRepository = {
       deactivateAllExceptOwner: jest.fn().mockResolvedValue(undefined),
       deactivateUsersNotInSet: jest.fn().mockResolvedValue(undefined),
+    };
+
+    sharesRepository = {
+      findByEntityIdAndType: jest.fn().mockResolvedValue([]),
     };
 
     findAllUserIdsByOrgId = {
@@ -35,6 +45,7 @@ describe('ShareDeletedListener', () => {
       providers: [
         ShareDeletedListener,
         { provide: SkillRepository, useValue: skillRepository },
+        { provide: SharesRepository, useValue: sharesRepository },
         {
           provide: FindAllUserIdsByOrgIdUseCase,
           useValue: findAllUserIdsByOrgId,
@@ -49,18 +60,23 @@ describe('ShareDeletedListener', () => {
     listener = module.get<ShareDeletedListener>(ShareDeletedListener);
   });
 
-  it('should deactivate all non-owner activations when no remaining scopes exist', async () => {
+  it('should deactivate all non-owner activations when no remaining shares exist', async () => {
     const skillId = randomUUID();
     const ownerId = randomUUID();
     const event = new ShareDeletedEvent(
       SharedEntityType.SKILL,
       skillId,
       ownerId,
-      [],
     );
+
+    sharesRepository.findByEntityIdAndType.mockResolvedValue([]);
 
     await listener.handleShareDeleted(event);
 
+    expect(sharesRepository.findByEntityIdAndType).toHaveBeenCalledWith(
+      skillId,
+      SharedEntityType.SKILL,
+    );
     expect(skillRepository.deactivateAllExceptOwner).toHaveBeenCalledWith(
       skillId,
       ownerId,
@@ -74,16 +90,19 @@ describe('ShareDeletedListener', () => {
     const teamId = randomUUID();
     const coveredUserId = randomUUID();
 
-    const remainingScopes = [
-      { scopeType: ShareScopeType.TEAM, scopeId: teamId },
-    ];
     const event = new ShareDeletedEvent(
       SharedEntityType.SKILL,
       skillId,
       ownerId,
-      remainingScopes,
     );
 
+    const remainingShare = new SkillShare({
+      skillId,
+      scope: new TeamShareScope({ teamId }),
+      ownerId,
+    });
+
+    sharesRepository.findByEntityIdAndType.mockResolvedValue([remainingShare]);
     findAllUserIdsByTeamId.execute.mockResolvedValue([coveredUserId]);
 
     await listener.handleShareDeleted(event);
@@ -103,14 +122,19 @@ describe('ShareDeletedListener', () => {
     const orgId = randomUUID();
     const coveredUserId = randomUUID();
 
-    const remainingScopes = [{ scopeType: ShareScopeType.ORG, scopeId: orgId }];
     const event = new ShareDeletedEvent(
       SharedEntityType.SKILL,
       skillId,
       ownerId,
-      remainingScopes,
     );
 
+    const remainingShare = new SkillShare({
+      skillId,
+      scope: new OrgShareScope({ orgId }),
+      ownerId,
+    });
+
+    sharesRepository.findByEntityIdAndType.mockResolvedValue([remainingShare]);
     findAllUserIdsByOrgId.execute.mockResolvedValue([coveredUserId]);
 
     await listener.handleShareDeleted(event);
@@ -137,12 +161,23 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.SKILL,
       skillId,
       ownerId,
-      [
-        { scopeType: ShareScopeType.ORG, scopeId: orgId },
-        { scopeType: ShareScopeType.TEAM, scopeId: teamId },
-      ],
     );
 
+    const orgShare = new SkillShare({
+      skillId,
+      scope: new OrgShareScope({ orgId }),
+      ownerId,
+    });
+    const teamShare = new SkillShare({
+      skillId,
+      scope: new TeamShareScope({ teamId }),
+      ownerId,
+    });
+
+    sharesRepository.findByEntityIdAndType.mockResolvedValue([
+      orgShare,
+      teamShare,
+    ]);
     findAllUserIdsByOrgId.execute.mockResolvedValue([
       sharedUserId,
       orgOnlyUserId,
@@ -166,11 +201,11 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.AGENT,
       randomUUID(),
       randomUUID(),
-      [],
     );
 
     await listener.handleShareDeleted(event);
 
+    expect(sharesRepository.findByEntityIdAndType).not.toHaveBeenCalled();
     expect(skillRepository.deactivateAllExceptOwner).not.toHaveBeenCalled();
     expect(skillRepository.deactivateUsersNotInSet).not.toHaveBeenCalled();
   });
@@ -180,11 +215,11 @@ describe('ShareDeletedListener', () => {
       SharedEntityType.PROMPT,
       randomUUID(),
       randomUUID(),
-      [],
     );
 
     await listener.handleShareDeleted(event);
 
+    expect(sharesRepository.findByEntityIdAndType).not.toHaveBeenCalled();
     expect(skillRepository.deactivateAllExceptOwner).not.toHaveBeenCalled();
     expect(skillRepository.deactivateUsersNotInSet).not.toHaveBeenCalled();
   });

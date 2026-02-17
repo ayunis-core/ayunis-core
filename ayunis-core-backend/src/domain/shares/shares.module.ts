@@ -64,6 +64,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     DeleteShareUseCase,
     FindSharesByScopeUseCase,
     FindShareByEntityUseCase,
+    SharesRepository,
   ],
 })
 export class SharesModule {}
