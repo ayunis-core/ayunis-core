@@ -32,9 +32,6 @@ export class AgentRecord extends BaseRecord {
   })
   model: PermittedModelRecord;
 
-  @Column({ nullable: true, type: 'varchar', length: 255 })
-  marketplaceIdentifier: string | null;
-
   @Column({ nullable: false })
   userId: UUID;
 

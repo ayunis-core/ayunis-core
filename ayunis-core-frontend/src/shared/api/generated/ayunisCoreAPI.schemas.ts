@@ -1618,9 +1618,53 @@ export interface UpdateThreadTitleDto {
   title: string;
 }
 
-export interface InstallAgentFromMarketplaceDto {
-  /** The unique identifier (slug) of the marketplace agent */
-  identifier: string;
+/**
+ * The type of tool to assign
+ */
+export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ToolAssignmentDtoType = {
+  http: 'http',
+  source_query: 'source_query',
+  source_get_text: 'source_get_text',
+  internet_search: 'internet_search',
+  website_content: 'website_content',
+  send_email: 'send_email',
+  create_calendar_event: 'create_calendar_event',
+  code_execution: 'code_execution',
+  bar_chart: 'bar_chart',
+  line_chart: 'line_chart',
+  pie_chart: 'pie_chart',
+  mcp_tool: 'mcp_tool',
+  mcp_resource: 'mcp_resource',
+  mcp_prompt: 'mcp_prompt',
+  product_knowledge: 'product_knowledge',
+  activate_skill: 'activate_skill',
+  create_skill: 'create_skill',
+} as const;
+
+export interface ToolAssignmentDto {
+  /** The type of tool to assign */
+  type: ToolAssignmentDtoType;
+  /** The ID of the tool configuration to assign */
+  toolConfigId?: string;
+}
+
+export interface CreateAgentDto {
+  /**
+   * The name of the agent
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** The instructions for the agent */
+  instructions: string;
+  /** The ID of the permitted model to use for this agent */
+  modelId: string;
+  /** The tools to assign to the agent */
+  toolAssignments: ToolAssignmentDto[];
 }
 
 /**
@@ -1697,64 +1741,10 @@ export interface AgentResponseDto {
   tools: ToolResponseDto[];
   /** The sources assigned to this agent */
   sources: AgentSourceResponseDto[];
-  /**
-   * The marketplace identifier if this agent was installed from the marketplace
-   * @nullable
-   */
-  marketplaceIdentifier?: string | null;
   /** Whether this agent is shared with the current user (vs. owned by them) */
   isShared: boolean;
   /** The unique identifier of the user who owns this agent (same as userId) */
   ownerId: string;
-}
-
-/**
- * The type of tool to assign
- */
-export type ToolAssignmentDtoType = typeof ToolAssignmentDtoType[keyof typeof ToolAssignmentDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ToolAssignmentDtoType = {
-  http: 'http',
-  source_query: 'source_query',
-  source_get_text: 'source_get_text',
-  internet_search: 'internet_search',
-  website_content: 'website_content',
-  send_email: 'send_email',
-  create_calendar_event: 'create_calendar_event',
-  code_execution: 'code_execution',
-  bar_chart: 'bar_chart',
-  line_chart: 'line_chart',
-  pie_chart: 'pie_chart',
-  mcp_tool: 'mcp_tool',
-  mcp_resource: 'mcp_resource',
-  mcp_prompt: 'mcp_prompt',
-  product_knowledge: 'product_knowledge',
-  activate_skill: 'activate_skill',
-  create_skill: 'create_skill',
-} as const;
-
-export interface ToolAssignmentDto {
-  /** The type of tool to assign */
-  type: ToolAssignmentDtoType;
-  /** The ID of the tool configuration to assign */
-  toolConfigId?: string;
-}
-
-export interface CreateAgentDto {
-  /**
-   * The name of the agent
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /** The instructions for the agent */
-  instructions: string;
-  /** The ID of the permitted model to use for this agent */
-  modelId: string;
-  /** The tools to assign to the agent */
-  toolAssignments: ToolAssignmentDto[];
 }
 
 export interface UpdateAgentDto {
@@ -1855,6 +1845,7 @@ export type CreateAgentShareDtoEntityType = typeof CreateAgentShareDtoEntityType
 export const CreateAgentShareDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
+  skill: 'skill',
 } as const;
 
 export interface CreateAgentShareDto {
@@ -1876,6 +1867,7 @@ export type ShareResponseDtoEntityType = typeof ShareResponseDtoEntityType[keyof
 export const ShareResponseDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
+  skill: 'skill',
 } as const;
 
 /**
@@ -1911,47 +1903,95 @@ export interface ShareResponseDto {
   updatedAt: string;
 }
 
-export interface MarketplaceAgentResponseDto {
-  /** Agent UUID */
-  id: string;
-  /** Unique identifier (slug) */
-  identifier: string;
-  /** Display name */
+/**
+ * Type of entity being shared
+ */
+export type CreateSkillShareDtoEntityType = typeof CreateSkillShareDtoEntityType[keyof typeof CreateSkillShareDtoEntityType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateSkillShareDtoEntityType = {
+  agent: 'agent',
+  prompt: 'prompt',
+  skill: 'skill',
+} as const;
+
+export interface CreateSkillShareDto {
+  /** Type of entity being shared */
+  entityType: CreateSkillShareDtoEntityType;
+  /** ID of the skill to share */
+  skillId: string;
+  /** ID of the team to share with (if not provided, shares with entire organization) */
+  teamId?: string;
+}
+
+export interface CreateTeamDto {
+  /** The name of the team */
   name: string;
-  /** Short description */
-  briefDescription: string;
-  /** Full system instructions */
-  instructions: string;
-  /**
-   * Recommended model name
-   * @nullable
-   */
-  recommendedModelName?: string | null;
-  /**
-   * Recommended model provider
-   * @nullable
-   */
-  recommendedModelProvider?: string | null;
-  /**
-   * Agent category ID
-   * @nullable
-   */
-  agentCategoryId?: string | null;
-  /**
-   * Icon URL
-   * @nullable
-   */
-  iconUrl?: string | null;
-  /** Whether the agent is featured */
-  featured: boolean;
-  /** Whether the agent is published */
-  published: boolean;
-  /** Whether the agent is pre-installed */
-  preInstalled: boolean;
-  /** Creation timestamp */
+}
+
+export interface UpdateTeamDto {
+  /** The new name of the team */
+  name: string;
+}
+
+export interface TeamResponseDto {
+  /** The unique identifier of the team */
+  id: string;
+  /** The name of the team */
+  name: string;
+  /** The organization ID the team belongs to */
+  orgId: string;
+  /** The date and time when the team was created */
   createdAt: string;
-  /** Last update timestamp */
+  /** The date and time when the team was last updated */
   updatedAt: string;
+}
+
+/**
+ * The role of the team member in the organization
+ */
+export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TeamMemberResponseDtoUserRole = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface TeamMemberResponseDto {
+  /** The unique identifier of the team member */
+  id: string;
+  /** The user ID of the team member */
+  userId: string;
+  /** The name of the team member */
+  userName: string;
+  /** The email of the team member */
+  userEmail: string;
+  /** The role of the team member in the organization */
+  userRole: TeamMemberResponseDtoUserRole;
+  /** The date when the user joined the team */
+  joinedAt: string;
+}
+
+export interface PaginatedTeamMembersResponseDto {
+  /** Array of team members for the current page */
+  data: TeamMemberResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+export interface AddTeamMemberDto {
+  /** The user ID to add to the team */
+  userId: string;
+}
+
+export interface ListTeamMembersQueryDto {
+  /** Maximum number of items per page */
+  limit?: number;
+  /** Number of items to skip */
+  offset?: number;
 }
 
 /**
@@ -2115,73 +2155,35 @@ export interface ValidationResponseDto {
   error?: string;
 }
 
-export interface CreateTeamDto {
-  /** The name of the team */
-  name: string;
+export interface InstallSkillFromMarketplaceDto {
+  /** The unique identifier (slug) of the marketplace skill */
+  identifier: string;
 }
 
-export interface UpdateTeamDto {
-  /** The new name of the team */
-  name: string;
-}
-
-export interface TeamResponseDto {
-  /** The unique identifier of the team */
+export interface SkillResponseDto {
+  /** The unique identifier of the skill */
   id: string;
-  /** The name of the team */
+  /** The name of the skill */
   name: string;
-  /** The organization ID the team belongs to */
-  orgId: string;
-  /** The date and time when the team was created */
+  /** A short description of the skill */
+  shortDescription: string;
+  /** Detailed instructions for the skill */
+  instructions: string;
+  /**
+   * The marketplace identifier if this skill was installed from the marketplace
+   * @nullable
+   */
+  marketplaceIdentifier: string | null;
+  /** Whether the skill is active and available for use in chats */
+  isActive: boolean;
+  /** The unique identifier of the user who owns this skill */
+  userId: string;
+  /** The date and time when the skill was created */
   createdAt: string;
-  /** The date and time when the team was last updated */
+  /** The date and time when the skill was last updated */
   updatedAt: string;
-}
-
-/**
- * The role of the team member in the organization
- */
-export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole[keyof typeof TeamMemberResponseDtoUserRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TeamMemberResponseDtoUserRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-export interface TeamMemberResponseDto {
-  /** The unique identifier of the team member */
-  id: string;
-  /** The user ID of the team member */
-  userId: string;
-  /** The name of the team member */
-  userName: string;
-  /** The email of the team member */
-  userEmail: string;
-  /** The role of the team member in the organization */
-  userRole: TeamMemberResponseDtoUserRole;
-  /** The date when the user joined the team */
-  joinedAt: string;
-}
-
-export interface PaginatedTeamMembersResponseDto {
-  /** Array of team members for the current page */
-  data: TeamMemberResponseDto[];
-  /** Pagination metadata */
-  pagination: PaginationDto;
-}
-
-export interface AddTeamMemberDto {
-  /** The user ID to add to the team */
-  userId: string;
-}
-
-export interface ListTeamMembersQueryDto {
-  /** Maximum number of items per page */
-  limit?: number;
-  /** Number of items to skip */
-  offset?: number;
+  /** Whether the skill is shared with the current user (not owned) */
+  isShared: boolean;
 }
 
 export interface CreateSkillDto {
@@ -2197,25 +2199,6 @@ export interface CreateSkillDto {
   instructions: string;
   /** Whether the skill is active (defaults to false) */
   isActive?: boolean;
-}
-
-export interface SkillResponseDto {
-  /** The unique identifier of the skill */
-  id: string;
-  /** The name of the skill */
-  name: string;
-  /** A short description of the skill */
-  shortDescription: string;
-  /** Detailed instructions for the skill */
-  instructions: string;
-  /** Whether the skill is active and available for use in chats */
-  isActive: boolean;
-  /** The unique identifier of the user who owns this skill */
-  userId: string;
-  /** The date and time when the skill was created */
-  createdAt: string;
-  /** The date and time when the skill was last updated */
-  updatedAt: string;
 }
 
 export interface UpdateSkillDto {
@@ -2238,6 +2221,41 @@ export interface SkillSourceResponseDto {
   name: string;
   /** The type of source */
   type: string;
+}
+
+export interface MarketplaceSkillResponseDto {
+  /** Skill UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /** Description shown to LLM to decide activation */
+  aiDescription: string;
+  /** Detailed instructions injected into the conversation when the skill is activated */
+  instructions: string;
+  /**
+   * Skill category ID
+   * @nullable
+   */
+  skillCategoryId?: string | null;
+  /**
+   * Icon URL
+   * @nullable
+   */
+  iconUrl?: string | null;
+  /** Whether the skill is featured */
+  featured: boolean;
+  /** Whether the skill is published */
+  published: boolean;
+  /** Whether the skill is pre-installed */
+  preInstalled: boolean;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
 }
 
 /**
@@ -2640,6 +2658,22 @@ export interface UserUsageResponseDto {
   pagination: PaginationDto;
 }
 
+export interface UserSystemPromptResponseDto {
+  /**
+   * The custom system prompt for the user, or null if not set
+   * @nullable
+   */
+  systemPrompt: string | null;
+}
+
+export interface UpsertUserSystemPromptDto {
+  /**
+   * The custom system prompt for the user
+   * @maxLength 10000
+   */
+  systemPrompt: string;
+}
+
 export interface CreatePromptDto {
   /**
    * The title of the prompt
@@ -2680,22 +2714,6 @@ export interface UpdatePromptDto {
 export interface TranscriptionResponseDto {
   /** The transcribed text from the audio file */
   text: string;
-}
-
-export interface UserSystemPromptResponseDto {
-  /**
-   * The custom system prompt for the user, or null if not set
-   * @nullable
-   */
-  systemPrompt: string | null;
-}
-
-export interface UpsertUserSystemPromptDto {
-  /**
-   * The custom system prompt for the user
-   * @maxLength 10000
-   */
-  systemPrompt: string;
 }
 
 export interface LoginDto {
@@ -2900,6 +2918,7 @@ export type SharesControllerGetSharesEntityType = typeof SharesControllerGetShar
 export const SharesControllerGetSharesEntityType = {
   agent: 'agent',
   prompt: 'prompt',
+  skill: 'skill',
 } as const;
 
 export type TeamsControllerListTeamMembersParams = {

@@ -29,6 +29,8 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 
 // Use Cases
+import { InstallSkillFromMarketplaceUseCase } from '../../application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
+import { InstallSkillFromMarketplaceCommand } from '../../application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.command';
 import { CreateSkillUseCase } from '../../application/use-cases/create-skill/create-skill.use-case';
 import { UpdateSkillUseCase } from '../../application/use-cases/update-skill/update-skill.use-case';
 import { DeleteSkillUseCase } from '../../application/use-cases/delete-skill/delete-skill.use-case';
@@ -62,6 +64,7 @@ import { SkillRepository } from '../../application/ports/skill.repository';
 // DTOs & Mappers
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { InstallSkillFromMarketplaceDto } from './dto/install-skill-from-marketplace.dto';
 import {
   SkillResponseDto,
   SkillSourceResponseDto,
@@ -104,6 +107,7 @@ export class SkillsController {
   private readonly logger = new Logger(SkillsController.name);
 
   constructor(
+    private readonly installSkillFromMarketplaceUseCase: InstallSkillFromMarketplaceUseCase,
     private readonly createSkillUseCase: CreateSkillUseCase,
     private readonly updateSkillUseCase: UpdateSkillUseCase,
     private readonly deleteSkillUseCase: DeleteSkillUseCase,
@@ -122,6 +126,35 @@ export class SkillsController {
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
   ) {}
+
+  @Post('install-from-marketplace')
+  @ApiOperation({ summary: 'Install a skill from the marketplace' })
+  @ApiBody({ type: InstallSkillFromMarketplaceDto })
+  @ApiResponse({
+    status: 201,
+    description:
+      'The skill has been successfully installed from the marketplace',
+    type: SkillResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Marketplace skill not found',
+  })
+  async installFromMarketplace(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Body() dto: InstallSkillFromMarketplaceDto,
+  ): Promise<SkillResponseDto> {
+    this.logger.log('installFromMarketplace', {
+      userId,
+      identifier: dto.identifier,
+    });
+
+    const skill = await this.installSkillFromMarketplaceUseCase.execute(
+      new InstallSkillFromMarketplaceCommand(dto.identifier),
+    );
+
+    return this.skillDtoMapper.toDto(skill, true);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new skill' })
@@ -166,13 +199,22 @@ export class SkillsController {
   ): Promise<SkillResponseDto[]> {
     this.logger.log('findAll', { userId });
 
-    const skills = await this.findAllSkillsUseCase.execute(
+    const results = await this.findAllSkillsUseCase.execute(
       new FindAllSkillsQuery(),
     );
 
     const activeSkillIds = await this.skillRepository.getActiveSkillIds(userId);
 
-    return this.skillDtoMapper.toDtoArray(skills, activeSkillIds);
+    const skills = results.map((r) => r.skill);
+    const sharedSkillIds = new Set<string>(
+      results.filter((r) => r.isShared).map((r) => r.skill.id),
+    );
+
+    return this.skillDtoMapper.toDtoArray(
+      skills,
+      activeSkillIds,
+      sharedSkillIds,
+    );
   }
 
   @Get(':id')
@@ -195,13 +237,13 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     this.logger.log('findOne', { id, userId });
 
-    const skill = await this.findOneSkillUseCase.execute(
+    const { skill, isShared } = await this.findOneSkillUseCase.execute(
       new FindOneSkillQuery(id),
     );
 
     const isActive = await this.skillRepository.isSkillActive(id, userId);
 
-    return this.skillDtoMapper.toDto(skill, isActive);
+    return this.skillDtoMapper.toDto(skill, isActive, isShared);
   }
 
   @Put(':id')

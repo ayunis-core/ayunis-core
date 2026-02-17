@@ -1,8 +1,8 @@
 import { Controller, Get, Logger, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { GetMarketplaceAgentUseCase } from '../../application/use-cases/get-marketplace-agent/get-marketplace-agent.use-case';
-import { GetMarketplaceAgentQuery } from '../../application/use-cases/get-marketplace-agent/get-marketplace-agent.query';
-import { MarketplaceAgentResponseDto } from './dto/marketplace-agent-response.dto';
+import { GetMarketplaceSkillUseCase } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
+import { GetMarketplaceSkillQuery } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
+import { MarketplaceSkillResponseDto } from './dto/marketplace-skill-response.dto';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -10,29 +10,29 @@ export class MarketplaceController {
   private readonly logger = new Logger(MarketplaceController.name);
 
   constructor(
-    private readonly getMarketplaceAgentUseCase: GetMarketplaceAgentUseCase,
+    private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
   ) {}
 
-  @Get('agents/:identifier')
-  @ApiOperation({ summary: 'Preview a marketplace agent before installation' })
+  @Get('skills/:identifier')
+  @ApiOperation({ summary: 'Preview a marketplace skill before installation' })
   @ApiParam({
     name: 'identifier',
-    description: 'The unique identifier slug of the marketplace agent',
+    description: 'The unique identifier slug of the marketplace skill',
     type: 'string',
   })
   @ApiResponse({
     status: 200,
-    description: 'Returns the marketplace agent details',
-    type: MarketplaceAgentResponseDto,
+    description: 'Returns the marketplace skill details',
+    type: MarketplaceSkillResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Marketplace agent not found' })
-  async getAgent(
+  @ApiResponse({ status: 404, description: 'Marketplace skill not found' })
+  async getSkill(
     @Param('identifier') identifier: string,
-  ): Promise<MarketplaceAgentResponseDto> {
-    this.logger.log('getAgent', { identifier });
+  ): Promise<MarketplaceSkillResponseDto> {
+    this.logger.log('getSkill', { identifier });
 
-    return this.getMarketplaceAgentUseCase.execute(
-      new GetMarketplaceAgentQuery(identifier),
+    return this.getMarketplaceSkillUseCase.execute(
+      new GetMarketplaceSkillQuery(identifier),
     );
   }
 }

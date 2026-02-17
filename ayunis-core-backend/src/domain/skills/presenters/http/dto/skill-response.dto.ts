@@ -31,6 +31,15 @@ export class SkillResponseDto {
   instructions: string;
 
   @ApiProperty({
+    description:
+      'The marketplace identifier if this skill was installed from the marketplace',
+    example: 'meeting-summarizer',
+    type: 'string',
+    nullable: true,
+  })
+  marketplaceIdentifier: string | null;
+
+  @ApiProperty({
     description: 'Whether the skill is active and available for use in chats',
     example: true,
   })
@@ -59,6 +68,13 @@ export class SkillResponseDto {
     format: 'date-time',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description:
+      'Whether the skill is shared with the current user (not owned)',
+    example: false,
+  })
+  isShared: boolean;
 }
 
 export class SkillSourceResponseDto {

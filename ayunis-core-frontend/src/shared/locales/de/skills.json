@@ -1,10 +1,13 @@
 {
+  "shared": {
+    "badge": "Freigegeben"
+  },
   "page": {
-    "title": "Meine Skills"
+    "title": "Fähigkeiten"
   },
   "emptyState": {
-    "title": "Noch keine Skills",
-    "description": "Erstellen Sie Ihren ersten Skill. Skills sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
+    "title": "Noch keine Fähigkeiten",
+    "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können."
   },
   "badge": {
     "active": "Aktiv",
@@ -14,43 +17,43 @@
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
     "confirmDelete": {
-      "title": "Skill löschen",
+      "title": "Fähigkeit löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen"
     }
   },
   "createDialog": {
-    "buttonText": "Skill hinzufügen",
-    "buttonTextFirst": "Erstellen Sie Ihren ersten Skill",
-    "title": "Neuen Skill hinzufügen",
-    "description": "Erstellen Sie einen neuen Skill mit spezifischem Wissen und Funktionen. Füllen Sie die Details unten aus.",
+    "buttonText": "Fähigkeit hinzufügen",
+    "buttonTextFirst": "Erstellen Sie Ihre erste Fähigkeit",
+    "title": "Neue Fähigkeit hinzufügen",
+    "description": "Erstellen Sie eine neue Fähigkeit mit spezifischem Wissen und Funktionen. Füllen Sie die Details unten aus.",
     "form": {
       "nameLabel": "Name",
-      "namePlaceholder": "Skill-Name eingeben...",
+      "namePlaceholder": "Name der Fähigkeit eingeben...",
       "shortDescriptionLabel": "Kurzbeschreibung",
-      "shortDescriptionPlaceholder": "Kurze Beschreibung dessen, was dieser Skill macht...",
+      "shortDescriptionPlaceholder": "Kurze Beschreibung dessen, was diese Fähigkeit macht...",
       "instructionsLabel": "Detaillierte Anweisungen",
-      "instructionsPlaceholder": "Detaillierte Anweisungen für diesen Skill eingeben..."
+      "instructionsPlaceholder": "Detaillierte Anweisungen für diese Fähigkeit eingeben..."
     },
     "buttons": {
       "cancel": "Abbrechen",
-      "create": "Skill erstellen",
+      "create": "Fähigkeit erstellen",
       "creating": "Wird erstellt..."
     }
   },
   "create": {
-    "success": "Skill erfolgreich erstellt!",
-    "error": "Skill konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    "success": "Fähigkeit erfolgreich erstellt!",
+    "error": "Fähigkeit konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },
   "toggleActive": {
-    "success": "Skill-Status erfolgreich aktualisiert!",
-    "error": "Skill-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-    "notFound": "Skill nicht gefunden. Er wurde möglicherweise gelöscht."
+    "success": "Fähigkeits-Status erfolgreich aktualisiert!",
+    "error": "Fähigkeits-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
   },
   "delete": {
-    "success": "Skill erfolgreich gelöscht!",
-    "error": "Skill konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
-    "notFound": "Skill nicht gefunden. Er wurde möglicherweise gelöscht."
+    "success": "Fähigkeit erfolgreich gelöscht!",
+    "error": "Fähigkeit konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
   }
 }

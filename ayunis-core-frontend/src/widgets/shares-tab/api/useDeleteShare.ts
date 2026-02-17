@@ -4,14 +4,25 @@ import {
   useSharesControllerDeleteShare,
   getSharesControllerGetSharesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { CreateAgentShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  CreateAgentShareDtoEntityType,
+  CreateSkillShareDtoEntityType,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 
-export function useDeleteShare(agentId: string) {
+type EntityType = 'agent' | 'skill';
+
+export function useDeleteShare(entityType: EntityType, entityId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { t } = useTranslation('agent');
+  const translationNs = entityType === 'agent' ? 'agent' : 'skill';
+  const { t } = useTranslation(translationNs);
+
+  const sharesEntityType =
+    entityType === 'agent'
+      ? CreateAgentShareDtoEntityType.agent
+      : CreateSkillShareDtoEntityType.skill;
 
   const mutation = useSharesControllerDeleteShare({
     mutation: {
@@ -22,14 +33,12 @@ export function useDeleteShare(agentId: string) {
         showError(t('shares.error.delete'));
       },
       onSettled: () => {
-        // Invalidate shares query to refetch
         void queryClient.invalidateQueries({
           queryKey: getSharesControllerGetSharesQueryKey({
-            entityId: agentId,
-            entityType: CreateAgentShareDtoEntityType.agent,
+            entityId,
+            entityType: sharesEntityType,
           }),
         });
-        // Invalidate router to refresh data
         void router.invalidate();
       },
     },

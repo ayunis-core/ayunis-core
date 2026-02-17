@@ -1,4 +1,5 @@
 import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getDataSourceToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -107,6 +108,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         return dataSource;
       },
     }),
+    EventEmitterModule.forRoot(),
     SentryModule.forRoot(),
     ContextModule, // Global
     ModelsModule,

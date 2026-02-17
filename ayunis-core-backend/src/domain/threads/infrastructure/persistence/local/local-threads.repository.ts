@@ -338,6 +338,40 @@ export class LocalThreadsRepository extends ThreadsRepository {
     await this.threadRepository.delete({ id, userId });
   }
 
+  async removeSourceAssignmentsByOriginSkill(params: {
+    originSkillId: UUID;
+    userIds: UUID[];
+  }): Promise<void> {
+    this.logger.log('removeSourceAssignmentsByOriginSkill', {
+      originSkillId: params.originSkillId,
+      userCount: params.userIds.length,
+    });
+
+    if (params.userIds.length === 0) {
+      return;
+    }
+
+    await this.threadSourceAssignmentRepository
+      .createQueryBuilder('tsa')
+      .delete()
+      .from(ThreadSourceAssignmentRecord)
+      .where(
+        'id IN ' +
+          this.threadSourceAssignmentRepository
+            .createQueryBuilder('tsa')
+            .select('tsa.id')
+            .innerJoin('tsa.thread', 'thread')
+            .where('tsa.originSkillId = :originSkillId')
+            .andWhere('thread.userId IN (:...userIds)')
+            .getQuery(),
+      )
+      .setParameters({
+        originSkillId: params.originSkillId,
+        userIds: params.userIds,
+      })
+      .execute();
+  }
+
   async findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]> {
     this.logger.log('findAllByOrgIdWithSources', { orgId });
     const threadEntities = await this.threadRepository

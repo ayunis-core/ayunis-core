@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { InstallPage } from '@/pages/install';
 
 const searchSchema = z.object({
-  agent: z.string().optional(),
+  skill: z.string().optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/install')({
@@ -12,6 +12,6 @@ export const Route = createFileRoute('/_authenticated/install')({
 });
 
 function RouteComponent() {
-  const { agent } = Route.useSearch();
-  return <InstallPage agentIdentifier={agent} />;
+  const { skill } = Route.useSearch();
+  return <InstallPage skillIdentifier={skill} />;
 }

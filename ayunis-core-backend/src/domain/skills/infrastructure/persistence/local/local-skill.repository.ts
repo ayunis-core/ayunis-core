@@ -237,6 +237,42 @@ export class LocalSkillRepository implements SkillRepository {
     await manager.delete(SkillActivationRecord, { skillId, userId });
   }
 
+  async deactivateAllExceptOwner(skillId: UUID, ownerId: UUID): Promise<void> {
+    this.logger.log('deactivateAllExceptOwner', { skillId, ownerId });
+
+    const manager = this.getManager();
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from(SkillActivationRecord)
+      .where('skillId = :skillId', { skillId })
+      .andWhere('userId != :ownerId', { ownerId })
+      .execute();
+  }
+
+  async deactivateUsersNotInSet(
+    skillId: UUID,
+    ownerId: UUID,
+    retainUserIds: Set<UUID>,
+  ): Promise<void> {
+    this.logger.log('deactivateUsersNotInSet', {
+      skillId,
+      ownerId,
+      retainCount: retainUserIds.size,
+    });
+
+    const manager = this.getManager();
+    const keepIds = [ownerId, ...retainUserIds];
+
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from(SkillActivationRecord)
+      .where('skillId = :skillId', { skillId })
+      .andWhere('userId NOT IN (:...keepIds)', { keepIds })
+      .execute();
+  }
+
   async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
     this.logger.log('isSkillActive', { skillId, userId });
 
@@ -245,6 +281,19 @@ export class LocalSkillRepository implements SkillRepository {
     });
 
     return count > 0;
+  }
+
+  async findByIds(ids: UUID[]): Promise<Skill[]> {
+    this.logger.log('findByIds', { count: ids.length });
+
+    if (ids.length === 0) return [];
+
+    const records = await this.skillRepository.find({
+      where: { id: In(ids) },
+      relations: ['sources', 'mcpIntegrations'],
+    });
+
+    return records.map((r) => this.skillMapper.toDomain(r));
   }
 
   async getActiveSkillIds(userId: UUID): Promise<Set<UUID>> {

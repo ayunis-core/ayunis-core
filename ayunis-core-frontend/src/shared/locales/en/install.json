@@ -1,30 +1,28 @@
 {
   "detail": {
-    "recommendedModel": "Recommended model",
-    "installNote": "This agent will be added to your account. A matching model from your organization will be assigned automatically. You can customize the agent's settings after installation."
+    "installNote": "This skill will be added to your account. You can customize the skill's settings after installation."
   },
   "action": {
-    "install": "Install Agent",
+    "install": "Install Skill",
     "installing": "Installing…",
     "cancel": "Cancel",
-    "backToAgents": "Back to Agents"
+    "backToSkills": "Back to Skills"
   },
-  "success": "Agent installed successfully!",
+  "success": "Skill installed successfully!",
   "error": {
     "missingIdentifier": {
-      "title": "Missing Agent Identifier",
-      "description": "No agent identifier was provided. Please use a valid install link from the marketplace."
+      "title": "Missing Skill Identifier",
+      "description": "No skill identifier was provided. Please use a valid install link from the marketplace."
     },
     "notFound": {
-      "title": "Agent Not Found",
-      "description": "The requested agent could not be found in the marketplace. It may have been removed or unpublished."
+      "title": "Skill Not Found",
+      "description": "The requested skill could not be found in the marketplace. It may have been removed or unpublished."
     },
     "fetchFailed": {
-      "title": "Unable to Load Agent",
-      "description": "Could not load agent details from the marketplace. Please try again later."
+      "title": "Unable to Load Skill",
+      "description": "Could not load skill details from the marketplace. Please try again later."
     },
     "unavailable": "The marketplace is currently unavailable. Please try again later.",
-    "noModel": "No compatible model is available in your organization. Please contact your administrator.",
-    "generic": "Something went wrong while installing the agent. Please try again."
+    "generic": "Something went wrong while installing the skill. Please try again."
   }
 }

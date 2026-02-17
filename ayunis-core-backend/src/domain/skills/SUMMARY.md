@@ -20,6 +20,8 @@ skills/
 │   └── skill.entity.ts                    # Skill domain entity
 ├── application/
 │   ├── ports/skill.repository.ts          # Abstract repository (includes activation methods)
+│   ├── listeners/
+│   │   └── share-deleted.listener.ts      # Reconciles activations on share deletion
 │   ├── skills.errors.ts                   # Domain errors
 │   └── use-cases/
 │       ├── create-skill/
@@ -35,7 +37,8 @@ skills/
 │       ├── list-skill-sources/
 │       ├── assign-mcp-integration-to-skill/
 │       ├── unassign-mcp-integration-from-skill/
-│       └── list-skill-mcp-integrations/
+│       ├── list-skill-mcp-integrations/
+│       └── install-skill-from-marketplace/
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/
@@ -60,16 +63,29 @@ Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` patt
 
 Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
 
+When a skill share is deleted, the `ShareDeletedListener` handles cleanup of activations. If no other shares remain for the skill, all non-owner activations are removed. If other shares still exist, the listener resolves the remaining scopes to user IDs (via `FindAllUserIdsByOrgIdUseCase` and `FindAllUserIdsByTeamIdUseCase`) and only deactivates users who are no longer covered by any remaining share scope.
+
 ## Dependencies
 
 - **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
 - **McpModule** — for MCP integration validation and batch fetch
+- **SharesModule** — for share authorization strategy registration
+- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
+- **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
+- **MarketplaceModule** — for fetching marketplace skill definitions (`GetMarketplaceSkillUseCase`)
 - **ContextService** — for user context (userId, orgId)
+
+## Marketplace Integration
+
+The skills module supports installing skills from the external Ayunis Marketplace. The `InstallSkillFromMarketplaceUseCase` fetches a skill definition from the marketplace (via `GetMarketplaceSkillUseCase` from the **MarketplaceModule**) and creates a local `Skill` entity with the marketplace skill's name, short description, and instructions. The `marketplaceIdentifier` field on the `Skill` entity tracks which skills were installed from the marketplace.
+
+Error handling: `MarketplaceInstallFailedError` is raised when the installation process fails unexpectedly.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
+| POST | `/skills/install-from-marketplace` | Install a skill from the marketplace |
 | POST | `/skills` | Create a skill |
 | GET | `/skills` | List all skills for current user |
 | GET | `/skills/:id` | Get a skill by ID |

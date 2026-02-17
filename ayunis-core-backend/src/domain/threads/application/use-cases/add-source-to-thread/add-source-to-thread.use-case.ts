@@ -41,6 +41,7 @@ export class AddSourceToThreadUseCase {
       }
       const sourceAssignment = new SourceAssignment({
         source: command.source,
+        originSkillId: command.originSkillId,
       });
       command.thread.sourceAssignments.push(sourceAssignment);
       return await this.threadsRepository.updateSourceAssignments({

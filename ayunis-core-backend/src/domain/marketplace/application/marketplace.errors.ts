@@ -1,10 +1,10 @@
 import { ApplicationError } from 'src/common/errors/base.error';
 
-export class MarketplaceAgentNotFoundError extends ApplicationError {
+export class MarketplaceSkillNotFoundError extends ApplicationError {
   constructor(identifier: string) {
     super(
-      `Marketplace agent not found: ${identifier}`,
-      'MARKETPLACE_AGENT_NOT_FOUND',
+      `Marketplace skill not found: ${identifier}`,
+      'MARKETPLACE_SKILL_NOT_FOUND',
       404,
     );
   }

@@ -6,7 +6,8 @@ import type {
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useCreateShare, useDeleteShare } from '../api';
+import { useCreateShare } from '../api/useCreateShare';
+import { useDeleteShare } from '../api/useDeleteShare';
 import {
   Item,
   ItemContent,
@@ -15,21 +16,26 @@ import {
   ItemActions,
 } from '@/shared/ui/shadcn/item';
 
+type EntityType = 'agent' | 'skill';
+
 interface SharesTabProps {
-  agentId: string;
+  entityType: EntityType;
+  entityId: string;
   shares: ShareResponseDto[];
   userTeams: TeamResponseDto[];
 }
 
 export default function SharesTab({
-  agentId,
+  entityType,
+  entityId,
   shares,
   userTeams,
 }: SharesTabProps) {
-  const { t } = useTranslation('agent');
+  const translationNs = entityType === 'agent' ? 'agent' : 'skill';
+  const { t } = useTranslation(translationNs);
   const { confirm } = useConfirmation();
-  const { createShare, isCreating } = useCreateShare(agentId);
-  const { deleteShare, isDeleting } = useDeleteShare(agentId);
+  const { createShare, isCreating } = useCreateShare(entityType, entityId);
+  const { deleteShare, isDeleting } = useDeleteShare(entityType, entityId);
 
   // Check if organization share exists
   const organizationShare = shares.find(
@@ -46,7 +52,6 @@ export default function SharesTab({
 
   const handleOrgToggleChange = (checked: boolean) => {
     if (checked) {
-      // Show create confirmation
       confirm({
         title: t('shares.create.title'),
         description: t('shares.create.description'),
@@ -57,7 +62,6 @@ export default function SharesTab({
         },
       });
     } else {
-      // Show delete confirmation
       if (organizationShare) {
         confirm({
           title: t('shares.delete.title'),
@@ -79,7 +83,6 @@ export default function SharesTab({
     checked: boolean,
   ) => {
     if (checked) {
-      // Show create confirmation for team share
       confirm({
         title: t('shares.teams.create.title'),
         description: t('shares.teams.create.description', { teamName }),
@@ -90,7 +93,6 @@ export default function SharesTab({
         },
       });
     } else {
-      // Show delete confirmation for team share
       const teamShare = getTeamShare(teamId);
       if (teamShare) {
         confirm({

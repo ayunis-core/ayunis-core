@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useTeamsControllerDeleteTeam,
   getTeamsControllerListTeamsQueryKey,
+  getTeamsControllerListMyTeamsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useRouter } from '@tanstack/react-router';
@@ -38,6 +39,9 @@ export function useDeleteTeam() {
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getTeamsControllerListTeamsQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getTeamsControllerListMyTeamsQueryKey(),
         });
         void router.invalidate();
       },

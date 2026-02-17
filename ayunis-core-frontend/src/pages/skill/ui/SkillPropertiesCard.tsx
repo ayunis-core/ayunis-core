@@ -22,8 +22,10 @@ import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.sche
 
 export default function SkillPropertiesCard({
   skill,
+  disabled = false,
 }: {
   skill: SkillResponseDto;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation('skill');
   const { form, onSubmit, isLoading } = useUpdateSkill({ skill });
@@ -49,6 +51,7 @@ export default function SkillPropertiesCard({
                   <FormControl>
                     <Input
                       placeholder={t('properties.form.namePlaceholder')}
+                      disabled={disabled}
                       {...field}
                     />
                   </FormControl>
@@ -70,6 +73,7 @@ export default function SkillPropertiesCard({
                         'properties.form.shortDescriptionPlaceholder',
                       )}
                       className="min-h-[80px] max-h-[200px]"
+                      disabled={disabled}
                       {...field}
                     />
                   </FormControl>
@@ -89,6 +93,7 @@ export default function SkillPropertiesCard({
                     <Textarea
                       placeholder={t('properties.form.instructionsPlaceholder')}
                       className="min-h-[250px] max-h-[500px]"
+                      disabled={disabled}
                       {...field}
                     />
                   </FormControl>
@@ -96,7 +101,7 @@ export default function SkillPropertiesCard({
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || disabled}>
               {isLoading
                 ? t('properties.buttons.saving')
                 : t('properties.buttons.save')}

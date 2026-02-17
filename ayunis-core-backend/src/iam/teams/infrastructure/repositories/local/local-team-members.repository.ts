@@ -103,4 +103,20 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     await this.teamMemberRepository.delete({ teamId, userId });
     this.logger.debug('Team member deleted successfully', { teamId, userId });
   }
+
+  async findAllUserIdsByTeamId(teamId: UUID): Promise<UUID[]> {
+    this.logger.log('findAllUserIdsByTeamId', { teamId });
+
+    const records = await this.teamMemberRepository.find({
+      where: { teamId },
+      select: ['userId'],
+    });
+
+    this.logger.debug('All team member user IDs found', {
+      teamId,
+      count: records.length,
+    });
+
+    return records.map((record) => record.userId);
+  }
 }

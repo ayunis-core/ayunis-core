@@ -57,6 +57,11 @@ export default function SkillCard({ skill }: SkillCardProps) {
       <ItemContent>
         <ItemTitle>
           <span>{skill.name}</span>
+          {skill.isShared && (
+            <Badge variant="secondary" className="ml-2 text-xs">
+              {t('shared.badge')}
+            </Badge>
+          )}
           <Badge
             variant={skill.isActive ? 'default' : 'secondary'}
             className="ml-2 text-xs"
@@ -78,17 +83,19 @@ export default function SkillCard({ skill }: SkillCardProps) {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete();
-          }}
-          disabled={deleteSkill.isPending}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {!skill.isShared && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            disabled={deleteSkill.isPending}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </ItemActions>
     </Item>
   );

@@ -1,30 +1,28 @@
 {
   "detail": {
-    "recommendedModel": "Empfohlenes Modell",
-    "installNote": "Dieser Agent wird Ihrem Konto hinzugefügt. Ein passendes Modell aus Ihrer Organisation wird automatisch zugewiesen. Sie können die Einstellungen des Agenten nach der Installation anpassen."
+    "installNote": "Diese Fähigkeit wird Ihrem Konto hinzugefügt. Sie können die Einstellungen der Fähigkeit nach der Installation anpassen."
   },
   "action": {
-    "install": "Agent installieren",
+    "install": "Fähigkeit installieren",
     "installing": "Wird installiert…",
     "cancel": "Abbrechen",
-    "backToAgents": "Zurück zu Agenten"
+    "backToSkills": "Zurück zu Fähigkeiten"
   },
-  "success": "Agent erfolgreich installiert!",
+  "success": "Fähigkeit erfolgreich installiert!",
   "error": {
     "missingIdentifier": {
-      "title": "Fehlende Agent-Kennung",
-      "description": "Es wurde keine Agent-Kennung angegeben. Bitte verwenden Sie einen gültigen Installationslink aus dem Marktplatz."
+      "title": "Fehlende Fähigkeits-Kennung",
+      "description": "Es wurde keine Fähigkeits-Kennung angegeben. Bitte verwenden Sie einen gültigen Installationslink aus dem Marktplatz."
     },
     "notFound": {
-      "title": "Agent nicht gefunden",
-      "description": "Der angeforderte Agent konnte im Marktplatz nicht gefunden werden. Er wurde möglicherweise entfernt oder deaktiviert."
+      "title": "Fähigkeit nicht gefunden",
+      "description": "Die angeforderte Fähigkeit konnte im Marktplatz nicht gefunden werden. Sie wurde möglicherweise entfernt oder deaktiviert."
     },
     "fetchFailed": {
-      "title": "Agent konnte nicht geladen werden",
-      "description": "Die Agent-Details konnten nicht vom Marktplatz geladen werden. Bitte versuchen Sie es später erneut."
+      "title": "Fähigkeit konnte nicht geladen werden",
+      "description": "Die Fähigkeits-Details konnten nicht vom Marktplatz geladen werden. Bitte versuchen Sie es später erneut."
     },
     "unavailable": "Der Marktplatz ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
-    "noModel": "In Ihrer Organisation ist kein kompatibles Modell verfügbar. Bitte kontaktieren Sie Ihren Administrator.",
-    "generic": "Beim Installieren des Agenten ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+    "generic": "Beim Installieren der Fähigkeit ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
   }
 }

@@ -6,6 +6,10 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
+import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { SkillShare } from 'src/domain/shares/domain/share.entity';
 
 @Injectable()
 export class FindSkillByNameUseCase {
@@ -13,6 +17,7 @@ export class FindSkillByNameUseCase {
 
   constructor(
     private readonly skillRepository: SkillRepository,
+    private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -24,16 +29,33 @@ export class FindSkillByNameUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      const skill = await this.skillRepository.findByNameAndOwner(
+      // Owned skills take priority
+      const ownedSkill = await this.skillRepository.findByNameAndOwner(
         query.name,
         userId,
       );
 
-      if (!skill) {
-        throw new SkillNotFoundError(query.name);
+      if (ownedSkill) {
+        return ownedSkill;
       }
 
-      return skill;
+      // Check shared skills
+      const shares = await this.findSharesByScopeUseCase.execute(
+        new FindSharesByScopeQuery(SharedEntityType.SKILL),
+      );
+
+      if (shares.length > 0) {
+        const sharedSkillIds = shares.map((s) => (s as SkillShare).skillId);
+        const sharedSkills =
+          await this.skillRepository.findByIds(sharedSkillIds);
+        const matchingSkill = sharedSkills.find((s) => s.name === query.name);
+
+        if (matchingSkill) {
+          return matchingSkill;
+        }
+      }
+
+      throw new SkillNotFoundError(query.name);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Error finding skill by name', {

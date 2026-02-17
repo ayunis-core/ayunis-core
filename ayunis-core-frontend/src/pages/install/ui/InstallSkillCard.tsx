@@ -7,53 +7,43 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import { Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import type { MarketplaceAgentResponseDto } from '../api/useFetchMarketplaceAgent';
+import type { MarketplaceSkillResponseDto } from '../api/useFetchMarketplaceSkill';
 
-interface InstallAgentCardProps {
-  agent: MarketplaceAgentResponseDto;
+interface InstallSkillCardProps {
+  skill: MarketplaceSkillResponseDto;
   onInstall: () => void;
   isInstalling: boolean;
 }
 
-export function InstallAgentCard({
-  agent,
+export function InstallSkillCard({
+  skill,
   onInstall,
   isInstalling,
-}: InstallAgentCardProps) {
+}: InstallSkillCardProps) {
   const { t } = useTranslation('install');
 
   return (
     <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          {agent.iconUrl ? (
+          {skill.iconUrl ? (
             <img
-              src={agent.iconUrl}
-              alt={agent.name}
+              src={skill.iconUrl}
+              alt={skill.name}
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (
             <Bot className="h-8 w-8 text-primary" />
           )}
         </div>
-        <CardTitle className="text-xl">{agent.name}</CardTitle>
-        <CardDescription>{agent.briefDescription}</CardDescription>
+        <CardTitle className="text-xl">{skill.name}</CardTitle>
+        <CardDescription>{skill.shortDescription}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {agent.recommendedModelName && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {t('detail.recommendedModel')}
-            </span>
-            <Badge variant="secondary">{agent.recommendedModelName}</Badge>
-          </div>
-        )}
-
         <div className="rounded-md bg-muted/50 p-4">
           <p className="text-sm text-muted-foreground">
             {t('detail.installNote')}
@@ -63,7 +53,7 @@ export function InstallAgentCard({
 
       <CardFooter className="flex gap-3">
         <Button variant="outline" className="flex-1" asChild>
-          <Link to="/agents">{t('action.cancel')}</Link>
+          <Link to="/skills">{t('action.cancel')}</Link>
         </Button>
         <Button className="flex-1" onClick={onInstall} disabled={isInstalling}>
           {isInstalling ? t('action.installing') : t('action.install')}

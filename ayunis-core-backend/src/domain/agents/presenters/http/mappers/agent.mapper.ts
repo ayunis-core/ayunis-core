@@ -30,7 +30,6 @@ export class AgentDtoMapper {
       sources: this.agentSourceDtoMapper.toDtoArray(
         agent.sourceAssignments || [],
       ),
-      marketplaceIdentifier: agent.marketplaceIdentifier,
       isShared,
       ownerId: agent.userId,
     };

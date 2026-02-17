@@ -55,24 +55,20 @@ export class PostgresSharesRepository extends SharesRepository {
 
     // Query directly by the entity-specific field without using entityType
     if (entityType === SharedEntityType.AGENT) {
-      // For agent shares, query by agentId directly
-      // TypeORM will automatically filter to AgentShareRecord instances
       records = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
         .where('share.agent_id = :entityId', { entityId })
         .orderBy('share.createdAt', 'DESC')
         .getMany();
+    } else if (entityType === SharedEntityType.SKILL) {
+      records = await this.shareRepository
+        .createQueryBuilder('share')
+        .leftJoinAndSelect('share.scope', 'scope')
+        .where('share.skill_id = :entityId', { entityId })
+        .orderBy('share.createdAt', 'DESC')
+        .getMany();
     }
-    // Future: Add other entity types here
-    // if (entityType === SharedEntityType.PROMPT) {
-    //   records = await this.shareRepository
-    //     .createQueryBuilder('share')
-    //     .leftJoinAndSelect('share.scope', 'scope')
-    //     .where('share.prompt_id = :entityId', { entityId })
-    //     .orderBy('share.createdAt', 'DESC')
-    //     .getMany();
-    // }
 
     return records.map((record) => this.mapper.toDomain(record));
   }
@@ -84,10 +80,7 @@ export class PostgresSharesRepository extends SharesRepository {
   ): Promise<Share[]> {
     let records: ShareRecord[] = [];
 
-    if (
-      entityType === SharedEntityType.AGENT &&
-      scopeType === ShareScopeType.ORG
-    ) {
+    if (scopeType === ShareScopeType.ORG) {
       records = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
@@ -96,10 +89,7 @@ export class PostgresSharesRepository extends SharesRepository {
         .andWhere('scope.orgId = :scopeId', { scopeId })
         .orderBy('share.createdAt', 'DESC')
         .getMany();
-    } else if (
-      entityType === SharedEntityType.AGENT &&
-      scopeType === ShareScopeType.TEAM
-    ) {
+    } else if (scopeType === ShareScopeType.TEAM) {
       records = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
@@ -109,7 +99,6 @@ export class PostgresSharesRepository extends SharesRepository {
         .orderBy('share.createdAt', 'DESC')
         .getMany();
     }
-    // Future: Add support for other entity types
 
     return records.map((record) => this.mapper.toDomain(record));
   }
@@ -122,32 +111,30 @@ export class PostgresSharesRepository extends SharesRepository {
   ): Promise<Share | null> {
     let record: ShareRecord | null = null;
 
-    if (
-      entityType === SharedEntityType.AGENT &&
-      scopeType === ShareScopeType.ORG
-    ) {
+    const entityColumn =
+      entityType === SharedEntityType.AGENT
+        ? 'share.agent_id'
+        : 'share.skill_id';
+
+    if (scopeType === ShareScopeType.ORG) {
       record = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
         .where('share.entity_type = :entityType', { entityType })
-        .andWhere('share.agent_id = :entityId', { entityId })
+        .andWhere(`${entityColumn} = :entityId`, { entityId })
         .andWhere('scope.scope_type = :scopeType', { scopeType })
         .andWhere('scope.orgId = :scopeId', { scopeId })
         .getOne();
-    } else if (
-      entityType === SharedEntityType.AGENT &&
-      scopeType === ShareScopeType.TEAM
-    ) {
+    } else if (scopeType === ShareScopeType.TEAM) {
       record = await this.shareRepository
         .createQueryBuilder('share')
         .leftJoinAndSelect('share.scope', 'scope')
         .where('share.entity_type = :entityType', { entityType })
-        .andWhere('share.agent_id = :entityId', { entityId })
+        .andWhere(`${entityColumn} = :entityId`, { entityId })
         .andWhere('scope.scope_type = :scopeType', { scopeType })
         .andWhere('scope.team_id = :scopeId', { scopeId })
         .getOne();
     }
-    // Future: Add support for other entity types
 
     return record ? this.mapper.toDomain(record) : null;
   }
@@ -162,19 +149,16 @@ export class PostgresSharesRepository extends SharesRepository {
 
     let records: ShareRecord[] = [];
 
-    if (entityType === SharedEntityType.AGENT) {
-      records = await this.shareRepository
-        .createQueryBuilder('share')
-        .leftJoinAndSelect('share.scope', 'scope')
-        .where('share.entity_type = :entityType', { entityType })
-        .andWhere('scope.scope_type = :scopeType', {
-          scopeType: ShareScopeType.TEAM,
-        })
-        .andWhere('scope.team_id IN (:...teamIds)', { teamIds })
-        .orderBy('share.createdAt', 'DESC')
-        .getMany();
-    }
-    // Future: Add support for other entity types
+    records = await this.shareRepository
+      .createQueryBuilder('share')
+      .leftJoinAndSelect('share.scope', 'scope')
+      .where('share.entity_type = :entityType', { entityType })
+      .andWhere('scope.scope_type = :scopeType', {
+        scopeType: ShareScopeType.TEAM,
+      })
+      .andWhere('scope.team_id IN (:...teamIds)', { teamIds })
+      .orderBy('share.createdAt', 'DESC')
+      .getMany();
 
     return records.map((record) => this.mapper.toDomain(record));
   }

@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
-  useAgentsControllerInstallFromMarketplace,
-  getAgentsControllerFindAllQueryKey,
+  useSkillsControllerInstallFromMarketplace,
+  getSkillsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -13,30 +13,27 @@ export function useInstallFromMarketplace() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  return useAgentsControllerInstallFromMarketplace({
+  return useSkillsControllerInstallFromMarketplace({
     mutation: {
-      onSuccess: (agent) => {
+      onSuccess: (skill) => {
         showSuccess(t('success'));
         void queryClient.invalidateQueries({
-          queryKey: getAgentsControllerFindAllQueryKey(),
+          queryKey: getSkillsControllerFindAllQueryKey(),
         });
         void router.navigate({
-          to: '/agents/$id',
-          params: { id: agent.id },
+          to: '/skills/$id',
+          params: { id: skill.id },
         });
       },
       onError: (error) => {
         try {
           const { code } = extractErrorData(error);
           switch (code) {
-            case 'MARKETPLACE_AGENT_NOT_FOUND':
+            case 'MARKETPLACE_SKILL_NOT_FOUND':
               showError(t('error.notFound.description'));
               break;
             case 'MARKETPLACE_UNAVAILABLE':
               showError(t('error.unavailable'));
-              break;
-            case 'NO_PERMITTED_MODEL':
-              showError(t('error.noModel'));
               break;
             default:
               showError(t('error.generic'));

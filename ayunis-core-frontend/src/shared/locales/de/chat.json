@@ -46,17 +46,17 @@
       },
       "create_skill": {
         "name": "Name",
-        "namePlaceholder": "Skill-Name eingeben",
+        "namePlaceholder": "Name der Fähigkeit eingeben",
         "shortDescription": "Kurzbeschreibung",
-        "shortDescriptionPlaceholder": "Kurze Beschreibung der Skill-Funktion",
+        "shortDescriptionPlaceholder": "Kurze Beschreibung der Fähigkeit",
         "instructions": "Anweisungen",
-        "instructionsPlaceholder": "Detaillierte Anweisungen für den Skill",
+        "instructionsPlaceholder": "Detaillierte Anweisungen für die Fähigkeit",
         "active": "Aktiv",
-        "create": "Skill erstellen",
-        "created": "Skill erstellt",
-        "success": "Skill erfolgreich erstellt",
-        "error": "Skill konnte nicht erstellt werden",
-        "errorDuplicate": "Ein Skill mit diesem Namen existiert bereits"
+        "create": "Fähigkeit erstellen",
+        "created": "Fähigkeit erstellt",
+        "success": "Fähigkeit erfolgreich erstellt",
+        "error": "Fähigkeit konnte nicht erstellt werden",
+        "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits"
       },
       "create_calendar_event": {
         "title": "Titel",

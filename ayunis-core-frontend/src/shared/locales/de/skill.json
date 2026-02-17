@@ -1,4 +1,60 @@
 {
+  "shared": {
+    "badge": "Freigegeben"
+  },
+  "tabs": {
+    "configuration": "Konfiguration",
+    "shares": "Freigaben"
+  },
+  "shares": {
+    "org": {
+      "title": "Freigabe für Organisation",
+      "descriptionOn": "Diese Fähigkeit ist für alle Nutzer Ihrer Organisation freigegeben",
+      "descriptionOff": "Diese Fähigkeit ist aktuell nicht für Nutzer Ihrer Organisation freigegeben"
+    },
+    "teams": {
+      "title": "Teams",
+      "description": "Mit Teammitgliedern teilen",
+      "create": {
+        "title": "Fähigkeit mit Team teilen",
+        "description": "Dadurch wird die Fähigkeit für alle Mitglieder von {{teamName}} verfügbar",
+        "confirm": "Teilen",
+        "cancel": "Abbrechen"
+      },
+      "delete": {
+        "title": "Team-Freigabe entfernen",
+        "description": "Der Zugriff für alle Mitglieder von {{teamName}} wird entfernt",
+        "confirm": "Entfernen",
+        "cancel": "Abbrechen"
+      }
+    },
+    "create": {
+      "button": "Fähigkeit teilen",
+      "title": "Fähigkeit mit Organisation teilen",
+      "description": "Dadurch wird die Fähigkeit für alle Mitglieder Ihrer Organisation verfügbar",
+      "confirm": "Teilen",
+      "cancel": "Abbrechen"
+    },
+    "delete": {
+      "tooltip": "Freigabe entfernen",
+      "title": "Freigabe entfernen",
+      "description": "Der Zugriff für alle Mitglieder Ihrer Organisation wird entfernt",
+      "confirm": "Entfernen",
+      "cancel": "Abbrechen"
+    },
+    "scope": {
+      "org": "Organisation"
+    },
+    "sharedOn": "Geteilt am",
+    "success": {
+      "created": "Fähigkeit erfolgreich geteilt",
+      "deleted": "Freigabe erfolgreich entfernt"
+    },
+    "error": {
+      "create": "Fehler beim Teilen der Fähigkeit",
+      "delete": "Fehler beim Entfernen der Freigabe"
+    }
+  },
   "properties": {
     "title": "Fähigkeit bearbeiten",
     "description": "Nehmen Sie hier Änderungen an Ihrer Fähigkeit vor. Klicken Sie auf Speichern, wenn Sie fertig sind.",

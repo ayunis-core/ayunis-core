@@ -12,6 +12,7 @@ export class ThreadSourceAssignmentMapper {
     return new SourceAssignment({
       id: record.id,
       source: this.sourceMapper.toDomain(record.source),
+      originSkillId: record.originSkillId ?? undefined,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -24,6 +25,7 @@ export class ThreadSourceAssignmentMapper {
     const record = new ThreadSourceAssignmentRecord();
     record.id = domain.id;
     record.threadId = threadId;
+    record.originSkillId = domain.originSkillId ?? null;
     record.sourceId = domain.source.id;
     record.source = this.sourceMapper.toRecord(domain.source).source;
     record.createdAt = domain.createdAt;
