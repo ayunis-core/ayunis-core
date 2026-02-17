@@ -20,6 +20,8 @@ skills/
 │   └── skill.entity.ts                    # Skill domain entity
 ├── application/
 │   ├── ports/skill.repository.ts          # Abstract repository (includes activation methods)
+│   ├── listeners/
+│   │   └── share-deleted.listener.ts      # Reconciles activations on share deletion
 │   ├── skills.errors.ts                   # Domain errors
 │   └── use-cases/
 │       ├── create-skill/
@@ -60,10 +62,15 @@ Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` patt
 
 Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
 
+When a skill share is deleted, the `ShareDeletedListener` handles cleanup of activations. If no other shares remain for the skill, all non-owner activations are removed. If other shares still exist, the listener resolves the remaining scopes to user IDs (via `FindAllUserIdsByOrgIdUseCase` and `FindAllUserIdsByTeamIdUseCase`) and only deactivates users who are no longer covered by any remaining share scope.
+
 ## Dependencies
 
 - **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
 - **McpModule** — for MCP integration validation and batch fetch
+- **SharesModule** — for share authorization strategy registration
+- **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
+- **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)
 - **ContextService** — for user context (userId, orgId)
 
 ## API Endpoints
