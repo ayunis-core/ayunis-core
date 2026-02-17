@@ -16,11 +16,6 @@ export class FindAllUserIdsByTeamIdUseCase {
   async execute(query: FindAllUserIdsByTeamIdQuery): Promise<UUID[]> {
     this.logger.log('execute', { teamId: query.teamId });
 
-    const result = await this.teamMembersRepository.findByTeamId(query.teamId, {
-      limit: 1000,
-      offset: 0,
-    });
-
-    return result.data.map((member) => member.userId);
+    return this.teamMembersRepository.findAllUserIdsByTeamId(query.teamId);
   }
 }
