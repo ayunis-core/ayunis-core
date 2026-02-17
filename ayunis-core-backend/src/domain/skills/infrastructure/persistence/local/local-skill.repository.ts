@@ -250,6 +250,29 @@ export class LocalSkillRepository implements SkillRepository {
       .execute();
   }
 
+  async deactivateUsersNotInSet(
+    skillId: UUID,
+    ownerId: UUID,
+    retainUserIds: Set<UUID>,
+  ): Promise<void> {
+    this.logger.log('deactivateUsersNotInSet', {
+      skillId,
+      ownerId,
+      retainCount: retainUserIds.size,
+    });
+
+    const manager = this.getManager();
+    const keepIds = [ownerId, ...retainUserIds];
+
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from(SkillActivationRecord)
+      .where('skillId = :skillId', { skillId })
+      .andWhere('userId NOT IN (:...keepIds)', { keepIds })
+      .execute();
+  }
+
   async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
     this.logger.log('isSkillActive', { skillId, userId });
 

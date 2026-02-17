@@ -36,6 +36,10 @@ import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-t
 // Shares
 import { SharesModule } from '../shares/shares.module';
 
+// IAM
+import { UsersModule } from 'src/iam/users/users.module';
+import { TeamsModule } from 'src/iam/teams/teams.module';
+
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
@@ -52,6 +56,8 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     SourcesModule,
     McpModule,
     forwardRef(() => SharesModule),
+    UsersModule,
+    TeamsModule,
   ],
   providers: [
     {

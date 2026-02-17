@@ -20,5 +20,10 @@ export abstract class SkillRepository {
     skillId: UUID,
     ownerId: UUID,
   ): Promise<void>;
+  abstract deactivateUsersNotInSet(
+    skillId: UUID,
+    ownerId: UUID,
+    retainUserIds: Set<UUID>,
+  ): Promise<void>;
   abstract findByIds(ids: UUID[]): Promise<Skill[]>;
 }

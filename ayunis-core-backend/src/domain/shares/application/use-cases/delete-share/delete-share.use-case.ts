@@ -6,8 +6,15 @@ import { UUID } from 'crypto';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ShareDeletedEvent } from '../../events/share-deleted.event';
+import {
+  RemainingShareScope,
+  ShareDeletedEvent,
+} from '../../events/share-deleted.event';
 import { Share, AgentShare, SkillShare } from '../../../domain/share.entity';
+import {
+  OrgShareScope,
+  TeamShareScope,
+} from '../../../domain/share-scope.entity';
 
 @Injectable()
 export class DeleteShareUseCase {
@@ -38,9 +45,22 @@ export class DeleteShareUseCase {
       await this.repository.delete(share);
 
       const entityId = this.getEntityId(share);
+      const remainingShares = await this.repository.findByEntityIdAndType(
+        entityId,
+        share.entityType,
+      );
+      const remainingScopes = remainingShares.map((s) =>
+        this.toRemainingScope(s),
+      );
+
       this.eventEmitter.emit(
         ShareDeletedEvent.EVENT_NAME,
-        new ShareDeletedEvent(share.entityType, entityId, share.ownerId),
+        new ShareDeletedEvent(
+          share.entityType,
+          entityId,
+          share.ownerId,
+          remainingScopes,
+        ),
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -53,5 +73,16 @@ export class DeleteShareUseCase {
     if (share instanceof AgentShare) return share.agentId;
     if (share instanceof SkillShare) return share.skillId;
     throw new Error(`Unknown share type: ${share.entityType}`);
+  }
+
+  private toRemainingScope(share: Share): RemainingShareScope {
+    const scope = share.scope;
+    if (scope instanceof OrgShareScope) {
+      return { scopeType: scope.scopeType, scopeId: scope.orgId };
+    }
+    if (scope instanceof TeamShareScope) {
+      return { scopeType: scope.scopeType, scopeId: scope.teamId };
+    }
+    throw new Error(`Unknown scope type: ${scope.scopeType}`);
   }
 }
