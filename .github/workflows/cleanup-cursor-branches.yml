@@ -45,7 +45,7 @@ jobs:
           echo ""
 
           # Get all non-cursor, non-main remote branches (potential base branches)
-          feature_branches=$(git branch -r | grep -v 'origin/cursor/' | grep -v 'origin/main' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs || true)
+          feature_branches=$(git branch -r | grep -v 'origin/cursor/' | grep -v '^[[:space:]]*origin/main$' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs || true)
 
           deleted_count=0
           skipped_count=0
