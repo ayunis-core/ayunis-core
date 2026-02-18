@@ -2,6 +2,7 @@ import type { ArtifactVersionResponseDto } from '@/shared/api';
 import { Button } from '@/shared/ui/shadcn/button';
 import { ChevronDown, ChevronRight, History, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface VersionHistoryProps {
   versions: ArtifactVersionResponseDto[];
@@ -24,6 +25,7 @@ export function VersionHistory({
   currentVersionNumber,
   onRevert,
 }: VersionHistoryProps) {
+  const { t } = useTranslation('artifacts');
   const [isOpen, setIsOpen] = useState(false);
 
   const sortedVersions = [...versions].sort(
@@ -38,7 +40,7 @@ export function VersionHistory({
         onClick={() => setIsOpen(!isOpen)}
       >
         <History className="size-4" />
-        <span>Version History ({versions.length})</span>
+        <span>{t('versionHistory.title', { count: versions.length })}</span>
         {isOpen ? (
           <ChevronDown className="ml-auto size-4" />
         ) : (
@@ -58,7 +60,7 @@ export function VersionHistory({
                   v{version.versionNumber}
                   {version.versionNumber === currentVersionNumber && (
                     <span className="text-muted-foreground ml-1">
-                      (current)
+                      {t('versionHistory.current')}
                     </span>
                   )}
                 </span>
@@ -72,10 +74,12 @@ export function VersionHistory({
                   size="sm"
                   className="h-7 px-2"
                   onClick={() => onRevert(version.versionNumber)}
-                  title={`Revert to v${version.versionNumber}`}
+                  title={t('versionHistory.revertTo', {
+                    version: version.versionNumber,
+                  })}
                 >
                   <RotateCcw className="mr-1 size-3" />
-                  Revert
+                  {t('versionHistory.revert')}
                 </Button>
               )}
             </div>
