@@ -8,6 +8,7 @@ export function getFlagByProvider(provider: Provider): string {
     case 'ayunis':
     case 'synaforce':
     case 'ollama':
+    case 'stackit':
       return `🇩🇪`;
     case 'mistral':
     case 'bedrock':

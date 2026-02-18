@@ -72,6 +72,12 @@ const MODEL_PROVIDER_CONFIGS: ModelProviderConfig[] = [
     hostedIn: ModelProviderLocation.US,
     configKey: 'models.gemini.apiKey',
   },
+  {
+    provider: ModelProvider.STACKIT,
+    displayName: 'Stackit',
+    hostedIn: ModelProviderLocation.DE,
+    configKey: 'models.stackit.apiKey',
+  },
 ];
 
 @Injectable()

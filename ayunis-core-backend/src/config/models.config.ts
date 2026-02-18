@@ -40,4 +40,8 @@ export const modelsConfig = registerAs('models', () => ({
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
   },
+  stackit: {
+    apiKey: process.env.STACKIT_TOKEN,
+    baseURL: 'https://api.openai-compat.model-serving.eu01.onstackit.cloud/v1',
+  },
 }));

@@ -18,6 +18,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   ayunis: 'Ayunis',
   azure: 'MS Azure',
   gemini: 'Gemini',
+  stackit: 'Stackit',
 };
 
 /**

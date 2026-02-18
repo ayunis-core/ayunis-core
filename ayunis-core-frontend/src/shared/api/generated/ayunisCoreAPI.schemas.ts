@@ -30,6 +30,7 @@ export const ModelWithConfigResponseDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -85,6 +86,7 @@ export const ModelProviderInfoResponseDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -141,6 +143,7 @@ export const PermittedLanguageModelResponseDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -226,6 +229,7 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -279,6 +283,7 @@ export const CreateLanguageModelRequestDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -318,6 +323,7 @@ export const UpdateLanguageModelRequestDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -357,6 +363,7 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -403,6 +410,7 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -449,6 +457,7 @@ export const LanguageModelResponseDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -507,6 +516,7 @@ export const EmbeddingModelResponseDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 /**
@@ -2542,6 +2552,7 @@ export const ProviderUsageDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 export interface ProviderUsageDto {
@@ -2607,6 +2618,7 @@ export const ModelDistributionDtoProvider = {
   otc: 'otc',
   azure: 'azure',
   gemini: 'gemini',
+  stackit: 'stackit',
 } as const;
 
 export interface ModelDistributionDto {
