@@ -32,6 +32,7 @@ describe('GetMarketplaceSkillUseCase', () => {
   beforeEach(() => {
     marketplaceClient = {
       getSkillByIdentifier: jest.fn(),
+      getIntegrationByIdentifier: jest.fn(),
     } as jest.Mocked<MarketplaceClient>;
 
     useCase = new GetMarketplaceSkillUseCase(marketplaceClient);

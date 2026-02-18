@@ -2,8 +2,10 @@ import { randomUUID } from 'crypto';
 import { McpIntegrationMapper } from './mcp-integration.mapper';
 import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from '../../../../domain/integrations/marketplace-mcp-integration.entity';
 import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { IntegrationConfigSchema } from '../../../../domain/value-objects/integration-config-schema';
 import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../../domain/auth/custom-header-mcp-integration-auth.entity';
@@ -14,6 +16,7 @@ import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
+  MarketplaceMcpIntegrationRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
@@ -229,5 +232,109 @@ describe('McpIntegrationMapper', () => {
     expect(
       (reconstructed.auth as CustomHeaderMcpIntegrationAuth).headerName,
     ).toBe('X-API-Key');
+  });
+
+  const oparlConfigSchema: IntegrationConfigSchema = {
+    authType: 'NO_AUTH',
+    orgFields: [
+      {
+        key: 'oparlEndpointUrl',
+        type: 'url',
+        label: 'OParl Endpoint URL',
+        headerName: 'X-Oparl-Endpoint-Url',
+        required: true,
+        help: 'Your municipality OParl system endpoint URL',
+      },
+    ],
+    userFields: [],
+  };
+
+  describe('toRecord — marketplace', () => {
+    it('maps marketplace integration with config schema and org config values', () => {
+      const auth = new NoAuthMcpIntegrationAuth();
+      const integration = new MarketplaceMcpIntegration({
+        ...baseParams,
+        auth,
+        marketplaceIdentifier: 'oparl-mcp',
+        configSchema: oparlConfigSchema,
+        orgConfigValues: {
+          oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+        },
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record).toBeInstanceOf(MarketplaceMcpIntegrationRecord);
+      const marketplaceRecord = record as MarketplaceMcpIntegrationRecord;
+      expect(marketplaceRecord.marketplaceIdentifier).toBe('oparl-mcp');
+      expect(marketplaceRecord.configSchema).toEqual(oparlConfigSchema);
+      expect(marketplaceRecord.orgConfigValues).toEqual({
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      });
+      expect(record.auth).toBeInstanceOf(NoAuthMcpIntegrationAuthRecord);
+    });
+  });
+
+  describe('toDomain — marketplace', () => {
+    it('maps marketplace integration record to domain entity', () => {
+      const record = new MarketplaceMcpIntegrationRecord();
+      record.id = randomUUID();
+      record.orgId = baseParams.orgId;
+      record.name = 'OParl Integration';
+      record.serverUrl = 'https://mcp.ayunis.de/oparl';
+      record.marketplaceIdentifier = 'oparl-mcp';
+      record.configSchema = oparlConfigSchema;
+      record.orgConfigValues = {
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      };
+      record.enabled = true;
+      record.connectionStatus = 'connected';
+      record.createdAt = baseParams.createdAt;
+      record.updatedAt = baseParams.updatedAt;
+
+      const authRecord = new NoAuthMcpIntegrationAuthRecord();
+      authRecord.id = randomUUID();
+      authRecord.integrationId = record.id;
+      authRecord.createdAt = baseParams.createdAt;
+      authRecord.updatedAt = baseParams.updatedAt;
+      authRecord.integration = record;
+      record.auth = authRecord;
+
+      const domain = mapper.toDomain(record);
+
+      expect(domain).toBeInstanceOf(MarketplaceMcpIntegration);
+      expect(domain.kind).toBe(McpIntegrationKind.MARKETPLACE);
+      const marketplace = domain as MarketplaceMcpIntegration;
+      expect(marketplace.marketplaceIdentifier).toBe('oparl-mcp');
+      expect(marketplace.configSchema).toEqual(oparlConfigSchema);
+      expect(marketplace.orgConfigValues).toEqual({
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      });
+      expect(domain.auth).toBeInstanceOf(NoAuthMcpIntegrationAuth);
+    });
+  });
+
+  it('round-trips a marketplace integration through record mapping', () => {
+    const auth = new NoAuthMcpIntegrationAuth();
+    const original = new MarketplaceMcpIntegration({
+      ...baseParams,
+      auth,
+      marketplaceIdentifier: 'oparl-mcp',
+      configSchema: oparlConfigSchema,
+      orgConfigValues: {
+        oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      },
+    });
+
+    const record = mapper.toRecord(original);
+    const reconstructed = mapper.toDomain(record);
+
+    expect(reconstructed.kind).toBe(McpIntegrationKind.MARKETPLACE);
+    const marketplace = reconstructed as MarketplaceMcpIntegration;
+    expect(marketplace.marketplaceIdentifier).toBe('oparl-mcp');
+    expect(marketplace.configSchema).toEqual(oparlConfigSchema);
+    expect(marketplace.orgConfigValues).toEqual({
+      oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+    });
   });
 });

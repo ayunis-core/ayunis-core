@@ -8,12 +8,16 @@ import { McpClientService } from './application/services/mcp-client.service';
 import { PredefinedMcpIntegrationRegistry } from './application/registries/predefined-mcp-integration-registry.service';
 import { McpIntegrationsRepositoryPort } from './application/ports/mcp-integrations.repository.port';
 import { McpIntegrationsRepository } from './infrastructure/persistence/postgres/mcp-integrations.repository';
+import { McpIntegrationUserConfigRepositoryPort } from './application/ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationUserConfigRepository } from './infrastructure/persistence/postgres/mcp-integration-user-config.repository';
 import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
+  MarketplaceMcpIntegrationRecord,
   McpIntegrationAuthRecord,
   McpIntegrationRecord,
+  McpIntegrationUserConfigRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
@@ -52,11 +56,13 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       McpIntegrationRecord,
       CustomMcpIntegrationRecord,
       PredefinedMcpIntegrationRecord,
+      MarketplaceMcpIntegrationRecord,
       McpIntegrationAuthRecord,
       NoAuthMcpIntegrationAuthRecord,
       BearerMcpIntegrationAuthRecord,
       CustomHeaderMcpIntegrationAuthRecord,
       OAuthMcpIntegrationAuthRecord,
+      McpIntegrationUserConfigRecord,
     ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
   ],
@@ -73,6 +79,10 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     {
       provide: McpIntegrationsRepositoryPort,
       useClass: McpIntegrationsRepository,
+    },
+    {
+      provide: McpIntegrationUserConfigRepositoryPort,
+      useClass: McpIntegrationUserConfigRepository,
     },
     McpIntegrationMapper,
     McpIntegrationFactory,
@@ -104,6 +114,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     McpCredentialEncryptionPort,
     McpClientPort,
     McpIntegrationsRepositoryPort,
+    McpIntegrationUserConfigRepositoryPort,
     PredefinedMcpIntegrationRegistry,
     RetrieveMcpResourceUseCase,
     DiscoverMcpCapabilitiesUseCase,
