@@ -90,6 +90,19 @@ jobs:
               fi
             done
 
+            # If no feature branch found, check if cursor was based on main directly
+            if [ "$base_branch_exists" = false ]; then
+              # Get the first commit on cursor branch after merge-base with main
+              first_cursor_commit=$(git log --reverse --format="%H" "$merge_base..origin/$branch" 2>/dev/null | head -1)
+              if [ -n "$first_cursor_commit" ]; then
+                # If this commit is NOT on main, cursor was based on main directly (not a merged feature branch)
+                if ! git branch -r --contains "$first_cursor_commit" 2>/dev/null | grep -q 'origin/main'; then
+                  echo "  🌿 Based on main directly (main is always alive)"
+                  base_branch_exists=true
+                fi
+              fi
+            fi
+
             if [ "$base_branch_exists" = true ]; then
               echo "  ⏭️  Keeping (base branch still exists)"
               skipped_count=$((skipped_count + 1))
@@ -97,11 +110,15 @@ jobs:
               echo "  🕸️  Orphaned (base branch was merged to main)"
               if [ "$DRY_RUN" = "true" ]; then
                 echo "  🔸 [DRY RUN] Would delete: $branch"
+                deleted_count=$((deleted_count + 1))
               else
                 echo "  🗑️  Deleting: $branch"
-                git push origin --delete "$branch" || echo "  ⚠️  Failed to delete"
+                if git push origin --delete "$branch"; then
+                  deleted_count=$((deleted_count + 1))
+                else
+                  echo "  ⚠️  Failed to delete"
+                fi
               fi
-              deleted_count=$((deleted_count + 1))
             fi
           done
 
