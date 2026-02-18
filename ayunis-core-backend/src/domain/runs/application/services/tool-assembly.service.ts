@@ -18,6 +18,8 @@ import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
+import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
+import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -30,6 +32,7 @@ export class ToolAssemblyService {
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
+    private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -210,6 +213,33 @@ export class ToolAssemblyService {
         }),
       ),
     );
+
+    // Document tools are always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.CREATE_DOCUMENT,
+        }),
+      ),
+    );
+
+    const updateDocumentTool = await this.assembleToolsUseCase.execute(
+      new AssembleToolCommand({
+        type: ToolType.UPDATE_DOCUMENT,
+      }),
+    );
+    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+    if (threadArtifacts.length > 0) {
+      const artifactList = threadArtifacts
+        .map((a) => `- ${a.id}: "${a.title}"`)
+        .join('\n');
+      updateDocumentTool.descriptionLong =
+        `${updateDocumentTool.descriptionLong ?? updateDocumentTool.description}\n\n` +
+        `Available documents in this conversation:\n${artifactList}`;
+    }
+    tools.push(updateDocumentTool);
 
     // Create skill tool is available for non-cloud deployments
     if (!isCloudHosted) {

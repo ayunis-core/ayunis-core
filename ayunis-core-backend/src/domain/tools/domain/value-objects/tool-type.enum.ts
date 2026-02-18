@@ -17,4 +17,6 @@ export enum ToolType {
   PRODUCT_KNOWLEDGE = 'product_knowledge',
   ACTIVATE_SKILL = 'activate_skill',
   CREATE_SKILL = 'create_skill',
+  CREATE_DOCUMENT = 'create_document',
+  UPDATE_DOCUMENT = 'update_document',
 }
