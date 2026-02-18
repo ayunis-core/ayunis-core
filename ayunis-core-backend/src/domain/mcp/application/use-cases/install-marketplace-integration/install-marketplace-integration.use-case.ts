@@ -14,7 +14,35 @@ import {
   IntegrationConfigSchema,
   ConfigField,
 } from '../../../domain/value-objects/integration-config-schema';
-import { IntegrationConfigSchemaDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import { IntegrationResponseDtoConfigSchema } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+
+/**
+ * Runtime shape of the configSchema returned by the marketplace API.
+ * The OpenAPI spec declares this as a generic object, so we cast at the boundary.
+ */
+interface MarketplaceConfigSchemaDto {
+  authType: string;
+  orgFields: Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'url' | 'secret';
+    headerName: string | null;
+    prefix: string | null;
+    required: boolean;
+    help: string | null;
+    value: string | null;
+  }>;
+  userFields: Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'url' | 'secret';
+    headerName: string | null;
+    prefix: string | null;
+    required: boolean;
+    help: string | null;
+    value: string | null;
+  }>;
+}
 import {
   McpOAuthNotSupportedError,
   McpMissingRequiredConfigError,
@@ -116,17 +144,18 @@ export class InstallMarketplaceIntegrationUseCase {
   }
 
   private parseConfigSchema(
-    dto: IntegrationConfigSchemaDto,
+    dto: IntegrationResponseDtoConfigSchema,
   ): IntegrationConfigSchema {
+    const schema = dto as unknown as MarketplaceConfigSchemaDto;
     return {
-      authType: dto.authType,
-      orgFields: dto.orgFields.map((f) => this.parseConfigField(f)),
-      userFields: dto.userFields.map((f) => this.parseConfigField(f)),
+      authType: schema.authType,
+      orgFields: schema.orgFields.map((f) => this.parseConfigField(f)),
+      userFields: schema.userFields.map((f) => this.parseConfigField(f)),
     };
   }
 
   private parseConfigField(
-    field: IntegrationConfigSchemaDto['orgFields'][number],
+    field: MarketplaceConfigSchemaDto['orgFields'][number],
   ): ConfigField {
     return {
       key: field.key,

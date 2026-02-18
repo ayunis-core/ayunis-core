@@ -6,457 +6,420 @@
  * OpenAPI spec version: 1.0
  */
 import type {
+  IntegrationListResponseDto,
   IntegrationResponseDto,
+  PaginatedIntegrationsResponseDto,
   PaginatedSkillsResponseDto,
+  PublicIntegrationsControllerListParams,
   PublicSkillsControllerListParams,
   SkillCategoryResponseDto,
   SkillListResponseDto,
-  SkillResponseDto,
+  SkillResponseDto
 } from './ayunisMarketplaceAPI.schemas';
 
 import { marketplaceAxiosInstance } from '../client';
 
-export const getAyunisMarketplaceAPI = () => {
-  const authControllerLoginPage = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/login`,
-      method: 'GET',
-    });
-  };
 
-  const authControllerGoogleAuth = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/auth/google`,
-      method: 'GET',
-    });
-  };
 
-  const authControllerGoogleAuthCallback = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/auth/google/callback`,
-      method: 'GET',
-    });
-  };
-
-  const authControllerLogout = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/auth/logout`,
-      method: 'POST',
-    });
-  };
-
-  const adminControllerDashboard = () => {
-    return marketplaceAxiosInstance<null>({ url: `/admin`, method: 'GET' });
-  };
-
-  /**
-   * Retrieve all skill categories sorted by their sort order.
-   * @summary List all skill categories
-   */
-  const publicSkillCategoriesControllerList = () => {
-    return marketplaceAxiosInstance<SkillCategoryResponseDto[]>({
-      url: `/api/skill-categories`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillCategoriesControllerList = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillCategoriesControllerCreate = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories`,
-      method: 'POST',
-    });
-  };
-
-  const adminSkillCategoriesControllerNewForm = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories/new`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillCategoriesControllerEditForm = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories/${id}/edit`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillCategoriesControllerUpdate = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories/${id}`,
-      method: 'POST',
-    });
-  };
-
-  const adminSkillCategoriesControllerDeleteConfirm = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories/${id}/delete`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillCategoriesControllerDelete = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skill-categories/${id}/delete`,
-      method: 'POST',
-    });
-  };
-
-  /**
-   * Retrieve a paginated list of published skills with optional filters for category, featured status, and pagination.
-   * @summary List published skills
-   */
-  const publicSkillsControllerList = (
+  export const getAyunisMarketplaceAPI = () => {
+const authControllerLoginPage = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/login`, method: 'GET'
+    },
+      );
+    }
+  
+const authControllerGoogleAuth = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/auth/google`, method: 'GET'
+    },
+      );
+    }
+  
+const authControllerGoogleAuthCallback = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/auth/google/callback`, method: 'GET'
+    },
+      );
+    }
+  
+const authControllerLogout = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/auth/logout`, method: 'POST'
+    },
+      );
+    }
+  
+const adminControllerDashboard = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin`, method: 'GET'
+    },
+      );
+    }
+  
+/**
+ * Retrieve all skill categories sorted by their sort order.
+ * @summary List all skill categories
+ */
+const publicSkillCategoriesControllerList = (
+    
+ ) => {
+      return marketplaceAxiosInstance<SkillCategoryResponseDto[]>(
+      {url: `/api/skill-categories`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerList = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerCreate = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories`, method: 'POST'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerNewForm = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories/new`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerEditForm = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories/${id}/edit`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerUpdate = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories/${id}`, method: 'POST'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerDeleteConfirm = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories/${id}/delete`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillCategoriesControllerDelete = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skill-categories/${id}/delete`, method: 'POST'
+    },
+      );
+    }
+  
+/**
+ * Retrieve a paginated list of published skills with optional filters for category, featured status, and pagination.
+ * @summary List published skills
+ */
+const publicSkillsControllerList = (
     params?: PublicSkillsControllerListParams,
-  ) => {
-    return marketplaceAxiosInstance<PaginatedSkillsResponseDto>({
-      url: `/api/skills`,
-      method: 'GET',
-      params,
-    });
-  };
-
-  /**
-   * Retrieve all published skills that are marked as pre-installed for new organizations.
-   * @summary List pre-installed skills
-   */
-  const publicSkillsControllerListPreInstalled = () => {
-    return marketplaceAxiosInstance<SkillListResponseDto[]>({
-      url: `/api/skills/pre-installed`,
-      method: 'GET',
-    });
-  };
-
-  /**
-   * Retrieve full details of a published skill by its unique identifier slug.
-   * @summary Get a skill by identifier
-   */
-  const publicSkillsControllerGetByIdentifier = (identifier: string) => {
-    return marketplaceAxiosInstance<SkillResponseDto>({
-      url: `/api/skills/${identifier}`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillsControllerList = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillsControllerCreate = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills`,
-      method: 'POST',
-    });
-  };
-
-  const adminSkillsControllerNewForm = () => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/new`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillsControllerEditForm = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/${id}/edit`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillsControllerUpdate = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/${id}`,
-      method: 'POST',
-    });
-  };
-
-  const adminSkillsControllerDeleteConfirm = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/${id}/delete`,
-      method: 'GET',
-    });
-  };
-
-  const adminSkillsControllerDelete = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/${id}/delete`,
-      method: 'POST',
-    });
-  };
-
-  const adminSkillsControllerPublish = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/${id}/publish`,
-      method: 'POST',
-    });
-  };
-
-  const adminSkillsControllerUnpublish = (id: string) => {
-    return marketplaceAxiosInstance<null>({
-      url: `/admin/skills/${id}/unpublish`,
-      method: 'POST',
-    });
-  };
-
-  /**
-   * Retrieve full details of a published integration by its unique identifier slug.
-   * @summary Get an integration by identifier
-   */
-  const publicIntegrationsControllerGetByIdentifier = (identifier: string) => {
-    return marketplaceAxiosInstance<IntegrationResponseDto>({
-      url: `/api/integrations/${identifier}`,
-      method: 'GET',
-    });
-  };
-
-  return {
-    authControllerLoginPage,
-    authControllerGoogleAuth,
-    authControllerGoogleAuthCallback,
-    authControllerLogout,
-    adminControllerDashboard,
-    publicSkillCategoriesControllerList,
-    adminSkillCategoriesControllerList,
-    adminSkillCategoriesControllerCreate,
-    adminSkillCategoriesControllerNewForm,
-    adminSkillCategoriesControllerEditForm,
-    adminSkillCategoriesControllerUpdate,
-    adminSkillCategoriesControllerDeleteConfirm,
-    adminSkillCategoriesControllerDelete,
-    publicSkillsControllerList,
-    publicSkillsControllerListPreInstalled,
-    publicSkillsControllerGetByIdentifier,
-    adminSkillsControllerList,
-    adminSkillsControllerCreate,
-    adminSkillsControllerNewForm,
-    adminSkillsControllerEditForm,
-    adminSkillsControllerUpdate,
-    adminSkillsControllerDeleteConfirm,
-    adminSkillsControllerDelete,
-    adminSkillsControllerPublish,
-    adminSkillsControllerUnpublish,
-    publicIntegrationsControllerGetByIdentifier,
-  };
-};
-export type AuthControllerLoginPageResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['authControllerLoginPage']
-    >
-  >
->;
-export type AuthControllerGoogleAuthResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['authControllerGoogleAuth']
-    >
-  >
->;
-export type AuthControllerGoogleAuthCallbackResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['authControllerGoogleAuthCallback']
-    >
-  >
->;
-export type AuthControllerLogoutResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['authControllerLogout']
-    >
-  >
->;
-export type AdminControllerDashboardResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminControllerDashboard']
-    >
-  >
->;
-export type PublicSkillCategoriesControllerListResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['publicSkillCategoriesControllerList']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerListResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerList']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerCreateResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerCreate']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerNewFormResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerNewForm']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerEditFormResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerEditForm']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerUpdateResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerUpdate']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerDeleteConfirmResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerDeleteConfirm']
-    >
-  >
->;
-export type AdminSkillCategoriesControllerDeleteResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillCategoriesControllerDelete']
-    >
-  >
->;
-export type PublicSkillsControllerListResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['publicSkillsControllerList']
-    >
-  >
->;
-export type PublicSkillsControllerListPreInstalledResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['publicSkillsControllerListPreInstalled']
-    >
-  >
->;
-export type PublicSkillsControllerGetByIdentifierResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['publicSkillsControllerGetByIdentifier']
-    >
-  >
->;
-export type AdminSkillsControllerListResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerList']
-    >
-  >
->;
-export type AdminSkillsControllerCreateResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerCreate']
-    >
-  >
->;
-export type AdminSkillsControllerNewFormResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerNewForm']
-    >
-  >
->;
-export type AdminSkillsControllerEditFormResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillsControllerEditForm']
-    >
-  >
->;
-export type AdminSkillsControllerUpdateResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerUpdate']
-    >
-  >
->;
-export type AdminSkillsControllerDeleteConfirmResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillsControllerDeleteConfirm']
-    >
-  >
->;
-export type AdminSkillsControllerDeleteResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerDelete']
-    >
-  >
->;
-export type AdminSkillsControllerPublishResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerPublish']
-    >
-  >
->;
-export type AdminSkillsControllerUnpublishResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['adminSkillsControllerUnpublish']
-    >
-  >
->;
-export type PublicIntegrationsControllerGetByIdentifierResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAyunisMarketplaceAPI
-      >['publicIntegrationsControllerGetByIdentifier']
-    >
-  >
->;
+ ) => {
+      return marketplaceAxiosInstance<PaginatedSkillsResponseDto>(
+      {url: `/api/skills`, method: 'GET',
+        params
+    },
+      );
+    }
+  
+/**
+ * Retrieve all published skills that are marked as pre-installed for new organizations.
+ * @summary List pre-installed skills
+ */
+const publicSkillsControllerListPreInstalled = (
+    
+ ) => {
+      return marketplaceAxiosInstance<SkillListResponseDto[]>(
+      {url: `/api/skills/pre-installed`, method: 'GET'
+    },
+      );
+    }
+  
+/**
+ * Retrieve full details of a published skill by its unique identifier slug.
+ * @summary Get a skill by identifier
+ */
+const publicSkillsControllerGetByIdentifier = (
+    identifier: string,
+ ) => {
+      return marketplaceAxiosInstance<SkillResponseDto>(
+      {url: `/api/skills/${identifier}`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillsControllerList = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillsControllerCreate = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills`, method: 'POST'
+    },
+      );
+    }
+  
+const adminSkillsControllerNewForm = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/new`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillsControllerEditForm = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/${id}/edit`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillsControllerUpdate = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/${id}`, method: 'POST'
+    },
+      );
+    }
+  
+const adminSkillsControllerDeleteConfirm = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/${id}/delete`, method: 'GET'
+    },
+      );
+    }
+  
+const adminSkillsControllerDelete = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/${id}/delete`, method: 'POST'
+    },
+      );
+    }
+  
+const adminSkillsControllerPublish = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/${id}/publish`, method: 'POST'
+    },
+      );
+    }
+  
+const adminSkillsControllerUnpublish = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/skills/${id}/unpublish`, method: 'POST'
+    },
+      );
+    }
+  
+/**
+ * Retrieve a paginated list of published integrations with optional filters for featured status and pagination.
+ * @summary List published integrations
+ */
+const publicIntegrationsControllerList = (
+    params?: PublicIntegrationsControllerListParams,
+ ) => {
+      return marketplaceAxiosInstance<PaginatedIntegrationsResponseDto>(
+      {url: `/api/integrations`, method: 'GET',
+        params
+    },
+      );
+    }
+  
+/**
+ * Retrieve all published integrations that are marked as pre-installed for new organizations.
+ * @summary List pre-installed integrations
+ */
+const publicIntegrationsControllerListPreInstalled = (
+    
+ ) => {
+      return marketplaceAxiosInstance<IntegrationListResponseDto[]>(
+      {url: `/api/integrations/pre-installed`, method: 'GET'
+    },
+      );
+    }
+  
+/**
+ * Retrieve full details of a published integration by its unique identifier slug.
+ * @summary Get an integration by identifier
+ */
+const publicIntegrationsControllerGetByIdentifier = (
+    identifier: string,
+ ) => {
+      return marketplaceAxiosInstance<IntegrationResponseDto>(
+      {url: `/api/integrations/${identifier}`, method: 'GET'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerList = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations`, method: 'GET'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerCreate = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations`, method: 'POST'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerNewForm = (
+    
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/new`, method: 'GET'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerEditForm = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/${id}/edit`, method: 'GET'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerUpdate = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/${id}`, method: 'POST'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerDeleteConfirm = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/${id}/delete`, method: 'GET'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerDelete = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/${id}/delete`, method: 'POST'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerPublish = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/${id}/publish`, method: 'POST'
+    },
+      );
+    }
+  
+const adminIntegrationsControllerUnpublish = (
+    id: string,
+ ) => {
+      return marketplaceAxiosInstance<null>(
+      {url: `/admin/integrations/${id}/unpublish`, method: 'POST'
+    },
+      );
+    }
+  
+return {authControllerLoginPage,authControllerGoogleAuth,authControllerGoogleAuthCallback,authControllerLogout,adminControllerDashboard,publicSkillCategoriesControllerList,adminSkillCategoriesControllerList,adminSkillCategoriesControllerCreate,adminSkillCategoriesControllerNewForm,adminSkillCategoriesControllerEditForm,adminSkillCategoriesControllerUpdate,adminSkillCategoriesControllerDeleteConfirm,adminSkillCategoriesControllerDelete,publicSkillsControllerList,publicSkillsControllerListPreInstalled,publicSkillsControllerGetByIdentifier,adminSkillsControllerList,adminSkillsControllerCreate,adminSkillsControllerNewForm,adminSkillsControllerEditForm,adminSkillsControllerUpdate,adminSkillsControllerDeleteConfirm,adminSkillsControllerDelete,adminSkillsControllerPublish,adminSkillsControllerUnpublish,publicIntegrationsControllerList,publicIntegrationsControllerListPreInstalled,publicIntegrationsControllerGetByIdentifier,adminIntegrationsControllerList,adminIntegrationsControllerCreate,adminIntegrationsControllerNewForm,adminIntegrationsControllerEditForm,adminIntegrationsControllerUpdate,adminIntegrationsControllerDeleteConfirm,adminIntegrationsControllerDelete,adminIntegrationsControllerPublish,adminIntegrationsControllerUnpublish}};
+export type AuthControllerLoginPageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['authControllerLoginPage']>>>
+export type AuthControllerGoogleAuthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['authControllerGoogleAuth']>>>
+export type AuthControllerGoogleAuthCallbackResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['authControllerGoogleAuthCallback']>>>
+export type AuthControllerLogoutResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['authControllerLogout']>>>
+export type AdminControllerDashboardResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminControllerDashboard']>>>
+export type PublicSkillCategoriesControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicSkillCategoriesControllerList']>>>
+export type AdminSkillCategoriesControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerList']>>>
+export type AdminSkillCategoriesControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerCreate']>>>
+export type AdminSkillCategoriesControllerNewFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerNewForm']>>>
+export type AdminSkillCategoriesControllerEditFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerEditForm']>>>
+export type AdminSkillCategoriesControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerUpdate']>>>
+export type AdminSkillCategoriesControllerDeleteConfirmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerDeleteConfirm']>>>
+export type AdminSkillCategoriesControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillCategoriesControllerDelete']>>>
+export type PublicSkillsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicSkillsControllerList']>>>
+export type PublicSkillsControllerListPreInstalledResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicSkillsControllerListPreInstalled']>>>
+export type PublicSkillsControllerGetByIdentifierResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicSkillsControllerGetByIdentifier']>>>
+export type AdminSkillsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerList']>>>
+export type AdminSkillsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerCreate']>>>
+export type AdminSkillsControllerNewFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerNewForm']>>>
+export type AdminSkillsControllerEditFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerEditForm']>>>
+export type AdminSkillsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerUpdate']>>>
+export type AdminSkillsControllerDeleteConfirmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerDeleteConfirm']>>>
+export type AdminSkillsControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerDelete']>>>
+export type AdminSkillsControllerPublishResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerPublish']>>>
+export type AdminSkillsControllerUnpublishResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminSkillsControllerUnpublish']>>>
+export type PublicIntegrationsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicIntegrationsControllerList']>>>
+export type PublicIntegrationsControllerListPreInstalledResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicIntegrationsControllerListPreInstalled']>>>
+export type PublicIntegrationsControllerGetByIdentifierResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['publicIntegrationsControllerGetByIdentifier']>>>
+export type AdminIntegrationsControllerListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerList']>>>
+export type AdminIntegrationsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerCreate']>>>
+export type AdminIntegrationsControllerNewFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerNewForm']>>>
+export type AdminIntegrationsControllerEditFormResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerEditForm']>>>
+export type AdminIntegrationsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerUpdate']>>>
+export type AdminIntegrationsControllerDeleteConfirmResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerDeleteConfirm']>>>
+export type AdminIntegrationsControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerDelete']>>>
+export type AdminIntegrationsControllerPublishResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerPublish']>>>
+export type AdminIntegrationsControllerUnpublishResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisMarketplaceAPI>['adminIntegrationsControllerUnpublish']>>>
