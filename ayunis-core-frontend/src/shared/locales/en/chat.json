@@ -58,6 +58,20 @@
         "error": "Failed to create skill",
         "errorDuplicate": "A skill with this name already exists"
       },
+      "create_document": {
+        "title": "Document",
+        "created": "Document created",
+        "creating": "Creating document…",
+        "generating": "Generating document…",
+        "openInEditor": "Open in Editor"
+      },
+      "update_document": {
+        "title": "Document updated",
+        "updated": "Document updated",
+        "updating": "Updating document…",
+        "generating": "Generating update…",
+        "openInEditor": "Open in Editor"
+      },
       "create_calendar_event": {
         "title": "Title",
         "titlePlaceholder": "Event title",
