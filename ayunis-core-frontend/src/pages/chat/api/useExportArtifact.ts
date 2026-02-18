@@ -2,6 +2,7 @@ import { artifactsControllerExport } from '@/shared/api';
 import type { ExportFormatDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showError } from '@/shared/lib/toast';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface UseExportArtifactOptions {
   artifactId: string;
@@ -12,6 +13,7 @@ export function useExportArtifact({
   artifactId,
   title,
 }: UseExportArtifactOptions) {
+  const { t } = useTranslation('artifacts');
   const [isExporting, setIsExporting] = useState(false);
 
   const exportArtifact = useCallback(
@@ -31,12 +33,12 @@ export function useExportArtifact({
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch {
-        showError(`Failed to export as ${format.toUpperCase()}`);
+        showError(t('export.errorFormat', { format: format.toUpperCase() }));
       } finally {
         setIsExporting(false);
       }
     },
-    [artifactId, title],
+    [artifactId, title, t],
   );
 
   return { exportArtifact, isExporting };

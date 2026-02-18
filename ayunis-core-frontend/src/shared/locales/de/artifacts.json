@@ -1,0 +1,35 @@
+{
+  "editor": {
+    "save": "Speichern",
+    "placeholder": "Schreiben beginnen…",
+    "linkPrompt": "URL",
+    "invalidUrl": "Bitte geben Sie eine gültige URL ein (http://, https:// oder mailto:).",
+    "toolbar": {
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "underline": "Unterstrichen",
+      "heading1": "Überschrift 1",
+      "heading2": "Überschrift 2",
+      "heading3": "Überschrift 3",
+      "bulletList": "Aufzählung",
+      "orderedList": "Nummerierte Liste",
+      "alignLeft": "Linksbündig",
+      "alignCenter": "Zentriert",
+      "alignRight": "Rechtsbündig",
+      "link": "Link",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen"
+    }
+  },
+  "export": {
+    "word": "Word",
+    "pdf": "PDF",
+    "errorFormat": "Export als {{format}} fehlgeschlagen"
+  },
+  "versionHistory": {
+    "title": "Versionshistorie ({{count}})",
+    "current": "(aktuell)",
+    "revertTo": "Zurücksetzen auf v{{version}}",
+    "revert": "Zurücksetzen"
+  }
+}
