@@ -21,7 +21,7 @@ export default function CreateDocumentWidget({
   onOpenArtifact,
 }: CreateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
-  const createdRef = useRef(false);
+  const createdRef = useRef<string | null>(null);
 
   const params = (content.params || {}) as {
     title?: string;
@@ -39,8 +39,13 @@ export default function CreateDocumentWidget({
 
   // Auto-create the artifact once streaming is done and we have content
   useEffect(() => {
-    if (!isStreaming && !createdRef.current && params.title && params.content) {
-      createdRef.current = true;
+    if (
+      !isStreaming &&
+      createdRef.current !== content.id &&
+      params.title &&
+      params.content
+    ) {
+      createdRef.current = content.id;
       createArtifact({
         title: params.title,
         content: params.content,
@@ -48,7 +53,14 @@ export default function CreateDocumentWidget({
         authorType: AuthorType.ASSISTANT,
       });
     }
-  }, [isStreaming, params.title, params.content, threadId, createArtifact]);
+  }, [
+    isStreaming,
+    params.title,
+    params.content,
+    threadId,
+    createArtifact,
+    content.id,
+  ]);
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {

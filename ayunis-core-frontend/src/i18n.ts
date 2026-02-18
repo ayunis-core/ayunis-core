@@ -8,6 +8,8 @@ import enCommon from './shared/locales/en/common.json';
 import deCommon from './shared/locales/de/common.json';
 import enAdminSettingsLayout from './shared/locales/en/admin-settings-layout.json';
 import deAdminSettingsLayout from './shared/locales/de/admin-settings-layout.json';
+import enAdminSettingsBilling from './shared/locales/en/admin-settings-billing.json';
+import deAdminSettingsBilling from './shared/locales/de/admin-settings-billing.json';
 import enAdminSettingsModels from './shared/locales/en/admin-settings-models.json';
 import deAdminSettingsModels from './shared/locales/de/admin-settings-models.json';
 import enAdminSettingsUsers from './shared/locales/en/admin-settings-users.json';
@@ -34,24 +36,25 @@ import enAgents from './shared/locales/en/agents.json';
 import deAgents from './shared/locales/de/agents.json';
 import enAgent from './shared/locales/en/agent.json';
 import deAgent from './shared/locales/de/agent.json';
+import enQuickActions from './shared/locales/en/quickActions.json';
+import deQuickActions from './shared/locales/de/quickActions.json';
 import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
 import enInstall from './shared/locales/en/install.json';
 import deInstall from './shared/locales/de/install.json';
-import enInstallIntegration from './shared/locales/en/install-integration.json';
-import deInstallIntegration from './shared/locales/de/install-integration.json';
 import enSkills from './shared/locales/en/skills.json';
 import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
 import deSkill from './shared/locales/de/skill.json';
-import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
-import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
+import enArtifacts from './shared/locales/en/artifacts.json';
+import deArtifacts from './shared/locales/de/artifacts.json';
 
 const resources = {
   en: {
     auth: enAuth,
     common: enCommon,
     'admin-settings-layout': enAdminSettingsLayout,
+    'admin-settings-billing': enAdminSettingsBilling,
     'admin-settings-models': enAdminSettingsModels,
     'admin-settings-users': enAdminSettingsUsers,
     'admin-settings-integrations': enAdminSettingsIntegrations,
@@ -66,16 +69,17 @@ const resources = {
     prompts: enPrompts,
     agents: enAgents,
     agent: enAgent,
+    quickActions: enQuickActions,
     install: enInstall,
-    'install-integration': enInstallIntegration,
     skills: enSkills,
     skill: enSkill,
-    'knowledge-bases': enKnowledgeBases,
+    artifacts: enArtifacts,
   },
   de: {
     auth: deAuth,
     common: deCommon,
     'admin-settings-layout': deAdminSettingsLayout,
+    'admin-settings-billing': deAdminSettingsBilling,
     'admin-settings-models': deAdminSettingsModels,
     'admin-settings-users': deAdminSettingsUsers,
     'admin-settings-integrations': deAdminSettingsIntegrations,
@@ -90,11 +94,11 @@ const resources = {
     prompts: dePrompts,
     agents: deAgents,
     agent: deAgent,
+    quickActions: deQuickActions,
     install: deInstall,
-    'install-integration': deInstallIntegration,
     skills: deSkills,
     skill: deSkill,
-    'knowledge-bases': deKnowledgeBases,
+    artifacts: deArtifacts,
   },
 };
 
