@@ -91,6 +91,6 @@
     "typescript-eslint": "^8.46.4",
     "vite": "^6.1.0",
     "vitest": "^3.0.5",
-    "web-vitals": "^4.2.4"
+    "web-vitals": "^5.1.0"
   }
 }
