@@ -26,9 +26,13 @@ import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mapp
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from './application/factories/mcp-integration-auth.factory';
 import { SourcesModule } from '../sources/sources.module';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
+import { InstallMarketplaceIntegrationUseCase } from './application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { SetUserMcpConfigUseCase } from './application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
+import { GetUserMcpConfigUseCase } from './application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 import { GetMcpIntegrationUseCase } from './application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
 import { GetMcpIntegrationsByIdsUseCase } from './application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { ListOrgMcpIntegrationsUseCase } from './application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
@@ -64,6 +68,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       McpIntegrationUserConfigRecord,
     ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
+    MarketplaceModule,
   ],
   controllers: [McpIntegrationsController],
   providers: [
@@ -104,6 +109,9 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     DiscoverMcpCapabilitiesUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
+    InstallMarketplaceIntegrationUseCase,
+    SetUserMcpConfigUseCase,
+    GetUserMcpConfigUseCase,
     // Mappers
     McpIntegrationDtoMapper,
     PredefinedConfigDtoMapper,

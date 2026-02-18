@@ -3,6 +3,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { GetMarketplaceSkillUseCase } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import { GetMarketplaceSkillQuery } from '../../application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
 import { MarketplaceSkillResponseDto } from './dto/marketplace-skill-response.dto';
+import { GetMarketplaceIntegrationUseCase } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
+import { GetMarketplaceIntegrationQuery } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
+import { MarketplaceIntegrationResponseDto } from './dto/marketplace-integration-response.dto';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -11,6 +14,7 @@ export class MarketplaceController {
 
   constructor(
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
+    private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
   ) {}
 
   @Get('skills/:identifier')
@@ -33,6 +37,34 @@ export class MarketplaceController {
 
     return this.getMarketplaceSkillUseCase.execute(
       new GetMarketplaceSkillQuery(identifier),
+    );
+  }
+
+  @Get('integrations/:identifier')
+  @ApiOperation({
+    summary: 'Preview a marketplace integration before installation',
+  })
+  @ApiParam({
+    name: 'identifier',
+    description: 'The unique identifier slug of the marketplace integration',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the marketplace integration details',
+    type: MarketplaceIntegrationResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Marketplace integration not found',
+  })
+  async getIntegration(
+    @Param('identifier') identifier: string,
+  ): Promise<MarketplaceIntegrationResponseDto> {
+    this.logger.log('getIntegration', { identifier });
+
+    return this.getMarketplaceIntegrationUseCase.execute(
+      new GetMarketplaceIntegrationQuery(identifier),
     );
   }
 }
