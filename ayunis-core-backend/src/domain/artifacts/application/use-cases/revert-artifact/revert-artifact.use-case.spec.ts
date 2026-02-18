@@ -1,5 +1,11 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { RevertArtifactUseCase } from './revert-artifact.use-case';
 import { RevertArtifactCommand } from './revert-artifact.command';
@@ -99,6 +105,10 @@ describe('RevertArtifactUseCase', () => {
     expect(result.content).toBe('<p>Original municipal plan</p>');
     expect(result.authorType).toBe(AuthorType.USER);
     expect(result.authorId).toBe(mockUserId);
+    expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockUserId,
+    );
   });
 
   it('should update the current version number after reverting', async () => {
@@ -184,6 +194,33 @@ describe('RevertArtifactUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(
       ArtifactVersionNotFoundError,
+    );
+  });
+
+  it('should throw UnauthorizedException when user is not authenticated', async () => {
+    const mockContextService = {
+      get: jest.fn(() => undefined),
+    } as unknown as jest.Mocked<ContextService>;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        RevertArtifactUseCase,
+        { provide: ArtifactsRepository, useValue: artifactsRepository },
+        { provide: ContextService, useValue: mockContextService },
+      ],
+    }).compile();
+
+    const useCaseNoAuth = module.get<RevertArtifactUseCase>(
+      RevertArtifactUseCase,
+    );
+
+    const command = new RevertArtifactCommand({
+      artifactId: mockArtifactId,
+      versionNumber: 1,
+    });
+
+    await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
+      UnauthorizedException,
     );
   });
 });

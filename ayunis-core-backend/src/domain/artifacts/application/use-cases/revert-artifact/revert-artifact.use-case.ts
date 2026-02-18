@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { RevertArtifactCommand } from './revert-artifact.command';
 import {
@@ -18,14 +19,21 @@ export class RevertArtifactUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: RevertArtifactCommand): Promise<ArtifactVersion> {
     this.logger.log('Reverting artifact', {
       artifactId: command.artifactId,
       targetVersion: command.versionNumber,
     });
 
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     const artifact = await this.artifactsRepository.findByIdWithVersions(
       command.artifactId,
+      userId,
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
@@ -42,14 +50,13 @@ export class RevertArtifactUseCase {
     }
 
     const newVersionNumber = artifact.currentVersionNumber + 1;
-    const userId = this.contextService.get('userId');
 
     const revertedVersion = new ArtifactVersion({
       artifactId: artifact.id,
       versionNumber: newVersionNumber,
       content: targetVersion.content,
       authorType: AuthorType.USER,
-      authorId: userId ?? null,
+      authorId: userId,
     });
 
     const createdVersion =

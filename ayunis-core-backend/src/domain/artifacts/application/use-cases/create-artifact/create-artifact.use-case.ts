@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { CreateArtifactCommand } from './create-artifact.command';
 import { Artifact } from '../../../domain/artifact.entity';
@@ -15,6 +16,7 @@ export class CreateArtifactUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @Transactional()
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
     this.logger.log('Creating artifact', { title: command.title });
 

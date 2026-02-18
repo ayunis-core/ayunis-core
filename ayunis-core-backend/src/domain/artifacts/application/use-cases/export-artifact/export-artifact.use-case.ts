@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { DocumentExportPort } from '../../ports/document-export.port';
 import { ExportArtifactCommand } from './export-artifact.command';
@@ -6,6 +6,7 @@ import {
   ArtifactNotFoundError,
   ArtifactVersionNotFoundError,
 } from '../../artifacts.errors';
+import { ContextService } from 'src/common/context/services/context.service';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -20,6 +21,7 @@ export class ExportArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly documentExportPort: DocumentExportPort,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
@@ -28,8 +30,14 @@ export class ExportArtifactUseCase {
       format: command.format,
     });
 
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     const artifact = await this.artifactsRepository.findByIdWithVersions(
       command.artifactId,
+      userId,
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
@@ -45,7 +53,8 @@ export class ExportArtifactUseCase {
       );
     }
 
-    const safeTitle = artifact.title.replace(/[^a-zA-Z0-9-_ ]/g, '');
+    const safeTitle =
+      artifact.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'artifact';
 
     if (command.format === 'docx') {
       const buffer = await this.documentExportPort.exportToDocx(

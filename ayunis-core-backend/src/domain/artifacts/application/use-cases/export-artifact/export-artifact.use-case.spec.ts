@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { ExportArtifactUseCase } from './export-artifact.use-case';
 import { ExportArtifactCommand } from './export-artifact.command';
@@ -9,6 +9,7 @@ import { ArtifactNotFoundError } from '../../artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('ExportArtifactUseCase', () => {
   let useCase: ExportArtifactUseCase;
@@ -35,11 +36,19 @@ describe('ExportArtifactUseCase', () => {
       exportToPdf: jest.fn(),
     };
 
+    const mockContextService = {
+      get: jest.fn((key: string) => {
+        if (key === 'userId') return mockUserId;
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ContextService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: DocumentExportPort, useValue: mockExportPort },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -94,6 +103,10 @@ describe('ExportArtifactUseCase', () => {
     expect(result.mimeType).toContain('wordprocessingml');
     expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
       '<h1>Annual Report</h1><p>Current content</p>',
+    );
+    expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockUserId,
     );
   });
 
@@ -178,5 +191,65 @@ describe('ExportArtifactUseCase', () => {
     expect(result.fileName).toBe('Report 2026 Final.pdf');
     expect(result.fileName).not.toContain('<');
     expect(result.fileName).not.toContain('"');
+  });
+
+  it('should fallback to "artifact" when title has only non-ASCII characters', async () => {
+    const artifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Бюджетний звіт',
+      currentVersionNumber: 1,
+      versions: [
+        new ArtifactVersion({
+          artifactId: mockArtifactId,
+          versionNumber: 1,
+          content: '<p>Зміст</p>',
+          authorType: AuthorType.ASSISTANT,
+        }),
+      ],
+    });
+
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    documentExportPort.exportToPdf.mockResolvedValue(
+      Buffer.from('pdf-content'),
+    );
+
+    const command = new ExportArtifactCommand({
+      artifactId: mockArtifactId,
+      format: 'pdf',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.fileName).toBe('artifact.pdf');
+  });
+
+  it('should throw UnauthorizedException when user is not authenticated', async () => {
+    const mockContextService = {
+      get: jest.fn(() => undefined),
+    } as unknown as jest.Mocked<ContextService>;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ExportArtifactUseCase,
+        { provide: ArtifactsRepository, useValue: artifactsRepository },
+        { provide: DocumentExportPort, useValue: documentExportPort },
+        { provide: ContextService, useValue: mockContextService },
+      ],
+    }).compile();
+
+    const useCaseNoAuth = module.get<ExportArtifactUseCase>(
+      ExportArtifactUseCase,
+    );
+
+    const command = new ExportArtifactCommand({
+      artifactId: mockArtifactId,
+      format: 'pdf',
+    });
+
+    await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });

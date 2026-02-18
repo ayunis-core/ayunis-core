@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { FindArtifactWithVersionsUseCase } from './find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from './find-artifact-with-versions.query';
@@ -7,6 +8,7 @@ import { ArtifactNotFoundError } from '../../artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('FindArtifactWithVersionsUseCase', () => {
   let useCase: FindArtifactWithVersionsUseCase;
@@ -27,10 +29,18 @@ describe('FindArtifactWithVersionsUseCase', () => {
       delete: jest.fn(),
     };
 
+    const mockContextService = {
+      get: jest.fn((key: string) => {
+        if (key === 'userId') return mockUserId;
+        return undefined;
+      }),
+    } as unknown as jest.Mocked<ContextService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindArtifactWithVersionsUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -82,6 +92,10 @@ describe('FindArtifactWithVersionsUseCase', () => {
     expect(result.versions).toHaveLength(2);
     expect(result.versions[0].versionNumber).toBe(1);
     expect(result.versions[1].versionNumber).toBe(2);
+    expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockUserId,
+    );
   });
 
   it('should throw ArtifactNotFoundError when artifact does not exist', async () => {
@@ -92,5 +106,31 @@ describe('FindArtifactWithVersionsUseCase', () => {
     });
 
     await expect(useCase.execute(query)).rejects.toThrow(ArtifactNotFoundError);
+  });
+
+  it('should throw UnauthorizedException when user is not authenticated', async () => {
+    const mockContextService = {
+      get: jest.fn(() => undefined),
+    } as unknown as jest.Mocked<ContextService>;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        FindArtifactWithVersionsUseCase,
+        { provide: ArtifactsRepository, useValue: artifactsRepository },
+        { provide: ContextService, useValue: mockContextService },
+      ],
+    }).compile();
+
+    const useCaseNoAuth = module.get<FindArtifactWithVersionsUseCase>(
+      FindArtifactWithVersionsUseCase,
+    );
+
+    const query = new FindArtifactWithVersionsQuery({
+      artifactId: mockArtifactId,
+    });
+
+    await expect(useCaseNoAuth.execute(query)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });
