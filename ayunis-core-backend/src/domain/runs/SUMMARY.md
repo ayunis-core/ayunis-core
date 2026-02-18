@@ -5,6 +5,17 @@ Runs execute AI conversations by coordinating model inference, message creation,
 
 The runs module is the central orchestrator for AI conversation execution. The `Run` entity (currently minimal) represents an execution instance, while `RunInput` differentiates between `RunUserInput` (text and images) and `RunToolResultInput` (tool call responses). The primary use case `ExecuteRun` is a thin orchestrator that delegates to focused services. `ExecuteRunAndSetTitle` extends this to auto-generate thread titles on first messages.
 
+### Domain Events
+
+The module uses domain events (`RunEvent`) to decouple business logic from presentation concerns. The `run-events.ts` file defines typed event interfaces:
+
+- **RunSessionEvent** — Signals session start with streaming status
+- **RunMessageEvent** — Wraps a domain `Message` entity for delivery
+- **RunErrorEvent** — Captures error details with code and optional metadata
+- **RunThreadEvent** — Notifies of thread updates (e.g., title changes)
+
+Use cases yield these domain events, and the controller's `mapEventToResponse` method transforms them into response DTOs using `MessageDtoMapper`.
+
 ### Services
 
 - **ToolAssemblyService** — Assembles available tools and builds the run context (system prompt instructions) from thread, agent, active skills, and model capabilities.

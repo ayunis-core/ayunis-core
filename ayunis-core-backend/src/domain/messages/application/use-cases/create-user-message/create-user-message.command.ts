@@ -1,14 +1,7 @@
 import { UUID } from 'crypto';
+import { ImageUploadData } from 'src/domain/messages/domain/value-objects/image-upload-data';
 
-/**
- * Application-layer data structure for image uploads.
- * Contains the raw binary data and metadata needed for image storage.
- */
-export interface ImageUploadData {
-  readonly buffer: Buffer;
-  readonly contentType: string;
-  readonly altText?: string;
-}
+export { ImageUploadData };
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
 const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total

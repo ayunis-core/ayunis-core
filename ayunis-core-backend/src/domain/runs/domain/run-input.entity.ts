@@ -1,12 +1,6 @@
-/**
- * Domain-layer data structure for image uploads.
- * Contains the raw binary data and metadata needed for image storage.
- */
-export interface ImageUploadData {
-  readonly buffer: Buffer;
-  readonly contentType: string;
-  readonly altText?: string;
-}
+import { ImageUploadData } from 'src/domain/messages/domain/value-objects/image-upload-data';
+
+export { ImageUploadData };
 
 export class RunInput {}
 
