@@ -33,10 +33,17 @@ describe('GetMcpPromptUseCase', () => {
   let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = 'org-123' as UUID;
+  const mockUserId = 'user-789' as UUID;
   const mockIntegrationId = 'integration-456' as UUID;
   const mockPromptName = 'test-prompt';
 
-  beforeAll(async () => {
+  const mockContextGet = (key?: string | symbol) => {
+    if (key === 'orgId') return mockOrgId;
+    if (key === 'userId') return mockUserId;
+    return undefined;
+  };
+
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetMcpPromptUseCase,
@@ -110,7 +117,7 @@ describe('GetMcpPromptUseCase', () => {
         description: 'Test prompt description',
       };
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
       jest.spyOn(registryService, 'getConfig').mockReturnValue({
         slug: PredefinedMcpIntegrationSlug.TEST,
@@ -146,6 +153,7 @@ describe('GetMcpPromptUseCase', () => {
         mockIntegration,
         mockPromptName,
         mockArguments,
+        mockUserId,
       );
       expect(loggerLogSpy).toHaveBeenCalledWith('getMcpPrompt', {
         id: mockIntegrationId,
@@ -175,7 +183,7 @@ describe('GetMcpPromptUseCase', () => {
         messages: [{ role: 'user', content: { text: 'Hello' } }],
       };
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
       jest
         .spyOn(mcpClientService, 'getPrompt')
@@ -195,6 +203,7 @@ describe('GetMcpPromptUseCase', () => {
         mockIntegration,
         mockPromptName,
         {},
+        mockUserId,
       );
     });
 
@@ -217,7 +226,7 @@ describe('GetMcpPromptUseCase', () => {
         messages: [{ role: 'user', content: { text: 'Hello' } }],
       };
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
       jest
         .spyOn(mcpClientService, 'getPrompt')
@@ -233,12 +242,13 @@ describe('GetMcpPromptUseCase', () => {
         mockIntegration,
         mockPromptName,
         {},
+        mockUserId,
       );
     });
 
     it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
       // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(null);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
@@ -266,7 +276,7 @@ describe('GetMcpPromptUseCase', () => {
         updatedAt: new Date(),
       });
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
@@ -293,7 +303,7 @@ describe('GetMcpPromptUseCase', () => {
         updatedAt: new Date(),
       });
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
@@ -308,7 +318,7 @@ describe('GetMcpPromptUseCase', () => {
 
     it('should throw UnauthorizedException when user is not authenticated', async () => {
       // Arrange
-      jest.spyOn(contextService, 'get').mockReturnValue(undefined);
+      jest.spyOn(contextService, 'get').mockImplementation(() => undefined);
 
       const query = new GetMcpPromptQuery(mockIntegrationId, mockPromptName);
 
@@ -339,7 +349,7 @@ describe('GetMcpPromptUseCase', () => {
         messages: [{ role: 'user', content: { text: 'Hello' } }],
       };
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
       jest.spyOn(registryService, 'getConfig').mockReturnValue({
         slug: PredefinedMcpIntegrationSlug.TEST,
@@ -379,7 +389,7 @@ describe('GetMcpPromptUseCase', () => {
         updatedAt: new Date(),
       });
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
       jest.spyOn(registryService, 'getConfig').mockReturnValue({
         slug: PredefinedMcpIntegrationSlug.TEST,
@@ -424,7 +434,7 @@ describe('GetMcpPromptUseCase', () => {
         ],
       };
 
-      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(contextService, 'get').mockImplementation(mockContextGet);
       jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
       jest.spyOn(registryService, 'getConfig').mockReturnValue({
         slug: PredefinedMcpIntegrationSlug.TEST,

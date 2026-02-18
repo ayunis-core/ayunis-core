@@ -29,7 +29,14 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
+  const mockUserId = randomUUID();
   const mockIntegrationId = randomUUID();
+
+  const mockContextGet = (key?: string | symbol) => {
+    if (key === 'orgId') return mockOrgId;
+    if (key === 'userId') return mockUserId;
+    return undefined;
+  };
 
   const buildPredefinedIntegration = (
     overrides: Partial<
@@ -152,7 +159,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       const integration = buildPredefinedIntegration();
       arrangeSuccessfulClientCalls();
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
 
       const result = await useCase.execute(
@@ -168,9 +175,13 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         ),
       ).toBe(true);
 
-      expect(mcpClientService.listTools).toHaveBeenCalledWith(integration);
+      expect(mcpClientService.listTools).toHaveBeenCalledWith(
+        integration,
+        mockUserId,
+      );
       expect(mcpClientService.listResourceTemplates).toHaveBeenCalledWith(
         integration,
+        mockUserId,
       );
       expect(loggerLogSpy).toHaveBeenCalledWith('discoverMcpCapabilities', {
         id: mockIntegrationId,
@@ -191,20 +202,29 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       const integration = buildCustomIntegration();
       arrangeSuccessfulClientCalls();
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
 
       await useCase.execute(
         new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
       );
 
-      expect(mcpClientService.listTools).toHaveBeenCalledWith(integration);
-      expect(mcpClientService.listResources).toHaveBeenCalledWith(integration);
-      expect(mcpClientService.listPrompts).toHaveBeenCalledWith(integration);
+      expect(mcpClientService.listTools).toHaveBeenCalledWith(
+        integration,
+        mockUserId,
+      );
+      expect(mcpClientService.listResources).toHaveBeenCalledWith(
+        integration,
+        mockUserId,
+      );
+      expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
+        integration,
+        mockUserId,
+      );
     });
 
     it('throws McpIntegrationNotFoundError when integration is missing', async () => {
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(null);
 
       await expect(
@@ -221,7 +241,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     it('throws McpIntegrationAccessDeniedError for different organization', async () => {
       const integration = buildPredefinedIntegration({ orgId: randomUUID() });
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
 
       await expect(
@@ -234,7 +254,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     it('throws McpIntegrationDisabledError when integration disabled', async () => {
       const integration = buildPredefinedIntegration({ enabled: false });
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
 
       await expect(
@@ -258,7 +278,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       const integration = buildPredefinedIntegration();
       const unexpectedError = new Error('Connection timeout');
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
       mcpClientService.listTools.mockRejectedValue(unexpectedError);
 

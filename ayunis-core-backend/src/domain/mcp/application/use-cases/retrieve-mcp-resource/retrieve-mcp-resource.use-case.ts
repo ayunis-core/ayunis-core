@@ -28,10 +28,12 @@ export class RetrieveMcpResourceUseCase {
       );
 
       // Retrieve resource content with parameters (for URI template substitution)
+      const userId = this.contextService.get('userId');
       const { content, mimeType } = await this.mcpClientService.readResource(
         integration,
         command.resourceUri,
         command.parameters,
+        userId,
       );
 
       return { content, mimeType };
