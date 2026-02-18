@@ -24,6 +24,7 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
+import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.modul
     SkillsModule,
     SkillTemplatesModule,
     ChatSettingsModule,
+    ArtifactsModule,
   ],
   controllers: [RunsController],
   providers: [

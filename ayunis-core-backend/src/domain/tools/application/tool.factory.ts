@@ -29,6 +29,9 @@ import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
 import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
+import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -42,6 +45,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.PIE_CHART]: () => new PieChartTool(),
   [ToolType.PRODUCT_KNOWLEDGE]: () => new ProductKnowledgeTool(),
   [ToolType.CREATE_SKILL]: () => new CreateSkillTool(),
+  [ToolType.CREATE_DOCUMENT]: () => new CreateDocumentTool(),
+  [ToolType.UPDATE_DOCUMENT]: () => new UpdateDocumentTool(),
 };
 
 @Injectable()
@@ -67,14 +72,6 @@ export class ToolFactory {
       [ToolType.ACTIVATE_SKILL]: (p) =>
         new ActivateSkillTool(
           requireMapContext(p.context, ToolType.ACTIVATE_SKILL),
-        ),
-      [ToolType.KNOWLEDGE_QUERY]: (p) =>
-        new KnowledgeQueryTool(
-          requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_QUERY),
-        ),
-      [ToolType.KNOWLEDGE_GET_TEXT]: (p) =>
-        new KnowledgeGetTextTool(
-          requireKnowledgeBaseContext(p.context, ToolType.KNOWLEDGE_GET_TEXT),
         ),
     };
   }

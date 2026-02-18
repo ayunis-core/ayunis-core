@@ -1,5 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Agent } from 'src/domain/agents/domain/agent.entity';
@@ -33,6 +33,8 @@ import {
   type SkillPrefix,
 } from 'src/common/util/skill-slug';
 import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
+import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -49,6 +51,7 @@ export class ToolAssemblyService {
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
     @Inject(featuresConfig.KEY)
     private readonly features: ConfigType<typeof featuresConfig>,
+    private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -94,6 +97,8 @@ export class ToolAssemblyService {
       (s): s is TextSource => s instanceof TextSource,
     );
 
+    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
+
     // Fetch user's custom system prompt (returns null if not configured)
     const userSystemPromptEntity =
       await this.getUserSystemPromptUseCase.execute();
@@ -104,7 +109,7 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: textSources,
-      // Only include skills in prompt when tools are enabled and skills feature is on,
+      // Only include skills in prompt when tools are enabled and not cloud-hosted,
       // otherwise the prompt would instruct the model to use activate_skill which isn't available
       skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
       knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
@@ -171,7 +176,8 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     slugMap: Map<string, string>,
   ): Promise<Tool[]> {
-    const skillsEnabled = this.features.skillsEnabled;
+    const isSelfhosted = this.configService.get<boolean>('app.isSelfHosted');
+    const isCloudHosted = this.configService.get<boolean>('app.isCloudHosted');
     const tools: Tool[] = [];
 
     // Collect MCP integration IDs from agent and thread (skill-injected)
@@ -183,68 +189,19 @@ export class ToolAssemblyService {
 
     // Discover MCP capabilities from all integration IDs
     if (mcpIntegrationIds.size > 0) {
-      const integrationIdList = [...mcpIntegrationIds];
-
-      // Fetch integration entities for metadata (name, logoUrl)
-      const integrations = await this.getMcpIntegrationsByIdsUseCase.execute(
-        new GetMcpIntegrationsByIdsQuery(integrationIdList),
-      );
-      const integrationMetaMap = new Map<
-        UUID,
-        { name: string; logoUrl: string | null }
-      >();
-      for (const integration of integrations) {
-        integrationMetaMap.set(integration.id, {
-          name: integration.name,
-          logoUrl:
-            integration instanceof MarketplaceMcpIntegration
-              ? integration.logoUrl
-              : null,
-        });
-      }
-
-      const mcpResults = await Promise.allSettled(
-        integrationIdList.map((integrationId) =>
+      const mcpCapabilities = await Promise.all(
+        [...mcpIntegrationIds].map((integrationId) =>
           this.discoverMcpCapabilitiesUseCase.execute(
             new DiscoverMcpCapabilitiesQuery(integrationId),
           ),
         ),
       );
-
-      // Filter successful results, log and skip failures
-      const mcpCapabilities = mcpResults
-        .map((result, index) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          }
-          const failedId = integrationIdList[index];
-          const meta = integrationMetaMap.get(failedId);
-          this.logger.warn(
-            `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
-            {
-              integrationId: failedId,
-              error:
-                result.reason instanceof Error
-                  ? result.reason.message
-                  : 'Unknown error',
-            },
-          );
-          return null;
-        })
-        .filter((cap): cap is NonNullable<typeof cap> => cap !== null);
-
       // Add MCP tools and resources
       tools.push(
         ...mcpCapabilities.flatMap((capability) =>
-          capability.tools.map((tool) => {
-            const meta = integrationMetaMap.get(tool.integrationId);
-            return new McpIntegrationTool(
-              tool,
-              capability.returnsPii,
-              meta?.name ?? 'Unknown',
-              meta?.logoUrl ?? null,
-            );
-          }),
+          capability.tools.map(
+            (tool) => new McpIntegrationTool(tool, capability.returnsPii),
+          ),
         ),
         ...mcpCapabilities.flatMap((capability) =>
           capability.resources.map(
@@ -347,8 +304,35 @@ export class ToolAssemblyService {
       ),
     );
 
-    // Create skill tool is available when skills feature is enabled
-    if (skillsEnabled) {
+    // Document tools are always available
+    tools.push(
+      await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({
+          type: ToolType.CREATE_DOCUMENT,
+        }),
+      ),
+    );
+
+    const updateDocumentTool = await this.assembleToolsUseCase.execute(
+      new AssembleToolCommand({
+        type: ToolType.UPDATE_DOCUMENT,
+      }),
+    );
+    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+    if (threadArtifacts.length > 0) {
+      const artifactList = threadArtifacts
+        .map((a) => `- ${a.id}: "${a.title}"`)
+        .join('\n');
+      updateDocumentTool.descriptionLong =
+        `${updateDocumentTool.descriptionLong ?? updateDocumentTool.description}\n\n` +
+        `Available documents in this conversation:\n${artifactList}`;
+    }
+    tools.push(updateDocumentTool);
+
+    // Create skill tool is available for non-cloud deployments
+    if (!isCloudHosted) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
@@ -358,8 +342,12 @@ export class ToolAssemblyService {
       );
     }
 
-    // Internet search tool is available when Brave Search credentials are configured
-    if (this.configService.get<boolean>('internetSearch.isAvailable')) {
+    // Internet search tool is always available
+    if (
+      isCloudHosted ||
+      (isSelfhosted &&
+        this.configService.get<boolean>('internetSearch.isAvailable'))
+    ) {
       tools.push(
         await this.assembleToolsUseCase.execute(
           new AssembleToolCommand({
