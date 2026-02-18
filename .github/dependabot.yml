@@ -120,17 +120,6 @@ updates:
       - "docker"
 
   - package-ecosystem: "docker"
-    directory: "/ayunis-core-backend"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-docker)"
-    labels:
-      - "dependencies"
-      - "docker"
-
-  - package-ecosystem: "docker"
     directory: "/ayunis-core-anonymize"
     schedule:
       interval: "weekly"
