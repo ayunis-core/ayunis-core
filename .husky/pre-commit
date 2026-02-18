@@ -51,6 +51,7 @@ BE_ESLINT_STATUS_FILE="$STATUS_DIR/be_eslint.status"
 BE_PRETTIER_STATUS_FILE="$STATUS_DIR/be_prettier.status"
 BE_TSC_STATUS_FILE="$STATUS_DIR/be_tsc.status"
 COMPLEXITY_STATUS_FILE="$STATUS_DIR/complexity.status"
+DEPCRUISE_STATUS_FILE="$STATUS_DIR/depcruise.status"
 
 # Jobs
 run_fe_prettier() {
@@ -182,6 +183,19 @@ run_complexity() {
   printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
+run_depcruise() {
+  STATUS_FILE="$1"
+  print_section "Dependencies • dependency-cruiser (backend)"
+  set +e
+  (
+    cd ayunis-core-backend >/dev/null 2>&1
+    npm run deps:check --silent
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
 # Launch jobs in parallel where possible
 if [ -n "$FE_STAGED" ]; then
   run_fe_prettier "$FE_PRETTIER_STATUS_FILE" &
@@ -199,6 +213,7 @@ fi
 # Complexity check runs on backend TS files only (lizard doesn't handle React/JSX well)
 if [ -n "$BE_TS_STAGED" ]; then
   run_complexity "$COMPLEXITY_STATUS_FILE" &
+  run_depcruise "$DEPCRUISE_STATUS_FILE" &
 fi
 
 wait
@@ -211,6 +226,7 @@ ESLINT_STATUS=$(cat "$BE_ESLINT_STATUS_FILE" 2>/dev/null || printf "0")
 PRETTIER_STATUS=$(cat "$BE_PRETTIER_STATUS_FILE" 2>/dev/null || printf "0")
 BE_TSC_STATUS=$(cat "$BE_TSC_STATUS_FILE" 2>/dev/null || printf "0")
 COMPLEXITY_STATUS=$(cat "$COMPLEXITY_STATUS_FILE" 2>/dev/null || printf "0")
+DEPCRUISE_STATUS=$(cat "$DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 
 # Summary and exit code
 FAILED=0
@@ -264,6 +280,12 @@ if [ -n "$BE_TS_STAGED" ]; then
     FAILED=1
   else
     printf "%b\n" "${GREEN}✅ Complexity check passed${NC}"
+  fi
+  if [ "$DEPCRUISE_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ Dependency check failed (architecture violations)${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ Dependency check passed${NC}"
   fi
 fi
 

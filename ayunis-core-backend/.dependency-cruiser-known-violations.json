@@ -1,0 +1,38 @@
+[
+  {
+    "type": "dependency",
+    "from": "src/domain/runs/domain/run-input.entity.ts",
+    "to": "src/domain/messages/application/use-cases/create-user-message/create-user-message.command.ts",
+    "rule": {
+      "severity": "error",
+      "name": "domain-no-use-cases"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case.ts",
+    "to": "src/domain/runs/presenters/http/dto/run-response.dto.ts",
+    "rule": {
+      "severity": "error",
+      "name": "use-cases-no-presenters"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case.ts",
+    "to": "src/domain/threads/presenters/http/mappers/message.mapper.ts",
+    "rule": {
+      "severity": "error",
+      "name": "use-cases-no-presenters"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/iam/invites/application/use-cases/get-invite-by-token/get-invite-by-token.use-case.ts",
+    "to": "src/iam/invites/presenters/http/dtos/invite-response.dto.ts",
+    "rule": {
+      "severity": "error",
+      "name": "use-cases-no-presenters"
+    }
+  }
+]
