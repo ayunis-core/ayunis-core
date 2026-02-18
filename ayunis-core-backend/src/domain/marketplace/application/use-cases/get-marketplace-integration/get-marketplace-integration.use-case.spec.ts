@@ -15,10 +15,13 @@ describe('GetMarketplaceIntegrationUseCase', () => {
     id: '550e8400-e29b-41d4-a716-446655440000',
     identifier: 'oparl-council-data',
     name: 'OParl Council Data',
+    shortDescription: 'Access municipal council data via OParl',
     description:
       'Access municipal council data via the OParl standard interface',
     iconUrl: 'https://marketplace.ayunis.de/icons/oparl.png',
     serverUrl: 'https://mcp.ayunis.de/oparl',
+    featured: false,
+    preInstalled: false,
     configSchema: {
       authType: 'NO_AUTH',
       orgFields: [

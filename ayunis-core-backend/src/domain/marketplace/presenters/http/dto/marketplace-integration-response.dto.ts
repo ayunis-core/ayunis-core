@@ -74,7 +74,10 @@ export class MarketplaceIntegrationResponseDto {
   @ApiProperty({ description: 'Display name' })
   name: string;
 
-  @ApiProperty({ description: 'Description' })
+  @ApiProperty({ description: 'Short description for marketplace display' })
+  shortDescription: string;
+
+  @ApiProperty({ description: 'Full description' })
   description: string;
 
   @ApiPropertyOptional({
@@ -84,14 +87,23 @@ export class MarketplaceIntegrationResponseDto {
   })
   iconUrl: string | null;
 
+  @ApiProperty({ description: 'MCP server URL' })
+  serverUrl: string;
+
   @ApiProperty({
-    description: 'Configuration schema',
-    type: MarketplaceIntegrationConfigSchemaDto,
+    description:
+      'Configuration schema (authType, orgFields, userFields, oauth)',
   })
-  configSchema: MarketplaceIntegrationConfigSchemaDto;
+  configSchema: { [key: string]: unknown };
+
+  @ApiProperty({ description: 'Whether the integration is featured' })
+  featured: boolean;
 
   @ApiProperty({ description: 'Whether the integration is published' })
   published: boolean;
+
+  @ApiProperty({ description: 'Whether the integration is pre-installed' })
+  preInstalled: boolean;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;

@@ -100,45 +100,45 @@ export interface SkillResponseDto {
   updatedAt: string;
 }
 
-export interface IntegrationConfigFieldDto {
-  /** Unique identifier within the schema */
-  key: string;
-  /** Display label for the frontend form */
-  label: string;
-  /** Field type: text (plaintext), url (validated URL), secret (encrypted at rest) */
-  type: 'text' | 'url' | 'secret';
+export interface IntegrationListResponseDto {
+  /** Integration UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
   /**
-   * HTTP header name this field maps to; if absent, field is internal config
+   * Icon URL
    * @nullable
    */
-  headerName: string | null;
-  /**
-   * Optional prefix prepended to the value before sending
-   * @nullable
-   */
-  prefix: string | null;
-  /** Whether the field must be provided */
-  required: boolean;
-  /**
-   * Optional help text for the frontend form
-   * @nullable
-   */
-  help: string | null;
-  /**
-   * Fixed value from marketplace; if set, field is not shown in forms
-   * @nullable
-   */
-  value: string | null;
+  iconUrl: string | null;
+  /** Whether the integration is featured */
+  featured: boolean;
+  /** Whether the integration is published */
+  published: boolean;
+  /** Whether the integration is pre-installed */
+  preInstalled: boolean;
 }
 
-export interface IntegrationConfigSchemaDto {
-  /** Auth type for documentation/UI purposes */
-  authType: string;
-  /** Fields configured by org admin at install time */
-  orgFields: IntegrationConfigFieldDto[];
-  /** Fields configured by individual users */
-  userFields: IntegrationConfigFieldDto[];
+export interface PaginatedIntegrationsResponseDto {
+  /** List of integrations */
+  data: IntegrationListResponseDto[];
+  /** Total number of integrations matching the query */
+  total: number;
+  /** Current page number */
+  page: number;
+  /** Items per page */
+  limit: number;
+  /** Total number of pages */
+  totalPages: number;
 }
+
+/**
+ * Configuration schema (authType, orgFields, userFields, oauth)
+ */
+export type IntegrationResponseDtoConfigSchema = { [key: string]: unknown };
 
 export interface IntegrationResponseDto {
   /** Integration UUID */
@@ -147,7 +147,9 @@ export interface IntegrationResponseDto {
   identifier: string;
   /** Display name */
   name: string;
-  /** Description */
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /** Full description */
   description: string;
   /**
    * Icon URL
@@ -156,10 +158,14 @@ export interface IntegrationResponseDto {
   iconUrl: string | null;
   /** MCP server URL */
   serverUrl: string;
-  /** Configuration schema */
-  configSchema: IntegrationConfigSchemaDto;
+  /** Configuration schema (authType, orgFields, userFields, oauth) */
+  configSchema: IntegrationResponseDtoConfigSchema;
+  /** Whether the integration is featured */
+  featured: boolean;
   /** Whether the integration is published */
   published: boolean;
+  /** Whether the integration is pre-installed */
+  preInstalled: boolean;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -167,20 +173,36 @@ export interface IntegrationResponseDto {
 }
 
 export type PublicSkillsControllerListParams = {
-  /**
-   * Filter by category ID
-   */
-  categoryId?: string;
-  /**
-   * Filter by featured status
-   */
-  featured?: string;
-  /**
-   * Maximum number of items per page
-   */
-  limit?: number;
-  /**
-   * Page number
-   */
-  page?: number;
+/**
+ * Filter by category ID
+ */
+categoryId?: string;
+/**
+ * Filter by featured status
+ */
+featured?: string;
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Page number
+ */
+page?: number;
 };
+
+export type PublicIntegrationsControllerListParams = {
+/**
+ * Filter by featured status
+ */
+featured?: string;
+/**
+ * Maximum number of items per page
+ */
+limit?: number;
+/**
+ * Page number
+ */
+page?: number;
+};
+
