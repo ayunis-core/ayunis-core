@@ -1,0 +1,45 @@
+name: Dependency Check
+
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-backend/src/**/*.ts'
+      - 'ayunis-core-backend/.dependency-cruiser.cjs'
+      - '.github/workflows/dependency-check.yml'
+
+jobs:
+  dependency-cruiser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ayunis-core-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run dependency check
+        run: npm run deps:check
+
+      - name: Generate dependency graph (on failure)
+        if: failure()
+        run: |
+          npm run deps:check -- --output-type err-html > dependency-violations.html || true
+          echo "::error::Dependency architecture violations detected. See artifact for details."
+
+      - name: Upload violation report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-violations
+          path: ayunis-core-backend/dependency-violations.html
+          retention-days: 7
