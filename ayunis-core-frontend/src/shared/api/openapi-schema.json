@@ -224,7 +224,7 @@
     },
     "/models/default": {
       "get": {
-        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
+        "description": "Returns the applicable default model with fallback hierarchy: User default \u2192 Org default \u2192 First available model",
         "operationId": "ModelsController_getEffectiveDefaultModel",
         "parameters": [],
         "responses": {
@@ -6943,6 +6943,242 @@
           "Authentication"
         ]
       }
+    },
+    "/artifacts": {
+      "post": {
+        "operationId": "ArtifactsController_create",
+        "summary": "Create a new artifact (document)",
+        "tags": [
+          "artifacts"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The artifact has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        }
+      }
+    },
+    "/artifacts/{id}": {
+      "patch": {
+        "operationId": "ArtifactsController_update",
+        "summary": "Update an artifact (add a new version)",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new version has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        }
+      },
+      "get": {
+        "operationId": "ArtifactsController_findOne",
+        "summary": "Get an artifact by ID with all versions",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The artifact with all versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        }
+      }
+    },
+    "/artifacts/thread/{threadId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByThread",
+        "summary": "Get all artifacts for a thread",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts for the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtifactResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artifacts/{id}/revert": {
+      "post": {
+        "operationId": "ArtifactsController_revert",
+        "summary": "Revert an artifact to a specific version",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevertArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A new version was created with the reverted content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact or version not found"
+          }
+        }
+      }
+    },
+    "/artifacts/{id}/export": {
+      "get": {
+        "operationId": "ArtifactsController_export",
+        "summary": "Export an artifact as DOCX or PDF",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExportFormatDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The exported file",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        }
+      }
     }
   },
   "info": {
@@ -6955,6 +7191,10 @@
     {
       "name": "ayunis",
       "description": ""
+    },
+    {
+      "name": "artifacts",
+      "description": "Artifact (document) management"
     }
   ],
   "servers": [],
@@ -8484,7 +8724,7 @@
           "street": {
             "type": "string",
             "description": "Street",
-            "example": "Musterstraße"
+            "example": "Musterstra\u00dfe"
           },
           "houseNumber": {
             "type": "string",
@@ -9115,7 +9355,7 @@
           "result": {
             "type": "string",
             "description": "The result returned by the tool",
-            "example": "The current temperature in New York is 22°C with partly cloudy skies."
+            "example": "The current temperature in New York is 22\u00b0C with partly cloudy skies."
           }
         },
         "required": [
@@ -9684,7 +9924,9 @@
               "mcp_prompt",
               "product_knowledge",
               "activate_skill",
-              "create_skill"
+              "create_skill",
+              "create_document",
+              "update_document"
             ]
           },
           "toolConfigId": {
@@ -9758,7 +10000,9 @@
               "mcp_prompt",
               "product_knowledge",
               "activate_skill",
-              "create_skill"
+              "create_skill",
+              "create_document",
+              "update_document"
             ]
           }
         },
@@ -11055,7 +11299,7 @@
           "result": {
             "type": "string",
             "description": "The result data from the tool execution",
-            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75\u00b0F and a low of 60\u00b0F\",\"precipitation\":\"20%\"}"
           }
         },
         "required": [
@@ -11805,6 +12049,183 @@
           "role",
           "systemRole",
           "name"
+        ]
+      },
+      "AuthorType": {
+        "type": "string",
+        "enum": [
+          "USER",
+          "ASSISTANT"
+        ]
+      },
+      "ExportFormatDto": {
+        "type": "string",
+        "enum": [
+          "docx",
+          "pdf"
+        ]
+      },
+      "CreateArtifactDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Meeting Notes Q1 2026",
+            "maxLength": 500
+          },
+          "content": {
+            "type": "string",
+            "example": "<p>Meeting notes content...</p>",
+            "maxLength": 512000
+          },
+          "threadId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "authorType": {
+            "$ref": "#/components/schemas/AuthorType",
+            "example": "ASSISTANT"
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "threadId",
+          "authorType"
+        ]
+      },
+      "UpdateArtifactDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "<p>Updated meeting notes...</p>",
+            "maxLength": 512000
+          },
+          "authorType": {
+            "$ref": "#/components/schemas/AuthorType",
+            "example": "USER"
+          }
+        },
+        "required": [
+          "content",
+          "authorType"
+        ]
+      },
+      "RevertArtifactDto": {
+        "type": "object",
+        "properties": {
+          "versionNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          }
+        },
+        "required": [
+          "versionNumber"
+        ]
+      },
+      "ExportArtifactQueryDto": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/ExportFormatDto",
+            "example": "docx"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "ArtifactVersionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "artifactId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "versionNumber": {
+            "type": "number",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "example": "<p>Document content...</p>"
+          },
+          "authorType": {
+            "$ref": "#/components/schemas/AuthorType",
+            "example": "ASSISTANT"
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "artifactId",
+          "versionNumber",
+          "content",
+          "authorType",
+          "createdAt"
+        ]
+      },
+      "ArtifactResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "threadId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "userId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Meeting Notes Q1 2026"
+          },
+          "currentVersionNumber": {
+            "type": "number",
+            "example": 3
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-01-15T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "userId",
+          "title",
+          "currentVersionNumber",
+          "createdAt",
+          "updatedAt"
         ]
       }
     }

@@ -1653,6 +1653,8 @@ export const ToolAssignmentDtoType = {
   product_knowledge: 'product_knowledge',
   activate_skill: 'activate_skill',
   create_skill: 'create_skill',
+  create_document: 'create_document',
+  update_document: 'update_document',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1702,6 +1704,8 @@ export const ToolResponseDtoType = {
   product_knowledge: 'product_knowledge',
   activate_skill: 'activate_skill',
   create_skill: 'create_skill',
+  create_document: 'create_document',
+  update_document: 'update_document',
 } as const;
 
 export interface ToolResponseDto {
@@ -2793,6 +2797,70 @@ export interface MeResponseDto {
   name: string;
 }
 
+export type AuthorType = typeof AuthorType[keyof typeof AuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+export type ExportFormatDto = typeof ExportFormatDto[keyof typeof ExportFormatDto];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ExportFormatDto = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface CreateArtifactDto {
+  /** @maxLength 500 */
+  title: string;
+  /** @maxLength 512000 */
+  content: string;
+  threadId: string;
+  authorType: AuthorType;
+}
+
+export interface UpdateArtifactDto {
+  /** @maxLength 512000 */
+  content: string;
+  authorType: AuthorType;
+}
+
+export interface RevertArtifactDto {
+  /** @minimum 1 */
+  versionNumber: number;
+}
+
+export interface ExportArtifactQueryDto {
+  format: ExportFormatDto;
+}
+
+export interface ArtifactVersionResponseDto {
+  id: string;
+  artifactId: string;
+  versionNumber: number;
+  content: string;
+  authorType: AuthorType;
+  /** @nullable */
+  authorId?: string | null;
+  createdAt: string;
+}
+
+export interface ArtifactResponseDto {
+  id: string;
+  threadId: string;
+  userId: string;
+  title: string;
+  currentVersionNumber: number;
+  versions?: ArtifactVersionResponseDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
@@ -3156,5 +3224,9 @@ export type TranscriptionsControllerTranscribeBody = {
   file: Blob;
   /** Optional language hint (e.g., "en", "de") */
   language?: string;
+};
+
+export type ArtifactsControllerExportParams = {
+format: ExportFormatDto;
 };
 
