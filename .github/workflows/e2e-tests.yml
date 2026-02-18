@@ -172,7 +172,7 @@ jobs:
 
       - name: Upload Cypress videos
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cypress-videos
           path: ayunis-core-e2e-ui-tests/cypress/videos/
@@ -180,7 +180,7 @@ jobs:
 
       - name: Upload Cypress screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cypress-screenshots
           path: ayunis-core-e2e-ui-tests/cypress/screenshots/
