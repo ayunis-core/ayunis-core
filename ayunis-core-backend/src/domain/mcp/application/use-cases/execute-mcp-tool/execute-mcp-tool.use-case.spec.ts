@@ -20,6 +20,7 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 
 const mockOrgId = randomUUID();
+const mockUserId = randomUUID();
 const mockIntegrationId = randomUUID();
 const mockToolName = 'test-tool';
 const mockParameters = { foo: 'bar' };
@@ -97,7 +98,11 @@ describe('ExecuteMcpToolUseCase', () => {
   it('returns successful tool execution result', async () => {
     const integration = buildPredefined();
     repository.findById.mockResolvedValue(integration);
-    contextService.get.mockReturnValue(mockOrgId);
+    contextService.get.mockImplementation((key?: string | symbol) => {
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'userId') return mockUserId;
+      return undefined;
+    });
     mcpClientService.callTool.mockResolvedValue({
       isError: false,
       content: { result: 'ok' },
@@ -106,10 +111,14 @@ describe('ExecuteMcpToolUseCase', () => {
     const result = await useCase.execute(buildCommand());
 
     expect(result).toEqual({ isError: false, content: { result: 'ok' } });
-    expect(mcpClientService.callTool).toHaveBeenCalledWith(integration, {
-      toolName: mockToolName,
-      parameters: mockParameters,
-    });
+    expect(mcpClientService.callTool).toHaveBeenCalledWith(
+      integration,
+      {
+        toolName: mockToolName,
+        parameters: mockParameters,
+      },
+      mockUserId,
+    );
     expect(loggerLogSpy).toHaveBeenCalled();
   });
 
@@ -174,10 +183,14 @@ describe('ExecuteMcpToolUseCase', () => {
     expect(loggerErrorSpy).toHaveBeenCalled();
   });
 
-  it('passes custom integrations to client service', async () => {
+  it('passes custom integrations to client service with userId', async () => {
     const integration = buildCustom();
     repository.findById.mockResolvedValue(integration);
-    contextService.get.mockReturnValue(mockOrgId);
+    contextService.get.mockImplementation((key?: string | symbol) => {
+      if (key === 'orgId') return mockOrgId;
+      if (key === 'userId') return mockUserId;
+      return undefined;
+    });
     mcpClientService.callTool.mockResolvedValue({
       isError: false,
       content: {},
@@ -185,10 +198,14 @@ describe('ExecuteMcpToolUseCase', () => {
 
     await useCase.execute(buildCommand());
 
-    expect(mcpClientService.callTool).toHaveBeenCalledWith(integration, {
-      toolName: mockToolName,
-      parameters: mockParameters,
-    });
+    expect(mcpClientService.callTool).toHaveBeenCalledWith(
+      integration,
+      {
+        toolName: mockToolName,
+        parameters: mockParameters,
+      },
+      mockUserId,
+    );
     expect(integration.kind).toBe(McpIntegrationKind.CUSTOM);
   });
 });

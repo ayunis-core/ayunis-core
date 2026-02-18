@@ -13,6 +13,9 @@ import { EnableMcpIntegrationUseCase } from '../../application/use-cases/enable-
 import { DisableMcpIntegrationUseCase } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
 import { ValidateMcpIntegrationUseCase } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
+import { InstallMarketplaceIntegrationUseCase } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { SetUserMcpConfigUseCase } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
+import { GetUserMcpConfigUseCase } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
@@ -69,6 +72,15 @@ describe('McpIntegrationsController', () => {
     const mockListConfigsUseCase = {
       execute: jest.fn(),
     };
+    const mockInstallMarketplaceUseCase = {
+      execute: jest.fn(),
+    };
+    const mockSetUserConfigUseCase = {
+      execute: jest.fn(),
+    };
+    const mockGetUserConfigUseCase = {
+      execute: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [McpIntegrationsController],
@@ -114,6 +126,18 @@ describe('McpIntegrationsController', () => {
         {
           provide: ListPredefinedMcpIntegrationConfigsUseCase,
           useValue: mockListConfigsUseCase,
+        },
+        {
+          provide: InstallMarketplaceIntegrationUseCase,
+          useValue: mockInstallMarketplaceUseCase,
+        },
+        {
+          provide: SetUserMcpConfigUseCase,
+          useValue: mockSetUserConfigUseCase,
+        },
+        {
+          provide: GetUserMcpConfigUseCase,
+          useValue: mockGetUserConfigUseCase,
         },
         {
           provide: ConfigService,

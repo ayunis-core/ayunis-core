@@ -67,10 +67,12 @@ export class GetMcpPromptUseCase {
       }
 
       // Retrieve prompt from MCP server
+      const userId = this.contextService.get('userId');
       const promptResponse = await this.mcpClientService.getPrompt(
         integration,
         query.promptName,
         query.args || {},
+        userId,
       );
 
       this.logger.log('promptRetrieved', {

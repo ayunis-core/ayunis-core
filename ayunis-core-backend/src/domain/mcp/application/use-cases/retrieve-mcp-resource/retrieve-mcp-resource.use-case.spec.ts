@@ -25,6 +25,7 @@ describe('RetrieveMcpResourceUseCase', () => {
   let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
+  const mockUserId = randomUUID();
   const mockIntegrationId = randomUUID();
   const mockResourceUri = 'dataset://sales-data.csv';
 
@@ -91,7 +92,11 @@ describe('RetrieveMcpResourceUseCase', () => {
       const integration = buildIntegration();
       const mockResponse = { content: 'file-content', mimeType: 'text/plain' };
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation((key?: string | symbol) => {
+        if (key === 'orgId') return mockOrgId;
+        if (key === 'userId') return mockUserId;
+        return undefined;
+      });
       repository.findById.mockResolvedValue(integration);
       mcpClientService.readResource.mockResolvedValue(mockResponse);
 
@@ -104,6 +109,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         integration,
         mockResourceUri,
         undefined,
+        mockUserId,
       );
       expect(loggerLogSpy).toHaveBeenCalledWith('retrieveMcpResource', {
         integrationId: mockIntegrationId,
@@ -112,11 +118,15 @@ describe('RetrieveMcpResourceUseCase', () => {
       });
     });
 
-    it('passes parameters through to client service', async () => {
+    it('passes parameters through to client service with userId', async () => {
       const integration = buildIntegration();
       const parameters = { id: '123', locale: 'en' };
 
-      contextService.get.mockReturnValue(mockOrgId);
+      contextService.get.mockImplementation((key?: string | symbol) => {
+        if (key === 'orgId') return mockOrgId;
+        if (key === 'userId') return mockUserId;
+        return undefined;
+      });
       repository.findById.mockResolvedValue(integration);
       mcpClientService.readResource.mockResolvedValue({
         content: { data: true },
@@ -135,6 +145,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         integration,
         mockResourceUri,
         parameters,
+        mockUserId,
       );
     });
 

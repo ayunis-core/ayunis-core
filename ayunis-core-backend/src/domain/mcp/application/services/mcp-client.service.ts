@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { UUID } from 'crypto';
 import {
   McpClientPort,
   McpConnectionConfig,
@@ -9,7 +10,10 @@ import {
   McpToolResult,
 } from '../ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
+import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
+import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
+import { ConfigField } from '../../domain/value-objects/integration-config-schema';
 import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
@@ -27,18 +31,111 @@ export class McpClientService {
   constructor(
     private readonly mcpClient: McpClientPort,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
+    private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
   ) {}
 
   /**
    * Builds MCP connection configuration from integration entity.
-   * Delegates auth header generation to the integration entity with special
-   * handling for decryption of encrypted credentials.
+   * For marketplace integrations, resolves config fields to headers with
+   * optional per-user overrides. For legacy integrations, delegates auth
+   * header generation to the auth entity hierarchy.
    *
    * @param integration The MCP integration entity
+   * @param userId Optional user ID for per-user config resolution (marketplace only)
    * @returns Connection configuration for MCP client
    * @throws McpAuthenticationError if authentication configuration fails
    */
   async buildConnectionConfig(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<McpConnectionConfig> {
+    if (integration instanceof MarketplaceMcpIntegration) {
+      return this.buildMarketplaceConnectionConfig(integration, userId);
+    }
+    return this.buildLegacyConnectionConfig(integration);
+  }
+
+  /**
+   * Builds connection config for marketplace integrations by resolving
+   * config schema fields to HTTP headers, with optional user-level overrides.
+   */
+  private async buildMarketplaceConnectionConfig(
+    integration: MarketplaceMcpIntegration,
+    userId?: UUID,
+  ): Promise<McpConnectionConfig> {
+    try {
+      const headers: Record<string, string> = {};
+      const { configSchema, orgConfigValues } = integration;
+
+      // Apply org-level fields to headers
+      await this.applyConfigFieldHeaders(
+        headers,
+        configSchema.orgFields,
+        orgConfigValues,
+      );
+
+      // Apply user-level overrides if applicable
+      if (userId && configSchema.userFields.length > 0) {
+        const userConfig =
+          await this.userConfigRepository.findByIntegrationAndUser(
+            integration.id,
+            userId,
+          );
+
+        if (userConfig) {
+          await this.applyConfigFieldHeaders(
+            headers,
+            configSchema.userFields,
+            userConfig.configValues,
+          );
+        }
+      }
+
+      return { serverUrl: integration.serverUrl, headers };
+    } catch (error) {
+      if (error instanceof McpAuthenticationError) {
+        throw error;
+      }
+      this.logger.error('Failed to build marketplace connection config', {
+        error: error as Error,
+        integrationId: integration.id,
+      });
+      throw new McpAuthenticationError('Authentication configuration failed');
+    }
+  }
+
+  /**
+   * Applies config field values as HTTP headers.
+   * Only fields with a `headerName` are sent. Prefix is prepended if present.
+   * Secret fields are decrypted before sending.
+   */
+  private async applyConfigFieldHeaders(
+    headers: Record<string, string>,
+    fields: ConfigField[],
+    values: Record<string, string>,
+  ): Promise<void> {
+    for (const field of fields) {
+      const rawValue = values[field.key];
+      if (!rawValue || !field.headerName) continue;
+
+      const decryptedValue =
+        field.type === 'secret'
+          ? await this.credentialEncryption.decrypt(rawValue)
+          : rawValue;
+
+      const headerValue = field.prefix
+        ? `${field.prefix}${decryptedValue}`
+        : decryptedValue;
+
+      headers[field.headerName] = headerValue;
+    }
+  }
+
+  /**
+   * Builds connection config for legacy (Custom/Predefined) integrations
+   * using the auth entity hierarchy.
+   */
+  private async buildLegacyConnectionConfig(
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
     const headers: Record<string, string> = {};
@@ -112,9 +209,12 @@ export class McpClientService {
    * @param integration The MCP integration entity
    * @returns true if connection is valid, false otherwise
    */
-  async validateConnection(integration: McpIntegration): Promise<boolean> {
+  async validateConnection(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<boolean> {
     try {
-      const config = await this.buildConnectionConfig(integration);
+      const config = await this.buildConnectionConfig(integration, userId);
       const result = await this.mcpClient.validateConnection(config);
 
       integration.updateConnectionStatus(
@@ -145,8 +245,11 @@ export class McpClientService {
    * @returns List of available tools
    * @throws McpAuthenticationError on 401 responses
    */
-  async listTools(integration: McpIntegration): Promise<McpTool[]> {
-    const config = await this.buildConnectionConfig(integration);
+  async listTools(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<McpTool[]> {
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.listTools(config);
@@ -164,8 +267,11 @@ export class McpClientService {
    * @returns List of available resources
    * @throws McpAuthenticationError on 401 responses
    */
-  async listResources(integration: McpIntegration): Promise<McpResource[]> {
-    const config = await this.buildConnectionConfig(integration);
+  async listResources(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<McpResource[]> {
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.listResources(config);
@@ -185,8 +291,9 @@ export class McpClientService {
    */
   async listResourceTemplates(
     integration: McpIntegration,
+    userId?: UUID,
   ): Promise<McpResource[]> {
-    const config = await this.buildConnectionConfig(integration);
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.listResourceTemplates(config);
@@ -204,8 +311,11 @@ export class McpClientService {
    * @returns List of available prompts
    * @throws McpAuthenticationError on 401 responses
    */
-  async listPrompts(integration: McpIntegration): Promise<McpPrompt[]> {
-    const config = await this.buildConnectionConfig(integration);
+  async listPrompts(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<McpPrompt[]> {
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.listPrompts(config);
@@ -227,8 +337,9 @@ export class McpClientService {
   async callTool(
     integration: McpIntegration,
     call: McpToolCall,
+    userId?: UUID,
   ): Promise<McpToolResult> {
-    const config = await this.buildConnectionConfig(integration);
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.callTool(config, call);
@@ -251,8 +362,9 @@ export class McpClientService {
     integration: McpIntegration,
     uri: string,
     parameters?: Record<string, unknown>,
+    userId?: UUID,
   ): Promise<{ content: unknown; mimeType: string }> {
-    const config = await this.buildConnectionConfig(integration);
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.readResource(config, uri, parameters);
@@ -275,8 +387,9 @@ export class McpClientService {
     integration: McpIntegration,
     name: string,
     args: Record<string, unknown>,
+    userId?: UUID,
   ): Promise<{ messages: unknown[] }> {
-    const config = await this.buildConnectionConfig(integration);
+    const config = await this.buildConnectionConfig(integration, userId);
 
     try {
       return await this.mcpClient.getPrompt(config, name, args);

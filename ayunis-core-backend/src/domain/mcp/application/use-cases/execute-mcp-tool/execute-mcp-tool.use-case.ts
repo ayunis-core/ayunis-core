@@ -64,6 +64,7 @@ export class ExecuteMcpToolUseCase {
 
       // Execute tool (errors are caught and returned, not thrown)
       try {
+        const userId = this.contextService.get('userId');
         const toolCall: McpToolCall = {
           toolName: command.toolName,
           parameters: command.parameters,
@@ -72,6 +73,7 @@ export class ExecuteMcpToolUseCase {
         const result = await this.mcpClientService.callTool(
           integration,
           toolCall,
+          userId,
         );
 
         const duration = Date.now() - startTime;
