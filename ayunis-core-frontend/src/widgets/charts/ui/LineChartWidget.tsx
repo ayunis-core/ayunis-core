@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 
 // Types
-import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 // UI
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';

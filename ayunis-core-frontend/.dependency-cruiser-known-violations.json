@@ -1,0 +1,38 @@
+[
+  {
+    "type": "dependency",
+    "from": "src/widgets/app-sidebar/ui/ChatsSidebarGroup.tsx",
+    "to": "src/widgets/confirmation-modal/index.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "widget-imports-widget"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/widgets/app-sidebar/ui/ChatsSidebarGroup.tsx",
+    "to": "src/widgets/rename-thread-dialog/index.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "widget-imports-widget"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/widgets/chat-input/ui/ChatInput.tsx",
+    "to": "src/widgets/tooltip-if/ui/TooltipIf.tsx",
+    "rule": {
+      "severity": "warn",
+      "name": "widget-imports-widget"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "src/widgets/chat-input/ui/PlusButton.tsx",
+    "to": "src/widgets/tooltip-if/ui/TooltipIf.tsx",
+    "rule": {
+      "severity": "warn",
+      "name": "widget-imports-widget"
+    }
+  }
+]

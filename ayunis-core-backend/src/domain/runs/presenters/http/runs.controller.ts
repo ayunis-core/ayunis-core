@@ -47,15 +47,18 @@ import {
   RunMessageResponseDto,
   RunErrorResponseDto,
   RunThreadResponseDto,
+  RunResponse,
 } from './dto/run-response.dto';
 import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
+import { RunEvent } from '../../application/run-events';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { RunInput } from '../../domain/run-input.entity';
 import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
 import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
+import { MessageDtoMapper } from '../../../threads/presenters/http/mappers/message.mapper';
 import { Response } from 'express';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -96,6 +99,7 @@ export class RunsController {
     private readonly executeRunAndSetTitleUseCase: ExecuteRunAndSetTitleUseCase,
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
+    private readonly messageDtoMapper: MessageDtoMapper,
   ) {}
 
   @Post('send-message')
@@ -366,6 +370,51 @@ export class RunsController {
     }
   }
 
+  private mapEventToResponse(event: RunEvent): RunResponse {
+    switch (event.type) {
+      case 'message': {
+        const messageDto = this.messageDtoMapper.toDto(event.message);
+        const response: RunMessageResponseDto = {
+          type: 'message',
+          message: messageDto,
+          threadId: event.threadId,
+          timestamp: event.timestamp,
+        };
+        return response;
+      }
+      case 'thread': {
+        const response: RunThreadResponseDto = {
+          type: 'thread',
+          threadId: event.threadId,
+          updateType: event.updateType,
+          title: event.title,
+          timestamp: event.timestamp,
+        };
+        return response;
+      }
+      case 'error': {
+        const response: RunErrorResponseDto = {
+          type: 'error',
+          message: event.message,
+          threadId: event.threadId,
+          timestamp: event.timestamp,
+          code: event.code,
+          details: event.details,
+        };
+        return response;
+      }
+      case 'session': {
+        const response: RunSessionResponseDto = {
+          type: 'session',
+          streaming: event.streaming,
+          threadId: event.threadId,
+          timestamp: event.timestamp,
+        };
+        return response;
+      }
+    }
+  }
+
   private writeSSEEvent(response: Response, id: string, data: any): void {
     response.write(`id: ${id}\n`);
     response.write(`data: ${JSON.stringify(data)}\n`);
@@ -409,6 +458,9 @@ export class RunsController {
             break;
           }
 
+          // Map domain event to presenter DTO
+          const responseDto = this.mapEventToResponse(event);
+
           // Generate appropriate event ID based on response type
           let eventId: string;
           switch (event.type) {
@@ -428,7 +480,7 @@ export class RunsController {
               eventId = 'event';
           }
 
-          this.writeSSEEvent(params.response, eventId, event);
+          this.writeSSEEvent(params.response, eventId, responseDto);
         }
       } finally {
         // Clean up disconnect listener
