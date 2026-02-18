@@ -1,3 +1,9 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';

@@ -1,5 +1,11 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { UpdateArtifactUseCase } from './update-artifact.use-case';
 import { UpdateArtifactCommand } from './update-artifact.command';
@@ -81,6 +87,10 @@ describe('UpdateArtifactUseCase', () => {
     );
     expect(result.authorType).toBe(AuthorType.USER);
     expect(result.authorId).toBe(mockUserId);
+    expect(artifactsRepository.findById).toHaveBeenCalledWith(
+      mockArtifactId,
+      mockUserId,
+    );
   });
 
   it('should update the current version number on the artifact', async () => {
@@ -148,5 +158,33 @@ describe('UpdateArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.authorId).toBeNull();
+  });
+
+  it('should throw UnauthorizedException when user is not authenticated', async () => {
+    const mockContextService = {
+      get: jest.fn(() => undefined),
+    } as unknown as jest.Mocked<ContextService>;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UpdateArtifactUseCase,
+        { provide: ArtifactsRepository, useValue: artifactsRepository },
+        { provide: ContextService, useValue: mockContextService },
+      ],
+    }).compile();
+
+    const useCaseNoAuth = module.get<UpdateArtifactUseCase>(
+      UpdateArtifactUseCase,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p>Should not be updated</p>',
+      authorType: AuthorType.USER,
+    });
+
+    await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });
