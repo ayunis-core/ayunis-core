@@ -6,14 +6,13 @@ import { FindThreadUseCase } from '../../../../threads/application/use-cases/fin
 import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
 import { GenerateAndSetThreadTitleUseCase } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import { GenerateAndSetThreadTitleCommand } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
-import { MessageDtoMapper } from '../../../../threads/presenters/http/mappers/message.mapper';
 import {
-  RunMessageResponseDto,
-  RunThreadResponseDto,
-  RunErrorResponseDto,
-  RunResponse,
-  RunSessionResponseDto,
-} from '../../../presenters/http/dto/run-response.dto';
+  RunEvent,
+  RunMessageEvent,
+  RunThreadEvent,
+  RunErrorEvent,
+  RunSessionEvent,
+} from '../../run-events';
 import {
   RunInput,
   RunUserInput,
@@ -40,7 +39,6 @@ export class ExecuteRunAndSetTitleUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findOneAgentUseCase: FindOneAgentUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
-    private readonly messageDtoMapper: MessageDtoMapper,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
     private readonly contextService: ContextService,
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
@@ -48,7 +46,7 @@ export class ExecuteRunAndSetTitleUseCase {
 
   async *execute(
     command: ExecuteRunAndSetTitleCommand,
-  ): AsyncGenerator<RunResponse> {
+  ): AsyncGenerator<RunEvent> {
     try {
       // Fair use quota check - throws QuotaExceededError if limit exceeded
       const userId = this.contextService.get('userId');
@@ -59,13 +57,13 @@ export class ExecuteRunAndSetTitleUseCase {
         new CheckQuotaQuery(userId, QuotaType.FAIR_USE_MESSAGES),
       );
 
-      const streamingStartResponse: RunSessionResponseDto = {
+      const streamingStartEvent: RunSessionEvent = {
         type: 'session',
         streaming: true,
         threadId: command.threadId,
         timestamp: new Date().toISOString(),
       };
-      yield streamingStartResponse;
+      yield streamingStartEvent;
 
       const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
@@ -84,21 +82,19 @@ export class ExecuteRunAndSetTitleUseCase {
       );
 
       for await (const message of messageGenerator) {
-        const messageDto = this.messageDtoMapper.toDto(message);
-
-        // Yield message response
-        const messageResponse: RunMessageResponseDto = {
+        // Yield message event with domain entity
+        const messageEvent: RunMessageEvent = {
           type: 'message',
-          message: messageDto,
+          message,
           threadId: command.threadId,
           timestamp: new Date().toISOString(),
         };
-        yield messageResponse;
+        yield messageEvent;
       }
       if (shouldGenerateTitle) {
-        const titleResponse = await this.generateTitle(command, thread);
-        if (titleResponse) {
-          yield titleResponse;
+        const titleEvent = await this.generateTitle(command, thread);
+        if (titleEvent) {
+          yield titleEvent;
         }
       }
     } catch (error) {
@@ -108,8 +104,8 @@ export class ExecuteRunAndSetTitleUseCase {
       const errorCode =
         error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
 
-      // Yield error response
-      const errorResponse: RunErrorResponseDto = {
+      // Yield error event
+      const errorEvent: RunErrorEvent = {
         type: 'error',
         message:
           error instanceof Error
@@ -126,22 +122,22 @@ export class ExecuteRunAndSetTitleUseCase {
         },
       };
 
-      yield errorResponse;
+      yield errorEvent;
     } finally {
-      const streamingEndResponse: RunSessionResponseDto = {
+      const streamingEndEvent: RunSessionEvent = {
         type: 'session',
         streaming: false,
         threadId: command.threadId,
         timestamp: new Date().toISOString(),
       };
-      yield streamingEndResponse;
+      yield streamingEndEvent;
     }
   }
 
   private async generateTitle(
     command: ExecuteRunAndSetTitleCommand,
     thread: Thread,
-  ): Promise<RunThreadResponseDto | null> {
+  ): Promise<RunThreadEvent | null> {
     try {
       // Extract the first user message for title generation
       const firstUserMessage = this.extractUserMessage(command.input);

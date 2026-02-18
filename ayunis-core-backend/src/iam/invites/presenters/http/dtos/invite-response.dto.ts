@@ -2,12 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
+import { InviteStatus } from 'src/iam/invites/domain/invite-status.enum';
 
-export enum InviteStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  EXPIRED = 'expired',
-}
+export { InviteStatus };
 
 export class InviteResponseDto {
   @ApiProperty({

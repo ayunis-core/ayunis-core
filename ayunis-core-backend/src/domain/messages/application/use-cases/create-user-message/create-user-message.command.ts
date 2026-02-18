@@ -1,14 +1,5 @@
 import { UUID } from 'crypto';
 
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
-const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total
-const ALLOWED_CONTENT_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-];
-
 /**
  * Application-layer data structure for image uploads.
  * Contains the raw binary data and metadata needed for image storage.
@@ -18,6 +9,15 @@ export interface ImageUploadData {
   readonly contentType: string;
   readonly altText?: string;
 }
+
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
+const MAX_TOTAL_IMAGE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total
+const ALLOWED_CONTENT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
 
 export function isAllowedImageContentType(contentType: string): boolean {
   return ALLOWED_CONTENT_TYPES.includes(contentType.toLowerCase());

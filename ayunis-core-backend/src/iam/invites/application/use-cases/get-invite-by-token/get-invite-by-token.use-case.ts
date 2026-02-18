@@ -9,7 +9,7 @@ import { FindOrgByIdUseCase } from '../../../../orgs/application/use-cases/find-
 import { FindOrgByIdQuery } from '../../../../orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { InviteStatus } from 'src/iam/invites/presenters/http/dtos/invite-response.dto';
+import { InviteStatus } from 'src/iam/invites/domain/invite-status.enum';
 import {
   InviteJwtPayload,
   InviteJwtService,
