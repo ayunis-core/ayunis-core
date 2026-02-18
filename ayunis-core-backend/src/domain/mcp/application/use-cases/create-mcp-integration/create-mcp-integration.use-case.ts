@@ -172,9 +172,7 @@ export class CreateMcpIntegrationUseCase {
       });
 
       // Save integration first to get ID
-      const savedIntegration = (await this.repository.save(
-        integration,
-      )) as PredefinedMcpIntegration;
+      const savedIntegration = await this.repository.save(integration);
 
       // Validate connection (don't throw on failure)
       await this.validateAndUpdateConnectionStatus(savedIntegration);
@@ -293,9 +291,7 @@ export class CreateMcpIntegrationUseCase {
       }
 
       // Save integration first to get ID
-      const savedIntegration = (await this.repository.save(
-        integration,
-      )) as CustomMcpIntegration;
+      const savedIntegration = await this.repository.save(integration);
 
       // Validate connection (don't throw on failure)
       await this.validateAndUpdateConnectionStatus(savedIntegration);

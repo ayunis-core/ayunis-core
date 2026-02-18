@@ -10,6 +10,16 @@ export class MarketplaceSkillNotFoundError extends ApplicationError {
   }
 }
 
+export class MarketplaceIntegrationNotFoundError extends ApplicationError {
+  constructor(identifier: string) {
+    super(
+      `Marketplace integration not found: ${identifier}`,
+      'MARKETPLACE_INTEGRATION_NOT_FOUND',
+      404,
+    );
+  }
+}
+
 export class MarketplaceUnavailableError extends ApplicationError {
   constructor() {
     super(
