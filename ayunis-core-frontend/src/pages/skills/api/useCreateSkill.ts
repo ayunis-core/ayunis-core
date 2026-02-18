@@ -11,18 +11,26 @@ import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 
-const createSkillSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  shortDescription: z.string().min(1, 'Short description is required'),
-  instructions: z.string().min(1, 'Instructions are required'),
-});
-
-export type CreateSkillData = z.infer<typeof createSkillSchema>;
+export type CreateSkillData = {
+  name: string;
+  shortDescription: string;
+  instructions: string;
+};
 
 export function useCreateSkill() {
   const { t } = useTranslation('skills');
   const queryClient = useQueryClient();
   const router = useRouter();
+
+  const createSkillSchema = z.object({
+    name: z.string().min(1, t('createDialog.validation.nameRequired')),
+    shortDescription: z
+      .string()
+      .min(1, t('createDialog.validation.shortDescriptionRequired')),
+    instructions: z
+      .string()
+      .min(1, t('createDialog.validation.instructionsRequired')),
+  });
 
   const form = useForm<CreateSkillData>({
     resolver: zodResolver(createSkillSchema),

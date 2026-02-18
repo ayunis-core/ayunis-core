@@ -40,6 +40,11 @@
       "cancel": "Abbrechen",
       "create": "Fähigkeit erstellen",
       "creating": "Wird erstellt..."
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich",
+      "shortDescriptionRequired": "Kurzbeschreibung ist erforderlich",
+      "instructionsRequired": "Anweisungen sind erforderlich"
     }
   },
   "create": {

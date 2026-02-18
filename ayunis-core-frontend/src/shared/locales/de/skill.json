@@ -69,6 +69,11 @@
     "buttons": {
       "save": "Änderungen speichern",
       "saving": "Wird gespeichert..."
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich",
+      "shortDescriptionRequired": "Kurzbeschreibung ist erforderlich",
+      "instructionsRequired": "Anweisungen sind erforderlich"
     }
   },
   "knowledgeBase": {
