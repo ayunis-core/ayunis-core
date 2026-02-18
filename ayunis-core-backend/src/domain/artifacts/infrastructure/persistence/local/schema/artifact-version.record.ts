@@ -12,7 +12,7 @@ import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
 
 @Entity({ name: 'artifact_versions' })
 export class ArtifactVersionRecord {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn()
   id: UUID;
 
   @Column()
