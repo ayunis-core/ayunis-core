@@ -12,13 +12,11 @@ import {
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRouter } from '@tanstack/react-router';
 
-const updateSkillSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255),
-  shortDescription: z.string().min(1, 'Short description is required'),
-  instructions: z.string().min(1, 'Instructions are required'),
-});
-
-type UpdateSkillData = z.infer<typeof updateSkillSchema>;
+type UpdateSkillData = {
+  name: string;
+  shortDescription: string;
+  instructions: string;
+};
 
 interface UseUpdateSkillProps {
   skill: SkillResponseDto;
@@ -28,6 +26,16 @@ export function useUpdateSkill({ skill }: UseUpdateSkillProps) {
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
   const router = useRouter();
+
+  const updateSkillSchema = z.object({
+    name: z.string().min(1, t('properties.validation.nameRequired')).max(255),
+    shortDescription: z
+      .string()
+      .min(1, t('properties.validation.shortDescriptionRequired')),
+    instructions: z
+      .string()
+      .min(1, t('properties.validation.instructionsRequired')),
+  });
 
   const form = useForm<UpdateSkillData>({
     resolver: zodResolver(updateSkillSchema),
