@@ -9,10 +9,11 @@ import type { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/pr
 export abstract class McpIntegrationsRepositoryPort {
   /**
    * Saves an MCP integration (create or update).
+   * Returns the same subtype that was passed in.
    * @param integration The integration to save
    * @returns The saved integration
    */
-  abstract save(integration: McpIntegration): Promise<McpIntegration>;
+  abstract save<T extends McpIntegration>(integration: T): Promise<T>;
 
   /**
    * Finds an MCP integration by its ID.

@@ -177,9 +177,7 @@ export class McpIntegrationMapper {
     return record;
   }
 
-  private authFromRecord(
-    record: McpIntegrationAuthRecord,
-  ): McpIntegrationAuth {
+  private authFromRecord(record: McpIntegrationAuthRecord): McpIntegrationAuth {
     if (record instanceof NoAuthMcpIntegrationAuthRecord) {
       return this.noAuthFromRecord(record);
     }

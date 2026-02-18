@@ -30,7 +30,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     super();
   }
 
-  async save(integration: McpIntegration): Promise<McpIntegration> {
+  async save<T extends McpIntegration>(integration: T): Promise<T> {
     this.logger.log('save', { integrationId: integration.id });
 
     const recordResult = this.mcpIntegrationMapper.toRecord(integration);
@@ -75,7 +75,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       );
     }
 
-    return this.mcpIntegrationMapper.toDomain(reloadedRecord);
+    return this.mcpIntegrationMapper.toDomain(reloadedRecord) as T;
   }
 
   async findById(id: UUID): Promise<McpIntegration | null> {
