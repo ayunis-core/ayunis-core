@@ -46,6 +46,8 @@ import enSkills from './shared/locales/en/skills.json';
 import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
 import deSkill from './shared/locales/de/skill.json';
+import enArtifacts from './shared/locales/en/artifacts.json';
+import deArtifacts from './shared/locales/de/artifacts.json';
 
 const resources = {
   en: {
@@ -71,6 +73,7 @@ const resources = {
     install: enInstall,
     skills: enSkills,
     skill: enSkill,
+    artifacts: enArtifacts,
   },
   de: {
     auth: deAuth,
@@ -95,6 +98,7 @@ const resources = {
     install: deInstall,
     skills: deSkills,
     skill: deSkill,
+    artifacts: deArtifacts,
   },
 };
 

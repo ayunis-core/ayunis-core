@@ -7,7 +7,8 @@ import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Save, X } from 'lucide-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from './EditorToolbar';
 import { VersionHistory } from './VersionHistory';
 import { ExportButtons } from './ExportButtons';
@@ -27,6 +28,8 @@ export function ArtifactEditor({
   onExport,
   onClose,
 }: ArtifactEditorProps) {
+  const { t } = useTranslation('artifacts');
+
   const currentVersion = artifact.versions?.find(
     (v) => v.versionNumber === artifact.currentVersionNumber,
   );
@@ -37,7 +40,7 @@ export function ArtifactEditor({
       LinkExtension.configure({ openOnClick: false }),
       UnderlineExtension,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Placeholder.configure({ placeholder: 'Start writing…' }),
+      Placeholder.configure({ placeholder: t('editor.placeholder') }),
     ],
     content: currentVersion?.content ?? '',
     editorProps: {
@@ -48,15 +51,18 @@ export function ArtifactEditor({
     },
   });
 
-  // Update editor content when artifact changes (e.g. after revert or external update)
+  // Track which version is currently loaded in the editor
+  const loadedVersionRef = useRef(artifact.currentVersionNumber);
+
+  // Update editor content only when the version number actually changes
   useEffect(() => {
     if (!editor || !currentVersion) return;
 
-    const currentHtml = editor.getHTML();
-    if (currentHtml !== currentVersion.content) {
+    if (loadedVersionRef.current !== artifact.currentVersionNumber) {
+      loadedVersionRef.current = artifact.currentVersionNumber;
       editor.commands.setContent(currentVersion.content);
     }
-  }, [editor, currentVersion]);
+  }, [editor, currentVersion, artifact.currentVersionNumber]);
 
   const handleSave = useCallback(() => {
     if (!editor) return;
@@ -79,7 +85,7 @@ export function ArtifactEditor({
             onClick={handleSave}
           >
             <Save className="mr-1 size-3.5" />
-            Save
+            {t('editor.save')}
           </Button>
           <Button
             variant="ghost"
