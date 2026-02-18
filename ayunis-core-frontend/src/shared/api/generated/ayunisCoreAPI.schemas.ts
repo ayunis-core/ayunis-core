@@ -12,17 +12,6 @@ export interface IsCloudResponseDto {
   isRegistrationDisabled: boolean;
 }
 
-export interface FeatureTogglesResponseDto {
-  /** Whether the agents feature is enabled */
-  agentsEnabled: boolean;
-  /** Whether the standalone knowledge bases feature is enabled */
-  knowledgeBasesEnabled: boolean;
-  /** Whether the prompts feature is enabled */
-  promptsEnabled: boolean;
-  /** Whether the skills feature is enabled */
-  skillsEnabled: boolean;
-}
-
 /**
  * The provider of the model
  */
@@ -42,7 +31,6 @@ export const ModelWithConfigResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 export interface ModelWithConfigResponseDto {
@@ -99,7 +87,6 @@ export const ModelProviderInfoResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -157,7 +144,6 @@ export const PermittedLanguageModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -244,7 +230,6 @@ export const PermittedEmbeddingModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -299,7 +284,6 @@ export const CreateLanguageModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 export interface CreateLanguageModelRequestDto {
@@ -340,7 +324,6 @@ export const UpdateLanguageModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 export interface UpdateLanguageModelRequestDto {
@@ -381,7 +364,6 @@ export const CreateEmbeddingModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -429,7 +411,6 @@ export const UpdateEmbeddingModelRequestDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -477,7 +458,6 @@ export const LanguageModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -537,7 +517,6 @@ export const EmbeddingModelResponseDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 /**
@@ -747,52 +726,6 @@ export interface CreateUserDto {
   role: CreateUserDtoRole;
   /** Send password reset email */
   sendPasswordResetEmail: boolean;
-}
-
-/**
- * User role
- */
-export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole[keyof typeof SuperAdminUserResponseDtoRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SuperAdminUserResponseDtoRole = {
-  admin: 'admin',
-  user: 'user',
-} as const;
-
-/**
- * System-level role of the user
- */
-export type SuperAdminUserResponseDtoSystemRole = typeof SuperAdminUserResponseDtoSystemRole[keyof typeof SuperAdminUserResponseDtoSystemRole];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SuperAdminUserResponseDtoSystemRole = {
-  customer: 'customer',
-  super_admin: 'super_admin',
-} as const;
-
-export interface SuperAdminUserResponseDto {
-  /** User unique identifier */
-  id: string;
-  /** User name */
-  name: string;
-  /** User email address */
-  email: string;
-  /** User role */
-  role: SuperAdminUserResponseDtoRole;
-  /** Organization ID the user belongs to */
-  orgId: string;
-  /** Date when the user was created */
-  createdAt: string;
-  /** System-level role of the user */
-  systemRole: SuperAdminUserResponseDtoSystemRole;
-}
-
-export interface PromoteToSuperAdminDto {
-  /** Email address of the user to promote to super admin */
-  email: string;
 }
 
 /**
@@ -1015,16 +948,6 @@ export interface DeleteAllPendingInvitesResponseDto {
   deletedCount: number;
 }
 
-export interface ActiveSubscriptionResponseDto {
-  /** Whether the organization has an active subscription */
-  hasActiveSubscription: boolean;
-}
-
-export interface PriceResponseDto {
-  /** Current price per seat per month in the configured currency */
-  pricePerSeatMonthly: number;
-}
-
 export interface SubscriptionBillingInfoResponseDto {
   /** Company name */
   companyName: string;
@@ -1115,6 +1038,11 @@ export interface CreateSubscriptionRequestDto {
   vatNumber?: string;
 }
 
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
+}
+
 export interface UpdateBillingInfoDto {
   /** Company name for the subscription */
   companyName: string;
@@ -1130,6 +1058,11 @@ export interface UpdateBillingInfoDto {
   country: string;
   /** VAT number for the subscription */
   vatNumber?: string;
+}
+
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
 }
 
 export interface UpdateSeatsDto { [key: string]: unknown }
@@ -1281,20 +1214,6 @@ export interface TextMessageContentResponseDto {
   type: TextMessageContentResponseDtoType;
   /** The text content of the message */
   text: string;
-  /** Whether this text content contains skill instructions */
-  isSkillInstruction?: boolean;
-}
-
-export interface ToolUseIntegrationDto {
-  /** Integration ID */
-  id: string;
-  /** Integration name */
-  name: string;
-  /**
-   * Integration logo URL
-   * @nullable
-   */
-  logoUrl?: string | null;
 }
 
 /**
@@ -1326,8 +1245,6 @@ export interface ToolUseMessageContentResponseDto {
   name: string;
   /** Parameters passed to the tool */
   params: ToolUseMessageContentResponseDtoParams;
-  /** Integration metadata if this tool belongs to a marketplace integration */
-  integration?: ToolUseIntegrationDto;
 }
 
 /**
@@ -1507,7 +1424,6 @@ export const FileSourceResponseDtoFileType = {
   pdf: 'pdf',
   docx: 'docx',
   pptx: 'pptx',
-  txt: 'txt',
 } as const;
 
 export interface FileSourceResponseDto {
@@ -1656,13 +1572,6 @@ export interface CSVDataSourceResponseDto {
   data: CSVDataSourceResponseDtoData;
 }
 
-export interface KnowledgeBaseSummaryResponseDto {
-  /** Unique identifier for the knowledge base */
-  id: string;
-  /** Name of the knowledge base */
-  name: string;
-}
-
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
@@ -1688,8 +1597,6 @@ export interface GetThreadResponseDto {
   isAnonymous: boolean;
   /** Whether the thread has exceeded the token threshold for optimal performance */
   isLongChat: boolean;
-  /** Knowledge bases attached to this thread */
-  knowledgeBases: KnowledgeBaseSummaryResponseDto[];
 }
 
 export interface GetThreadsResponseDtoItem {
@@ -1746,8 +1653,8 @@ export const ToolAssignmentDtoType = {
   product_knowledge: 'product_knowledge',
   activate_skill: 'activate_skill',
   create_skill: 'create_skill',
-  knowledge_query: 'knowledge_query',
-  knowledge_get_text: 'knowledge_get_text',
+  create_document: 'create_document',
+  update_document: 'update_document',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1797,8 +1704,8 @@ export const ToolResponseDtoType = {
   product_knowledge: 'product_knowledge',
   activate_skill: 'activate_skill',
   create_skill: 'create_skill',
-  knowledge_query: 'knowledge_query',
-  knowledge_get_text: 'knowledge_get_text',
+  create_document: 'create_document',
+  update_document: 'update_document',
 } as const;
 
 export interface ToolResponseDto {
@@ -1877,7 +1784,6 @@ export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType
 export const McpIntegrationResponseDtoType = {
   predefined: 'predefined',
   custom: 'custom',
-  marketplace: 'marketplace',
 } as const;
 
 /**
@@ -1907,16 +1813,6 @@ export const McpIntegrationResponseDtoConnectionStatus = {
   error: 'error',
   unknown: 'unknown',
 } as const;
-
-/**
- * Configuration schema from marketplace (only for marketplace integrations)
- */
-export type McpIntegrationResponseDtoConfigSchema = { [key: string]: unknown };
-
-/**
- * Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••".
- */
-export type McpIntegrationResponseDtoOrgConfigValues = { [key: string]: unknown };
 
 export interface McpIntegrationResponseDto {
   /** Unique identifier of the integration */
@@ -1951,21 +1847,6 @@ export interface McpIntegrationResponseDto {
   updatedAt: string;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
   returnsPii: boolean;
-  /** Marketplace integration identifier (only for marketplace integrations) */
-  marketplaceIdentifier?: string;
-  /** Configuration schema from marketplace (only for marketplace integrations) */
-  configSchema?: McpIntegrationResponseDtoConfigSchema;
-  /** Whether this marketplace integration has user-level config fields */
-  hasUserFields?: boolean;
-  /** Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
-  orgConfigValues?: McpIntegrationResponseDtoOrgConfigValues;
-  /**
-   * Logo URL for marketplace integrations
-   * @nullable
-   */
-  logoUrl?: string | null;
-  /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
-  description?: string;
 }
 
 /**
@@ -1979,7 +1860,6 @@ export const CreateAgentShareDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
-  knowledge_base: 'knowledge_base',
 } as const;
 
 export interface CreateAgentShareDto {
@@ -2002,7 +1882,6 @@ export const ShareResponseDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
-  knowledge_base: 'knowledge_base',
 } as const;
 
 /**
@@ -2049,7 +1928,6 @@ export const CreateSkillShareDtoEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
-  knowledge_base: 'knowledge_base',
 } as const;
 
 export interface CreateSkillShareDto {
@@ -2057,29 +1935,6 @@ export interface CreateSkillShareDto {
   entityType: CreateSkillShareDtoEntityType;
   /** ID of the skill to share */
   skillId: string;
-  /** ID of the team to share with (if not provided, shares with entire organization) */
-  teamId?: string;
-}
-
-/**
- * Type of entity being shared
- */
-export type CreateKnowledgeBaseShareDtoEntityType = typeof CreateKnowledgeBaseShareDtoEntityType[keyof typeof CreateKnowledgeBaseShareDtoEntityType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateKnowledgeBaseShareDtoEntityType = {
-  agent: 'agent',
-  prompt: 'prompt',
-  skill: 'skill',
-  knowledge_base: 'knowledge_base',
-} as const;
-
-export interface CreateKnowledgeBaseShareDto {
-  /** Type of entity being shared */
-  entityType: CreateKnowledgeBaseShareDtoEntityType;
-  /** ID of the knowledge base to share */
-  knowledgeBaseId: string;
   /** ID of the team to share with (if not provided, shares with entire organization) */
   teamId?: string;
 }
@@ -2285,11 +2140,6 @@ export interface PredefinedConfigResponseDto {
   credentialFields?: CredentialFieldDto[];
 }
 
-/**
- * Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.
- */
-export type UpdateMcpIntegrationDtoOrgConfigValues = { [key: string]: unknown };
-
 export interface UpdateMcpIntegrationDto {
   /**
    * The new name for the integration
@@ -2303,44 +2153,6 @@ export interface UpdateMcpIntegrationDto {
   authHeaderName?: string;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
   returnsPii?: boolean;
-  /** Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value. */
-  orgConfigValues?: UpdateMcpIntegrationDtoOrgConfigValues;
-}
-
-/**
- * Organization-level configuration values (key-value pairs matching config schema orgFields)
- */
-export type InstallMarketplaceIntegrationDtoOrgConfigValues = {[key: string]: string};
-
-export interface InstallMarketplaceIntegrationDto {
-  /** Marketplace integration identifier */
-  identifier: string;
-  /** Organization-level configuration values (key-value pairs matching config schema orgFields) */
-  orgConfigValues: InstallMarketplaceIntegrationDtoOrgConfigValues;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
-  returnsPii?: boolean;
-}
-
-/**
- * Configuration values with secret values masked (keys present, values replaced with "••••••")
- */
-export type UserConfigResponseDtoConfigValues = {[key: string]: string};
-
-export interface UserConfigResponseDto {
-  /** Whether the user has configured values for this integration */
-  hasConfig: boolean;
-  /** Configuration values with secret values masked (keys present, values replaced with "••••••") */
-  configValues: UserConfigResponseDtoConfigValues;
-}
-
-/**
- * User-level configuration values (key-value pairs matching config schema userFields)
- */
-export type SetUserConfigDtoConfigValues = {[key: string]: string};
-
-export interface SetUserConfigDto {
-  /** User-level configuration values (key-value pairs matching config schema userFields) */
-  configValues: SetUserConfigDtoConfigValues;
 }
 
 /**
@@ -2355,6 +2167,74 @@ export interface ValidationResponseDto {
   capabilities: ValidationResponseDtoCapabilities;
   /** Error message if validation failed */
   error?: string;
+}
+
+export interface InstallSkillFromMarketplaceDto {
+  /** The unique identifier (slug) of the marketplace skill */
+  identifier: string;
+}
+
+export interface SkillResponseDto {
+  /** The unique identifier of the skill */
+  id: string;
+  /** The name of the skill */
+  name: string;
+  /** A short description of the skill */
+  shortDescription: string;
+  /** Detailed instructions for the skill */
+  instructions: string;
+  /**
+   * The marketplace identifier if this skill was installed from the marketplace
+   * @nullable
+   */
+  marketplaceIdentifier: string | null;
+  /** Whether the skill is active and available for use in chats */
+  isActive: boolean;
+  /** The unique identifier of the user who owns this skill */
+  userId: string;
+  /** The date and time when the skill was created */
+  createdAt: string;
+  /** The date and time when the skill was last updated */
+  updatedAt: string;
+  /** Whether the skill is shared with the current user (not owned) */
+  isShared: boolean;
+}
+
+export interface CreateSkillDto {
+  /**
+   * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+  /** Whether the skill is active (defaults to false) */
+  isActive?: boolean;
+}
+
+export interface UpdateSkillDto {
+  /**
+   * The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
+  shortDescription: string;
+  /** Detailed instructions for the skill (injected when the skill is activated) */
+  instructions: string;
+}
+
+export interface SkillSourceResponseDto {
+  /** The unique identifier of the source */
+  id: string;
+  /** The name of the source */
+  name: string;
+  /** The type of source */
+  type: string;
 }
 
 export interface MarketplaceSkillResponseDto {
@@ -2390,402 +2270,6 @@ export interface MarketplaceSkillResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
-}
-
-/**
- * Field type
- */
-export type MarketplaceIntegrationConfigFieldDtoType = typeof MarketplaceIntegrationConfigFieldDtoType[keyof typeof MarketplaceIntegrationConfigFieldDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MarketplaceIntegrationConfigFieldDtoType = {
-  text: 'text',
-  url: 'url',
-  secret: 'secret',
-} as const;
-
-export interface MarketplaceIntegrationConfigFieldDto {
-  /** Unique identifier within the schema */
-  key: string;
-  /** Display label for the frontend form */
-  label: string;
-  /** Field type */
-  type: MarketplaceIntegrationConfigFieldDtoType;
-  /**
-   * HTTP header name this field maps to; if absent, field is internal config
-   * @nullable
-   */
-  headerName?: string | null;
-  /**
-   * Optional prefix prepended to the value before sending
-   * @nullable
-   */
-  prefix?: string | null;
-  /** Whether the field must be provided */
-  required: boolean;
-  /**
-   * Optional help text for the frontend form
-   * @nullable
-   */
-  help?: string | null;
-  /**
-   * Fixed value from marketplace; if set, field is not shown in forms
-   * @nullable
-   */
-  value?: string | null;
-}
-
-export interface MarketplaceIntegrationConfigSchemaDto {
-  /** Auth type for documentation/UI purposes */
-  authType: string;
-  /** Fields configured by org admin at install time */
-  orgFields: MarketplaceIntegrationConfigFieldDto[];
-  /** Fields configured by individual users */
-  userFields: MarketplaceIntegrationConfigFieldDto[];
-}
-
-export interface MarketplaceIntegrationResponseDto {
-  /** Integration UUID */
-  id: string;
-  /** Unique identifier (slug) */
-  identifier: string;
-  /** Display name */
-  name: string;
-  /** Short description for marketplace display */
-  shortDescription: string;
-  /** Full description */
-  description: string;
-  /**
-   * Lucide icon name
-   * @nullable
-   */
-  iconName?: string | null;
-  /**
-   * Absolute URL to the integration logo image
-   * @nullable
-   */
-  logoUrl?: string | null;
-  /**
-   * Category UUID from the marketplace
-   * @nullable
-   */
-  integrationCategoryId?: string | null;
-  /** MCP server URL */
-  serverUrl: string;
-  /** Configuration schema (authType, orgFields, userFields, oauth) */
-  configSchema: MarketplaceIntegrationConfigSchemaDto;
-  /** Whether the integration is featured */
-  featured: boolean;
-  /** Whether the integration is published */
-  published: boolean;
-  /** Whether the integration is pre-installed */
-  preInstalled: boolean;
-  /**
-   * URL to the legal text page the installer must confirm
-   * @nullable
-   */
-  legalTextUrl?: string | null;
-  /**
-   * Version of the legal text
-   * @nullable
-   */
-  legalTextVersion?: string | null;
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
-}
-
-export interface CreateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name: string;
-  /**
-   * An optional description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-export interface KnowledgeBaseResponseDto {
-  /** The unique identifier of the knowledge base */
-  id: string;
-  /** The name of the knowledge base */
-  name: string;
-  /** The description of the knowledge base */
-  description: string;
-  /** The date and time when the knowledge base was created */
-  createdAt: string;
-  /** The date and time when the knowledge base was last updated */
-  updatedAt: string;
-  /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
-  isShared?: boolean;
-}
-
-export interface KnowledgeBaseListResponseDto {
-  /** The list of knowledge bases */
-  data: KnowledgeBaseResponseDto[];
-}
-
-export interface UpdateKnowledgeBaseDto {
-  /**
-   * The name of the knowledge base
-   * @minLength 1
-   * @maxLength 255
-   */
-  name?: string;
-  /**
-   * The description of the knowledge base
-   * @maxLength 2000
-   */
-  description?: string;
-}
-
-/**
- * The type of the source
- */
-export type KnowledgeBaseDocumentResponseDtoType = typeof KnowledgeBaseDocumentResponseDtoType[keyof typeof KnowledgeBaseDocumentResponseDtoType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoType = {
-  text: 'text',
-  data: 'data',
-} as const;
-
-/**
- * Who created the source
- */
-export type KnowledgeBaseDocumentResponseDtoCreatedBy = typeof KnowledgeBaseDocumentResponseDtoCreatedBy[keyof typeof KnowledgeBaseDocumentResponseDtoCreatedBy];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoCreatedBy = {
-  user: 'user',
-  llm: 'llm',
-  system: 'system',
-} as const;
-
-/**
- * The text source subtype (e.g. file, web)
- */
-export type KnowledgeBaseDocumentResponseDtoTextType = typeof KnowledgeBaseDocumentResponseDtoTextType[keyof typeof KnowledgeBaseDocumentResponseDtoTextType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const KnowledgeBaseDocumentResponseDtoTextType = {
-  file: 'file',
-  web: 'web',
-} as const;
-
-export interface KnowledgeBaseDocumentResponseDto {
-  /** The unique identifier of the document */
-  id: string;
-  /** The name of the document */
-  name: string;
-  /** The type of the source */
-  type: KnowledgeBaseDocumentResponseDtoType;
-  /** Who created the source */
-  createdBy: KnowledgeBaseDocumentResponseDtoCreatedBy;
-  /** The date and time when the document was added */
-  createdAt: string;
-  /** The date and time when the document was last updated */
-  updatedAt: string;
-  /** The text source subtype (e.g. file, web) */
-  textType?: KnowledgeBaseDocumentResponseDtoTextType;
-  /** The URL of the source (only for web sources) */
-  url?: string;
-}
-
-export interface KnowledgeBaseDocumentListResponseDto {
-  /** The list of documents in the knowledge base */
-  data: KnowledgeBaseDocumentResponseDto[];
-}
-
-export interface AddUrlToKnowledgeBaseDto {
-  /** The URL to crawl and add to the knowledge base */
-  url: string;
-}
-
-export interface InstallSkillFromMarketplaceDto {
-  /** The unique identifier (slug) of the marketplace skill */
-  identifier: string;
-}
-
-export interface SkillResponseDto {
-  /** The unique identifier of the skill */
-  id: string;
-  /** The name of the skill */
-  name: string;
-  /** A short description of the skill */
-  shortDescription: string;
-  /** Detailed instructions for the skill */
-  instructions: string;
-  /**
-   * The marketplace identifier if this skill was installed from the marketplace
-   * @nullable
-   */
-  marketplaceIdentifier: string | null;
-  /** Whether the skill is active and available for use in chats */
-  isActive: boolean;
-  /** The unique identifier of the user who owns this skill */
-  userId: string;
-  /** The date and time when the skill was created */
-  createdAt: string;
-  /** The date and time when the skill was last updated */
-  updatedAt: string;
-  /** Whether the skill is shared with the current user (not owned) */
-  isShared: boolean;
-  /** Whether the skill is pinned for quick access in chat */
-  isPinned: boolean;
-}
-
-export interface CreateSkillDto {
-  /**
-   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
-  shortDescription: string;
-  /** Detailed instructions for the skill (injected when the skill is activated) */
-  instructions: string;
-  /** Whether the skill is active (defaults to true) */
-  isActive?: boolean;
-}
-
-export interface UpdateSkillDto {
-  /**
-   * The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  /** A short description of the skill (shown in system prompt for LLM to decide activation) */
-  shortDescription: string;
-  /** Detailed instructions for the skill (injected when the skill is activated) */
-  instructions: string;
-}
-
-export interface SkillSourceResponseDto {
-  /** The unique identifier of the source */
-  id: string;
-  /** The name of the source */
-  name: string;
-  /** The type of source */
-  type: string;
-}
-
-/**
- * The distribution mode of the skill template
- */
-export type CreateSkillTemplateDtoDistributionMode = typeof CreateSkillTemplateDtoDistributionMode[keyof typeof CreateSkillTemplateDtoDistributionMode];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateSkillTemplateDtoDistributionMode = {
-  always_on: 'always_on',
-  pre_created_copy: 'pre_created_copy',
-} as const;
-
-export interface CreateSkillTemplateDto {
-  /**
-   * The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name: string;
-  /** A short description of the skill template */
-  shortDescription: string;
-  /** The instructions for the skill template */
-  instructions: string;
-  /** The distribution mode of the skill template */
-  distributionMode: CreateSkillTemplateDtoDistributionMode;
-  /** Whether the skill template is active (defaults to false) */
-  isActive?: boolean;
-  /** Whether copied skills should be active by default (only for pre_created_copy mode, defaults to false) */
-  defaultActive?: boolean;
-  /** Whether copied skills should be pinned by default (only for pre_created_copy mode, defaults to false) */
-  defaultPinned?: boolean;
-}
-
-/**
- * The distribution mode of the skill template
- */
-export type SkillTemplateResponseDtoDistributionMode = typeof SkillTemplateResponseDtoDistributionMode[keyof typeof SkillTemplateResponseDtoDistributionMode];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const SkillTemplateResponseDtoDistributionMode = {
-  always_on: 'always_on',
-  pre_created_copy: 'pre_created_copy',
-} as const;
-
-export interface SkillTemplateResponseDto {
-  /** The unique identifier of the skill template */
-  id: string;
-  /** The name of the skill template */
-  name: string;
-  /** A short description of the skill template */
-  shortDescription: string;
-  /** The instructions for the skill template */
-  instructions: string;
-  /** The distribution mode of the skill template */
-  distributionMode: SkillTemplateResponseDtoDistributionMode;
-  /** Whether the skill template is active */
-  isActive: boolean;
-  /**
-   * Whether copied skills are active by default (null for always_on templates)
-   * @nullable
-   */
-  defaultActive: boolean | null;
-  /**
-   * Whether copied skills are pinned by default (null for always_on templates)
-   * @nullable
-   */
-  defaultPinned: boolean | null;
-  /** The date the skill template was created */
-  createdAt: string;
-  /** The date the skill template was last updated */
-  updatedAt: string;
-}
-
-/**
- * The distribution mode of the skill template
- */
-export type UpdateSkillTemplateDtoDistributionMode = typeof UpdateSkillTemplateDtoDistributionMode[keyof typeof UpdateSkillTemplateDtoDistributionMode];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateSkillTemplateDtoDistributionMode = {
-  always_on: 'always_on',
-  pre_created_copy: 'pre_created_copy',
-} as const;
-
-export interface UpdateSkillTemplateDto {
-  /**
-   * The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.
-   * @minLength 1
-   * @maxLength 100
-   */
-  name?: string;
-  /** A short description of the skill template */
-  shortDescription?: string;
-  /** The instructions for the skill template */
-  instructions?: string;
-  /** The distribution mode of the skill template */
-  distributionMode?: UpdateSkillTemplateDtoDistributionMode;
-  /** Whether the skill template is active */
-  isActive?: boolean;
-  /** Whether copied skills should be active by default (only for pre_created_copy mode) */
-  defaultActive?: boolean;
-  /** Whether copied skills should be pinned by default (only for pre_created_copy mode) */
-  defaultPinned?: boolean;
 }
 
 /**
@@ -2974,8 +2458,6 @@ export interface SendMessageDto {
   imageAltTexts?: string[];
   /** Tool result input (for tool_result type only) */
   toolResult?: ToolResultInput;
-  /** Skill ID to activate for this message — injects skill instructions and resources into the thread */
-  skillId?: string;
   /** Enable streaming mode for real-time response updates */
   streaming?: boolean;
 }
@@ -3075,7 +2557,6 @@ export const ProviderUsageDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 export interface ProviderUsageDto {
@@ -3142,7 +2623,6 @@ export const ModelDistributionDtoProvider = {
   azure: 'azure',
   gemini: 'gemini',
   stackit: 'stackit',
-  scaleway: 'scaleway',
 } as const;
 
 export interface ModelDistributionDto {
@@ -3194,33 +2674,6 @@ export interface UserUsageResponseDto {
   pagination: PaginationDto;
 }
 
-export interface GlobalUserUsageDto {
-  /** User ID */
-  userId: string;
-  /** User name */
-  userName: string;
-  /** User email */
-  userEmail: string;
-  /** Total tokens for this user */
-  tokens: number;
-  /** Total requests for this user */
-  requests: number;
-  /**
-   * Last activity date (null if no activity)
-   * @nullable
-   */
-  lastActivity: string | null;
-  /** Whether the user is considered active */
-  isActive: boolean;
-  /** Name of the organization the user belongs to */
-  organizationName: string;
-}
-
-export interface GlobalUserUsageResponseDto {
-  /** Top users by token usage across all organizations */
-  data: GlobalUserUsageDto[];
-}
-
 export interface UserSystemPromptResponseDto {
   /**
    * The custom system prompt for the user, or null if not set
@@ -3235,31 +2688,6 @@ export interface UpsertUserSystemPromptDto {
    * @maxLength 10000
    */
   systemPrompt: string;
-}
-
-export interface GeneratePersonalizedSystemPromptDto {
-  /**
-   * The preferred name of the user
-   * @maxLength 200
-   */
-  preferredName: string;
-  /**
-   * The preferred communication style
-   * @maxLength 500
-   */
-  communicationStyle?: string;
-  /**
-   * The work context of the user
-   * @maxLength 1000
-   */
-  workContext?: string;
-}
-
-export interface GeneratePersonalizedSystemPromptResponseDto {
-  /** The generated personalized system prompt */
-  systemPrompt: string;
-  /** A personalized welcome message for the user */
-  welcomeMessage: string;
 }
 
 export interface CreatePromptDto {
@@ -3367,6 +2795,70 @@ export interface MeResponseDto {
   systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
+}
+
+export type AuthorType = typeof AuthorType[keyof typeof AuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+export type ExportFormatDto = typeof ExportFormatDto[keyof typeof ExportFormatDto];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ExportFormatDto = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface CreateArtifactDto {
+  /** @maxLength 500 */
+  title: string;
+  /** @maxLength 512000 */
+  content: string;
+  threadId: string;
+  authorType: AuthorType;
+}
+
+export interface UpdateArtifactDto {
+  /** @maxLength 512000 */
+  content: string;
+  authorType: AuthorType;
+}
+
+export interface RevertArtifactDto {
+  /** @minimum 1 */
+  versionNumber: number;
+}
+
+export interface ExportArtifactQueryDto {
+  format: ExportFormatDto;
+}
+
+export interface ArtifactVersionResponseDto {
+  id: string;
+  artifactId: string;
+  versionNumber: number;
+  content: string;
+  authorType: AuthorType;
+  /** @nullable */
+  authorId?: string | null;
+  createdAt: string;
+}
+
+export interface ArtifactResponseDto {
+  id: string;
+  threadId: string;
+  userId: string;
+  title: string;
+  currentVersionNumber: number;
+  versions?: ArtifactVersionResponseDto[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
@@ -3507,7 +2999,6 @@ export const SharesControllerGetSharesEntityType = {
   agent: 'agent',
   prompt: 'prompt',
   skill: 'skill',
-  knowledge_base: 'knowledge_base',
 } as const;
 
 export type TeamsControllerListTeamMembersParams = {
@@ -3521,12 +3012,7 @@ limit?: number;
 offset?: number;
 };
 
-export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT) */
-  file: Blob;
-};
-
-export type SkillSourcesControllerAddFileSourceBody = {
+export type SkillsControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
 };
@@ -3541,8 +3027,6 @@ export type RunsControllerSendMessageBody = {
   imageAltTexts?: string;
   /** JSON object for tool result input */
   toolResult?: string;
-  /** Skill ID to activate for this message */
-  skillId?: string;
   streaming?: boolean;
 };
 
@@ -3735,15 +3219,14 @@ endDate?: string;
 modelId?: string;
 };
 
-export type SuperAdminGlobalUsageControllerGetGlobalUserUsageParams = {
-startDate?: string;
-endDate?: string;
-};
-
 export type TranscriptionsControllerTranscribeBody = {
   /** The audio file to transcribe */
   file: Blob;
   /** Optional language hint (e.g., "en", "de") */
   language?: string;
+};
+
+export type ArtifactsControllerExportParams = {
+format: ExportFormatDto;
 };
 

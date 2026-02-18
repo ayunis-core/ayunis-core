@@ -38,28 +38,6 @@
         ]
       }
     },
-    "/feature-toggles": {
-      "get": {
-        "operationId": "AppController_featureToggles",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Feature toggle states",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FeatureTogglesResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get the current feature toggle states",
-        "tags": [
-          "app"
-        ]
-      }
-    },
     "/models/available": {
       "get": {
         "operationId": "ModelsController_getAvailableModelsWithConfig",
@@ -246,7 +224,7 @@
     },
     "/models/default": {
       "get": {
-        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
+        "description": "Returns the applicable default model with fallback hierarchy: User default \u2192 Org default \u2192 First available model",
         "operationId": "ModelsController_getEffectiveDefaultModel",
         "parameters": [],
         "responses": {
@@ -1925,116 +1903,6 @@
         ]
       }
     },
-    "/super-admin/super-admins": {
-      "get": {
-        "description": "Retrieve all users with super admin status. Only accessible to super admins.",
-        "operationId": "SuperAdminManagementController_listSuperAdmins",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of super admins",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SuperAdminUserResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          }
-        },
-        "summary": "List all super admins",
-        "tags": [
-          "Super Admin Management"
-        ]
-      },
-      "post": {
-        "description": "Promote an existing user to super admin by email address. Idempotent if user is already a super admin.",
-        "operationId": "SuperAdminManagementController_promoteToSuperAdmin",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Email of the user to promote",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PromoteToSuperAdminDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User promoted to super admin (or already a super admin)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuperAdminUserResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "User with the given email not found"
-          }
-        },
-        "summary": "Promote a user to super admin",
-        "tags": [
-          "Super Admin Management"
-        ]
-      }
-    },
-    "/super-admin/super-admins/{userId}": {
-      "delete": {
-        "description": "Demote a user from super admin to customer. Cannot demote yourself.",
-        "operationId": "SuperAdminManagementController_demoteFromSuperAdmin",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "description": "User ID to demote",
-            "schema": {
-              "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Super admin status removed"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "403": {
-            "description": "Cannot remove your own super admin status"
-          },
-          "404": {
-            "description": "User not found"
-          },
-          "409": {
-            "description": "Cannot demote the last super admin"
-          },
-          "422": {
-            "description": "User is not a super admin"
-          }
-        },
-        "summary": "Remove super admin status from a user",
-        "tags": [
-          "Super Admin Management"
-        ]
-      }
-    },
     "/invites": {
       "post": {
         "description": "Send an invitation to a user to join an organization with a specific role",
@@ -2360,6 +2228,104 @@
         ]
       }
     },
+    "/subscriptions": {
+      "get": {
+        "operationId": "SubscriptionsController_getSubscription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved subscription details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponseDtoNullable"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not authorized to access this organization's subscription"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get subscription details for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      },
+      "post": {
+        "operationId": "SubscriptionsController_createSubscription",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid subscription data provided"
+          },
+          "403": {
+            "description": "User is not authorized to create a subscription for this organization"
+          },
+          "409": {
+            "description": "Subscription already exists for this organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a new subscription for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      },
+      "delete": {
+        "operationId": "SubscriptionsController_cancelSubscription",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully cancelled subscription"
+          },
+          "403": {
+            "description": "User is not authorized to cancel this organization's subscription"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "409": {
+            "description": "Subscription is already cancelled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Cancel the subscription for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
     "/subscriptions/active": {
       "get": {
         "operationId": "SubscriptionsController_hasActiveSubscription",
@@ -2408,6 +2374,104 @@
           }
         },
         "summary": "Get the current price per seat monthly",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/subscriptions/seats": {
+      "put": {
+        "operationId": "SubscriptionsController_updateSeats",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeatsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated seats"
+          },
+          "400": {
+            "description": "Invalid seat update data provided"
+          },
+          "403": {
+            "description": "User is not authorized to update seats for this organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the number of seats for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/subscriptions/billing-info": {
+      "put": {
+        "operationId": "SubscriptionsController_updateBillingInfo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillingInfoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully updated billing information"
+          },
+          "400": {
+            "description": "Invalid billing information provided"
+          },
+          "403": {
+            "description": "User is not authorized to update billing information for this organization"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update the billing information for the current organization",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/subscriptions/uncancel": {
+      "post": {
+        "operationId": "SubscriptionsController_uncancelSubscription",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Successfully uncancelled subscription"
+          },
+          "403": {
+            "description": "User is not authorized to uncancel this organization's subscription"
+          },
+          "404": {
+            "description": "No subscription found for the organization"
+          },
+          "409": {
+            "description": "Subscription is not cancelled"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Uncancel the subscription for the current organization",
         "tags": [
           "subscriptions"
         ]
@@ -3236,82 +3300,6 @@
         ]
       }
     },
-    "/threads/{id}/knowledge-bases/{knowledgeBaseId}": {
-      "post": {
-        "operationId": "ThreadKnowledgeBasesController_addKnowledgeBase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to add",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The knowledge base has been successfully added to the thread"
-          },
-          "404": {
-            "description": "Thread or knowledge base not found"
-          }
-        },
-        "summary": "Add a knowledge base to a thread",
-        "tags": [
-          "threads"
-        ]
-      },
-      "delete": {
-        "operationId": "ThreadKnowledgeBasesController_removeKnowledgeBase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to remove",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The knowledge base has been successfully removed from the thread"
-          },
-          "404": {
-            "description": "Thread not found"
-          }
-        },
-        "summary": "Remove a knowledge base from a thread",
-        "tags": [
-          "threads"
-        ]
-      }
-    },
     "/agents": {
       "post": {
         "operationId": "AgentsController_create",
@@ -3577,7 +3565,7 @@
             "description": "The file source has been successfully added to the agent"
           },
           "400": {
-            "description": "Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, TXT, CSV, XLSX, XLS"
+            "description": "Invalid or unsupported file type. Supported types: PDF, DOCX, PPTX, CSV, XLSX, XLS"
           },
           "404": {
             "description": "Agent not found"
@@ -3633,7 +3621,7 @@
     },
     "/agents/{agentId}/mcp-integrations/{integrationId}": {
       "post": {
-        "operationId": "AgentMcpIntegrationsController_assignMcpIntegration",
+        "operationId": "AgentsController_assignMcpIntegration",
         "parameters": [
           {
             "name": "agentId",
@@ -3686,7 +3674,7 @@
         ]
       },
       "delete": {
-        "operationId": "AgentMcpIntegrationsController_unassignMcpIntegration",
+        "operationId": "AgentsController_unassignMcpIntegration",
         "parameters": [
           {
             "name": "agentId",
@@ -3732,7 +3720,7 @@
     },
     "/agents/{agentId}/mcp-integrations": {
       "get": {
-        "operationId": "AgentMcpIntegrationsController_listAgentMcpIntegrations",
+        "operationId": "AgentsController_listAgentMcpIntegrations",
         "parameters": [
           {
             "name": "agentId",
@@ -3835,8 +3823,7 @@
               "enum": [
                 "agent",
                 "prompt",
-                "skill",
-                "knowledge_base"
+                "skill"
               ],
               "type": "string"
             }
@@ -3909,48 +3896,6 @@
           }
         },
         "summary": "Create a share for a skill",
-        "tags": [
-          "shares"
-        ]
-      }
-    },
-    "/shares/knowledge-bases": {
-      "post": {
-        "operationId": "SharesController_createKnowledgeBaseShare",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "description": "Knowledge base share creation data",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateKnowledgeBaseShareDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Share created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShareResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request data"
-          },
-          "401": {
-            "description": "User not authenticated"
-          },
-          "403": {
-            "description": "User cannot create share for this knowledge base"
-          }
-        },
-        "summary": "Create a share for a knowledge base",
         "tags": [
           "shares"
         ]
@@ -4726,122 +4671,6 @@
         ]
       }
     },
-    "/mcp-integrations/install-from-marketplace": {
-      "post": {
-        "operationId": "McpIntegrationsController_installFromMarketplace",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InstallMarketplaceIntegrationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Integration installed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Missing required config fields or OAuth not supported"
-          },
-          "404": {
-            "description": "Marketplace integration not found"
-          }
-        },
-        "summary": "Install an MCP integration from the marketplace",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
-    "/mcp-integrations/{id}/user-config": {
-      "get": {
-        "operationId": "McpIntegrationsController_getUserConfig",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User configuration (secret values masked)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserConfigResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get current user config for a marketplace MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      },
-      "patch": {
-        "operationId": "McpIntegrationsController_setUserConfig",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetUserConfigDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User configuration saved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserConfigResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Integration has no user fields"
-          },
-          "404": {
-            "description": "Integration not found"
-          }
-        },
-        "summary": "Set current user config for a marketplace MCP integration",
-        "tags": [
-          "mcp-integrations"
-        ]
-      }
-    },
     "/mcp-integrations/{id}/validate": {
       "post": {
         "operationId": "McpIntegrationsController_validate",
@@ -4874,416 +4703,6 @@
         "summary": "Validate MCP integration connection",
         "tags": [
           "mcp-integrations"
-        ]
-      }
-    },
-    "/marketplace/skills/{identifier}": {
-      "get": {
-        "operationId": "MarketplaceController_getSkill",
-        "parameters": [
-          {
-            "name": "identifier",
-            "required": true,
-            "in": "path",
-            "description": "The unique identifier slug of the marketplace skill",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the marketplace skill details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarketplaceSkillResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Marketplace skill not found"
-          }
-        },
-        "summary": "Preview a marketplace skill before installation",
-        "tags": [
-          "marketplace"
-        ]
-      }
-    },
-    "/marketplace/integrations/{identifier}": {
-      "get": {
-        "operationId": "MarketplaceController_getIntegration",
-        "parameters": [
-          {
-            "name": "identifier",
-            "required": true,
-            "in": "path",
-            "description": "The unique identifier slug of the marketplace integration",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the marketplace integration details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarketplaceIntegrationResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Marketplace integration not found"
-          }
-        },
-        "summary": "Preview a marketplace integration before installation",
-        "tags": [
-          "marketplace"
-        ]
-      }
-    },
-    "/knowledge-bases": {
-      "post": {
-        "operationId": "KnowledgeBasesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateKnowledgeBaseDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The knowledge base has been successfully created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input data"
-          }
-        },
-        "summary": "Create a new knowledge base",
-        "tags": [
-          "knowledge-bases"
-        ]
-      },
-      "get": {
-        "operationId": "KnowledgeBasesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Returns all knowledge bases for the current user",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "List all knowledge bases for the current user",
-        "tags": [
-          "knowledge-bases"
-        ]
-      }
-    },
-    "/knowledge-bases/{id}": {
-      "get": {
-        "operationId": "KnowledgeBasesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the knowledge base",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "Get a knowledge base by ID",
-        "tags": [
-          "knowledge-bases"
-        ]
-      },
-      "patch": {
-        "operationId": "KnowledgeBasesController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to update",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateKnowledgeBaseDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The knowledge base has been successfully updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input data"
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "Update a knowledge base",
-        "tags": [
-          "knowledge-bases"
-        ]
-      },
-      "delete": {
-        "operationId": "KnowledgeBasesController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to delete",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The knowledge base has been successfully deleted"
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "Delete a knowledge base",
-        "tags": [
-          "knowledge-bases"
-        ]
-      }
-    },
-    "/knowledge-bases/{id}/documents": {
-      "get": {
-        "operationId": "KnowledgeBasesController_listDocuments",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the documents in the knowledge base",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseDocumentListResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "List all documents in a knowledge base",
-        "tags": [
-          "knowledge-bases"
-        ]
-      },
-      "post": {
-        "operationId": "KnowledgeBasesController_addDocument",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "The file to upload (PDF, DOCX, PPTX, TXT)"
-                  }
-                },
-                "required": [
-                  "file"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The document has been added to the knowledge base",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "Add a document to a knowledge base",
-        "tags": [
-          "knowledge-bases"
-        ]
-      }
-    },
-    "/knowledge-bases/{id}/urls": {
-      "post": {
-        "operationId": "KnowledgeBasesController_addUrl",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddUrlToKnowledgeBaseDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The URL source has been added to the knowledge base",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "Add a URL source to a knowledge base",
-        "tags": [
-          "knowledge-bases"
-        ]
-      }
-    },
-    "/knowledge-bases/{id}/documents/{documentId}": {
-      "delete": {
-        "operationId": "KnowledgeBasesController_removeDocument",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "documentId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the document to remove",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "The document has been removed from the knowledge base"
-          },
-          "404": {
-            "description": "Knowledge base or document not found"
-          }
-        },
-        "summary": "Remove a document from a knowledge base",
-        "tags": [
-          "knowledge-bases"
         ]
       }
     },
@@ -5532,48 +4951,9 @@
         ]
       }
     },
-    "/skills/{id}/toggle-pinned": {
-      "patch": {
-        "operationId": "SkillsController_togglePinned",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the skill to toggle pinned status",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The skill pinned status has been toggled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Skill is not active"
-          },
-          "404": {
-            "description": "Skill not found"
-          }
-        },
-        "summary": "Toggle skill pinned/unpinned status",
-        "tags": [
-          "skills"
-        ]
-      }
-    },
     "/skills/{id}/sources": {
       "get": {
-        "operationId": "SkillSourcesController_getSkillSources",
+        "operationId": "SkillsController_getSkillSources",
         "parameters": [
           {
             "name": "id",
@@ -5612,7 +4992,7 @@
     },
     "/skills/{id}/sources/file": {
       "post": {
-        "operationId": "SkillSourcesController_addFileSource",
+        "operationId": "SkillsController_addFileSource",
         "parameters": [
           {
             "name": "id",
@@ -5671,7 +5051,7 @@
     },
     "/skills/{id}/sources/{sourceId}": {
       "delete": {
-        "operationId": "SkillSourcesController_removeSource",
+        "operationId": "SkillsController_removeSource",
         "parameters": [
           {
             "name": "id",
@@ -5710,7 +5090,7 @@
     },
     "/skills/{skillId}/mcp-integrations/{integrationId}": {
       "post": {
-        "operationId": "SkillMcpIntegrationsController_assignMcpIntegration",
+        "operationId": "SkillsController_assignMcpIntegration",
         "parameters": [
           {
             "name": "skillId",
@@ -5757,7 +5137,7 @@
         ]
       },
       "delete": {
-        "operationId": "SkillMcpIntegrationsController_unassignMcpIntegration",
+        "operationId": "SkillsController_unassignMcpIntegration",
         "parameters": [
           {
             "name": "skillId",
@@ -5803,7 +5183,7 @@
     },
     "/skills/{skillId}/mcp-integrations": {
       "get": {
-        "operationId": "SkillMcpIntegrationsController_listSkillMcpIntegrations",
+        "operationId": "SkillsController_listSkillMcpIntegrations",
         "parameters": [
           {
             "name": "skillId",
@@ -5840,338 +5220,38 @@
         ]
       }
     },
-    "/skills/{skillId}/knowledge-bases/{knowledgeBaseId}": {
-      "post": {
-        "operationId": "SkillKnowledgeBasesController_assignKnowledgeBase",
-        "parameters": [
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the skill",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to assign",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "The knowledge base has been successfully assigned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Skill or knowledge base not found"
-          },
-          "409": {
-            "description": "Knowledge base already assigned"
-          }
-        },
-        "summary": "Assign knowledge base to skill",
-        "tags": [
-          "skills"
-        ]
-      },
-      "delete": {
-        "operationId": "SkillKnowledgeBasesController_unassignKnowledgeBase",
-        "parameters": [
-          {
-            "name": "skillId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the skill",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "knowledgeBaseId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base to unassign",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The knowledge base has been successfully unassigned",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Skill not found or knowledge base not assigned"
-          }
-        },
-        "summary": "Unassign knowledge base from skill",
-        "tags": [
-          "skills"
-        ]
-      }
-    },
-    "/skills/{skillId}/knowledge-bases": {
+    "/marketplace/skills/{identifier}": {
       "get": {
-        "operationId": "SkillKnowledgeBasesController_listSkillKnowledgeBases",
+        "operationId": "MarketplaceController_getSkill",
         "parameters": [
           {
-            "name": "skillId",
+            "name": "identifier",
             "required": true,
             "in": "path",
-            "description": "The UUID of the skill",
+            "description": "The unique identifier slug of the marketplace skill",
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Returns all knowledge bases assigned to the skill",
+            "description": "Returns the marketplace skill details",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
-                  }
+                  "$ref": "#/components/schemas/MarketplaceSkillResponseDto"
                 }
               }
             }
           },
           "404": {
-            "description": "Skill not found"
+            "description": "Marketplace skill not found"
           }
         },
-        "summary": "List knowledge bases assigned to skill",
+        "summary": "Preview a marketplace skill before installation",
         "tags": [
-          "skills"
-        ]
-      }
-    },
-    "/super-admin/skill-templates": {
-      "post": {
-        "description": "Create a new skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSkillTemplateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "409": {
-            "description": "Skill template with this name already exists"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new skill template",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      },
-      "get": {
-        "description": "Retrieve all skill templates. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved skill templates",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get all skill templates",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      }
-    },
-    "/super-admin/skill-templates/{id}": {
-      "get": {
-        "description": "Retrieve a specific skill template by its ID. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get a skill template by ID",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      },
-      "patch": {
-        "description": "Partially update an existing skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSkillTemplateDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated skill template",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SkillTemplateResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "409": {
-            "description": "Skill template with this name already exists"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update a skill template",
-        "tags": [
-          "Super Admin Skill Templates"
-        ]
-      },
-      "delete": {
-        "description": "Delete a skill template. Only accessible to super admins.",
-        "operationId": "SuperAdminSkillTemplatesController_delete",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Skill template ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted skill template"
-          },
-          "401": {
-            "description": "User not authenticated or not authorized as super admin"
-          },
-          "404": {
-            "description": "Skill template not found"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Delete a skill template",
-        "tags": [
-          "Super Admin Skill Templates"
+          "marketplace"
         ]
       }
     },
@@ -6214,11 +5294,6 @@
                     "type": "string",
                     "description": "JSON object for tool result input"
                   },
-                  "skillId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "Skill ID to activate for this message"
-                  },
                   "streaming": {
                     "type": "boolean",
                     "default": true
@@ -6255,6 +5330,58 @@
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
                       "thread": "#/components/schemas/RunThreadResponseDto"
+                    }
+                  }
+                },
+                "examples": {
+                  "session-event": {
+                    "summary": "Session establishment event",
+                    "value": {
+                      "type": "session",
+                      "success": true,
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z",
+                      "streaming": true
+                    }
+                  },
+                  "message-event": {
+                    "summary": "Message event",
+                    "value": {
+                      "type": "message",
+                      "message": {
+                        "id": "123e4567-e89b-12d3-a456-426614174000",
+                        "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                        "role": "assistant",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Hello!"
+                          }
+                        ],
+                        "createdAt": "2024-01-01T12:00:00.000Z"
+                      },
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z"
+                    }
+                  },
+                  "error-event": {
+                    "summary": "Error event",
+                    "value": {
+                      "type": "error",
+                      "message": "An error occurred while processing your request",
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "timestamp": "2024-01-01T12:00:00.000Z",
+                      "code": "EXECUTION_ERROR"
+                    }
+                  },
+                  "thread-event": {
+                    "summary": "Thread update event",
+                    "value": {
+                      "type": "thread",
+                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
+                      "updateType": "title_updated",
+                      "title": "Discussion about AI and machine learning",
+                      "timestamp": "2024-01-01T12:00:00.000Z"
                     }
                   }
                 }
@@ -7279,45 +6406,6 @@
         ]
       }
     },
-    "/super-admin/global-usage/users": {
-      "get": {
-        "operationId": "SuperAdminGlobalUsageController_getGlobalUserUsage",
-        "parameters": [
-          {
-            "name": "startDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GlobalUserUsageResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get top 20 users by token usage across all organizations",
-        "tags": [
-          "Super Admin Global Usage"
-        ]
-      }
-    },
     "/chat-settings/system-prompt": {
       "get": {
         "description": "Returns the custom system prompt for the authenticated user, or null if not set.",
@@ -7384,48 +6472,6 @@
           }
         },
         "summary": "Delete the user system prompt",
-        "tags": [
-          "Chat Settings"
-        ]
-      }
-    },
-    "/chat-settings/generate-personalized-system-prompt": {
-      "post": {
-        "description": "Generates a personalized system prompt and welcome message based on user preferences, then saves the system prompt.",
-        "operationId": "ChatSettingsController_generatePersonalizedSystemPrompt",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GeneratePersonalizedSystemPromptDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully generated and saved the personalized system prompt",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GeneratePersonalizedSystemPromptResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload"
-          },
-          "422": {
-            "description": "No default model configured for the organization"
-          },
-          "500": {
-            "description": "Inference failure during prompt generation"
-          }
-        },
-        "summary": "Generate a personalized system prompt",
         "tags": [
           "Chat Settings"
         ]
@@ -7897,6 +6943,242 @@
           "Authentication"
         ]
       }
+    },
+    "/artifacts": {
+      "post": {
+        "operationId": "ArtifactsController_create",
+        "summary": "Create a new artifact (document)",
+        "tags": [
+          "artifacts"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The artifact has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        }
+      }
+    },
+    "/artifacts/{id}": {
+      "patch": {
+        "operationId": "ArtifactsController_update",
+        "summary": "Update an artifact (add a new version)",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new version has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        }
+      },
+      "get": {
+        "operationId": "ArtifactsController_findOne",
+        "summary": "Get an artifact by ID with all versions",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The artifact with all versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        }
+      }
+    },
+    "/artifacts/thread/{threadId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByThread",
+        "summary": "Get all artifacts for a thread",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "threadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts for the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtifactResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artifacts/{id}/revert": {
+      "post": {
+        "operationId": "ArtifactsController_revert",
+        "summary": "Revert an artifact to a specific version",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevertArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A new version was created with the reverted content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact or version not found"
+          }
+        }
+      }
+    },
+    "/artifacts/{id}/export": {
+      "get": {
+        "operationId": "ArtifactsController_export",
+        "summary": "Export an artifact as DOCX or PDF",
+        "tags": [
+          "artifacts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExportFormatDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The exported file",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        }
+      }
     }
   },
   "info": {
@@ -7909,6 +7191,10 @@
     {
       "name": "ayunis",
       "description": ""
+    },
+    {
+      "name": "artifacts",
+      "description": "Artifact (document) management"
     }
   ],
   "servers": [],
@@ -7931,37 +7217,6 @@
         "required": [
           "isCloud",
           "isRegistrationDisabled"
-        ]
-      },
-      "FeatureTogglesResponseDto": {
-        "type": "object",
-        "properties": {
-          "agentsEnabled": {
-            "type": "boolean",
-            "description": "Whether the agents feature is enabled",
-            "example": true
-          },
-          "knowledgeBasesEnabled": {
-            "type": "boolean",
-            "description": "Whether the standalone knowledge bases feature is enabled",
-            "example": true
-          },
-          "promptsEnabled": {
-            "type": "boolean",
-            "description": "Whether the prompts feature is enabled",
-            "example": true
-          },
-          "skillsEnabled": {
-            "type": "boolean",
-            "description": "Whether the skills feature is enabled",
-            "example": false
-          }
-        },
-        "required": [
-          "agentsEnabled",
-          "knowledgeBasesEnabled",
-          "promptsEnabled",
-          "skillsEnabled"
         ]
       },
       "ModelWithConfigResponseDto": {
@@ -7993,8 +7248,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "The provider of the model"
           },
@@ -8068,8 +7322,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -8154,8 +7407,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "The provider of the model"
           },
@@ -8289,8 +7541,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "The provider of the model"
           },
@@ -8352,8 +7603,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "example": "openai"
           },
@@ -8421,8 +7671,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "example": "openai"
           },
@@ -8490,8 +7739,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "example": "openai"
           },
@@ -8546,8 +7794,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "example": "openai"
           },
@@ -8607,8 +7854,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -8703,8 +7949,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -9084,79 +8329,6 @@
           "name",
           "role",
           "sendPasswordResetEmail"
-        ]
-      },
-      "SuperAdminUserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "User unique identifier",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "User name",
-            "example": "John Doe"
-          },
-          "email": {
-            "type": "string",
-            "description": "User email address",
-            "example": "john.doe@example.com"
-          },
-          "role": {
-            "type": "string",
-            "description": "User role",
-            "enum": [
-              "admin",
-              "user"
-            ],
-            "example": "user"
-          },
-          "orgId": {
-            "type": "string",
-            "description": "Organization ID the user belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174001",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Date when the user was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "systemRole": {
-            "type": "string",
-            "description": "System-level role of the user",
-            "enum": [
-              "customer",
-              "super_admin"
-            ],
-            "example": "super_admin"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "email",
-          "role",
-          "orgId",
-          "createdAt",
-          "systemRole"
-        ]
-      },
-      "PromoteToSuperAdminDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address of the user to promote to super admin",
-            "example": "user@example.com"
-          }
-        },
-        "required": [
-          "email"
         ]
       },
       "CreateInviteDto": {
@@ -9541,32 +8713,6 @@
           "deletedCount"
         ]
       },
-      "ActiveSubscriptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "hasActiveSubscription": {
-            "type": "boolean",
-            "description": "Whether the organization has an active subscription",
-            "example": true
-          }
-        },
-        "required": [
-          "hasActiveSubscription"
-        ]
-      },
-      "PriceResponseDto": {
-        "type": "object",
-        "properties": {
-          "pricePerSeatMonthly": {
-            "type": "number",
-            "description": "Current price per seat per month in the configured currency",
-            "example": 29.99
-          }
-        },
-        "required": [
-          "pricePerSeatMonthly"
-        ]
-      },
       "SubscriptionBillingInfoResponseDto": {
         "type": "object",
         "properties": {
@@ -9578,7 +8724,7 @@
           "street": {
             "type": "string",
             "description": "Street",
-            "example": "Musterstraße"
+            "example": "Musterstra\u00dfe"
           },
           "houseNumber": {
             "type": "string",
@@ -9779,6 +8925,19 @@
           "country"
         ]
       },
+      "ActiveSubscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "hasActiveSubscription": {
+            "type": "boolean",
+            "description": "Whether the organization has an active subscription",
+            "example": true
+          }
+        },
+        "required": [
+          "hasActiveSubscription"
+        ]
+      },
       "UpdateBillingInfoDto": {
         "type": "object",
         "properties": {
@@ -9825,6 +8984,19 @@
           "postalCode",
           "city",
           "country"
+        ]
+      },
+      "PriceResponseDto": {
+        "type": "object",
+        "properties": {
+          "pricePerSeatMonthly": {
+            "type": "number",
+            "description": "Current price per seat per month in the configured currency",
+            "example": 29.99
+          }
+        },
+        "required": [
+          "pricePerSeatMonthly"
         ]
       },
       "UpdateSeatsDto": {
@@ -10107,41 +9279,11 @@
             "type": "string",
             "description": "The text content of the message",
             "example": "Hello, how can I help you today?"
-          },
-          "isSkillInstruction": {
-            "type": "boolean",
-            "description": "Whether this text content contains skill instructions",
-            "example": false
           }
         },
         "required": [
           "type",
           "text"
-        ]
-      },
-      "ToolUseIntegrationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Integration ID",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "name": {
-            "type": "string",
-            "description": "Integration name",
-            "example": "Weather Service"
-          },
-          "logoUrl": {
-            "type": "string",
-            "description": "Integration logo URL",
-            "example": "https://marketplace.ayunis.de/logos/weather.png",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "name"
         ]
       },
       "ToolUseMessageContentResponseDto": {
@@ -10176,14 +9318,6 @@
               "location": "New York",
               "unit": "celsius"
             }
-          },
-          "integration": {
-            "description": "Integration metadata if this tool belongs to a marketplace integration",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ToolUseIntegrationDto"
-              }
-            ]
           }
         },
         "required": [
@@ -10221,7 +9355,7 @@
           "result": {
             "type": "string",
             "description": "The result returned by the tool",
-            "example": "The current temperature in New York is 22°C with partly cloudy skies."
+            "example": "The current temperature in New York is 22\u00b0C with partly cloudy skies."
           }
         },
         "required": [
@@ -10437,8 +9571,7 @@
             "enum": [
               "pdf",
               "docx",
-              "pptx",
-              "txt"
+              "pptx"
             ]
           }
         },
@@ -10603,25 +9736,6 @@
           "data"
         ]
       },
-      "KnowledgeBaseSummaryResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the knowledge base",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the knowledge base",
-            "example": "Municipal Zoning Guidelines"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ]
-      },
       "GetThreadResponseDto": {
         "type": "object",
         "properties": {
@@ -10696,13 +9810,6 @@
             "type": "boolean",
             "description": "Whether the thread has exceeded the token threshold for optimal performance",
             "example": false
-          },
-          "knowledgeBases": {
-            "description": "Knowledge bases attached to this thread",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/KnowledgeBaseSummaryResponseDto"
-            }
           }
         },
         "required": [
@@ -10715,8 +9822,7 @@
           "createdAt",
           "updatedAt",
           "isAnonymous",
-          "isLongChat",
-          "knowledgeBases"
+          "isLongChat"
         ]
       },
       "GetThreadsResponseDtoItem": {
@@ -10819,8 +9925,8 @@
               "product_knowledge",
               "activate_skill",
               "create_skill",
-              "knowledge_query",
-              "knowledge_get_text"
+              "create_document",
+              "update_document"
             ]
           },
           "toolConfigId": {
@@ -10895,8 +10001,8 @@
               "product_knowledge",
               "activate_skill",
               "create_skill",
-              "knowledge_query",
-              "knowledge_get_text"
+              "create_document",
+              "update_document"
             ]
           }
         },
@@ -11077,8 +10183,7 @@
             "description": "Type of integration",
             "enum": [
               "predefined",
-              "custom",
-              "marketplace"
+              "custom"
             ],
             "example": "predefined"
           },
@@ -11161,39 +10266,6 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
             "example": true
-          },
-          "marketplaceIdentifier": {
-            "type": "string",
-            "description": "Marketplace integration identifier (only for marketplace integrations)",
-            "example": "oparl-council-data"
-          },
-          "configSchema": {
-            "type": "object",
-            "description": "Configuration schema from marketplace (only for marketplace integrations)"
-          },
-          "hasUserFields": {
-            "type": "boolean",
-            "description": "Whether this marketplace integration has user-level config fields",
-            "example": false
-          },
-          "orgConfigValues": {
-            "type": "object",
-            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
-            "example": {
-              "endpointUrl": "https://example.com/api",
-              "apiToken": "••••••"
-            }
-          },
-          "logoUrl": {
-            "type": "string",
-            "description": "Logo URL for marketplace integrations",
-            "nullable": true,
-            "example": "https://marketplace.ayunis.de/logos/oparl.png"
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable description of the integration (populated from marketplace shortDescription or predefined config description)",
-            "example": "Access municipal council data via OParl"
           }
         },
         "required": [
@@ -11217,8 +10289,7 @@
             "enum": [
               "agent",
               "prompt",
-              "skill",
-              "knowledge_base"
+              "skill"
             ]
           },
           "agentId": {
@@ -11251,8 +10322,7 @@
             "enum": [
               "agent",
               "prompt",
-              "skill",
-              "knowledge_base"
+              "skill"
             ]
           },
           "entityId": {
@@ -11312,8 +10382,7 @@
             "enum": [
               "agent",
               "prompt",
-              "skill",
-              "knowledge_base"
+              "skill"
             ]
           },
           "skillId": {
@@ -11330,35 +10399,6 @@
         "required": [
           "entityType",
           "skillId"
-        ]
-      },
-      "CreateKnowledgeBaseShareDto": {
-        "type": "object",
-        "properties": {
-          "entityType": {
-            "type": "string",
-            "description": "Type of entity being shared",
-            "enum": [
-              "agent",
-              "prompt",
-              "skill",
-              "knowledge_base"
-            ]
-          },
-          "knowledgeBaseId": {
-            "type": "string",
-            "description": "ID of the knowledge base to share",
-            "format": "uuid"
-          },
-          "teamId": {
-            "type": "string",
-            "description": "ID of the team to share with (if not provided, shares with entire organization)",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "entityType",
-          "knowledgeBaseId"
         ]
       },
       "CreateTeamDto": {
@@ -11747,86 +10787,8 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode.",
             "example": true
-          },
-          "orgConfigValues": {
-            "type": "object",
-            "description": "Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.",
-            "example": {
-              "endpointUrl": "https://example.com/api"
-            }
           }
         }
-      },
-      "InstallMarketplaceIntegrationDto": {
-        "type": "object",
-        "properties": {
-          "identifier": {
-            "type": "string",
-            "description": "Marketplace integration identifier",
-            "example": "oparl-council-data"
-          },
-          "orgConfigValues": {
-            "type": "object",
-            "description": "Organization-level configuration values (key-value pairs matching config schema orgFields)",
-            "example": {
-              "oparlEndpointUrl": "https://rim.ekom21.de/oparl/v1"
-            },
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "returnsPii": {
-            "type": "boolean",
-            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
-            "example": false
-          }
-        },
-        "required": [
-          "identifier",
-          "orgConfigValues"
-        ]
-      },
-      "UserConfigResponseDto": {
-        "type": "object",
-        "properties": {
-          "hasConfig": {
-            "type": "boolean",
-            "description": "Whether the user has configured values for this integration",
-            "example": true
-          },
-          "configValues": {
-            "type": "object",
-            "description": "Configuration values with secret values masked (keys present, values replaced with \"••••••\")",
-            "example": {
-              "personalToken": "••••••"
-            },
-            "additionalProperties": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "hasConfig",
-          "configValues"
-        ]
-      },
-      "SetUserConfigDto": {
-        "type": "object",
-        "properties": {
-          "configValues": {
-            "type": "object",
-            "description": "User-level configuration values (key-value pairs matching config schema userFields)",
-            "example": {
-              "personalToken": "my-personal-access-token"
-            },
-            "additionalProperties": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "configValues"
-        ]
       },
       "ValidationResponseDto": {
         "type": "object",
@@ -11854,6 +10816,176 @@
         "required": [
           "valid",
           "capabilities"
+        ]
+      },
+      "InstallSkillFromMarketplaceDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier (slug) of the marketplace skill",
+            "example": "meeting-summarizer"
+          }
+        },
+        "required": [
+          "identifier"
+        ]
+      },
+      "SkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the skill",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the skill",
+            "example": "Legal Research"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "A short description of the skill",
+            "example": "Research legal topics, find relevant case law, and draft legal documents."
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Detailed instructions for the skill",
+            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
+          },
+          "marketplaceIdentifier": {
+            "type": "string",
+            "description": "The marketplace identifier if this skill was installed from the marketplace",
+            "example": "meeting-summarizer",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the skill is active and available for use in chats",
+            "example": true
+          },
+          "userId": {
+            "type": "string",
+            "description": "The unique identifier of the user who owns this skill",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the skill was created",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "The date and time when the skill was last updated",
+            "example": "2023-12-01T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "isShared": {
+            "type": "boolean",
+            "description": "Whether the skill is shared with the current user (not owned)",
+            "example": false
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "shortDescription",
+          "instructions",
+          "marketplaceIdentifier",
+          "isActive",
+          "userId",
+          "createdAt",
+          "updatedAt",
+          "isShared"
+        ]
+      },
+      "CreateSkillDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.",
+            "example": "Legal Research",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "A short description of the skill (shown in system prompt for LLM to decide activation)",
+            "example": "Research legal topics, find relevant case law, and draft legal documents."
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Detailed instructions for the skill (injected when the skill is activated)",
+            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the skill is active (defaults to false)",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "shortDescription",
+          "instructions"
+        ]
+      },
+      "UpdateSkillDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the skill (must be unique per user). Only letters, numbers, hyphens, and spaces allowed. Must start and end with a letter or number.",
+            "example": "Legal Research",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "A short description of the skill (shown in system prompt for LLM to decide activation)",
+            "example": "Research legal topics, find relevant case law, and draft legal documents."
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Detailed instructions for the skill (injected when the skill is activated)",
+            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
+          }
+        },
+        "required": [
+          "name",
+          "shortDescription",
+          "instructions"
+        ]
+      },
+      "SkillSourceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the source",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the source",
+            "example": "Legal Database 2024"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of source",
+            "example": "file"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type"
         ]
       },
       "MarketplaceSkillResponseDto": {
@@ -11927,726 +11059,6 @@
           "createdAt",
           "updatedAt"
         ]
-      },
-      "MarketplaceIntegrationConfigFieldDto": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique identifier within the schema"
-          },
-          "label": {
-            "type": "string",
-            "description": "Display label for the frontend form"
-          },
-          "type": {
-            "type": "string",
-            "description": "Field type",
-            "enum": [
-              "text",
-              "url",
-              "secret"
-            ]
-          },
-          "headerName": {
-            "type": "string",
-            "description": "HTTP header name this field maps to; if absent, field is internal config",
-            "nullable": true
-          },
-          "prefix": {
-            "type": "string",
-            "description": "Optional prefix prepended to the value before sending",
-            "nullable": true
-          },
-          "required": {
-            "type": "boolean",
-            "description": "Whether the field must be provided"
-          },
-          "help": {
-            "type": "string",
-            "description": "Optional help text for the frontend form",
-            "nullable": true
-          },
-          "value": {
-            "type": "string",
-            "description": "Fixed value from marketplace; if set, field is not shown in forms",
-            "nullable": true
-          }
-        },
-        "required": [
-          "key",
-          "label",
-          "type",
-          "required"
-        ]
-      },
-      "MarketplaceIntegrationConfigSchemaDto": {
-        "type": "object",
-        "properties": {
-          "authType": {
-            "type": "string",
-            "description": "Auth type for documentation/UI purposes"
-          },
-          "orgFields": {
-            "description": "Fields configured by org admin at install time",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MarketplaceIntegrationConfigFieldDto"
-            }
-          },
-          "userFields": {
-            "description": "Fields configured by individual users",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MarketplaceIntegrationConfigFieldDto"
-            }
-          }
-        },
-        "required": [
-          "authType",
-          "orgFields",
-          "userFields"
-        ]
-      },
-      "MarketplaceIntegrationResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Integration UUID"
-          },
-          "identifier": {
-            "type": "string",
-            "description": "Unique identifier (slug)"
-          },
-          "name": {
-            "type": "string",
-            "description": "Display name"
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "Short description for marketplace display"
-          },
-          "description": {
-            "type": "string",
-            "description": "Full description"
-          },
-          "iconName": {
-            "type": "string",
-            "description": "Lucide icon name",
-            "nullable": true
-          },
-          "logoUrl": {
-            "type": "string",
-            "description": "Absolute URL to the integration logo image",
-            "nullable": true
-          },
-          "integrationCategoryId": {
-            "type": "string",
-            "description": "Category UUID from the marketplace",
-            "nullable": true
-          },
-          "serverUrl": {
-            "type": "string",
-            "description": "MCP server URL"
-          },
-          "configSchema": {
-            "description": "Configuration schema (authType, orgFields, userFields, oauth)",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/MarketplaceIntegrationConfigSchemaDto"
-              }
-            ]
-          },
-          "featured": {
-            "type": "boolean",
-            "description": "Whether the integration is featured"
-          },
-          "published": {
-            "type": "boolean",
-            "description": "Whether the integration is published"
-          },
-          "preInstalled": {
-            "type": "boolean",
-            "description": "Whether the integration is pre-installed"
-          },
-          "legalTextUrl": {
-            "type": "string",
-            "description": "URL to the legal text page the installer must confirm",
-            "nullable": true
-          },
-          "legalTextVersion": {
-            "type": "string",
-            "description": "Version of the legal text",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp"
-          }
-        },
-        "required": [
-          "id",
-          "identifier",
-          "name",
-          "shortDescription",
-          "description",
-          "serverUrl",
-          "configSchema",
-          "featured",
-          "published",
-          "preInstalled",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "CreateKnowledgeBaseDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the knowledge base",
-            "example": "Stadtratsprotokolle 2025",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "description": {
-            "type": "string",
-            "description": "An optional description of the knowledge base",
-            "example": "Sammlung aller Stadtratsprotokolle aus dem Jahr 2025",
-            "maxLength": 2000
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "KnowledgeBaseResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the knowledge base",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the knowledge base",
-            "example": "Stadtratsprotokolle 2025"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the knowledge base",
-            "example": "Sammlung aller Stadtratsprotokolle aus dem Jahr 2025"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time when the knowledge base was created",
-            "example": "2025-01-15T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "The date and time when the knowledge base was last updated",
-            "example": "2025-01-15T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "isShared": {
-            "type": "boolean",
-            "description": "Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases).",
-            "example": false
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "description",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "KnowledgeBaseListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "The list of knowledge bases",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
-            }
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "UpdateKnowledgeBaseDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the knowledge base",
-            "example": "Stadtratsprotokolle 2025",
-            "minLength": 1,
-            "maxLength": 255
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the knowledge base",
-            "example": "Sammlung aller Stadtratsprotokolle aus dem Jahr 2025",
-            "maxLength": 2000
-          }
-        }
-      },
-      "KnowledgeBaseDocumentResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the document",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the document",
-            "example": "Protokoll_Stadtrat_2025-03.pdf"
-          },
-          "type": {
-            "type": "string",
-            "description": "The type of the source",
-            "enum": [
-              "text",
-              "data"
-            ],
-            "example": "text"
-          },
-          "createdBy": {
-            "type": "string",
-            "description": "Who created the source",
-            "enum": [
-              "user",
-              "llm",
-              "system"
-            ],
-            "example": "user"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time when the document was added",
-            "example": "2025-01-15T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "The date and time when the document was last updated",
-            "example": "2025-01-15T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "textType": {
-            "type": "string",
-            "description": "The text source subtype (e.g. file, web)",
-            "enum": [
-              "file",
-              "web"
-            ],
-            "example": "web"
-          },
-          "url": {
-            "type": "string",
-            "description": "The URL of the source (only for web sources)",
-            "example": "https://example.com/page"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "type",
-          "createdBy",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "KnowledgeBaseDocumentListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "The list of documents in the knowledge base",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
-            }
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "AddUrlToKnowledgeBaseDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL to crawl and add to the knowledge base",
-            "example": "https://example.com/page"
-          }
-        },
-        "required": [
-          "url"
-        ]
-      },
-      "InstallSkillFromMarketplaceDto": {
-        "type": "object",
-        "properties": {
-          "identifier": {
-            "type": "string",
-            "description": "The unique identifier (slug) of the marketplace skill",
-            "example": "meeting-summarizer"
-          }
-        },
-        "required": [
-          "identifier"
-        ]
-      },
-      "SkillResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the skill",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the skill",
-            "example": "Legal Research"
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill",
-            "example": "Research legal topics, find relevant case law, and draft legal documents."
-          },
-          "instructions": {
-            "type": "string",
-            "description": "Detailed instructions for the skill",
-            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
-          },
-          "marketplaceIdentifier": {
-            "type": "string",
-            "description": "The marketplace identifier if this skill was installed from the marketplace",
-            "example": "meeting-summarizer",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the skill is active and available for use in chats",
-            "example": true
-          },
-          "userId": {
-            "type": "string",
-            "description": "The unique identifier of the user who owns this skill",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "The date and time when the skill was created",
-            "example": "2023-12-01T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "The date and time when the skill was last updated",
-            "example": "2023-12-01T10:00:00.000Z",
-            "format": "date-time"
-          },
-          "isShared": {
-            "type": "boolean",
-            "description": "Whether the skill is shared with the current user (not owned)",
-            "example": false
-          },
-          "isPinned": {
-            "type": "boolean",
-            "description": "Whether the skill is pinned for quick access in chat",
-            "example": false
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "shortDescription",
-          "instructions",
-          "marketplaceIdentifier",
-          "isActive",
-          "userId",
-          "createdAt",
-          "updatedAt",
-          "isShared",
-          "isPinned"
-        ]
-      },
-      "CreateSkillDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
-            "example": "Legal Research",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill (shown in system prompt for LLM to decide activation)",
-            "example": "Research legal topics, find relevant case law, and draft legal documents."
-          },
-          "instructions": {
-            "type": "string",
-            "description": "Detailed instructions for the skill (injected when the skill is activated)",
-            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the skill is active (defaults to true)",
-            "example": true
-          }
-        },
-        "required": [
-          "name",
-          "shortDescription",
-          "instructions"
-        ]
-      },
-      "UpdateSkillDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the skill (must be unique per user). No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
-            "example": "Legal Research",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill (shown in system prompt for LLM to decide activation)",
-            "example": "Research legal topics, find relevant case law, and draft legal documents."
-          },
-          "instructions": {
-            "type": "string",
-            "description": "Detailed instructions for the skill (injected when the skill is activated)",
-            "example": "You are a legal research assistant. When activated, search through the attached legal databases..."
-          }
-        },
-        "required": [
-          "name",
-          "shortDescription",
-          "instructions"
-        ]
-      },
-      "SkillSourceResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The unique identifier of the source",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the source",
-            "example": "Legal Database 2024"
-          },
-          "type": {
-            "type": "string",
-            "description": "The type of source",
-            "example": "file"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "type"
-        ]
-      },
-      "CreateSkillTemplateDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
-            "example": "Legal Guidelines",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill template",
-            "example": "Legal compliance instructions for all responses"
-          },
-          "instructions": {
-            "type": "string",
-            "description": "The instructions for the skill template",
-            "example": "Always follow legal guidelines when responding to user queries."
-          },
-          "distributionMode": {
-            "type": "string",
-            "description": "The distribution mode of the skill template",
-            "enum": [
-              "always_on",
-              "pre_created_copy"
-            ],
-            "example": "always_on"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the skill template is active (defaults to false)",
-            "example": false
-          },
-          "defaultActive": {
-            "type": "boolean",
-            "description": "Whether copied skills should be active by default (only for pre_created_copy mode, defaults to false)",
-            "example": false
-          },
-          "defaultPinned": {
-            "type": "boolean",
-            "description": "Whether copied skills should be pinned by default (only for pre_created_copy mode, defaults to false)",
-            "example": false
-          }
-        },
-        "required": [
-          "name",
-          "shortDescription",
-          "instructions",
-          "distributionMode"
-        ]
-      },
-      "SkillTemplateResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "The unique identifier of the skill template",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the skill template",
-            "example": "Legal Guidelines"
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill template",
-            "example": "Legal compliance instructions for all responses"
-          },
-          "instructions": {
-            "type": "string",
-            "description": "The instructions for the skill template",
-            "example": "Always follow legal guidelines when responding to user queries."
-          },
-          "distributionMode": {
-            "type": "string",
-            "enum": [
-              "always_on",
-              "pre_created_copy"
-            ],
-            "description": "The distribution mode of the skill template",
-            "example": "always_on"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the skill template is active",
-            "example": false
-          },
-          "defaultActive": {
-            "type": "boolean",
-            "nullable": true,
-            "description": "Whether copied skills are active by default (null for always_on templates)",
-            "example": null
-          },
-          "defaultPinned": {
-            "type": "boolean",
-            "nullable": true,
-            "description": "Whether copied skills are pinned by default (null for always_on templates)",
-            "example": null
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the skill template was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the skill template was last updated"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "shortDescription",
-          "instructions",
-          "distributionMode",
-          "isActive",
-          "defaultActive",
-          "defaultPinned",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "UpdateSkillTemplateDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the skill template. No leading/trailing whitespace, no consecutive spaces, no control characters. Max 100 characters.",
-            "example": "Legal Guidelines",
-            "minLength": 1,
-            "maxLength": 100
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "A short description of the skill template",
-            "example": "Legal compliance instructions for all responses"
-          },
-          "instructions": {
-            "type": "string",
-            "description": "The instructions for the skill template",
-            "example": "Always follow legal guidelines when responding to user queries."
-          },
-          "distributionMode": {
-            "type": "string",
-            "description": "The distribution mode of the skill template",
-            "enum": [
-              "always_on",
-              "pre_created_copy"
-            ],
-            "example": "always_on"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the skill template is active",
-            "example": true
-          },
-          "defaultActive": {
-            "type": "boolean",
-            "description": "Whether copied skills should be active by default (only for pre_created_copy mode)",
-            "example": false
-          },
-          "defaultPinned": {
-            "type": "boolean",
-            "description": "Whether copied skills should be pinned by default (only for pre_created_copy mode)",
-            "example": false
-          }
-        }
       },
       "MessageContentResponseDto": {
         "type": "object",
@@ -12887,7 +11299,7 @@
           "result": {
             "type": "string",
             "description": "The result data from the tool execution",
-            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75\u00b0F and a low of 60\u00b0F\",\"precipitation\":\"20%\"}"
           }
         },
         "required": [
@@ -12929,11 +11341,6 @@
                 "$ref": "#/components/schemas/ToolResultInput"
               }
             ]
-          },
-          "skillId": {
-            "type": "string",
-            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "streaming": {
             "type": "boolean",
@@ -13142,8 +11549,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "Model provider"
           },
@@ -13284,8 +11690,7 @@
               "otc",
               "azure",
               "gemini",
-              "stackit",
-              "scaleway"
+              "stackit"
             ],
             "description": "Model provider"
           },
@@ -13395,70 +11800,6 @@
           "pagination"
         ]
       },
-      "GlobalUserUsageDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "User ID"
-          },
-          "userName": {
-            "type": "string",
-            "description": "User name"
-          },
-          "userEmail": {
-            "type": "string",
-            "description": "User email"
-          },
-          "tokens": {
-            "type": "number",
-            "description": "Total tokens for this user"
-          },
-          "requests": {
-            "type": "number",
-            "description": "Total requests for this user"
-          },
-          "lastActivity": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Last activity date (null if no activity)",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the user is considered active"
-          },
-          "organizationName": {
-            "type": "string",
-            "description": "Name of the organization the user belongs to"
-          }
-        },
-        "required": [
-          "userId",
-          "userName",
-          "userEmail",
-          "tokens",
-          "requests",
-          "lastActivity",
-          "isActive",
-          "organizationName"
-        ]
-      },
-      "GlobalUserUsageResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "description": "Top users by token usage across all organizations",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/GlobalUserUsageDto"
-            }
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
       "UserSystemPromptResponseDto": {
         "type": "object",
         "properties": {
@@ -13485,51 +11826,6 @@
         },
         "required": [
           "systemPrompt"
-        ]
-      },
-      "GeneratePersonalizedSystemPromptDto": {
-        "type": "object",
-        "properties": {
-          "preferredName": {
-            "type": "string",
-            "description": "The preferred name of the user",
-            "example": "Maria",
-            "maxLength": 200
-          },
-          "communicationStyle": {
-            "type": "string",
-            "description": "The preferred communication style",
-            "example": "Locker & kurz",
-            "maxLength": 500
-          },
-          "workContext": {
-            "type": "string",
-            "description": "The work context of the user",
-            "example": "Bescheide im Sozialamt, Protokolle für den Gemeinderat",
-            "maxLength": 1000
-          }
-        },
-        "required": [
-          "preferredName"
-        ]
-      },
-      "GeneratePersonalizedSystemPromptResponseDto": {
-        "type": "object",
-        "properties": {
-          "systemPrompt": {
-            "type": "string",
-            "description": "The generated personalized system prompt",
-            "example": "Hallo Maria! Ich kommuniziere locker und kurz mit dir. Ich helfe dir bei allen Fragen rund um deine Arbeit im Sozialamt."
-          },
-          "welcomeMessage": {
-            "type": "string",
-            "description": "A personalized welcome message for the user",
-            "example": "Willkommen, Maria! Schön, dass du da bist. Wie kann ich dir heute helfen?"
-          }
-        },
-        "required": [
-          "systemPrompt",
-          "welcomeMessage"
         ]
       },
       "CreatePromptDto": {
@@ -13753,6 +12049,183 @@
           "role",
           "systemRole",
           "name"
+        ]
+      },
+      "AuthorType": {
+        "type": "string",
+        "enum": [
+          "USER",
+          "ASSISTANT"
+        ]
+      },
+      "ExportFormatDto": {
+        "type": "string",
+        "enum": [
+          "docx",
+          "pdf"
+        ]
+      },
+      "CreateArtifactDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Meeting Notes Q1 2026",
+            "maxLength": 500
+          },
+          "content": {
+            "type": "string",
+            "example": "<p>Meeting notes content...</p>",
+            "maxLength": 512000
+          },
+          "threadId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "authorType": {
+            "$ref": "#/components/schemas/AuthorType",
+            "example": "ASSISTANT"
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "threadId",
+          "authorType"
+        ]
+      },
+      "UpdateArtifactDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "<p>Updated meeting notes...</p>",
+            "maxLength": 512000
+          },
+          "authorType": {
+            "$ref": "#/components/schemas/AuthorType",
+            "example": "USER"
+          }
+        },
+        "required": [
+          "content",
+          "authorType"
+        ]
+      },
+      "RevertArtifactDto": {
+        "type": "object",
+        "properties": {
+          "versionNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          }
+        },
+        "required": [
+          "versionNumber"
+        ]
+      },
+      "ExportArtifactQueryDto": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/ExportFormatDto",
+            "example": "docx"
+          }
+        },
+        "required": [
+          "format"
+        ]
+      },
+      "ArtifactVersionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "artifactId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "versionNumber": {
+            "type": "number",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "example": "<p>Document content...</p>"
+          },
+          "authorType": {
+            "$ref": "#/components/schemas/AuthorType",
+            "example": "ASSISTANT"
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "artifactId",
+          "versionNumber",
+          "content",
+          "authorType",
+          "createdAt"
+        ]
+      },
+      "ArtifactResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "threadId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "userId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "title": {
+            "type": "string",
+            "example": "Meeting Notes Q1 2026"
+          },
+          "currentVersionNumber": {
+            "type": "number",
+            "example": 3
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-01-15T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "userId",
+          "title",
+          "currentVersionNumber",
+          "createdAt",
+          "updatedAt"
         ]
       }
     }
