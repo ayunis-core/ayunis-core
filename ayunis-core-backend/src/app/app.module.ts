@@ -24,6 +24,7 @@ import { UsageModule } from '../domain/usage/usage.module';
 import { TranscriptionsModule } from '../domain/transcriptions/transcriptions.module';
 import { ChatSettingsModule } from '../domain/chat-settings/chat-settings.module';
 import { KnowledgeBasesModule } from '../domain/knowledge-bases/knowledge-bases.module';
+import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
 import { IamModule } from '../iam/iam.module';
 
 import { modelsConfig } from '../config/models.config';
@@ -138,6 +139,7 @@ import { MetricsModule } from '../metrics/metrics.module';
     TranscriptionsModule,
     ChatSettingsModule,
     KnowledgeBasesModule,
+    ArtifactsModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
