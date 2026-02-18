@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddAzure1767865559794 implements MigrationInterface {
   name = 'AddAzure1767865559794';

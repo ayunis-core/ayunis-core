@@ -1,6 +1,9 @@
 // src/common/validators/is-json-schema.validator.ts
-import type { ValidationOptions, ValidationArguments } from 'class-validator';
-import { registerDecorator } from 'class-validator';
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
+} from 'class-validator';
 import { createAjv } from './ajv.factory';
 
 // Basic validation that a value is a JSON Schema object
@@ -9,7 +12,7 @@ export function IsJsonSchema(validationOptions?: ValidationOptions) {
     registerDecorator({
       name: 'isJsonSchema',
       target: object.constructor,
-      propertyName,
+      propertyName: propertyName,
       options: validationOptions,
       validator: {
         validate(value: unknown) {

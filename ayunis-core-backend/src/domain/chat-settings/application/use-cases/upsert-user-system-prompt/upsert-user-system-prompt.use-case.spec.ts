@@ -1,9 +1,9 @@
 import { UpsertUserSystemPromptUseCase } from './upsert-user-system-prompt.use-case';
 import { UpsertUserSystemPromptCommand } from './upsert-user-system-prompt.command';
-import type { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
+import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
 import { UserSystemPrompt } from '../../../domain/user-system-prompt.entity';
 import { randomUUID } from 'crypto';
-import type { ContextService } from 'src/common/context/services/context.service';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('UpsertUserSystemPromptUseCase', () => {
   let useCase: UpsertUserSystemPromptUseCase;

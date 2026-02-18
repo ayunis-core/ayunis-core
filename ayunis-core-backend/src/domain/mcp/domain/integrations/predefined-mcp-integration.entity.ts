@@ -1,8 +1,8 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { McpIntegration } from '../mcp-integration.entity';
-import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
+import { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import type { PredefinedMcpIntegrationSlug } from '../value-objects/predefined-mcp-integration-slug.enum';
+import { PredefinedMcpIntegrationSlug } from '../value-objects/predefined-mcp-integration-slug.enum';
 
 export class PredefinedMcpIntegration extends McpIntegration {
   public readonly slug: PredefinedMcpIntegrationSlug;

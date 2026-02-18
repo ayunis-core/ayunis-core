@@ -19,13 +19,14 @@ function createConsoleFormat() {
         return `${String(timestamp)} [${String(level)}]: ${String(message)}${metaStr}`;
       }),
     );
+  } else {
+    // Production: structured JSON for log aggregation
+    return format.combine(
+      format.timestamp(),
+      format.errors({ stack: true }),
+      format.json(),
+    );
   }
-  // Production: structured JSON for log aggregation
-  return format.combine(
-    format.timestamp(),
-    format.errors({ stack: true }),
-    format.json(),
-  );
 }
 
 function createTransports() {

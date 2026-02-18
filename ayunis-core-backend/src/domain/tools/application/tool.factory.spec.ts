@@ -5,7 +5,7 @@ import {
   HttpTool,
 } from 'src/domain/tools/domain/tools/http-tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';

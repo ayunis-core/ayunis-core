@@ -11,7 +11,7 @@ export class ToolConfigMapper {
       return this.httpToolConfigToDomain(record);
     }
 
-    throw new Error(`Invalid tool config type: ${record.constructor.name}`);
+    throw new Error('Invalid tool config type: ' + record.constructor.name);
   }
 
   toRecord(domain: ToolConfig): ToolConfigRecord {
@@ -19,7 +19,7 @@ export class ToolConfigMapper {
       return this.httpToolConfigToRecord(domain);
     }
 
-    throw new Error(`Invalid tool config type: ${domain.constructor.name}`);
+    throw new Error('Invalid tool config type: ' + domain.constructor.name);
   }
 
   private httpToolConfigToDomain(entity: HttpToolConfigRecord): HttpToolConfig {

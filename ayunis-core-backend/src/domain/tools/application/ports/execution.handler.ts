@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import { UUID } from 'crypto';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 export interface ToolExecutionContext {
   orgId: UUID;

@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddBedrockProvider1766006304082 implements MigrationInterface {
   name = 'AddBedrockProvider1766006304082';

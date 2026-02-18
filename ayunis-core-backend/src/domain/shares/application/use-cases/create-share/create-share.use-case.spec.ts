@@ -1,12 +1,11 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { CreateShareUseCase } from './create-share.use-case';
 import { CreateOrgAgentShareCommand } from './create-share.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
-import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
+import { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
 import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 import { AgentShare } from '../../../domain/share.entity';
 import { OrgShareScope } from '../../../domain/share-scope.entity';

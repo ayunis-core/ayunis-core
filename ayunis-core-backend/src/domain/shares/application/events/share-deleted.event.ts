@@ -1,6 +1,6 @@
-import type { UUID } from 'crypto';
-import type { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import type { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
+import { UUID } from 'crypto';
+import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 
 export interface RemainingShareScope {
   scopeType: ShareScopeType;

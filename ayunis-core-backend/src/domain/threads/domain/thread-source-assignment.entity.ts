@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { Source } from 'src/domain/sources/domain/source.entity';
+import { UUID, randomUUID } from 'crypto';
+import { Source } from 'src/domain/sources/domain/source.entity';
 
 export class SourceAssignment {
   public readonly id: UUID;

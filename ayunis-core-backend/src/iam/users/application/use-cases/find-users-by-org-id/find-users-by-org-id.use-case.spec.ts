@@ -1,11 +1,10 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { FindUsersByOrgIdUseCase } from './find-users-by-org-id.use-case';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from '../../../domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -56,7 +55,7 @@ describe('FindUsersByOrgIdUseCase', () => {
         emailVerified: false,
         passwordHash: 'hash1',
         role: UserRole.USER,
-        orgId,
+        orgId: orgId,
         name: 'User One',
         hasAcceptedMarketing: false,
       }),
@@ -66,7 +65,7 @@ describe('FindUsersByOrgIdUseCase', () => {
         emailVerified: false,
         passwordHash: 'hash2',
         role: UserRole.USER,
-        orgId,
+        orgId: orgId,
         name: 'User Two',
         hasAcceptedMarketing: false,
       }),

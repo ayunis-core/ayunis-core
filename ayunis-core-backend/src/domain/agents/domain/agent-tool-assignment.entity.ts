@@ -1,6 +1,5 @@
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { randomUUID, UUID } from 'crypto';
 
 export class AgentToolAssignment {
   public readonly id: UUID;

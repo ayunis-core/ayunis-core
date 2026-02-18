@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ActivateSkillToolHandler } from './activate-skill-tool.handler';
@@ -8,7 +7,7 @@ import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cas
 import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
-import type { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
+import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Source } from 'src/domain/sources/domain/source.entity';

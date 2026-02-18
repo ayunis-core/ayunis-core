@@ -1,8 +1,8 @@
-import type { Repository } from 'typeorm';
-import type { UUID } from 'crypto';
-import type { UsageRecord } from '../schema/usage.record';
+import { Repository } from 'typeorm';
+import { UUID } from 'crypto';
+import { UsageRecord } from '../schema/usage.record';
 import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
-import type { TopModelRow } from './usage-query.types';
+import { TopModelRow } from './usage-query.types';
 
 export async function getTopModels(
   usageRepository: Repository<UsageRecord>,
@@ -30,7 +30,7 @@ export async function getTopModels(
     qb.andWhere('usage.createdAt <= :endDate', { endDate });
   }
 
-  return qb
+  return await qb
     .groupBy('usage.modelId, model.displayName')
     .orderBy('SUM(usage.totalTokens)', 'DESC')
     .limit(limit)

@@ -38,7 +38,7 @@ export default function AgentPropertiesCard({
   const { t } = useTranslation('agent');
   const { models } = usePermittedModels();
   const { form, onSubmit, isLoading } = useUpdateAgent({
-    agent,
+    agent: agent,
   });
 
   return (

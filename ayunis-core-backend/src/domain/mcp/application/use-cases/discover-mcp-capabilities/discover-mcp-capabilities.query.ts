@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 /**
  * Query for discovering capabilities from an MCP integration

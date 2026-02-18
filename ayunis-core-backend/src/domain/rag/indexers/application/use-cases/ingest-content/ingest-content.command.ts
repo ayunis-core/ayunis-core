@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { IndexType } from '../../../domain/value-objects/index-type.enum';
+import { UUID } from 'crypto';
+import { IndexType } from '../../../domain/value-objects/index-type.enum';
 
 export class IngestContentCommand {
   orgId: UUID;

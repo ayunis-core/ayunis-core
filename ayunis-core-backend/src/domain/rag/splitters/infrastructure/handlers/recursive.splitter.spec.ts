@@ -1,5 +1,5 @@
 import { RecursiveSplitterHandler } from './recursive.splitter';
-import type { SplitterInput } from '../../application/ports/splitter.handler';
+import { SplitterInput } from '../../application/ports/splitter.handler';
 
 describe('RecursiveSplitterHandler', () => {
   let handler: RecursiveSplitterHandler;

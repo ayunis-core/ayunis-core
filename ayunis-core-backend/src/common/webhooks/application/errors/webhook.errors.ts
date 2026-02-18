@@ -1,10 +1,9 @@
-import type { ErrorMetadata } from '../../../errors/base.error';
-import { ApplicationError } from '../../../errors/base.error';
+import { ApplicationError, ErrorMetadata } from '../../../errors/base.error';
 import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import type { WebhookEventType } from '../../domain/value-objects/webhook-event-type.enum';
+import { WebhookEventType } from '../../domain/value-objects/webhook-event-type.enum';
 
 export enum WebhookErrorCode {
   WEBHOOK_DELIVERY_FAILED = 'WEBHOOK_DELIVERY_FAILED',

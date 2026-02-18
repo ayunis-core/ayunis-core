@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -9,8 +8,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 
 import { UnassignMcpIntegrationFromAgentUseCase } from './unassign-mcp-integration-from-agent.use-case';
 import { UnassignMcpIntegrationFromAgentCommand } from './unassign-mcp-integration-from-agent.command';

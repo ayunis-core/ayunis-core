@@ -1,5 +1,5 @@
-import type { PredefinedMcpIntegrationSlug } from './value-objects/predefined-mcp-integration-slug.enum';
-import type { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationSlug } from './value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
 
 export enum CredentialFieldType {
   TOKEN = 'token',

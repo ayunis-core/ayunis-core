@@ -1,8 +1,7 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 import { RefreshTokenCommand } from './refresh-token.command';
-import type { AuthenticationRepository } from '../../ports/authentication.repository';
+import { AuthenticationRepository } from '../../ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
 import { JwtService } from '@nestjs/jwt';
 import { FindUserByIdUseCase } from '../../../../users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -10,7 +9,7 @@ import { User } from '../../../../users/domain/user.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { AuthTokens } from '../../../domain/auth-tokens.entity';
 import { InvalidTokenError } from '../../authentication.errors';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;

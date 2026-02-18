@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { McpAuthMethod } from '../value-objects/mcp-auth-method.enum';
+import { randomUUID, UUID } from 'crypto';
+import { McpAuthMethod } from '../value-objects/mcp-auth-method.enum';
 
 export abstract class McpIntegrationAuth {
   public readonly id: UUID;

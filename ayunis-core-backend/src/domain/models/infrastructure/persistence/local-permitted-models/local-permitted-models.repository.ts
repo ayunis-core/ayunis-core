@@ -245,7 +245,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     });
 
     // Start a transaction to ensure consistency
-    return this.permittedModelRepository.manager.transaction(
+    return await this.permittedModelRepository.manager.transaction(
       async (manager) => {
         // Unset any existing default for this organization
         await manager.update(

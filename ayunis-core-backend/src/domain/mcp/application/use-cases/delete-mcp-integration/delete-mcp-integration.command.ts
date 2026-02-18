@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 /**
  * Command to delete an MCP integration.

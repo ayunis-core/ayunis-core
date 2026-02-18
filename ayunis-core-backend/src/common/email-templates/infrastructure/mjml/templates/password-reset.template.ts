@@ -1,5 +1,5 @@
 import mjml2html from 'mjml';
-import type { PasswordResetTemplateContent } from '../../../domain/email-template.entity';
+import { PasswordResetTemplateContent } from '../../../domain/email-template.entity';
 
 export function passwordResetText(template: PasswordResetTemplateContent) {
   const userNameText = template.userName

@@ -1,6 +1,6 @@
-import type { Org } from 'src/iam/orgs/domain/org.entity';
-import type { UUID } from 'crypto';
-import type { Paginated } from 'src/common/pagination/paginated.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
+import { UUID } from 'crypto';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 export interface OrgsPagination {
   limit: number;

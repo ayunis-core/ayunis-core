@@ -34,7 +34,7 @@ export class CreatePermittedModelUseCase {
       }
       const model = this.modelRegistry.getAvailableModel(command.modelId);
       const permittedModel = new PermittedModel({
-        model,
+        model: model,
         orgId: command.orgId,
         anonymousOnly: command.anonymousOnly,
       });

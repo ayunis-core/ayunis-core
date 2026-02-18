@@ -36,7 +36,8 @@ export class GetCurrentUserUseCase {
       const payload = this.jwtService.verify<JwtPayload>(command.accessToken);
 
       if (
-        !payload?.sub ||
+        !payload ||
+        !payload.sub ||
         !payload.email ||
         !payload.role ||
         !payload.orgId ||

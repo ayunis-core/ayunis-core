@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { LegalAcceptance } from '../legal-acceptance.entity';
 import { LegalAcceptanceType } from '../value-objects/legal-acceptance-type.enum';
 

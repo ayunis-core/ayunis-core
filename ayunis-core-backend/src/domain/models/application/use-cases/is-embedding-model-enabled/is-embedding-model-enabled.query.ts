@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 export class IsEmbeddingModelEnabledQuery {
   constructor(public readonly orgId: UUID) {}

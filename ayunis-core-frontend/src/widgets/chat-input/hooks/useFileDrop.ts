@@ -30,7 +30,7 @@ export function useFileDrop({
 
   const isValidDocumentFile = useCallback(
     (file: File): boolean => {
-      const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
+      const extension = '.' + file.name.split('.').pop()?.toLowerCase();
       return acceptedDocumentExtensions.includes(extension);
     },
     [acceptedDocumentExtensions],

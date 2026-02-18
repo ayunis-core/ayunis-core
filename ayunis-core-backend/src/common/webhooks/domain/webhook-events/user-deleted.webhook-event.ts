@@ -1,5 +1,5 @@
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { WebhookEvent } from '../webhook-event.entity';
 
 export class UserDeletedWebhookEvent extends WebhookEvent {

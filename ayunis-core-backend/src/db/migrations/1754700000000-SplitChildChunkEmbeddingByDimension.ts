@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class SplitChildChunkEmbeddingByDimension1755000000000
   implements MigrationInterface

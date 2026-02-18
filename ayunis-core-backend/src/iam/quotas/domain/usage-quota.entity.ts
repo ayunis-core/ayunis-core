@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { QuotaType } from './quota-type.enum';
+import { randomUUID, UUID } from 'crypto';
+import { QuotaType } from './quota-type.enum';
 
 export interface UsageQuotaParams {
   id?: UUID;

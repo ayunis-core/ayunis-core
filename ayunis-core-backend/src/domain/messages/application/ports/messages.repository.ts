@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { Message } from 'src/domain/messages/domain/message.entity';
+import { UUID } from 'crypto';
+import { Message } from 'src/domain/messages/domain/message.entity';
 
 export const MESSAGES_REPOSITORY = 'MESSAGES_REPOSITORY';
 

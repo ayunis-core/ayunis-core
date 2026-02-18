@@ -1,6 +1,6 @@
-import type { UUID } from 'crypto';
-import type { UsageQuota } from '../../domain/usage-quota.entity';
-import type { QuotaType } from '../../domain/quota-type.enum';
+import { UUID } from 'crypto';
+import { UsageQuota } from '../../domain/usage-quota.entity';
+import { QuotaType } from '../../domain/quota-type.enum';
 
 export interface CheckAndIncrementResult {
   quota: UsageQuota;

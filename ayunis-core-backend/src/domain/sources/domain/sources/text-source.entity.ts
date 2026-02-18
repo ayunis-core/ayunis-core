@@ -1,9 +1,8 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { Source } from '../source.entity';
-import type { FileType } from '../source-type.enum';
-import { SourceType, TextType } from '../source-type.enum';
-import type { TextSourceContentChunk } from '../source-content-chunk.entity';
-import type { SourceCreator } from '../source-creator.enum';
+import { FileType, SourceType, TextType } from '../source-type.enum';
+import { TextSourceContentChunk } from '../source-content-chunk.entity';
+import { SourceCreator } from '../source-creator.enum';
 
 export abstract class TextSource extends Source {
   contentChunks: TextSourceContentChunk[];

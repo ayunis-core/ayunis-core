@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { Team } from '../../domain/team.entity';
+import { UUID } from 'crypto';
+import { Team } from '../../domain/team.entity';
 
 export abstract class TeamsRepository {
   abstract findById(id: UUID): Promise<Team | null>;

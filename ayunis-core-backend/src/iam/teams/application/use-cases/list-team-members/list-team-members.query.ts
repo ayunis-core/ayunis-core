@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import type { PaginatedQueryParams } from 'src/common/pagination';
-import { PaginatedQuery } from 'src/common/pagination';
+import { UUID } from 'crypto';
+import { PaginatedQuery, PaginatedQueryParams } from 'src/common/pagination';
 
 export class ListTeamMembersQuery extends PaginatedQuery {
   public readonly teamId: UUID;

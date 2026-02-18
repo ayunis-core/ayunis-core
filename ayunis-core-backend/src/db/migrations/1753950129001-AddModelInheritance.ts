@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddModelInheritance1753950129001 implements MigrationInterface {
   name = 'AddModelInheritance1753950129001';

@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { IsValidPasswordUseCase } from './is-valid-password.use-case';
 import { IsValidPasswordQuery } from './is-valid-password.query';
 import { UsersRepository } from '../../ports/users.repository';

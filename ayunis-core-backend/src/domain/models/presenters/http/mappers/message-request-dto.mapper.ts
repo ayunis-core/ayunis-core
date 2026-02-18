@@ -81,8 +81,9 @@ export class MessageRequestDtoMapper {
           return this.fromTextContentDto(content);
         } else if (content.type === MessageContentType.TOOL_USE) {
           return this.fromToolUseContentDto(content);
+        } else {
+          throw new Error(`Invalid content type for assistant message `);
         }
-        throw new Error(`Invalid content type for assistant message `);
       }),
     });
   }

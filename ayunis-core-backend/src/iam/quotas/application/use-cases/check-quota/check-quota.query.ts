@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { QuotaType } from '../../../domain/quota-type.enum';
+import { UUID } from 'crypto';
+import { QuotaType } from '../../../domain/quota-type.enum';
 
 export class CheckQuotaQuery {
   constructor(

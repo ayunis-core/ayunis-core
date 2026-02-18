@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { FindOneAgentUseCase } from './find-one-agent.use-case';
 import { FindOneAgentQuery } from './find-one-agent.query';
@@ -11,7 +10,7 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { ContextService } from 'src/common/context/services/context.service';
 import { AgentNotFoundError, UnexpectedAgentError } from '../../agents.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 
 describe('FindOneAgentUseCase', () => {

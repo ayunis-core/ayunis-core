@@ -1,4 +1,4 @@
-import type { StorageUrl } from './storage-url.entity';
+import { StorageUrl } from './storage-url.entity';
 
 export class PresignedUrl {
   readonly url: string;

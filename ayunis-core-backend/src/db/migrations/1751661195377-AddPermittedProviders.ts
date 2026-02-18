@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddPermittedProviders1751661195377 implements MigrationInterface {
   name = 'AddPermittedProviders1751661195377';

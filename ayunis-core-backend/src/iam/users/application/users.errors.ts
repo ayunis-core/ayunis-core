@@ -1,5 +1,7 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import {
+  ApplicationError,
+  ErrorMetadata,
+} from '../../../common/errors/base.error';
 import {
   BadRequestException,
   NotFoundException,
@@ -79,7 +81,7 @@ export class UserUnexpectedError extends UserError {
       500,
       {
         ...metadata,
-        error,
+        error: error,
       },
     );
   }

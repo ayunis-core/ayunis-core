@@ -169,7 +169,7 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         // Text Message Content
         if (content instanceof TextMessageContent) {
           convertedMessages.push({
-            id: `msg_${message.id}`,
+            id: 'msg_' + message.id,
             status: 'completed' as const,
             type: 'message',
             role: 'assistant' as const,
@@ -186,7 +186,7 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         if (content instanceof ToolUseMessageContent) {
           const convertedAssistantToolCallMessage: OpenAI.Responses.ResponseFunctionToolCallItem =
             {
-              id: `fc_${content.id}`,
+              id: 'fc_' + content.id,
               call_id: content.id,
               type: 'function_call',
               name: content.name,
@@ -217,7 +217,7 @@ export class OpenAIInferenceHandler extends InferenceHandler {
         [];
       for (const content of message.content) {
         convertedMessages.push({
-          id: `fc_${message.id}`,
+          id: 'fc_' + message.id,
           status: 'completed' as const,
           type: 'function_call_output',
           call_id: content.toolId,
@@ -241,8 +241,9 @@ export class OpenAIInferenceHandler extends InferenceHandler {
       return 'auto';
     } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return 'required';
+    } else {
+      return { type: 'function', name: toolChoice };
     }
-    return { type: 'function', name: toolChoice };
   };
 
   private parseCompletion = (

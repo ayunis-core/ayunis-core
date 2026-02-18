@@ -27,8 +27,9 @@ export class ShareScopeMapper {
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
+    } else {
+      throw new Error(`Unknown share scope type: ${JSON.stringify(record)}`);
     }
-    throw new Error(`Unknown share scope type: ${JSON.stringify(record)}`);
   }
 
   toRecord(entity: ShareScope): ShareScopeRecord {
@@ -46,7 +47,8 @@ export class ShareScopeMapper {
       teamRecord.createdAt = entity.createdAt;
       teamRecord.updatedAt = entity.updatedAt;
       return teamRecord;
+    } else {
+      throw new Error(`Unknown share scope type: ${JSON.stringify(entity)}`);
     }
-    throw new Error(`Unknown share scope type: ${JSON.stringify(entity)}`);
   }
 }

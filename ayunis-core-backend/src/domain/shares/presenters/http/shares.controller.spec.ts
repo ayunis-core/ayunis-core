@@ -1,12 +1,11 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { SharesController } from './shares.controller';
 import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
 import { DeleteShareUseCase } from '../../application/use-cases/delete-share/delete-share.use-case';
 import { GetSharesUseCase } from '../../application/use-cases/get-shares/get-shares.use-case';
 import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import { CreateAgentShareDto } from './dto/create-share.dto';
-import type { ShareResponseDto } from './dto/share-response.dto';
+import { ShareResponseDto } from './dto/share-response.dto';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 import { AgentShare } from '../../domain/share.entity';

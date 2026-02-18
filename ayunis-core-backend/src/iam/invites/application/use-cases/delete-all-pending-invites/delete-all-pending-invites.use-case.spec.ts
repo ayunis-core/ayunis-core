@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { DeleteAllPendingInvitesUseCase } from './delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from './delete-all-pending-invites.command';

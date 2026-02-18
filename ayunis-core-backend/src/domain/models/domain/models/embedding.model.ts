@@ -1,9 +1,9 @@
-import type { ModelProvider } from '../value-objects/model-provider.enum';
+import { ModelProvider } from '../value-objects/model-provider.enum';
 import { Model } from '../model.entity';
 import { ModelType } from '../value-objects/model-type.enum';
-import type { UUID } from 'crypto';
-import type { EmbeddingDimensions } from '../value-objects/embedding-dimensions.enum';
-import type { Currency } from '../value-objects/currency.enum';
+import { UUID } from 'crypto';
+import { EmbeddingDimensions } from '../value-objects/embedding-dimensions.enum';
+import { Currency } from '../value-objects/currency.enum';
 
 export class EmbeddingModel extends Model {
   public readonly dimensions: EmbeddingDimensions;

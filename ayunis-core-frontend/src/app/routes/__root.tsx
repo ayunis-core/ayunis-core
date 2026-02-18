@@ -1,6 +1,6 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';
 import { ChatContextProvider } from '@/shared/contexts/chat/ChatContextProvider';
-import type { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { Toaster } from '@/shared/ui/shadcn/sonner';
 import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {

@@ -1,8 +1,5 @@
 import { UsageRecord } from '../schema/usage.record';
-import type {
-  GetUserUsageQueryParams,
-  UserUsageRow,
-} from './usage-query.types';
+import { GetUserUsageQueryParams, UserUsageRow } from './usage-query.types';
 
 export async function getUserUsageRows(
   params: GetUserUsageQueryParams,
@@ -107,7 +104,7 @@ export async function getUserUsageRows(
   qb.orderBy(orderByField, params.sortOrder);
   qb.addOrderBy('user.name', 'ASC');
 
-  return qb
+  return await qb
     .offset(params.offset)
     .limit(params.limit)
     .getRawMany<UserUsageRow>();

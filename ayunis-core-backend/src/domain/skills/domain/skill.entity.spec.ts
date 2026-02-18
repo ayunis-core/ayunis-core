@@ -1,5 +1,5 @@
 import { Skill, InvalidSkillNameError } from './skill.entity';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('Skill Entity', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;

@@ -1,5 +1,5 @@
-import type { Prompt } from '../../domain/prompt.entity';
-import type { UUID } from 'crypto';
+import { Prompt } from '../../domain/prompt.entity';
+import { UUID } from 'crypto';
 
 export abstract class PromptsRepository {
   abstract create(prompt: Prompt): Promise<Prompt>;

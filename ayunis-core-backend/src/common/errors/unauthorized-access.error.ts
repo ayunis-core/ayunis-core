@@ -1,5 +1,4 @@
-import type { ErrorMetadata } from './base.error';
-import { ApplicationError } from './base.error';
+import { ApplicationError, ErrorMetadata } from './base.error';
 
 export class UnauthorizedAccessError extends ApplicationError {
   constructor(metadata?: ErrorMetadata) {

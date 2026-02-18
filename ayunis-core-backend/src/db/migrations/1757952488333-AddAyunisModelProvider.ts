@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddAyunisModelProvider1757952488333 implements MigrationInterface {
   name = 'AddAyunisModelProvider1757952488333';

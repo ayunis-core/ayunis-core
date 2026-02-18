@@ -1,8 +1,8 @@
-import type { UUID } from 'crypto';
-import type { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import type { Model } from '../../domain/model.entity';
-import type { EmbeddingModel } from '../../domain/models/embedding.model';
-import type { LanguageModel } from '../../domain/models/language.model';
+import { UUID } from 'crypto';
+import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+import { Model } from '../../domain/model.entity';
+import { EmbeddingModel } from '../../domain/models/embedding.model';
+import { LanguageModel } from '../../domain/models/language.model';
 
 export type FindOneModelParams =
   | {

@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ClearDefaultsByCatalogModelIdUseCase } from './clear-defaults-by-catalog-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from './clear-defaults-by-catalog-model-id.command';
@@ -8,7 +7,7 @@ import { UserDefaultModelsRepository } from '../../ports/user-default-models.rep
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('ClearDefaultsByCatalogModelIdUseCase', () => {
   let useCase: ClearDefaultsByCatalogModelIdUseCase;

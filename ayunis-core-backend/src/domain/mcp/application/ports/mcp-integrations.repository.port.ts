@@ -1,6 +1,6 @@
-import type { UUID } from 'crypto';
-import type { McpIntegration } from '../../domain/mcp-integration.entity';
-import type { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { UUID } from 'crypto';
+import { McpIntegration } from '../../domain/mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 
 /**
  * Repository port for MCP integration persistence.

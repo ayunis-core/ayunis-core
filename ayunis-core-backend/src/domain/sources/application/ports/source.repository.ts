@@ -1,7 +1,7 @@
-import type { UUID } from 'crypto';
-import type { TextSource } from '../../domain/sources/text-source.entity';
-import type { DataSource } from '../../domain/sources/data-source.entity';
-import type { Source } from '../../domain/source.entity';
+import { UUID } from 'crypto';
+import { TextSource } from '../../domain/sources/text-source.entity';
+import { DataSource } from '../../domain/sources/data-source.entity';
+import { Source } from '../../domain/source.entity';
 
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;

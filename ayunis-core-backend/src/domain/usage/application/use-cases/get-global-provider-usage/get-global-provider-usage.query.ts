@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
+import { UUID } from 'crypto';
+import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 
 export class GetGlobalProviderUsageQuery {
   public readonly startDate?: Date;

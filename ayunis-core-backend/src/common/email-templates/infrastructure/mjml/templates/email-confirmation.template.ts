@@ -1,5 +1,5 @@
 import mjml2html from 'mjml';
-import type { EmailConfirmationTemplateContent } from '../../../domain/email-template.entity';
+import { EmailConfirmationTemplateContent } from '../../../domain/email-template.entity';
 
 export function emailConfirmationText(
   template: EmailConfirmationTemplateContent,

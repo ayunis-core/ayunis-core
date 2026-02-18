@@ -1,5 +1,7 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import {
+  ApplicationError,
+  ErrorMetadata,
+} from '../../../common/errors/base.error';
 
 export enum ToolErrorCode {
   HANDLER_NOT_FOUND = 'HANDLER_NOT_FOUND',

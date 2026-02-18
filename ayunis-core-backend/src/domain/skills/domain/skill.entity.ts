@@ -1,5 +1,4 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 
 /**
  * Valid skill names: letters, numbers, hyphens, and spaces.

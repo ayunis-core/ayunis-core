@@ -1,11 +1,10 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { UpdateOrgUseCase } from './update-org.use-case';
 import { UpdateOrgCommand } from './update-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from '../../../domain/org.entity';
 import { OrgUpdateFailedError } from '../../orgs.errors';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('UpdateOrgUseCase', () => {
   let useCase: UpdateOrgUseCase;

@@ -1,8 +1,7 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import type { SourceAssignment } from './thread-source-assignment.entity';
+import { UUID, randomUUID } from 'crypto';
+import { Message } from 'src/domain/messages/domain/message.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { SourceAssignment } from './thread-source-assignment.entity';
 
 export class Thread {
   id: UUID;

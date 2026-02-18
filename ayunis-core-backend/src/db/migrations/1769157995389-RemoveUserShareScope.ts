@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class RemoveUserShareScope1769157995389 implements MigrationInterface {
   name = 'RemoveUserShareScope1769157995389';

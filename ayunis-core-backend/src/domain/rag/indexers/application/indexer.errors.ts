@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import type { ErrorMetadata } from 'src/common/errors/base.error';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { UUID } from 'crypto';
+import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
 
 export enum IndexErrorCode {
   INDEX_NOT_FOUND = 'INDEX_NOT_FOUND',

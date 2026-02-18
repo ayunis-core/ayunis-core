@@ -26,7 +26,7 @@ export class AssembleToolUseCase {
       );
       return this.toolFactory.createTool({
         type: command.type,
-        config,
+        config: config,
         context: command.context,
       });
     }

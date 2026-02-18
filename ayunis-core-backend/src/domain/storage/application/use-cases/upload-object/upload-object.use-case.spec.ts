@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { UploadObjectUseCase } from './upload-object.use-case';
 import { UploadObjectCommand } from './upload-object.command';

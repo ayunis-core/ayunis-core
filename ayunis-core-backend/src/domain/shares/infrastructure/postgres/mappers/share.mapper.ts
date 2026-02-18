@@ -34,8 +34,9 @@ export class ShareMapper {
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       });
+    } else {
+      throw new Error('Unsupported share record type');
     }
-    throw new Error('Unsupported share record type');
   }
 
   toRecord(entity: Share): ShareRecord {
@@ -57,7 +58,8 @@ export class ShareMapper {
       skillShareRecord.updatedAt = entity.updatedAt;
       skillShareRecord.skillId = entity.skillId;
       return skillShareRecord;
+    } else {
+      throw new Error(`Unknown share entity type: ${entity.entityType}`);
     }
-    throw new Error(`Unknown share entity type: ${entity.entityType}`);
   }
 }

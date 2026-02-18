@@ -1,11 +1,10 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ExecuteToolUseCase } from './execute-tool.use-case';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ToolHandlerRegistry } from '../../tool-handler.registry';
 import { Tool } from '../../../domain/tool.entity';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
-import type { JSONSchema } from 'json-schema-to-ts';
+import { JSONSchema } from 'json-schema-to-ts';
 import {
   ToolInvalidInputError,
   ToolExecutionFailedError,

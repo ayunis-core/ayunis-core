@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { AgentMapper } from './agent.mapper';
 import { AgentRecord } from '../schema/agent.record';
 import { Agent } from '../../../../domain/agent.entity';
@@ -9,8 +8,8 @@ import { AgentSourceAssignmentMapper } from './agent-source-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import type { UUID } from 'crypto';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { UUID } from 'crypto';
 
 describe('AgentMapper', () => {
   let mapper: AgentMapper;

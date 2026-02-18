@@ -1,6 +1,5 @@
-import type { ErrorMetadata } from '../../errors/base.error';
-import { ApplicationError } from '../../errors/base.error';
-import type { TokenCounterType } from './ports/token-counter.handler.port';
+import { ApplicationError, ErrorMetadata } from '../../errors/base.error';
+import { TokenCounterType } from './ports/token-counter.handler.port';
 
 export enum TokenCounterErrorCode {
   HANDLER_NOT_FOUND = 'TOKEN_COUNTER_HANDLER_NOT_FOUND',

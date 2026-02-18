@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -19,7 +18,7 @@ import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { Org } from '../../../../orgs/domain/org.entity';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { InvalidPasswordError } from '../../authentication.errors';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';

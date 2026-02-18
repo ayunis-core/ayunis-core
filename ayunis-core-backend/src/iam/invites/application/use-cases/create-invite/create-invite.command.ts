@@ -1,6 +1,6 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
-import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 export class CreateInviteCommand {
   public readonly email: string;

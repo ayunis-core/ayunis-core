@@ -1,5 +1,7 @@
-import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
-import { PaginatedQuery } from 'src/common/pagination/paginated.query';
+import {
+  PaginatedQuery,
+  PaginatedQueryParams,
+} from 'src/common/pagination/paginated.query';
 
 const DEFAULT_LIMIT = 50;
 

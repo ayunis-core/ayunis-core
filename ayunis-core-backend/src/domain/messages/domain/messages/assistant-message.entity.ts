@@ -1,9 +1,9 @@
-import type { TextMessageContent } from '../message-contents/text-message-content.entity';
-import type { ToolUseMessageContent } from '../message-contents/tool-use.message-content.entity';
+import { TextMessageContent } from '../message-contents/text-message-content.entity';
+import { ToolUseMessageContent } from '../message-contents/tool-use.message-content.entity';
 import { Message } from '../message.entity';
 import { MessageRole } from '../value-objects/message-role.object';
-import type { UUID } from 'crypto';
-import type { ThinkingMessageContent } from '../message-contents/thinking-message-content.entity';
+import { UUID } from 'crypto';
+import { ThinkingMessageContent } from '../message-contents/thinking-message-content.entity';
 
 export class AssistantMessage extends Message<
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent

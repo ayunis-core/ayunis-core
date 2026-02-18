@@ -1,6 +1,8 @@
-import type { ErrorMetadata } from '../../../../common/errors/base.error';
-import { ApplicationError } from '../../../../common/errors/base.error';
-import type { SplitterType } from '../domain/splitter-type.enum';
+import {
+  ApplicationError,
+  ErrorMetadata,
+} from '../../../../common/errors/base.error';
+import { SplitterType } from '../domain/splitter-type.enum';
 
 export enum SplitterErrorCode {
   PROVIDER_NOT_FOUND = 'PROVIDER_NOT_FOUND',

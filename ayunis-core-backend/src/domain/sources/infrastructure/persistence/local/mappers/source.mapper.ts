@@ -128,7 +128,7 @@ export class SourceMapper {
       return this.dataSourceToRecord(source);
     }
 
-    throw new Error(`Invalid source type: ${source.type}`);
+    throw new Error('Invalid source type: ' + source.type);
   }
 
   private fileSourceToRecord(source: FileSource): {

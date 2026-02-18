@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { SourceMapper } from './source.mapper';
-import type { SourceContentChunkMapper } from './source-content-chunk.mapper';
+import { SourceContentChunkMapper } from './source-content-chunk.mapper';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { DataSourceRecord } from '../schema/source.record';

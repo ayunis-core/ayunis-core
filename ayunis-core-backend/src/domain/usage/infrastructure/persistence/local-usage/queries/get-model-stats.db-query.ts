@@ -1,8 +1,8 @@
-import type { Repository } from 'typeorm';
-import type { UUID } from 'crypto';
-import type { UsageRecord } from '../schema/usage.record';
+import { Repository } from 'typeorm';
+import { UUID } from 'crypto';
+import { UsageRecord } from '../schema/usage.record';
 import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
-import type { ModelStatsRow } from './usage-query.types';
+import { ModelStatsRow } from './usage-query.types';
 
 export async function getModelStats(
   usageRepository: Repository<UsageRecord>,
@@ -36,7 +36,7 @@ export async function getModelStats(
     qb.andWhere('usage.modelId = :modelId', { modelId });
   }
 
-  return qb
+  return await qb
     .groupBy('usage.modelId, usage.provider, model.name, model.displayName')
     .orderBy('SUM(usage.totalTokens)', 'DESC')
     .getRawMany<ModelStatsRow>();

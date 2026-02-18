@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddUserSystemPrompt1770989962087 implements MigrationInterface {
   name = 'AddUserSystemPrompt1770989962087';

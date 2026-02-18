@@ -1,11 +1,10 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { UpdateUserRoleUseCase } from './update-user-role.use-case';
 import { UpdateUserRoleCommand } from './update-user-role.command';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { UserUnexpectedError } from '../../users.errors';
 

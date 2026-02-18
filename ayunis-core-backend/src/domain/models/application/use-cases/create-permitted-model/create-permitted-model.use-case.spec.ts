@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
@@ -9,7 +8,7 @@ import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity'
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelNotFoundError } from '../../models.errors';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 

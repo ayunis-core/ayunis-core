@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreatePromptUseCase } from './create-prompt.use-case';
 import { CreatePromptCommand } from './create-prompt.command';

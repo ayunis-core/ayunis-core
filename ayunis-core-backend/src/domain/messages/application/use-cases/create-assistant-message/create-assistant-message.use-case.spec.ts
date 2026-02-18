@@ -1,8 +1,9 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { CreateAssistantMessageUseCase } from './create-assistant-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import {
+  MESSAGES_REPOSITORY,
+  MessagesRepository,
+} from '../../ports/messages.repository';
 import { CreateAssistantMessageCommand } from './create-assistant-message.command';
 import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';

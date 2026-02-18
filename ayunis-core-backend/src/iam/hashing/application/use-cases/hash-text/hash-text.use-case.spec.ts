@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { HashTextUseCase } from './hash-text.use-case';
 import { HashTextCommand } from './hash-text.command';
 import { HashingHandler } from '../../ports/hashing.handler';

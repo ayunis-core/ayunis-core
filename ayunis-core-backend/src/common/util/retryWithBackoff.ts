@@ -17,7 +17,7 @@ export default function retryWithBackoff<T>({
     function attempt() {
       fn()
         .then((result) => {
-          if (retryIfResult?.(result)) {
+          if (retryIfResult && retryIfResult(result)) {
             if (retries >= maxRetries) {
               reject(
                 new Error('Max retries reached with unsatisfactory result'),

@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { LegalAcceptanceType } from './value-objects/legal-acceptance-type.enum';
+import { randomUUID, UUID } from 'crypto';
+import { LegalAcceptanceType } from './value-objects/legal-acceptance-type.enum';
 
 export abstract class LegalAcceptance {
   id: UUID;

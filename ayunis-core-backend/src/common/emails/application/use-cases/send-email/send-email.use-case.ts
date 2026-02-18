@@ -20,11 +20,11 @@ export class SendEmailUseCase {
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new EmailSendFailedError(error.message, {
-          error,
+          error: error,
         });
       }
       throw new EmailSendFailedError('Unknown error', {
-        error,
+        error: error,
       });
     }
   }

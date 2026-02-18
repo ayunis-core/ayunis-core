@@ -241,8 +241,9 @@ export class BaseOpenAIChatStreamInferenceHandler
       return 'auto';
     } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return 'required';
+    } else {
+      return { type: 'function', function: { name: toolChoice } };
     }
-    return { type: 'function', function: { name: toolChoice } };
   };
 
   private convertChunk = (

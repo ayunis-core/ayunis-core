@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddIndicesToChunks1755595952924 implements MigrationInterface {
   name = 'AddIndicesToChunks1755595952924';

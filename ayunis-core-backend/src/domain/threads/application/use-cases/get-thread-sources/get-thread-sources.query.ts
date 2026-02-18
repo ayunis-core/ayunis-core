@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 export class FindThreadSourcesQuery {
   constructor(public readonly threadId: UUID) {}

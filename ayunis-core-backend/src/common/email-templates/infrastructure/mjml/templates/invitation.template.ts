@@ -1,5 +1,5 @@
 import mjml2html from 'mjml';
-import type { InvitationTemplateContent } from '../../../domain/email-template.entity';
+import { InvitationTemplateContent } from '../../../domain/email-template.entity';
 
 export function invitationText(template: InvitationTemplateContent) {
   const adminNameText = template.adminName ? ` von ${template.adminName}` : '';

@@ -1,5 +1,5 @@
 import { UsageRecord } from '../schema/usage.record';
-import type { GetUserUsageQueryParams } from './usage-query.types';
+import { GetUserUsageQueryParams } from './usage-query.types';
 
 export async function countUsersForUserUsage(
   params: Omit<

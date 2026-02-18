@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddFullTextToSource1755609303693 implements MigrationInterface {
   name = 'AddFullTextToSource1755609303693';

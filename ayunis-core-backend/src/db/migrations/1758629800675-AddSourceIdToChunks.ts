@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddSourceIdToChunks1758629800675 implements MigrationInterface {
   name = 'AddSourceIdToChunks1758629800675';

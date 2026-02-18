@@ -1,5 +1,5 @@
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ErrorMetadata } from 'src/common/errors/base.error';
 
 export enum EmailErrorCode {
   EMAIL_SEND_FAILED = 'EMAIL_SEND_FAILED',

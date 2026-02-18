@@ -1,16 +1,16 @@
 import { InstallSkillFromMarketplaceUseCase } from './install-skill-from-marketplace.use-case';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
-import type { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
-import type { SkillRepository } from '../../ports/skill.repository';
-import type { ContextService } from 'src/common/context/services/context.service';
-import type { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
+import { SkillRepository } from '../../ports/skill.repository';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
 } from 'src/domain/marketplace/application/marketplace.errors';
 import { MarketplaceInstallFailedError } from '../../skills.errors';
 import { Skill } from '../../../domain/skill.entity';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('InstallSkillFromMarketplaceUseCase', () => {
   let useCase: InstallSkillFromMarketplaceUseCase;

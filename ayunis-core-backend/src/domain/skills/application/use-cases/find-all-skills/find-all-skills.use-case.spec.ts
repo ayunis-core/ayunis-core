@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { FindAllSkillsUseCase } from './find-all-skills.use-case';
 import { FindAllSkillsQuery } from './find-all-skills.query';
@@ -9,7 +8,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('FindAllSkillsUseCase', () => {
   let useCase: FindAllSkillsUseCase;

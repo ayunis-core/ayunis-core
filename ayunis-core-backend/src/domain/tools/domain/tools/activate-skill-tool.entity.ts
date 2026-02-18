@@ -1,8 +1,8 @@
-import type { JSONSchema } from 'json-schema-to-ts';
+import { JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 function buildParameters(skills: Skill[]): JSONSchema {
   const skillNameProperty: Record<string, unknown> = {

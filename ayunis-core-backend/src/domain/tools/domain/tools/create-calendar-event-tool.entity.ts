@@ -1,5 +1,5 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
-import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { DisplayableTool } from '../displayable-tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 

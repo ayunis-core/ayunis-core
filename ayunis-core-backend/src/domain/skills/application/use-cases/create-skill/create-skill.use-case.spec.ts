@@ -1,12 +1,11 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreateSkillUseCase } from './create-skill.use-case';
 import { CreateSkillCommand } from './create-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
 import { Skill } from '../../../domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { DuplicateSkillNameError } from '../../skills.errors';
 
 describe('CreateSkillUseCase', () => {

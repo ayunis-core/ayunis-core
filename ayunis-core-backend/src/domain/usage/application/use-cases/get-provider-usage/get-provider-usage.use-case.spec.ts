@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { GetProviderUsageUseCase } from './get-provider-usage.use-case';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
@@ -7,7 +6,7 @@ import { InvalidDateRangeError } from '../../usage.errors';
 import { ProviderUsage } from '../../../domain/provider-usage.entity';
 import { TimeSeriesPoint } from '../../../domain/time-series-point.entity';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('GetProviderUsageUseCase', () => {
   let useCase: GetProviderUsageUseCase;

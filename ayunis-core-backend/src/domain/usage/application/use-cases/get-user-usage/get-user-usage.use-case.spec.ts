@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { GetUserUsageUseCase } from './get-user-usage.use-case';
 import { GetUserUsageQuery } from './get-user-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
@@ -9,7 +8,7 @@ import {
 } from '../../usage.errors';
 import { Paginated } from 'src/common/pagination';
 import { UserUsageItem } from '../../../domain/user-usage-item.entity';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 describe('GetUserUsageUseCase', () => {

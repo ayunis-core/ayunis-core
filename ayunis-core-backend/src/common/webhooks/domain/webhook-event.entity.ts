@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { WebhookEventType } from './value-objects/webhook-event-type.enum';
+import { randomUUID, UUID } from 'crypto';
+import { WebhookEventType } from './value-objects/webhook-event-type.enum';
 
 export abstract class WebhookEvent {
   readonly id: UUID = randomUUID();

@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { RetrieveUrlUseCase } from './retrieve-url.use-case';
 import { RetrieveUrlCommand } from './retrieve-url.command';
 import { UrlRetrieverHandler } from '../../ports/url-retriever.handler';

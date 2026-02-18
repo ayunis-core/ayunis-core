@@ -1,7 +1,7 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { Source } from '../source.entity';
 import { DataType, SourceType } from '../source-type.enum';
-import type { SourceCreator } from '../source-creator.enum';
+import { SourceCreator } from '../source-creator.enum';
 
 export abstract class DataSource extends Source {
   dataType: DataType;

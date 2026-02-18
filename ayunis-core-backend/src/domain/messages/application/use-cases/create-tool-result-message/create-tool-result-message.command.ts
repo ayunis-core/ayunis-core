@@ -1,5 +1,5 @@
-import type { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
-import type { UUID } from 'crypto';
+import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { UUID } from 'crypto';
 
 export class CreateToolResultMessageCommand {
   constructor(

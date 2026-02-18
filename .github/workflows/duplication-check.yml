@@ -48,16 +48,14 @@ jobs:
             --ignore '**/migrations/**' \
             --ignore '**/*.spec.ts' \
             --ignore '**/*.test.ts' \
-            --ignore '**/*.e2e-spec.ts' \
             --reporters json \
             --output "$REPORT_DIR" \
             --silent >/dev/null 2>&1
 
-          # Build jq filter from changed files (strip project prefix, exclude test files)
+          # Build jq filter from changed files (strip project prefix)
           STAGED_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' \
             | tr ' ' '\n' \
             | sed 's#^ayunis-core-backend/##' \
-            | grep -vE '\.(spec|test|e2e-spec)\.(ts|tsx)$' \
             | jq -R . | jq -s .)
 
           MATCHES=$(jq --argjson staged "$STAGED_JSON" '
@@ -128,20 +126,16 @@ jobs:
             --min-tokens 60 \
             --format "typescript,tsx" \
             --ignore '**/generated/**' \
-            --ignore '**/*.spec.ts' \
-            --ignore '**/*.spec.tsx' \
             --ignore '**/*.test.ts' \
             --ignore '**/*.test.tsx' \
-            --ignore '**/*.e2e-spec.ts' \
             --reporters json \
             --output "$REPORT_DIR" \
             --silent >/dev/null 2>&1
 
-          # Build jq filter from changed files (strip project prefix, exclude test files)
+          # Build jq filter from changed files (strip project prefix)
           STAGED_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' \
             | tr ' ' '\n' \
             | sed 's#^ayunis-core-frontend/##' \
-            | grep -vE '\.(spec|test|e2e-spec)\.(ts|tsx)$' \
             | jq -R . | jq -s .)
 
           MATCHES=$(jq --argjson staged "$STAGED_JSON" '

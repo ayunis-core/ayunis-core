@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { User } from 'src/iam/users/domain/user.entity';
+import { UUID, randomUUID } from 'crypto';
+import { User } from 'src/iam/users/domain/user.entity';
 
 export class TeamMember {
   public id: UUID;

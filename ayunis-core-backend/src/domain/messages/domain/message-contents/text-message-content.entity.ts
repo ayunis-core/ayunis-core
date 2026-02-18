@@ -1,7 +1,7 @@
 import { MessageContent } from '../message-content.entity';
 import { MessageContentType } from '../value-objects/message-content-type.object';
 import { sanitizeUnicodeEscapes } from 'src/common/util/unicode-sanitizer';
-import type { ProviderMetadata } from './provider-metadata.type';
+import { ProviderMetadata } from './provider-metadata.type';
 
 export class TextMessageContent extends MessageContent {
   public text: string;

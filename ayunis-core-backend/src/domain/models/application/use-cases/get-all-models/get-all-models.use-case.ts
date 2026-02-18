@@ -11,6 +11,6 @@ export class GetAllModelsUseCase {
   async execute(): Promise<Model[]> {
     this.logger.log('execute');
 
-    return this.modelsRepository.findAll();
+    return await this.modelsRepository.findAll();
   }
 }

@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
+import { UUID } from 'crypto';
+import { RunInput } from 'src/domain/runs/domain/run-input.entity';
 
 export class ExecuteRunAndSetTitleCommand {
   public readonly threadId: UUID;

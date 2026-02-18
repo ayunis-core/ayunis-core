@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -22,8 +21,7 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { AgentNotFoundError } from '../../agents.errors';
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 
 describe('UpdateAgentUseCase', () => {
   let useCase: UpdateAgentUseCase;

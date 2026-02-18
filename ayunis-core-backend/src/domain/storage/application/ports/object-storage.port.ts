@@ -1,8 +1,8 @@
-import type { StorageObject } from '../../domain/storage-object.entity';
-import type { StorageObjectUpload } from '../../domain/storage-object-upload.entity';
-import type { StorageBucket } from '../../domain/storage-bucket.entity';
-import type { StorageUrl } from '../../domain/storage-url.entity';
-import type { PresignedUrl } from '../../domain/presigned-url.entity';
+import { StorageObject } from '../../domain/storage-object.entity';
+import { StorageObjectUpload } from '../../domain/storage-object-upload.entity';
+import { StorageBucket } from '../../domain/storage-bucket.entity';
+import { StorageUrl } from '../../domain/storage-url.entity';
+import { PresignedUrl } from '../../domain/presigned-url.entity';
 
 export abstract class ObjectStoragePort {
   /**

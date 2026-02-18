@@ -1,5 +1,4 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 
 export class ChildChunk {
   public readonly id: UUID;

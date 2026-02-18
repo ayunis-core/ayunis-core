@@ -1,6 +1,5 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { ToolType } from './value-objects/tool-type.enum';
+import { randomUUID, UUID } from 'crypto';
+import { ToolType } from './value-objects/tool-type.enum';
 
 export class ToolConfig {
   public readonly id: UUID;

@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { CreateRegularUserUseCase } from './create-regular-user.use-case';
 import { CreateRegularUserCommand } from './create-regular-user.command';
 import { UsersRepository } from '../../ports/users.repository';
@@ -7,7 +6,7 @@ import { HashTextUseCase } from '../../../../hashing/application/use-cases/hash-
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import { UserAlreadyExistsError } from '../../users.errors';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { CreateUserUseCase } from '../create-user/create-user.use-case';
 
 describe('CreateRegularUserUseCase', () => {

@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination/paginated.query';
 import { ThreadsConstants } from '../../../domain/threads.constants';
 

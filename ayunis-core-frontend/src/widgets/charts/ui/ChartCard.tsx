@@ -59,7 +59,7 @@ export function ChartCard({
         </ChartContainer>
       </CardContent>
 
-      {insight?.trim() && (
+      {insight && insight.trim() && (
         <CardFooter>
           <p className="text-sm text-muted-foreground">{insight}</p>
         </CardFooter>

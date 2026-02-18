@@ -1,7 +1,6 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { McpIntegrationAuth } from './auth/mcp-integration-auth.entity';
-import type { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
+import { randomUUID, UUID } from 'crypto';
+import { McpIntegrationAuth } from './auth/mcp-integration-auth.entity';
+import { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
 
 /**

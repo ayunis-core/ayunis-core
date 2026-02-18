@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -30,7 +29,7 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('AssignMcpIntegrationToAgentUseCase', () => {
   let useCase: AssignMcpIntegrationToAgentUseCase;

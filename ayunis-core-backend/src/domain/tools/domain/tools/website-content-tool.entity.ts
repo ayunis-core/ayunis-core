@@ -1,4 +1,4 @@
-import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { Tool } from '../tool.entity';
 import { createAjv } from 'src/common/validators/ajv.factory';

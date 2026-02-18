@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddOrgIdToShareScope1763652542713 implements MigrationInterface {
   name = 'AddOrgIdToShareScope1763652542713';

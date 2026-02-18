@@ -1,8 +1,8 @@
-import type { Message } from 'src/domain/messages/domain/message.entity';
+import { Message } from 'src/domain/messages/domain/message.entity';
 
-import type { ModelToolChoice } from '../../../domain/value-objects/model-tool-choice.enum';
-import type { Model } from 'src/domain/models/domain/model.entity';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import { ModelToolChoice } from '../../../domain/value-objects/model-tool-choice.enum';
+import { Model } from 'src/domain/models/domain/model.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 export class StreamInferenceCommand {
   model: Model;

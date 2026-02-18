@@ -1,14 +1,13 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { LoginUseCase } from './login.use-case';
 import { LoginCommand } from './login.command';
-import type { AuthenticationRepository } from '../../ports/authentication.repository';
+import { AuthenticationRepository } from '../../ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { AuthTokens } from '../../../domain/auth-tokens.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
 import { SystemRole } from '../../../../users/domain/value-objects/system-role.enum';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;

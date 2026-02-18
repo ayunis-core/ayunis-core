@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 export interface UpdateBillingInfoParams {
   companyName: string;

@@ -128,8 +128,9 @@ export class SuperAdminTrialsController {
     } catch (error) {
       if (error instanceof TrialNotFoundError) {
         return { trial: undefined };
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 

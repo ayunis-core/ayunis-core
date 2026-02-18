@@ -1,8 +1,8 @@
 import { Message } from '../message.entity';
 import { MessageRole } from '../value-objects/message-role.object';
-import type { TextMessageContent } from '../message-contents/text-message-content.entity';
-import type { ImageMessageContent } from '../message-contents/image-message-content.entity';
-import type { UUID } from 'crypto';
+import { TextMessageContent } from '../message-contents/text-message-content.entity';
+import { ImageMessageContent } from '../message-contents/image-message-content.entity';
+import { UUID } from 'crypto';
 
 export class UserMessage extends Message<
   TextMessageContent | ImageMessageContent

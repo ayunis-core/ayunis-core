@@ -1,6 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { ResourceArgument } from './mcp-resource.entity';
-import { McpResource } from './mcp-resource.entity';
+import { McpResource, ResourceArgument } from './mcp-resource.entity';
 
 describe('McpResource', () => {
   it('should instantiate correctly with all required fields', () => {

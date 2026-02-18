@@ -1,5 +1,5 @@
-import type { UUID } from 'crypto';
-import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
+import { UUID } from 'crypto';
+import { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
 
 export class EmbedTextCommand {
   model: EmbeddingModel;

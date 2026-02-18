@@ -1,5 +1,5 @@
-import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import type { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class CreateLanguageModelCommand {
   name: string;

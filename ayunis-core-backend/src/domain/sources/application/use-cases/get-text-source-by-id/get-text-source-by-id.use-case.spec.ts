@@ -1,9 +1,8 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { GetTextSourceByIdUseCase } from './get-text-source-by-id.use-case';
 import { GetTextSourceByIdQuery } from './get-text-source-by-id.query';
 import { SourceRepository } from '../../ports/source.repository';
-import type { Source } from '../../../domain/source.entity';
+import { Source } from '../../../domain/source.entity';
 import { randomUUID } from 'crypto';
 import { SourceNotFoundError } from '../../sources.errors';
 

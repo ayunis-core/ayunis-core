@@ -1,9 +1,9 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
-import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import type { UUID } from 'crypto';
-import type { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
+import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import { UUID } from 'crypto';
+import { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
 
 const mcpResourceToolParameters = {
   type: 'object' as const,

@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { ListSkillSourcesUseCase } from './list-skill-sources.use-case';
 import { ListSkillSourcesQuery } from './list-skill-sources.query';
@@ -10,7 +9,7 @@ import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-case
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { Skill } from '../../../domain/skill.entity';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
 

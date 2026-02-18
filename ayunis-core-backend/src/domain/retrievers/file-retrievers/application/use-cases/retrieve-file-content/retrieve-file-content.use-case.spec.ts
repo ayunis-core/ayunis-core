@@ -1,8 +1,7 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
-import type { FileRetrieverHandler } from '../../ports/file-retriever.handler';
+import { FileRetrieverHandler } from '../../ports/file-retriever.handler';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
 import {
   FileRetrieverResult,

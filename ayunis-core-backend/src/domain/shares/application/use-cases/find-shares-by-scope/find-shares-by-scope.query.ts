@@ -1,4 +1,4 @@
-import type { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
+import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 
 /**
  * Query for finding shares by scope (for current user's org)

@@ -1,4 +1,4 @@
-import type { ModelProvider } from '../../models/domain/value-objects/model-provider.enum';
+import { ModelProvider } from '../../models/domain/value-objects/model-provider.enum';
 import { TimeSeriesPoint } from './time-series-point.entity';
 
 export class ProviderUsage {

@@ -1,5 +1,4 @@
-import type { ErrorMetadata } from 'src/common/errors/base.error';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
 
 export enum AnonymizationErrorCode {
   ANONYMIZATION_FAILED = 'ANONYMIZATION_FAILED',

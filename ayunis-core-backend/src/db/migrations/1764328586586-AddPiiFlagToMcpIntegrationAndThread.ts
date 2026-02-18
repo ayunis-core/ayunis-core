@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddPiiFlagToMcpIntegrationAndThread1764328586586
   implements MigrationInterface

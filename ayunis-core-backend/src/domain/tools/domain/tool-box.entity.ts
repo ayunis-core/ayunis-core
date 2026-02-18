@@ -1,5 +1,5 @@
-import type { Tool } from './tool.entity';
-import type { ToolBoxType } from './value-objects/tool-box-types.enum';
+import { Tool } from './tool.entity';
+import { ToolBoxType } from './value-objects/tool-box-types.enum';
 
 export class ToolBox {
   constructor(

@@ -1,4 +1,4 @@
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 
 export class DeletePermittedModelCommand {
   public readonly orgId: UUID;

@@ -1,7 +1,6 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import type { UUID } from 'crypto';
+import { UUID } from 'crypto';
 import { DisableMcpIntegrationUseCase } from './disable-mcp-integration.use-case';
 import { DisableMcpIntegrationCommand } from './disable-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';

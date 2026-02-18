@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddOriginSkillIdToThreadSourceAssignments1771334174752
   implements MigrationInterface

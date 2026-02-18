@@ -1,7 +1,7 @@
-import type { UUID } from 'crypto';
-import type { Share } from '../../domain/share.entity';
-import type { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
-import type { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
+import { UUID } from 'crypto';
+import { Share } from '../../domain/share.entity';
+import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 
 export abstract class SharesRepository {
   /**

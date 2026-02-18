@@ -69,7 +69,8 @@ export class InviteResponseMapper {
       return InviteStatus.ACCEPTED;
     } else if (invite.expiresAt < new Date()) {
       return InviteStatus.EXPIRED;
+    } else {
+      return InviteStatus.PENDING;
     }
-    return InviteStatus.PENDING;
   }
 }

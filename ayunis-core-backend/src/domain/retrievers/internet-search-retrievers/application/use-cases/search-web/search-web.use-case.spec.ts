@@ -1,5 +1,4 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { SearchWebUseCase } from './search-web.use-case';
 import { SearchWebCommand } from './search-web.command';
 import { InternetSearchHandler } from '../../ports/internet-search.handler';

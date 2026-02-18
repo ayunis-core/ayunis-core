@@ -1,7 +1,6 @@
-import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
-import type { ModelProvider } from '../../models/domain/value-objects/model-provider.enum';
-import type { Currency } from '../../models/domain/value-objects/currency.enum';
+import { randomUUID, UUID } from 'crypto';
+import { ModelProvider } from '../../models/domain/value-objects/model-provider.enum';
+import { Currency } from '../../models/domain/value-objects/currency.enum';
 
 export class Usage {
   public readonly id: UUID;

@@ -1,8 +1,8 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
-import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
-import type { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { DataType } from 'src/domain/sources/domain/source-type.enum';
 
 const codeExecutionToolParameters = {

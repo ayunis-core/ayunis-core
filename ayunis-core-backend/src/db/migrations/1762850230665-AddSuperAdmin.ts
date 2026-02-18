@@ -1,4 +1,4 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddSuperAdmin1762850230665 implements MigrationInterface {
   name = 'AddSuperAdmin1762850230665';

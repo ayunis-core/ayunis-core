@@ -1,6 +1,8 @@
-import type { ErrorMetadata } from '../../../../common/errors/base.error';
-import { ApplicationError } from '../../../../common/errors/base.error';
-import type { EmbeddingsProvider } from '../domain/embeddings-provider.enum';
+import {
+  ApplicationError,
+  ErrorMetadata,
+} from '../../../../common/errors/base.error';
+import { EmbeddingsProvider } from '../domain/embeddings-provider.enum';
 
 export enum EmbeddingsErrorCode {
   PROVIDER_NOT_FOUND = 'PROVIDER_NOT_FOUND',

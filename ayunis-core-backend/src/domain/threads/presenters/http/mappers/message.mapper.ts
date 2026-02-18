@@ -118,10 +118,11 @@ export class MessageDtoMapper {
         return this.mapToolUseContent(contentItem as ToolUseMessageContent);
       } else if (contentItem.type === MessageContentType.THINKING) {
         return this.mapThinkingContent(contentItem as ThinkingMessageContent);
+      } else {
+        throw new Error(
+          `Invalid content type for assistant message: ${contentItem.type}`,
+        );
       }
-      throw new Error(
-        `Invalid content type for assistant message: ${contentItem.type}`,
-      );
     });
   }
 

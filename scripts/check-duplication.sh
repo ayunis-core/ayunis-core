@@ -42,10 +42,8 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
     --ignore '**/generated/**' \
     --ignore '**/migrations/**' \
     --ignore '**/*.spec.ts' \
-    --ignore '**/*.spec.tsx' \
     --ignore '**/*.test.ts' \
     --ignore '**/*.test.tsx' \
-    --ignore '**/*.e2e-spec.ts' \
     --reporters json \
     --output "$REPORT_DIR" \
     --silent >/dev/null 2>&1
@@ -61,15 +59,10 @@ fi
 # Build a jq filter array from staged file paths (relative to project src/)
 # Staged files come in as e.g. "ayunis-core-backend/src/domain/foo.ts"
 # jscpd report paths are e.g. "src/domain/foo.ts"
-# Exclude test/spec files from the check (duplication in tests is acceptable)
 PROJECT_BASENAME=$(basename "$PROJECT_DIR")
 JQ_PATTERNS="["
 FIRST=true
 for f in "${STAGED_FILES[@]}"; do
-  # Skip test/spec files
-  case "$f" in
-    *.spec.ts|*.spec.tsx|*.test.ts|*.test.tsx|*.e2e-spec.ts) continue ;;
-  esac
   # Strip the project dir prefix: "ayunis-core-backend/src/..." -> "src/..."
   REL="${f#"$PROJECT_BASENAME"/}"
   if [ "$FIRST" = true ]; then
@@ -80,12 +73,6 @@ for f in "${STAGED_FILES[@]}"; do
   JQ_PATTERNS+="\"$REL\""
 done
 JQ_PATTERNS+="]"
-
-# If all staged files were tests, nothing to check
-if [ "$JQ_PATTERNS" = "[]" ]; then
-  echo -e "${GREEN}✅ Only test files staged — skipping duplication check${NC}"
-  exit 0
-fi
 
 # Extract clones where at least one side is a staged file
 MATCHES=$(jq --argjson staged "$JQ_PATTERNS" '

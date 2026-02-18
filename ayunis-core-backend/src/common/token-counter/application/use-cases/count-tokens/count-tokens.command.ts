@@ -1,4 +1,4 @@
-import type { TokenCounterType } from '../../ports/token-counter.handler.port';
+import { TokenCounterType } from '../../ports/token-counter.handler.port';
 
 export class CountTokensCommand {
   constructor(
