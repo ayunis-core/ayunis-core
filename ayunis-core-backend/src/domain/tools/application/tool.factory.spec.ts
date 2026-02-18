@@ -10,6 +10,8 @@ import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity'
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
+import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 
 describe('ToolFactory', () => {
   let factory: ToolFactory;
@@ -61,6 +63,18 @@ describe('ToolFactory', () => {
       expect(tool).toBeInstanceOf(CreateSkillTool);
     });
 
+    it('should create a CreateDocumentTool', () => {
+      const tool = factory.createTool({ type: ToolType.CREATE_DOCUMENT });
+      expect(tool).toBeInstanceOf(CreateDocumentTool);
+      expect(tool.name).toBe(ToolType.CREATE_DOCUMENT);
+    });
+
+    it('should create an UpdateDocumentTool', () => {
+      const tool = factory.createTool({ type: ToolType.UPDATE_DOCUMENT });
+      expect(tool).toBeInstanceOf(UpdateDocumentTool);
+      expect(tool.name).toBe(ToolType.UPDATE_DOCUMENT);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -100,8 +114,10 @@ describe('ToolFactory', () => {
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
+      expect(types).toContain(ToolType.CREATE_DOCUMENT);
+      expect(types).toContain(ToolType.UPDATE_DOCUMENT);
 
-      expect(types.length).toBe(17);
+      expect(types.length).toBe(19);
     });
   });
 });
