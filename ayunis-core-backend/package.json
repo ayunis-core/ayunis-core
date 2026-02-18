@@ -83,7 +83,7 @@
     "nest-winston": "^1.10.2",
     "nestjs-cls": "^6.0.1",
     "nodemailer": "^7.0.5",
-    "ollama": "^0.5.16",
+    "ollama": "^0.6.3",
     "openai": "^4.104.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
