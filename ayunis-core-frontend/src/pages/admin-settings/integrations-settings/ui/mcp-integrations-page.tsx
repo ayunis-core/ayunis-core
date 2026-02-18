@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-import { Plus, AlertCircle } from 'lucide-react';
+import { Plus, AlertCircle, ExternalLink } from 'lucide-react';
 import { IntegrationsList } from './integrations-list';
 import { CreatePredefinedDialog } from './create-predefined-dialog';
 import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
+import { UserConfigDialog } from './user-config-dialog';
 import SettingsLayout from '../../admin-settings-layout';
 import { useMcpIntegrationsQueries } from '../api/useMcpIntegrationsQueries';
 import type { McpIntegration } from '../model/types';
@@ -36,6 +37,8 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
     null,
   );
   const [deleteIntegration, setDeleteIntegration] =
+    useState<McpIntegration | null>(null);
+  const [userConfigIntegration, setUserConfigIntegration] =
     useState<McpIntegration | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
@@ -104,43 +107,16 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
     );
   }
 
-  const headerActions = (
-    <div className="flex gap-2">
-      {isCloud ? (
-        <Button
-          variant="default"
-          size="sm"
-          onClick={handleOpenCreatePredefined}
-        >
-          <Plus className="h-4 w-4" />
-          {t('integrations.page.add')}
-        </Button>
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm">
-              <Plus className="h-4 w-4" />
-              {t('integrations.page.add')}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleOpenCreatePredefined}>
-              {t('integrations.page.addPredefined')}
-            </DropdownMenuItem>
-            {!isCloud && (
-              <DropdownMenuItem onClick={() => setCreateCustomOpen(true)}>
-                {t('integrations.page.addCustom')}
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
-  );
-
   return (
     <SettingsLayout
-      action={headerActions}
+      action={
+        <HeaderActions
+          isCloud={isCloud}
+          onCreatePredefined={handleOpenCreatePredefined}
+          onCreateCustom={() => setCreateCustomOpen(true)}
+          t={t}
+        />
+      }
       title={tLayout('layout.integrations')}
     >
       <div className="space-y-4">
@@ -148,6 +124,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
           integrations={integrations}
           onEdit={setEditIntegration}
           onDelete={setDeleteIntegration}
+          onUserConfig={setUserConfigIntegration}
         />
 
         <CreatePredefinedDialog
@@ -174,11 +151,69 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
           onOpenChange={(open) => !open && setDeleteIntegration(null)}
         />
 
+        <UserConfigDialog
+          integration={userConfigIntegration}
+          open={!!userConfigIntegration}
+          onOpenChange={(open) => !open && setUserConfigIntegration(null)}
+        />
+
         <ComingSoonDialog
           open={comingSoonOpen}
           onOpenChange={setComingSoonOpen}
         />
       </div>
     </SettingsLayout>
+  );
+}
+
+function HeaderActions({
+  isCloud,
+  onCreatePredefined,
+  onCreateCustom,
+  t,
+}: {
+  isCloud: boolean;
+  onCreatePredefined: () => void;
+  onCreateCustom: () => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="flex gap-2">
+      <Button variant="outline" size="sm" asChild>
+        <a
+          href="https://marketplace.ayunis.de/integrations"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <ExternalLink className="h-4 w-4" />
+          {t('integrations.page.browseMarketplace')}
+        </a>
+      </Button>
+      {isCloud ? (
+        <Button variant="default" size="sm" onClick={onCreatePredefined}>
+          <Plus className="h-4 w-4" />
+          {t('integrations.page.add')}
+        </Button>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4" />
+              {t('integrations.page.add')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onCreatePredefined}>
+              {t('integrations.page.addPredefined')}
+            </DropdownMenuItem>
+            {!isCloud && (
+              <DropdownMenuItem onClick={onCreateCustom}>
+                {t('integrations.page.addCustom')}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
   );
 }

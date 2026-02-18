@@ -7,7 +7,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Switch } from '@/shared/ui/shadcn/switch';
-import { MoreVertical, Loader2 } from 'lucide-react';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import { MoreVertical, Loader2, User } from 'lucide-react';
 import type { McpIntegration } from '../model/types';
 import { getIntegrationTypeLabel } from '../lib/helpers';
 import {
@@ -24,6 +25,7 @@ interface IntegrationCardProps {
   onDelete: (integration: McpIntegration) => void;
   onToggleEnabled: (integration: McpIntegration, enabled: boolean) => void;
   onValidate: (integration: McpIntegration) => void;
+  onUserConfig?: (integration: McpIntegration) => void;
   isTogglingEnabled?: boolean;
   isValidating?: boolean;
 }
@@ -34,26 +36,42 @@ export function IntegrationCard({
   onDelete,
   onToggleEnabled,
   onValidate,
+  onUserConfig,
   isTogglingEnabled = false,
   isValidating = false,
 }: IntegrationCardProps) {
   const { t } = useTranslation('admin-settings-integrations');
-  const typeLabel = getIntegrationTypeLabel(integration.type);
-  const integrationKey = `integration-${integration.id}`;
+  const isMarketplace = integration.type === 'marketplace';
+  const hasUserFields = integration.hasUserFields === true;
 
   return (
     <Item variant="outline">
       <ItemContent>
-        <ItemTitle>{integration.name}</ItemTitle>
+        <ItemTitle>
+          {integration.name}
+          {isMarketplace && (
+            <Badge variant="secondary" className="ml-2">
+              {t('integrations.card.marketplace')}
+            </Badge>
+          )}
+        </ItemTitle>
         <ItemDescription>
-          {integration.type === 'predefined'
-            ? ``
-            : `${typeLabel} - ${integration.serverUrl}`}
+          <IntegrationDescription integration={integration} />
         </ItemDescription>
       </ItemContent>
       <ItemActions>
+        {isMarketplace && hasUserFields && onUserConfig && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onUserConfig(integration)}
+          >
+            <User className="h-4 w-4" />
+            {t('integrations.card.userConfig')}
+          </Button>
+        )}
         <Switch
-          id={integrationKey}
+          id={`integration-${integration.id}`}
           checked={integration.enabled}
           onCheckedChange={(checked) => onToggleEnabled(integration, checked)}
           disabled={isTogglingEnabled}
@@ -77,9 +95,11 @@ export function IntegrationCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(integration)}>
-              {t('integrations.card.edit')}
-            </DropdownMenuItem>
+            {!isMarketplace && (
+              <DropdownMenuItem onClick={() => onEdit(integration)}>
+                {t('integrations.card.edit')}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => onDelete(integration)}
               className="text-red-600"
@@ -90,5 +110,26 @@ export function IntegrationCard({
         </DropdownMenu>
       </ItemActions>
     </Item>
+  );
+}
+
+function IntegrationDescription({
+  integration,
+}: {
+  integration: McpIntegration;
+}) {
+  if (integration.type === 'marketplace') {
+    return <>{integration.marketplaceIdentifier ?? ''}</>;
+  }
+
+  if (integration.type === 'predefined') {
+    return <></>;
+  }
+
+  const typeLabel = getIntegrationTypeLabel(integration.type);
+  return (
+    <>
+      {typeLabel} - {integration.serverUrl}
+    </>
   );
 }

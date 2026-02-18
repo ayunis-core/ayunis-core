@@ -13,13 +13,19 @@ import { Link } from '@tanstack/react-router';
 interface InstallErrorStateProps {
   title: string;
   description: string;
+  backTo?: string;
+  backLabel?: string;
 }
 
 export function InstallErrorState({
   title,
   description,
+  backTo,
+  backLabel,
 }: InstallErrorStateProps) {
   const { t } = useTranslation('install');
+  const linkTo = backTo ?? '/skills';
+  const linkLabel = backLabel ?? t('action.backToSkills');
 
   return (
     <Card className="w-full max-w-lg">
@@ -32,7 +38,7 @@ export function InstallErrorState({
       </CardHeader>
       <CardFooter className="justify-center">
         <Button variant="outline" asChild>
-          <Link to="/skills">{t('action.backToSkills')}</Link>
+          <Link to={linkTo}>{linkLabel}</Link>
         </Button>
       </CardFooter>
     </Card>

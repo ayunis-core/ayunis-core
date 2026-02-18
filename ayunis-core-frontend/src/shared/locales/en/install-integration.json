@@ -1,0 +1,41 @@
+{
+  "title": "Install Integration",
+  "detail": {
+    "installNote": "This integration will be added to your organization. Configure the required fields below.",
+    "zeroConfigNote": "This integration requires no additional configuration and will be installed immediately.",
+    "adminOnly": "Only organization admins can install integrations."
+  },
+  "field": {
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "action": {
+    "install": "Install Integration",
+    "installing": "Installing…",
+    "cancel": "Cancel",
+    "backToIntegrations": "Back to Integrations"
+  },
+  "success": "Integration installed successfully!",
+  "error": {
+    "missingIdentifier": {
+      "title": "Missing Integration Identifier",
+      "description": "No integration identifier was provided. Please use a valid install link from the marketplace."
+    },
+    "notFound": {
+      "title": "Integration Not Found",
+      "description": "The requested integration could not be found in the marketplace. It may have been removed or unpublished."
+    },
+    "fetchFailed": {
+      "title": "Unable to Load Integration",
+      "description": "Could not load integration details from the marketplace. Please try again later."
+    },
+    "unavailable": "The marketplace is currently unavailable. Please try again later.",
+    "oauthNotSupported": "OAuth integrations are not yet supported.",
+    "missingRequiredConfig": "Please fill in all required fields.",
+    "adminRequired": {
+      "title": "Admin Access Required",
+      "description": "You need administrator privileges to install integrations."
+    },
+    "generic": "Something went wrong while installing the integration. Please try again."
+  }
+}
