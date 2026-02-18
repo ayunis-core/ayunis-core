@@ -4,7 +4,7 @@ import {
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { SendMessageDto } from '../dto/send-message.dto';
-import { ImageUploadData } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
+import { ImageUploadData } from 'src/domain/runs/domain/run-input.entity';
 
 export class RunInputMapper {
   /**

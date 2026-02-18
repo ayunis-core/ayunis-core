@@ -1,4 +1,12 @@
-import { ImageUploadData } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
+/**
+ * Domain-layer data structure for image uploads.
+ * Contains the raw binary data and metadata needed for image storage.
+ */
+export interface ImageUploadData {
+  readonly buffer: Buffer;
+  readonly contentType: string;
+  readonly altText?: string;
+}
 
 export class RunInput {}
 
