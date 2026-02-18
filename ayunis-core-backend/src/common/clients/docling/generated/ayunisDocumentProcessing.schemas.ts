@@ -16,8 +16,6 @@ export interface BodyConvertFileConvertFilePost {
 export interface ConvertPathRequest {
   /** Path to the document file */
   path: string;
-  /** Force full-page OCR for scanned documents */
-  force_ocr?: boolean;
 }
 
 /**
@@ -56,7 +54,3 @@ export interface ValidationError {
   msg: string;
   type: string;
 }
-
-export type ConvertFileConvertFilePostParams = {
-  force_ocr?: boolean;
-};
