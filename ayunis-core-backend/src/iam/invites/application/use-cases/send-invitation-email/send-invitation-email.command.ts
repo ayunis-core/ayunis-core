@@ -1,4 +1,4 @@
-import { Invite } from '../../../domain/invite.entity';
+import type { Invite } from '../../../domain/invite.entity';
 
 export class SendInvitationEmailCommand {
   constructor(

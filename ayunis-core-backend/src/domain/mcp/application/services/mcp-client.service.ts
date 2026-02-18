@@ -66,7 +66,7 @@ export class McpClientService {
 
         this.logger.log('Built connection config for bearer authentication', {
           integrationId: integration.id,
-          config: config,
+          config,
         });
         return config;
       }
@@ -339,7 +339,7 @@ export class McpClientService {
     this.logger.error('Failed to execute MCP operation', {
       error: error as Error,
       integrationId: integration.id,
-      operation: operation,
+      operation,
     });
     throw error;
   }

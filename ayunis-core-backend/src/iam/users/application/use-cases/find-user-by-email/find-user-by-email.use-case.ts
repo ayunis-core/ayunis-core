@@ -8,6 +8,6 @@ export class FindUserByEmailUseCase {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async execute(query: FindUserByEmailQuery): Promise<User | null> {
-    return await this.usersRepository.findOneByEmail(query.email);
+    return this.usersRepository.findOneByEmail(query.email);
   }
 }

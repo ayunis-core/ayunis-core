@@ -1,6 +1,6 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { DisplayableTool } from '../displayable-tool.entity';
 
 const lineChartToolParameters = {

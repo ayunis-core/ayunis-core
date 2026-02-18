@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreateThreadUseCase } from './create-thread.use-case';
 import { CreateThreadCommand } from './create-thread.command';
@@ -14,7 +15,7 @@ import {
   NoModelOrAgentProvidedError,
   ThreadCreationError,
 } from '../../threads.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;

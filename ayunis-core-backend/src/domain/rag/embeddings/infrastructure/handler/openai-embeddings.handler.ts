@@ -19,7 +19,7 @@ export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
     const result = await this.openai.embeddings.create({
       model: model.name,
-      input: input,
+      input,
       dimensions: model.dimensions,
     });
 

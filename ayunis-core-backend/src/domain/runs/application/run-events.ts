@@ -1,4 +1,4 @@
-import { Message } from 'src/domain/messages/domain/message.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 
 export interface RunSessionEvent {
   type: 'session';

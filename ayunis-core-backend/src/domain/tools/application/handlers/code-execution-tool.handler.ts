@@ -57,7 +57,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
               this.logger.error('Error getting CSV data source', error);
               throw new ToolExecutionFailedError({
                 toolName: tool.name,
-                message: `Error getting CSV data source: ${error instanceof Error ? error.message : 'Unknown error. Source ID: ' + sourceId}`,
+                message: `Error getting CSV data source: ${error instanceof Error ? error.message : `Unknown error. Source ID: ${sourceId}`}`,
                 exposeToLLM: true,
               });
             });
@@ -84,7 +84,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
 
       // Prepare the execution request
       const executionRequest: ExecutionRequest = {
-        code: code,
+        code,
         files: executionFiles,
       };
 
@@ -167,9 +167,8 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         }
         result += `Exit code: ${response.exit_code}`;
         return result;
-      } else {
-        return `Code execution failed (ID: ${response.execution_id})\nError: ${response.error}\nExit code: ${response.exit_code}`;
       }
+      return `Code execution failed (ID: ${response.execution_id})\nError: ${response.error}\nExit code: ${response.exit_code}`;
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ValidateUserUseCase } from './validate-user.use-case';
 import { ValidateUserQuery } from './validate-user.query';
 import { UsersRepository } from '../../ports/users.repository';
@@ -9,7 +10,7 @@ import {
   UserNotFoundError,
   UserAuthenticationFailedError,
 } from '../../users.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('ValidateUserUseCase', () => {
   let useCase: ValidateUserUseCase;

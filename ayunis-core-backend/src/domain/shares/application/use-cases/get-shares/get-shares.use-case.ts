@@ -57,7 +57,7 @@ export class GetSharesUseCase {
     }
 
     // Fetch and return shares
-    return await this.sharesRepository.findByEntityIdAndType(
+    return this.sharesRepository.findByEntityIdAndType(
       query.entityId,
       query.entityType,
     );

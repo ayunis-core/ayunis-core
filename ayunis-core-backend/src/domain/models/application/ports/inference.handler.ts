@@ -1,10 +1,10 @@
-import { Message } from 'src/domain/messages/domain/message.entity';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
-import { Model } from '../../domain/model.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
+import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import type { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import type { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
+import type { Model } from '../../domain/model.entity';
 
 export class InferenceInput {
   public readonly model: Model;

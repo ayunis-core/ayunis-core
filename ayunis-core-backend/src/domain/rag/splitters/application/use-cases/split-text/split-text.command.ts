@@ -1,5 +1,5 @@
-import { SplitterType } from '../../../domain/splitter-type.enum';
-import { SplitterMetadata } from '../../ports/splitter.handler';
+import type { SplitterType } from '../../../domain/splitter-type.enum';
+import type { SplitterMetadata } from '../../ports/splitter.handler';
 
 export class SplitTextCommand {
   constructor(

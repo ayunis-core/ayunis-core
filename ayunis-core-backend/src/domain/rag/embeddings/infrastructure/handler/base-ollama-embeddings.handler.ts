@@ -11,7 +11,7 @@ export abstract class BaseOllamaEmbeddingsHandler extends EmbeddingsHandler {
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
     const ollamaEmbeddingsResponse = await this.client.embed({
       model: model.name,
-      input: input,
+      input,
     });
     const embeddings = ollamaEmbeddingsResponse.embeddings.map(
       (embedding, i) => {

@@ -1,5 +1,5 @@
-import { JSONSchema, FromSchema } from 'json-schema-to-ts';
-import { ToolType } from './value-objects/tool-type.enum';
+import type { JSONSchema, FromSchema } from 'json-schema-to-ts';
+import type { ToolType } from './value-objects/tool-type.enum';
 
 export abstract class Tool {
   name: string;

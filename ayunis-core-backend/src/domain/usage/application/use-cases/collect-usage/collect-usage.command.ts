@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { LanguageModel } from '../../../../models/domain/models/language.model';
+import type { UUID } from 'crypto';
+import type { LanguageModel } from '../../../../models/domain/models/language.model';
 
 export class CollectUsageCommand {
   public readonly model: LanguageModel;

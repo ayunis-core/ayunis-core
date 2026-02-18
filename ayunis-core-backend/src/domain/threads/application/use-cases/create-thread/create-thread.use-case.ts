@@ -69,8 +69,8 @@ export class CreateThreadUseCase {
       try {
         const thread = new Thread({
           userId,
-          model: model,
-          agentId: agentId,
+          model,
+          agentId,
           isAnonymous,
           messages: [],
         });

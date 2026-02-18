@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { GetAvailableModelsUseCase } from './get-available-models.use-case';
 import { GetAvailableModelsQuery } from './get-available-models.query';
 import { ModelsRepository } from '../../ports/models.repository';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';

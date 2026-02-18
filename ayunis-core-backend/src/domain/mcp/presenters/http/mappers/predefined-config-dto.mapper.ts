@@ -31,7 +31,7 @@ export class PredefinedConfigDtoMapper {
       description: config.description,
       authType: config.authType,
       authHeaderName: config.authHeaderName,
-      credentialFields: credentialFields,
+      credentialFields,
     };
   }
 

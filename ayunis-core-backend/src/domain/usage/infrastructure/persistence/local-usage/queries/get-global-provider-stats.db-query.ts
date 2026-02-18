@@ -1,7 +1,7 @@
-import { Repository } from 'typeorm';
-import { UUID } from 'crypto';
-import { UsageRecord } from '../schema/usage.record';
-import { ProviderStatsRow } from './usage-query.types';
+import type { Repository } from 'typeorm';
+import type { UUID } from 'crypto';
+import type { UsageRecord } from '../schema/usage.record';
+import type { ProviderStatsRow } from './usage-query.types';
 
 export async function getGlobalProviderStats(
   usageRepository: Repository<UsageRecord>,
@@ -29,5 +29,5 @@ export async function getGlobalProviderStats(
     qb.andWhere('usage.modelId = :modelId', { modelId });
   }
 
-  return await qb.groupBy('usage.provider').getRawMany<ProviderStatsRow>();
+  return qb.groupBy('usage.provider').getRawMany<ProviderStatsRow>();
 }

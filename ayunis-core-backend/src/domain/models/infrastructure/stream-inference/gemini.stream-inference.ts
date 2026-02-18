@@ -152,12 +152,11 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
       return { mode: FunctionCallingConfigMode.AUTO };
     } else if (toolChoice === ModelToolChoice.REQUIRED) {
       return { mode: FunctionCallingConfigMode.ANY };
-    } else {
-      return {
-        mode: FunctionCallingConfigMode.ANY,
-        allowedFunctionNames: [toolChoice],
-      };
     }
+    return {
+      mode: FunctionCallingConfigMode.ANY,
+      allowedFunctionNames: [toolChoice],
+    };
   };
 
   private convertMessages = async (

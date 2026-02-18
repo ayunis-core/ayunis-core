@@ -1,7 +1,5 @@
-import {
-  ApplicationError,
-  ErrorMetadata,
-} from '../../../common/errors/base.error';
+import type { ErrorMetadata } from '../../../common/errors/base.error';
+import { ApplicationError } from '../../../common/errors/base.error';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 export enum QuotaErrorCode {

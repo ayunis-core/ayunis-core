@@ -1,7 +1,7 @@
 import { MessageContent } from '../message-content.entity';
 import { MessageContentType } from '../value-objects/message-content-type.object';
 import { sanitizeObject } from 'src/common/util/unicode-sanitizer';
-import { ProviderMetadata } from './provider-metadata.type';
+import type { ProviderMetadata } from './provider-metadata.type';
 
 export class ToolUseMessageContent extends MessageContent {
   public id: string;

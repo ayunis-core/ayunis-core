@@ -1,6 +1,6 @@
-import { Repository } from 'typeorm';
-import { UUID } from 'crypto';
-import { UsageRecord } from '../schema/usage.record';
+import type { Repository } from 'typeorm';
+import type { UUID } from 'crypto';
+import type { UsageRecord } from '../schema/usage.record';
 
 export async function findUsageRecordsByModel(
   usageRepository: Repository<UsageRecord>,
@@ -19,5 +19,5 @@ export async function findUsageRecordsByModel(
     qb.andWhere('usage.createdAt <= :endDate', { endDate });
   }
 
-  return await qb.orderBy('usage.createdAt', 'DESC').getMany();
+  return qb.orderBy('usage.createdAt', 'DESC').getMany();
 }

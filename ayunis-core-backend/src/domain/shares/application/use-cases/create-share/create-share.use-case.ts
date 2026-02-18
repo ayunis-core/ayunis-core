@@ -77,9 +77,8 @@ export class CreateShareUseCase {
         (ownerId, scope) =>
           new SkillShare({ skillId: command.skillId, scope, ownerId }),
       );
-    } else {
-      throw new Error('Unsupported share command type');
     }
+    throw new Error('Unsupported share command type');
   }
 
   private getAuthenticatedContext(): { userId: UUID; orgId: UUID } {

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { CreateAgentUseCase } from './create-agent.use-case';
 import { CreateAgentCommand } from './create-agent.command';
@@ -12,7 +13,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('CreateAgentUseCase', () => {
   let useCase: CreateAgentUseCase;
@@ -154,7 +155,7 @@ describe('CreateAgentUseCase', () => {
         toolAssignments: [
           {
             toolType: ToolType.SEND_EMAIL,
-            toolConfigId: toolConfigId,
+            toolConfigId,
           },
         ],
       });

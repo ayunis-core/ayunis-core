@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class ClearExistingSources1758880000000 implements MigrationInterface {
   name = 'ClearExistingSources1758880000000';

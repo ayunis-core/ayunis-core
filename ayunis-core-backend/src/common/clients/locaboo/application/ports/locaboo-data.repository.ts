@@ -1,8 +1,8 @@
-import { Booking } from '../../domain/booking.entity';
-import { InvoiceRow } from '../../domain/invoice-row.entity';
-import { Availability } from '../../domain/availability.entity';
-import { Resource } from '../../domain/resource.entity';
-import { CustomerGroup } from '../../domain/customer-group.entity';
+import type { Booking } from '../../domain/booking.entity';
+import type { InvoiceRow } from '../../domain/invoice-row.entity';
+import type { Availability } from '../../domain/availability.entity';
+import type { Resource } from '../../domain/resource.entity';
+import type { CustomerGroup } from '../../domain/customer-group.entity';
 
 export interface CreateBookingParams {
   from: Date;

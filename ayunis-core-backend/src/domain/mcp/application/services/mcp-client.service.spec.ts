@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { McpClientService } from './mcp-client.service';
 import { McpClientPort } from '../ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';

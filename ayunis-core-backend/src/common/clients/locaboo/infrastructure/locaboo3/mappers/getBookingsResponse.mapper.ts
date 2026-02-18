@@ -27,8 +27,8 @@ export class GetBookingsResponseMapper {
             customerGroupIds: response.customer_groups.map((group) =>
               group.id.toString(),
             ),
-            fromDate: new Date(instance.from.replace(' ', 'T') + 'Z'),
-            toDate: new Date(instance.to.replace(' ', 'T') + 'Z'),
+            fromDate: new Date(`${instance.from.replace(' ', 'T')}Z`),
+            toDate: new Date(`${instance.to.replace(' ', 'T')}Z`),
           }),
       ),
     );

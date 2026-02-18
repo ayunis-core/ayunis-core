@@ -1,7 +1,7 @@
-import { JSONSchema } from 'json-schema-to-ts';
+import type { JSONSchema } from 'json-schema-to-ts';
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { Source } from 'src/domain/sources/domain/source.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 import { Tool } from '../tool.entity';
 
 interface SourceQueryToolParameters {

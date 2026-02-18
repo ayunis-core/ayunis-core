@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindAllUserIdsByTeamIdUseCase } from './find-all-user-ids-by-team-id.use-case';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.query';
@@ -43,9 +44,9 @@ describe('FindAllUserIdsByTeamIdUseCase', () => {
     );
 
     expect(result).toEqual([userId1, userId2]);
-    expect(
-      teamMembersRepository.findAllUserIdsByTeamId,
-    ).toHaveBeenCalledWith(teamId);
+    expect(teamMembersRepository.findAllUserIdsByTeamId).toHaveBeenCalledWith(
+      teamId,
+    );
   });
 
   it('should return empty array when team has no members', async () => {

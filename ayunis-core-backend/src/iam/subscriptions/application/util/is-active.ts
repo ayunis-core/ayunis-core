@@ -1,4 +1,4 @@
-import { Subscription } from '../../domain/subscription.entity';
+import type { Subscription } from '../../domain/subscription.entity';
 import { getNextDate } from './get-date-for-anchor-and-cycle';
 
 export function isActive(subscription: Subscription): boolean {
@@ -15,7 +15,6 @@ export function isActive(subscription: Subscription): boolean {
     }
 
     return true;
-  } else {
-    return true;
   }
+  return true;
 }

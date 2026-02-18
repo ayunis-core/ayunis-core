@@ -1,10 +1,10 @@
+import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import {
-  RunInput,
   RunUserInput,
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
-import { SendMessageDto } from '../dto/send-message.dto';
-import { ImageUploadData } from 'src/domain/runs/domain/run-input.entity';
+import type { SendMessageDto } from '../dto/send-message.dto';
+import type { ImageUploadData } from 'src/domain/runs/domain/run-input.entity';
 
 export class RunInputMapper {
   /**

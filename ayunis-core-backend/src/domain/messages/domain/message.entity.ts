@@ -1,6 +1,6 @@
-import { MessageRole } from './value-objects/message-role.object';
-import { MessageContent } from './message-content.entity';
-import { UUID } from 'crypto';
+import type { MessageRole } from './value-objects/message-role.object';
+import type { MessageContent } from './message-content.entity';
+import type { UUID } from 'crypto';
 import { randomUUID } from 'node:crypto';
 
 export abstract class Message<T extends MessageContent = MessageContent> {

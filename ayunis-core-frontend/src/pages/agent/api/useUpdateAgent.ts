@@ -40,7 +40,7 @@ export function useUpdateAgent({ agent }: UseUpdateAgentProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateAgentData) => {
-      return await agentsControllerUpdate(agent.id, data);
+      return agentsControllerUpdate(agent.id, data);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({

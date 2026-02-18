@@ -26,7 +26,7 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
     quotaType: QuotaType,
     windowDurationMs: number,
   ): Promise<UsageQuota> {
-    return await this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(UsageQuotaRecord);
 
       // Use SELECT FOR UPDATE to lock the row
@@ -81,7 +81,7 @@ export class UsageQuotaRepository extends UsageQuotaRepositoryPort {
     windowDurationMs: number,
     limit: number,
   ): Promise<CheckAndIncrementResult> {
-    return await this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(UsageQuotaRecord);
       const now = new Date();
 

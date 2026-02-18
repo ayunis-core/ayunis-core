@@ -36,7 +36,7 @@ export class ParentChildIndexerAdapter extends IndexerPort {
   }
 
   async search(input: SearchInput): Promise<IndexEntry[]> {
-    return await this.searchContentUseCase.execute(input);
+    return this.searchContentUseCase.execute(input);
   }
 
   async delete(documentId: UUID): Promise<void> {

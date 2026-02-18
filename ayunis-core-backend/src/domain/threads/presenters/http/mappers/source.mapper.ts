@@ -27,7 +27,7 @@ export class SourceDtoMapper {
       return this.csvDataSourceToDto(source, threadId);
     }
 
-    throw new Error('Invalid source type: ' + source.type);
+    throw new Error(`Invalid source type: ${source.type}`);
   }
 
   private fileSourceToDto(

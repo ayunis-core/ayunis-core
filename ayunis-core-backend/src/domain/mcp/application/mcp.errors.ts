@@ -1,4 +1,5 @@
-import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 import {
   NotFoundException,
   BadRequestException,

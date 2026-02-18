@@ -28,7 +28,7 @@ export class StreamInferenceUseCase {
       }
       this.logger.error('Stream inference failed', {
         error: error as Error,
-        input: input,
+        input,
       });
       throw new InferenceFailedError(
         error instanceof Error ? error.message : 'Unknown error',

@@ -1,5 +1,5 @@
-import { Tool } from '../../../domain/tool.entity';
-import { ToolExecutionContext } from '../../ports/execution.handler';
+import type { Tool } from '../../../domain/tool.entity';
+import type { ToolExecutionContext } from '../../ports/execution.handler';
 
 export class ExecuteToolCommand {
   constructor(

@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { GetPermittedModelsUseCase } from './get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import type { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('GetPermittedModelsUseCase', () => {

@@ -1,10 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ListTeamsUseCase } from './list-teams.use-case';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { Team } from '../../../domain/team.entity';
 import { UnexpectedTeamError } from '../../teams.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('ListTeamsUseCase', () => {

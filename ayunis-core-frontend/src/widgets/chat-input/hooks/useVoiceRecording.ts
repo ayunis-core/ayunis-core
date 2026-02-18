@@ -168,10 +168,7 @@ export function useVoiceRecording(
 
       // Auto-stop after max duration
       timeoutRef.current = setTimeout(() => {
-        if (
-          mediaRecorderRef.current &&
-          mediaRecorderRef.current.state === 'recording'
-        ) {
+        if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
       }, MAX_RECORDING_DURATION_MS);
@@ -188,10 +185,7 @@ export function useVoiceRecording(
   }, [state, onError, processRecording, cleanup]);
 
   const stopRecording = useCallback(() => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === 'recording'
-    ) {
+    if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
   }, []);

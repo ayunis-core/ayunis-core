@@ -1,6 +1,6 @@
-import { User } from '../../domain/user.entity';
-import { UUID } from 'crypto';
-import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { User } from '../../domain/user.entity';
+import type { UUID } from 'crypto';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
 
 export interface UsersPagination {
   limit: number;

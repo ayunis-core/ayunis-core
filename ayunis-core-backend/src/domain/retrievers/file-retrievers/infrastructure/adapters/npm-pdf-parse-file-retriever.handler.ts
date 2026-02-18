@@ -1,7 +1,7 @@
 import { FileRetrieverHandler } from '../../application/ports/file-retriever.handler';
 import { FileRetrieverResult } from '../../domain/file-retriever-result.entity';
 import { FileRetrieverPage } from '../../domain/file-retriever-result.entity';
-import { File } from '../../domain/file.entity';
+import type { File } from '../../domain/file.entity';
 import PdfParse from 'pdf-parse';
 
 export class NpmPdfParseFileRetrieverHandler extends FileRetrieverHandler {

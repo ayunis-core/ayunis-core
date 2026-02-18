@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { McpCredentialEncryptionService } from './mcp-credential-encryption.service';
 
@@ -119,7 +120,7 @@ describe('McpCredentialEncryptionService', () => {
       const encrypted = await service.encrypt(plaintext);
 
       // Corrupt the encrypted value
-      const corrupted = encrypted.slice(0, -5) + 'XXXXX';
+      const corrupted = `${encrypted.slice(0, -5)}XXXXX`;
 
       await expect(service.decrypt(corrupted)).rejects.toThrow(
         'Failed to decrypt credential',

@@ -90,7 +90,7 @@ export function EditEmbeddingModelDialog({
         name: model.name,
         provider: model.provider,
         displayName: model.displayName,
-        dimensions: dimensions,
+        dimensions,
         isArchived: model.isArchived,
       });
     }
