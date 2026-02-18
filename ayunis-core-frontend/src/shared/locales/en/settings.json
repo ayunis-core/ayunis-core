@@ -57,6 +57,7 @@
     "selectDefaultModel": "Select default model",
     "none": "No model selected",
     "systemPromptTitle": "System Prompt",
+    "systemPromptLabel": "Personal Instruction",
     "systemPromptDescription": "Define a personal system prompt that gets injected into every AI conversation. Use this to customize AI behavior to your preferences.",
     "systemPromptPlaceholder": "e.g. Always respond in bullet points. I work in the finance department.",
     "systemPromptSaved": "System prompt saved successfully",
