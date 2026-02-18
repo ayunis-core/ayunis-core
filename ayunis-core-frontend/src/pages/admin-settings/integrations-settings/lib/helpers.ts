@@ -30,13 +30,20 @@ export function getStatusBadgeVariant(
  * Get display text for integration type
  */
 export function getIntegrationTypeLabel(type: McpIntegration['type']): string {
-  return type === 'predefined'
-    ? i18n.t('integrations.helpers.type.predefined', {
-        ns: 'admin-settings-integrations',
-      })
-    : i18n.t('integrations.helpers.type.custom', {
+  switch (type) {
+    case 'predefined':
+      return i18n.t('integrations.helpers.type.predefined', {
         ns: 'admin-settings-integrations',
       });
+    case 'marketplace':
+      return i18n.t('integrations.helpers.type.marketplace', {
+        ns: 'admin-settings-integrations',
+      });
+    default:
+      return i18n.t('integrations.helpers.type.custom', {
+        ns: 'admin-settings-integrations',
+      });
+  }
 }
 
 /**

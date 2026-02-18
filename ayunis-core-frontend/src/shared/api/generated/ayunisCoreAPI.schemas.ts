@@ -1780,6 +1780,7 @@ export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType
 export const McpIntegrationResponseDtoType = {
   predefined: 'predefined',
   custom: 'custom',
+  marketplace: 'marketplace',
 } as const;
 
 /**
@@ -1809,6 +1810,11 @@ export const McpIntegrationResponseDtoConnectionStatus = {
   error: 'error',
   unknown: 'unknown',
 } as const;
+
+/**
+ * Configuration schema from marketplace (only for marketplace integrations)
+ */
+export type McpIntegrationResponseDtoConfigSchema = { [key: string]: unknown };
 
 export interface McpIntegrationResponseDto {
   /** Unique identifier of the integration */
@@ -1843,6 +1849,12 @@ export interface McpIntegrationResponseDto {
   updatedAt: string;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
   returnsPii: boolean;
+  /** Marketplace integration identifier (only for marketplace integrations) */
+  marketplaceIdentifier?: string;
+  /** Configuration schema from marketplace (only for marketplace integrations) */
+  configSchema?: McpIntegrationResponseDtoConfigSchema;
+  /** Whether this marketplace integration has user-level config fields */
+  hasUserFields?: boolean;
 }
 
 /**
@@ -2152,6 +2164,42 @@ export interface UpdateMcpIntegrationDto {
 }
 
 /**
+ * Organization-level configuration values (key-value pairs matching config schema orgFields)
+ */
+export type InstallMarketplaceIntegrationDtoOrgConfigValues = {[key: string]: string};
+
+export interface InstallMarketplaceIntegrationDto {
+  /** Marketplace integration identifier */
+  identifier: string;
+  /** Organization-level configuration values (key-value pairs matching config schema orgFields) */
+  orgConfigValues: InstallMarketplaceIntegrationDtoOrgConfigValues;
+  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
+  returnsPii?: boolean;
+}
+
+/**
+ * Configuration values with secret values masked (keys present, values replaced with "***")
+ */
+export type UserConfigResponseDtoConfigValues = {[key: string]: string};
+
+export interface UserConfigResponseDto {
+  /** Whether the user has configured values for this integration */
+  hasConfig: boolean;
+  /** Configuration values with secret values masked (keys present, values replaced with "***") */
+  configValues: UserConfigResponseDtoConfigValues;
+}
+
+/**
+ * User-level configuration values (key-value pairs matching config schema userFields)
+ */
+export type SetUserConfigDtoConfigValues = {[key: string]: string};
+
+export interface SetUserConfigDto {
+  /** User-level configuration values (key-value pairs matching config schema userFields) */
+  configValues: SetUserConfigDtoConfigValues;
+}
+
+/**
  * Discovered capabilities from the MCP server
  */
 export type ValidationResponseDtoCapabilities = { [key: string]: unknown };
@@ -2163,6 +2211,118 @@ export interface ValidationResponseDto {
   capabilities: ValidationResponseDtoCapabilities;
   /** Error message if validation failed */
   error?: string;
+}
+
+export interface MarketplaceSkillResponseDto {
+  /** Skill UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /** Description shown to LLM to decide activation */
+  aiDescription: string;
+  /** Detailed instructions injected into the conversation when the skill is activated */
+  instructions: string;
+  /**
+   * Skill category ID
+   * @nullable
+   */
+  skillCategoryId?: string | null;
+  /**
+   * Icon URL
+   * @nullable
+   */
+  iconUrl?: string | null;
+  /** Whether the skill is featured */
+  featured: boolean;
+  /** Whether the skill is published */
+  published: boolean;
+  /** Whether the skill is pre-installed */
+  preInstalled: boolean;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
+/**
+ * Field type
+ */
+export type MarketplaceIntegrationConfigFieldDtoType = typeof MarketplaceIntegrationConfigFieldDtoType[keyof typeof MarketplaceIntegrationConfigFieldDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MarketplaceIntegrationConfigFieldDtoType = {
+  text: 'text',
+  url: 'url',
+  secret: 'secret',
+} as const;
+
+export interface MarketplaceIntegrationConfigFieldDto {
+  /** Unique identifier within the schema */
+  key: string;
+  /** Display label for the frontend form */
+  label: string;
+  /** Field type */
+  type: MarketplaceIntegrationConfigFieldDtoType;
+  /**
+   * HTTP header name this field maps to; if absent, field is internal config
+   * @nullable
+   */
+  headerName?: string | null;
+  /**
+   * Optional prefix prepended to the value before sending
+   * @nullable
+   */
+  prefix?: string | null;
+  /** Whether the field must be provided */
+  required: boolean;
+  /**
+   * Optional help text for the frontend form
+   * @nullable
+   */
+  help?: string | null;
+  /**
+   * Fixed value from marketplace; if set, field is not shown in forms
+   * @nullable
+   */
+  value?: string | null;
+}
+
+export interface MarketplaceIntegrationConfigSchemaDto {
+  /** Auth type for documentation/UI purposes */
+  authType: string;
+  /** Fields configured by org admin at install time */
+  orgFields: MarketplaceIntegrationConfigFieldDto[];
+  /** Fields configured by individual users */
+  userFields: MarketplaceIntegrationConfigFieldDto[];
+}
+
+export interface MarketplaceIntegrationResponseDto {
+  /** Integration UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Description */
+  description: string;
+  /**
+   * Icon URL
+   * @nullable
+   */
+  iconUrl?: string | null;
+  /** Configuration schema */
+  configSchema: MarketplaceIntegrationConfigSchemaDto;
+  /** Whether the integration is published */
+  published: boolean;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
 }
 
 export interface InstallSkillFromMarketplaceDto {
@@ -2231,41 +2391,6 @@ export interface SkillSourceResponseDto {
   name: string;
   /** The type of source */
   type: string;
-}
-
-export interface MarketplaceSkillResponseDto {
-  /** Skill UUID */
-  id: string;
-  /** Unique identifier (slug) */
-  identifier: string;
-  /** Display name */
-  name: string;
-  /** Short description for marketplace display */
-  shortDescription: string;
-  /** Description shown to LLM to decide activation */
-  aiDescription: string;
-  /** Detailed instructions injected into the conversation when the skill is activated */
-  instructions: string;
-  /**
-   * Skill category ID
-   * @nullable
-   */
-  skillCategoryId?: string | null;
-  /**
-   * Icon URL
-   * @nullable
-   */
-  iconUrl?: string | null;
-  /** Whether the skill is featured */
-  featured: boolean;
-  /** Whether the skill is published */
-  published: boolean;
-  /** Whether the skill is pre-installed */
-  preInstalled: boolean;
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
 }
 
 /**
