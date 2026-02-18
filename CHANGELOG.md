@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.11.0](https://github.com/ayunis-core/ayunis-core/compare/v1.10.0...v1.11.0) (2026-02-18)
+
+
+### Features
+
+* add sharing for skills & marketplace install ([#130](https://github.com/ayunis-core/ayunis-core/issues/130)) ([6c5cdee](https://github.com/ayunis-core/ayunis-core/commit/6c5cdeebe8f41565bc5ba701d038352ae7dedb73))
+* allow personal system prompt ([#126](https://github.com/ayunis-core/ayunis-core/issues/126)) ([a79b19b](https://github.com/ayunis-core/ayunis-core/commit/a79b19b2b554688e64e4f796d3e18d7e18638a3f))
+
+
+### Bug Fixes
+
+* add skill create modal translations ([#170](https://github.com/ayunis-core/ayunis-core/issues/170)) ([42e6395](https://github.com/ayunis-core/ayunis-core/commit/42e6395a883937ffcc5ea05a1481df14b83f611f))
+* adjust system prompt label translation ([9ba5049](https://github.com/ayunis-core/ayunis-core/commit/9ba5049fbd591f90a0c8808744c00937a986489d))
+
+
+### Code Refactoring
+
+* extract skill activation into separate entity ([#129](https://github.com/ayunis-core/ayunis-core/issues/129)) ([4c60cf4](https://github.com/ayunis-core/ayunis-core/commit/4c60cf434222731583cc5438acf79f6f6d8dd525))
+
+
+### Miscellaneous
+
+* add Dependabot for automated dependency updates ([#132](https://github.com/ayunis-core/ayunis-core/issues/132)) ([14b7be2](https://github.com/ayunis-core/ayunis-core/commit/14b7be293ff7d161969d9ff34213332e0696762f))
+* add dependency-cruiser for architecture enforcement ([#131](https://github.com/ayunis-core/ayunis-core/issues/131)) ([727d9f5](https://github.com/ayunis-core/ayunis-core/commit/727d9f51813a48f1b83146130b6820f830b9c9ee))
+* add Docker logging rotation, resource limits, and Dozzle ([#128](https://github.com/ayunis-core/ayunis-core/issues/128)) ([1b553b1](https://github.com/ayunis-core/ayunis-core/commit/1b553b1d2c9d3a7866bca42916d4a52e8963147d))
+* **deps-actions:** bump actions/setup-node from 4 to 6 ([#134](https://github.com/ayunis-core/ayunis-core/issues/134)) ([cd15db9](https://github.com/ayunis-core/ayunis-core/commit/cd15db9fd6bfb5b94dde190c96fa7f5730047111))
+* **deps-actions:** bump actions/upload-artifact from 4 to 6 ([#141](https://github.com/ayunis-core/ayunis-core/issues/141)) ([bafc291](https://github.com/ayunis-core/ayunis-core/commit/bafc291490fd0ff43f2cba813f140101dff0fdf9))
+* **deps-actions:** bump appleboy/ssh-action from 1.2.0 to 1.2.5 ([#139](https://github.com/ayunis-core/ayunis-core/issues/139)) ([319203c](https://github.com/ayunis-core/ayunis-core/commit/319203c13a5b66d4a36e49592f9619f7fc59a6c4))
+* **deps-actions:** bump tj-actions/changed-files from 44 to 47 ([#136](https://github.com/ayunis-core/ayunis-core/issues/136)) ([48a29f5](https://github.com/ayunis-core/ayunis-core/commit/48a29f5fbea0905d2dc73acc525ff7a57b15ec34))
+* **deps-anonymize:** bump presidio-analyzer in /ayunis-core-anonymize ([#142](https://github.com/ayunis-core/ayunis-core/issues/142)) ([9f288c1](https://github.com/ayunis-core/ayunis-core/commit/9f288c1cc7e7509437620ef018a446b798851eea))
+* **deps-anonymize:** bump pydantic in /ayunis-core-anonymize ([#145](https://github.com/ayunis-core/ayunis-core/issues/145)) ([8b36df5](https://github.com/ayunis-core/ayunis-core/commit/8b36df5f507b537b1f28cd3c8b6e80e18deca5d7))
+* **deps-backend:** bump @google/genai in /ayunis-core-backend ([#160](https://github.com/ayunis-core/ayunis-core/issues/160)) ([bc6b9a7](https://github.com/ayunis-core/ayunis-core/commit/bc6b9a741c386e2f038437f67cc8daf893383f10))
+* **deps-backend:** bump @mistralai/mistralai in /ayunis-core-backend ([#162](https://github.com/ayunis-core/ayunis-core/issues/162)) ([dc9de47](https://github.com/ayunis-core/ayunis-core/commit/dc9de477debf3d72d886a328941f3522339a5210))
+* **deps-backend:** bump eslint-plugin-prettier in /ayunis-core-backend ([#164](https://github.com/ayunis-core/ayunis-core/issues/164)) ([6829ed2](https://github.com/ayunis-core/ayunis-core/commit/6829ed28af9986f0c049b6ed9e5cb333e156a23b))
+* **deps-backend:** bump ollama in /ayunis-core-backend ([#168](https://github.com/ayunis-core/ayunis-core/issues/168)) ([3a719e6](https://github.com/ayunis-core/ayunis-core/commit/3a719e674ea06568db9677988c7bf8b0feaf598e))
+* **deps-backend:** bump pg in /ayunis-core-backend ([#167](https://github.com/ayunis-core/ayunis-core/issues/167)) ([ad32367](https://github.com/ayunis-core/ayunis-core/commit/ad3236733e024ace87feecfb529adc19c2e53e5f))
+* **deps-docker:** bump cypress/included in /ayunis-core-e2e-ui-tests ([#133](https://github.com/ayunis-core/ayunis-core/issues/133)) ([94aba37](https://github.com/ayunis-core/ayunis-core/commit/94aba370c3dce7f45408f9b9ace67eab63cdd09b))
+* **deps-e2e:** bump cypress in /ayunis-core-e2e-ui-tests ([#143](https://github.com/ayunis-core/ayunis-core/issues/143)) ([24160cc](https://github.com/ayunis-core/ayunis-core/commit/24160cc10daa3959d8aebf5d042db52060852b66))
+* **deps-e2e:** bump globals in /ayunis-core-e2e-ui-tests ([#149](https://github.com/ayunis-core/ayunis-core/issues/149)) ([407bb0f](https://github.com/ayunis-core/ayunis-core/commit/407bb0fd890094520968eb4f3d23e7ca2216c326))
+* **deps-e2e:** bump jiti in /ayunis-core-e2e-ui-tests ([#140](https://github.com/ayunis-core/ayunis-core/issues/140)) ([c9b01ea](https://github.com/ayunis-core/ayunis-core/commit/c9b01ea5a90289d7304ff719bdd8272a475e863e))
+* **deps-e2e:** bump prettier in /ayunis-core-e2e-ui-tests ([#144](https://github.com/ayunis-core/ayunis-core/issues/144)) ([fa9bf0c](https://github.com/ayunis-core/ayunis-core/commit/fa9bf0c82c8827c750b9298bba8354adf309b030))
+* **deps-e2e:** bump typescript in /ayunis-core-e2e-ui-tests ([#147](https://github.com/ayunis-core/ayunis-core/issues/147)) ([d6132c8](https://github.com/ayunis-core/ayunis-core/commit/d6132c81d3451b47fbf1865bf0e46b9456f0e8ce))
+* **deps-frontend:** bump @tailwindcss/typography ([#156](https://github.com/ayunis-core/ayunis-core/issues/156)) ([9ad2b2b](https://github.com/ayunis-core/ayunis-core/commit/9ad2b2b32ddf9ab78f878a0ea278399bc3eff04b))
+* **deps-frontend:** bump i18next in /ayunis-core-frontend ([#163](https://github.com/ayunis-core/ayunis-core/issues/163)) ([5a4a566](https://github.com/ayunis-core/ayunis-core/commit/5a4a56606f6537465e427e696d9e394efdd578df))
+* **deps-frontend:** bump react-day-picker in /ayunis-core-frontend ([#161](https://github.com/ayunis-core/ayunis-core/issues/161)) ([ebb1a64](https://github.com/ayunis-core/ayunis-core/commit/ebb1a6460f9d8b1afc43723b96c67d0fb8c29f67))
+* **deps-frontend:** bump typescript in /ayunis-core-frontend ([#158](https://github.com/ayunis-core/ayunis-core/issues/158)) ([9ca5f83](https://github.com/ayunis-core/ayunis-core/commit/9ca5f836ada5301d3e62bb0787e430e4c4140493))
+
 ## [1.10.0](https://github.com/ayunis-core/ayunis-core/compare/v1.9.0...v1.10.0) (2026-02-13)
 
 
