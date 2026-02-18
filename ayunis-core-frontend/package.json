@@ -48,7 +48,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "i18next": "^25.2.1",
+    "i18next": "^25.8.10",
     "i18next-browser-languagedetector": "^8.2.0",
     "lucide-react": "^0.476.0",
     "react": "^19.0.0",
