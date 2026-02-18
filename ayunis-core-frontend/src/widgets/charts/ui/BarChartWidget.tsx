@@ -1,5 +1,5 @@
 // Types
-import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { YAxisSeries } from '@/widgets/charts/lib/ChartUtils';
 
 // Utils
