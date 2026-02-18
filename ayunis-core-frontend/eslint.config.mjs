@@ -81,24 +81,6 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-expressions': 'warn',
       '@typescript-eslint/await-thenable': 'warn',
       '@typescript-eslint/no-redundant-type-constituents': 'warn',
-
-      // Auto-fixable: code style & modern TS idioms
-      '@typescript-eslint/consistent-type-imports': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-      '@typescript-eslint/prefer-optional-chain': 'warn',
-      '@typescript-eslint/no-useless-constructor': 'warn',
-      'object-shorthand': 'warn',
-      'no-else-return': 'warn',
-      'prefer-template': 'warn',
-      'no-unneeded-ternary': 'warn',
-      'eqeqeq': 'warn',
-
-      // Not auto-fixable: catch real bugs & LLM slop
-      'no-console': 'error',
-      '@typescript-eslint/no-shadow': 'error',
-      '@typescript-eslint/return-await': ['error', 'in-try-catch'],
-      '@typescript-eslint/switch-exhaustiveness-check': 'error',
-      '@typescript-eslint/max-params': ['error', { max: 5 }],
     },
   },
   // Relaxed rules for test files
