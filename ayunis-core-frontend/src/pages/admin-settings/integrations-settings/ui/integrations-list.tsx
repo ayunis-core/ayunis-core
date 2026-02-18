@@ -10,12 +10,14 @@ interface IntegrationsListProps {
   integrations: McpIntegration[];
   onEdit: (integration: McpIntegration) => void;
   onDelete: (integration: McpIntegration) => void;
+  onUserConfig?: (integration: McpIntegration) => void;
 }
 
 export function IntegrationsList({
   integrations,
   onEdit,
   onDelete,
+  onUserConfig,
 }: Readonly<IntegrationsListProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { toggleIntegration, togglingIds } = useToggleIntegration();
@@ -51,6 +53,7 @@ export function IntegrationsList({
             onDelete={onDelete}
             onToggleEnabled={toggleIntegration}
             onValidate={validateIntegration}
+            onUserConfig={onUserConfig}
             isTogglingEnabled={togglingIds.has(integration.id)}
             isValidating={validatingIds.has(integration.id)}
           />

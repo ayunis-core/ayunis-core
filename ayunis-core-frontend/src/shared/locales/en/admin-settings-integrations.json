@@ -50,7 +50,8 @@
       "retry": "Retry",
       "addPredefined": "Add Predefined",
       "addCustom": "Add Custom",
-      "add": "Add Integration"
+      "add": "Add Integration",
+      "browseMarketplace": "Browse Marketplace"
     },
     "card": {
       "openMenu": "Open menu",
@@ -60,7 +61,9 @@
       "credentials": "Credentials",
       "enableIntegration": "Enable integration",
       "testing": "Testing...",
-      "testConnection": "Test Connection"
+      "testConnection": "Test Connection",
+      "marketplace": "Marketplace",
+      "userConfig": "My Config"
     },
     "list": {
       "noIntegrationsTitle": "No integrations yet",
@@ -137,10 +140,20 @@
       "deleting": "Deleting...",
       "delete": "Delete"
     },
+    "userConfig": {
+      "title": "User Configuration — {{name}}",
+      "description": "Set your personal configuration for this integration. These values override organization defaults.",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "success": "User configuration saved successfully",
+      "error": "Failed to save user configuration. Please try again."
+    },
     "helpers": {
       "type": {
         "predefined": "Predefined",
-        "custom": "Custom"
+        "custom": "Custom",
+        "marketplace": "Marketplace"
       },
       "authMethod": {
         "none": "None",
