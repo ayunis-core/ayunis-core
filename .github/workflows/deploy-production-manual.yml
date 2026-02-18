@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Deploy to Production
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         with:

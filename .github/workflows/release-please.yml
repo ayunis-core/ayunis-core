@@ -35,7 +35,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Deploy to Internal
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         env:
           RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         with:
@@ -63,7 +63,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Deploy to Production
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         env:
           RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
         with:
