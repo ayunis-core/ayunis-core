@@ -242,18 +242,16 @@ export class McpSdkClientAdapter extends McpClientPort {
    */
   private async createClient(config: McpConnectionConfig): Promise<Client> {
     // Create Streamable HTTP transport (MCP protocol 2024-11-05+)
-    // Only pass requestInit with headers when we have authentication to add
+    // Only pass requestInit with headers when we have headers to add
     // Otherwise, let the SDK handle the default headers (Accept, Content-Type, etc.)
-    const transport =
-      config.authHeaderName && config.authToken
-        ? new StreamableHTTPClientTransport(new URL(config.serverUrl), {
-            requestInit: {
-              headers: {
-                [config.authHeaderName]: config.authToken,
-              },
-            },
-          })
-        : new StreamableHTTPClientTransport(new URL(config.serverUrl));
+    const hasHeaders = config.headers && Object.keys(config.headers).length > 0;
+    const transport = hasHeaders
+      ? new StreamableHTTPClientTransport(new URL(config.serverUrl), {
+          requestInit: {
+            headers: { ...config.headers },
+          },
+        })
+      : new StreamableHTTPClientTransport(new URL(config.serverUrl));
 
     // Create client with capabilities
     const client = new Client({ name: 'ayunis-core', version: '1.0.0' });
