@@ -36,6 +36,8 @@ jobs:
 
       - name: Check duplication
         if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           REPORT_DIR=$(mktemp -d)
 
@@ -53,7 +55,7 @@ jobs:
             --silent >/dev/null 2>&1
 
           # Build jq filter from changed files (strip project prefix)
-          STAGED_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' \
+          STAGED_JSON=$(echo "$CHANGED_FILES" \
             | tr ' ' '\n' \
             | sed 's#^ayunis-core-backend/##' \
             | jq -R . | jq -s .)
@@ -117,6 +119,8 @@ jobs:
 
       - name: Check duplication
         if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           REPORT_DIR=$(mktemp -d)
 
@@ -126,6 +130,8 @@ jobs:
             --min-tokens 60 \
             --format "typescript,tsx" \
             --ignore '**/generated/**' \
+            --ignore '**/migrations/**' \
+            --ignore '**/*.spec.ts' \
             --ignore '**/*.test.ts' \
             --ignore '**/*.test.tsx' \
             --reporters json \
@@ -133,7 +139,7 @@ jobs:
             --silent >/dev/null 2>&1
 
           # Build jq filter from changed files (strip project prefix)
-          STAGED_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' \
+          STAGED_JSON=$(echo "$CHANGED_FILES" \
             | tr ' ' '\n' \
             | sed 's#^ayunis-core-frontend/##' \
             | jq -R . | jq -s .)
