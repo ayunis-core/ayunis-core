@@ -45,7 +45,7 @@ jobs:
           echo ""
 
           # Get all non-cursor, non-main remote branches (potential base branches)
-          feature_branches=$(git branch -r | grep -v 'origin/cursor/' | grep -v 'origin/main' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs)
+          feature_branches=$(git branch -r | grep -v 'origin/cursor/' | grep -v 'origin/main' | grep -v 'origin/HEAD' | sed 's/origin\///' | xargs || true)
 
           deleted_count=0
           skipped_count=0
@@ -79,7 +79,6 @@ jobs:
               if git merge-base --is-ancestor "$merge_base" "origin/$fb" 2>/dev/null; then
                 # Check if the cursor branch is based on this feature branch
                 # (cursor branch tip should have this feature branch in its history)
-                fb_tip=$(git rev-parse "origin/$fb" 2>/dev/null || echo "")
                 cursor_base=$(git merge-base "origin/$fb" "origin/$branch" 2>/dev/null || echo "")
                 
                 # If the cursor branch and feature branch share more history than just main
