@@ -82,7 +82,7 @@ updates:
     open-pull-requests-limit: 5
 
   # Anonymize service (Python/uv)
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/ayunis-core-anonymize"
     schedule:
       interval: "weekly"
