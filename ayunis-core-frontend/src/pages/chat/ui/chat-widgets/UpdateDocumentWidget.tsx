@@ -21,7 +21,7 @@ export default function UpdateDocumentWidget({
   onOpenArtifact,
 }: UpdateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
-  const updatedRef = useRef(false);
+  const updatedRef = useRef<string | null>(null);
   const [updated, setUpdated] = useState(false);
 
   const params = (content.params || {}) as {
@@ -41,14 +41,19 @@ export default function UpdateDocumentWidget({
 
   // Auto-update the artifact once streaming is done and we have content
   useEffect(() => {
-    if (!isStreaming && !updatedRef.current && artifactId && params.content) {
-      updatedRef.current = true;
+    if (
+      !isStreaming &&
+      updatedRef.current !== content.id &&
+      artifactId &&
+      params.content
+    ) {
+      updatedRef.current = content.id;
       updateArtifact({
         content: params.content,
         authorType: AuthorType.ASSISTANT,
       });
     }
-  }, [isStreaming, artifactId, params.content, updateArtifact]);
+  }, [isStreaming, artifactId, params.content, updateArtifact, content.id]);
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
