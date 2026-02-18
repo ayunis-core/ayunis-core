@@ -7,7 +7,6 @@
  */
 import type {
   BodyConvertFileConvertFilePost,
-  ConvertFileConvertFilePostParams,
   ConvertPathRequest,
   ConvertResponse,
   HealthResponse,
@@ -30,12 +29,11 @@ export const getAyunisDocumentProcessing = () => {
   /**
  * Convert an uploaded document file to Markdown.
 
-Supports PDF, DOCX, and PPTX formats. For scanned PDFs, set force_ocr=true.
+Supports PDF, DOCX, and PPTX formats.
  * @summary Convert uploaded file to Markdown
  */
   const convertFileConvertFilePost = (
     bodyConvertFileConvertFilePost: BodyConvertFileConvertFilePost,
-    params?: ConvertFileConvertFilePostParams,
   ) => {
     const formData = new FormData();
     formData.append(`file`, bodyConvertFileConvertFilePost.file);
@@ -45,14 +43,13 @@ Supports PDF, DOCX, and PPTX formats. For scanned PDFs, set force_ocr=true.
       method: 'POST',
       headers: { 'Content-Type': 'multipart/form-data' },
       data: formData,
-      params,
     });
   };
 
   /**
  * Convert a document file from a local path to Markdown.
 
-Supports PDF, DOCX, and PPTX formats. For scanned PDFs, set force_ocr=true.
+Supports PDF, DOCX, and PPTX formats.
  * @summary Convert file from path to Markdown
  */
   const convertPathConvertPathPost = (
