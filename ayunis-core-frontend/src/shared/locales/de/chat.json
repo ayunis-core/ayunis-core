@@ -59,6 +59,20 @@
         "error": "Fähigkeit konnte nicht erstellt werden",
         "errorDuplicate": "Eine Fähigkeit mit diesem Namen existiert bereits"
       },
+      "create_document": {
+        "title": "Dokument",
+        "created": "Dokument erstellt",
+        "creating": "Dokument wird erstellt…",
+        "generating": "Dokument wird generiert…",
+        "openInEditor": "Im Editor öffnen"
+      },
+      "update_document": {
+        "title": "Dokument aktualisiert",
+        "updated": "Dokument aktualisiert",
+        "updating": "Dokument wird aktualisiert…",
+        "generating": "Aktualisierung wird generiert…",
+        "openInEditor": "Im Editor öffnen"
+      },
       "create_calendar_event": {
         "title": "Titel",
         "titlePlaceholder": "Ereignistitel",
