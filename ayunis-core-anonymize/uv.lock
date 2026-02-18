@@ -677,17 +677,18 @@ wheels = [
 
 [[package]]
 name = "presidio-analyzer"
-version = "2.2.360"
+version = "2.2.361"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "phonenumbers" },
+    { name = "pydantic" },
     { name = "pyyaml" },
     { name = "regex" },
     { name = "spacy" },
     { name = "tldextract" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/dd/df0d00ff44977868878f391b08feb65b8269904262d0f1387de827c13c7d/presidio_analyzer-2.2.360-py3-none-any.whl", hash = "sha256:aa6e83779b8f23587000ccfa3ef47aa34356a60b51284742e0d2a96b33205c4e", size = 128661, upload-time = "2025-09-09T09:24:20.75Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/47/5f07857a3ae4bea36cb631adc6899ef58081cb37ad1901aab01b6a8b2849/presidio_analyzer-2.2.361-py3-none-any.whl", hash = "sha256:7054b36303f5f47dd4bb3b00600bc936fb46aa3cc5e6befde3de839f0205f7f2", size = 183910, upload-time = "2026-02-12T08:11:38.181Z" },
 ]
 
 [[package]]
