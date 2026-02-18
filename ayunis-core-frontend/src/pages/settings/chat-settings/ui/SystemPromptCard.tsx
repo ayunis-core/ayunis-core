@@ -46,7 +46,7 @@ function SystemPromptForm({
   return (
     <div className="space-y-2">
       <Label htmlFor="system-prompt-textarea">
-        {t('chat.systemPromptTitle')}
+        {t('chat.systemPromptLabel')}
       </Label>
       <div className="text-sm text-muted-foreground">
         {t('chat.systemPromptDescription')}
