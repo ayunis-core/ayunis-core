@@ -12,7 +12,7 @@
 	},
 	"dependencies": {
 		"@types/node": "^24.3.0",
-		"cypress": "^15.0.0",
+		"cypress": "^15.10.0",
 		"typescript": "^5.9.2"
 	},
 	"devDependencies": {
