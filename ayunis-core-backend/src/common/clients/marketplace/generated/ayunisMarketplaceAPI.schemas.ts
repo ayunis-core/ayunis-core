@@ -100,6 +100,72 @@ export interface SkillResponseDto {
   updatedAt: string;
 }
 
+export interface IntegrationConfigFieldDto {
+  /** Unique identifier within the schema */
+  key: string;
+  /** Display label for the frontend form */
+  label: string;
+  /** Field type: text (plaintext), url (validated URL), secret (encrypted at rest) */
+  type: 'text' | 'url' | 'secret';
+  /**
+   * HTTP header name this field maps to; if absent, field is internal config
+   * @nullable
+   */
+  headerName: string | null;
+  /**
+   * Optional prefix prepended to the value before sending
+   * @nullable
+   */
+  prefix: string | null;
+  /** Whether the field must be provided */
+  required: boolean;
+  /**
+   * Optional help text for the frontend form
+   * @nullable
+   */
+  help: string | null;
+  /**
+   * Fixed value from marketplace; if set, field is not shown in forms
+   * @nullable
+   */
+  value: string | null;
+}
+
+export interface IntegrationConfigSchemaDto {
+  /** Auth type for documentation/UI purposes */
+  authType: string;
+  /** Fields configured by org admin at install time */
+  orgFields: IntegrationConfigFieldDto[];
+  /** Fields configured by individual users */
+  userFields: IntegrationConfigFieldDto[];
+}
+
+export interface IntegrationResponseDto {
+  /** Integration UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Description */
+  description: string;
+  /**
+   * Icon URL
+   * @nullable
+   */
+  iconUrl: string | null;
+  /** MCP server URL */
+  serverUrl: string;
+  /** Configuration schema */
+  configSchema: IntegrationConfigSchemaDto;
+  /** Whether the integration is published */
+  published: boolean;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
 export type PublicSkillsControllerListParams = {
   /**
    * Filter by category ID

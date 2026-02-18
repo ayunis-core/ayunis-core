@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type {
+  IntegrationResponseDto,
   PaginatedSkillsResponseDto,
   PublicSkillsControllerListParams,
   SkillCategoryResponseDto,
@@ -207,6 +208,17 @@ export const getAyunisMarketplaceAPI = () => {
     });
   };
 
+  /**
+   * Retrieve full details of a published integration by its unique identifier slug.
+   * @summary Get an integration by identifier
+   */
+  const publicIntegrationsControllerGetByIdentifier = (identifier: string) => {
+    return marketplaceAxiosInstance<IntegrationResponseDto>({
+      url: `/api/integrations/${identifier}`,
+      method: 'GET',
+    });
+  };
+
   return {
     authControllerLoginPage,
     authControllerGoogleAuth,
@@ -233,6 +245,7 @@ export const getAyunisMarketplaceAPI = () => {
     adminSkillsControllerDelete,
     adminSkillsControllerPublish,
     adminSkillsControllerUnpublish,
+    publicIntegrationsControllerGetByIdentifier,
   };
 };
 export type AuthControllerLoginPageResult = NonNullable<
@@ -435,6 +448,15 @@ export type AdminSkillsControllerUnpublishResult = NonNullable<
       ReturnType<
         typeof getAyunisMarketplaceAPI
       >['adminSkillsControllerUnpublish']
+    >
+  >
+>;
+export type PublicIntegrationsControllerGetByIdentifierResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['publicIntegrationsControllerGetByIdentifier']
     >
   >
 >;
