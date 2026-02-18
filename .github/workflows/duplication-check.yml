@@ -1,0 +1,168 @@
+name: Duplication Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ayunis-core-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get changed TypeScript files
+        id: changed-files
+        uses: tj-actions/changed-files@v47
+        with:
+          files: |
+            ayunis-core-backend/src/**/*.ts
+
+      - name: Check duplication
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          REPORT_DIR=$(mktemp -d)
+
+          npx --yes jscpd src \
+            --threshold 100 \
+            --min-lines 6 \
+            --min-tokens 60 \
+            --format "typescript" \
+            --ignore '**/generated/**' \
+            --ignore '**/migrations/**' \
+            --ignore '**/*.spec.ts' \
+            --ignore '**/*.test.ts' \
+            --reporters json \
+            --output "$REPORT_DIR" \
+            --silent >/dev/null 2>&1
+
+          # Build jq filter from changed files (strip project prefix)
+          STAGED_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' \
+            | tr ' ' '\n' \
+            | sed 's#^ayunis-core-backend/##' \
+            | jq -R . | jq -s .)
+
+          MATCHES=$(jq --argjson staged "$STAGED_JSON" '
+            [.duplicates[] | select(
+              (.firstFile.name as $f | $staged | any(. == $f)) or
+              (.secondFile.name as $s | $staged | any(. == $s))
+            )]
+          ' "$REPORT_DIR/jscpd-report.json")
+
+          COUNT=$(echo "$MATCHES" | jq 'length')
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "✅ No duplicated code blocks found in changed files"
+          else
+            echo "❌ Found $COUNT duplicated code block(s) involving changed files:"
+            echo ""
+            echo "$MATCHES" | jq -r '.[] |
+              "  Clone (\(.lines) lines):\n    " +
+              .firstFile.name + ":" + (.firstFile.start | tostring) + "-" + (.firstFile.end | tostring) +
+              "\n    " +
+              .secondFile.name + ":" + (.secondFile.start | tostring) + "-" + (.secondFile.end | tostring) +
+              "\n"
+            '
+            echo "Extract shared logic into a helper function or module."
+            exit 1
+          fi
+
+      - name: No TypeScript files changed
+        if: steps.changed-files.outputs.any_changed != 'true'
+        run: echo "No backend TypeScript files changed, skipping duplication check."
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ayunis-core-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get changed TypeScript files
+        id: changed-files
+        uses: tj-actions/changed-files@v47
+        with:
+          files: |
+            ayunis-core-frontend/src/**/*.ts
+            ayunis-core-frontend/src/**/*.tsx
+
+      - name: Check duplication
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          REPORT_DIR=$(mktemp -d)
+
+          npx --yes jscpd src \
+            --threshold 100 \
+            --min-lines 6 \
+            --min-tokens 60 \
+            --format "typescript,tsx" \
+            --ignore '**/generated/**' \
+            --ignore '**/*.test.ts' \
+            --ignore '**/*.test.tsx' \
+            --reporters json \
+            --output "$REPORT_DIR" \
+            --silent >/dev/null 2>&1
+
+          # Build jq filter from changed files (strip project prefix)
+          STAGED_JSON=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' \
+            | tr ' ' '\n' \
+            | sed 's#^ayunis-core-frontend/##' \
+            | jq -R . | jq -s .)
+
+          MATCHES=$(jq --argjson staged "$STAGED_JSON" '
+            [.duplicates[] | select(
+              (.firstFile.name as $f | $staged | any(. == $f)) or
+              (.secondFile.name as $s | $staged | any(. == $s))
+            )]
+          ' "$REPORT_DIR/jscpd-report.json")
+
+          COUNT=$(echo "$MATCHES" | jq 'length')
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "✅ No duplicated code blocks found in changed files"
+          else
+            echo "❌ Found $COUNT duplicated code block(s) involving changed files:"
+            echo ""
+            echo "$MATCHES" | jq -r '.[] |
+              "  Clone (\(.lines) lines):\n    " +
+              .firstFile.name + ":" + (.firstFile.start | tostring) + "-" + (.firstFile.end | tostring) +
+              "\n    " +
+              .secondFile.name + ":" + (.secondFile.start | tostring) + "-" + (.secondFile.end | tostring) +
+              "\n"
+            '
+            echo "Extract shared logic into a helper function or module."
+            exit 1
+          fi
+
+      - name: No TypeScript files changed
+        if: steps.changed-files.outputs.any_changed != 'true'
+        run: echo "No frontend TypeScript files changed, skipping duplication check."
