@@ -89,7 +89,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pdf-parse": "^1.1.1",
-    "pg": "^8.16.3",
+    "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "tiktoken": "^1.0.22",
