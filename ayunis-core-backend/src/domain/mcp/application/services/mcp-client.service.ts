@@ -41,9 +41,7 @@ export class McpClientService {
   async buildConnectionConfig(
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
-    const config: McpConnectionConfig = {
-      serverUrl: integration.serverUrl,
-    };
+    const headers: Record<string, string> = {};
 
     try {
       const auth = integration.auth;
@@ -58,20 +56,15 @@ export class McpClientService {
         );
         const headerName = auth.getAuthHeaderName();
 
-        config.authHeaderName = headerName;
-        config.authToken =
-          headerName === 'Authorization'
+        headers[headerName ?? 'Authorization'] =
+          headerName === 'Authorization' || !headerName
             ? `Bearer ${decryptedToken}`
             : decryptedToken;
 
         this.logger.log('Built connection config for bearer authentication', {
           integrationId: integration.id,
-          config: config,
         });
-        return config;
-      }
-
-      if (auth instanceof CustomHeaderMcpIntegrationAuth) {
+      } else if (auth instanceof CustomHeaderMcpIntegrationAuth) {
         if (!auth.secret) {
           throw new McpAuthenticationError('Header secret not configured');
         }
@@ -80,13 +73,8 @@ export class McpClientService {
           auth.secret,
         );
 
-        config.authHeaderName = auth.getAuthHeaderName();
-        config.authToken = decryptedKey;
-
-        return config;
-      }
-
-      if (auth instanceof OAuthMcpIntegrationAuth) {
+        headers[auth.getAuthHeaderName() ?? 'Authorization'] = decryptedKey;
+      } else if (auth instanceof OAuthMcpIntegrationAuth) {
         if (!auth.accessToken) {
           throw new McpAuthenticationError('OAuth access token not available');
         }
@@ -101,14 +89,10 @@ export class McpClientService {
           auth.accessToken,
         );
 
-        config.authHeaderName = 'Authorization';
-        config.authToken = `Bearer ${decryptedToken}`;
-
-        return config;
+        headers['Authorization'] = `Bearer ${decryptedToken}`;
       }
 
-      // No auth headers needed for anonymous integrations
-      return config;
+      return { serverUrl: integration.serverUrl, headers };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
         throw error;

@@ -61,7 +61,7 @@ describe('McpClientService', () => {
   });
 
   describe('buildConnectionConfig', () => {
-    it('returns base config for no-auth integrations', async () => {
+    it('returns base config with empty headers for no-auth integrations', async () => {
       const integration = new CustomMcpIntegration({
         ...baseIntegrationParams,
         auth: new NoAuthMcpIntegrationAuth(),
@@ -69,11 +69,14 @@ describe('McpClientService', () => {
 
       const config = await service.buildConnectionConfig(integration);
 
-      expect(config).toEqual({ serverUrl: baseIntegrationParams.serverUrl });
+      expect(config).toEqual({
+        serverUrl: baseIntegrationParams.serverUrl,
+        headers: {},
+      });
       expect(encryption.decrypt).not.toHaveBeenCalled();
     });
 
-    it('builds config for bearer auth', async () => {
+    it('builds config with Authorization header for bearer auth', async () => {
       const auth = new BearerMcpIntegrationAuth({
         authToken: 'encrypted-token',
       });
@@ -89,12 +92,11 @@ describe('McpClientService', () => {
 
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
-        authHeaderName: 'Authorization',
-        authToken: 'Bearer decrypted-token',
+        headers: { Authorization: 'Bearer decrypted-token' },
       });
     });
 
-    it('builds config for custom header auth', async () => {
+    it('builds config with custom header for custom header auth', async () => {
       const auth = new CustomHeaderMcpIntegrationAuth({
         secret: 'encrypted-secret',
         headerName: 'X-API-Key',
@@ -110,12 +112,11 @@ describe('McpClientService', () => {
 
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
-        authHeaderName: 'X-API-Key',
-        authToken: 'decrypted-secret',
+        headers: { 'X-API-Key': 'decrypted-secret' },
       });
     });
 
-    it('builds config for oauth auth with valid token', async () => {
+    it('builds config with Authorization header for oauth auth with valid token', async () => {
       const auth = new OAuthMcpIntegrationAuth({
         clientId: 'client',
         clientSecret: 'secret',
@@ -133,8 +134,7 @@ describe('McpClientService', () => {
 
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
-        authHeaderName: 'Authorization',
-        authToken: 'Bearer decrypted-token',
+        headers: { Authorization: 'Bearer decrypted-token' },
       });
     });
 

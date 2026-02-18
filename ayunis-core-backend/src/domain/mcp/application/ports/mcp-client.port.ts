@@ -4,10 +4,8 @@
 export interface McpConnectionConfig {
   /** Base URL of the MCP server (uses Streamable HTTP transport, MCP protocol 2024-11-05+) */
   serverUrl: string;
-  /** Optional authentication header name (e.g., 'Authorization') */
-  authHeaderName?: string;
-  /** Optional authentication token value */
-  authToken?: string;
+  /** Optional headers to send with every MCP request (auth + config fields) */
+  headers?: Record<string, string>;
 }
 
 /**

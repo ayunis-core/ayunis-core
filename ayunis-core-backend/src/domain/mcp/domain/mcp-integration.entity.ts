@@ -107,6 +107,10 @@ export abstract class McpIntegration {
     return this.kind === McpIntegrationKind.CUSTOM;
   }
 
+  isMarketplace(): boolean {
+    return this.kind === McpIntegrationKind.MARKETPLACE;
+  }
+
   updateReturnsPii(value: boolean): void {
     this.returnsPii = value;
     this.touch();
@@ -119,3 +123,4 @@ export abstract class McpIntegration {
 
 export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
 export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
+export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';
