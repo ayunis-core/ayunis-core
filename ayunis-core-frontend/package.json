@@ -12,7 +12,9 @@
     "openapi:generate": "orval --config orval.config.ts",
     "openapi:update": "npm run openapi:fetch && npm run openapi:generate",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "deps:check": "dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known",
+    "deps:check:strict": "dependency-cruiser src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
@@ -74,6 +76,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "dependency-cruiser": "^17.3.8",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
