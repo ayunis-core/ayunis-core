@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
@@ -26,11 +26,11 @@ import { Markdown } from '@/widgets/markdown';
 import { cn } from '@/shared/lib/shadcn/utils';
 import SendEmailWidget from './chat-widgets/SendEmailWidget';
 import ExecutableToolWidget from './chat-widgets/ExecutableToolWidget';
-import IntegrationToolWidget from './chat-widgets/IntegrationToolWidget';
 import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
 import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
-import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
+import CreateDocumentWidget from './chat-widgets/CreateDocumentWidget';
+import UpdateDocumentWidget from './chat-widgets/UpdateDocumentWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -45,53 +45,40 @@ interface ChatMessageProps {
   readonly message: Message;
   readonly hideAvatar?: boolean;
   readonly isStreaming?: boolean;
+  readonly threadId?: string;
+  readonly onOpenArtifact?: (artifactId: string) => void;
 }
 
-function CopyMessageButton({
-  contentRef,
-}: {
-  readonly contentRef: React.RefObject<HTMLDivElement | null>;
-}) {
+function CopyMessageButton({ message }: { readonly message: Message }) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation('chat');
 
+  const extractTextContent = (message: Message): string => {
+    if (message.role !== 'assistant') return '';
+    // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming even if typed as required
+    if (message.content == null || message.content.length === 0) return '';
+
+    return message.content
+      .filter((content) => content.type === 'text')
+      .map((content) => (content as TextMessageContent).text)
+      .join('\n\n');
+  };
+
   const handleCopy = async () => {
-    const el = contentRef.current;
-    if (!el) return;
-
-    const copyableElements = el.querySelectorAll('[data-copyable="true"]');
-    if (copyableElements.length === 0) return;
-
-    const htmlParts: string[] = [];
-    const textParts: string[] = [];
-    copyableElements.forEach((element) => {
-      htmlParts.push(element.innerHTML);
-      textParts.push(element.textContent ?? '');
-    });
-
-    const html = htmlParts.join('<br><br>');
-    const plainText = textParts.join('\n\n');
-    if (!plainText.trim()) return;
+    const textContent = extractTextContent(message);
+    if (!textContent) return;
 
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html': new Blob([html], { type: 'text/html' }),
-          'text/plain': new Blob([plainText], { type: 'text/plain' }),
-        }),
-      ]);
+      await navigator.clipboard.writeText(textContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      try {
-        await navigator.clipboard.writeText(plainText);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy message:', error);
-      }
+    } catch (error) {
+      console.error('Failed to copy message:', error);
     }
   };
+
+  const textContent = extractTextContent(message);
+  if (!textContent) return null;
 
   return (
     <Tooltip>
@@ -119,9 +106,10 @@ export default function ChatMessage({
   hideAvatar = false,
   message,
   isStreaming = false,
+  threadId,
+  onOpenArtifact,
 }: ChatMessageProps) {
   const { theme } = useTheme();
-  const messageContentRef = useRef<HTMLDivElement>(null);
 
   const isUserMessage = message.role === 'user';
   const isAssistantMessage = message.role === 'assistant';
@@ -160,16 +148,17 @@ export default function ChatMessage({
         )}
         <div className="max-w-2xl min-w-0 space-y-1 w-full">
           <div
-            ref={messageContentRef}
             className="space-y-2 overflow-hidden w-full"
             data-testid="assistant-message"
           >
-            {renderMessageContent(message, isStreaming)}
+            {renderMessageContent(
+              message,
+              isStreaming,
+              threadId,
+              onOpenArtifact,
+            )}
           </div>
-          {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming */}
-          {message.content?.some((c) => c.type === 'text') && (
-            <CopyMessageButton contentRef={messageContentRef} />
-          )}
+          <CopyMessageButton message={message} />
         </div>
       </div>
     );
@@ -220,7 +209,12 @@ function ImageThumbnail({
 }
 
 // eslint-disable-next-line sonarjs/function-return-type
-function renderMessageContent(message: Message, isStreaming?: boolean) {
+function renderMessageContent(
+  message: Message,
+  isStreaming?: boolean,
+  threadId?: string,
+  onOpenArtifact?: (artifactId: string) => void,
+) {
   switch (message.role) {
     case 'user':
     case 'system': {
@@ -244,18 +238,11 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
             </div>
           )}
 
-          {texts.map((textContent, index) =>
-            textContent.isSkillInstruction ? (
-              <SkillInstructionWidget
-                key={`skill-instruction-${index}-${textContent.text.slice(0, 50)}`}
-                content={textContent}
-              />
-            ) : (
-              <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
-                {textContent.text}
-              </Markdown>
-            ),
-          )}
+          {texts.map((textContent, index) => (
+            <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
+              {textContent.text}
+            </Markdown>
+          ))}
         </>
       );
     }
@@ -285,12 +272,11 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
         if (content.type === 'text') {
           const textMessageContent = content as TextMessageContent;
           return (
-            <div
+            <Markdown
               key={`text-${index}-${textMessageContent.text.slice(0, 50)}`}
-              data-copyable="true"
             >
-              <Markdown>{textMessageContent.text}</Markdown>
-            </div>
+              {textMessageContent.text}
+            </Markdown>
           );
         } else if (content.type === 'tool_use') {
           try {
@@ -362,13 +348,31 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
                 />
               );
             }
-
-            if (toolUseMessageContent.integration) {
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.create_document
+            ) {
               return (
-                <IntegrationToolWidget
-                  key={`integration-tool-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                <CreateDocumentWidget
+                  key={`create-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
+                  threadId={threadId ?? ''}
+                  onOpenArtifact={onOpenArtifact}
+                />
+              );
+            }
+            if (
+              toolUseMessageContent.name ===
+              ToolAssignmentDtoType.update_document
+            ) {
+              return (
+                <UpdateDocumentWidget
+                  key={`update-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
+                  content={toolUseMessageContent}
+                  isStreaming={isStreaming}
+                  threadId={threadId ?? ''}
+                  onOpenArtifact={onOpenArtifact}
                 />
               );
             }

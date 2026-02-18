@@ -1,10 +1,16 @@
 import React from 'react';
 import { useAutoScroll } from '@/features/useAutoScroll';
+import {
+  Panel,
+  Group as PanelGroup,
+  Separator as PanelResizeHandle,
+} from 'react-resizable-panels';
 
 interface ChatInterfaceLayoutProps {
   chatHeader: React.ReactNode;
   chatContent: React.ReactNode;
   chatInput: React.ReactNode;
+  sidePanel?: React.ReactNode;
   className?: string;
 }
 
@@ -12,11 +18,13 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   chatHeader,
   chatContent,
   chatInput,
+  sidePanel,
   className = '',
 }) => {
   const { scrollRef, handleScroll } = useAutoScroll(chatContent);
-  return (
-    <div className={`flex flex-col absolute inset-0 px-4 ${className}`}>
+
+  const chatPane = (
+    <div className={`flex flex-col h-full px-4 ${className}`}>
       {/* Chat Header - sticky at top, not scrollable */}
       <div className="flex-shrink-0 sticky top-0 z-10">{chatHeader}</div>
 
@@ -26,7 +34,6 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
         ref={scrollRef}
         onScroll={handleScroll}
       >
-        {/* <ScrollArea className="h-full">{chatContent}</ScrollArea> */}
         {chatContent}
       </div>
 
@@ -35,6 +42,22 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
         {chatInput}
       </div>
     </div>
+  );
+
+  if (!sidePanel) {
+    return <div className="absolute inset-0">{chatPane}</div>;
+  }
+
+  return (
+    <PanelGroup orientation="horizontal" className="absolute inset-0">
+      <Panel defaultSize={50} minSize={30}>
+        {chatPane}
+      </Panel>
+      <PanelResizeHandle className="w-1 bg-border hover:bg-primary/20 transition-colors" />
+      <Panel defaultSize={50} minSize={30}>
+        {sidePanel}
+      </Panel>
+    </PanelGroup>
   );
 };
 
