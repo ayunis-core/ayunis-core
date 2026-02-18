@@ -41,7 +41,9 @@ artifacts/
 │   │   ├── local-artifacts-repository.module.ts
 │   │   └── unique-constraint.util.ts
 │   └── export/
-│       └── html-document-export.service.ts
+│       ├── html-document-export.service.ts
+│       ├── html-to-docx-converter.ts
+│       └── docx-document-config.ts
 ├── presenters/http/
 │   ├── artifacts.controller.ts
 │   ├── dtos/
