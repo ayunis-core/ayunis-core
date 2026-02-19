@@ -24,6 +24,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       save: jest.fn(),
       findAll: jest.fn(),
       findByOrgIdAndSlug: jest.fn(),
+      findByOrgIdAndMarketplaceIdentifier: jest.fn(),
       delete: jest.fn(),
     } as unknown as jest.Mocked<McpIntegrationsRepositoryPort>;
 

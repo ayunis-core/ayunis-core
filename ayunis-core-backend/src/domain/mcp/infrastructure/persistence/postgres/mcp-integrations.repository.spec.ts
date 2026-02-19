@@ -4,6 +4,7 @@ import { McpIntegrationsRepository } from './mcp-integrations.repository';
 import { McpIntegrationRecord } from './schema/mcp-integration.record';
 import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
 import { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
+import { MarketplaceMcpIntegrationRecord } from './schema/marketplace-mcp-integration.record';
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from '../../../application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../../application/factories/mcp-integration-auth.factory';
@@ -35,6 +36,7 @@ describe('McpIntegrationsRepository', () => {
   let ormRepository: InMemoryRepository<McpIntegrationRecord>;
   let authRepository: InMemoryRepository<McpIntegrationAuthRecord>;
   let predefinedRepository: InMemoryRepository<PredefinedMcpIntegrationRecord>;
+  let marketplaceRepository: InMemoryRepository<MarketplaceMcpIntegrationRecord>;
   let mapper: McpIntegrationMapper;
 
   beforeEach(() => {
@@ -42,6 +44,8 @@ describe('McpIntegrationsRepository', () => {
     authRepository = new InMemoryRepository<McpIntegrationAuthRecord>();
     predefinedRepository =
       new InMemoryRepository<PredefinedMcpIntegrationRecord>();
+    marketplaceRepository =
+      new InMemoryRepository<MarketplaceMcpIntegrationRecord>();
     mapper = new McpIntegrationMapper(
       new McpIntegrationFactory(),
       new McpIntegrationAuthFactory(),
@@ -67,6 +71,7 @@ describe('McpIntegrationsRepository', () => {
       ormRepository as unknown as Repository<McpIntegrationRecord>,
       authRepository as unknown as Repository<McpIntegrationAuthRecord>,
       predefinedRepository as unknown as Repository<PredefinedMcpIntegrationRecord>,
+      marketplaceRepository as unknown as Repository<MarketplaceMcpIntegrationRecord>,
       mapper,
     );
   });

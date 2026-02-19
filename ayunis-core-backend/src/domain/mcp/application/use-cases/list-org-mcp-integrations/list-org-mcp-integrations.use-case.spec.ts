@@ -30,6 +30,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
       findById: jest.fn(),
       findAll: jest.fn(),
       findByOrgIdAndSlug: jest.fn(),
+      findByOrgIdAndMarketplaceIdentifier: jest.fn(),
       delete: jest.fn(),
     };
 
