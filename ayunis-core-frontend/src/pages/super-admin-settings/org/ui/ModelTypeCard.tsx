@@ -23,9 +23,9 @@ import { cn } from '@/shared/lib/shadcn/utils';
 import { getFlagByProvider } from '@/shared/lib/getFlagByProvider';
 
 interface ModelTypeCardProps {
-  type: 'language' | 'embedding';
-  models: ModelWithConfigResponseDto[];
-  orgId: string;
+  readonly type: 'language' | 'embedding';
+  readonly models: ModelWithConfigResponseDto[];
+  readonly orgId: string;
 }
 
 // Priority order: DE (0) -> EU (1) -> US (2)
@@ -45,9 +45,8 @@ function getHostingPriority(
       return 1; // EU
     case 'openai':
     case 'anthropic':
+    case 'gemini':
       return 2; // US
-    default:
-      return 3;
   }
 }
 
@@ -75,13 +74,12 @@ export default function ModelTypeCard({
     model: ModelWithConfigResponseDto,
     isPermitted: boolean,
   ) {
+    // eslint-disable-next-line sonarjs/no-selector-parameter
     if (isPermitted) {
+      // eslint-disable-next-line sonarjs/void-use
       void enableModel(model);
-      return;
-    }
-    if (!isPermitted && model.permittedModelId) {
+    } else if (model.permittedModelId) {
       deletePermittedModel(model.permittedModelId);
-      return;
     }
   }
 
