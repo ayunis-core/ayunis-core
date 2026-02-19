@@ -12,8 +12,7 @@ import {
   StreamInferenceInput,
   StreamInferenceResponseChunk,
 } from 'src/domain/models/application/ports/stream-inference.handler';
-import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
-import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
+import { CollectUsageAsyncService } from './collect-usage-async.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
@@ -47,7 +46,7 @@ export class StreamingInferenceService {
   constructor(
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
-    private readonly collectUsageUseCase: CollectUsageUseCase,
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
   ) {}
 
   async *executeStreamingInference(params: {
@@ -104,7 +103,7 @@ export class StreamingInferenceService {
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
         if (usage) {
-          this.collectUsageAsync(
+          this.collectUsage(
             model,
             usage.inputTokens,
             usage.outputTokens,
@@ -130,7 +129,7 @@ export class StreamingInferenceService {
     return {
       [Symbol.asyncIterator]() {
         let completed = false;
-        let error: any = null;
+        let error: Error | null = null;
         let consumedIndex = 0;
 
         const subscription = stream$.subscribe({
@@ -240,7 +239,7 @@ export class StreamingInferenceService {
     return shouldUpdate;
   }
 
-  private buildMessageContent(
+  private buildBaseContent(
     state: AccumulatedState,
   ): Array<
     TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
@@ -264,6 +263,16 @@ export class StreamingInferenceService {
         new TextMessageContent(state.text, state.textProviderMetadata),
       );
     }
+
+    return content;
+  }
+
+  private buildMessageContent(
+    state: AccumulatedState,
+  ): Array<
+    TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
+  > {
+    const content = this.buildBaseContent(state);
 
     state.toolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
@@ -341,25 +350,7 @@ export class StreamingInferenceService {
   ): Array<
     TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
   > {
-    const content: Array<
-      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-    > = [];
-
-    if (state.thinking.trim()) {
-      content.push(
-        new ThinkingMessageContent(
-          state.thinking,
-          state.thinkingId,
-          state.thinkingSignature,
-        ),
-      );
-    }
-
-    if (state.text.trim()) {
-      content.push(
-        new TextMessageContent(state.text, state.textProviderMetadata),
-      );
-    }
+    const content = this.buildBaseContent(state);
 
     if (includeToolCalls) {
       this.addFinalToolCalls(content, state.toolCalls);
@@ -424,31 +415,17 @@ export class StreamingInferenceService {
     return hasUsageData ? { inputTokens, outputTokens } : undefined;
   }
 
-  private collectUsageAsync(
+  private collectUsage(
     model: LanguageModel,
     inputTokens: number,
     outputTokens: number,
     messageId?: UUID,
   ): void {
-    this.logger.debug('Collecting usage', {
-      modelId: model.id,
-      modelName: model.name,
+    this.collectUsageAsyncService.collect(
+      model,
       inputTokens,
       outputTokens,
       messageId,
-    });
-
-    this.collectUsageUseCase
-      .execute(
-        new CollectUsageCommand({
-          model,
-          inputTokens,
-          outputTokens,
-          requestId: messageId,
-        }),
-      )
-      .catch((error) => {
-        this.logger.debug('Usage collection failed', { error: error as Error });
-      });
+    );
   }
 }

@@ -27,7 +27,7 @@ export type CurrentUserParam = UserProperty;
  * Example usage:
  * ```
  * @Get()
- * getProfile(@CurrentUser(UserProperty.FULL_USER) user: any) {}
+ * getProfile(@CurrentUser(UserProperty.FULL_USER) user: unknown) {}
  *
  * @Get()
  * getUserId(@CurrentUser(UserProperty.ID) userId: string) {}

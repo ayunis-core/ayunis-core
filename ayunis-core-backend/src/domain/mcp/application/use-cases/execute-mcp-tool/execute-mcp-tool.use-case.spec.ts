@@ -1,15 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ExecuteMcpToolUseCase } from './execute-mcp-tool.use-case';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
+import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
+  McpUnauthenticatedError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
@@ -74,6 +76,7 @@ describe('ExecuteMcpToolUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExecuteMcpToolUseCase,
+        ValidateIntegrationAccessService,
         { provide: McpIntegrationsRepositoryPort, useValue: repository },
         { provide: McpClientService, useValue: mcpClientService },
         { provide: ContextService, useValue: contextService },
@@ -156,11 +159,11 @@ describe('ExecuteMcpToolUseCase', () => {
     );
   });
 
-  it('throws UnauthorizedException when orgId missing', async () => {
+  it('throws McpUnauthenticatedError when orgId missing', async () => {
     contextService.get.mockReturnValue(undefined);
 
     await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
-      UnauthorizedException,
+      McpUnauthenticatedError,
     );
   });
 
