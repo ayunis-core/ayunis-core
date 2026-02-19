@@ -56,7 +56,7 @@ export class SourceMapper {
         name: record.name,
         type: TextType.FILE,
         text: record.textSourceDetails.text,
-        contentChunks: record.textSourceDetails.contentChunks?.map((c) =>
+        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
           this.sourceContentChunkMapper.toDomain(c),
         ),
         createdAt: record.createdAt,
@@ -71,7 +71,7 @@ export class SourceMapper {
         name: record.name,
         type: TextType.WEB,
         text: record.textSourceDetails.text,
-        contentChunks: record.textSourceDetails.contentChunks?.map((c) =>
+        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
           this.sourceContentChunkMapper.toDomain(c),
         ),
         createdAt: record.createdAt,
@@ -151,7 +151,7 @@ export class SourceMapper {
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    const contentChunks = source.contentChunks?.map((c) =>
+    const contentChunks = source.contentChunks.map((c) =>
       this.sourceContentChunkMapper.toRecord(details, c),
     );
 
@@ -180,7 +180,7 @@ export class SourceMapper {
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    const contentChunks = source.contentChunks?.map((c) =>
+    const contentChunks = source.contentChunks.map((c) =>
       this.sourceContentChunkMapper.toRecord(details, c),
     );
 

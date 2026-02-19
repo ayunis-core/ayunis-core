@@ -28,7 +28,7 @@ export class UpdateTeamUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    const trimmedName = command.name?.trim() || '';
+    const trimmedName = command.name.trim() || '';
 
     this.logger.log('updateTeam', {
       teamId: command.teamId,

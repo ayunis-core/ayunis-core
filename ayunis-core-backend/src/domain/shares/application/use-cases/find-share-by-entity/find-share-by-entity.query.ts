@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
+import type { UUID } from 'crypto';
+import type { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
 
 /**
  * Query for finding a specific share by entity type and entity ID

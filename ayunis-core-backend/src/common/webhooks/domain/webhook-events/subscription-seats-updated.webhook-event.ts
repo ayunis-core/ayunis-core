@@ -1,6 +1,6 @@
 import { WebhookEvent } from '../webhook-event.entity';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
-import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 
 export class SubscriptionSeatsUpdatedWebhookEvent extends WebhookEvent {
   readonly eventType: WebhookEventType;

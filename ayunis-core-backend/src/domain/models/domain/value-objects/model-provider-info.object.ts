@@ -1,4 +1,4 @@
-import { ModelProvider } from './model-provider.enum';
+import type { ModelProvider } from './model-provider.enum';
 
 export class ModelProviderInfo {
   provider: ModelProvider;

@@ -1,23 +1,26 @@
-import {
+import type {
   StreamInferenceHandler,
   StreamInferenceInput,
+} from '../../application/ports/stream-inference.handler';
+import {
   StreamInferenceResponseChunk,
   StreamInferenceResponseChunkToolCall,
 } from '../../application/ports/stream-inference.handler';
-import { Observable, Subscriber } from 'rxjs';
-import Anthropic from '@anthropic-ai/sdk';
+import type { Subscriber } from 'rxjs';
+import { Observable } from 'rxjs';
+import type Anthropic from '@anthropic-ai/sdk';
 import { Logger } from '@nestjs/common';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
-import { Message } from 'src/domain/messages/domain/message.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import {
+import type {
   MessageCreateParamsStreaming,
   ToolChoiceAny,
   ToolChoiceAuto,
@@ -25,7 +28,7 @@ import {
 } from '@anthropic-ai/sdk/resources/messages';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 type AnthropicToolChoice = ToolChoiceAny | ToolChoiceAuto | ToolChoiceTool;
@@ -62,7 +65,7 @@ export abstract class BaseAnthropicStreamInferenceHandler
   ): Promise<void> {
     try {
       const { messages, tools, toolChoice, systemPrompt, orgId } = input;
-      const anthropicTools = tools?.map(this.convertTool);
+      const anthropicTools = tools.map(this.convertTool);
       const anthropicMessages = await this.convertMessages(messages, orgId);
       const anthropicToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
@@ -322,7 +325,7 @@ export abstract class BaseAnthropicStreamInferenceHandler
     // input_tokens are only sent in message_start, not in message_delta
     if (chunk.type === 'message_start') {
       const usage = chunk.message.usage;
-      if (usage?.input_tokens !== undefined) {
+      if (usage.input_tokens !== undefined) {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
           textContentDelta: null,
@@ -339,7 +342,7 @@ export abstract class BaseAnthropicStreamInferenceHandler
     // output_tokens are sent in message_delta at the end of the stream
     if (chunk.type === 'message_delta') {
       const usage = chunk.usage;
-      if (usage?.output_tokens !== undefined) {
+      if (usage.output_tokens !== undefined) {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,
           textContentDelta: null,

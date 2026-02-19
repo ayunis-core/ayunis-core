@@ -1,7 +1,7 @@
-import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
+import type { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
 import { WebhookEvent } from '../webhook-event.entity';
-import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
+import type { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 
 export class SubscriptionBillingInfoUpdatedWebhookEvent extends WebhookEvent {
   readonly eventType: WebhookEventType;

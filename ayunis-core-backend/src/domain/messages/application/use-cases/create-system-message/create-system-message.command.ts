@@ -1,5 +1,5 @@
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { UUID } from 'crypto';
+import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import type { UUID } from 'crypto';
 
 export class CreateSystemMessageCommand {
   constructor(

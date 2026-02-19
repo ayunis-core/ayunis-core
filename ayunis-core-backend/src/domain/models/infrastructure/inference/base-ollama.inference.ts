@@ -36,11 +36,11 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
     this.logger.log('answer', {
       model: input.model.name,
       messageCount: input.messages.length,
-      toolCount: input.tools?.length ?? 0,
+      toolCount: input.tools.length ?? 0,
     });
     try {
       const { messages, tools, orgId } = input;
-      const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
+      const ollamaTools = tools.map(this.convertTool).map((tool) => ({
         ...tool,
         function: { ...tool.function, strict: true },
       }));
@@ -275,8 +275,8 @@ export abstract class BaseOllamaInferenceHandler extends InferenceHandler {
 
   private parseToolCall(toolCall: OllamaToolCall): ToolUseMessageContent {
     const id = `ollama-tool-${Date.now()}-${Math.random()}`;
-    const name = toolCall.function?.name;
-    const parameters = toolCall.function?.arguments as Record<string, unknown>;
+    const name = toolCall.function.name;
+    const parameters = toolCall.function.arguments as Record<string, unknown>;
 
     if (!name) {
       throw new InferenceFailedError('Tool call missing function name', {

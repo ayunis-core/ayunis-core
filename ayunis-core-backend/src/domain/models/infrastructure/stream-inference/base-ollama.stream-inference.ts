@@ -88,7 +88,7 @@ export class BaseOllamaStreamInferenceHandler
     input: StreamInferenceInput,
   ): Promise<ChatRequest & { stream: true }> => {
     const { messages, tools, orgId } = input;
-    const ollamaTools = tools?.map(this.convertTool).map((tool) => ({
+    const ollamaTools = tools.map(this.convertTool).map((tool) => ({
       ...tool,
       function: { ...tool.function, strict: true },
     }));
@@ -263,8 +263,8 @@ export class BaseOllamaStreamInferenceHandler
         new StreamInferenceResponseChunkToolCall({
           index: 0,
           id: randomUUID(),
-          name: toolCall.function?.name,
-          argumentsDelta: JSON.stringify(toolCall.function?.arguments),
+          name: toolCall.function.name,
+          argumentsDelta: JSON.stringify(toolCall.function.arguments),
         }),
     ) ?? [];
 

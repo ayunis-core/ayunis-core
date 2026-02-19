@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class UpdatePermittedModelCommand {
   public readonly permittedModelId: UUID;

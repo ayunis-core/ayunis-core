@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { AddMcpIntegrationToThreadUseCase } from './add-mcp-integration-to-thread.use-case';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
@@ -6,7 +7,7 @@ import { ThreadsRepository } from '../../ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadNotFoundError } from '../../threads.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('AddMcpIntegrationToThreadUseCase', () => {
   let useCase: AddMcpIntegrationToThreadUseCase;

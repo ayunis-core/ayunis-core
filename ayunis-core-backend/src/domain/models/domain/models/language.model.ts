@@ -1,8 +1,8 @@
-import { ModelProvider } from '../value-objects/model-provider.enum';
+import type { ModelProvider } from '../value-objects/model-provider.enum';
 import { Model } from '../model.entity';
 import { ModelType } from '../value-objects/model-type.enum';
-import { UUID } from 'crypto';
-import { Currency } from '../value-objects/currency.enum';
+import type { UUID } from 'crypto';
+import type { Currency } from '../value-objects/currency.enum';
 
 export class LanguageModel extends Model {
   public readonly canStream: boolean;

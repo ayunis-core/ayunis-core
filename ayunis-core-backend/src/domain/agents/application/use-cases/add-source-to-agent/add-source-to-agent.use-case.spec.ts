@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { AddSourceToAgentUseCase } from './add-source-to-agent.use-case';
 import { AddSourceToAgentCommand } from './add-source-to-agent.command';
@@ -17,7 +18,7 @@ import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 // Mock Source implementation since it's abstract
 class MockSource extends Source {

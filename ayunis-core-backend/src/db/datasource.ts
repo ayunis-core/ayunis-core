@@ -1,6 +1,6 @@
 import { typeormConfigRaw } from '../config/typeorm.config';
 import { DataSource } from 'typeorm';
-import { WithLengthColumnType } from 'typeorm/driver/types/ColumnTypes';
+import type { WithLengthColumnType } from 'typeorm/driver/types/ColumnTypes';
 
 const dataSource = new DataSource(typeormConfigRaw);
 

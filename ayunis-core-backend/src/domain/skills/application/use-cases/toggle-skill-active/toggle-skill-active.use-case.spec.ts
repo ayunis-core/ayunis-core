@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -14,7 +15,7 @@ import { SkillRepository } from '../../ports/skill.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { Skill } from '../../../domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { SkillNotFoundError } from '../../skills.errors';
 
 describe('ToggleSkillActiveUseCase', () => {

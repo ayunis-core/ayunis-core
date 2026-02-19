@@ -1,6 +1,6 @@
-import { Repository } from 'typeorm';
-import { UUID } from 'crypto';
-import { UsageRecord } from '../schema/usage.record';
+import type { Repository } from 'typeorm';
+import type { UUID } from 'crypto';
+import type { UsageRecord } from '../schema/usage.record';
 
 export async function countUsagesInRange(
   usageRepository: Repository<UsageRecord>,

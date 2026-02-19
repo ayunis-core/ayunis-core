@@ -1,4 +1,5 @@
-import { randomUUID, UUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 
 export interface SubscriptionBillingInfoParams {
   id?: UUID;

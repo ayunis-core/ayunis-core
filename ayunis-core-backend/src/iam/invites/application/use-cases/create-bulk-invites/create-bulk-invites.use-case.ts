@@ -204,7 +204,6 @@ export class CreateBulkInvitesUseCase {
           errorCode: 'EMAIL_ALREADY_USER',
           message: 'Email is already registered as a user',
         });
-        return;
       }
     });
 

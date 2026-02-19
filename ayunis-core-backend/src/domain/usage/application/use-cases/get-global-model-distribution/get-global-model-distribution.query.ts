@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { UsageConstants } from '../../../domain/value-objects/usage.constants';
 
 export class GetGlobalModelDistributionQuery {

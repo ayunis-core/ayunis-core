@@ -1,6 +1,6 @@
-import { JSONSchema } from 'json-schema-to-ts';
+import type { JSONSchema } from 'json-schema-to-ts';
 import { Tool } from './tool.entity';
-import { ToolType } from './value-objects/tool-type.enum';
+import type { ToolType } from './value-objects/tool-type.enum';
 
 export abstract class DisplayableTool extends Tool {
   isDisplayable: boolean = true;

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { McpIntegrationsController } from './mcp-integrations.controller';
 import { McpIntegrationDtoMapper } from './mappers/mcp-integration-dto.mapper';
@@ -19,9 +20,9 @@ import {
 } from '../../domain/mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from '../../domain/value-objects/mcp-auth-method.enum';
-import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
-import { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
-import { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
+import type { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
+import type { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
+import type { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
 import { randomUUID } from 'crypto';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';

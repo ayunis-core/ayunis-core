@@ -52,7 +52,7 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
   ): Promise<void> {
     try {
       const { messages, tools, toolChoice, orgId } = input;
-      const openAiTools = tools?.map(this.convertTool);
+      const openAiTools = tools.map(this.convertTool);
       const openAiMessages = await this.convertMessages(messages, orgId);
       const isGpt5 = input.model.name.startsWith('gpt-5');
 
@@ -258,6 +258,7 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
   ): StreamInferenceResponseChunk | null => {
     if (chunk.type !== 'response.output_text.delta')
       this.logger.debug('convertChunk', chunk);
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- OpenAI SDK emits many event types; we only handle the ones we care about
     switch (chunk.type) {
       case 'response.reasoning_summary_text.delta':
         return new StreamInferenceResponseChunk({
@@ -272,12 +273,12 @@ export class OpenAIStreamInferenceHandler implements StreamInferenceHandler {
           toolCallsDelta: [],
         });
       case 'response.completed': {
-        const usage = chunk.response?.usage;
+        const usage = chunk.response.usage;
 
         // Extract reasoning metadata (id, encrypted_content) from first reasoning output item
         let thinkingId: string | null = null;
         let thinkingSignature: string | null = null;
-        const reasoningItem = chunk.response?.output?.find(
+        const reasoningItem = chunk.response.output.find(
           (item) => item.type === 'reasoning',
         );
         if (reasoningItem && 'id' in reasoningItem) {

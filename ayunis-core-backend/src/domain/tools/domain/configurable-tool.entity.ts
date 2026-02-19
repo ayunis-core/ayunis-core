@@ -1,6 +1,6 @@
-import { ToolConfig } from './tool-config.entity';
+import type { ToolConfig } from './tool-config.entity';
 import { Tool } from './tool.entity';
-import { JSONSchema } from 'json-schema-to-ts';
+import type { JSONSchema } from 'json-schema-to-ts';
 
 export abstract class ConfigurableTool<T extends ToolConfig> extends Tool {
   public readonly config: T;

@@ -1,5 +1,6 @@
-import { UUID, randomUUID } from 'crypto';
-import { SourceType } from './source-type.enum';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { SourceType } from './source-type.enum';
 import { SourceCreator } from './source-creator.enum';
 
 export abstract class Source {

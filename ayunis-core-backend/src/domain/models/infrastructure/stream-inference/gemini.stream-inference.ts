@@ -68,7 +68,7 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
       const { messages, tools, toolChoice, orgId } = input;
       const contents = await this.convertMessages(messages, orgId);
 
-      const geminiTools = tools?.length
+      const geminiTools = tools.length
         ? [{ functionDeclarations: tools.map(this.convertTool) }]
         : undefined;
 
@@ -78,7 +78,7 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
           : undefined,
         tools: geminiTools,
         toolConfig:
-          toolChoice && tools?.length
+          toolChoice && tools.length
             ? { functionCallingConfig: this.convertToolChoice(toolChoice) }
             : undefined,
       };
@@ -130,7 +130,7 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
     } catch (error) {
       this.logger.error('Gemini streaming inference failed', {
         message: error instanceof Error ? error.message : 'Unknown error',
-        status: (error as Record<string, unknown>)?.status,
+        status: (error as Record<string, unknown>).status,
         contents: JSON.stringify(error).substring(0, 2000),
       });
       subscriber.error(error);
@@ -222,7 +222,7 @@ export class GeminiStreamInferenceHandler implements StreamInferenceHandler {
             functionCall: {
               id: content.id,
               name: content.name,
-              args: content.params as Record<string, unknown>,
+              args: content.params,
             },
           };
           if (content.providerMetadata?.gemini?.thoughtSignature) {

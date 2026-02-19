@@ -1,4 +1,5 @@
-import { UUID, randomUUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 
 export class Prompt {
   public readonly id: UUID;

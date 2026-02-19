@@ -1,7 +1,7 @@
-import { ToolResultMessageContent } from '../message-contents/tool-result.message-content.entity';
+import type { ToolResultMessageContent } from '../message-contents/tool-result.message-content.entity';
 import { Message } from '../message.entity';
 import { MessageRole } from '../value-objects/message-role.object';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class ToolResultMessage extends Message<ToolResultMessageContent> {
   constructor(params: {

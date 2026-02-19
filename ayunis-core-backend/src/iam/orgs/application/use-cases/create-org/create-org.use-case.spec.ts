@@ -1,10 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateOrgUseCase } from './create-org.use-case';
 import { CreateOrgCommand } from './create-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from '../../../domain/org.entity';
 import { OrgCreationFailedError } from '../../orgs.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('CreateOrgUseCase', () => {
   let useCase: CreateOrgUseCase;

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AuthenticationController } from './authentication.controller';
 import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token/refresh-token.use-case';
@@ -7,13 +8,13 @@ import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-u
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
 import { ActiveUser } from '../../domain/active-user.entity';
 import { AuthTokens } from '../../domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;

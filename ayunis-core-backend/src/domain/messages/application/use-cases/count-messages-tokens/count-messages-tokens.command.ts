@@ -1,5 +1,5 @@
-import { TokenCounterType } from 'src/common/token-counter/application/ports/token-counter.handler.port';
-import { Message } from '../../../domain/message.entity';
+import type { TokenCounterType } from 'src/common/token-counter/application/ports/token-counter.handler.port';
+import type { Message } from '../../../domain/message.entity';
 
 export class CountMessagesTokensCommand {
   constructor(

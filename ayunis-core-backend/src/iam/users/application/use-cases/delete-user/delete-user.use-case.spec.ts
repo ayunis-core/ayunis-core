@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -10,7 +11,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { DeleteUserUseCase } from './delete-user.use-case';
 import { DeleteUserCommand } from './delete-user.command';
 import { UsersRepository } from '../../ports/users.repository';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { DeleteInviteByEmailUseCase } from 'src/iam/invites/application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
