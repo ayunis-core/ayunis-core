@@ -4,11 +4,10 @@ import { CreateCustomMcpIntegrationCommand } from './create-custom-mcp-integrati
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import {
@@ -37,7 +36,7 @@ export class CreateMcpIntegrationUseCase {
     private readonly factory: McpIntegrationFactory,
     private readonly authFactory: McpIntegrationAuthFactory,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
-    private readonly validateUseCase: ValidateMcpIntegrationUseCase,
+    private readonly connectionValidationService: ConnectionValidationService,
   ) {}
 
   // Overload signatures
@@ -175,7 +174,9 @@ export class CreateMcpIntegrationUseCase {
       const savedIntegration = await this.repository.save(integration);
 
       // Validate connection (don't throw on failure)
-      await this.validateAndUpdateConnectionStatus(savedIntegration);
+      await this.connectionValidationService.validateAndUpdateStatus(
+        savedIntegration,
+      );
 
       // Return the updated integration
       return savedIntegration;
@@ -294,7 +295,9 @@ export class CreateMcpIntegrationUseCase {
       const savedIntegration = await this.repository.save(integration);
 
       // Validate connection (don't throw on failure)
-      await this.validateAndUpdateConnectionStatus(savedIntegration);
+      await this.connectionValidationService.validateAndUpdateStatus(
+        savedIntegration,
+      );
 
       // Return the updated integration
       return savedIntegration;
@@ -315,39 +318,6 @@ export class CreateMcpIntegrationUseCase {
     }
   }
 
-  /**
-   * Validates the MCP integration connection and updates its status.
-   * Does not throw errors - captures them in the connection status.
-   */
-  private async validateAndUpdateConnectionStatus(
-    integration: McpIntegration,
-  ): Promise<void> {
-    try {
-      const validationResult = await this.validateUseCase.execute({
-        integrationId: integration.id,
-      });
-
-      if (validationResult.isValid) {
-        integration.updateConnectionStatus('healthy');
-      } else {
-        integration.updateConnectionStatus(
-          'unhealthy',
-          validationResult.errorMessage ?? 'Validation failed',
-        );
-      }
-    } catch (error) {
-      // Don't throw - just update status
-      const errorMessage =
-        error instanceof Error
-          ? `Validation failed: ${error.message}`
-          : 'Validation failed: Unknown error';
-
-      integration.updateConnectionStatus('unhealthy', errorMessage);
-    }
-
-    // Save the updated connection status
-    await this.repository.save(integration);
-  }
 
   private isValidUrl(url: string): boolean {
     try {

@@ -7,6 +7,7 @@ import { MarketplaceConfigService } from '../../services/marketplace-config.serv
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
@@ -29,6 +30,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   let factory: McpIntegrationFactory;
   let authFactory: McpIntegrationAuthFactory;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
+  let connectionValidationService: ConnectionValidationService;
   let contextService: jest.Mocked<ContextService>;
 
   const orgId = '660e8400-e29b-41d4-a716-446655440001' as UUID;
@@ -156,6 +158,10 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     marketplaceConfigService = new MarketplaceConfigService(
       credentialEncryption,
     );
+    connectionValidationService = new ConnectionValidationService(
+      validateUseCase,
+      repository,
+    );
 
     useCase = new InstallMarketplaceIntegrationUseCase(
       getMarketplaceIntegrationUseCase,
@@ -163,7 +169,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       marketplaceConfigService,
       factory,
       authFactory,
-      validateUseCase,
+      connectionValidationService,
       contextService,
     );
   });
