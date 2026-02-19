@@ -100,6 +100,9 @@ cmd_up() {
 PORT=$BACKEND_PORT
 POSTGRES_HOST=localhost
 POSTGRES_PORT=$POSTGRES_HOST_PORT
+POSTGRES_USER=\${POSTGRES_USER:-postgres}
+POSTGRES_PASSWORD=\${POSTGRES_PASSWORD:-postgres}
+POSTGRES_DB=\${POSTGRES_DB:-ayunis}
 MINIO_ENDPOINT=localhost
 MINIO_PORT=$MINIO_HOST_PORT
 MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minio}
@@ -122,11 +125,11 @@ EOF
   else
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
-    (
-      cd "$REPO_DIR/ayunis-core-backend"
+    setsid bash -c '
+      cd "'"$REPO_DIR/ayunis-core-backend"'"
       exec npm run start:dev \
-        >> "$STATE_DIR/backend.log" 2>&1
-    ) &
+        >> "'"$STATE_DIR/backend.log"'" 2>&1
+    ' &
     echo $! > "$STATE_DIR/backend.pid"
   fi
 
@@ -136,12 +139,12 @@ EOF
   else
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
-    (
-      cd "$REPO_DIR/ayunis-core-frontend"
-      export VITE_API_BASE_URL="http://localhost:$BACKEND_PORT/api"
-      exec npx vite --port "$FRONTEND_PORT" \
-        >> "$STATE_DIR/frontend.log" 2>&1
-    ) &
+    VITE_API_BASE_URL="http://localhost:$BACKEND_PORT/api" \
+    setsid bash -c '
+      cd "'"$REPO_DIR/ayunis-core-frontend"'"
+      exec npx vite --port "'"$FRONTEND_PORT"'" \
+        >> "'"$STATE_DIR/frontend.log"'" 2>&1
+    ' &
     echo $! > "$STATE_DIR/frontend.pid"
   fi
 
@@ -268,12 +271,16 @@ _kill_pid() {
     local pid
     pid=$(cat "$pidfile")
     info "Stopping $label (PID $pid) …"
-    # The PID is a subshell that is a process group leader.
-    # Kill the whole group so child processes (node, vite) also die.
-    kill -TERM -- -"$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+    # Processes are launched with setsid so pid == process group leader.
+    # Kill the whole group, then fall back to pkill -P for any stragglers.
+    kill -TERM -- -"$pid" 2>/dev/null || true
+    pkill -TERM -P "$pid" 2>/dev/null || true
+    kill -TERM "$pid" 2>/dev/null || true
     # Wait briefly, then force-kill stragglers
     sleep 1
-    kill -9 -- -"$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null || true
+    kill -9 -- -"$pid" 2>/dev/null || true
+    pkill -9 -P "$pid" 2>/dev/null || true
+    kill -9 "$pid" 2>/dev/null || true
     rm -f "$pidfile"
   fi
 }
