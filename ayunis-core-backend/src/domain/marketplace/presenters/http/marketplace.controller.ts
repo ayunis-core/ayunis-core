@@ -63,8 +63,10 @@ export class MarketplaceController {
   ): Promise<MarketplaceIntegrationResponseDto> {
     this.logger.log('getIntegration', { identifier });
 
-    return this.getMarketplaceIntegrationUseCase.execute(
+    const integration = await this.getMarketplaceIntegrationUseCase.execute(
       new GetMarketplaceIntegrationQuery(identifier),
     );
+
+    return integration as unknown as MarketplaceIntegrationResponseDto;
   }
 }
