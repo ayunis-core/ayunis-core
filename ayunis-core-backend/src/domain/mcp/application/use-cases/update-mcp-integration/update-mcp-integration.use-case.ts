@@ -18,7 +18,7 @@ import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-head
 import { McpValidationFailedError } from '../../mcp.errors';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
-import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -29,7 +29,7 @@ export class UpdateMcpIntegrationUseCase {
     private readonly contextService: ContextService,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly marketplaceConfigService: MarketplaceConfigService,
-    private readonly validateUseCase: ValidateMcpIntegrationUseCase,
+    private readonly connectionValidationService: ConnectionValidationService,
   ) {}
 
   async execute(command: UpdateMcpIntegrationCommand): Promise<McpIntegration> {
@@ -79,7 +79,7 @@ export class UpdateMcpIntegrationUseCase {
       const saved = await this.repository.save(integration);
 
       if (command.orgConfigValues !== undefined) {
-        await this.validateConnectionAfterUpdate(saved);
+        await this.connectionValidationService.validateAndUpdateStatus(saved);
       }
 
       return saved;
@@ -112,33 +112,6 @@ export class UpdateMcpIntegrationUseCase {
     );
 
     integration.updateOrgConfigValues(mergedValues);
-  }
-
-  private async validateConnectionAfterUpdate(
-    integration: McpIntegration,
-  ): Promise<void> {
-    try {
-      const result = await this.validateUseCase.execute({
-        integrationId: integration.id,
-      });
-
-      if (result.isValid) {
-        integration.updateConnectionStatus('healthy', undefined);
-      } else {
-        integration.updateConnectionStatus(
-          'unhealthy',
-          result.errorMessage ?? 'Validation failed',
-        );
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? `Validation failed: ${error.message}`
-          : 'Validation failed: Unknown error';
-      integration.updateConnectionStatus('unhealthy', errorMessage);
-    }
-
-    await this.repository.save(integration);
   }
 
   private async rotateCredentials(

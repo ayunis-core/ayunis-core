@@ -11,6 +11,7 @@ import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -44,6 +45,7 @@ describe('CreateMcpIntegrationUseCase', () => {
   let authFactory: McpIntegrationAuthFactory;
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
+  let connectionValidationService: ConnectionValidationService;
   let factorySpy: jest.SpyInstance;
   let authSpy: jest.SpyInstance;
   let savedIntegrations: McpIntegration[];
@@ -122,6 +124,11 @@ describe('CreateMcpIntegrationUseCase', () => {
       execute: jest.fn().mockResolvedValue({ isValid: true }),
     } as any;
 
+    connectionValidationService = new ConnectionValidationService(
+      validateUseCase,
+      repository,
+    );
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateMcpIntegrationUseCase,
@@ -131,7 +138,10 @@ describe('CreateMcpIntegrationUseCase', () => {
         { provide: McpIntegrationFactory, useValue: factory },
         { provide: McpIntegrationAuthFactory, useValue: authFactory },
         { provide: McpCredentialEncryptionPort, useValue: encryption },
-        { provide: ValidateMcpIntegrationUseCase, useValue: validateUseCase },
+        {
+          provide: ConnectionValidationService,
+          useValue: connectionValidationService,
+        },
       ],
     }).compile();
 

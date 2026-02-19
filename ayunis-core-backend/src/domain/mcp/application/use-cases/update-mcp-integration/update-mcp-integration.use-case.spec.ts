@@ -6,6 +6,7 @@ import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repo
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
@@ -27,6 +28,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
   let marketplaceConfigService: MarketplaceConfigService;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
+  let connectionValidationService: ConnectionValidationService;
   let useCase: UpdateMcpIntegrationUseCase;
 
   beforeEach(() => {
@@ -53,13 +55,17 @@ describe('UpdateMcpIntegrationUseCase', () => {
     } as unknown as jest.Mocked<ValidateMcpIntegrationUseCase>;
 
     marketplaceConfigService = new MarketplaceConfigService(encryption);
+    connectionValidationService = new ConnectionValidationService(
+      validateUseCase,
+      repository,
+    );
 
     useCase = new UpdateMcpIntegrationUseCase(
       repository,
       context,
       encryption,
       marketplaceConfigService,
-      validateUseCase,
+      connectionValidationService,
     );
     context.get.mockReturnValue(orgId);
     repository.save.mockImplementation(async (integration) => integration);
