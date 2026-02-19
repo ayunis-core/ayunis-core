@@ -1,7 +1,7 @@
 import { DeleteUserSystemPromptUseCase } from './delete-user-system-prompt.use-case';
-import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
+import type { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
 import { randomUUID } from 'crypto';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { ContextService } from 'src/common/context/services/context.service';
 
 describe('DeleteUserSystemPromptUseCase', () => {
   let useCase: DeleteUserSystemPromptUseCase;

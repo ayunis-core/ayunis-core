@@ -27,7 +27,7 @@ export class RefreshTokenUseCase {
         command.refreshToken,
       );
 
-      if (!payload || !payload.sub) {
+      if (!payload.sub) {
         throw new InvalidTokenError('Invalid token payload');
       }
 

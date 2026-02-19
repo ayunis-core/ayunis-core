@@ -1,4 +1,4 @@
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { Tool } from '../tool.entity';
 import { createAjv } from 'src/common/validators/ajv.factory';
@@ -26,7 +26,9 @@ export class WebsiteContentTool extends Tool {
     });
   }
 
-  validateParams(params: Record<string, any>): WebsiteContentToolParameters {
+  validateParams(
+    params: Record<string, unknown>,
+  ): WebsiteContentToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

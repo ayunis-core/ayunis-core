@@ -1,7 +1,7 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 
 /**
  * Ephemeral tool entity representing an MCP prompt retrieval tool.
@@ -39,7 +39,7 @@ export class McpPromptTool extends Tool {
   }
 
   validateParams(
-    params: Record<string, any>,
+    params: Record<string, unknown>,
   ): FromSchema<typeof this.parameters> {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);

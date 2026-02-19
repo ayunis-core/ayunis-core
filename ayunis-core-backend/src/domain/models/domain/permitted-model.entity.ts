@@ -1,7 +1,8 @@
-import { randomUUID, UUID } from 'crypto';
-import { Model } from './model.entity';
-import { LanguageModel } from './models/language.model';
-import { EmbeddingModel } from './models/embedding.model';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { Model } from './model.entity';
+import type { LanguageModel } from './models/language.model';
+import type { EmbeddingModel } from './models/embedding.model';
 
 export class PermittedModel {
   public readonly id: UUID;

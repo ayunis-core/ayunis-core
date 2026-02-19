@@ -458,7 +458,6 @@ export class ExecuteRunUseCase {
         null,
       );
     }
-    return;
   }
 
   /**

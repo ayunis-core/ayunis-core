@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { PermittedLanguageModel } from '../../domain/permitted-model.entity';
+import type { UUID } from 'crypto';
+import type { PermittedLanguageModel } from '../../domain/permitted-model.entity';
 
 export abstract class UserDefaultModelsRepository {
   abstract findByUserId(userId: UUID): Promise<PermittedLanguageModel | null>;

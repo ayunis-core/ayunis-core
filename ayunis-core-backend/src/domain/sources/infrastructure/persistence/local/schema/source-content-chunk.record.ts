@@ -14,5 +14,5 @@ export class SourceContentChunkRecord extends BaseRecord {
   source: TextSourceDetailsRecord;
 
   @Column({ type: 'jsonb' })
-  meta: Record<string, any>;
+  meta: Record<string, unknown>;
 }

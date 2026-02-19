@@ -1,6 +1,6 @@
-import { UUID } from 'crypto';
-import { Subscription } from '../../domain/subscription.entity';
-import { SubscriptionBillingInfo } from '../../domain/subscription-billing-info.entity';
+import type { UUID } from 'crypto';
+import type { Subscription } from '../../domain/subscription.entity';
+import type { SubscriptionBillingInfo } from '../../domain/subscription-billing-info.entity';
 
 export abstract class SubscriptionRepository {
   abstract findByOrgId(orgId: UUID): Promise<Subscription[]>;

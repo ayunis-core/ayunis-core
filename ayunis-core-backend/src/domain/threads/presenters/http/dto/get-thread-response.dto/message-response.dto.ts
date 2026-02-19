@@ -36,7 +36,7 @@ export class ToolUseMessageContentResponseDto extends MessageContentResponseDto 
     description: 'Parameters passed to the tool',
     example: { location: 'New York', unit: 'celsius' },
   })
-  params: Record<string, any>;
+  params: Record<string, unknown>;
 }
 
 export class ToolResultMessageContentResponseDto extends MessageContentResponseDto {

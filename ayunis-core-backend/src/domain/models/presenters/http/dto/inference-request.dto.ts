@@ -46,7 +46,7 @@ export class ToolSpecificationDto {
       required: ['location'],
     },
   })
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 // Message content DTOs for requests
@@ -139,7 +139,7 @@ export class ToolUseMessageContentRequestDto extends MessageContentRequestDto {
     description: 'Parameters passed to the tool',
     example: { location: 'New York', unit: 'celsius' },
   })
-  params: Record<string, any>;
+  params: Record<string, unknown>;
 }
 
 export class ToolResultMessageContentRequestDto extends MessageContentRequestDto {

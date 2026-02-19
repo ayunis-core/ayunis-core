@@ -1,4 +1,4 @@
-import { SplitResult } from '../../domain/split-result.entity';
+import type { SplitResult } from '../../domain/split-result.entity';
 
 export interface SplitterMetadata {
   chunkSize?: number;

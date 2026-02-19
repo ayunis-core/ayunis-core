@@ -27,7 +27,7 @@ export class CreateTeamUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    const trimmedName = command.name?.trim() || '';
+    const trimmedName = command.name.trim() || '';
 
     this.logger.log('createTeam', { name: trimmedName, orgId });
 

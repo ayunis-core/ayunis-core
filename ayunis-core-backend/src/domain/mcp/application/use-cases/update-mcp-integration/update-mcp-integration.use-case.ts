@@ -144,7 +144,7 @@ export class UpdateMcpIntegrationUseCase {
         }
         return;
       }
-      default: {
+      case McpAuthMethod.OAUTH: {
         if (credentials !== undefined || authHeaderName !== undefined) {
           throw new McpValidationFailedError(
             integration.id,

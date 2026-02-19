@@ -1,6 +1,6 @@
 import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import { SubscriptionBillingInfoRecord } from '../schema/subscription-billing-info.record';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class SubscriptionBillingInfoMapper {
   toRecord(

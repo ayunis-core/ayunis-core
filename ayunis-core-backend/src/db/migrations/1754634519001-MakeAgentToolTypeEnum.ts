@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class MakeAgentToolTypeEnum1754634519001 implements MigrationInterface {
   name = 'MakeAgentToolTypeEnum1754634519001';

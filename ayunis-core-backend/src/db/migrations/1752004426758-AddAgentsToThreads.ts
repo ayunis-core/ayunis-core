@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddAgentsToThreads1752004426758 implements MigrationInterface {
   name = 'AddAgentsToThreads1752004426758';

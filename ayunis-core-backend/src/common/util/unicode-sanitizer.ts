@@ -10,7 +10,7 @@
  * @returns The sanitized string
  */
 export function sanitizeUnicodeEscapes(input: unknown): string {
-  if (input == null || typeof input !== 'string') {
+  if (input === null || input === undefined || typeof input !== 'string') {
     return String(input);
   }
 

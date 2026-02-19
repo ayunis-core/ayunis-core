@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { ListAgentMcpIntegrationsUseCase } from './list-agent-mcp-integrations.use-case';
 import { ListAgentMcpIntegrationsQuery } from './list-agent-mcp-integrations.query';
@@ -13,7 +14,7 @@ import {
   AgentNotFoundError,
   UnexpectedAgentError,
 } from '../../../application/agents.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,

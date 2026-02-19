@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CheckToolCapabilitiesUseCase } from './check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
 import { Tool } from '../../../domain/tool.entity';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
-import { JSONSchema } from 'json-schema-to-ts';
+import type { JSONSchema } from 'json-schema-to-ts';
 
 // Mock tool implementation for testing
 class MockTool extends Tool {

@@ -1,7 +1,7 @@
-import { Response } from 'express';
-import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
+import type { ConfigService } from '@nestjs/config';
 import { getMillisecondsFromJwtExpiry } from './jwt.util';
-import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
+import type { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { Logger } from '@nestjs/common';
 
 const logger = new Logger('CookieUtil');

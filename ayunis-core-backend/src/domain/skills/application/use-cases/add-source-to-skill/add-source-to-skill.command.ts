@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class AddSourceToSkillCommand {
   public readonly skillId: UUID;

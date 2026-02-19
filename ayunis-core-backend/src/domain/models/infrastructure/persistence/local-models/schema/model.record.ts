@@ -61,7 +61,7 @@ export class LanguageModelRecord extends ModelRecord {
     nullable: true,
     transformer: {
       to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
+      from: (value: string | null) => (value === null ? null : Number(value)),
     },
   })
   inputTokenCost?: number;
@@ -73,7 +73,7 @@ export class LanguageModelRecord extends ModelRecord {
     nullable: true,
     transformer: {
       to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
+      from: (value: string | null) => (value === null ? null : Number(value)),
     },
   })
   outputTokenCost?: number;
@@ -100,7 +100,7 @@ export class EmbeddingModelRecord extends ModelRecord {
     nullable: true,
     transformer: {
       to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
+      from: (value: string | null) => (value === null ? null : Number(value)),
     },
   })
   inputTokenCost?: number;
@@ -112,7 +112,7 @@ export class EmbeddingModelRecord extends ModelRecord {
     nullable: true,
     transformer: {
       to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
+      from: (value: string | null) => (value === null ? null : Number(value)),
     },
   })
   outputTokenCost?: number;

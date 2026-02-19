@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { IndexEntry } from '../../domain/index-entry.entity';
+import type { UUID } from 'crypto';
+import type { IndexEntry } from '../../domain/index-entry.entity';
 
 export interface SearchInput {
   orgId: UUID;

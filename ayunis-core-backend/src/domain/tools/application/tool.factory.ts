@@ -114,7 +114,7 @@ function requireArrayContext<T>(
     toolType,
     metadata: {
       contextType:
-        (context as { constructor?: { name?: string } })?.constructor?.name ||
+        (context as { constructor?: { name?: string } }).constructor?.name ||
         'null',
     },
   });

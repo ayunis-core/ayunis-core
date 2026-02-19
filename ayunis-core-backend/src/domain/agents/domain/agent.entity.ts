@@ -1,8 +1,9 @@
-import { randomUUID, UUID } from 'crypto';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { AgentToolAssignment } from './agent-tool-assignment.entity';
-import { AgentSourceAssignment } from './agent-source-assignment.entity';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { AgentToolAssignment } from './agent-tool-assignment.entity';
+import type { AgentSourceAssignment } from './agent-source-assignment.entity';
 
 export class Agent {
   public readonly id: UUID;

@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddGemini1769698433926 implements MigrationInterface {
   name = 'AddGemini1769698433926';

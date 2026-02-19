@@ -1,8 +1,8 @@
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
-import { Org } from 'src/iam/orgs/domain/org.entity';
+import type { Org } from 'src/iam/orgs/domain/org.entity';
 
 export class User {
   public id: UUID;

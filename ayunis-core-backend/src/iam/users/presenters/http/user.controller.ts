@@ -460,8 +460,6 @@ export class UserController {
     await this.triggerPasswordResetUseCase.execute(
       new TriggerPasswordResetCommand(body.email),
     );
-
-    return;
   }
 
   @Public()
@@ -500,8 +498,6 @@ export class UserController {
         body.newPasswordConfirmation,
       ),
     );
-
-    return;
   }
 
   @Public()

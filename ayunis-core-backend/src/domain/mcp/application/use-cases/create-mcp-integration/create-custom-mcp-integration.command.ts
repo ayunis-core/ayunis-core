@@ -1,4 +1,4 @@
-import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import type { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 
 export class CreateCustomMcpIntegrationCommand {
   constructor(

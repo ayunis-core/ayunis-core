@@ -1,4 +1,4 @@
-import { InternetSearchResultType } from './value-objects/internet-search-result-type.enum';
+import type { InternetSearchResultType } from './value-objects/internet-search-result-type.enum';
 
 export class InternetSearchResult {
   public readonly title: string;
