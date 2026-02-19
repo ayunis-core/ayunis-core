@@ -1,8 +1,8 @@
-import { Repository } from 'typeorm';
-import { UUID } from 'crypto';
-import { UsageRecord } from '../schema/usage.record';
+import type { Repository } from 'typeorm';
+import type { UUID } from 'crypto';
+import type { UsageRecord } from '../schema/usage.record';
 import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
-import { TopModelRow } from './usage-query.types';
+import type { TopModelRow } from './usage-query.types';
 
 export async function getTopModels(
   usageRepository: Repository<UsageRecord>,

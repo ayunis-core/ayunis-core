@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
 import { ConfigService, ConfigModule } from '@nestjs/config';
-import { AuthProvider } from 'src/config/authentication.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
 import { Repository } from 'typeorm';
@@ -73,15 +72,11 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
   providers: [
     {
       provide: UsersRepository,
-      useFactory: (
-        configService: ConfigService,
-        userRepository: Repository<UserRecord>,
-      ) => {
-        return configService.get('auth.provider') === AuthProvider.CLOUD
-          ? new LocalUsersRepository(userRepository) // TODO: Implement cloud users repository
-          : new LocalUsersRepository(userRepository);
+      useFactory: (userRepository: Repository<UserRecord>) => {
+        // TODO: Implement cloud users repository when auth.provider === AuthProvider.CLOUD
+        return new LocalUsersRepository(userRepository);
       },
-      inject: [ConfigService, getRepositoryToken(UserRecord)],
+      inject: [getRepositoryToken(UserRecord)],
     },
     // Use cases
     FindUserByIdUseCase,

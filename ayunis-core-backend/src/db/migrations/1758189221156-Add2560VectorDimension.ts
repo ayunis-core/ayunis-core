@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class Add2560VectorDimension1758189221156 implements MigrationInterface {
   name = 'Add2560VectorDimension1758189221156';

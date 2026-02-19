@@ -1,4 +1,4 @@
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
@@ -40,7 +40,9 @@ export class ProductKnowledgeTool extends Tool {
     });
   }
 
-  validateParams(params: Record<string, any>): ProductKnowledgeToolParameters {
+  validateParams(
+    params: Record<string, unknown>,
+  ): ProductKnowledgeToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

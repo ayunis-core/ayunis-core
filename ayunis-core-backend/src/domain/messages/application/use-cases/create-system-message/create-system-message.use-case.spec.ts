@@ -1,9 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateSystemMessageUseCase } from './create-system-message.use-case';
-import {
-  MESSAGES_REPOSITORY,
-  MessagesRepository,
-} from '../../ports/messages.repository';
+import type { MessagesRepository } from '../../ports/messages.repository';
+import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import { CreateSystemMessageCommand } from './create-system-message.command';
 import { SystemMessage } from '../../../domain/messages/system-message.entity';
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';

@@ -1,6 +1,6 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { DisplayableTool } from '../displayable-tool.entity';
 
 const barChartToolParameters = {
@@ -62,7 +62,7 @@ export class BarChartTool extends DisplayableTool {
     });
   }
 
-  validateParams(params: Record<string, any>): BarChartToolParameters {
+  validateParams(params: Record<string, unknown>): BarChartToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

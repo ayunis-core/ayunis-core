@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { DataSourceOptions } from 'typeorm';
+import type { DataSourceOptions } from 'typeorm';
 
 // Base configuration for TypeORM
 const baseConfig: DataSourceOptions = {

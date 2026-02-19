@@ -81,9 +81,9 @@ export class TranscriptionsController {
     @Body('language') language?: string,
   ): Promise<TranscriptionResponseDto> {
     this.logger.log('Transcription request received', {
-      fileName: file?.originalname,
-      mimeType: file?.mimetype,
-      fileSize: file?.size,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      fileSize: file.size,
       language,
     });
 

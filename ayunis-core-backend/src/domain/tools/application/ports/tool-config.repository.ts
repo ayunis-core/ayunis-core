@@ -1,6 +1,6 @@
-import { UUID } from 'crypto';
-import { ToolConfig } from 'src/domain/tools/domain/tool-config.entity';
-import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { UUID } from 'crypto';
+import type { ToolConfig } from 'src/domain/tools/domain/tool-config.entity';
+import type { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 export abstract class ToolConfigRepository {
   abstract findOne(id: UUID, userId: UUID): Promise<ToolConfig>;

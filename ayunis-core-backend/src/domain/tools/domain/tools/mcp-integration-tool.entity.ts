@@ -1,9 +1,9 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FromSchema } from 'json-schema-to-ts';
-import { UUID } from 'crypto';
-import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import type { FromSchema } from 'json-schema-to-ts';
+import type { UUID } from 'crypto';
+import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 
 /**
  * Ephemeral tool entity representing an MCP tool.
@@ -26,7 +26,7 @@ export class McpIntegrationTool extends Tool {
   }
 
   validateParams(
-    params: Record<string, any>,
+    params: Record<string, unknown>,
   ): FromSchema<typeof this.parameters> {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);

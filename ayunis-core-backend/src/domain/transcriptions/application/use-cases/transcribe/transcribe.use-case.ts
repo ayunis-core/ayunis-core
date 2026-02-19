@@ -84,7 +84,7 @@ export class TranscribeUseCase {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new TranscriptionFailedError(
-        (error as Error)?.message ?? 'Unknown error during transcription',
+        (error as Error).message ?? 'Unknown error during transcription',
       );
     }
   }

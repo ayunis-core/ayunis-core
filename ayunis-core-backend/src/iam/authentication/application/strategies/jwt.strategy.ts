@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           'access_token',
         );
 
-        const token = req.cookies?.[cookieName] as string;
+        const token = req.cookies[cookieName] as string;
 
         if (!token) {
           this.logger.debug(`No JWT token found in cookie: ${cookieName}`);

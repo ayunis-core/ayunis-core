@@ -88,7 +88,7 @@ export class UnauthorizedExceptionFilter implements ExceptionFilter {
     const cookies = (request.cookies as Record<string, string>) || {};
     const token = cookies[cookieName];
     const decoded = this.decodeJwt(token);
-    if (!token || !decoded || !decoded.sub) {
+    if (!token || !decoded?.sub) {
       return undefined;
     }
 

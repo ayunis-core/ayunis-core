@@ -1,4 +1,5 @@
-import { UUID, randomUUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 
 export class Team {
   public id: UUID;

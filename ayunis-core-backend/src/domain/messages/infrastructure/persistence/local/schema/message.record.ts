@@ -16,7 +16,7 @@ interface ToolUseMessageContentData {
   type: MessageContentType.TOOL_USE;
   id: string;
   name: string;
-  params: Record<string, any>;
+  params: Record<string, unknown>;
   providerMetadata?: ProviderMetadata;
 }
 

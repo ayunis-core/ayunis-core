@@ -1,7 +1,7 @@
-import { SourceAssignment } from '../../domain/thread-source-assignment.entity';
-import { Thread } from '../../domain/thread.entity';
-import { UUID } from 'crypto';
-import { Paginated } from 'src/common/pagination/paginated.entity';
+import type { SourceAssignment } from '../../domain/thread-source-assignment.entity';
+import type { Thread } from '../../domain/thread.entity';
+import type { UUID } from 'crypto';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
 
 export interface ThreadsFindAllOptions {
   withSources?: boolean;

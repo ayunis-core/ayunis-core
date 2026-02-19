@@ -47,7 +47,7 @@ export class BaseOpenAIChatStreamInferenceHandler
       this.thinkingParser.reset();
 
       const { messages, tools, toolChoice } = input;
-      const openAiTools = tools?.map(this.convertTool).map((tool) => ({
+      const openAiTools = tools.map(this.convertTool).map((tool) => ({
         ...tool,
         function: { ...tool.function, strict: true },
       }));
@@ -250,7 +250,7 @@ export class BaseOpenAIChatStreamInferenceHandler
     chunk: OpenAI.ChatCompletionChunk,
   ): StreamInferenceResponseChunk => {
     const delta = chunk.choices[0]?.delta;
-    const textContent = delta?.content ?? null;
+    const textContent = delta.content ?? null;
 
     // Parse thinking content from text
     const { thinkingDelta, textContentDelta } = textContent
@@ -264,7 +264,7 @@ export class BaseOpenAIChatStreamInferenceHandler
       thinkingDelta,
       textContentDelta,
       toolCallsDelta:
-        delta?.tool_calls?.map(
+        delta.tool_calls?.map(
           (toolCall) =>
             new StreamInferenceResponseChunkToolCall({
               index: toolCall.index,

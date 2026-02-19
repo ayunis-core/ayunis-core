@@ -1,10 +1,10 @@
-import { UUID } from 'crypto';
-import {
+import type { UUID } from 'crypto';
+import type {
   PermittedEmbeddingModel,
   PermittedLanguageModel,
   PermittedModel,
 } from '../../domain/permitted-model.entity';
-import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+import type { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 
 export type FindOneParams =
   | {

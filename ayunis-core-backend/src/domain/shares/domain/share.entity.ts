@@ -1,6 +1,7 @@
-import { randomUUID, UUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { SharedEntityType } from './value-objects/shared-entity-type.enum';
-import { ShareScope } from './share-scope.entity';
+import type { ShareScope } from './share-scope.entity';
 
 export abstract class Share {
   id: UUID;

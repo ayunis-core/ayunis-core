@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddOtcModelProvider1763983604326 implements MigrationInterface {
   name = 'AddOtcModelProvider1763983604326';

@@ -3,6 +3,6 @@ export class UrlRetrieverResult {
     public readonly content: string,
     public readonly url: string,
     public readonly websiteTitle: string,
-    public readonly metadata: Record<string, any> = {},
+    public readonly metadata: Record<string, unknown> = {},
   ) {}
 }

@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddEmailConfirmFlag1752676317840 implements MigrationInterface {
   name = 'AddEmailConfirmFlag1752676317840';

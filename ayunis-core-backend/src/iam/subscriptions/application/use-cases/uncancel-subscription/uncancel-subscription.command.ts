@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class UncancelSubscriptionCommand {
   public readonly orgId: UUID;

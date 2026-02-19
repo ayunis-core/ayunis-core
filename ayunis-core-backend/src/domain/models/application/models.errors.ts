@@ -1,9 +1,7 @@
-import {
-  ApplicationError,
-  ErrorMetadata,
-} from '../../../common/errors/base.error';
-import { ModelProvider } from '../domain/value-objects/model-provider.enum';
-import { UUID } from 'crypto';
+import type { ErrorMetadata } from '../../../common/errors/base.error';
+import { ApplicationError } from '../../../common/errors/base.error';
+import type { ModelProvider } from '../domain/value-objects/model-provider.enum';
+import type { UUID } from 'crypto';
 
 /**
  * Error codes specific to the Models domain

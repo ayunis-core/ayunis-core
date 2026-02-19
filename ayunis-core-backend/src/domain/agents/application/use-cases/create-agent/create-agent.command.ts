@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { UUID } from 'crypto';
+import type { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 export class CreateAgentCommand {
   name: string;

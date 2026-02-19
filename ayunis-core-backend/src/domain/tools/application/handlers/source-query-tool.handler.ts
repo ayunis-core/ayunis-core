@@ -67,10 +67,10 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
       const result = matchedChunks.map((chunk) => {
         return {
           content: chunk.content,
-          startLine: (chunk.meta?.startLine as number | undefined) ?? null,
-          endLine: (chunk.meta?.endLine as number | undefined) ?? null,
-          fileName: (chunk.meta?.fileName as string | undefined) ?? null,
-          url: (chunk.meta?.url as string | undefined) ?? null,
+          startLine: (chunk.meta.startLine as number | undefined) ?? null,
+          endLine: (chunk.meta.endLine as number | undefined) ?? null,
+          fileName: (chunk.meta.fileName as string | undefined) ?? null,
+          url: (chunk.meta.url as string | undefined) ?? null,
         };
       });
 

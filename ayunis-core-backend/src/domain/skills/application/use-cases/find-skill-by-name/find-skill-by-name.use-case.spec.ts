@@ -1,12 +1,12 @@
 import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
-import { SkillRepository } from '../../ports/skill.repository';
-import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
+import type { SkillRepository } from '../../ports/skill.repository';
+import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { Skill } from '../../../domain/skill.entity';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
-import { UUID } from 'crypto';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { UUID } from 'crypto';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { SkillNotFoundError } from '../../skills.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 

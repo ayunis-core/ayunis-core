@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GetAvailableProvidersUseCase } from './get-available-providers.use-case';
 import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
 import { GetAvailableProvidersQuery } from './get-available-providers.query';

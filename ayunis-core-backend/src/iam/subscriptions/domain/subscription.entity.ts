@@ -1,6 +1,7 @@
-import { randomUUID, UUID } from 'crypto';
-import { RenewalCycle } from './value-objects/renewal-cycle.enum';
-import { SubscriptionBillingInfo } from './subscription-billing-info.entity';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { RenewalCycle } from './value-objects/renewal-cycle.enum';
+import type { SubscriptionBillingInfo } from './subscription-billing-info.entity';
 
 export interface SubscriptionParams {
   id?: UUID;

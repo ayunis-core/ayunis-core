@@ -1,4 +1,5 @@
-import { randomUUID, UUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { ShareScopeType } from './value-objects/share-scope-type.enum';
 
 export abstract class ShareScope {

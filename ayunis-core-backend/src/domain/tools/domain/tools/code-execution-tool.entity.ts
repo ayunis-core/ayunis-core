@@ -1,8 +1,8 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import type { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { DataType } from 'src/domain/sources/domain/source-type.enum';
 
 const codeExecutionToolParameters = {
@@ -58,7 +58,7 @@ ${csvLongDescription}`.trim(),
     });
   }
 
-  validateParams(params: Record<string, any>): CodeExecutionToolParameters {
+  validateParams(params: Record<string, unknown>): CodeExecutionToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

@@ -103,7 +103,7 @@ export class CreateMcpIntegrationUseCase {
           const tokenField = command.credentialFields.find(
             (field) => field.name === CredentialFieldType.TOKEN,
           );
-          const rawToken = tokenField?.value?.trim();
+          const rawToken = tokenField?.value.trim();
 
           if (!rawToken) {
             throw new McpValidationFailedError(
@@ -133,8 +133,27 @@ export class CreateMcpIntegrationUseCase {
               )?.value ?? '',
           });
           break;
-        default:
-          throw new Error(`Unknown MCP auth type: ${config.authType}`);
+        case McpAuthMethod.CUSTOM_HEADER: {
+          const secretField = command.credentialFields.find(
+            (field) => field.name === CredentialFieldType.TOKEN,
+          );
+          const rawSecret = secretField?.value.trim();
+
+          if (!rawSecret) {
+            throw new McpValidationFailedError(
+              '',
+              config.displayName,
+              'Custom header secret is required',
+              CredentialFieldType.TOKEN,
+            );
+          }
+
+          integrationAuth = this.authFactory.createAuth({
+            method: McpAuthMethod.CUSTOM_HEADER,
+            secret: await this.credentialEncryption.encrypt(rawSecret),
+          });
+          break;
+        }
       }
 
       const integration = this.factory.createIntegration({

@@ -1,5 +1,5 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { DisplayableTool } from '../displayable-tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 
@@ -42,7 +42,7 @@ export class CreateSkillTool extends DisplayableTool {
     });
   }
 
-  validateParams(params: Record<string, any>): CreateSkillToolParameters {
+  validateParams(params: Record<string, unknown>): CreateSkillToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);
