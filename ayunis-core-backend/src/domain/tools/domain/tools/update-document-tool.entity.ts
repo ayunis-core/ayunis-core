@@ -25,6 +25,8 @@ type UpdateDocumentToolParameters = FromSchema<
 >;
 
 export class UpdateDocumentTool extends DisplayableTool {
+  override isExecutable: boolean = true;
+
   constructor() {
     super({
       name: ToolType.UPDATE_DOCUMENT,
