@@ -117,6 +117,7 @@ If an action is irreversible and isn't writing/editing source code, **ask first*
 
 For detailed development workflows, patterns, and validation checklists, use the appropriate skill:
 
+- **Environment setup** → `worktree-dev` skill (create worktree, start dev stack, isolated per-slot environment)
 - **Backend work** → `ayunis-core-backend-dev` skill (NestJS, hexagonal patterns, TDD, validation)
 - **Frontend work** → `ayunis-core-frontend-dev` skill (React, Feature-Sliced Design, API client, hooks)
 - **Database migrations** → `ayunis-core-migrations` skill (TypeORM entity changes, auto-generated migrations)

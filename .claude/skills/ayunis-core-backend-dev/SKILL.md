@@ -68,7 +68,8 @@ Run after every refactor step and before committing. Do NOT trust your own asses
 npm run lint                    # Must pass
 npx tsc --noEmit               # 0 type errors
 npm run test                   # All tests pass
-npm run docker:dev && curl http://localhost:3000/api/health  # Service runs
+# Ensure dev stack is running (./dev up from repo root), then:
+curl http://localhost:3000/api/health  # Service responds
 ```
 
 ## Complexity Thresholds
@@ -155,11 +156,17 @@ For schema changes, use the `ayunis-core-migrations` skill. Never write migratio
 ## Common Commands
 
 ```bash
-npm run docker:dev           # Start with deps
+# From repo root:
+./dev up                     # Start full dev stack (infra + backend + frontend)
+./dev status                 # Check what's running
+./dev logs backend           # View backend logs
+./dev down                   # Stop everything
+
+# From ayunis-core-backend/:
 npm run lint                 # Lint check
 npx tsc --noEmit            # Type check
 npm run test                 # Run tests
-npm run migration:generate:dev "Name"  # New migration
+npm run migration:generate:dev -- src/db/migrations/Name  # New migration
 ```
 
 ## Completion Checklist
@@ -167,7 +174,7 @@ npm run migration:generate:dev "Name"  # New migration
 - [ ] `npm run lint` passes
 - [ ] `npx tsc --noEmit` shows 0 errors
 - [ ] `npm run test` all pass
-- [ ] Service starts: `npm run docker:dev`
+- [ ] Dev stack is running (`./dev up` from repo root, or `./dev status` to verify)
 - [ ] Relevant endpoint responds correctly (test with curl)
 - [ ] No `any` types introduced
 - [ ] DTOs have validation decorators

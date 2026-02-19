@@ -78,7 +78,12 @@ export function useCreateItem(onSuccess?: () => void) {
 ## Common Commands
 
 ```bash
-npm run dev                  # Dev server (port 3001)
+# From repo root:
+./dev up                     # Start full dev stack (infra + backend + frontend)
+./dev status                 # Check what's running
+./dev logs frontend          # View frontend logs
+
+# From ayunis-core-frontend/:
 npm run build               # Production build
 npm run lint                # Lint check
 npm run openapi:update      # Regenerate API client

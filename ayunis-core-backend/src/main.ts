@@ -1,5 +1,5 @@
-// Load environment variables first
-import 'dotenv/config';
+// Load environment variables first (.env.dev overrides .env when present)
+import './config/env';
 // Sentry - !! Initialize Sentry before any other imports
 import './common/sentry/instrument';
 // Utils
