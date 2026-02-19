@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { FileText, ExternalLink, Check } from 'lucide-react';
 import { useCreateArtifact } from '../../api/useCreateArtifact';
+import { useThreadArtifacts } from '../../api/useThreadArtifacts';
 import { AuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreateDocumentWidgetProps {
@@ -35,7 +36,11 @@ export default function CreateDocumentWidget({
     },
   );
 
-  const artifactId = data?.id ?? null;
+  // Use mutation response first, fall back to thread artifacts list
+  // so the button stays clickable after component re-mounts
+  const { artifacts } = useThreadArtifacts(threadId);
+  const artifactId =
+    data?.id ?? artifacts.find((a) => a.title === params.title)?.id ?? null;
 
   // Auto-create the artifact once streaming is done and we have content
   useEffect(() => {
