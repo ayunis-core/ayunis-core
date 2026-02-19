@@ -23,7 +23,7 @@ export function useExportArtifact({
         const data = await artifactsControllerExport(artifactId, { format });
 
         // The response is a file blob — trigger download
-        const blob = new Blob([data as unknown as BlobPart]);
+        const blob = data instanceof Blob ? data : new Blob([data]);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
