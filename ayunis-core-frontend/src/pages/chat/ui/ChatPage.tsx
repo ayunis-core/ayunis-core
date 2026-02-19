@@ -53,11 +53,6 @@ import { useArtifact } from '../api/useArtifact';
 import { useUpdateArtifact } from '../api/useUpdateArtifact';
 import { useRevertArtifact } from '../api/useRevertArtifact';
 import { useExportArtifact } from '../api/useExportArtifact';
-const LazyArtifactEditor = lazy(() =>
-  import('@/widgets/artifact-editor').then((m) => ({
-    default: m.ArtifactEditor,
-  })),
-);
 import { AuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { ExportFormatDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useAgents } from '@/features/useAgents';
@@ -71,6 +66,12 @@ import {
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { PendingImage } from '../api/useMessageSend';
+
+const LazyArtifactEditor = lazy(() =>
+  import('@/widgets/artifact-editor').then((m) => ({
+    default: m.ArtifactEditor,
+  })),
+);
 
 interface ChatPageProps {
   thread: Thread;
