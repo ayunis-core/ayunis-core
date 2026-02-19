@@ -93,8 +93,9 @@ export class MarketplaceIntegrationResponseDto {
   @ApiProperty({
     description:
       'Configuration schema (authType, orgFields, userFields, oauth)',
+    type: MarketplaceIntegrationConfigSchemaDto,
   })
-  configSchema: { [key: string]: unknown };
+  configSchema: MarketplaceIntegrationConfigSchemaDto;
 
   @ApiProperty({ description: 'Whether the integration is featured' })
   featured: boolean;

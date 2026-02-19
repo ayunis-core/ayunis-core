@@ -2308,17 +2308,25 @@ export interface MarketplaceIntegrationResponseDto {
   identifier: string;
   /** Display name */
   name: string;
-  /** Description */
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /** Full description */
   description: string;
   /**
    * Icon URL
    * @nullable
    */
   iconUrl?: string | null;
-  /** Configuration schema */
+  /** MCP server URL */
+  serverUrl: string;
+  /** Configuration schema (authType, orgFields, userFields, oauth) */
   configSchema: MarketplaceIntegrationConfigSchemaDto;
+  /** Whether the integration is featured */
+  featured: boolean;
   /** Whether the integration is published */
   published: boolean;
+  /** Whether the integration is pre-installed */
+  preInstalled: boolean;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
