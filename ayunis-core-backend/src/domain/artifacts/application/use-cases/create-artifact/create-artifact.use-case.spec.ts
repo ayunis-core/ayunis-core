@@ -14,6 +14,10 @@ import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
+import {
+  ArtifactContentTooLargeError,
+  ARTIFACT_MAX_CONTENT_LENGTH,
+} from '../../artifacts.errors';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
@@ -276,6 +280,43 @@ describe('CreateArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.versions[0].content).toBe(safeContent);
+  });
+
+  it('should reject content exceeding the maximum allowed length', async () => {
+    const oversizedContent =
+      '<p>' + 'A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH) + '</p>';
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Oversized Document',
+      content: oversizedContent,
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      ArtifactContentTooLargeError,
+    );
+    expect(artifactsRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('should accept content at exactly the maximum allowed length', async () => {
+    const maxContent = 'A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH);
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Maximum Size Document',
+      content: maxContent,
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.title).toBe('Maximum Size Document');
   });
 
   it('should persist the artifact before adding the version', async () => {

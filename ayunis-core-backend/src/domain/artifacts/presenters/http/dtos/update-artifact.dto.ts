@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-
-const MAX_CONTENT_LENGTH = 512_000; // ~500KB
+import { ARTIFACT_MAX_CONTENT_LENGTH } from '../../../application/artifacts.errors';
 
 export class UpdateArtifactDto {
   @ApiProperty({
@@ -11,7 +10,7 @@ export class UpdateArtifactDto {
   })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(MAX_CONTENT_LENGTH)
+  @MaxLength(ARTIFACT_MAX_CONTENT_LENGTH)
   content: string;
 
   @ApiProperty({
