@@ -172,7 +172,7 @@ export default function ChatPage({
 
   // Memoize sorted messages to avoid sorting on every render
   const sortedMessages = useMemo(() => {
-    return messages.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+    return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
   }, [messages]);
 
   const { deleteChat } = useDeleteThread({
