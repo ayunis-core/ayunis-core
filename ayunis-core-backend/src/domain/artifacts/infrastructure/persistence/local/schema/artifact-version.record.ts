@@ -5,12 +5,14 @@ import {
   ManyToOne,
   PrimaryColumn,
   CreateDateColumn,
+  Unique,
 } from 'typeorm';
 import { UUID } from 'crypto';
 import { ArtifactRecord } from './artifact.record';
 import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
 
 @Entity({ name: 'artifact_versions' })
+@Unique('UQ_artifact_version_number', ['artifactId', 'versionNumber'])
 export class ArtifactVersionRecord {
   @PrimaryColumn()
   id: UUID;

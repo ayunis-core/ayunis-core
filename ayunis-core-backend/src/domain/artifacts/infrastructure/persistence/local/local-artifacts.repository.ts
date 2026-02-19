@@ -1,15 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 
 import { ArtifactsRepository } from '../../../application/ports/artifacts-repository.port';
+import { ArtifactVersionConflictError } from '../../../application/artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { ArtifactRecord } from './schema/artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
+import { isUniqueConstraintViolation } from './unique-constraint.util';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
@@ -75,6 +78,34 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       { id: artifactId },
       { currentVersionNumber: versionNumber },
     );
+  }
+
+  @Transactional()
+  async addVersionAndUpdateCurrent(
+    version: ArtifactVersion,
+  ): Promise<ArtifactVersion> {
+    this.logger.log('addVersionAndUpdateCurrent', {
+      artifactId: version.artifactId,
+      versionNumber: version.versionNumber,
+    });
+
+    try {
+      const record = this.versionMapper.toRecord(version);
+      const saved = await this.versionRepo.save(record);
+      const createdVersion = this.versionMapper.toDomain(saved);
+
+      await this.artifactRepo.update(
+        { id: version.artifactId },
+        { currentVersionNumber: version.versionNumber },
+      );
+
+      return createdVersion;
+    } catch (error) {
+      if (isUniqueConstraintViolation(error)) {
+        throw new ArtifactVersionConflictError(version.artifactId);
+      }
+      throw error;
+    }
   }
 
   async delete(id: UUID): Promise<void> {

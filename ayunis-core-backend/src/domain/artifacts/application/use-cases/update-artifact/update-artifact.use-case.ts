@@ -1,12 +1,16 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
-import { ArtifactNotFoundError } from '../../artifacts.errors';
+import {
+  ArtifactNotFoundError,
+  ArtifactVersionConflictError,
+} from '../../artifacts.errors';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../../domain/sanitize-html-content';
+
+const MAX_VERSION_RETRIES = 3;
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -17,7 +21,6 @@ export class UpdateArtifactUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  @Transactional()
   async execute(command: UpdateArtifactCommand): Promise<ArtifactVersion> {
     this.logger.log('Updating artifact', { artifactId: command.artifactId });
 
@@ -26,32 +29,47 @@ export class UpdateArtifactUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    const artifact = await this.artifactsRepository.findById(
-      command.artifactId,
-      userId,
-    );
-    if (!artifact) {
-      throw new ArtifactNotFoundError(command.artifactId);
-    }
-
-    const newVersionNumber = artifact.currentVersionNumber + 1;
     const sanitizedContent = sanitizeHtmlContent(command.content);
 
-    const version = new ArtifactVersion({
-      artifactId: artifact.id,
-      versionNumber: newVersionNumber,
-      content: sanitizedContent,
-      authorType: command.authorType,
-      authorId: command.authorType === AuthorType.USER ? userId : null,
-    });
+    for (let attempt = 1; attempt <= MAX_VERSION_RETRIES; attempt++) {
+      const artifact = await this.artifactsRepository.findById(
+        command.artifactId,
+        userId,
+      );
+      if (!artifact) {
+        throw new ArtifactNotFoundError(command.artifactId);
+      }
 
-    const createdVersion = await this.artifactsRepository.addVersion(version);
+      const newVersionNumber = artifact.currentVersionNumber + 1;
 
-    await this.artifactsRepository.updateCurrentVersionNumber(
-      artifact.id,
-      newVersionNumber,
-    );
+      const version = new ArtifactVersion({
+        artifactId: artifact.id,
+        versionNumber: newVersionNumber,
+        content: sanitizedContent,
+        authorType: command.authorType,
+        authorId: command.authorType === AuthorType.USER ? userId : null,
+      });
 
-    return createdVersion;
+      try {
+        return await this.artifactsRepository.addVersionAndUpdateCurrent(
+          version,
+        );
+      } catch (error) {
+        if (
+          error instanceof ArtifactVersionConflictError &&
+          attempt < MAX_VERSION_RETRIES
+        ) {
+          this.logger.warn(`Version conflict on attempt ${attempt}, retrying`, {
+            artifactId: command.artifactId,
+            versionNumber: newVersionNumber,
+          });
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw new ArtifactVersionConflictError(command.artifactId);
   }
 }

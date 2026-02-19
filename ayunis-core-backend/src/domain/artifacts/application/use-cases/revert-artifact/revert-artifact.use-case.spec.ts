@@ -1,9 +1,3 @@
-jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
-      descriptor,
-}));
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
@@ -12,6 +6,7 @@ import { RevertArtifactCommand } from './revert-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import {
   ArtifactNotFoundError,
+  ArtifactVersionConflictError,
   ArtifactVersionNotFoundError,
 } from '../../artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
@@ -27,6 +22,26 @@ describe('RevertArtifactUseCase', () => {
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
+  const makeVersions = (currentVersionNumber: number) => [
+    new ArtifactVersion({
+      artifactId: mockArtifactId,
+      versionNumber: 1,
+      content: '<p>Original municipal plan</p>',
+      authorType: AuthorType.ASSISTANT,
+    }),
+    ...Array.from(
+      { length: currentVersionNumber - 1 },
+      (_, i) =>
+        new ArtifactVersion({
+          artifactId: mockArtifactId,
+          versionNumber: i + 2,
+          content: `<p>Version ${i + 2}</p>`,
+          authorType: AuthorType.USER,
+          authorId: mockUserId,
+        }),
+    ),
+  ];
+
   beforeEach(async () => {
     const mockRepository = {
       create: jest.fn(),
@@ -35,6 +50,7 @@ describe('RevertArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
+      addVersionAndUpdateCurrent: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -57,6 +73,7 @@ describe('RevertArtifactUseCase', () => {
     artifactsRepository = module.get(ArtifactsRepository);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -90,7 +107,7 @@ describe('RevertArtifactUseCase', () => {
     });
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -111,7 +128,7 @@ describe('RevertArtifactUseCase', () => {
     );
   });
 
-  it('should update the current version number after reverting', async () => {
+  it('should call addVersionAndUpdateCurrent with the reverted version', async () => {
     const versions = [
       new ArtifactVersion({
         artifactId: mockArtifactId,
@@ -138,7 +155,7 @@ describe('RevertArtifactUseCase', () => {
     });
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -149,10 +166,13 @@ describe('RevertArtifactUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(artifactsRepository.updateCurrentVersionNumber).toHaveBeenCalledWith(
-      mockArtifactId,
-      3,
-    );
+    expect(
+      artifactsRepository.addVersionAndUpdateCurrent,
+    ).toHaveBeenCalledTimes(1);
+    const passedVersion =
+      artifactsRepository.addVersionAndUpdateCurrent.mock.calls[0][0];
+    expect(passedVersion.artifactId).toBe(mockArtifactId);
+    expect(passedVersion.versionNumber).toBe(3);
   });
 
   it('should throw ArtifactNotFoundError when artifact does not exist', async () => {
@@ -226,7 +246,7 @@ describe('RevertArtifactUseCase', () => {
     });
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -267,5 +287,118 @@ describe('RevertArtifactUseCase', () => {
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
       UnauthorizedException,
     );
+  });
+
+  describe('retry on version conflict', () => {
+    it('should retry and succeed when addVersionAndUpdateCurrent fails once with conflict', async () => {
+      const artifactV2 = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Concurrent Revert Report',
+        currentVersionNumber: 2,
+        versions: makeVersions(2),
+      });
+
+      const artifactV3 = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Concurrent Revert Report',
+        currentVersionNumber: 3,
+        versions: [
+          ...makeVersions(2),
+          new ArtifactVersion({
+            artifactId: mockArtifactId,
+            versionNumber: 3,
+            content: '<p>Version 3</p>',
+            authorType: AuthorType.USER,
+            authorId: mockUserId,
+          }),
+        ],
+      });
+
+      artifactsRepository.findByIdWithVersions
+        .mockResolvedValueOnce(artifactV2)
+        .mockResolvedValueOnce(artifactV3);
+
+      artifactsRepository.addVersionAndUpdateCurrent
+        .mockRejectedValueOnce(new ArtifactVersionConflictError(mockArtifactId))
+        .mockImplementationOnce(async (version) => version);
+
+      const command = new RevertArtifactCommand({
+        artifactId: mockArtifactId,
+        versionNumber: 1,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.versionNumber).toBe(4);
+      expect(result.content).toBe('<p>Original municipal plan</p>');
+      expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(2);
+      expect(
+        artifactsRepository.addVersionAndUpdateCurrent,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw ArtifactVersionConflictError after exhausting all retries', async () => {
+      const artifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Heavily Contended Revert',
+        currentVersionNumber: 5,
+        versions: makeVersions(5),
+      });
+
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+        new ArtifactVersionConflictError(mockArtifactId),
+      );
+
+      const command = new RevertArtifactCommand({
+        artifactId: mockArtifactId,
+        versionNumber: 1,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ArtifactVersionConflictError,
+      );
+
+      expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(3);
+      expect(
+        artifactsRepository.addVersionAndUpdateCurrent,
+      ).toHaveBeenCalledTimes(3);
+    });
+
+    it('should rethrow non-conflict errors without retrying', async () => {
+      const artifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Connection Error Revert',
+        currentVersionNumber: 2,
+        versions: makeVersions(2),
+      });
+
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+        new Error('Connection refused'),
+      );
+
+      const command = new RevertArtifactCommand({
+        artifactId: mockArtifactId,
+        versionNumber: 1,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        'Connection refused',
+      );
+
+      expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(1);
+      expect(
+        artifactsRepository.addVersionAndUpdateCurrent,
+      ).toHaveBeenCalledTimes(1);
+    });
   });
 });

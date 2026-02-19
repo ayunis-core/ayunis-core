@@ -6,6 +6,7 @@ import {
 export enum ArtifactErrorCode {
   ARTIFACT_NOT_FOUND = 'ARTIFACT_NOT_FOUND',
   ARTIFACT_VERSION_NOT_FOUND = 'ARTIFACT_VERSION_NOT_FOUND',
+  ARTIFACT_VERSION_CONFLICT = 'ARTIFACT_VERSION_CONFLICT',
   ARTIFACT_CONTENT_TOO_LARGE = 'ARTIFACT_CONTENT_TOO_LARGE',
 }
 
@@ -42,6 +43,17 @@ export class ArtifactVersionNotFoundError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_VERSION_NOT_FOUND,
       404,
       { artifactId, versionNumber, ...metadata },
+    );
+  }
+}
+
+export class ArtifactVersionConflictError extends ArtifactError {
+  constructor(artifactId: string, metadata?: ErrorMetadata) {
+    super(
+      `Concurrent version conflict for artifact '${artifactId}'. Please retry.`,
+      ArtifactErrorCode.ARTIFACT_VERSION_CONFLICT,
+      409,
+      { artifactId, ...metadata },
     );
   }
 }

@@ -1,16 +1,13 @@
-jest.mock('@nestjs-cls/transactional', () => ({
-  Transactional:
-    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
-      descriptor,
-}));
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { UpdateArtifactUseCase } from './update-artifact.use-case';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { ArtifactNotFoundError } from '../../artifacts.errors';
+import {
+  ArtifactNotFoundError,
+  ArtifactVersionConflictError,
+} from '../../artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -31,6 +28,7 @@ describe('UpdateArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
+      addVersionAndUpdateCurrent: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -53,6 +51,7 @@ describe('UpdateArtifactUseCase', () => {
     artifactsRepository = module.get(ArtifactsRepository);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -69,7 +68,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -93,7 +92,7 @@ describe('UpdateArtifactUseCase', () => {
     );
   });
 
-  it('should update the current version number on the artifact', async () => {
+  it('should call addVersionAndUpdateCurrent with the new version', async () => {
     const existingArtifact = new Artifact({
       id: mockArtifactId,
       threadId: mockThreadId,
@@ -103,7 +102,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -115,10 +114,13 @@ describe('UpdateArtifactUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(artifactsRepository.updateCurrentVersionNumber).toHaveBeenCalledWith(
-      mockArtifactId,
-      2,
-    );
+    expect(
+      artifactsRepository.addVersionAndUpdateCurrent,
+    ).toHaveBeenCalledTimes(1);
+    const passedVersion =
+      artifactsRepository.addVersionAndUpdateCurrent.mock.calls[0][0];
+    expect(passedVersion.artifactId).toBe(mockArtifactId);
+    expect(passedVersion.versionNumber).toBe(2);
   });
 
   it('should throw ArtifactNotFoundError when artifact does not exist', async () => {
@@ -145,7 +147,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -170,7 +172,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -196,7 +198,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -222,7 +224,7 @@ describe('UpdateArtifactUseCase', () => {
     });
 
     artifactsRepository.findById.mockResolvedValue(existingArtifact);
-    artifactsRepository.addVersion.mockImplementation(
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
       async (version) => version,
     );
 
@@ -266,5 +268,107 @@ describe('UpdateArtifactUseCase', () => {
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
       UnauthorizedException,
     );
+  });
+
+  describe('retry on version conflict', () => {
+    it('should retry and succeed when addVersionAndUpdateCurrent fails once with conflict', async () => {
+      const artifactV2 = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Concurrent Budget Report',
+        currentVersionNumber: 2,
+      });
+
+      const artifactV3 = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Concurrent Budget Report',
+        currentVersionNumber: 3,
+      });
+
+      artifactsRepository.findById
+        .mockResolvedValueOnce(artifactV2)
+        .mockResolvedValueOnce(artifactV3);
+
+      artifactsRepository.addVersionAndUpdateCurrent
+        .mockRejectedValueOnce(new ArtifactVersionConflictError(mockArtifactId))
+        .mockImplementationOnce(async (version) => version);
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '<p>Concurrent update content</p>',
+        authorType: AuthorType.USER,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.versionNumber).toBe(4);
+      expect(artifactsRepository.findById).toHaveBeenCalledTimes(2);
+      expect(
+        artifactsRepository.addVersionAndUpdateCurrent,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw ArtifactVersionConflictError after exhausting all retries', async () => {
+      const artifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Heavily Contended Report',
+        currentVersionNumber: 5,
+      });
+
+      artifactsRepository.findById.mockResolvedValue(artifact);
+      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+        new ArtifactVersionConflictError(mockArtifactId),
+      );
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '<p>This update will fail</p>',
+        authorType: AuthorType.USER,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ArtifactVersionConflictError,
+      );
+
+      expect(artifactsRepository.findById).toHaveBeenCalledTimes(3);
+      expect(
+        artifactsRepository.addVersionAndUpdateCurrent,
+      ).toHaveBeenCalledTimes(3);
+    });
+
+    it('should rethrow non-conflict errors without retrying', async () => {
+      const artifact = new Artifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Connection Error Report',
+        currentVersionNumber: 1,
+      });
+
+      artifactsRepository.findById.mockResolvedValue(artifact);
+      artifactsRepository.addVersionAndUpdateCurrent.mockRejectedValue(
+        new Error('Connection refused'),
+      );
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '<p>Will fail with connection error</p>',
+        authorType: AuthorType.USER,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        'Connection refused',
+      );
+
+      expect(artifactsRepository.findById).toHaveBeenCalledTimes(1);
+      expect(
+        artifactsRepository.addVersionAndUpdateCurrent,
+      ).toHaveBeenCalledTimes(1);
+    });
   });
 });
