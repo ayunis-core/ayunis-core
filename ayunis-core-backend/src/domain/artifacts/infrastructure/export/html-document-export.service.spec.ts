@@ -16,8 +16,13 @@ describe('HtmlDocumentExportService', () => {
     </table>
   `;
 
-  beforeEach(() => {
+  beforeAll(async () => {
     service = new HtmlDocumentExportService();
+    await service.onModuleInit();
+  });
+
+  afterAll(async () => {
+    await service.onModuleDestroy();
   });
 
   describe('exportToDocx', () => {
@@ -74,6 +79,17 @@ describe('HtmlDocumentExportService', () => {
 
       expect(result).toBeInstanceOf(Buffer);
       expect(result.length).toBeGreaterThan(0);
+    }, 30000);
+
+    it('should relaunch browser if disconnected', async () => {
+      // Force-close the browser to simulate a crash
+      await service.onModuleDestroy();
+
+      const result = await service.exportToPdf('<p>After reconnect</p>');
+
+      expect(result).toBeInstanceOf(Buffer);
+      const header = result.subarray(0, 4).toString('ascii');
+      expect(header).toBe('%PDF');
     }, 30000);
   });
 });
