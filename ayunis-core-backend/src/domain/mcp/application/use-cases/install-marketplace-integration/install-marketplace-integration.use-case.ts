@@ -5,8 +5,8 @@ import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/applicati
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
-import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
@@ -61,7 +61,7 @@ export class InstallMarketplaceIntegrationUseCase {
     private readonly marketplaceConfigService: MarketplaceConfigService,
     private readonly factory: McpIntegrationFactory,
     private readonly authFactory: McpIntegrationAuthFactory,
-    private readonly validateUseCase: ValidateMcpIntegrationUseCase,
+    private readonly connectionValidationService: ConnectionValidationService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -133,7 +133,7 @@ export class InstallMarketplaceIntegrationUseCase {
 
       const saved = await this.repository.save(integration);
 
-      await this.validateAndUpdateConnectionStatus(saved);
+      await this.connectionValidationService.validateAndUpdateStatus(saved);
 
       return saved;
     } catch (error) {
@@ -175,32 +175,5 @@ export class InstallMarketplaceIntegrationUseCase {
       help: field.help ?? undefined,
       value: field.value ?? undefined,
     };
-  }
-
-  private async validateAndUpdateConnectionStatus(
-    integration: MarketplaceMcpIntegration,
-  ): Promise<void> {
-    try {
-      const validationResult = await this.validateUseCase.execute({
-        integrationId: integration.id,
-      });
-
-      if (validationResult.isValid) {
-        integration.updateConnectionStatus('healthy', undefined);
-      } else {
-        integration.updateConnectionStatus(
-          'unhealthy',
-          validationResult.errorMessage ?? 'Validation failed',
-        );
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? `Validation failed: ${error.message}`
-          : 'Validation failed: Unknown error';
-      integration.updateConnectionStatus('unhealthy', errorMessage);
-    }
-
-    await this.repository.save(integration);
   }
 }
