@@ -148,6 +148,88 @@ describe('CreateArtifactUseCase', () => {
     );
   });
 
+  it('should sanitize HTML content by stripping script tags', async () => {
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'XSS Test Document',
+      content:
+        '<h1>Report</h1><script>alert("xss")</script><p>Safe content</p>',
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.versions[0].content).toBe(
+      '<h1>Report</h1><p>Safe content</p>',
+    );
+    expect(result.versions[0].content).not.toContain('<script');
+  });
+
+  it('should sanitize HTML content by stripping event handlers', async () => {
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Event Handler Test',
+      content:
+        '<p onclick="alert(1)">Paragraph</p><img src="x" onerror="steal()">',
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.versions[0].content).not.toContain('onclick');
+    expect(result.versions[0].content).not.toContain('onerror');
+  });
+
+  it('should sanitize HTML content by stripping iframe elements', async () => {
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Iframe Test',
+      content:
+        '<p>Before</p><iframe src="https://evil.com"></iframe><p>After</p>',
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.versions[0].content).toBe('<p>Before</p><p>After</p>');
+  });
+
+  it('should preserve safe Tiptap HTML during sanitization', async () => {
+    const safeContent =
+      '<h1>Title</h1><p>Text with <strong>bold</strong> and <em>italic</em></p><ul><li>Item</li></ul>';
+
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Safe HTML Test',
+      content: safeContent,
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.versions[0].content).toBe(safeContent);
+  });
+
   it('should persist the artifact before adding the version', async () => {
     const callOrder: string[] = [];
 
