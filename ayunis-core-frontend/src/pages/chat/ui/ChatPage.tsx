@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator';
@@ -32,7 +32,11 @@ import { useArtifact } from '../api/useArtifact';
 import { useUpdateArtifact } from '../api/useUpdateArtifact';
 import { useRevertArtifact } from '../api/useRevertArtifact';
 import { useExportArtifact } from '../api/useExportArtifact';
-import { ArtifactEditor } from '@/widgets/artifact-editor';
+const LazyArtifactEditor = lazy(() =>
+  import('@/widgets/artifact-editor').then((m) => ({
+    default: m.ArtifactEditor,
+  })),
+);
 import { AuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { ExportFormatDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useAgents } from '@/features/useAgents';
@@ -527,13 +531,15 @@ export default function ChatPage({
         chatInput={chatInput}
         sidePanel={
           openArtifact ? (
-            <ArtifactEditor
-              artifact={openArtifact}
-              onSave={handleSaveArtifact}
-              onRevert={handleRevertArtifact}
-              onExport={handleExportArtifact}
-              onClose={handleCloseArtifact}
-            />
+            <Suspense fallback={null}>
+              <LazyArtifactEditor
+                artifact={openArtifact}
+                onSave={handleSaveArtifact}
+                onRevert={handleRevertArtifact}
+                onExport={handleExportArtifact}
+                onClose={handleCloseArtifact}
+              />
+            </Suspense>
           ) : undefined
         }
       />
