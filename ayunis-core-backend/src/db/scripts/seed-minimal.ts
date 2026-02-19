@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'src/config/env';
 import { randomUUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { SeedRunner } from './utils/seed-runner';

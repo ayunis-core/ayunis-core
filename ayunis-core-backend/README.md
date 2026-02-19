@@ -43,21 +43,16 @@ cp .env.example .env
 
 ### Development Environment
 
-Using Docker (recommended):
+From the **repository root**:
 
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+./dev up            # Start infra (Docker) + backend + frontend in background
+./dev status        # Check what's running
+./dev logs backend  # View backend logs
+./dev down          # Stop everything
 ```
 
-Manual setup:
-
-```bash
-# Install dependencies
-npm install
-
-# Start the development server
-npm run start:dev
-```
+Use `./dev up --slot 1` to run a second instance in parallel (e.g. for another worktree).
 
 ### Production Environment
 

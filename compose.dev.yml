@@ -1,0 +1,130 @@
+# Development infrastructure — no application code runs here.
+# Parameterized by port variables for parallel worktree support.
+#
+# Prefer using the ./dev script instead of calling this directly.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    ports:
+      - '${POSTGRES_HOST_PORT:-5432}:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ayunis}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./ayunis-core-backend/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    ports:
+      - '${MINIO_HOST_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_HOST_PORT:-9001}:9001'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailcatcher:
+    image: dockage/mailcatcher:0.9.0
+    restart: on-failure
+    ports:
+      - '${MAILCATCHER_SMTP_HOST_PORT:-1025}:1025'
+      - '${MAILCATCHER_WEB_HOST_PORT:-1080}:1080'
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - CONTAINERS=1
+      - EXEC=1
+      - PUT=1
+      - POST=1
+      - DELETE=1
+      - BUILD=1
+      - IMAGES=1
+      - VOLUMES=1
+      - AUTH=0
+      - SECRETS=0
+      - SERVICES=0
+      - SWARM=0
+      - NETWORKS=0
+      - INFO=1
+      - PING=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - default
+      - docker-proxy-network
+
+  code-execution:
+    build:
+      context: ./ayunis-core-code-execution
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - docker-socket-proxy
+    ports:
+      - '${CODE_EXEC_HOST_PORT:-8080}:8080'
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - EXECUTION_TIMEOUT=30
+      - MAX_MEMORY=512m
+      - MAX_CPU=1.0
+      - DOCKER_IMAGE=python-sandbox:latest
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+    networks:
+      - default
+      - docker-proxy-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:8080/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  anonymize:
+    build:
+      context: ./ayunis-core-anonymize
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${ANONYMIZE_HOST_PORT:-8001}:8000'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")'' || exit 1',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres-data:
+  minio-data:
+
+networks:
+  default:
+    driver: bridge
+  docker-proxy-network:
+    driver: bridge
+    internal: true
