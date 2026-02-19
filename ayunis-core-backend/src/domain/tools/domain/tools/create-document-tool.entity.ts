@@ -25,6 +25,8 @@ type CreateDocumentToolParameters = FromSchema<
 >;
 
 export class CreateDocumentTool extends DisplayableTool {
+  override isExecutable: boolean = true;
+
   constructor() {
     super({
       name: ToolType.CREATE_DOCUMENT,
