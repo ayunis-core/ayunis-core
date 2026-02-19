@@ -95,11 +95,9 @@ export function IntegrationCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {!isMarketplace && (
-              <DropdownMenuItem onClick={() => onEdit(integration)}>
-                {t('integrations.card.edit')}
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={() => onEdit(integration)}>
+              {t('integrations.card.edit')}
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(integration)}
               className="text-red-600"

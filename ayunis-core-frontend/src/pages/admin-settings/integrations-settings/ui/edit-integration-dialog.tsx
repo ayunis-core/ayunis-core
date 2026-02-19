@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -19,14 +19,30 @@ import {
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
 import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+import { Label } from '@/shared/ui/shadcn/label';
 import { Button } from '@/shared/ui/shadcn/button';
 import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
 import { useUpdateIntegration } from '../api/useUpdateIntegration';
+import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+const SECRET_MASK = '••••••';
+
+interface ConfigSchema {
+  orgFields: MarketplaceIntegrationConfigFieldDto[];
+}
+
+function getEditableOrgFields(
+  integration: McpIntegration,
+): MarketplaceIntegrationConfigFieldDto[] {
+  const schema = integration.configSchema as ConfigSchema | undefined;
+  if (!schema?.orgFields) return [];
+  return schema.orgFields.filter((field) => field.value == null);
 }
 
 export function EditIntegrationDialog({
@@ -46,6 +62,18 @@ export function EditIntegrationDialog({
     },
   });
 
+  const isMarketplace = integration?.type === 'marketplace';
+  const editableFields =
+    integration && isMarketplace ? getEditableOrgFields(integration) : [];
+  const currentOrgValues = (integration?.orgConfigValues ?? {}) as Record<
+    string,
+    string
+  >;
+
+  const [configFormValues, setConfigFormValues] = useState<
+    Record<string, string>
+  >({});
+
   useEffect(() => {
     if (integration && open) {
       form.reset({
@@ -53,8 +81,22 @@ export function EditIntegrationDialog({
         authHeaderName: '',
         credentials: '',
       });
+
+      if (isMarketplace) {
+        const initial: Record<string, string> = {};
+        for (const field of editableFields) {
+          if (field.type === 'secret') {
+            // Leave secret fields empty — empty means "keep existing"
+            initial[field.key] = '';
+          } else {
+            initial[field.key] = currentOrgValues[field.key] ?? '';
+          }
+        }
+        setConfigFormValues(initial);
+      }
     }
-  }, [integration, open, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [integration, open]);
 
   const handleSubmit = (data: UpdateIntegrationFormData) => {
     if (!integration) return;
@@ -65,18 +107,44 @@ export function EditIntegrationDialog({
       payload.name = data.name;
     }
 
-    const trimmedCredentials = data.credentials?.trim();
-    if (trimmedCredentials) {
-      payload.credentials = trimmedCredentials;
-    }
+    if (isMarketplace) {
+      // Build orgConfigValues: include non-secret fields always, secret fields only if non-empty
+      const orgConfigValues: Record<string, string> = {};
+      let hasConfigChanges = false;
 
-    if (integration.authMethod === 'CUSTOM_HEADER') {
-      const trimmedHeaderName = data.authHeaderName?.trim();
-      if (
-        trimmedHeaderName &&
-        trimmedHeaderName !== integration.authHeaderName
-      ) {
-        payload.authHeaderName = trimmedHeaderName;
+      for (const field of editableFields) {
+        const value = configFormValues[field.key] ?? '';
+        if (field.type === 'secret') {
+          // Only include if the admin entered a new value
+          if (value.trim()) {
+            orgConfigValues[field.key] = value;
+            hasConfigChanges = true;
+          }
+        } else {
+          orgConfigValues[field.key] = value;
+          if (value !== (currentOrgValues[field.key] ?? '')) {
+            hasConfigChanges = true;
+          }
+        }
+      }
+
+      if (hasConfigChanges) {
+        payload.orgConfigValues = orgConfigValues;
+      }
+    } else {
+      const trimmedCredentials = data.credentials?.trim();
+      if (trimmedCredentials) {
+        payload.credentials = trimmedCredentials;
+      }
+
+      if (integration.authMethod === 'CUSTOM_HEADER') {
+        const trimmedHeaderName = data.authHeaderName?.trim();
+        if (
+          trimmedHeaderName &&
+          trimmedHeaderName !== integration.authHeaderName
+        ) {
+          payload.authHeaderName = trimmedHeaderName;
+        }
       }
     }
 
@@ -91,6 +159,7 @@ export function EditIntegrationDialog({
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !isUpdating) {
       form.reset();
+      setConfigFormValues({});
     }
     onOpenChange(newOpen);
   };
@@ -132,7 +201,35 @@ export function EditIntegrationDialog({
                 )}
               />
 
-              {authMethod === 'CUSTOM_HEADER' && (
+              {isMarketplace && editableFields.length > 0 && (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('integrations.editDialog.configDescription')}
+                  </p>
+                  {editableFields.map((field) => (
+                    <MarketplaceConfigFieldInput
+                      key={field.key}
+                      field={field}
+                      value={configFormValues[field.key] ?? ''}
+                      hasExistingValue={
+                        currentOrgValues[field.key] === SECRET_MASK
+                      }
+                      onChange={(value) =>
+                        setConfigFormValues((prev) => ({
+                          ...prev,
+                          [field.key]: value,
+                        }))
+                      }
+                      disabled={isUpdating}
+                      secretPlaceholder={t(
+                        'integrations.editDialog.secretPlaceholder',
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {!isMarketplace && authMethod === 'CUSTOM_HEADER' && (
                 <>
                   <FormField
                     control={form.control}
@@ -184,7 +281,7 @@ export function EditIntegrationDialog({
                 </>
               )}
 
-              {authMethod === 'BEARER_TOKEN' && (
+              {!isMarketplace && authMethod === 'BEARER_TOKEN' && (
                 <FormField
                   control={form.control}
                   name="credentials"
@@ -208,7 +305,7 @@ export function EditIntegrationDialog({
                 />
               )}
 
-              {authMethod === 'NO_AUTH' && (
+              {!isMarketplace && authMethod === 'NO_AUTH' && (
                 <FormDescription>
                   {t('integrations.editDialog.noCredentialsMessage')}
                 </FormDescription>
@@ -234,5 +331,57 @@ export function EditIntegrationDialog({
         </DialogContent>
       )}
     </Dialog>
+  );
+}
+
+interface MarketplaceConfigFieldInputProps {
+  field: MarketplaceIntegrationConfigFieldDto;
+  value: string;
+  hasExistingValue: boolean;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  secretPlaceholder: string;
+}
+
+function MarketplaceConfigFieldInput({
+  field,
+  value,
+  hasExistingValue,
+  onChange,
+  disabled,
+  secretPlaceholder,
+}: MarketplaceConfigFieldInputProps) {
+  const inputId = `config-field-${field.key}`;
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={inputId}>
+        {field.label}
+        {field.required && <span className="ml-1 text-destructive">*</span>}
+      </Label>
+      {field.type === 'secret' ? (
+        <PasswordInput
+          id={inputId}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          placeholder={
+            hasExistingValue ? secretPlaceholder : (field.help ?? '')
+          }
+        />
+      ) : (
+        <Input
+          id={inputId}
+          type={field.type === 'url' ? 'url' : 'text'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          placeholder={field.help ?? ''}
+        />
+      )}
+      {field.help && (
+        <p className="text-xs text-muted-foreground">{field.help}</p>
+      )}
+    </div>
   );
 }
