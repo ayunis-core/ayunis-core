@@ -40,13 +40,8 @@ import { useArtifact } from '../api/useArtifact';
 import { useUpdateArtifact } from '../api/useUpdateArtifact';
 import { useRevertArtifact } from '../api/useRevertArtifact';
 import { useExportArtifact } from '../api/useExportArtifact';
-const LazyArtifactEditor = lazy(() =>
-  import('@/widgets/artifact-editor').then((m) => ({
-    default: m.ArtifactEditor,
-  })),
-);
-import { AuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { ExportFormatDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useAgents } from '@/features/useAgents';
 import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
@@ -59,6 +54,12 @@ import {
 import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
 import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
+
+const LazyArtifactEditor = lazy(() =>
+  import('@/widgets/artifact-editor').then((m) => ({
+    default: m.ArtifactEditor,
+  })),
+);
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -156,7 +157,7 @@ export default function ChatPage({
 
   const handleSaveArtifact = useCallback(
     (content: string) => {
-      saveArtifact({ content, authorType: AuthorType.USER });
+      saveArtifact({ content, authorType: UpdateArtifactDtoAuthorType.USER });
     },
     [saveArtifact],
   );
@@ -170,7 +171,7 @@ export default function ChatPage({
 
   const handleExportArtifact = useCallback(
     (format: 'docx' | 'pdf') => {
-      void exportArtifact(format as ExportFormatDto);
+      void exportArtifact(format as ArtifactsControllerExportFormat);
     },
     [exportArtifact],
   );

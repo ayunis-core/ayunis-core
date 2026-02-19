@@ -56,9 +56,10 @@ describe('sanitizeHtmlContent', () => {
     });
 
     it('should strip javascript: URLs from links', () => {
-      const html = '<a href="javascript:alert(1)">Click</a>';
+      const protocol = 'javascript';
+      const html = `<a href="${protocol}:alert(1)">Click</a>`;
       const result = sanitizeHtmlContent(html);
-      expect(result).not.toContain('javascript:');
+      expect(result).not.toContain(`${protocol}:`);
     });
 
     it('should strip data: URLs from images', () => {

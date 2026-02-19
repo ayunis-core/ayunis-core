@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import type { UUID } from 'crypto';
+import type { AuthorType } from '../../../domain/value-objects/author-type.enum';
 
 export class UpdateArtifactCommand {
   readonly artifactId: UUID;

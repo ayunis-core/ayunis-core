@@ -2273,6 +2273,110 @@ export interface MarketplaceSkillResponseDto {
 }
 
 /**
+ * Who authored this version
+ */
+export type CreateArtifactDtoAuthorType = typeof CreateArtifactDtoAuthorType[keyof typeof CreateArtifactDtoAuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateArtifactDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+export interface CreateArtifactDto {
+  /** Title of the document */
+  title: string;
+  /** HTML content of the document */
+  content: string;
+  /** The thread this artifact belongs to */
+  threadId: string;
+  /** Who authored this version */
+  authorType: CreateArtifactDtoAuthorType;
+}
+
+/**
+ * Who authored this version
+ */
+export type ArtifactVersionResponseDtoAuthorType = typeof ArtifactVersionResponseDtoAuthorType[keyof typeof ArtifactVersionResponseDtoAuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactVersionResponseDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+/**
+ * ID of the author (user ID if authored by user, null if AI)
+ * @nullable
+ */
+export type ArtifactVersionResponseDtoAuthorId = { [key: string]: unknown } | null;
+
+export interface ArtifactVersionResponseDto {
+  /** Unique identifier of the version */
+  id: string;
+  /** The artifact this version belongs to */
+  artifactId: string;
+  /** Sequential version number */
+  versionNumber: number;
+  /** HTML content of this version */
+  content: string;
+  /** Who authored this version */
+  authorType: ArtifactVersionResponseDtoAuthorType;
+  /**
+   * ID of the author (user ID if authored by user, null if AI)
+   * @nullable
+   */
+  authorId?: ArtifactVersionResponseDtoAuthorId;
+  /** When this version was created */
+  createdAt: string;
+}
+
+export interface ArtifactResponseDto {
+  /** Unique identifier of the artifact */
+  id: string;
+  /** The thread this artifact belongs to */
+  threadId: string;
+  /** The user who owns this artifact */
+  userId: string;
+  /** Title of the document */
+  title: string;
+  /** Current version number */
+  currentVersionNumber: number;
+  /** All versions of this artifact (included when fetching by ID) */
+  versions?: ArtifactVersionResponseDto[];
+  /** When the artifact was created */
+  createdAt: string;
+  /** When the artifact was last updated */
+  updatedAt: string;
+}
+
+/**
+ * Who authored this version
+ */
+export type UpdateArtifactDtoAuthorType = typeof UpdateArtifactDtoAuthorType[keyof typeof UpdateArtifactDtoAuthorType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateArtifactDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+export interface UpdateArtifactDto {
+  /** Updated HTML content of the document */
+  content: string;
+  /** Who authored this version */
+  authorType: UpdateArtifactDtoAuthorType;
+}
+
+export interface RevertArtifactDto {
+  /** The version number to revert to */
+  versionNumber: number;
+}
+
+/**
  * Type of the message content
  */
 export type MessageContentResponseDtoType = typeof MessageContentResponseDtoType[keyof typeof MessageContentResponseDtoType];
@@ -2797,70 +2901,6 @@ export interface MeResponseDto {
   name: string;
 }
 
-export type AuthorType = typeof AuthorType[keyof typeof AuthorType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const AuthorType = {
-  USER: 'USER',
-  ASSISTANT: 'ASSISTANT',
-} as const;
-
-export type ExportFormatDto = typeof ExportFormatDto[keyof typeof ExportFormatDto];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ExportFormatDto = {
-  docx: 'docx',
-  pdf: 'pdf',
-} as const;
-
-export interface CreateArtifactDto {
-  /** @maxLength 500 */
-  title: string;
-  /** @maxLength 512000 */
-  content: string;
-  threadId: string;
-  authorType: AuthorType;
-}
-
-export interface UpdateArtifactDto {
-  /** @maxLength 512000 */
-  content: string;
-  authorType: AuthorType;
-}
-
-export interface RevertArtifactDto {
-  /** @minimum 1 */
-  versionNumber: number;
-}
-
-export interface ExportArtifactQueryDto {
-  format: ExportFormatDto;
-}
-
-export interface ArtifactVersionResponseDto {
-  id: string;
-  artifactId: string;
-  versionNumber: number;
-  content: string;
-  authorType: AuthorType;
-  /** @nullable */
-  authorId?: string | null;
-  createdAt: string;
-}
-
-export interface ArtifactResponseDto {
-  id: string;
-  threadId: string;
-  userId: string;
-  title: string;
-  currentVersionNumber: number;
-  versions?: ArtifactVersionResponseDto[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export type SuperAdminModelsControllerGetCatalogModelById200 = LanguageModelResponseDto | EmbeddingModelResponseDto;
 
 export type SuperAdminModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto;
@@ -3016,6 +3056,22 @@ export type SkillsControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
 };
+
+export type ArtifactsControllerExportParams = {
+/**
+ * Export format
+ */
+format: ArtifactsControllerExportFormat;
+};
+
+export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactsControllerExportFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
 
 export type RunsControllerSendMessageBody = {
   threadId: string;
@@ -3224,9 +3280,5 @@ export type TranscriptionsControllerTranscribeBody = {
   file: Blob;
   /** Optional language hint (e.g., "en", "de") */
   language?: string;
-};
-
-export type ArtifactsControllerExportParams = {
-format: ExportFormatDto;
 };
 

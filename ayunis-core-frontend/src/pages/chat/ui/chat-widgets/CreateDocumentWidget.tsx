@@ -1,9 +1,8 @@
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
-import { cn } from '@/shared/lib/shadcn/utils';
-import { FileText, ExternalLink, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useThreadArtifacts } from '../../api/useThreadArtifacts';
+import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 interface CreateDocumentWidgetProps {
   content: ToolUseMessageContent;
@@ -43,53 +42,27 @@ export default function CreateDocumentWidget({
     }
   };
 
+  const statusLabel = artifactId ? (
+    <span className="flex items-center gap-1">
+      <Check className="size-3" />
+      {t('chat.tools.create_document.created')}
+    </span>
+  ) : isStreaming ? (
+    t('chat.tools.create_document.generating')
+  ) : (
+    t('chat.tools.create_document.title')
+  );
+
   return (
-    <div
-      className="my-2 w-full rounded-lg border bg-card p-4"
-      key={`${content.name}-${content.id}`}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            'flex size-10 items-center justify-center rounded-lg bg-primary/10',
-            isStreaming && 'animate-pulse',
-          )}
-        >
-          <FileText className="size-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p
-            className={cn(
-              'text-sm font-medium truncate',
-              isStreaming && 'animate-pulse',
-            )}
-          >
-            {params.title || t('chat.tools.create_document.title')}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {artifactId ? (
-              <span className="flex items-center gap-1">
-                <Check className="size-3" />
-                {t('chat.tools.create_document.created')}
-              </span>
-            ) : isStreaming ? (
-              t('chat.tools.create_document.generating')
-            ) : (
-              t('chat.tools.create_document.title')
-            )}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8"
-          disabled={!artifactId}
-          onClick={handleOpen}
-        >
-          <ExternalLink className="mr-1 size-3.5" />
-          {t('chat.tools.create_document.openInEditor')}
-        </Button>
-      </div>
-    </div>
+    <DocumentWidgetCard
+      contentKey={content.name}
+      contentId={content.id}
+      isStreaming={isStreaming}
+      title={params.title || t('chat.tools.create_document.title')}
+      statusLabel={statusLabel}
+      buttonLabel={t('chat.tools.create_document.openInEditor')}
+      artifactId={artifactId}
+      onOpen={handleOpen}
+    />
   );
 }

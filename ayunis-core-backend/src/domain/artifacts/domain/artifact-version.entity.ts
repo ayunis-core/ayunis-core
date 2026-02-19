@@ -1,5 +1,6 @@
-import { randomUUID, UUID } from 'crypto';
-import { AuthorType } from './value-objects/author-type.enum';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { AuthorType } from './value-objects/author-type.enum';
 
 export class ArtifactVersion {
   public readonly id: UUID;

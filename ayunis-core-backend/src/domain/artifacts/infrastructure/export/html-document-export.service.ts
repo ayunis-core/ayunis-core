@@ -16,6 +16,7 @@ export class HtmlDocumentExportService
 {
   private readonly logger = new Logger(HtmlDocumentExportService.name);
   private browser: Browser | null = null;
+  private launchPromise: Promise<void> | null = null;
 
   async onModuleInit(): Promise<void> {
     await this.launchBrowser();
@@ -66,7 +67,12 @@ export class HtmlDocumentExportService
     }
 
     this.logger.warn('Browser disconnected — relaunching');
-    await this.launchBrowser();
+    if (!this.launchPromise) {
+      this.launchPromise = this.launchBrowser().finally(() => {
+        this.launchPromise = null;
+      });
+    }
+    await this.launchPromise;
     return this.browser!;
   }
 

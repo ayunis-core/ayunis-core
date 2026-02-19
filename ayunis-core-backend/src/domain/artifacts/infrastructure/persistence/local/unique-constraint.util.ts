@@ -3,7 +3,7 @@
  * Works with TypeORM's QueryFailedError which wraps the driver error.
  */
 export function isUniqueConstraintViolation(error: unknown): boolean {
-  if (error == null || typeof error !== 'object') {
+  if (error === null || error === undefined || typeof error !== 'object') {
     return false;
   }
 

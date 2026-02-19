@@ -1,6 +1,6 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { DisplayableTool } from '../displayable-tool.entity';
 
 const createDocumentToolParameters = {
@@ -37,7 +37,9 @@ export class CreateDocumentTool extends DisplayableTool {
     });
   }
 
-  validateParams(params: Record<string, any>): CreateDocumentToolParameters {
+  validateParams(
+    params: Record<string, unknown>,
+  ): CreateDocumentToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

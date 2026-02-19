@@ -1,6 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { FindArtifactWithVersionsUseCase } from './find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from './find-artifact-with-versions.query';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';

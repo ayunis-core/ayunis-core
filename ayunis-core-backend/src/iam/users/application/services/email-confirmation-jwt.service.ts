@@ -36,7 +36,7 @@ export class EmailConfirmationJwtService {
     const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.emailConfirmationExpiresIn',
       '24h',
-    );
+    ) as StringValue;
 
     return this.jwtService.sign(payload, { expiresIn });
   }

@@ -17,6 +17,7 @@ artifacts/
 ├── domain/
 │   ├── artifact.entity.ts
 │   ├── artifact-version.entity.ts
+│   ├── sanitize-html-content.ts
 │   └── value-objects/
 │       └── author-type.enum.ts
 ├── application/
@@ -47,6 +48,10 @@ artifacts/
 └── artifacts.module.ts
 ```
 
+## Dependencies
+
+- **ThreadsModule** — Imported for thread ownership validation when creating artifacts
+
 ## Ports
 
 - **ArtifactsRepository** — CRUD for artifacts and versions
@@ -59,3 +64,7 @@ artifacts/
 - Reverting copies content from a target version into a new version (non-destructive)
 - Deleting a thread cascade-deletes all its artifacts and versions
 - Export delegates to `DocumentExportPort` for format conversion
+- HTML sanitization (XSS prevention) on all content before storage and export
+- Content size validation (max ~512K characters) on create and update
+- Thread ownership verification when creating artifacts
+- Retry-on-conflict logic for version number uniqueness (unique constraint + up to 3 retries)

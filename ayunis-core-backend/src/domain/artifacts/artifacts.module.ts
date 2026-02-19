@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ArtifactsController } from './presenters/http/artifacts.controller';
 import { ArtifactsRepository } from './application/ports/artifacts-repository.port';
 import { DocumentExportPort } from './application/ports/document-export.port';
@@ -17,7 +17,7 @@ import { RevertArtifactUseCase } from './application/use-cases/revert-artifact/r
 import { ExportArtifactUseCase } from './application/use-cases/export-artifact/export-artifact.use-case';
 
 @Module({
-  imports: [LocalArtifactsRepositoryModule, ThreadsModule],
+  imports: [LocalArtifactsRepositoryModule, forwardRef(() => ThreadsModule)],
   controllers: [ArtifactsController],
   providers: [
     {

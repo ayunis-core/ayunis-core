@@ -54,7 +54,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
           expiresIn: configService.get<StringValue>(
             'auth.jwt.inviteExpiresIn',
             '7d',
-          ),
+          ) as StringValue,
         },
       }),
     }),

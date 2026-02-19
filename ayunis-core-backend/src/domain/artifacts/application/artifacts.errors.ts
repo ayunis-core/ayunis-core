@@ -1,7 +1,5 @@
-import {
-  ApplicationError,
-  ErrorMetadata,
-} from '../../../common/errors/base.error';
+import type { ErrorMetadata } from '../../../common/errors/base.error';
+import { ApplicationError } from '../../../common/errors/base.error';
 
 /** Maximum allowed artifact content length in characters (~500 KB). */
 export const ARTIFACT_MAX_CONTENT_LENGTH = 512_000;
