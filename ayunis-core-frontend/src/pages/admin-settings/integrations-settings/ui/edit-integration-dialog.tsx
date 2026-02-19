@@ -31,8 +31,6 @@ interface EditIntegrationDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const SECRET_MASK = '••••••';
-
 interface ConfigSchema {
   orgFields: MarketplaceIntegrationConfigFieldDto[];
 }
@@ -95,6 +93,9 @@ export function EditIntegrationDialog({
         setConfigFormValues(initial);
       }
     }
+    // Only reset form when the dialog opens with a (potentially different) integration.
+    // Derived values (editableFields, currentOrgValues, isMarketplace) are new references
+    // every render — including them would cause infinite re-render loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [integration, open]);
 
@@ -211,9 +212,7 @@ export function EditIntegrationDialog({
                       key={field.key}
                       field={field}
                       value={configFormValues[field.key] ?? ''}
-                      hasExistingValue={
-                        currentOrgValues[field.key] === SECRET_MASK
-                      }
+                      hasExistingValue={field.key in currentOrgValues}
                       onChange={(value) =>
                         setConfigFormValues((prev) => ({
                           ...prev,

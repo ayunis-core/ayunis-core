@@ -76,10 +76,11 @@ export class UpdateMcpIntegrationUseCase {
         await this.updateOrgConfigValues(integration, command.orgConfigValues);
       }
 
-      const saved = await this.repository.save(integration);
+      let saved = await this.repository.save(integration);
 
       if (command.orgConfigValues !== undefined) {
-        await this.connectionValidationService.validateAndUpdateStatus(saved);
+        saved =
+          await this.connectionValidationService.validateAndUpdateStatus(saved);
       }
 
       return saved;

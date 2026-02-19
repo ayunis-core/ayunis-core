@@ -133,9 +133,10 @@ export class InstallMarketplaceIntegrationUseCase {
 
       const saved = await this.repository.save(integration);
 
-      await this.connectionValidationService.validateAndUpdateStatus(saved);
+      const validated =
+        await this.connectionValidationService.validateAndUpdateStatus(saved);
 
-      return saved;
+      return validated as MarketplaceMcpIntegration;
     } catch (error) {
       if (
         error instanceof ApplicationError ||
