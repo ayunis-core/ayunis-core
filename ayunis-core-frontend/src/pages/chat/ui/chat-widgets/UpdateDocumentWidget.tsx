@@ -1,28 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { FileText, ExternalLink, Check } from 'lucide-react';
-import { useUpdateArtifact } from '../../api/useUpdateArtifact';
-import { AuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface UpdateDocumentWidgetProps {
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-  threadId: string;
   onOpenArtifact?: (artifactId: string) => void;
 }
 
 export default function UpdateDocumentWidget({
   content,
   isStreaming = false,
-  threadId,
   onOpenArtifact,
 }: UpdateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
-  const updatedRef = useRef<string | null>(null);
-  const [updated, setUpdated] = useState(false);
 
   const params = (content.params || {}) as {
     artifact_id?: string;
@@ -30,30 +23,6 @@ export default function UpdateDocumentWidget({
   };
 
   const artifactId = params.artifact_id || '';
-
-  const { updateArtifact, isUpdating } = useUpdateArtifact({
-    artifactId,
-    threadId,
-    onSuccess: () => {
-      setUpdated(true);
-    },
-  });
-
-  // Auto-update the artifact once streaming is done and we have content
-  useEffect(() => {
-    if (
-      !isStreaming &&
-      updatedRef.current !== content.id &&
-      artifactId &&
-      params.content
-    ) {
-      updatedRef.current = content.id;
-      updateArtifact({
-        content: params.content,
-        authorType: AuthorType.ASSISTANT,
-      });
-    }
-  }, [isStreaming, artifactId, params.content, updateArtifact, content.id]);
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
@@ -85,13 +54,11 @@ export default function UpdateDocumentWidget({
             {t('chat.tools.update_document.title')}
           </p>
           <p className="text-xs text-muted-foreground">
-            {updated ? (
+            {!isStreaming && artifactId ? (
               <span className="flex items-center gap-1">
                 <Check className="size-3" />
                 {t('chat.tools.update_document.updated')}
               </span>
-            ) : isUpdating ? (
-              t('chat.tools.update_document.updating')
             ) : isStreaming ? (
               t('chat.tools.update_document.generating')
             ) : (
