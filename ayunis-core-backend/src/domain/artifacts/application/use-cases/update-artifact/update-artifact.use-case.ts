@@ -2,8 +2,10 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
+  ArtifactContentTooLargeError,
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
+  ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
@@ -27,6 +29,13 @@ export class UpdateArtifactUseCase {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');
+    }
+
+    if (command.content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
+      throw new ArtifactContentTooLargeError(
+        command.content.length,
+        ARTIFACT_MAX_CONTENT_LENGTH,
+      );
     }
 
     const sanitizedContent = sanitizeHtmlContent(command.content);

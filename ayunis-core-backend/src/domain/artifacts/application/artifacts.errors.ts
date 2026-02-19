@@ -3,6 +3,9 @@ import {
   ErrorMetadata,
 } from '../../../common/errors/base.error';
 
+/** Maximum allowed artifact content length in characters (~500 KB). */
+export const ARTIFACT_MAX_CONTENT_LENGTH = 512_000;
+
 export enum ArtifactErrorCode {
   ARTIFACT_NOT_FOUND = 'ARTIFACT_NOT_FOUND',
   ARTIFACT_VERSION_NOT_FOUND = 'ARTIFACT_VERSION_NOT_FOUND',
