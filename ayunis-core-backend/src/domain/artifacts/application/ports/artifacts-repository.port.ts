@@ -1,6 +1,6 @@
-import { UUID } from 'crypto';
-import { Artifact } from '../../domain/artifact.entity';
-import { ArtifactVersion } from '../../domain/artifact-version.entity';
+import type { UUID } from 'crypto';
+import type { Artifact } from '../../domain/artifact.entity';
+import type { ArtifactVersion } from '../../domain/artifact-version.entity';
 
 export abstract class ArtifactsRepository {
   abstract create(artifact: Artifact): Promise<Artifact>;

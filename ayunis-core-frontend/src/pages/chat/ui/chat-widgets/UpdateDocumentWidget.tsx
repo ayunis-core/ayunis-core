@@ -1,8 +1,7 @@
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
-import { cn } from '@/shared/lib/shadcn/utils';
-import { FileText, ExternalLink, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 interface UpdateDocumentWidgetProps {
   content: ToolUseMessageContent;
@@ -30,53 +29,28 @@ export default function UpdateDocumentWidget({
     }
   };
 
+  const statusLabel =
+    !isStreaming && artifactId ? (
+      <span className="flex items-center gap-1">
+        <Check className="size-3" />
+        {t('chat.tools.update_document.updated')}
+      </span>
+    ) : isStreaming ? (
+      t('chat.tools.update_document.generating')
+    ) : (
+      t('chat.tools.update_document.title')
+    );
+
   return (
-    <div
-      className="my-2 w-full rounded-lg border bg-card p-4"
-      key={`${content.name}-${content.id}`}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            'flex size-10 items-center justify-center rounded-lg bg-primary/10',
-            isStreaming && 'animate-pulse',
-          )}
-        >
-          <FileText className="size-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p
-            className={cn(
-              'text-sm font-medium',
-              isStreaming && 'animate-pulse',
-            )}
-          >
-            {t('chat.tools.update_document.title')}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {!isStreaming && artifactId ? (
-              <span className="flex items-center gap-1">
-                <Check className="size-3" />
-                {t('chat.tools.update_document.updated')}
-              </span>
-            ) : isStreaming ? (
-              t('chat.tools.update_document.generating')
-            ) : (
-              t('chat.tools.update_document.title')
-            )}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8"
-          disabled={!artifactId}
-          onClick={handleOpen}
-        >
-          <ExternalLink className="mr-1 size-3.5" />
-          {t('chat.tools.update_document.openInEditor')}
-        </Button>
-      </div>
-    </div>
+    <DocumentWidgetCard
+      contentKey={content.name}
+      contentId={content.id}
+      isStreaming={isStreaming}
+      title={t('chat.tools.update_document.title')}
+      statusLabel={statusLabel}
+      buttonLabel={t('chat.tools.update_document.openInEditor')}
+      artifactId={artifactId || null}
+      onOpen={handleOpen}
+    />
   );
 }

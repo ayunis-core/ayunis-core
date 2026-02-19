@@ -1,5 +1,5 @@
 import { artifactsControllerExport } from '@/shared/api';
-import type { ExportFormatDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showError } from '@/shared/lib/toast';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,7 @@ export function useExportArtifact({
   const [isExporting, setIsExporting] = useState(false);
 
   const exportArtifact = useCallback(
-    async (format: ExportFormatDto) => {
+    async (format: ArtifactsControllerExportFormat) => {
       setIsExporting(true);
       try {
         const data = await artifactsControllerExport(artifactId, { format });

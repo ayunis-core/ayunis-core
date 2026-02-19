@@ -1,6 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { RevertArtifactUseCase } from './revert-artifact.use-case';
 import { RevertArtifactCommand } from './revert-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';

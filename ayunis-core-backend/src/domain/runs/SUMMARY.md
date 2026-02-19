@@ -14,10 +14,4 @@ The runs module is the central orchestrator for AI conversation execution. The `
 - **MessageCleanupService** — Ensures threads end with an assistant message after a run completes or is interrupted by deleting trailing non-assistant messages.
 - **SystemPromptBuilderService** — Builds system prompts from agent configuration, thread context, and active skills.
 
-### Helpers
-
-- **resolve-integration.helper.ts** — Pure functions for resolving MCP integration metadata. `resolveIntegration` matches tool names to `McpIntegrationTool` instances and extracts integration metadata. `enrichContentWithIntegration` attaches integration metadata to `ToolUseMessageContent` blocks in assistant responses.
-
-Note: **SkillActivationService** (which handles copying skill sources, MCP integrations, and returning instructions to the thread) lives in the **skills module** (`src/domain/skills/application/services/skill-activation.service.ts`) and is consumed by both the runs module (`ExecuteRunUseCase`) and the tools module (`ActivateSkillToolHandler`).
-
-The module integrates with **threads** for conversation context, **messages** for creating and reading conversation history, **models** for inference routing, **tools** for executing tool calls during runs, **agents** for loading agent configurations, **skills** for on-demand skill activation and source/MCP injection, **mcp** for fetching integration metadata (`GetMcpIntegrationsByIdsUseCase`, `MarketplaceMcpIntegration`), **usage** for tracking token consumption, and **chat-settings** for user-level system prompt injection.
+The module integrates with **threads** for conversation context, **messages** for creating and reading conversation history, **models** for inference routing, **tools** for executing tool calls during runs, **agents** for loading agent configurations, **skills** for on-demand skill activation and source/MCP injection, **usage** for tracking token consumption, **chat-settings** for user-level system prompt injection, and **artifacts** for discovering thread artifacts during tool assembly.
