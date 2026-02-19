@@ -54,8 +54,8 @@ import {
 import type { PendingImage } from '../api/useMessageSend';
 
 interface ChatPageProps {
-  thread: Thread;
-  isEmbeddingModelEnabled: boolean;
+  readonly thread: Thread;
+  readonly isEmbeddingModelEnabled: boolean;
 }
 
 export default function ChatPage({
@@ -217,6 +217,7 @@ export default function ChatPage({
           );
           break;
         }
+        case undefined:
         default:
           showError(t('chat.errorUnexpected'));
       }
@@ -226,6 +227,7 @@ export default function ChatPage({
 
   const handleSession = useCallback((session: RunSessionResponseDto) => {
     if (config.env === 'development') {
+      // eslint-disable-next-line no-console
       console.log('session', session);
     }
     if (session.streaming === true) setIsStreaming(true);
@@ -235,6 +237,7 @@ export default function ChatPage({
   const handleThread = useCallback(
     (thread: RunThreadResponseDto) => {
       if (config.env === 'development') {
+        // eslint-disable-next-line no-console
         console.log('Thread', thread);
       }
       setThreadTitle(thread.title);
@@ -256,6 +259,7 @@ export default function ChatPage({
       showError(t('chat.errorSendMessage'));
     },
     onComplete: () => {
+      // eslint-disable-next-line no-console
       console.log('Message sending completed');
       setIsStreaming(false);
     },
@@ -274,7 +278,7 @@ export default function ChatPage({
         imageFiles && imageFiles.length > 0
           ? imageFiles.map((img) => ({
               file: img.file,
-              altText: img.altText || 'Pasted image',
+              altText: img.altText ?? 'Pasted image',
             }))
           : undefined;
 
@@ -302,7 +306,8 @@ export default function ChatPage({
     // This provides instant feedback matching what the backend will save
     setMessages((prev) => {
       const lastMessage = prev[prev.length - 1];
-      if (lastMessage && lastMessage.role === 'assistant') {
+      // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- guard against empty prev array where lastMessage would be undefined
+      if (lastMessage != null && lastMessage.role === 'assistant') {
         // Filter out tool_use content, keeping only text and thinking
         const cleanedContent = lastMessage.content.filter(
           (c) => c.type === 'text' || c.type === 'thinking',
@@ -333,6 +338,7 @@ export default function ChatPage({
   }
 
   function handleRenameThread(fromDropdown = false) {
+    // eslint-disable-next-line sonarjs/no-selector-parameter
     if (fromDropdown) {
       // Delay to allow dropdown menu to fully close first
       setTimeout(() => setRenameDialogOpen(true), 0);
@@ -353,7 +359,7 @@ export default function ChatPage({
 
       // Find the source to get its name
       const source = thread.sources.find((s) => s.id === sourceId);
-      link.download = source?.name || 'download.csv';
+      link.download = source?.name ?? 'download.csv';
 
       // Trigger download
       document.body.appendChild(link);
@@ -403,7 +409,7 @@ export default function ChatPage({
             pendingImages.length > 0
               ? pendingImages.map((img) => ({
                   file: img.file,
-                  altText: img.altText || img.file.name || 'Pasted image',
+                  altText: img.altText ?? img.file.name,
                 }))
               : undefined;
 
@@ -448,7 +454,7 @@ export default function ChatPage({
           className="group inline-flex items-center gap-2"
           data-testid="header"
         >
-          {threadTitle || t('chat.untitled')}
+          {threadTitle ?? t('chat.untitled')}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -505,14 +511,17 @@ export default function ChatPage({
   // - No assistant message has arrived yet, OR
   // - The last assistant message has empty content (still waiting for content to stream in)
   const lastMessage = sortedMessages[sortedMessages.length - 1];
+  /* eslint-disable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- lastMessage may be undefined if sortedMessages is empty */
   const lastAssistantHasEmptyContent =
-    lastMessage?.role === 'assistant' &&
-    (!lastMessage.content || lastMessage.content.length === 0);
+    lastMessage != null &&
+    lastMessage.role === 'assistant' &&
+    lastMessage.content.length === 0;
   const showLoadingMessage =
     isStreaming &&
-    (!lastMessage ||
+    (lastMessage == null ||
       lastMessage.role !== 'assistant' ||
       lastAssistantHasEmptyContent);
+  /* eslint-enable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain */
 
   const chatContent = (
     <div className="p-4 pb-8">
