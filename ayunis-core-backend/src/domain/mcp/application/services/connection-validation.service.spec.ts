@@ -91,9 +91,7 @@ describe('ConnectionValidationService', () => {
 
   it('sets status to unhealthy when validation throws an error', async () => {
     const integration = createIntegration();
-    validateUseCase.execute.mockRejectedValue(
-      new Error('Connection refused'),
-    );
+    validateUseCase.execute.mockRejectedValue(new Error('Connection refused'));
 
     await service.validateAndUpdateStatus(integration);
 
@@ -118,9 +116,7 @@ describe('ConnectionValidationService', () => {
 
   it('does not throw even when validation fails', async () => {
     const integration = createIntegration();
-    validateUseCase.execute.mockRejectedValue(
-      new Error('Connection refused'),
-    );
+    validateUseCase.execute.mockRejectedValue(new Error('Connection refused'));
 
     await expect(
       service.validateAndUpdateStatus(integration),
