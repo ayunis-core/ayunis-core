@@ -1,12 +1,9 @@
-import { useEffect, useRef } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { FileText, ExternalLink, Check } from 'lucide-react';
-import { useCreateArtifact } from '../../api/useCreateArtifact';
 import { useThreadArtifacts } from '../../api/useThreadArtifacts';
-import { AuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface CreateDocumentWidgetProps {
   content: ToolUseMessageContent;
@@ -22,50 +19,16 @@ export default function CreateDocumentWidget({
   onOpenArtifact,
 }: CreateDocumentWidgetProps) {
   const { t } = useTranslation('chat');
-  const createdRef = useRef<string | null>(null);
 
   const params = (content.params || {}) as {
     title?: string;
     content?: string;
   };
 
-  const { createArtifact, isCreating, data } = useCreateArtifact(
-    threadId,
-    () => {
-      // onSuccess — artifact was created
-    },
-  );
-
-  // Use mutation response first, fall back to thread artifacts list
-  // so the button stays clickable after component re-mounts
+  // Artifact is created by the backend during the run.
+  // We just look it up from the thread artifacts list to get the ID.
   const { artifacts } = useThreadArtifacts(threadId);
-  const artifactId =
-    data?.id ?? artifacts.find((a) => a.title === params.title)?.id ?? null;
-
-  // Auto-create the artifact once streaming is done and we have content
-  useEffect(() => {
-    if (
-      !isStreaming &&
-      createdRef.current !== content.id &&
-      params.title &&
-      params.content
-    ) {
-      createdRef.current = content.id;
-      createArtifact({
-        title: params.title,
-        content: params.content,
-        threadId,
-        authorType: AuthorType.ASSISTANT,
-      });
-    }
-  }, [
-    isStreaming,
-    params.title,
-    params.content,
-    threadId,
-    createArtifact,
-    content.id,
-  ]);
+  const artifactId = artifacts.find((a) => a.title === params.title)?.id ?? null;
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
@@ -102,8 +65,6 @@ export default function CreateDocumentWidget({
                 <Check className="size-3" />
                 {t('chat.tools.create_document.created')}
               </span>
-            ) : isCreating ? (
-              t('chat.tools.create_document.creating')
             ) : isStreaming ? (
               t('chat.tools.create_document.generating')
             ) : (
