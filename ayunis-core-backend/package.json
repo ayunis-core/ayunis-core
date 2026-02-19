@@ -35,9 +35,9 @@
     "bundle-frontend": "bash scripts/bundle-frontend.sh",
     "generate:client": "orval --config ./orval.config.ts",
     "cli:ts": "ts-node -r tsconfig-paths/register src/cli/main.ts",
-    "cli": "node -r src/config/env-register dist/src/cli/main.js",
+    "cli": "node -r ./src/config/env-register dist/src/cli/main.js",
     "seed:minimal:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal.ts",
-    "seed:minimal": "node -r src/config/env-register dist/src/db/scripts/seed-minimal.js",
+    "seed:minimal": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js",
     "seed:ts": "npm run seed:minimal:ts",
     "seed": "npm run seed:minimal"
   },
