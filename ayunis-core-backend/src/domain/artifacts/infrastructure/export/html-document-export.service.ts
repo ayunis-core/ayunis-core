@@ -1,13 +1,29 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { DocumentExportPort } from '../../application/ports/document-export.port';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import htmlToDocx = require('html-to-docx');
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 import { sanitizeHtmlContent } from '../../domain/sanitize-html-content';
 
 @Injectable()
-export class HtmlDocumentExportService implements DocumentExportPort {
+export class HtmlDocumentExportService
+  implements DocumentExportPort, OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(HtmlDocumentExportService.name);
+  private browser: Browser | null = null;
+
+  async onModuleInit(): Promise<void> {
+    await this.launchBrowser();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.closeBrowser();
+  }
 
   async exportToDocx(html: string): Promise<Buffer> {
     this.logger.log('Exporting HTML to DOCX');
@@ -26,15 +42,10 @@ export class HtmlDocumentExportService implements DocumentExportPort {
     this.logger.log('Exporting HTML to PDF');
 
     const wrappedHtml = this.wrapHtml(html);
-    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+    const browser = await this.getBrowser();
+    const page = await browser.newPage();
 
     try {
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-
-      const page = await browser.newPage();
       await page.setContent(wrappedHtml, { waitUntil: 'networkidle0' });
 
       const pdfBuffer = await page.pdf({
@@ -45,9 +56,33 @@ export class HtmlDocumentExportService implements DocumentExportPort {
 
       return Buffer.from(pdfBuffer);
     } finally {
-      if (browser) {
-        await browser.close();
-      }
+      await page.close();
+    }
+  }
+
+  private async getBrowser(): Promise<Browser> {
+    if (this.browser?.connected) {
+      return this.browser;
+    }
+
+    this.logger.warn('Browser disconnected — relaunching');
+    await this.launchBrowser();
+    return this.browser!;
+  }
+
+  private async launchBrowser(): Promise<void> {
+    this.browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    this.logger.log('Puppeteer browser launched');
+  }
+
+  private async closeBrowser(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      this.logger.log('Puppeteer browser closed');
     }
   }
 
