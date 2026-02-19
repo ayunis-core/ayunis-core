@@ -1,5 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { UUID } from 'crypto';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
+import { UserMcpConfigResult } from '../get-user-mcp-config/get-user-mcp-config.use-case';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
@@ -9,8 +11,10 @@ import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketpl
 import { ConfigField } from '../../../domain/value-objects/integration-config-schema';
 import {
   McpIntegrationNotFoundError,
+  McpIntegrationAccessDeniedError,
   McpNotMarketplaceIntegrationError,
   McpNoUserFieldsError,
+  McpInvalidConfigKeysError,
 } from '../../mcp.errors';
 
 @Injectable()
@@ -26,7 +30,7 @@ export class SetUserMcpConfigUseCase {
 
   async execute(
     command: SetUserMcpConfigCommand,
-  ): Promise<McpIntegrationUserConfig> {
+  ): Promise<UserMcpConfigResult> {
     this.logger.log('execute', { integrationId: command.integrationId });
 
     const userId = this.contextService.get('userId');
@@ -34,12 +38,18 @@ export class SetUserMcpConfigUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
+    const orgId = this.contextService.get('orgId');
+
     const integration = await this.integrationRepository.findById(
       command.integrationId,
     );
 
     if (!integration) {
       throw new McpIntegrationNotFoundError(command.integrationId);
+    }
+
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(command.integrationId);
     }
 
     if (!integration.isMarketplace()) {
@@ -53,13 +63,41 @@ export class SetUserMcpConfigUseCase {
       throw new McpNoUserFieldsError(command.integrationId);
     }
 
+    this.validateConfigKeys(userFields, command.configValues);
+
     const encryptedValues = await this.encryptSecretFields(
       userFields,
       command.configValues,
     );
 
-    const existing = await this.userConfigRepository.findByIntegrationAndUser(
+    const saved = await this.saveConfig(
       command.integrationId,
+      userId,
+      encryptedValues,
+    );
+
+    return this.maskResult(saved.configValues, userFields);
+  }
+
+  private validateConfigKeys(
+    userFields: ConfigField[],
+    values: Record<string, string>,
+  ): void {
+    const allowedKeys = new Set(userFields.map((f) => f.key));
+    const invalidKeys = Object.keys(values).filter((k) => !allowedKeys.has(k));
+
+    if (invalidKeys.length > 0) {
+      throw new McpInvalidConfigKeysError(invalidKeys);
+    }
+  }
+
+  private async saveConfig(
+    integrationId: UUID,
+    userId: UUID,
+    encryptedValues: Record<string, string>,
+  ): Promise<McpIntegrationUserConfig> {
+    const existing = await this.userConfigRepository.findByIntegrationAndUser(
+      integrationId,
       userId,
     );
 
@@ -69,12 +107,28 @@ export class SetUserMcpConfigUseCase {
     }
 
     const userConfig = new McpIntegrationUserConfig({
-      integrationId: command.integrationId,
+      integrationId,
       userId,
       configValues: encryptedValues,
     });
 
     return this.userConfigRepository.save(userConfig);
+  }
+
+  private maskResult(
+    configValues: Record<string, string>,
+    userFields: ConfigField[],
+  ): UserMcpConfigResult {
+    const secretKeys = new Set(
+      userFields.filter((f) => f.type === 'secret').map((f) => f.key),
+    );
+
+    const maskedValues: Record<string, string> = {};
+    for (const [key, value] of Object.entries(configValues)) {
+      maskedValues[key] = secretKeys.has(key) ? '***' : value;
+    }
+
+    return { hasConfig: true, configValues: maskedValues };
   }
 
   private async encryptSecretFields(

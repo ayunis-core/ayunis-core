@@ -53,6 +53,18 @@ export abstract class McpIntegrationsRepositoryPort {
   ): Promise<McpIntegration | null>;
 
   /**
+   * Finds a marketplace MCP integration by organization ID and marketplace identifier.
+   * Used to check for duplicate marketplace installations.
+   * @param orgId The organization ID
+   * @param marketplaceIdentifier The marketplace integration identifier
+   * @returns The integration or null if not found
+   */
+  abstract findByOrgIdAndMarketplaceIdentifier(
+    orgId: UUID,
+    marketplaceIdentifier: string,
+  ): Promise<McpIntegration | null>;
+
+  /**
    * Deletes an MCP integration by its ID.
    * @param id The integration ID
    */

@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
-import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
+import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
+import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
@@ -14,8 +15,6 @@ import {
   IntegrationConfigSchema,
   ConfigField,
 } from '../../../domain/value-objects/integration-config-schema';
-import { IntegrationResponseDtoConfigSchema } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
-
 /**
  * Runtime shape of the configSchema returned by the marketplace API.
  * The OpenAPI spec declares this as a generic object, so we cast at the boundary.
@@ -46,7 +45,7 @@ interface MarketplaceConfigSchemaDto {
 import {
   McpOAuthNotSupportedError,
   McpMissingRequiredConfigError,
-  McpMarketplaceIntegrationNotFoundError,
+  DuplicateMarketplaceMcpIntegrationError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -58,7 +57,7 @@ export class InstallMarketplaceIntegrationUseCase {
   );
 
   constructor(
-    private readonly marketplaceClient: MarketplaceClient,
+    private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly factory: McpIntegrationFactory,
@@ -79,12 +78,18 @@ export class InstallMarketplaceIntegrationUseCase {
 
     try {
       const marketplaceIntegration =
-        await this.marketplaceClient.getIntegrationByIdentifier(
+        await this.getMarketplaceIntegrationUseCase.execute(
+          new GetMarketplaceIntegrationQuery(command.identifier),
+        );
+
+      const existing =
+        await this.repository.findByOrgIdAndMarketplaceIdentifier(
+          orgId,
           command.identifier,
         );
 
-      if (!marketplaceIntegration) {
-        throw new McpMarketplaceIntegrationNotFoundError(command.identifier);
+      if (existing) {
+        throw new DuplicateMarketplaceMcpIntegrationError(command.identifier);
       }
 
       const configSchema = this.parseConfigSchema(
@@ -144,7 +149,7 @@ export class InstallMarketplaceIntegrationUseCase {
   }
 
   private parseConfigSchema(
-    dto: IntegrationResponseDtoConfigSchema,
+    dto: Record<string, unknown>,
   ): IntegrationConfigSchema {
     const schema = dto as unknown as MarketplaceConfigSchemaDto;
     return {
