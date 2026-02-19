@@ -14,7 +14,9 @@ export class ConnectionValidationService {
     private readonly repository: McpIntegrationsRepositoryPort,
   ) {}
 
-  async validateAndUpdateStatus(integration: McpIntegration): Promise<void> {
+  async validateAndUpdateStatus(
+    integration: McpIntegration,
+  ): Promise<McpIntegration> {
     try {
       const result = await this.validateUseCase.execute({
         integrationId: integration.id,
@@ -36,6 +38,6 @@ export class ConnectionValidationService {
       integration.updateConnectionStatus('unhealthy', errorMessage);
     }
 
-    await this.repository.save(integration);
+    return this.repository.save(integration);
   }
 }
