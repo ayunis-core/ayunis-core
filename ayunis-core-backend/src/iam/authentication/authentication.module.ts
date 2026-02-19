@@ -2,6 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import type { StringValue } from 'ms';
 
 import { JwtStrategy } from './application/strategies/jwt.strategy';
 import { LocalStrategy } from './application/strategies/local.strategy';
@@ -60,7 +61,7 @@ export class AuthenticationModule {
               'dev-secret-change-in-production',
             ),
             signOptions: {
-              expiresIn: configService.get<string>('auth.jwt.expiresIn', '1h'),
+              expiresIn: configService.get<string>('auth.jwt.expiresIn', '1h') as StringValue,
             },
           }),
         }),

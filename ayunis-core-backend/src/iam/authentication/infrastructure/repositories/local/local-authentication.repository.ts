@@ -4,11 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { AuthenticationRepository } from '../../../application/ports/authentication.repository';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
+import type { StringValue } from 'ms';
 
 interface JwtConfig {
   secret: string;
-  expiresIn: string;
-  refreshTokenExpiresIn: string;
+  expiresIn: StringValue;
+  refreshTokenExpiresIn: StringValue;
 }
 
 @Injectable()

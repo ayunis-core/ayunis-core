@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
+import type { StringValue } from 'ms';
 import { InvalidEmailConfirmationTokenError } from '../users.errors';
 
 export interface EmailConfirmationJwtPayload {
@@ -35,7 +36,7 @@ export class EmailConfirmationJwtService {
     const expiresIn = this.configService.get<string>(
       'auth.jwt.emailConfirmationExpiresIn',
       '24h',
-    );
+    ) as StringValue;
 
     return this.jwtService.sign(payload, { expiresIn });
   }
