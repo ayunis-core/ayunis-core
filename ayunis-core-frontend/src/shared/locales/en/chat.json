@@ -10,6 +10,7 @@
     "deleteText": "Delete",
     "cancelText": "Cancel",
     "errorDeleteThread": "Failed to delete thread",
+    "artifactSaved": "Document saved successfully",
     "unknownMessageType": "Unknown message type",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",

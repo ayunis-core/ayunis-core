@@ -10,6 +10,7 @@
     "deleteText": "Löschen",
     "cancelText": "Abbrechen",
     "errorDeleteThread": "Thread konnte nicht gelöscht werden",
+    "artifactSaved": "Dokument erfolgreich gespeichert",
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Pro-Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",
