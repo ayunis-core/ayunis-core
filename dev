@@ -22,6 +22,18 @@ COMPOSE_FILE="$REPO_DIR/compose.dev.yml"
 die()  { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*"; }
 
+# Cross-platform wrapper: use setsid on Linux, run directly on macOS.
+# setsid creates a new session so the process becomes process group leader,
+# enabling clean group kills. On macOS, setsid is unavailable but _kill_pid
+# falls back to pkill -P and direct kill, which still work.
+_run_detached() {
+  if command -v setsid >/dev/null 2>&1; then
+    setsid "$@"
+  else
+    "$@"
+  fi
+}
+
 # ── Parse arguments ────────────────────────────────────────────────────────
 
 SLOT=""
@@ -125,7 +137,7 @@ EOF
   else
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
-    setsid bash -c '
+    _run_detached bash -c '
       cd "'"$REPO_DIR/ayunis-core-backend"'"
       exec npm run start:dev \
         >> "'"$STATE_DIR/backend.log"'" 2>&1
@@ -140,7 +152,7 @@ EOF
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
     VITE_API_BASE_URL="http://localhost:$BACKEND_PORT/api" \
-    setsid bash -c '
+    _run_detached bash -c '
       cd "'"$REPO_DIR/ayunis-core-frontend"'"
       exec npx vite --port "'"$FRONTEND_PORT"'" \
         >> "'"$STATE_DIR/frontend.log"'" 2>&1
@@ -271,8 +283,9 @@ _kill_pid() {
     local pid
     pid=$(cat "$pidfile")
     info "Stopping $label (PID $pid) …"
-    # Processes are launched with setsid so pid == process group leader.
-    # Kill the whole group, then fall back to pkill -P for any stragglers.
+    # On Linux, processes are launched with setsid so pid == process group leader.
+    # Try to kill the whole group; fall back to pkill -P for any stragglers
+    # (also used on macOS where setsid is unavailable).
     kill -TERM -- -"$pid" 2>/dev/null || true
     pkill -TERM -P "$pid" 2>/dev/null || true
     kill -TERM "$pid" 2>/dev/null || true
