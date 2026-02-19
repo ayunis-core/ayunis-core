@@ -377,6 +377,7 @@ export class McpIntegrationsController {
   }
 
   @Get(':id/user-config')
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get current user config for a marketplace MCP integration',
   })
@@ -402,6 +403,7 @@ export class McpIntegrationsController {
   }
 
   @Patch(':id/user-config')
+  @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Set current user config for a marketplace MCP integration',
   })
