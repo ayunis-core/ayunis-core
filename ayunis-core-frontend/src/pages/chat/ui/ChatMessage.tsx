@@ -371,7 +371,6 @@ function renderMessageContent(
                   key={`update-document-${index}-${toolUseMessageContent.name.slice(0, 50)}`}
                   content={toolUseMessageContent}
                   isStreaming={isStreaming}
-                  threadId={threadId ?? ''}
                   onOpenArtifact={onOpenArtifact}
                 />
               );
