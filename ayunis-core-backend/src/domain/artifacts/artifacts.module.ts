@@ -6,6 +6,7 @@ import { LocalArtifactsRepositoryModule } from './infrastructure/persistence/loc
 import { LocalArtifactsRepository } from './infrastructure/persistence/local/local-artifacts.repository';
 import { HtmlDocumentExportService } from './infrastructure/export/html-document-export.service';
 import { ArtifactDtoMapper } from './presenters/http/mappers/artifact-dto.mapper';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
 
 // Use cases
 import { CreateArtifactUseCase } from './application/use-cases/create-artifact/create-artifact.use-case';
@@ -16,7 +17,7 @@ import { RevertArtifactUseCase } from './application/use-cases/revert-artifact/r
 import { ExportArtifactUseCase } from './application/use-cases/export-artifact/export-artifact.use-case';
 
 @Module({
-  imports: [LocalArtifactsRepositoryModule],
+  imports: [LocalArtifactsRepositoryModule, ThreadsModule],
   controllers: [ArtifactsController],
   providers: [
     {

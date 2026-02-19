@@ -7,6 +7,8 @@ import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../../domain/sanitize-html-content';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 
 @Injectable()
 export class CreateArtifactUseCase {
@@ -15,6 +17,7 @@ export class CreateArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
+    private readonly findThreadUseCase: FindThreadUseCase,
   ) {}
 
   @Transactional()
@@ -25,6 +28,8 @@ export class CreateArtifactUseCase {
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');
     }
+
+    await this.findThreadUseCase.execute(new FindThreadQuery(command.threadId));
 
     const artifact = new Artifact({
       threadId: command.threadId,
