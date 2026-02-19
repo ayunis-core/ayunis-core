@@ -9,7 +9,7 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
-import { showError } from '@/shared/lib/toast';
+import { showError, showSuccess } from '@/shared/lib/toast';
 import config from '@/shared/config';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -128,6 +128,7 @@ export default function ChatPage({
   const { updateArtifact: saveArtifact } = useUpdateArtifact({
     artifactId: openArtifactId ?? '',
     threadId: thread.id,
+    onSuccess: () => showSuccess(t('chat.artifactSaved')),
   });
 
   const { revertArtifact } = useRevertArtifact({
