@@ -39,6 +39,10 @@ If complexity fails, split the offending function into smaller units before retr
 
 ## Workflow
 
+This project uses **Graphite** for stacked PRs. Always use `gt` commands, never raw `git commit`.
+
+### New commit → new stacked branch
+
 ```bash
 # 1. Stage changes
 git add <files>
@@ -46,8 +50,31 @@ git add <files>
 # 2. Verify what's staged
 git status --short
 
-# 3. Commit with proper format
-git commit -m "<type>(AYC-<number>): <description>"
+# 3. Create a new stacked branch (auto-stacks on current branch)
+gt create -m "<type>(AYC-<number>): <description>"
 
-# 4. If commit fails, fix issues and retry — do NOT use --no-verify
+# 4. If pre-commit hooks fail, fix issues and retry with gt modify
 ```
+
+### Amending the current branch
+
+Use this when fixing QA findings, addressing review feedback, or correcting issues on the current branch.
+
+```bash
+# 1. Stage fixes
+git add <files>
+
+# 2. Amend the current stacked branch (folds changes into existing commit)
+gt modify -m "<type>(AYC-<number>): <description>"
+
+# 3. This automatically restacks any descendant branches
+```
+
+Note: `gt modify` without `--commit` amends the existing commit. With `--commit` it creates an additional commit on the branch — that's not what we want for fixes.
+
+### Rules
+
+- Each logical unit of work gets its own `gt create` — one stacked branch per batch/task
+- Fixes and amendments use `gt modify`, never `gt create`
+- Never use `--no-verify` — let the hooks run
+- Never use raw `git commit` — always go through `gt`

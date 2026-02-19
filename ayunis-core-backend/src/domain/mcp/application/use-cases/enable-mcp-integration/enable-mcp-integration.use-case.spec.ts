@@ -1,13 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { EnableMcpIntegrationUseCase } from './enable-mcp-integration.use-case';
 import { EnableMcpIntegrationCommand } from './enable-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
+import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
+  McpUnauthenticatedError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { PredefinedMcpIntegration } from '../../../domain/mcp-integration.entity';
@@ -28,6 +30,7 @@ describe('EnableMcpIntegrationUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EnableMcpIntegrationUseCase,
+        ValidateIntegrationAccessService,
         {
           provide: McpIntegrationsRepositoryPort,
           useValue: {
@@ -180,7 +183,7 @@ describe('EnableMcpIntegrationUseCase', () => {
       expect(repository.save).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException when user is not authenticated', async () => {
+    it('should throw McpUnauthenticatedError when user is not authenticated', async () => {
       // Arrange
       jest.spyOn(contextService, 'get').mockReturnValue(undefined);
 
@@ -188,7 +191,7 @@ describe('EnableMcpIntegrationUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
+        McpUnauthenticatedError,
       );
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).not.toHaveBeenCalled();
