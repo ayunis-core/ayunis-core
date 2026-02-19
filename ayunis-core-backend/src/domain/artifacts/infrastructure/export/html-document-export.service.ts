@@ -3,6 +3,7 @@ import { DocumentExportPort } from '../../application/ports/document-export.port
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import htmlToDocx = require('html-to-docx');
 import puppeteer from 'puppeteer';
+import { sanitizeHtmlContent } from '../../domain/sanitize-html-content';
 
 @Injectable()
 export class HtmlDocumentExportService implements DocumentExportPort {
@@ -50,7 +51,15 @@ export class HtmlDocumentExportService implements DocumentExportPort {
     }
   }
 
-  private wrapHtml(html: string): string {
+  /**
+   * Wraps HTML content in a full document with styles for export.
+   *
+   * Re-sanitization here is intentional defense-in-depth: content stored
+   * before the sanitization fix may contain unsanitized HTML, so we
+   * sanitize at the export boundary regardless of upstream guarantees.
+   */
+  private wrapHtml(unsafeHtml: string): string {
+    const html = sanitizeHtmlContent(unsafeHtml);
     return `<!DOCTYPE html>
 <html>
 <head>

@@ -6,6 +6,7 @@ import { ArtifactNotFoundError } from '../../artifacts.errors';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { sanitizeHtmlContent } from '../../../domain/sanitize-html-content';
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -34,11 +35,12 @@ export class UpdateArtifactUseCase {
     }
 
     const newVersionNumber = artifact.currentVersionNumber + 1;
+    const sanitizedContent = sanitizeHtmlContent(command.content);
 
     const version = new ArtifactVersion({
       artifactId: artifact.id,
       versionNumber: newVersionNumber,
-      content: command.content,
+      content: sanitizedContent,
       authorType: command.authorType,
       authorId: command.authorType === AuthorType.USER ? userId : null,
     });
