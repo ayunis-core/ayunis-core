@@ -7006,7 +7006,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "The provider of the model"
           },
@@ -7079,7 +7080,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "The model provider identifier",
             "example": "openai"
@@ -7163,7 +7165,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "The provider of the model"
           },
@@ -7296,7 +7299,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "The provider of the model"
           },
@@ -7357,7 +7361,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "example": "openai"
           },
@@ -7424,7 +7429,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "example": "openai"
           },
@@ -7491,7 +7497,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "example": "openai"
           },
@@ -7545,7 +7552,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "example": "openai"
           },
@@ -7604,7 +7612,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -7698,7 +7707,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "The provider of the model",
             "example": "openai"
@@ -10821,26 +10831,42 @@
             "type": "string",
             "description": "Display name"
           },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
           "description": {
             "type": "string",
-            "description": "Description"
+            "description": "Full description"
           },
           "iconUrl": {
             "type": "string",
             "description": "Icon URL",
             "nullable": true
           },
+          "serverUrl": {
+            "type": "string",
+            "description": "MCP server URL"
+          },
           "configSchema": {
-            "description": "Configuration schema",
+            "description": "Configuration schema (authType, orgFields, userFields, oauth)",
             "allOf": [
               {
                 "$ref": "#/components/schemas/MarketplaceIntegrationConfigSchemaDto"
               }
             ]
           },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the integration is featured"
+          },
           "published": {
             "type": "boolean",
             "description": "Whether the integration is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the integration is pre-installed"
           },
           "createdAt": {
             "type": "string",
@@ -10855,9 +10881,13 @@
           "id",
           "identifier",
           "name",
+          "shortDescription",
           "description",
+          "serverUrl",
           "configSchema",
+          "featured",
           "published",
+          "preInstalled",
           "createdAt",
           "updatedAt"
         ]
@@ -11531,7 +11561,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "Model provider"
           },
@@ -11671,7 +11702,8 @@
               "ayunis",
               "otc",
               "azure",
-              "gemini"
+              "gemini",
+              "stackit"
             ],
             "description": "Model provider"
           },
