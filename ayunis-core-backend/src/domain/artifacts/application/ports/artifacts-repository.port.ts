@@ -15,5 +15,15 @@ export abstract class ArtifactsRepository {
     artifactId: UUID,
     versionNumber: number,
   ): Promise<void>;
+  /**
+   * Atomically adds a version and updates the artifact's current version number.
+   * Each call runs in its own transaction so that a unique-constraint failure
+   * does not poison the caller's transaction context.
+   *
+   * @throws ArtifactVersionConflictError when the version number already exists.
+   */
+  abstract addVersionAndUpdateCurrent(
+    version: ArtifactVersion,
+  ): Promise<ArtifactVersion>;
   abstract delete(id: UUID): Promise<void>;
 }
