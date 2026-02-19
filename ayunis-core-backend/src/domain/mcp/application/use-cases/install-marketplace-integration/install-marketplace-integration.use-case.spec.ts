@@ -3,6 +3,7 @@ import { InstallMarketplaceIntegrationCommand } from './install-marketplace-inte
 import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
+import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
@@ -24,6 +25,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   let getMarketplaceIntegrationUseCase: jest.Mocked<GetMarketplaceIntegrationUseCase>;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
+  let marketplaceConfigService: MarketplaceConfigService;
   let factory: McpIntegrationFactory;
   let authFactory: McpIntegrationAuthFactory;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
@@ -151,10 +153,14 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       promptCount: 0,
     });
 
+    marketplaceConfigService = new MarketplaceConfigService(
+      credentialEncryption,
+    );
+
     useCase = new InstallMarketplaceIntegrationUseCase(
       getMarketplaceIntegrationUseCase,
       repository,
-      credentialEncryption,
+      marketplaceConfigService,
       factory,
       authFactory,
       validateUseCase,

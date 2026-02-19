@@ -5,6 +5,7 @@ import { McpCredentialEncryptionService } from './infrastructure/encryption/mcp-
 import { McpClientPort } from './application/ports/mcp-client.port';
 import { McpSdkClientAdapter } from './infrastructure/clients/mcp-sdk-client.adapter';
 import { McpClientService } from './application/services/mcp-client.service';
+import { MarketplaceConfigService } from './application/services/marketplace-config.service';
 import { PredefinedMcpIntegrationRegistry } from './application/registries/predefined-mcp-integration-registry.service';
 import { McpIntegrationsRepositoryPort } from './application/ports/mcp-integrations.repository.port';
 import { McpIntegrationsRepository } from './infrastructure/persistence/postgres/mcp-integrations.repository';
@@ -93,6 +94,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     McpIntegrationFactory,
     McpIntegrationAuthFactory,
     McpClientService,
+    MarketplaceConfigService,
     PredefinedMcpIntegrationRegistry,
     ValidateIntegrationAccessService,
     // Use Cases

@@ -130,6 +130,8 @@
       "credentials": "Anmeldedaten (Optional)",
       "credentialsPlaceholder": "Leer lassen, um bestehende beizubehalten",
       "noCredentialsMessage": "Diese Integration verwendet keine Authentifizierungsdaten.",
+      "configDescription": "Aktualisieren Sie die Konfigurationswerte für diese Marketplace-Integration.",
+      "secretPlaceholder": "Leer lassen, um aktuellen Wert beizubehalten",
       "cancel": "Abbrechen",
       "updating": "Wird aktualisiert...",
       "update": "Aktualisieren"

@@ -142,4 +142,13 @@ export class McpIntegrationResponseDto {
     example: false,
   })
   hasUserFields?: boolean;
+
+  @ApiProperty({
+    description:
+      'Current org-level config values for marketplace integrations. ' +
+      'Non-secret fields contain plaintext values. Secret fields are masked with "••••••".',
+    required: false,
+    example: { endpointUrl: 'https://example.com/api', apiToken: '••••••' },
+  })
+  orgConfigValues?: Record<string, string>;
 }
