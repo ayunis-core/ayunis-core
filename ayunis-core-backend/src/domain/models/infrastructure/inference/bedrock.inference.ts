@@ -299,7 +299,11 @@ export class BedrockInferenceHandler extends InferenceHandler {
         return new TextMessageContent(c.text);
       }
       if (c.type === 'tool_use') {
-        return new ToolUseMessageContent(c.id, c.name, c.input as Record<string, unknown>);
+        return new ToolUseMessageContent(
+          c.id,
+          c.name,
+          c.input as Record<string, unknown>,
+        );
       }
       // This should never happen given our type definition, but handle it for safety
       throw new InferenceFailedError(

@@ -1,8 +1,8 @@
-import {
-  type RunSessionResponseDto,
-  type RunMessageResponseDto,
-  type RunErrorResponseDto,
-  type RunThreadResponseDto,
+import type {
+  RunSessionResponseDto,
+  RunMessageResponseDto,
+  RunErrorResponseDto,
+  RunThreadResponseDto,
 } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +57,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   const wasAbortedRef = useRef(false);
 
   const sendMessage = useCallback(
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     async (payload: SendMessagePayload) => {
       try {
         // Clean up any existing connection
@@ -130,6 +131,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         let _eventCount = 0;
 
         try {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           while (true) {
             const { done, value } = await reader.read();
 
@@ -141,7 +143,7 @@ export function useMessageSend(params: UseMessageSendParams) {
 
             buffer += chunk;
             const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
+            buffer = lines.pop() ?? '';
 
             for (const line of lines) {
               // Handle SSE comment lines
@@ -162,15 +164,14 @@ export function useMessageSend(params: UseMessageSendParams) {
                       break;
                     case 'message':
                       params.onMessageEvent?.(data as RunMessageResponseDto);
-                      console.log('Message', data);
                       break;
                     case 'thread':
                       params.onThreadEvent?.(data as RunThreadResponseDto);
                       break;
                     case 'error':
                       params.onErrorEvent?.(data as RunErrorResponseDto);
-                      console.log('Error', data);
                       break;
+                    case undefined:
                     default:
                       console.warn('Unknown SSE event type:', data.type);
                   }
@@ -198,8 +199,8 @@ export function useMessageSend(params: UseMessageSendParams) {
           // Handle specific error status codes
           if (error.message.includes('429')) {
             // Try to extract retry time from error response
-            const retryMatch = error.message.match(
-              /retryAfterSeconds[":]+(\d+)/,
+            const retryMatch = /retryAfterSeconds[":]+(\d+)/.exec(
+              error.message,
             );
             const retryMinutes = retryMatch
               ? Math.ceil(parseInt(retryMatch[1], 10) / 60)

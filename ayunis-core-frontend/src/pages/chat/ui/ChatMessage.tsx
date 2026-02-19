@@ -40,18 +40,19 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface ChatMessageProps {
-  message: Message;
-  hideAvatar?: boolean;
-  isStreaming?: boolean;
+  readonly message: Message;
+  readonly hideAvatar?: boolean;
+  readonly isStreaming?: boolean;
 }
 
-function CopyMessageButton({ message }: { message: Message }) {
+function CopyMessageButton({ message }: { readonly message: Message }) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation('chat');
 
   const extractTextContent = (message: Message): string => {
     if (message.role !== 'assistant') return '';
-    if (!message.content || message.content.length === 0) return '';
+    // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming even if typed as required
+    if (message.content == null || message.content.length === 0) return '';
 
     return message.content
       .filter((content) => content.type === 'text')
@@ -158,7 +159,7 @@ export default function ChatMessage({
 function ImageThumbnail({
   imageContent,
 }: {
-  imageContent: ImageMessageContentResponseDto;
+  readonly imageContent: ImageMessageContentResponseDto;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const encodedObjectName = encodeURIComponent(imageContent.imageUrl);
@@ -183,7 +184,7 @@ function ImageThumbnail({
           aria-describedby={undefined}
         >
           <DialogTitle className="sr-only">
-            {imageContent.altText || 'Image preview'}
+            {imageContent.altText ?? 'Image preview'}
           </DialogTitle>
           <img
             src={imageUrl}
@@ -196,6 +197,7 @@ function ImageThumbnail({
   );
 }
 
+// eslint-disable-next-line sonarjs/function-return-type
 function renderMessageContent(message: Message, isStreaming?: boolean) {
   switch (message.role) {
     case 'user':
@@ -230,11 +232,12 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
     }
 
     case 'assistant':
-      // Empty content shouldn't happen - StreamingLoadingIndicator handles the loading state
-      if (!message.content || message.content.length === 0) {
+      // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition -- content may be undefined during streaming even if typed as required
+      if (message.content == null || message.content.length === 0) {
         return null;
       }
 
+      // eslint-disable-next-line sonarjs/cognitive-complexity
       return message.content.map((content: AssistantMessageContent, index) => {
         if (content.type === 'thinking') {
           const thinkingMessageContent = content as ThinkingMessageContent;
@@ -350,7 +353,8 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
         return null;
       });
 
-    default:
+    case 'tool':
+      // Tool messages are handled inline within assistant message rendering
       return null;
   }
 }
