@@ -36,54 +36,8 @@ jobs:
 
       - name: Check duplication
         if: steps.changed-files.outputs.any_changed == 'true'
-        env:
-          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
-        run: |
-          REPORT_DIR=$(mktemp -d)
-
-          npx --yes jscpd src \
-            --threshold 100 \
-            --min-lines 6 \
-            --min-tokens 60 \
-            --format "typescript" \
-            --ignore '**/generated/**' \
-            --ignore '**/migrations/**' \
-            --ignore '**/*.spec.ts' \
-            --ignore '**/*.test.ts' \
-            --reporters json \
-            --output "$REPORT_DIR" \
-            --silent >/dev/null 2>&1
-
-          # Build jq filter from changed files (strip project prefix)
-          STAGED_JSON=$(echo "$CHANGED_FILES" \
-            | tr ' ' '\n' \
-            | sed 's#^ayunis-core-backend/##' \
-            | jq -R . | jq -s .)
-
-          MATCHES=$(jq --argjson staged "$STAGED_JSON" '
-            [.duplicates[] | select(
-              (.firstFile.name as $f | $staged | any(. == $f)) or
-              (.secondFile.name as $s | $staged | any(. == $s))
-            )]
-          ' "$REPORT_DIR/jscpd-report.json")
-
-          COUNT=$(echo "$MATCHES" | jq 'length')
-
-          if [ "$COUNT" -eq 0 ]; then
-            echo "✅ No duplicated code blocks found in changed files"
-          else
-            echo "❌ Found $COUNT duplicated code block(s) involving changed files:"
-            echo ""
-            echo "$MATCHES" | jq -r '.[] |
-              "  Clone (\(.lines) lines):\n    " +
-              .firstFile.name + ":" + (.firstFile.start | tostring) + "-" + (.firstFile.end | tostring) +
-              "\n    " +
-              .secondFile.name + ":" + (.secondFile.start | tostring) + "-" + (.secondFile.end | tostring) +
-              "\n"
-            '
-            echo "Extract shared logic into a helper function or module."
-            exit 1
-          fi
+        working-directory: .
+        run: ./scripts/check-duplication.sh ayunis-core-backend ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: No TypeScript files changed
         if: steps.changed-files.outputs.any_changed != 'true'
@@ -119,55 +73,8 @@ jobs:
 
       - name: Check duplication
         if: steps.changed-files.outputs.any_changed == 'true'
-        env:
-          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
-        run: |
-          REPORT_DIR=$(mktemp -d)
-
-          npx --yes jscpd src \
-            --threshold 100 \
-            --min-lines 6 \
-            --min-tokens 60 \
-            --format "typescript,tsx" \
-            --ignore '**/generated/**' \
-            --ignore '**/migrations/**' \
-            --ignore '**/*.spec.ts' \
-            --ignore '**/*.test.ts' \
-            --ignore '**/*.test.tsx' \
-            --reporters json \
-            --output "$REPORT_DIR" \
-            --silent >/dev/null 2>&1
-
-          # Build jq filter from changed files (strip project prefix)
-          STAGED_JSON=$(echo "$CHANGED_FILES" \
-            | tr ' ' '\n' \
-            | sed 's#^ayunis-core-frontend/##' \
-            | jq -R . | jq -s .)
-
-          MATCHES=$(jq --argjson staged "$STAGED_JSON" '
-            [.duplicates[] | select(
-              (.firstFile.name as $f | $staged | any(. == $f)) or
-              (.secondFile.name as $s | $staged | any(. == $s))
-            )]
-          ' "$REPORT_DIR/jscpd-report.json")
-
-          COUNT=$(echo "$MATCHES" | jq 'length')
-
-          if [ "$COUNT" -eq 0 ]; then
-            echo "✅ No duplicated code blocks found in changed files"
-          else
-            echo "❌ Found $COUNT duplicated code block(s) involving changed files:"
-            echo ""
-            echo "$MATCHES" | jq -r '.[] |
-              "  Clone (\(.lines) lines):\n    " +
-              .firstFile.name + ":" + (.firstFile.start | tostring) + "-" + (.firstFile.end | tostring) +
-              "\n    " +
-              .secondFile.name + ":" + (.secondFile.start | tostring) + "-" + (.secondFile.end | tostring) +
-              "\n"
-            '
-            echo "Extract shared logic into a helper function or module."
-            exit 1
-          fi
+        working-directory: .
+        run: ./scripts/check-duplication.sh ayunis-core-frontend ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: No TypeScript files changed
         if: steps.changed-files.outputs.any_changed != 'true'
