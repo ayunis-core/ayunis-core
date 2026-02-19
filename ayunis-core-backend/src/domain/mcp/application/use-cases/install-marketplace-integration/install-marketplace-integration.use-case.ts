@@ -3,10 +3,10 @@ import { InstallMarketplaceIntegrationCommand } from './install-marketplace-inte
 import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
@@ -44,7 +44,6 @@ interface MarketplaceConfigSchemaDto {
 }
 import {
   McpOAuthNotSupportedError,
-  McpMissingRequiredConfigError,
   DuplicateMarketplaceMcpIntegrationError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
@@ -59,7 +58,7 @@ export class InstallMarketplaceIntegrationUseCase {
   constructor(
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     private readonly repository: McpIntegrationsRepositoryPort,
-    private readonly credentialEncryption: McpCredentialEncryptionPort,
+    private readonly marketplaceConfigService: MarketplaceConfigService,
     private readonly factory: McpIntegrationFactory,
     private readonly authFactory: McpIntegrationAuthFactory,
     private readonly validateUseCase: ValidateMcpIntegrationUseCase,
@@ -100,17 +99,21 @@ export class InstallMarketplaceIntegrationUseCase {
         throw new McpOAuthNotSupportedError();
       }
 
-      const mergedValues = this.mergeFixedValues(
+      const mergedValues = this.marketplaceConfigService.mergeFixedValues(
         command.orgConfigValues,
         configSchema.orgFields,
       );
 
-      this.validateRequiredFields(configSchema.orgFields, mergedValues);
-
-      const encryptedValues = await this.encryptSecretFields(
+      this.marketplaceConfigService.validateRequiredFields(
         configSchema.orgFields,
         mergedValues,
       );
+
+      const encryptedValues =
+        await this.marketplaceConfigService.encryptSecretFields(
+          configSchema.orgFields,
+          mergedValues,
+        );
 
       const auth = this.authFactory.createAuth({
         method: McpAuthMethod.NO_AUTH,
@@ -172,51 +175,6 @@ export class InstallMarketplaceIntegrationUseCase {
       help: field.help ?? undefined,
       value: field.value ?? undefined,
     };
-  }
-
-  private mergeFixedValues(
-    userProvided: Record<string, string>,
-    orgFields: ConfigField[],
-  ): Record<string, string> {
-    const merged = { ...userProvided };
-    for (const field of orgFields) {
-      if (field.value !== undefined) {
-        merged[field.key] = field.value;
-      }
-    }
-    return merged;
-  }
-
-  private validateRequiredFields(
-    orgFields: ConfigField[],
-    values: Record<string, string>,
-  ): void {
-    const missing = orgFields
-      .filter((field) => field.required && !values[field.key])
-      .map((field) => field.key);
-
-    if (missing.length > 0) {
-      throw new McpMissingRequiredConfigError(missing);
-    }
-  }
-
-  private async encryptSecretFields(
-    orgFields: ConfigField[],
-    values: Record<string, string>,
-  ): Promise<Record<string, string>> {
-    const encrypted = { ...values };
-    const secretKeys = new Set(
-      orgFields.filter((f) => f.type === 'secret').map((f) => f.key),
-    );
-
-    for (const key of Object.keys(encrypted)) {
-      if (secretKeys.has(key)) {
-        encrypted[key] = await this.credentialEncryption.encrypt(
-          encrypted[key],
-        );
-      }
-    }
-    return encrypted;
   }
 
   private async validateAndUpdateConnectionStatus(

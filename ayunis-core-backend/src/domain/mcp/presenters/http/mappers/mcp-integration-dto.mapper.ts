@@ -7,6 +7,7 @@ import { OAuthMcpIntegrationAuth } from '../../../domain/auth/oauth-mcp-integrat
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { ConfigField } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 /**
  * Mapper for converting MCP integration entities to DTOs.
@@ -53,6 +54,10 @@ export class McpIntegrationDtoMapper {
         userFields: integration.configSchema.userFields,
       };
       baseDto.hasUserFields = integration.configSchema.userFields.length > 0;
+      baseDto.orgConfigValues = this.buildMaskedOrgConfigValues(
+        integration.configSchema.orgFields,
+        integration.orgConfigValues,
+      );
       baseDto.serverUrl = undefined; // Not exposed for marketplace
       baseDto.slug = undefined;
     } else if (integration instanceof PredefinedMcpIntegration) {
@@ -101,6 +106,39 @@ export class McpIntegrationDtoMapper {
       return auth.getAuthHeaderName();
     }
     return undefined;
+  }
+
+  /**
+   * Builds masked org config values for the response DTO.
+   * Non-secret fields include plaintext values.
+   * Secret fields are masked with "••••••".
+   * Fixed-value fields (those with a `value` in the schema) are excluded.
+   */
+  private buildMaskedOrgConfigValues(
+    orgFields: ConfigField[],
+    orgConfigValues: Record<string, string>,
+  ): Record<string, string> {
+    const masked: Record<string, string> = {};
+
+    for (const field of orgFields) {
+      // Skip fixed-value fields — admin didn't provide them
+      if (field.value !== undefined) {
+        continue;
+      }
+
+      const currentValue = orgConfigValues[field.key];
+      if (currentValue === undefined) {
+        continue;
+      }
+
+      if (field.type === 'secret') {
+        masked[field.key] = '••••••';
+      } else {
+        masked[field.key] = currentValue;
+      }
+    }
+
+    return masked;
   }
 
   /**

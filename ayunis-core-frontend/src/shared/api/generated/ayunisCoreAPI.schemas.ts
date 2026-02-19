@@ -1816,6 +1816,11 @@ export const McpIntegrationResponseDtoConnectionStatus = {
  */
 export type McpIntegrationResponseDtoConfigSchema = { [key: string]: unknown };
 
+/**
+ * Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••".
+ */
+export type McpIntegrationResponseDtoOrgConfigValues = { [key: string]: unknown };
+
 export interface McpIntegrationResponseDto {
   /** Unique identifier of the integration */
   id: string;
@@ -1855,6 +1860,8 @@ export interface McpIntegrationResponseDto {
   configSchema?: McpIntegrationResponseDtoConfigSchema;
   /** Whether this marketplace integration has user-level config fields */
   hasUserFields?: boolean;
+  /** Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
+  orgConfigValues?: McpIntegrationResponseDtoOrgConfigValues;
 }
 
 /**
@@ -2148,6 +2155,11 @@ export interface PredefinedConfigResponseDto {
   credentialFields?: CredentialFieldDto[];
 }
 
+/**
+ * Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.
+ */
+export type UpdateMcpIntegrationDtoOrgConfigValues = { [key: string]: unknown };
+
 export interface UpdateMcpIntegrationDto {
   /**
    * The new name for the integration
@@ -2161,6 +2173,8 @@ export interface UpdateMcpIntegrationDto {
   authHeaderName?: string;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
   returnsPii?: boolean;
+  /** Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value. */
+  orgConfigValues?: UpdateMcpIntegrationDtoOrgConfigValues;
 }
 
 /**

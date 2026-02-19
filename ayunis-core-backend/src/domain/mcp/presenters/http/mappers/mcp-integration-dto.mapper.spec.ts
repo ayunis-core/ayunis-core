@@ -114,6 +114,8 @@ describe('McpIntegrationDtoMapper', () => {
     expect(dto.hasUserFields).toBe(true);
     expect(dto.serverUrl).toBeUndefined();
     expect(dto.slug).toBeUndefined();
+    // Secret field is masked
+    expect(dto.orgConfigValues).toEqual({ apiToken: '••••••' });
   });
 
   it('maps marketplace integration without user fields', () => {
@@ -142,5 +144,91 @@ describe('McpIntegrationDtoMapper', () => {
 
     expect(dto.type).toBe('marketplace');
     expect(dto.hasUserFields).toBe(false);
+  });
+
+  it('exposes non-secret org config values as plaintext and masks secrets', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'NO_AUTH',
+      orgFields: [
+        {
+          key: 'endpointUrl',
+          label: 'Endpoint URL',
+          type: 'url',
+          required: true,
+        },
+        {
+          key: 'apiToken',
+          label: 'API Token',
+          type: 'secret',
+          required: true,
+        },
+        {
+          key: 'description',
+          label: 'Description',
+          type: 'text',
+          required: false,
+        },
+      ],
+      userFields: [],
+    };
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      marketplaceIdentifier: 'multi-field-integration',
+      configSchema,
+      orgConfigValues: {
+        endpointUrl: 'https://rim.ekom21.de/oparl/v1',
+        apiToken: 'encrypted:my-secret-token',
+        description: 'Municipal council data',
+      },
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    expect(dto.orgConfigValues).toEqual({
+      endpointUrl: 'https://rim.ekom21.de/oparl/v1',
+      apiToken: '••••••',
+      description: 'Municipal council data',
+    });
+  });
+
+  it('excludes fixed-value fields from orgConfigValues', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'BEARER_TOKEN',
+      orgFields: [
+        {
+          key: 'systemToken',
+          label: 'System Token',
+          type: 'secret',
+          required: true,
+          value: 'sk-fixed-token',
+        },
+        {
+          key: 'endpointUrl',
+          label: 'Endpoint URL',
+          type: 'url',
+          required: true,
+        },
+      ],
+      userFields: [],
+    };
+    const integration = new MarketplaceMcpIntegration({
+      ...baseParams,
+      marketplaceIdentifier: 'fixed-field-integration',
+      configSchema,
+      orgConfigValues: {
+        systemToken: 'encrypted:sk-fixed-token',
+        endpointUrl: 'https://example.com/api',
+      },
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+
+    const dto = mapper.toDto(integration);
+
+    // Fixed-value field should not appear in orgConfigValues
+    expect(dto.orgConfigValues).toEqual({
+      endpointUrl: 'https://example.com/api',
+    });
+    expect(dto.orgConfigValues!.systemToken).toBeUndefined();
   });
 });

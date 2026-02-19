@@ -3,6 +3,7 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
+  IsObject,
   Length,
   MinLength,
 } from 'class-validator';
@@ -62,4 +63,14 @@ export class UpdateMcpIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Org-level config values for marketplace integrations. ' +
+      'For secret fields, omit or send empty string to keep the existing value.',
+    example: { endpointUrl: 'https://example.com/api' },
+  })
+  @IsOptional()
+  @IsObject()
+  orgConfigValues?: Record<string, string>;
 }

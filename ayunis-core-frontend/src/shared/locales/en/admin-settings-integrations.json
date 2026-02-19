@@ -129,6 +129,8 @@
       "credentials": "Credentials (Optional)",
       "credentialsPlaceholder": "Leave empty to keep existing",
       "noCredentialsMessage": "This integration does not use authentication credentials.",
+      "configDescription": "Update the configuration values for this marketplace integration.",
+      "secretPlaceholder": "Leave empty to keep current value",
       "cancel": "Cancel",
       "updating": "Updating...",
       "update": "Update"

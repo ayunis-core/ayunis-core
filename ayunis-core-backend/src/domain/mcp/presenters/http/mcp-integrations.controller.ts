@@ -267,13 +267,14 @@ export class McpIntegrationsController {
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('update', { id });
 
-    const command = new UpdateMcpIntegrationCommand(
-      id,
-      dto.name,
-      dto.credentials,
-      dto.authHeaderName,
-      dto.returnsPii,
-    );
+    const command = new UpdateMcpIntegrationCommand({
+      integrationId: id,
+      name: dto.name,
+      credentials: dto.credentials,
+      authHeaderName: dto.authHeaderName,
+      returnsPii: dto.returnsPii,
+      orgConfigValues: dto.orgConfigValues,
+    });
 
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
     return this.mcpIntegrationDtoMapper.toDto(integration);
