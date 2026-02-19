@@ -14,4 +14,7 @@
  */
 import { config } from 'dotenv';
 
-config({ path: ['.env.dev', '.env'] });
+// Load .env.dev first (if present), then .env. Dotenv won't overwrite
+// vars already set, so .env.dev values take precedence.
+config({ path: '.env.dev' });
+config({ path: '.env' });
