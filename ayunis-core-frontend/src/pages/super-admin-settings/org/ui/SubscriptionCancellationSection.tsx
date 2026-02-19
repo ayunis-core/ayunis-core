@@ -28,6 +28,7 @@ export default function SubscriptionCancellationSection({
   const { confirm: confirmUncancel } = useConfirmation();
   const { confirm: confirmCancel } = useConfirmation();
 
+  // eslint-disable-next-line eqeqeq -- intentional loose equality to catch both null and undefined from the API
   const isCancelled = subscription.cancelledAt != null;
 
   if (isCancelled) {
