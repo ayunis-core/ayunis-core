@@ -1,6 +1,6 @@
 import { InstallMarketplaceIntegrationUseCase } from './install-marketplace-integration.use-case';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
-import { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
+import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
@@ -13,14 +13,15 @@ import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integratio
 import {
   McpOAuthNotSupportedError,
   McpMissingRequiredConfigError,
-  McpMarketplaceIntegrationNotFoundError,
+  DuplicateMarketplaceMcpIntegrationError,
 } from '../../mcp.errors';
+import { MarketplaceIntegrationNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
 import { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import { UUID } from 'crypto';
 
 describe('InstallMarketplaceIntegrationUseCase', () => {
   let useCase: InstallMarketplaceIntegrationUseCase;
-  let marketplaceClient: jest.Mocked<MarketplaceClient>;
+  let getMarketplaceIntegrationUseCase: jest.Mocked<GetMarketplaceIntegrationUseCase>;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
   let factory: McpIntegrationFactory;
@@ -107,10 +108,9 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   };
 
   beforeEach(() => {
-    marketplaceClient = {
-      getSkillByIdentifier: jest.fn(),
-      getIntegrationByIdentifier: jest.fn(),
-    } as jest.Mocked<MarketplaceClient>;
+    getMarketplaceIntegrationUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetMarketplaceIntegrationUseCase>;
 
     repository = {
       save: jest.fn(),
@@ -118,6 +118,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
       findByIds: jest.fn(),
       findAll: jest.fn(),
       findByOrgIdAndSlug: jest.fn(),
+      findByOrgIdAndMarketplaceIdentifier: jest.fn(),
       delete: jest.fn(),
     } as jest.Mocked<McpIntegrationsRepositoryPort>;
 
@@ -151,7 +152,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     });
 
     useCase = new InstallMarketplaceIntegrationUseCase(
-      marketplaceClient,
+      getMarketplaceIntegrationUseCase,
       repository,
       credentialEncryption,
       factory,
@@ -162,7 +163,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should install an integration with org config values', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oparlMarketplaceResponse,
     );
 
@@ -184,7 +185,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should merge fixed values from config schema', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       bearerWithFixedValueResponse,
     );
 
@@ -221,7 +222,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
         userFields: [],
       },
     };
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       integrationWithSecret,
     );
 
@@ -237,7 +238,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should not encrypt non-secret field values', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oparlMarketplaceResponse,
     );
 
@@ -254,7 +255,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should reject OAUTH auth type', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oauthIntegrationResponse,
     );
 
@@ -268,7 +269,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should throw when required org fields are missing', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oparlMarketplaceResponse,
     );
 
@@ -279,18 +280,53 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     ).rejects.toThrow(McpMissingRequiredConfigError);
   });
 
-  it('should throw when marketplace integration is not found', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(null);
+  it('should throw DuplicateMarketplaceMcpIntegrationError when integration is already installed', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
+      oparlMarketplaceResponse,
+    );
+
+    const existingIntegration = new MarketplaceMcpIntegration({
+      id: '880e8400-e29b-41d4-a716-446655440000' as UUID,
+      orgId,
+      name: 'OParl Council Data',
+      serverUrl: 'https://mcp.ayunis.de/oparl',
+      auth: new NoAuthMcpIntegrationAuth({}),
+      marketplaceIdentifier: 'oparl-council-data',
+      configSchema: {
+        authType: 'NO_AUTH',
+        orgFields: [],
+        userFields: [],
+      },
+      orgConfigValues: {},
+    });
+
+    repository.findByOrgIdAndMarketplaceIdentifier.mockResolvedValue(
+      existingIntegration,
+    );
+
+    await expect(
+      useCase.execute(
+        new InstallMarketplaceIntegrationCommand('oparl-council-data', {
+          oparlEndpointUrl: 'https://rim.ekom21.de/oparl/v1',
+        }),
+      ),
+    ).rejects.toThrow(DuplicateMarketplaceMcpIntegrationError);
+  });
+
+  it('should propagate MarketplaceIntegrationNotFoundError when integration is not found', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockRejectedValue(
+      new MarketplaceIntegrationNotFoundError('nonexistent'),
+    );
 
     await expect(
       useCase.execute(
         new InstallMarketplaceIntegrationCommand('nonexistent', {}),
       ),
-    ).rejects.toThrow(McpMarketplaceIntegrationNotFoundError);
+    ).rejects.toThrow(MarketplaceIntegrationNotFoundError);
   });
 
   it('should validate connection after saving and update status', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oparlMarketplaceResponse,
     );
     validateUseCase.execute.mockResolvedValue({
@@ -310,7 +346,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should set returnsPii when provided', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oparlMarketplaceResponse,
     );
 
@@ -326,7 +362,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should use NoAuth for the auth entity since auth is handled via config headers', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       oparlMarketplaceResponse,
     );
 
@@ -340,7 +376,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
   });
 
   it('should fixed values take precedence over user-provided values', async () => {
-    marketplaceClient.getIntegrationByIdentifier.mockResolvedValue(
+    getMarketplaceIntegrationUseCase.execute.mockResolvedValue(
       bearerWithFixedValueResponse,
     );
 

@@ -421,18 +421,7 @@ export class McpIntegrationsController {
 
     const command = new SetUserMcpConfigCommand(id, dto.configValues);
 
-    const config = await this.setUserMcpConfigUseCase.execute(command);
-
-    // Return masked values
-    const maskedValues: Record<string, string> = {};
-    for (const key of Object.keys(config.configValues)) {
-      maskedValues[key] = '***';
-    }
-
-    return {
-      hasConfig: true,
-      configValues: maskedValues,
-    };
+    return this.setUserMcpConfigUseCase.execute(command);
   }
 
   @Post(':id/validate')

@@ -42,6 +42,7 @@ export class ValidateMcpIntegrationUseCase {
 
     try {
       const orgId = this.getOrgIdOrThrow();
+      const userId = this.contextService.get('userId');
       const integration = await this.getIntegrationOrThrow(
         command.integrationId,
       );
@@ -51,6 +52,7 @@ export class ValidateMcpIntegrationUseCase {
       const capabilityResult = await this.collectCapabilities(
         integration,
         command.integrationId,
+        userId,
       );
 
       if (capabilityResult.kind === 'failure') {
@@ -145,6 +147,7 @@ export class ValidateMcpIntegrationUseCase {
   private async collectCapabilities(
     integration: McpIntegration,
     integrationId: UUID,
+    userId?: UUID,
   ): Promise<
     | {
         kind: 'success';
@@ -161,10 +164,10 @@ export class ValidateMcpIntegrationUseCase {
       Promise<unknown[]>,
       Promise<unknown[]>,
     ] = [
-      this.mcpClientService.listTools(integration),
-      this.mcpClientService.listResources(integration),
-      this.mcpClientService.listResourceTemplates(integration),
-      this.mcpClientService.listPrompts(integration),
+      this.mcpClientService.listTools(integration, userId),
+      this.mcpClientService.listResources(integration, userId),
+      this.mcpClientService.listResourceTemplates(integration, userId),
+      this.mcpClientService.listPrompts(integration, userId),
     ];
 
     const [toolsResult, resourcesResult, templatesResult, promptsResult] =
