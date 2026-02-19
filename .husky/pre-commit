@@ -42,7 +42,8 @@ else
 fi
 
 # Status files (for parallel jobs)
-STATUS_DIR=".git/.precommit-status"
+GIT_DIR=$(git rev-parse --git-dir)
+STATUS_DIR="$GIT_DIR/.precommit-status"
 mkdir -p "$STATUS_DIR"
 FE_PRETTIER_STATUS_FILE="$STATUS_DIR/fe_prettier.status"
 FE_TSC_STATUS_FILE="$STATUS_DIR/fe_tsc.status"
