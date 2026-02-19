@@ -5,8 +5,10 @@ import { UpdateArtifactUseCase } from './update-artifact.use-case';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import {
+  ArtifactContentTooLargeError,
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
+  ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
 import { Artifact } from '../../../domain/artifact.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
@@ -240,6 +242,49 @@ describe('UpdateArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.content).toBe(safeContent);
+  });
+
+  it('should reject content exceeding the maximum allowed length', async () => {
+    const oversizedContent =
+      '<p>' + 'A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH) + '</p>';
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: oversizedContent,
+      authorType: AuthorType.USER,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      ArtifactContentTooLargeError,
+    );
+    expect(artifactsRepository.findById).not.toHaveBeenCalled();
+  });
+
+  it('should accept content at exactly the maximum allowed length', async () => {
+    const maxContent = 'A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH);
+
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Maximum Size Update',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersionAndUpdateCurrent.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: maxContent,
+      authorType: AuthorType.USER,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.versionNumber).toBe(2);
   });
 
   it('should throw UnauthorizedException when user is not authenticated', async () => {

@@ -8,8 +8,7 @@ import {
 } from 'class-validator';
 import { UUID } from 'crypto';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-
-const MAX_CONTENT_LENGTH = 512_000; // ~500KB
+import { ARTIFACT_MAX_CONTENT_LENGTH } from '../../../application/artifacts.errors';
 
 export class CreateArtifactDto {
   @ApiProperty({
@@ -27,7 +26,7 @@ export class CreateArtifactDto {
   })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(MAX_CONTENT_LENGTH)
+  @MaxLength(ARTIFACT_MAX_CONTENT_LENGTH)
   content: string;
 
   @ApiProperty({

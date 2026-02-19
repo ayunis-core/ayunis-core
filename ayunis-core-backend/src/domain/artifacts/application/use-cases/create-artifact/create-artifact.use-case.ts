@@ -9,6 +9,10 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../../domain/sanitize-html-content';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import {
+  ArtifactContentTooLargeError,
+  ARTIFACT_MAX_CONTENT_LENGTH,
+} from '../../artifacts.errors';
 
 @Injectable()
 export class CreateArtifactUseCase {
@@ -27,6 +31,13 @@ export class CreateArtifactUseCase {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');
+    }
+
+    if (command.content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
+      throw new ArtifactContentTooLargeError(
+        command.content.length,
+        ARTIFACT_MAX_CONTENT_LENGTH,
+      );
     }
 
     await this.findThreadUseCase.execute(new FindThreadQuery(command.threadId));
