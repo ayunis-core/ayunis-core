@@ -7,6 +7,7 @@ import {
   Length,
   MinLength,
 } from 'class-validator';
+import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -72,5 +73,6 @@ export class UpdateMcpIntegrationDto {
   })
   @IsOptional()
   @IsObject()
+  @IsStringRecord({ message: 'all values in orgConfigValues must be strings' })
   orgConfigValues?: Record<string, string>;
 }

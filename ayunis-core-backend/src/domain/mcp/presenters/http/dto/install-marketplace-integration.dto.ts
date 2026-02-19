@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsBoolean,
 } from 'class-validator';
+import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
  * DTO for installing a marketplace MCP integration.
@@ -32,6 +33,7 @@ export class InstallMarketplaceIntegrationDto {
     additionalProperties: { type: 'string' },
   })
   @IsObject()
+  @IsStringRecord({ message: 'all values in orgConfigValues must be strings' })
   orgConfigValues: Record<string, string>;
 
   @ApiPropertyOptional({
