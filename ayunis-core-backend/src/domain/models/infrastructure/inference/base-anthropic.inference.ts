@@ -1,19 +1,19 @@
 import { Logger } from '@nestjs/common';
-import Anthropic from '@anthropic-ai/sdk';
-import {
-  InferenceHandler,
+import type Anthropic from '@anthropic-ai/sdk';
+import type {
   InferenceInput,
   InferenceResponse,
 } from '../../application/ports/inference.handler';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { Message } from 'src/domain/messages/domain/message.entity';
+import { InferenceHandler } from '../../application/ports/inference.handler';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
-import {
+import type {
   MessageCreateParamsNonStreaming,
   ToolChoiceAny,
   ToolChoiceAuto,
@@ -23,7 +23,7 @@ import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.en
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
@@ -49,12 +49,12 @@ export abstract class BaseAnthropicInferenceHandler extends InferenceHandler {
     this.logger.log('answer', {
       model: input.model.name,
       messageCount: input.messages.length,
-      toolCount: input.tools?.length ?? 0,
+      toolCount: input.tools.length ?? 0,
       toolChoice: input.toolChoice,
     });
     try {
       const { messages, tools, toolChoice, systemPrompt, orgId } = input;
-      const anthropicTools = tools?.map(this.convertTool);
+      const anthropicTools = tools.map(this.convertTool);
       const anthropicMessages = await this.convertMessages(messages, orgId);
       const anthropicToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
@@ -306,7 +306,7 @@ export abstract class BaseAnthropicInferenceHandler extends InferenceHandler {
   ): ToolUseMessageContent => {
     const id = toolCall.id;
     const name = toolCall.name;
-    const parameters = toolCall.input as object;
+    const parameters = toolCall.input as Record<string, unknown>;
     return new ToolUseMessageContent(id, name, parameters);
   };
 

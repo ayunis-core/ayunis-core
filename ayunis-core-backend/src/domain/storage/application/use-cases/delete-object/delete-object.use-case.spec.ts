@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { DeleteObjectUseCase } from './delete-object.use-case';
 import { DeleteObjectCommand } from './delete-object.command';

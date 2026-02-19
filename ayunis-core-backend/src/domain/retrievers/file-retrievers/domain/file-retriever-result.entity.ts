@@ -1,7 +1,7 @@
 export class FileRetrieverResult {
   constructor(
     public readonly pages: FileRetrieverPage[] = [],
-    public readonly metadata: Record<string, any> = {},
+    public readonly metadata: Record<string, unknown> = {},
   ) {}
 }
 
@@ -11,7 +11,7 @@ export class FileRetrieverPage {
   constructor(
     text: string,
     public readonly number: number,
-    public readonly metadata: Record<string, any> = {},
+    public readonly metadata: Record<string, unknown> = {},
   ) {
     // Remove null bytes that cause PostgreSQL UTF-8 encoding errors
     // eslint-disable-next-line no-control-regex

@@ -1,6 +1,6 @@
-import { UUID } from 'crypto';
-import { TeamMember } from '../../domain/team-member.entity';
-import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
+import type { UUID } from 'crypto';
+import type { TeamMember } from '../../domain/team-member.entity';
+import type { Paginated, PaginatedQueryParams } from 'src/common/pagination';
 
 export abstract class TeamMembersRepository {
   abstract findByTeamId(

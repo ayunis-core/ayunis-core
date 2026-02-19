@@ -58,7 +58,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
   ): Promise<void> {
     try {
       const { messages, tools, toolChoice, systemPrompt, orgId } = input;
-      const mistralTools = tools?.map(this.convertTool);
+      const mistralTools = tools.map(this.convertTool);
       const mistralMessages = await this.convertMessages(messages, orgId);
       const mistralToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
@@ -104,7 +104,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.parameters as Record<string, any>,
+        parameters: tool.parameters as Record<string, unknown>,
       },
     };
   };
@@ -274,7 +274,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     // Handle text content delta
     let textContentDelta: string | null = null;
     let toolCallsDelta: StreamInferenceResponseChunkToolCall[] = [];
-    const content = chunk.data.choices?.[0]?.delta?.content;
+    const content = chunk.data.choices[0]?.delta?.content;
     if (content) {
       if (Array.isArray(content)) {
         // content is an array of content chunks
@@ -287,24 +287,24 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
         textContentDelta = content;
       }
     }
-    const toolCalls = chunk.data.choices?.[0]?.delta?.toolCalls;
+    const toolCalls = chunk.data.choices[0]?.delta?.toolCalls;
     if (toolCalls) {
       toolCallsDelta = toolCalls
         .filter((toolCall) => toolCall.index !== undefined)
         .map((toolCall) => ({
           index: toolCall.index!,
           id: toolCall.id || null,
-          name: toolCall.function?.name,
+          name: toolCall.function.name,
           argumentsDelta:
-            typeof toolCall.function?.arguments === 'string'
-              ? toolCall.function?.arguments
-              : JSON.stringify(toolCall.function?.arguments),
+            typeof toolCall.function.arguments === 'string'
+              ? toolCall.function.arguments
+              : JSON.stringify(toolCall.function.arguments),
           providerMetadata: null,
         }));
     }
 
-    const choice = chunk.data.choices?.[0];
-    const finishReason = choice?.finishReason;
+    const choice = chunk.data.choices[0];
+    const finishReason = choice.finishReason;
     const usage = chunk.data.usage;
 
     // Skip empty chunks with no useful data

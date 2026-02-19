@@ -1,4 +1,4 @@
-import { EmbeddingModel } from './embedding-model.entity';
+import type { EmbeddingModel } from './embedding-model.entity';
 
 export type EmbeddingVector = number[];
 

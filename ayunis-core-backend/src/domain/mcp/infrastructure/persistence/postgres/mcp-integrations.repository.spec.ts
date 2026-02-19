@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
-import { Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { McpIntegrationsRepository } from './mcp-integrations.repository';
 import { McpIntegrationRecord } from './schema/mcp-integration.record';
 import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
-import { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
+import type { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from '../../../application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../../application/factories/mcp-integration-auth.factory';

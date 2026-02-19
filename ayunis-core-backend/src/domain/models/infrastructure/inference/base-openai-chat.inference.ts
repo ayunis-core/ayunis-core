@@ -29,12 +29,12 @@ export abstract class BaseOpenAIChatInferenceHandler extends InferenceHandler {
     this.logger.log('answer', {
       model: input.model.name,
       messageCount: input.messages.length,
-      toolCount: input.tools?.length ?? 0,
+      toolCount: input.tools.length ?? 0,
       toolChoice: input.toolChoice,
     });
     try {
       const { messages, tools, toolChoice } = input;
-      const openAiTools = tools?.map(this.convertTool).map((tool) => ({
+      const openAiTools = tools.map(this.convertTool).map((tool) => ({
         ...tool,
         function: { ...tool.function, strict: true },
       }));

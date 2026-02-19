@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 /**
  * Ephemeral entity representing an MCP tool.

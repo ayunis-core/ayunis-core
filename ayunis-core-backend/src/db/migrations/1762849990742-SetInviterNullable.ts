@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class SetInviterNullable1762849990742 implements MigrationInterface {
   name = 'SetInviterNullable1762849990742';

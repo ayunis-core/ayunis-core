@@ -1,7 +1,7 @@
 import { WebhookEvent } from '../webhook-event.entity';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
-import { Org } from 'src/iam/orgs/domain/org.entity';
-import { User } from 'src/iam/users/domain/user.entity';
+import type { Org } from 'src/iam/orgs/domain/org.entity';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 export class OrgCreatedWebhookEvent extends WebhookEvent {
   readonly eventType: WebhookEventType;

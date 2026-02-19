@@ -1,6 +1,6 @@
 export class RetrieveUrlCommand {
   constructor(
     public readonly url: string,
-    public readonly options?: Record<string, any>,
+    public readonly options?: Record<string, unknown>,
   ) {}
 }

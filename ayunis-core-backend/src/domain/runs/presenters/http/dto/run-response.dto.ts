@@ -129,7 +129,7 @@ export class RunErrorResponseDto {
     example: { originalError: 'Network timeout' },
     required: false,
   })
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export class RunMessageResponseDto {

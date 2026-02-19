@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class MoveMarketplaceIdentifierFromAgentsToSkills1771330643208
   implements MigrationInterface

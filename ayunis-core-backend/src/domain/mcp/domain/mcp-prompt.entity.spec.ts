@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
-import { McpPrompt, PromptArgument } from './mcp-prompt.entity';
+import type { PromptArgument } from './mcp-prompt.entity';
+import { McpPrompt } from './mcp-prompt.entity';
 
 describe('McpPrompt', () => {
   it('should instantiate correctly with all required fields', () => {

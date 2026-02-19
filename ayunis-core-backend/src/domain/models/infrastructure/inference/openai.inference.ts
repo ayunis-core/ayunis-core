@@ -41,12 +41,12 @@ export class OpenAIInferenceHandler extends InferenceHandler {
     this.logger.log('answer', {
       model: input.model.name,
       messageCount: input.messages.length,
-      toolCount: input.tools?.length ?? 0,
+      toolCount: input.tools.length ?? 0,
       toolChoice: input.toolChoice,
     });
     try {
       const { messages, tools, toolChoice, orgId } = input;
-      const openAiTools = tools?.map(this.convertTool);
+      const openAiTools = tools.map(this.convertTool);
       const openAiMessages = await this.convertMessages(messages, orgId);
       const isGpt5 = input.model.name.startsWith('gpt-5');
 

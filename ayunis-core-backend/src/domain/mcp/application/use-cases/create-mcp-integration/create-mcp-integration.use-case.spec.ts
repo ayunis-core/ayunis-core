@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateMcpIntegrationUseCase } from './create-mcp-integration.use-case';
@@ -14,19 +15,19 @@ import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/valid
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { McpIntegration } from '../../../domain/mcp-integration.entity';
 import {
-  McpIntegration,
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import {
-  CredentialFieldType,
+import type {
   CredentialFieldValue,
   PredefinedMcpIntegrationConfig,
 } from '../../../domain/predefined-mcp-integration-config';
+import { CredentialFieldType } from '../../../domain/predefined-mcp-integration-config';
 import {
   DuplicateMcpIntegrationError,
   InvalidPredefinedSlugError,

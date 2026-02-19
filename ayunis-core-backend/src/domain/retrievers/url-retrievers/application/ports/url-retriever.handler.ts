@@ -1,4 +1,4 @@
-import { UrlRetrieverResult } from '../../domain/url-retriever-result.entity';
+import type { UrlRetrieverResult } from '../../domain/url-retriever-result.entity';
 
 export interface UrlRetrieverInput {
   url: string;

@@ -1,16 +1,17 @@
-import { UUID, randomUUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 
 export class TextSourceContentChunk {
   id: UUID;
   content: string;
-  meta: Record<string, any>;
+  meta: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 
   constructor(params: {
     id?: UUID;
     content: string;
-    meta: Record<string, any>;
+    meta: Record<string, unknown>;
     createdAt?: Date;
     updatedAt?: Date;
   }) {

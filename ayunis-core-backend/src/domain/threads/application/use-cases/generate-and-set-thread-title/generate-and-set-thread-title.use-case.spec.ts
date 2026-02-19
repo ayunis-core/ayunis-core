@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GenerateAndSetThreadTitleUseCase } from './generate-and-set-thread-title.use-case';
 import { UpdateThreadTitleUseCase } from '../update-thread-title/update-thread-title.use-case';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';

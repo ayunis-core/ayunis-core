@@ -1,12 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID, UUID } from 'crypto';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { TrimMessagesForContextUseCase } from './trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from './trim-messages-for-context.command';
 import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
 import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
-import { Message } from '../../../domain/message.entity';
+import type { Message } from '../../../domain/message.entity';
 
 describe('TrimMessagesForContextUseCase', () => {
   let useCase: TrimMessagesForContextUseCase;

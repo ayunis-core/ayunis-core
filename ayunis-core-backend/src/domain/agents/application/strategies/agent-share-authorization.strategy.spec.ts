@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AgentShareAuthorizationStrategy } from './agent-share-authorization.strategy';
 import { AgentRepository } from '../ports/agent.repository';
-import { Agent } from '../../domain/agent.entity';
+import type { Agent } from '../../domain/agent.entity';
 import { randomUUID } from 'crypto';
 
 describe('AgentShareAuthorizationStrategy', () => {

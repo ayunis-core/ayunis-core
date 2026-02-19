@@ -1,10 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindOrgByIdUseCase } from './find-org-by-id.use-case';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from '../../../domain/org.entity';
 import { OrgNotFoundError } from '../../orgs.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('FindOrgByIdUseCase', () => {
   let useCase: FindOrgByIdUseCase;

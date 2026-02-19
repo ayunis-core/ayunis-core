@@ -70,13 +70,6 @@ export class ModelRegistry {
   }
 
   getModel(modelId: UUID): Model {
-    this.logger.log('getModel', { modelId });
-    const model = this.models.find(
-      (m) => m.id === modelId && this.hasApiKeyForProvider(m.provider),
-    );
-    if (!model) {
-      throw new ModelNotFoundError(modelId);
-    }
-    return model;
+    return this.getAvailableModel(modelId);
   }
 }

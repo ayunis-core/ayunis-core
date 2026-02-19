@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { Skill } from '../../domain/skill.entity';
+import type { UUID } from 'crypto';
+import type { Skill } from '../../domain/skill.entity';
 
 export abstract class SkillRepository {
   abstract create(skill: Skill): Promise<Skill>;

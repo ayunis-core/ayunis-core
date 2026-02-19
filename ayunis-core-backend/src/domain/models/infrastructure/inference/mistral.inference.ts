@@ -48,11 +48,11 @@ export class MistralInferenceHandler extends InferenceHandler {
     this.logger.log('answer', {
       model: input.model.name,
       messageCount: input.messages.length,
-      toolCount: input.tools?.length ?? 0,
+      toolCount: input.tools.length ?? 0,
       toolChoice: input.toolChoice,
     });
     const { model, messages, tools, toolChoice, orgId } = input;
-    const mistralTools = tools?.map(this.convertTool);
+    const mistralTools = tools.map(this.convertTool);
     const mistralMessages = await this.convertMessages(messages, orgId);
     const systemPrompt = input.systemPrompt
       ? this.convertSystemPrompt(input.systemPrompt)
@@ -88,7 +88,7 @@ export class MistralInferenceHandler extends InferenceHandler {
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.parameters as Record<string, any>,
+        parameters: tool.parameters as Record<string, unknown>,
       },
     };
   };

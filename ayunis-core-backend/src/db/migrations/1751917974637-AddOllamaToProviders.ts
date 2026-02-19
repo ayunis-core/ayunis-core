@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddOllamaToProviders1751917974637 implements MigrationInterface {
   name = 'AddOllamaToProviders1751917974637';

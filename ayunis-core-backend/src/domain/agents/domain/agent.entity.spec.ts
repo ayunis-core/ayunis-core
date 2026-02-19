@@ -2,7 +2,7 @@ import { Agent } from './agent.entity';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('Agent Entity', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
