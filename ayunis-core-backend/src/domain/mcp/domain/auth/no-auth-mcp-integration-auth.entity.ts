@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { McpAuthMethod } from '../value-objects/mcp-auth-method.enum';
 import { McpIntegrationAuth } from './mcp-integration-auth.entity';
 

@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { DeleteOrgUseCase } from './delete-org.use-case';
 import { DeleteOrgCommand } from './delete-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { OrgDeletionFailedError } from '../../orgs.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('DeleteOrgUseCase', () => {
   let useCase: DeleteOrgUseCase;

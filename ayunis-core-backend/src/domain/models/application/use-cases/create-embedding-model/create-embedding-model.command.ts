@@ -1,6 +1,6 @@
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import type { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
+import type { Currency } from 'src/domain/models/domain/value-objects/currency.enum';
 
 export class CreateEmbeddingModelCommand {
   name: string;

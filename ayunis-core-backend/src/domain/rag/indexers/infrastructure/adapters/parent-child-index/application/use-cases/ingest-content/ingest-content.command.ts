@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import type { UUID } from 'crypto';
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 
 export class IngestContentCommand {
   orgId: UUID;

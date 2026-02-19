@@ -146,7 +146,7 @@ export class CreateTextSourceUseCase {
    */
   private getChunksFromText(
     text: string,
-    meta: Record<string, any> = {},
+    meta: Record<string, unknown> = {},
   ): TextSourceContentChunk[] {
     const sourceContentChunks: TextSourceContentChunk[] = [];
 

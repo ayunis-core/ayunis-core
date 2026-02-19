@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindAllUserIdsByTeamIdUseCase } from './find-all-user-ids-by-team-id.use-case';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { FindAllUserIdsByTeamIdQuery } from './find-all-user-ids-by-team-id.query';

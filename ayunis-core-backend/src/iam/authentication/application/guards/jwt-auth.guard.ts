@@ -49,7 +49,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       'refresh_token',
     );
 
-    const refreshToken = request.cookies?.[refreshTokenName] as string;
+    const refreshToken = request.cookies[refreshTokenName] as string;
 
     if (!refreshToken) {
       return false;

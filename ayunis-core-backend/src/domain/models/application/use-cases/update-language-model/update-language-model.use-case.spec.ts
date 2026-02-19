@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { UpdateLanguageModelUseCase } from './update-language-model.use-case';
 import { UpdateLanguageModelCommand } from './update-language-model.command';
@@ -7,7 +8,7 @@ import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catal
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelNotFoundByIdError } from '../../models.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
   let useCase: UpdateLanguageModelUseCase;

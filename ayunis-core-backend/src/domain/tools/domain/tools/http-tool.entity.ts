@@ -1,8 +1,8 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { ConfigurableTool } from '../configurable-tool.entity';
 import { ToolConfig } from '../tool-config.entity';
-import { UUID } from 'crypto';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { UUID } from 'crypto';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 
 export enum HttpToolMethod {
@@ -63,7 +63,7 @@ export class HttpTool extends ConfigurableTool<HttpToolConfig> {
     });
   }
 
-  validateParams(params: Record<string, any>): HttpToolParameters {
+  validateParams(params: Record<string, unknown>): HttpToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

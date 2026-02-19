@@ -56,14 +56,14 @@ export class GeminiInferenceHandler extends InferenceHandler {
     this.logger.log('answer', {
       model: input.model.name,
       messageCount: input.messages.length,
-      toolCount: input.tools?.length ?? 0,
+      toolCount: input.tools.length ?? 0,
       toolChoice: input.toolChoice,
     });
     try {
       const { messages, tools, toolChoice, orgId } = input;
       const contents = await this.convertMessages(messages, orgId);
 
-      const geminiTools = tools?.length
+      const geminiTools = tools.length
         ? [{ functionDeclarations: tools.map(this.convertTool) }]
         : undefined;
 
@@ -73,7 +73,7 @@ export class GeminiInferenceHandler extends InferenceHandler {
           : undefined,
         tools: geminiTools,
         toolConfig:
-          toolChoice && tools?.length
+          toolChoice && tools.length
             ? { functionCallingConfig: this.convertToolChoice(toolChoice) }
             : undefined,
       };
@@ -192,7 +192,7 @@ export class GeminiInferenceHandler extends InferenceHandler {
             functionCall: {
               id: content.id,
               name: content.name,
-              args: content.params as Record<string, unknown>,
+              args: content.params,
             },
           };
           if (content.providerMetadata?.gemini?.thoughtSignature) {

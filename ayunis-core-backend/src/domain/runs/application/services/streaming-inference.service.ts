@@ -294,10 +294,10 @@ export class StreamingInferenceService {
     return content;
   }
 
-  private parseToolArguments(args: string, toolName: string): object {
+  private parseToolArguments(args: string, toolName: string): Record<string, unknown> {
     if (!args) return {};
     try {
-      const parsed = safeJsonParse(args, null) as object | null;
+      const parsed = safeJsonParse(args, null) as Record<string, unknown> | null;
       return parsed || {};
     } catch {
       this.logger.debug(`Incomplete tool call arguments for ${toolName}`, {
@@ -373,7 +373,7 @@ export class StreamingInferenceService {
     toolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
         try {
-          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as object;
+          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as Record<string, unknown>;
           if (parsedArgs) {
             content.push(
               new ToolUseMessageContent(

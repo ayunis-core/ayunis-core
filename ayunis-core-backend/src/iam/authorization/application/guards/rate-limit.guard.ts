@@ -139,7 +139,7 @@ export class RateLimitGuard implements CanActivate {
     }
 
     // Fallback to connection remote address
-    return request.socket?.remoteAddress || request.ip || null;
+    return request.socket.remoteAddress || request.ip || null;
   }
 
   /**

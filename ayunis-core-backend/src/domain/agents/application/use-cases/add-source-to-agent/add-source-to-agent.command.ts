@@ -1,5 +1,5 @@
-import { Source } from 'src/domain/sources/domain/source.entity';
-import { UUID } from 'crypto';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import type { UUID } from 'crypto';
 
 export class AddSourceToAgentCommand {
   public readonly agentId: UUID;

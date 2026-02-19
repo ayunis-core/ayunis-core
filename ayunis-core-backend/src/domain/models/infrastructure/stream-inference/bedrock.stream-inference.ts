@@ -197,7 +197,7 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
   ): Promise<void> {
     const { messages, tools, toolChoice, systemPrompt, orgId } = input;
     const anthropicMessages = await this.convertMessages(messages, orgId);
-    const anthropicTools = tools?.map((tool) => this.convertTool(tool));
+    const anthropicTools = tools.map((tool) => this.convertTool(tool));
     const anthropicToolChoice = toolChoice
       ? this.convertToolChoice(toolChoice)
       : undefined;
@@ -314,7 +314,7 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
     // Handle message_start for input tokens
     if (chunk.type === 'message_start') {
       const messageChunk = chunk as BedrockMessageStart;
-      const usage = messageChunk.message?.usage;
+      const usage = messageChunk.message.usage;
       if (usage?.input_tokens !== undefined) {
         return new StreamInferenceResponseChunk({
           thinkingDelta: null,

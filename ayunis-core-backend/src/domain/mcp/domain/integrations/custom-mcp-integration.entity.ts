@@ -1,6 +1,6 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { McpIntegration } from '../mcp-integration.entity';
-import { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
+import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
 
 export class CustomMcpIntegration extends McpIntegration {

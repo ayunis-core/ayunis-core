@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { SplitTextUseCase } from './split-text.use-case';
 import { SplitTextCommand } from './split-text.command';
 import { SplitterHandlerRegistry } from '../../splitter-handler.registry';

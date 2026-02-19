@@ -1,9 +1,9 @@
-import { MessageContent } from '../../domain/message-content.entity';
+import type { MessageContent } from '../../domain/message-content.entity';
 import { MessageContentType } from '../../domain/value-objects/message-content-type.object';
-import { TextMessageContent } from '../../domain/message-contents/text-message-content.entity';
-import { ThinkingMessageContent } from '../../domain/message-contents/thinking-message-content.entity';
-import { ToolUseMessageContent } from '../../domain/message-contents/tool-use.message-content.entity';
-import { ToolResultMessageContent } from '../../domain/message-contents/tool-result.message-content.entity';
+import type { TextMessageContent } from '../../domain/message-contents/text-message-content.entity';
+import type { ThinkingMessageContent } from '../../domain/message-contents/thinking-message-content.entity';
+import type { ToolUseMessageContent } from '../../domain/message-contents/tool-use.message-content.entity';
+import type { ToolResultMessageContent } from '../../domain/message-contents/tool-result.message-content.entity';
 
 /**
  * Extracts text content from a message content entity for token counting purposes.

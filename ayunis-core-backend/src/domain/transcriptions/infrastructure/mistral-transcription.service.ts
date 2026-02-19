@@ -53,7 +53,7 @@ export class MistralTranscriptionService extends TranscriptionPort {
       const response =
         await this.client.audio.transcriptions.complete(transcriptionRequest);
 
-      const transcriptedText = response.text?.trim() || '';
+      const transcriptedText = response.text.trim() || '';
 
       this.logger.log('Transcription completed successfully', {
         fileName,

@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { ListOrgMcpIntegrationsUseCase } from './list-org-mcp-integrations.use-case';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
+import type { McpIntegration } from '../../../domain/mcp-integration.entity';
 import {
-  McpIntegration,
   PredefinedMcpIntegration,
   CustomMcpIntegration,
 } from '../../../domain/mcp-integration.entity';

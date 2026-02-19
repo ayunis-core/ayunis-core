@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddMcpIntegrations1762268803661 implements MigrationInterface {
   name = 'AddMcpIntegrations1762268803661';

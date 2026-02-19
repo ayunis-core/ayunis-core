@@ -1,5 +1,5 @@
-import { User } from 'src/iam/users/domain/user.entity';
-import { UUID } from 'crypto';
+import type { User } from 'src/iam/users/domain/user.entity';
+import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 
 export class Org {

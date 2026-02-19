@@ -1,4 +1,4 @@
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
@@ -28,7 +28,9 @@ export class InternetSearchTool extends Tool {
     });
   }
 
-  validateParams(params: Record<string, any>): InternetSearchToolParameters {
+  validateParams(
+    params: Record<string, unknown>,
+  ): InternetSearchToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

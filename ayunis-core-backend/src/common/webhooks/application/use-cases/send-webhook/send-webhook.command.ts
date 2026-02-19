@@ -1,4 +1,4 @@
-import { WebhookEvent } from 'src/common/webhooks/domain/webhook-event.entity';
+import type { WebhookEvent } from 'src/common/webhooks/domain/webhook-event.entity';
 
 export class SendWebhookCommand {
   event: WebhookEvent;

@@ -28,15 +28,15 @@ export class ChildChunkRecord extends BaseRecord {
 
   // Hack until typeorm supports vector column type
   // https://github.com/typeorm/typeorm/pull/11437
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   @Column({ name: 'embedding_1024', type: 'vector' as any, nullable: true })
   embedding1024: number[] | null;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   @Column({ name: 'embedding_1536', type: 'vector' as any, nullable: true })
   embedding1536: number[] | null;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   @Column({ name: 'embedding_2560', type: 'vector' as any, nullable: true })
   embedding2560: number[] | null;
 

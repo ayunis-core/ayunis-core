@@ -62,7 +62,7 @@ export class CreateThreadUseCase {
 
       // Determine if anonymous mode should be enforced by the effective model
       const effectiveAnonymousOnly =
-        agent?.model?.anonymousOnly ?? model?.anonymousOnly ?? false;
+        agent?.model.anonymousOnly ?? model?.anonymousOnly ?? false;
       const isAnonymous =
         effectiveAnonymousOnly || (command.isAnonymous ?? false);
 

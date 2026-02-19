@@ -130,7 +130,7 @@ export function getCanonicalMimeType(
       return MIME_TYPES.XLS;
     case 'csv':
       return MIME_TYPES.CSV;
-    default:
+    case 'unknown':
       return null;
   }
 }

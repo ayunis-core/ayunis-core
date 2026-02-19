@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import type { UUID } from 'crypto';
+import type { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 export class CreateBulkInvitesCommand {
   public readonly invites: Array<{ email: string; role: UserRole }>;

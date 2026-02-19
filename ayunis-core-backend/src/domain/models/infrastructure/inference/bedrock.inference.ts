@@ -117,7 +117,7 @@ export class BedrockInferenceHandler extends InferenceHandler {
     try {
       const { messages, tools, toolChoice, systemPrompt, orgId } = input;
       const anthropicMessages = await this.convertMessages(messages, orgId);
-      const anthropicTools = tools?.map((tool) => this.convertTool(tool));
+      const anthropicTools = tools.map((tool) => this.convertTool(tool));
       const anthropicToolChoice = toolChoice
         ? this.convertToolChoice(toolChoice)
         : undefined;
@@ -299,7 +299,7 @@ export class BedrockInferenceHandler extends InferenceHandler {
         return new TextMessageContent(c.text);
       }
       if (c.type === 'tool_use') {
-        return new ToolUseMessageContent(c.id, c.name, c.input);
+        return new ToolUseMessageContent(c.id, c.name, c.input as Record<string, unknown>);
       }
       // This should never happen given our type definition, but handle it for safety
       throw new InferenceFailedError(

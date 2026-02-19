@@ -1,5 +1,5 @@
-import { Trial } from '../../domain/trial.entity';
-import { UUID } from 'crypto';
+import type { Trial } from '../../domain/trial.entity';
+import type { UUID } from 'crypto';
 
 export abstract class TrialRepository {
   abstract create(trial: Trial): Promise<Trial>;

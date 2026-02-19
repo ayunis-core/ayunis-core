@@ -1,9 +1,9 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { UUID } from 'crypto';
-import { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
+import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import type { UUID } from 'crypto';
+import type { McpResource } from 'src/domain/mcp/domain/mcp-resource.entity';
 
 const mcpResourceToolParameters = {
   type: 'object' as const,
@@ -39,7 +39,7 @@ export class McpIntegrationResource extends Tool {
     this._returnsPii = returnsPii;
   }
 
-  validateParams(params: Record<string, any>): McpResourceToolParameters {
+  validateParams(params: Record<string, unknown>): McpResourceToolParameters {
     const ajv = createAjv();
     const validate = ajv.compile(this.parameters);
     const valid = validate(params);

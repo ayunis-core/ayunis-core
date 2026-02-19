@@ -1,5 +1,5 @@
-import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
-import { CredentialFieldValue } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
+import type { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { CredentialFieldValue } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 export class CreatePredefinedMcpIntegrationCommand {
   constructor(

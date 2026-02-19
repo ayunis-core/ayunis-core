@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import type { UUID } from 'crypto';
+import type { UserRole } from '../../../domain/value-objects/role.object';
 
 export class CreateUserCommand {
   public readonly email: string;
