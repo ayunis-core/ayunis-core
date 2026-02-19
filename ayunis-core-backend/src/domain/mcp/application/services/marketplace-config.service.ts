@@ -87,10 +87,31 @@ export class MarketplaceConfigService {
     providedValues: Record<string, string>,
     orgFields: ConfigField[],
   ): Promise<Record<string, string>> {
+    const merged = this.mergePlaintextValues(
+      existingValues,
+      providedValues,
+      orgFields,
+    );
+
+    this.validateRequiredFields(orgFields, merged);
+
+    await this.encryptNewAndFixedSecrets(merged, providedValues, orgFields);
+
+    return merged;
+  }
+
+  /**
+   * Merges existing and provided values into a single map, keeping plaintext
+   * for new secrets so validation can check them before encryption.
+   */
+  private mergePlaintextValues(
+    existingValues: Record<string, string>,
+    providedValues: Record<string, string>,
+    orgFields: ConfigField[],
+  ): Record<string, string> {
     const merged: Record<string, string> = {};
 
     for (const field of orgFields) {
-      // Fixed-value fields always use schema value
       if (field.value !== undefined) {
         merged[field.key] = field.value;
         continue;
@@ -101,14 +122,11 @@ export class MarketplaceConfigService {
 
       if (field.type === 'secret') {
         if (provided !== undefined && provided !== '') {
-          // New secret value — encrypt it
-          merged[field.key] = await this.credentialEncryption.encrypt(provided);
+          merged[field.key] = provided;
         } else if (existing !== undefined) {
-          // Keep existing encrypted value
           merged[field.key] = existing;
         }
       } else {
-        // Non-secret: use provided value if given, otherwise keep existing
         if (provided !== undefined) {
           merged[field.key] = provided;
         } else if (existing !== undefined) {
@@ -117,18 +135,31 @@ export class MarketplaceConfigService {
       }
     }
 
-    // Re-encrypt fixed-value secret fields
-    const fixedSecretFields = orgFields.filter(
-      (f) => f.value !== undefined && f.type === 'secret',
-    );
-    for (const field of fixedSecretFields) {
-      merged[field.key] = await this.credentialEncryption.encrypt(
-        merged[field.key],
-      );
-    }
-
-    this.validateRequiredFields(orgFields, merged);
-
     return merged;
+  }
+
+  /**
+   * Encrypts newly provided secret values and fixed-value secret fields in place.
+   * Existing encrypted values (retained from previous save) are left untouched.
+   */
+  private async encryptNewAndFixedSecrets(
+    merged: Record<string, string>,
+    providedValues: Record<string, string>,
+    orgFields: ConfigField[],
+  ): Promise<void> {
+    for (const field of orgFields) {
+      if (field.type !== 'secret') continue;
+
+      const isFixed = field.value !== undefined;
+      const isNewlyProvided =
+        providedValues[field.key] !== undefined &&
+        providedValues[field.key] !== '';
+
+      if (isFixed || isNewlyProvided) {
+        merged[field.key] = await this.credentialEncryption.encrypt(
+          merged[field.key],
+        );
+      }
+    }
   }
 }
