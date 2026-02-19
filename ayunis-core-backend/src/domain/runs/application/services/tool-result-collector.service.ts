@@ -68,12 +68,9 @@ export class ToolResultCollectorService {
           new CheckToolCapabilitiesQuery(tool),
         );
 
-        if (capabilities.isDisplayable) {
-          toolResultMessageContent.push(
-            this.handleDisplayableTool(content, input),
-          );
-        } else if (capabilities.isExecutable) {
-          const result = await this.executeBackendTool(
+        if (capabilities.isDisplayable && capabilities.isExecutable) {
+          // Hybrid tool: execute for side effects, then return displayable result
+          const executionResult = await this.executeBackendTool(
             tool,
             content,
             params.trace,
@@ -81,7 +78,27 @@ export class ToolResultCollectorService {
             thread.id,
             isAnonymous,
           );
-          toolResultMessageContent.push(result);
+          if (executionResult.succeeded) {
+            toolResultMessageContent.push(
+              this.handleDisplayableTool(content, input),
+            );
+          } else {
+            toolResultMessageContent.push(executionResult.content);
+          }
+        } else if (capabilities.isDisplayable) {
+          toolResultMessageContent.push(
+            this.handleDisplayableTool(content, input),
+          );
+        } else if (capabilities.isExecutable) {
+          const executionResult = await this.executeBackendTool(
+            tool,
+            content,
+            params.trace,
+            orgId,
+            thread.id,
+            isAnonymous,
+          );
+          toolResultMessageContent.push(executionResult.content);
         }
       } catch (error) {
         if (error instanceof ApplicationError) {
@@ -162,7 +179,7 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<ToolResultMessageContent> {
+  ): Promise<{ content: ToolResultMessageContent; succeeded: boolean }> {
     const span = trace.span({
       name: `tool__${tool.type}`,
       input: content.params,
@@ -174,9 +191,11 @@ export class ToolResultCollectorService {
       orgId,
       threadId,
     };
+    let succeeded = true;
     let result = await this.executeToolUseCase
       .execute(new ExecuteToolCommand(tool, content.params, context))
       .catch((error) => {
+        succeeded = false;
         span.update({
           metadata: {
             isError: true,
@@ -204,7 +223,10 @@ export class ToolResultCollectorService {
       result = await this.anonymizeText(result);
     }
 
-    return new ToolResultMessageContent(content.id, content.name, result);
+    return {
+      content: new ToolResultMessageContent(content.id, content.name, result),
+      succeeded,
+    };
   }
 
   private async anonymizeText(text: string): Promise<string> {

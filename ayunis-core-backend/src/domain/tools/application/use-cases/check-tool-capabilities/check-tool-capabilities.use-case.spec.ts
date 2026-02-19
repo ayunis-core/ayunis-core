@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CheckToolCapabilitiesUseCase } from './check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
 import { Tool } from '../../../domain/tool.entity';
+import { DisplayableTool } from '../../../domain/displayable-tool.entity';
 import { ToolType } from '../../../domain/value-objects/tool-type.enum';
 import { JSONSchema } from 'json-schema-to-ts';
 
@@ -13,6 +14,48 @@ class MockTool extends Tool {
       description: 'Mock tool for testing',
       parameters: {} as JSONSchema,
       type,
+    });
+  }
+
+  validateParams(params: Record<string, any>): any {
+    return params;
+  }
+
+  get returnsPii(): boolean {
+    return false;
+  }
+}
+
+// Mock displayable-only tool (e.g., SendEmailTool)
+class MockDisplayableTool extends DisplayableTool {
+  constructor() {
+    super({
+      name: 'mock_displayable',
+      description: 'Mock displayable tool',
+      parameters: {} as JSONSchema,
+      type: ToolType.SEND_EMAIL,
+    });
+  }
+
+  validateParams(params: Record<string, any>): any {
+    return params;
+  }
+
+  get returnsPii(): boolean {
+    return false;
+  }
+}
+
+// Mock hybrid tool (displayable + executable, e.g., CreateDocumentTool)
+class MockHybridTool extends DisplayableTool {
+  override isExecutable: boolean = true;
+
+  constructor() {
+    super({
+      name: 'mock_hybrid',
+      description: 'Mock hybrid tool',
+      parameters: {} as JSONSchema,
+      type: ToolType.CREATE_DOCUMENT,
     });
   }
 
@@ -128,6 +171,36 @@ describe('CheckToolCapabilitiesUseCase', () => {
       expect(httpResult.isExecutable).toBe(true);
       expect(sourceResult.isDisplayable).toBe(false);
       expect(sourceResult.isExecutable).toBe(true);
+    });
+
+    it('should return displayable=true, executable=false for a plain displayable tool', () => {
+      const tool = new MockDisplayableTool();
+      const query = new CheckToolCapabilitiesQuery(tool);
+
+      const result = useCase.execute(query);
+
+      expect(result.isDisplayable).toBe(true);
+      expect(result.isExecutable).toBe(false);
+    });
+
+    it('should return displayable=true, executable=true for a hybrid displayable+executable tool', () => {
+      const tool = new MockHybridTool();
+      const query = new CheckToolCapabilitiesQuery(tool);
+
+      const result = useCase.execute(query);
+
+      expect(result.isDisplayable).toBe(true);
+      expect(result.isExecutable).toBe(true);
+    });
+
+    it('should return displayable=false, executable=true for a plain executable tool', () => {
+      const tool = new MockTool('HTTP Tool', ToolType.HTTP);
+      const query = new CheckToolCapabilitiesQuery(tool);
+
+      const result = useCase.execute(query);
+
+      expect(result.isDisplayable).toBe(false);
+      expect(result.isExecutable).toBe(true);
     });
   });
 });
