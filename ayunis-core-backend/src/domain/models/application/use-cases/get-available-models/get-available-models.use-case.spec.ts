@@ -50,6 +50,7 @@ describe('GetAvailableModelsUseCase', () => {
           [ModelProvider.AYUNIS]: 'models.ayunis.baseURL',
           [ModelProvider.AZURE]: 'models.azure.apiKey',
           [ModelProvider.GEMINI]: 'models.gemini.apiKey',
+          [ModelProvider.STACKIT]: 'models.stackit.apiKey',
         };
         return configMap[provider];
       }),

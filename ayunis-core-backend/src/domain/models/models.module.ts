@@ -72,6 +72,8 @@ import { AzureInferenceHandler } from './infrastructure/inference/azure.inferenc
 import { AzureStreamInferenceHandler } from './infrastructure/stream-inference/azure.stream-inference';
 import { GeminiInferenceHandler } from './infrastructure/inference/gemini.inference';
 import { GeminiStreamInferenceHandler } from './infrastructure/stream-inference/gemini.stream-inference';
+import { StackitInferenceHandler } from './infrastructure/inference/stackit.inference';
+import { StackitStreamInferenceHandler } from './infrastructure/stream-inference/stackit.stream-inference';
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
@@ -119,6 +121,8 @@ import { MessagesModule } from '../messages/messages.module';
     AzureStreamInferenceHandler,
     GeminiInferenceHandler,
     GeminiStreamInferenceHandler,
+    StackitInferenceHandler,
+    StackitStreamInferenceHandler,
     MockStreamInferenceHandler,
     MockInferenceHandler,
     {
@@ -134,6 +138,7 @@ import { MessagesModule } from '../messages/messages.module';
         bedrockHandler: BedrockStreamInferenceHandler,
         azureHandler: AzureStreamInferenceHandler,
         geminiHandler: GeminiStreamInferenceHandler,
+        stackitHandler: StackitStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -148,6 +153,7 @@ import { MessagesModule } from '../messages/messages.module';
         registry.register(ModelProvider.OTC, otcHandler);
         registry.register(ModelProvider.AZURE, azureHandler);
         registry.register(ModelProvider.GEMINI, geminiHandler);
+        registry.register(ModelProvider.STACKIT, stackitHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -162,6 +168,7 @@ import { MessagesModule } from '../messages/messages.module';
         BedrockStreamInferenceHandler,
         AzureStreamInferenceHandler,
         GeminiStreamInferenceHandler,
+        StackitStreamInferenceHandler,
         MockStreamInferenceHandler,
         ConfigService,
       ],
@@ -179,6 +186,7 @@ import { MessagesModule } from '../messages/messages.module';
         otcHandler: OtcInferenceHandler,
         azureHandler: AzureInferenceHandler,
         geminiHandler: GeminiInferenceHandler,
+        stackitHandler: StackitInferenceHandler,
         mockHandler: MockInferenceHandler,
         configService: ConfigService,
       ) => {
@@ -193,6 +201,7 @@ import { MessagesModule } from '../messages/messages.module';
         registry.register(ModelProvider.OTC, otcHandler);
         registry.register(ModelProvider.AZURE, azureHandler);
         registry.register(ModelProvider.GEMINI, geminiHandler);
+        registry.register(ModelProvider.STACKIT, stackitHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -207,6 +216,7 @@ import { MessagesModule } from '../messages/messages.module';
         OtcInferenceHandler,
         AzureInferenceHandler,
         GeminiInferenceHandler,
+        StackitInferenceHandler,
         MockInferenceHandler,
         ConfigService,
       ],

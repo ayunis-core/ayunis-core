@@ -9,4 +9,5 @@ export enum ModelProvider {
   OTC = 'otc',
   AZURE = 'azure',
   GEMINI = 'gemini',
+  STACKIT = 'stackit',
 }

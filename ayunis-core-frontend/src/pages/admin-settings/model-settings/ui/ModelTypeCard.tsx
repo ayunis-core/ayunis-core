@@ -36,6 +36,7 @@ function getHostingPriority(
     case 'ayunis':
     case 'synaforce':
     case 'ollama':
+    case 'stackit':
       return 0; // DE
     case 'mistral':
     case 'bedrock':
