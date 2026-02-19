@@ -125,11 +125,11 @@ EOF
   else
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
-    setsid bash -c '
-      cd "'"$REPO_DIR/ayunis-core-backend"'"
+    (
+      cd "$REPO_DIR/ayunis-core-backend"
       exec npm run start:dev \
-        >> "'"$STATE_DIR/backend.log"'" 2>&1
-    ' &
+        >> "$STATE_DIR/backend.log" 2>&1
+    ) &
     echo $! > "$STATE_DIR/backend.pid"
   fi
 
@@ -139,12 +139,12 @@ EOF
   else
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
-    VITE_API_BASE_URL="http://localhost:$BACKEND_PORT/api" \
-    setsid bash -c '
-      cd "'"$REPO_DIR/ayunis-core-frontend"'"
-      exec npx vite --port "'"$FRONTEND_PORT"'" \
-        >> "'"$STATE_DIR/frontend.log"'" 2>&1
-    ' &
+    (
+      cd "$REPO_DIR/ayunis-core-frontend"
+      export VITE_API_BASE_URL="http://localhost:$BACKEND_PORT/api"
+      exec npx vite --port "$FRONTEND_PORT" \
+        >> "$STATE_DIR/frontend.log" 2>&1
+    ) &
     echo $! > "$STATE_DIR/frontend.pid"
   fi
 
@@ -271,7 +271,7 @@ _kill_pid() {
     local pid
     pid=$(cat "$pidfile")
     info "Stopping $label (PID $pid) …"
-    # Processes are launched with setsid so pid == process group leader.
+    # The PID is a subshell that is a process group leader.
     # Kill the whole group, then fall back to pkill -P for any stragglers.
     kill -TERM -- -"$pid" 2>/dev/null || true
     pkill -TERM -P "$pid" 2>/dev/null || true
