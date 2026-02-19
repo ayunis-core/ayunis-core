@@ -26,10 +26,16 @@ export default function CreateDocumentWidget({
   };
 
   // Artifact is created by the backend during the run.
-  // We just look it up from the thread artifacts list to get the ID.
+  // We look it up from the thread artifacts list by title.
+  // When multiple artifacts share the same title, prefer the most recently created one.
   const { artifacts } = useThreadArtifacts(threadId);
   const artifactId =
-    artifacts.find((a) => a.title === params.title)?.id ?? null;
+    artifacts
+      .filter((a) => a.title === params.title)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0]?.id ?? null;
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
