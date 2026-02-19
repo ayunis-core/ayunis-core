@@ -1,7 +1,14 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
+import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  McpIntegrationNotFoundError,
+  McpIntegrationAccessDeniedError,
+} from '../../mcp.errors';
+import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegration } from '../../../domain/mcp-integration.entity';
 
 export interface UserMcpConfigResult {
   hasConfig: boolean;
@@ -14,6 +21,7 @@ export class GetUserMcpConfigUseCase {
   private readonly logger = new Logger(GetUserMcpConfigUseCase.name);
 
   constructor(
+    private readonly integrationRepository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
@@ -26,6 +34,20 @@ export class GetUserMcpConfigUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
+    const orgId = this.contextService.get('orgId');
+
+    const integration = await this.integrationRepository.findById(
+      query.integrationId,
+    );
+
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(query.integrationId);
+    }
+
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(query.integrationId);
+    }
+
     const config = await this.userConfigRepository.findByIntegrationAndUser(
       query.integrationId,
       userId,
@@ -35,12 +57,24 @@ export class GetUserMcpConfigUseCase {
       return { hasConfig: false, configValues: {} };
     }
 
-    // Return keys with masked values — never expose secrets
+    // Mask only secret fields — return non-secret values as-is
+    const secretKeys = this.getSecretKeys(integration);
     const maskedValues: Record<string, string> = {};
-    for (const key of Object.keys(config.configValues)) {
-      maskedValues[key] = '***';
+    for (const [key, value] of Object.entries(config.configValues)) {
+      maskedValues[key] = secretKeys.has(key) ? '***' : value;
     }
 
     return { hasConfig: true, configValues: maskedValues };
+  }
+
+  private getSecretKeys(integration: McpIntegration): Set<string> {
+    if (integration instanceof MarketplaceMcpIntegration) {
+      return new Set(
+        (integration.configSchema.userFields ?? [])
+          .filter((f) => f.type === 'secret')
+          .map((f) => f.key),
+      );
+    }
+    return new Set();
   }
 }

@@ -8,6 +8,7 @@ import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/pred
 import { McpIntegrationRecord } from './schema/mcp-integration.record';
 import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
 import { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
+import { MarketplaceMcpIntegrationRecord } from './schema/marketplace-mcp-integration.record';
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
 
 /**
@@ -25,6 +26,8 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     private readonly authRepository: Repository<McpIntegrationAuthRecord>,
     @InjectRepository(PredefinedMcpIntegrationRecord)
     private readonly predefinedRepository: Repository<PredefinedMcpIntegrationRecord>,
+    @InjectRepository(MarketplaceMcpIntegrationRecord)
+    private readonly marketplaceRepository: Repository<MarketplaceMcpIntegrationRecord>,
     private readonly mcpIntegrationMapper: McpIntegrationMapper,
   ) {
     super();
@@ -138,6 +141,29 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
       },
       relations: {
         auth: true,
+      },
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    return this.mcpIntegrationMapper.toDomain(record);
+  }
+
+  async findByOrgIdAndMarketplaceIdentifier(
+    orgId: UUID,
+    marketplaceIdentifier: string,
+  ): Promise<McpIntegration | null> {
+    this.logger.log('findByOrgIdAndMarketplaceIdentifier', {
+      orgId,
+      marketplaceIdentifier,
+    });
+
+    const record = await this.marketplaceRepository.findOne({
+      where: {
+        orgId,
+        marketplaceIdentifier,
       },
     });
 

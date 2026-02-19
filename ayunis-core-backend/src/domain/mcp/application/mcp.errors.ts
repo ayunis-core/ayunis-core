@@ -21,6 +21,7 @@ export enum McpErrorCode {
   MCP_MARKETPLACE_INTEGRATION_NOT_FOUND = 'MCP_MARKETPLACE_INTEGRATION_NOT_FOUND',
   MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
   MCP_NO_USER_FIELDS = 'MCP_NO_USER_FIELDS',
+  MCP_INVALID_CONFIG_KEYS = 'MCP_INVALID_CONFIG_KEYS',
 }
 
 export abstract class McpError extends ApplicationError {
@@ -236,6 +237,17 @@ export class DuplicateMcpIntegrationError extends McpError {
   }
 }
 
+export class DuplicateMarketplaceMcpIntegrationError extends McpError {
+  constructor(identifier: string, metadata?: ErrorMetadata) {
+    super(
+      `Marketplace integration '${identifier}' is already installed for this organization.`,
+      McpErrorCode.DUPLICATE_MCP_INTEGRATION,
+      409,
+      metadata,
+    );
+  }
+}
+
 export class McpOAuthNotSupportedError extends McpError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -285,6 +297,17 @@ export class McpNoUserFieldsError extends McpError {
     super(
       `MCP integration ${integrationId} does not support user-level configuration`,
       McpErrorCode.MCP_NO_USER_FIELDS,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpInvalidConfigKeysError extends McpError {
+  constructor(invalidKeys: string[], metadata?: ErrorMetadata) {
+    super(
+      `Unknown config keys: ${invalidKeys.join(', ')}`,
+      McpErrorCode.MCP_INVALID_CONFIG_KEYS,
       400,
       metadata,
     );
