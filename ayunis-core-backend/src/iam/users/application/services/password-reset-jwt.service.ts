@@ -33,7 +33,7 @@ export class PasswordResetJwtService {
     const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.passwordResetExpiresIn',
       '2h',
-    );
+    ) as StringValue;
 
     return this.jwtService.sign(payload, { expiresIn });
   }

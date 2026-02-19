@@ -1,4 +1,5 @@
-import sanitizeHtml, { IOptions } from 'sanitize-html';
+import type { IOptions } from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 
 const ALLOWED_TAGS = [
   // Block elements

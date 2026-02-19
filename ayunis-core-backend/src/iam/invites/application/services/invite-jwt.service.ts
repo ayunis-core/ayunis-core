@@ -30,7 +30,7 @@ export class InviteJwtService {
     const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.inviteExpiresIn',
       '2d',
-    );
+    ) as StringValue;
 
     return this.jwtService.sign(payload, { expiresIn });
   }

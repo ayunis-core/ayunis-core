@@ -1,5 +1,6 @@
-import { randomUUID, UUID } from 'crypto';
-import { ArtifactVersion } from './artifact-version.entity';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { ArtifactVersion } from './artifact-version.entity';
 
 export class Artifact {
   public readonly id: UUID;

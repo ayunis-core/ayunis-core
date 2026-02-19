@@ -4,9 +4,10 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { CreateArtifactUseCase } from './create-artifact.use-case';
 import { CreateArtifactCommand } from './create-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
