@@ -12,10 +12,13 @@ import { CreateArtifactCommand } from './create-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
+  let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -38,16 +41,22 @@ describe('CreateArtifactUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockFindThreadUseCase = {
+      execute: jest.fn().mockResolvedValue({ thread: {}, isLongChat: false }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
+        { provide: FindThreadUseCase, useValue: mockFindThreadUseCase },
       ],
     }).compile();
 
     useCase = module.get<CreateArtifactUseCase>(CreateArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
+    findThreadUseCase = module.get(FindThreadUseCase);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
@@ -129,6 +138,7 @@ describe('CreateArtifactUseCase', () => {
         CreateArtifactUseCase,
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
+        { provide: FindThreadUseCase, useValue: findThreadUseCase },
       ],
     }).compile();
 
@@ -146,6 +156,44 @@ describe('CreateArtifactUseCase', () => {
     await expect(useCaseNoAuth.execute(command)).rejects.toThrow(
       UnauthorizedException,
     );
+  });
+
+  it('should verify thread ownership before creating artifact', async () => {
+    const command = new CreateArtifactCommand({
+      threadId: mockThreadId,
+      title: 'Budget Report',
+      content: '<p>Q1 2026 expenses</p>',
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    await useCase.execute(command);
+
+    expect(findThreadUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ id: mockThreadId }),
+    );
+  });
+
+  it('should throw ThreadNotFoundError when thread does not belong to user', async () => {
+    const otherUserThreadId = '333e4567-e89b-12d3-a456-426614174000' as UUID;
+
+    findThreadUseCase.execute.mockRejectedValue(
+      new ThreadNotFoundError(otherUserThreadId, mockUserId),
+    );
+
+    const command = new CreateArtifactCommand({
+      threadId: otherUserThreadId,
+      title: 'Malicious Artifact',
+      content: '<p>Should not be created</p>',
+      authorType: AuthorType.USER,
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(ThreadNotFoundError);
+    expect(artifactsRepository.create).not.toHaveBeenCalled();
   });
 
   it('should sanitize HTML content by stripping script tags', async () => {
