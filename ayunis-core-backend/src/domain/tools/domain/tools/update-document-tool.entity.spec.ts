@@ -14,6 +14,10 @@ describe('UpdateDocumentTool', () => {
     expect(tool.isDisplayable).toBe(true);
   });
 
+  it('should be executable (hybrid displayable + executable)', () => {
+    expect(tool.isExecutable).toBe(true);
+  });
+
   it('should include a descriptionLong distinguishing create vs update', () => {
     expect(tool.descriptionLong).toBeDefined();
     expect(tool.descriptionLong).toContain('create_document');
