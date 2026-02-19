@@ -32,10 +32,12 @@ artifacts/
 │       ├── revert-artifact/
 │       └── export-artifact/
 ├── infrastructure/
-│   ├── persistence/postgres/
+│   ├── persistence/local/
 │   │   ├── schema/
 │   │   ├── mappers/
-│   │   └── postgres-artifacts.repository.ts
+│   │   ├── local-artifacts.repository.ts
+│   │   ├── local-artifacts-repository.module.ts
+│   │   └── unique-constraint.util.ts
 │   └── export/
 │       └── html-document-export.service.ts
 ├── presenters/http/
