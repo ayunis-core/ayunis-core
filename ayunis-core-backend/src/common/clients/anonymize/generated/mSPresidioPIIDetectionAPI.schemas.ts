@@ -47,7 +47,6 @@ export interface HealthResponse {
  */
 export type Language = (typeof Language)[keyof typeof Language];
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Language = {
   en: 'en',
   de: 'de',

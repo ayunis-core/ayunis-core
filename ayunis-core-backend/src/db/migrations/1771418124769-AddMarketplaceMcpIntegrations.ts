@@ -18,9 +18,19 @@ export class AddMarketplaceMcpIntegrations1771418124769
     await queryRunner.query(
       `ALTER TABLE "mcp_integrations" ADD "org_config_values" jsonb DEFAULT '{}'`,
     );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "UQ_marketplace_org_identifier" ON "mcp_integrations" ("org_id", "marketplace_identifier") WHERE "marketplace_identifier" IS NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "mcp_integration_user_configs" ADD CONSTRAINT "FK_user_config_integration" FOREIGN KEY ("integration_id") REFERENCES "mcp_integrations"("id") ON DELETE CASCADE`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "mcp_integration_user_configs" DROP CONSTRAINT "FK_user_config_integration"`,
+    );
+    await queryRunner.query(`DROP INDEX "UQ_marketplace_org_identifier"`);
     await queryRunner.query(
       `ALTER TABLE "mcp_integrations" DROP COLUMN "org_config_values"`,
     );

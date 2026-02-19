@@ -173,36 +173,35 @@ export interface IntegrationResponseDto {
 }
 
 export type PublicSkillsControllerListParams = {
-/**
- * Filter by category ID
- */
-categoryId?: string;
-/**
- * Filter by featured status
- */
-featured?: string;
-/**
- * Maximum number of items per page
- */
-limit?: number;
-/**
- * Page number
- */
-page?: number;
+  /**
+   * Filter by category ID
+   */
+  categoryId?: string;
+  /**
+   * Filter by featured status
+   */
+  featured?: string;
+  /**
+   * Maximum number of items per page
+   */
+  limit?: number;
+  /**
+   * Page number
+   */
+  page?: number;
 };
 
 export type PublicIntegrationsControllerListParams = {
-/**
- * Filter by featured status
- */
-featured?: string;
-/**
- * Maximum number of items per page
- */
-limit?: number;
-/**
- * Page number
- */
-page?: number;
+  /**
+   * Filter by featured status
+   */
+  featured?: string;
+  /**
+   * Maximum number of items per page
+   */
+  limit?: number;
+  /**
+   * Page number
+   */
+  page?: number;
 };
-
