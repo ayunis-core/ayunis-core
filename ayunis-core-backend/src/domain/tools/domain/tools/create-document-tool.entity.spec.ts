@@ -14,6 +14,10 @@ describe('CreateDocumentTool', () => {
     expect(tool.isDisplayable).toBe(true);
   });
 
+  it('should be executable (hybrid displayable + executable)', () => {
+    expect(tool.isExecutable).toBe(true);
+  });
+
   describe('validateParams', () => {
     it('should accept valid parameters with title and content', () => {
       const params = {
