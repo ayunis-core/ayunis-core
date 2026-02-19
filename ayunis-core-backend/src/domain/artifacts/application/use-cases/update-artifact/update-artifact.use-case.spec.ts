@@ -160,6 +160,86 @@ describe('UpdateArtifactUseCase', () => {
     expect(result.authorId).toBeNull();
   });
 
+  it('should sanitize HTML content by stripping script tags', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'XSS Update Test',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<h1>Updated</h1><script>document.cookie</script><p>Content</p>',
+      authorType: AuthorType.USER,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.content).toBe('<h1>Updated</h1><p>Content</p>');
+    expect(result.content).not.toContain('<script');
+  });
+
+  it('should sanitize HTML content by stripping event handlers', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Event Handler Update Test',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: '<p onmouseover="alert(1)">Hover me</p>',
+      authorType: AuthorType.ASSISTANT,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.content).toBe('<p>Hover me</p>');
+    expect(result.content).not.toContain('onmouseover');
+  });
+
+  it('should preserve safe Tiptap HTML during update sanitization', async () => {
+    const existingArtifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Safe Update Test',
+      currentVersionNumber: 1,
+    });
+
+    artifactsRepository.findById.mockResolvedValue(existingArtifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const safeContent =
+      '<h2>Section</h2><p><a href="https://example.com">Link</a></p><table><tr><td>Cell</td></tr></table>';
+
+    const command = new UpdateArtifactCommand({
+      artifactId: mockArtifactId,
+      content: safeContent,
+      authorType: AuthorType.USER,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.content).toBe(safeContent);
+  });
+
   it('should throw UnauthorizedException when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),

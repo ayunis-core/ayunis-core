@@ -197,6 +197,51 @@ describe('RevertArtifactUseCase', () => {
     );
   });
 
+  it('should sanitize content when reverting to a previous version', async () => {
+    const unsafeContent =
+      '<p>Safe content</p><script>alert("xss")</script><img src=x onerror="alert(1)">';
+    const versions = [
+      new ArtifactVersion({
+        artifactId: mockArtifactId,
+        versionNumber: 1,
+        content: unsafeContent,
+        authorType: AuthorType.ASSISTANT,
+      }),
+      new ArtifactVersion({
+        artifactId: mockArtifactId,
+        versionNumber: 2,
+        content: '<p>Current version</p>',
+        authorType: AuthorType.USER,
+        authorId: mockUserId,
+      }),
+    ];
+
+    const artifact = new Artifact({
+      id: mockArtifactId,
+      threadId: mockThreadId,
+      userId: mockUserId,
+      title: 'Test Artifact',
+      currentVersionNumber: 2,
+      versions,
+    });
+
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const command = new RevertArtifactCommand({
+      artifactId: mockArtifactId,
+      versionNumber: 1,
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.content).not.toContain('<script>');
+    expect(result.content).not.toContain('onerror');
+    expect(result.content).toContain('<p>Safe content</p>');
+  });
+
   it('should throw UnauthorizedException when user is not authenticated', async () => {
     const mockContextService = {
       get: jest.fn(() => undefined),
