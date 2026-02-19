@@ -2,13 +2,17 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  GatewayTimeoutException,
+  InternalServerErrorException,
   NotFoundException,
+  NotImplementedException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 export type ErrorCode = string;
 
 export interface ErrorMetadata {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -52,31 +56,29 @@ export abstract class ApplicationError extends Error {
    * Convert to a NestJS HTTP exception
    */
   toHttpException() {
+    const body = {
+      code: this.code,
+      message: this.message,
+      ...(this.metadata && { metadata: this.metadata }),
+    };
+
     switch (this.statusCode) {
+      case 401:
+        return new UnauthorizedException(body);
       case 403:
-        return new ForbiddenException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new ForbiddenException(body);
       case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new NotFoundException(body);
       case 409:
-        return new ConflictException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new ConflictException(body);
+      case 500:
+        return new InternalServerErrorException(body);
+      case 501:
+        return new NotImplementedException(body);
+      case 504:
+        return new GatewayTimeoutException(body);
       default:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
+        return new BadRequestException(body);
     }
   }
 }

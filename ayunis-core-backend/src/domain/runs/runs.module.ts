@@ -12,6 +12,7 @@ import { ToolAssemblyService } from './application/services/tool-assembly.servic
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
+import { CollectUsageAsyncService } from './application/services/collect-usage-async.service';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
@@ -48,6 +49,7 @@ import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.modul
     ToolResultCollectorService,
     MessageCleanupService,
     StreamingInferenceService,
+    CollectUsageAsyncService,
   ],
   exports: [ExecuteRunUseCase, ExecuteRunAndSetTitleUseCase],
 })
