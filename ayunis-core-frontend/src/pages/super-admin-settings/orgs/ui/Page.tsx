@@ -18,7 +18,7 @@ export default function SuperAdminOrgsPage({
   pagination,
   search,
   currentPage,
-}: SuperAdminOrgsPageProps) {
+}: Readonly<SuperAdminOrgsPageProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;

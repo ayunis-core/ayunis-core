@@ -32,7 +32,7 @@ export function ChartCard({
   threshold = 10,
   perPointPx = 70,
   children,
-}: ChartCardProps) {
+}: Readonly<ChartCardProps>) {
   const dynamicWidth = useMemo(() => {
     if (!xCount) {
       return undefined;
@@ -59,7 +59,7 @@ export function ChartCard({
         </ChartContainer>
       </CardContent>
 
-      {insight && insight.trim() && (
+      {insight?.trim() && (
         <CardFooter>
           <p className="text-sm text-muted-foreground">{insight}</p>
         </CardFooter>

@@ -19,12 +19,13 @@ export function AnonymousButton({
   onAnonymousChange,
   isDisabled,
   isEnforced = false,
-}: AnonymousButtonProps) {
+}: Readonly<AnonymousButtonProps>) {
   const { t } = useTranslation('common');
 
   // When enforced by model, always show as active
   const effectiveIsAnonymous = isEnforced || isAnonymous;
   // Disable toggle when enforced (can't turn off) or when explicitly disabled
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR
   const effectiveIsDisabled = isEnforced || isDisabled || !onAnonymousChange;
 
   function getTooltipContent() {

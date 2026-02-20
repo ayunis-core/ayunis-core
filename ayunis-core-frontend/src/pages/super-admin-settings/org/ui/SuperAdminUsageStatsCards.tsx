@@ -11,7 +11,7 @@ export function SuperAdminUsageStatsCards({
   orgId,
   startDate,
   endDate,
-}: SuperAdminUsageStatsCardsProps) {
+}: Readonly<SuperAdminUsageStatsCardsProps>) {
   const { data: stats, isLoading } = useSuperAdminUsageStats(orgId, {
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),

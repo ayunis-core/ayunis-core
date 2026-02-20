@@ -6,7 +6,9 @@ import { buttonVariants } from '@/shared/ui/shadcn/button';
 
 function AlertDialog({
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Root>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof AlertDialogPrimitive.Root>
+>): React.ReactElement {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
@@ -22,8 +24,8 @@ function AlertDialogTrigger({
 
 function AlertDialogPortal({
   ...props
-}: React.ComponentProps<
-  typeof AlertDialogPrimitive.Portal
+}: Readonly<
+  React.ComponentProps<typeof AlertDialogPrimitive.Portal>
 >): React.ReactElement {
   return (
     <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal" {...props} />

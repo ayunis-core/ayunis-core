@@ -14,7 +14,7 @@ interface BillingSettingsPageProps {
 export default function BillingSettingsPage({
   subscription = null,
   subscriptionPrice,
-}: BillingSettingsPageProps) {
+}: Readonly<BillingSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-layout');
 
   const pageContentNoSubscription = (

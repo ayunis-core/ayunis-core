@@ -8,7 +8,9 @@ interface InvitesSearchProps {
   search?: string;
 }
 
-export default function InvitesSearch({ search }: InvitesSearchProps) {
+export default function InvitesSearch({
+  search,
+}: Readonly<InvitesSearchProps>) {
   const { t } = useTranslation('admin-settings-users');
   const navigate = useNavigate();
   const [localValue, setLocalValue] = useState<string | null>(null);

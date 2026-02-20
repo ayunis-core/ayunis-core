@@ -18,7 +18,7 @@ interface InstallErrorStateProps {
 export function InstallErrorState({
   title,
   description,
-}: InstallErrorStateProps) {
+}: Readonly<InstallErrorStateProps>) {
   const { t } = useTranslation('install');
 
   return (

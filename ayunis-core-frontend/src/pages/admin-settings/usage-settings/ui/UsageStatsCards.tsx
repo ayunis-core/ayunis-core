@@ -6,7 +6,10 @@ interface UsageStatsCardsProps {
   endDate?: Date;
 }
 
-export function UsageStatsCards({ startDate, endDate }: UsageStatsCardsProps) {
+export function UsageStatsCards({
+  startDate,
+  endDate,
+}: Readonly<UsageStatsCardsProps>) {
   const { data: stats, isLoading } = useUsageStats({
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),

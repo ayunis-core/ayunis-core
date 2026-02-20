@@ -46,7 +46,7 @@ interface SingleInviteDialogProps {
 export default function SingleInviteDialog({
   open,
   onOpenChange,
-}: SingleInviteDialogProps) {
+}: Readonly<SingleInviteDialogProps>) {
   const { t } = useTranslation('admin-settings-users');
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
@@ -84,6 +84,7 @@ export default function SingleInviteDialog({
     handleClose();
   }
 
+  /* eslint-disable sonarjs/no-selector-parameter -- Required by Radix Dialog's onOpenChange callback signature */
   function handleOpenChange(newOpen: boolean) {
     if (newOpen) {
       onOpenChange(true);
@@ -91,6 +92,7 @@ export default function SingleInviteDialog({
       handleClose();
     }
   }
+  /* eslint-enable sonarjs/no-selector-parameter */
 
   async function copyUrlToClipboard() {
     if (inviteUrl) {

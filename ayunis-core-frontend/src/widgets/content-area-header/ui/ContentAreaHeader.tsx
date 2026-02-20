@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { SidebarTrigger } from '@/shared/ui/shadcn/sidebar';
 import { Separator } from '@/shared/ui/shadcn/separator';
 
@@ -12,7 +12,7 @@ export default function ContentAreaHeader({
   title,
   action,
   badge,
-}: ContentAreaHeaderProps) {
+}: Readonly<ContentAreaHeaderProps>) {
   return (
     <header className="flex items-center justify-between p-4">
       <div className="flex items-center gap-2">

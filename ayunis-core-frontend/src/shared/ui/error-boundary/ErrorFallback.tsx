@@ -5,7 +5,7 @@ interface Props {
   onReset: () => void;
 }
 
-export function ErrorFallback({ onReset }: Props) {
+export function ErrorFallback({ onReset }: Readonly<Props>) {
   const { t } = useTranslation('common');
 
   const handleReload = () => {

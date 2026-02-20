@@ -11,7 +11,9 @@ interface InstallPageProps {
   skillIdentifier: string | undefined;
 }
 
-export default function InstallPage({ skillIdentifier }: InstallPageProps) {
+export default function InstallPage({
+  skillIdentifier,
+}: Readonly<InstallPageProps>) {
   const { t } = useTranslation('install');
 
   if (!skillIdentifier) {
@@ -36,7 +38,9 @@ export default function InstallPage({ skillIdentifier }: InstallPageProps) {
   );
 }
 
-function InstallPageContent({ skillIdentifier }: { skillIdentifier: string }) {
+function InstallPageContent({
+  skillIdentifier,
+}: Readonly<{ skillIdentifier: string }>) {
   const { t } = useTranslation('install');
   const {
     data: skill,

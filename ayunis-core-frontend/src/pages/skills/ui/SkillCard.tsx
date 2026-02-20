@@ -20,7 +20,7 @@ interface SkillCardProps {
   skill: Skill;
 }
 
-export default function SkillCard({ skill }: SkillCardProps) {
+export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();

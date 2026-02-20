@@ -13,7 +13,7 @@ export function SuperAdminModelDistribution({
   startDate,
   endDate,
   selectedModel,
-}: SuperAdminModelDistributionProps) {
+}: Readonly<SuperAdminModelDistributionProps>) {
   const {
     data: modelDistribution,
     isLoading,

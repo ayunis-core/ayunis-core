@@ -10,10 +10,10 @@ import { useHasActiveSubscription } from '../api/useHasActiveSubscription';
 import { useTranslation } from 'react-i18next';
 
 export function SubscriptionHintButton() {
-  const { hasSubscription, isLoading, error } = useHasActiveSubscription();
+  const { hasSubscription, isLoading } = useHasActiveSubscription();
   const { t } = useTranslation('common');
 
-  if (isLoading || error || hasSubscription) {
+  if (isLoading || hasSubscription) {
     return null;
   }
 

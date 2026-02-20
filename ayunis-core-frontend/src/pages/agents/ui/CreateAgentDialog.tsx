@@ -43,9 +43,10 @@ export default function CreateAgentDialog({
   buttonText,
   showIcon = false,
   buttonClassName = '',
-}: CreateAgentDialogProps) {
+}: Readonly<CreateAgentDialogProps>) {
   const { t } = useTranslation('agents');
   const [isOpen, setIsOpen] = useState(false);
+  // eslint-disable-next-line sonarjs/todo-tag -- Placeholder for future agent tools feature
   // TODO: This is still here to keep the pattern of the create agent dialog
   // And should be extended as soon as there are agent tools
   const [internetSearchEnabled, setInternetSearchEnabled] = useState(false);
@@ -93,7 +94,7 @@ export default function CreateAgentDialog({
           className={`${showIcon ? 'inline-flex items-center gap-2' : ''} ${buttonClassName}`}
         >
           {showIcon && <Plus className="h-4 w-4" />}
-          {buttonText || t('createDialog.buttonText')}
+          {buttonText ?? t('createDialog.buttonText')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px]">

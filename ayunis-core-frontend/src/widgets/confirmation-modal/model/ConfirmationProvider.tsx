@@ -7,7 +7,9 @@ interface ConfirmationProviderProps {
   children: ReactNode;
 }
 
-export function ConfirmationProvider({ children }: ConfirmationProviderProps) {
+export function ConfirmationProvider({
+  children,
+}: Readonly<ConfirmationProviderProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmationOptions | null>(null);
 

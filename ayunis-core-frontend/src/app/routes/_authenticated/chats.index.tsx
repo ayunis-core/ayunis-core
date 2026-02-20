@@ -45,8 +45,8 @@ export const Route = createFileRoute('/_authenticated/chats/')({
         queryFn: () => agentsControllerFindAll(),
       }),
     ]);
-    const chats = chatsResponse?.data ?? [];
-    const pagination = chatsResponse?.pagination;
+    const chats = chatsResponse.data;
+    const pagination = chatsResponse.pagination;
     return { chats, pagination, agents, search, agentId, page };
   },
   component: RouteComponent,
@@ -55,7 +55,7 @@ export const Route = createFileRoute('/_authenticated/chats/')({
 function RouteComponent() {
   const { chats, pagination, agents, search, agentId, page } =
     Route.useLoaderData();
-  const hasFilters = Boolean(search || agentId);
+  const hasFilters = Boolean(search ?? agentId);
   return (
     <ChatsPage
       chats={chats}
@@ -64,7 +64,7 @@ function RouteComponent() {
       agentId={agentId}
       hasFilters={hasFilters}
       pagination={pagination}
-      currentPage={page ?? 1}
+      currentPage={page}
     />
   );
 }

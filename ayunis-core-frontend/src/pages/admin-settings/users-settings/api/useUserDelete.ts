@@ -31,12 +31,10 @@ export function useUserDelete(options?: UseUserDeleteOptions) {
         console.error('Error deleting user', err);
         try {
           const { code } = extractErrorData(err);
-          switch (code) {
-            case 'USER_NOT_FOUND':
-              showError(t('userDelete.notFound'));
-              break;
-            default:
-              showError(t('userDelete.error'));
+          if (code === 'USER_NOT_FOUND') {
+            showError(t('userDelete.notFound'));
+          } else {
+            showError(t('userDelete.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

@@ -16,7 +16,10 @@ interface TrialSectionProps {
   orgId: string;
 }
 
-export default function TrialSection({ trial, orgId }: TrialSectionProps) {
+export default function TrialSection({
+  trial,
+  orgId,
+}: Readonly<TrialSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
 
   const remainingMessages = trial.maxMessages - trial.messagesSent;

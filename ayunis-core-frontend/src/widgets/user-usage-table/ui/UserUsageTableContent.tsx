@@ -30,7 +30,7 @@ export function UserUsageTableContent({
   currentPage,
   totalPages,
   onPageChange,
-}: UserUsageTableContentProps) {
+}: Readonly<UserUsageTableContentProps>) {
   const { t } = useTranslation('admin-settings-usage');
 
   return (

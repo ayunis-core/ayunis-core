@@ -33,7 +33,7 @@ interface CreateSubscriptionDialogProps {
 export default function CreateSubscriptionDialog({
   trigger,
   subscriptionPrice,
-}: CreateSubscriptionDialogProps) {
+}: Readonly<CreateSubscriptionDialogProps>) {
   const { t } = useTranslation('admin-settings-billing');
   const { form, handleSubmit } = useSubscriptionCreate();
 

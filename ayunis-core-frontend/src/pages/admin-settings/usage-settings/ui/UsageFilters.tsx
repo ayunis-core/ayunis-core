@@ -31,7 +31,7 @@ export function UsageFilters({
   onProviderChange,
   selectedModel,
   onModelChange,
-}: UsageFiltersProps) {
+}: Readonly<UsageFiltersProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const { providers } = useProviders();
   const { models } = usePermittedModels();
@@ -45,7 +45,7 @@ export function UsageFilters({
   ];
 
   const providerOptions = useMemo(() => {
-    if (!providers?.length) {
+    if (!providers.length) {
       return [];
     }
 
@@ -56,7 +56,7 @@ export function UsageFilters({
   }, [providers]);
 
   const modelOptions = useMemo(() => {
-    if (!models?.length) {
+    if (!models.length) {
       return [];
     }
 
@@ -116,7 +116,7 @@ export function UsageFilters({
       </Select>
 
       <Select
-        value={selectedProvider || 'all'}
+        value={selectedProvider ?? 'all'}
         onValueChange={(value) =>
           onProviderChange(value === 'all' ? undefined : value)
         }
@@ -135,7 +135,7 @@ export function UsageFilters({
       </Select>
 
       <Select
-        value={selectedModel || 'all'}
+        value={selectedModel ?? 'all'}
         onValueChange={(value) =>
           onModelChange(value === 'all' ? undefined : value)
         }

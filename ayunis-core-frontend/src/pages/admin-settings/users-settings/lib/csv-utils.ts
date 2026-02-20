@@ -45,6 +45,33 @@ function detectSeparator(headerLine: string): ',' | ';' {
   return ',';
 }
 
+function validateRow(
+  email: string,
+  role: string,
+  rowNumber: number,
+  seenEmails: Map<string, number>,
+): CsvError | undefined {
+  if (!EMAIL_REGEX.test(email)) {
+    return { code: 'INVALID_EMAIL', row: rowNumber };
+  }
+
+  if (!VALID_ROLES.includes(role)) {
+    return { code: 'INVALID_ROLE', row: rowNumber };
+  }
+
+  const existingRow = seenEmails.get(email);
+  if (existingRow !== undefined) {
+    return {
+      code: 'DUPLICATE_EMAIL',
+      row: rowNumber,
+      firstOccurrenceRow: existingRow,
+    };
+  }
+
+  seenEmails.set(email, rowNumber);
+  return undefined;
+}
+
 export function parseInviteCsv(csvContent: string): CsvParseResult {
   const lines = csvContent
     .split(/\r?\n/)
@@ -109,37 +136,15 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = roleValue.trim().toLowerCase();
 
-    let isValid = true;
-    let error: CsvError | undefined;
+    const error = validateRow(
+      normalizedEmail,
+      normalizedRole,
+      rowNumber,
+      seenEmails,
+    );
+    const isValid = error === undefined;
 
-    // Validate email format
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-      isValid = false;
-      error = { code: 'INVALID_EMAIL', row: rowNumber };
-    }
-
-    // Validate role
-    if (isValid && !VALID_ROLES.includes(normalizedRole)) {
-      isValid = false;
-      error = { code: 'INVALID_ROLE', row: rowNumber };
-    }
-
-    // Check for duplicates within the file
-    if (isValid) {
-      const existingRow = seenEmails.get(normalizedEmail);
-      if (existingRow !== undefined) {
-        isValid = false;
-        error = {
-          code: 'DUPLICATE_EMAIL',
-          row: rowNumber,
-          firstOccurrenceRow: existingRow,
-        };
-      } else {
-        seenEmails.set(normalizedEmail, rowNumber);
-      }
-    }
-
-    if (!isValid && error) {
+    if (error) {
       errors.push(error);
     }
 

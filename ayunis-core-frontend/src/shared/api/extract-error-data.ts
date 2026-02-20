@@ -19,7 +19,7 @@ export default function extractErrorData(error: unknown): ErrorData {
     return {
       code: code ?? 'UNKNOWN_ERROR',
       message: message ?? 'An unknown error occurred',
-      status: error.response?.status || 500,
+      status: error.response?.status ?? 500,
     };
   }
   throw error;

@@ -34,8 +34,8 @@ export const Route = createFileRoute(
           offset,
         }),
     });
-    const orgs = response?.data ?? [];
-    const pagination = response?.pagination;
+    const orgs = response.data;
+    const pagination = response.pagination;
     return { orgs, pagination, search, page };
   },
 });
@@ -47,7 +47,7 @@ function RouteComponent() {
       orgs={orgs}
       pagination={pagination}
       search={search}
-      currentPage={page ?? 1}
+      currentPage={page}
     />
   );
 }

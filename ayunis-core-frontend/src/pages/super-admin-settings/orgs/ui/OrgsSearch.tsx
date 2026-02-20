@@ -8,7 +8,7 @@ interface OrgsSearchProps {
   search?: string;
 }
 
-export default function OrgsSearch({ search }: OrgsSearchProps) {
+export default function OrgsSearch({ search }: Readonly<OrgsSearchProps>) {
   const { t } = useTranslation('super-admin-settings-orgs');
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(search ?? '');

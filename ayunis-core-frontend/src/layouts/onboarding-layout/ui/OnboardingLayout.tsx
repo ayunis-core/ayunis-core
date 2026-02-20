@@ -28,7 +28,7 @@ export default function OnboardingLayout({
   title,
   description,
   footer,
-}: OnboardingLayoutProps) {
+}: Readonly<OnboardingLayoutProps>) {
   const { t } = useTranslation('auth');
 
   return (

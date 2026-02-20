@@ -25,7 +25,7 @@ export function EditTeamDialog({
   team,
   open,
   onOpenChange,
-}: EditTeamDialogProps) {
+}: Readonly<EditTeamDialogProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { updateTeam, isUpdating } = useUpdateTeam(() => {
     onOpenChange(false);

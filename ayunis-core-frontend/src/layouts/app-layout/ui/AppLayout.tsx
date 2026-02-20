@@ -7,7 +7,10 @@ interface AppLayoutProps {
   sidebar?: React.ReactNode;
 }
 
-export default function AppLayout({ children, sidebar }: AppLayoutProps) {
+export default function AppLayout({
+  children,
+  sidebar,
+}: Readonly<AppLayoutProps>) {
   return (
     <SidebarProvider>
       {sidebar ?? <AppSidebar />}

@@ -24,7 +24,7 @@ export default function LicenseSeatsUpdateDialog({
   subscription,
   orgId,
   trigger,
-}: LicenseSeatsUpdateDialogProps) {
+}: Readonly<LicenseSeatsUpdateDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const [selectedSeats, setSelectedSeats] = useState(subscription.noOfSeats);
   const { updateSeats, isPending } =

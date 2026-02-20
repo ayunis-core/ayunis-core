@@ -24,7 +24,7 @@ export default function AgentActivityHint({
   hint,
   input,
   output,
-}: AgentActivityHintProps) {
+}: Readonly<AgentActivityHintProps>) {
   const { scrollRef, handleScroll } = useAutoScroll(input);
   return (
     <Collapsible

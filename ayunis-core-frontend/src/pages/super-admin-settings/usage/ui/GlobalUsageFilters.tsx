@@ -27,7 +27,7 @@ export function GlobalUsageFilters({
   onProviderChange,
   selectedModel,
   onModelChange,
-}: GlobalUsageFiltersProps) {
+}: Readonly<GlobalUsageFiltersProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const { data: catalogModels } =
     useSuperAdminModelsControllerGetAllCatalogModels();
@@ -109,7 +109,7 @@ export function GlobalUsageFilters({
       </Select>
 
       <Select
-        value={selectedProvider || 'all'}
+        value={selectedProvider ?? 'all'}
         onValueChange={(value) =>
           onProviderChange(value === 'all' ? undefined : value)
         }
@@ -128,7 +128,7 @@ export function GlobalUsageFilters({
       </Select>
 
       <Select
-        value={selectedModel || 'all'}
+        value={selectedModel ?? 'all'}
         onValueChange={(value) =>
           onModelChange(value === 'all' ? undefined : value)
         }

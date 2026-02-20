@@ -22,12 +22,10 @@ export function useDeletePrompt() {
         console.error('Delete prompt failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'PROMPT_NOT_FOUND':
-              showError(t('notFound'));
-              break;
-            default:
-              showError(t('deleteError'));
+          if (code === 'PROMPT_NOT_FOUND') {
+            showError(t('notFound'));
+          } else {
+            showError(t('deleteError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

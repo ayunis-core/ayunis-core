@@ -15,7 +15,7 @@ export function XAxisTick({
   payload,
   maxChars,
   doTruncate = false,
-}: XAxisTickProps) {
+}: Readonly<XAxisTickProps>) {
   const original = payload?.value?.toString() ?? '';
 
   // Always truncate long labels

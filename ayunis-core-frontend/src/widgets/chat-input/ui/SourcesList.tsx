@@ -47,7 +47,7 @@ export function SourcesList({
   sources,
   onRemove,
   onDownload,
-}: SourcesListProps) {
+}: Readonly<SourcesListProps>) {
   const visibleSources = sources.filter(
     (source) => source.createdBy !== 'system',
   );

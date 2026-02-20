@@ -45,6 +45,7 @@ function getRandomSnippetIndex(exclude?: number): number {
   const indices = Array.from({ length: loadingSnippets.length }, (_, i) => i);
   const available =
     exclude !== undefined ? indices.filter((i) => i !== exclude) : indices;
+  // eslint-disable-next-line sonarjs/pseudo-random -- Random selection for UI variety, not security-sensitive
   return available[Math.floor(Math.random() * available.length)];
 }
 
@@ -57,13 +58,15 @@ export default function StreamingLoadingIndicator() {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const changeSnippet = () => {
+      setSnippetIndex((prev) => getRandomSnippetIndex(prev));
+      setIsVisible(true);
+    };
+
     const interval = setInterval(() => {
       // Fade out, then change snippet and fade in
       setIsVisible(false);
-      timeoutRef.current = setTimeout(() => {
-        setSnippetIndex((prev) => getRandomSnippetIndex(prev));
-        setIsVisible(true);
-      }, 150);
+      timeoutRef.current = setTimeout(changeSnippet, 150);
     }, 4000);
     return () => {
       clearInterval(interval);

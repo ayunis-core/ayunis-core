@@ -19,10 +19,10 @@ import { useRedirectNotification } from '@/features/useRedirectNotification';
 export function LoginPage({
   redirect,
   emailVerified,
-}: {
+}: Readonly<{
   redirect?: string;
   emailVerified?: boolean;
-}) {
+}>) {
   const { form, onSubmit, isLoading } = useLogin({ redirect });
   const { t } = useTranslation('auth');
 

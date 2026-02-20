@@ -16,15 +16,13 @@ export const Route = createFileRoute('/(onboarding)/confirm-email')({
       await userControllerConfirmEmail({ token });
       return redirect({ to: '/login', search: { emailVerified: true } });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       try {
         const { code } = extractErrorData(error);
-        switch (code) {
-          case 'EMAIL_NOT_VERIFIED':
-            return redirect({ to: '/email-confirm' });
-          default:
-            throw error;
+        if (code === 'EMAIL_NOT_VERIFIED') {
+          return redirect({ to: '/email-confirm' });
         }
+        throw error;
       } catch {
         // Non-AxiosError or extractErrorData threw - rethrow original error
         throw error;
@@ -34,12 +32,10 @@ export const Route = createFileRoute('/(onboarding)/confirm-email')({
   errorComponent: ({ error }) => {
     try {
       const { code } = extractErrorData(error);
-      switch (code) {
-        case 'INVALID_EMAIL_CONFIRMATION_TOKEN':
-          return <EmailConfirmError />;
-        default:
-          throw error;
+      if (code === 'INVALID_EMAIL_CONFIRMATION_TOKEN') {
+        return <EmailConfirmError />;
       }
+      throw error;
     } catch {
       // Non-AxiosError or extractErrorData threw - rethrow original error
       throw error;

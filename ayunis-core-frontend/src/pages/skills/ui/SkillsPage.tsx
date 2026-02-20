@@ -12,11 +12,11 @@ interface SkillsPageProps {
   skills: Skill[];
 }
 
-export default function SkillsPage({ skills }: SkillsPageProps) {
+export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
 
   // Sort skills by name
-  const sortedSkills = skills.sort((a, b) => a.name.localeCompare(b.name));
+  const sortedSkills = [...skills].sort((a, b) => a.name.localeCompare(b.name));
 
   // If no skills at all, show full-screen empty state
   if (skills.length === 0) {

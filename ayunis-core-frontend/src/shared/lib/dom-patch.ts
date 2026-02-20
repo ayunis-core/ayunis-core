@@ -14,6 +14,7 @@ export function applyDomPatch() {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const originalRemoveChild = Node.prototype.removeChild;
   Node.prototype.removeChild = function <T extends Node>(child: T): T {
+    // eslint-disable-next-line sonarjs/different-types-comparison -- Intentional: comparing Node reference to 'this' context
     if (child.parentNode !== this) {
       console.warn('RemoveChild: node is not a child of this node', child);
       return child;
@@ -27,6 +28,7 @@ export function applyDomPatch() {
     newNode: T,
     referenceNode: Node | null,
   ): T {
+    // eslint-disable-next-line sonarjs/different-types-comparison -- Intentional: comparing Node reference to 'this' context
     if (referenceNode && referenceNode.parentNode !== this) {
       console.warn('InsertBefore: reference node is not a child of this node');
       return newNode;

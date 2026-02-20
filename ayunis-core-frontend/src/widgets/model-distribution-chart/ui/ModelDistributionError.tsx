@@ -19,7 +19,9 @@ interface ModelDistributionErrorProps {
   error: unknown;
 }
 
-export function ModelDistributionError({ error }: ModelDistributionErrorProps) {
+export function ModelDistributionError({
+  error,
+}: Readonly<ModelDistributionErrorProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const errorMessage =
     error instanceof Error ? error.message : t('charts.errorUnknown');

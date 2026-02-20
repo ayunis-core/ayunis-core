@@ -16,7 +16,7 @@ export function IntegrationsList({
   integrations,
   onEdit,
   onDelete,
-}: IntegrationsListProps) {
+}: Readonly<IntegrationsListProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { toggleIntegration, togglingIds } = useToggleIntegration();
   const { validateIntegration, validatingIds } = useValidateIntegration();
@@ -41,7 +41,7 @@ export function IntegrationsList({
 
   return (
     <div className="space-y-4">
-      {integrations
+      {[...integrations]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((integration) => (
           <IntegrationCard

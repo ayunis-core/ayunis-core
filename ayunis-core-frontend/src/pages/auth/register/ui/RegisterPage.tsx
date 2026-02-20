@@ -27,7 +27,7 @@ interface RegisterPageProps {
 export function RegisterPage({
   isCloud,
   isRegistrationDisabled,
-}: RegisterPageProps) {
+}: Readonly<RegisterPageProps>) {
   const { form, onSubmit, isLoading } = useRegister();
   const { t } = useTranslation('auth');
   const agbHref = 'https://www.ayunis.com/agb-software-%c3%bcberlassung';

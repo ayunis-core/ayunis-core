@@ -83,6 +83,7 @@ export function useGenerateIcs() {
         const startDate = new Date(data.start);
         const endDate = new Date(data.end);
 
+        // eslint-disable-next-line sonarjs/pseudo-random -- UID uniqueness for ICS files, not security-sensitive
         const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@ayunis`;
         const dtStamp = formatDateUTC(new Date());
         const dtStart = formatDateUTC(startDate);
@@ -100,8 +101,8 @@ export function useGenerateIcs() {
           `DTSTART:${dtStart}`,
           `DTEND:${dtEnd}`,
           `SUMMARY:${escapeIcsText(data.title)}`,
-          `DESCRIPTION:${escapeIcsText(data.description || '')}`,
-          `LOCATION:${escapeIcsText(data.location || '')}`,
+          `DESCRIPTION:${escapeIcsText(data.description ?? '')}`,
+          `LOCATION:${escapeIcsText(data.location ?? '')}`,
           'END:VEVENT',
           'END:VCALENDAR',
           '',

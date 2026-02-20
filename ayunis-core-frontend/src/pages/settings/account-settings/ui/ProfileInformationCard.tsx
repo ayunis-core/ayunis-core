@@ -20,9 +20,9 @@ import { useUserNameUpdate } from '../api/useUserNameUpdate';
 
 export function ProfileInformationCard({
   user,
-}: {
+}: Readonly<{
   user: { name: string; email: string };
-}) {
+}>) {
   const { t } = useTranslation('settings');
   const { form, onSubmit, isUpdating } = useUserNameUpdate(user.name);
 

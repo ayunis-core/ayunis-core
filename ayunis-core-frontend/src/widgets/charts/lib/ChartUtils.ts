@@ -69,9 +69,8 @@ export function transformChartData(
     const dataPoint: Record<string, string | number> = { name: xLabel };
 
     yAxis.forEach((series) => {
-      if (series.values[index] !== undefined) {
+      if (index < series.values.length) {
         const slugifiedKey = slugifyForCssVar(series.label);
-
         dataPoint[slugifiedKey] = series.values[index];
       }
     });

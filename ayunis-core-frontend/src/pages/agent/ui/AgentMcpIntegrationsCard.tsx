@@ -23,9 +23,9 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 export default function AgentMcpIntegrationsCard({
   disabled = false,
-}: {
+}: Readonly<{
   disabled?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('agent');
   const { id: agentId } = useParams({ from: '/_authenticated/agents/$id' });
 

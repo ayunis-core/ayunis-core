@@ -41,7 +41,7 @@ export default function UsersSection({
   total,
   searchSlot,
   paginationSlot,
-}: UsersSectionProps) {
+}: Readonly<UsersSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const { updateUserRole, isLoading: isUpdatingRole } = useUserRoleUpdate({

@@ -143,7 +143,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   }
 
   return {
-    userDefaultModel: userDefaultModelResponse?.permittedLanguageModel || null,
+    userDefaultModel: userDefaultModelResponse?.permittedLanguageModel ?? null,
     error,
     manageError: manageUserDefaultModelMutation.error as Error | null,
     deleteError: deleteUserDefaultModelMutation.error as Error | null,

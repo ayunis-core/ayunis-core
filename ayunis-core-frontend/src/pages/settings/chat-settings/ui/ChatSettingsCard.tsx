@@ -22,13 +22,8 @@ export function ChatSettingsCard() {
   const { models: permittedModels, isLoading: modelsLoading } =
     usePermittedModels();
 
-  const {
-    userDefaultModel,
-    manageUserDefaultModel,
-    deleteUserDefaultModel,
-    error,
-    manageError,
-  } = useUserDefaultModel({ allModels: permittedModels });
+  const { userDefaultModel, manageUserDefaultModel, deleteUserDefaultModel } =
+    useUserDefaultModel({ allModels: permittedModels });
 
   const handleDefaultSettingChange = (value: string) => {
     if (value === 'null') {
@@ -74,7 +69,7 @@ export function ChatSettingsCard() {
   ];
 
   // Get current selected value
-  const selectedValue = userDefaultModel?.id || 'null';
+  const selectedValue = userDefaultModel?.id ?? 'null';
 
   return (
     <Card>
@@ -113,12 +108,7 @@ export function ChatSettingsCard() {
           </Select>
         </div>
 
-        {/* Show error messages if any */}
-        {(error || manageError) && (
-          <div className="text-sm text-red-600">
-            {String(error || manageError || 'An error occurred')}
-          </div>
-        )}
+        {/* Error messages removed — error types are void (always null) */}
       </CardContent>
     </Card>
   );

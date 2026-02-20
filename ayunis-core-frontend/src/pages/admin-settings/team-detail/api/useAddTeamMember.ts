@@ -23,7 +23,7 @@ export function useAddTeamMember(teamId: string, onSuccess?: () => void) {
       },
       onError: (error: unknown) => {
         const errorObj = error as { response?: { data?: { code?: string } } };
-        const errorCode = errorObj?.response?.data?.code;
+        const errorCode = errorObj.response?.data?.code;
 
         if (errorCode === 'USER_ALREADY_TEAM_MEMBER') {
           showError(t('teamDetail.addMember.alreadyMember'));

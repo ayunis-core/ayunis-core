@@ -22,7 +22,7 @@ export default function ChatsPagination({
   totalPages,
   search,
   agentId,
-}: ChatsPaginationProps) {
+}: Readonly<ChatsPaginationProps>) {
   const { t } = useTranslation('common');
 
   if (totalPages <= 1) {

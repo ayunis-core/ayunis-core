@@ -1,8 +1,6 @@
 // Simple configuration for Vite environment
 const config = {
-  env:
-    (import.meta.env.MODE as 'development' | 'production' | 'test') ||
-    'development',
+  env: import.meta.env.MODE as 'development' | 'production' | 'test',
   api: {
     baseUrl:
       import.meta.env.MODE === 'production'

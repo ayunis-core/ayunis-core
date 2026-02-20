@@ -33,7 +33,7 @@ export default function CreatePromptDialog({
   buttonText,
   showIcon = false,
   buttonClassName = '',
-}: CreatePromptDialogProps) {
+}: Readonly<CreatePromptDialogProps>) {
   const { t } = useTranslation('prompts');
   const [isOpen, setIsOpen] = useState(false);
   const { form, onSubmit, resetForm, isLoading } = useAddPrompt({
@@ -56,7 +56,7 @@ export default function CreatePromptDialog({
           className={`${showIcon ? 'inline-flex items-center gap-2' : ''} ${buttonClassName}`}
         >
           {showIcon && <Plus className="h-4 w-4" />}
-          {buttonText || t('createDialog.buttonText')}
+          {buttonText ?? t('createDialog.buttonText')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px]">

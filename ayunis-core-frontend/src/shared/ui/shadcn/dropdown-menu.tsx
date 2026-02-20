@@ -6,16 +6,16 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 function DropdownMenu({
   ...props
-}: React.ComponentProps<
-  typeof DropdownMenuPrimitive.Root
+}: Readonly<
+  React.ComponentProps<typeof DropdownMenuPrimitive.Root>
 >): React.ReactElement {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
 function DropdownMenuPortal({
   ...props
-}: React.ComponentProps<
-  typeof DropdownMenuPrimitive.Portal
+}: Readonly<
+  React.ComponentProps<typeof DropdownMenuPrimitive.Portal>
 >): React.ReactElement {
   return (
     <DropdownMenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
@@ -210,7 +210,9 @@ function DropdownMenuShortcut({
 
 function DropdownMenuSub({
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof DropdownMenuPrimitive.Sub>
+>): React.ReactElement {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />;
 }
 

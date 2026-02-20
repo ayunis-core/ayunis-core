@@ -35,6 +35,7 @@ import {
   type CsvError,
 } from '../lib/csv-utils';
 import { useBulkInviteCreate } from '../api/useBulkInviteCreate';
+import BulkInviteResultsContent from './BulkInviteResultsContent';
 import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { Badge } from '@/shared/ui/shadcn/badge';
 
@@ -48,7 +49,7 @@ interface BulkInviteDialogProps {
 export default function BulkInviteDialog({
   open,
   onOpenChange,
-}: BulkInviteDialogProps) {
+}: Readonly<BulkInviteDialogProps>) {
   const { t } = useTranslation('admin-settings-users');
   const [step, setStep] = useState<DialogStep>('upload');
   const [parsedData, setParsedData] = useState<ParsedInvite[]>([]);
@@ -176,8 +177,8 @@ export default function BulkInviteDialog({
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file && file.name.endsWith('.csv')) {
+      const file = e.dataTransfer.files[0] as File | undefined;
+      if (file?.name.endsWith('.csv')) {
         handleFileRead(file);
       } else {
         setParseError(t('bulkInvite.csvFormat'));
@@ -394,59 +395,12 @@ export default function BulkInviteDialog({
 
   // Results Step
   const resultsContent = results && (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
-        <div className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <span className="font-medium">{results.successCount}</span>
-          <span className="text-muted-foreground">succeeded</span>
-        </div>
-        {results.failureCount > 0 && (
-          <div className="flex items-center gap-2">
-            <XCircle className="h-5 w-5 text-destructive" />
-            <span className="font-medium">{results.failureCount}</span>
-            <span className="text-muted-foreground">failed</span>
-          </div>
-        )}
-      </div>
-
-      {results.failureCount > 0 && (
-        <div className="max-h-[200px] overflow-auto border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('bulkInvite.email')}</TableHead>
-                <TableHead>{t('bulkInvite.status')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {results.results
-                .filter((r) => !r.success)
-                .map((result, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{result.email}</TableCell>
-                    <TableCell className="text-destructive text-sm">
-                      {result.errorMessage}
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      <DialogFooter>
-        {hasUrls && (
-          <Button type="button" variant="outline" onClick={handleDownloadUrls}>
-            <Download className="mr-2 h-4 w-4" />
-            {t('bulkInvite.downloadUrls')}
-          </Button>
-        )}
-        <Button type="button" onClick={handleClose}>
-          {t('bulkInvite.close')}
-        </Button>
-      </DialogFooter>
-    </div>
+    <BulkInviteResultsContent
+      results={results}
+      hasUrls={hasUrls ?? false}
+      onDownloadUrls={handleDownloadUrls}
+      onClose={handleClose}
+    />
   );
 
   const getContent = () => {

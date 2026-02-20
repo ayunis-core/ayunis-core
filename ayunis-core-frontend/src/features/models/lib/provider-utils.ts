@@ -14,7 +14,7 @@ export function getFlagByHostedIn(hostedIn: HostedIn): string {
     SELF_HOSTED: '🇩🇪',
     AYUNIS: '🇩🇪',
   };
-  return locationFlags[hostedIn] ?? '';
+  return locationFlags[hostedIn];
 }
 
 /**
@@ -29,5 +29,5 @@ export function getHostingPriority(hostedIn: HostedIn): number {
     EU: 1,
     US: 2,
   };
-  return priorities[hostedIn] ?? 3;
+  return priorities[hostedIn];
 }

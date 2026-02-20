@@ -17,7 +17,9 @@ function Dialog({
   children,
   open,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof DialogPrimitive.Root>
+>): React.ReactElement {
   const wasOpenRef = React.useRef(open);
   const cleanupTimeoutsRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -62,7 +64,9 @@ function DialogTrigger({
 
 function DialogPortal({
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof DialogPrimitive.Portal>
+>): React.ReactElement {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 

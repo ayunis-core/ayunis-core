@@ -18,7 +18,7 @@ export function ProviderConsumption({
   startDate,
   endDate,
   selectedProvider,
-}: ProviderConsumptionProps) {
+}: Readonly<ProviderConsumptionProps>) {
   const {
     data: chartResp,
     isLoading,

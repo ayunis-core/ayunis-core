@@ -14,10 +14,10 @@ export default function SuperAdminSettingsLayout({
   pageTitle,
   children,
   action,
-}: SuperAdminSettingsLayoutProps) {
+}: Readonly<SuperAdminSettingsLayoutProps>) {
   const { t } = useTranslation('super-admin-settings-layout');
   const contentHeader = (
-    <ContentAreaHeader title={pageTitle || t('layout.title')} action={action} />
+    <ContentAreaHeader title={pageTitle ?? t('layout.title')} action={action} />
   );
 
   return (

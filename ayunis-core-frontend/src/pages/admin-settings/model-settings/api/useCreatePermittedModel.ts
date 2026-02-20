@@ -5,7 +5,7 @@ import {
   getModelsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
 } from '@/shared/api';
-import { type Model } from '../model/openapi';
+import type { Model } from '../model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
@@ -69,7 +69,7 @@ export function useCreatePermittedModel() {
           showError(t('models.createPermittedModel.error'));
         }
 
-        if (context?.previousData && context?.queryKey) {
+        if (context?.previousData) {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }
       },

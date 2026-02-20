@@ -200,6 +200,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     };
 
     const canSend =
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty string should use fallback, boolean OR
       (message.trim() || pendingImages.length > 0) && (modelId || agentId);
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
@@ -214,8 +215,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       e.preventDefault();
 
       const target = e.currentTarget;
-      const start = target.selectionStart ?? 0;
-      const end = target.selectionEnd ?? 0;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
 
       // Insert the pasted text at cursor position, preserving emojis
       const newValue =

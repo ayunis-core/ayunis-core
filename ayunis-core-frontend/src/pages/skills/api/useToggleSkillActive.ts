@@ -32,12 +32,10 @@ export function useToggleSkillActive() {
       console.error('Toggle skill active failed:', error);
       try {
         const { code } = extractErrorData(error);
-        switch (code) {
-          case 'SKILL_NOT_FOUND':
-            showError(t('toggleActive.notFound'));
-            break;
-          default:
-            showError(t('toggleActive.error'));
+        if (code === 'SKILL_NOT_FOUND') {
+          showError(t('toggleActive.notFound'));
+        } else {
+          showError(t('toggleActive.error'));
         }
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)

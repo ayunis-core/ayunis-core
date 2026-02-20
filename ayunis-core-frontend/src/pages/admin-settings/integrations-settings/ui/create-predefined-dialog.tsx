@@ -45,7 +45,7 @@ export function CreatePredefinedDialog({
   onOpenChange,
   predefinedConfigs,
   isCloud,
-}: CreatePredefinedDialogProps) {
+}: Readonly<CreatePredefinedDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreatePredefinedIntegrationFormData>({
     defaultValues: {
@@ -95,7 +95,7 @@ export function CreatePredefinedDialog({
   const handleSubmit = (data: CreatePredefinedIntegrationFormData) => {
     const payload: CreatePredefinedIntegrationFormData = {
       slug: data.slug,
-      configValues: (data.configValues ?? []).map((value) => ({
+      configValues: data.configValues.map((value) => ({
         name: value.name,
         value: value.value,
       })),
@@ -136,7 +136,7 @@ export function CreatePredefinedDialog({
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value ?? ''}
+                    value={field.value}
                     disabled={isCreating}
                   >
                     <FormControl>
@@ -198,7 +198,7 @@ export function CreatePredefinedDialog({
                               onBlur={onBlur}
                               onChange={onChange}
                               ref={fieldRef}
-                              value={value ?? ''}
+                              value={value}
                             />
                           </FormControl>
                           {credentialField.help && (

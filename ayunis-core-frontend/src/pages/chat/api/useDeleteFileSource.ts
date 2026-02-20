@@ -55,19 +55,17 @@ export function useDeleteFileSource({
         console.error('Error deleting file source', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'SOURCE_NOT_FOUND':
-              showError(t('chatInput.sourceNotFound'));
-              break;
-            default:
-              showError(t('chatInput.fileSourceDeleteError'));
+          if (code === 'SOURCE_NOT_FOUND') {
+            showError(t('chatInput.sourceNotFound'));
+          } else {
+            showError(t('chatInput.fileSourceDeleteError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
           showError(t('chatInput.fileSourceDeleteError'));
         }
 
-        if (context?.previousData && context?.queryKey) {
+        if (context?.previousData) {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }
       },
@@ -82,24 +80,12 @@ export function useDeleteFileSource({
   });
 
   const deleteFileSource = (sourceId: string) => {
-    console.log(
-      'Deleting file source with sourceId:',
-      sourceId,
-      'from threadId:',
-      threadId,
-    );
     if (!threadId) {
       console.error('Thread ID is required');
       showError('Thread ID is required');
       return;
     }
 
-    console.log(
-      'Deleting file source with sourceId:',
-      sourceId,
-      'from threadId:',
-      threadId,
-    );
     deleteFileSourceMutation.mutate({
       id: threadId,
       sourceId,

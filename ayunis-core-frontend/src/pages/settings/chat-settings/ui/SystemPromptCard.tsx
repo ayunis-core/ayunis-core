@@ -18,14 +18,14 @@ function SystemPromptForm({
   isDeleting,
   onUpsert,
   onDelete,
-}: {
+}: Readonly<{
   initialValue: string;
   systemPrompt: string | null;
   isUpserting: boolean;
   isDeleting: boolean;
   onUpsert: (value: string) => void;
   onDelete: () => void;
-}) {
+}>) {
   const { t } = useTranslation('settings');
   const [localValue, setLocalValue] = useState(initialValue);
 

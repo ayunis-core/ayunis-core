@@ -19,7 +19,7 @@ export function ModelsCatalogTabs({
   archivedCount,
   renderActiveContent,
   renderArchivedContent,
-}: ModelsCatalogTabsProps) {
+}: Readonly<ModelsCatalogTabsProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
 

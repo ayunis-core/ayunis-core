@@ -6,7 +6,9 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 function Sheet({
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Root>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof SheetPrimitive.Root>
+>): React.ReactElement {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
@@ -24,7 +26,9 @@ function SheetClose({
 
 function SheetPortal({
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Portal>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof SheetPrimitive.Portal>
+>): React.ReactElement {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 

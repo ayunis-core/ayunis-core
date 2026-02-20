@@ -23,10 +23,10 @@ import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.sche
 export default function SkillPropertiesCard({
   skill,
   disabled = false,
-}: {
+}: Readonly<{
   skill: SkillResponseDto;
   disabled?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('skill');
   const { form, onSubmit, isLoading } = useUpdateSkill({ skill });
 

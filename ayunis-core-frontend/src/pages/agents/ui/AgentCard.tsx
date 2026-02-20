@@ -20,7 +20,7 @@ interface AgentCardProps {
   agent: Agent;
 }
 
-export default function AgentCard({ agent }: AgentCardProps) {
+export default function AgentCard({ agent }: Readonly<AgentCardProps>) {
   const { t } = useTranslation('agents');
   const deleteAgent = useDeleteAgent();
   const { confirm } = useConfirmation();

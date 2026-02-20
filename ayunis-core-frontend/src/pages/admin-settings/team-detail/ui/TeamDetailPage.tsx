@@ -17,7 +17,10 @@ interface TeamDetailPageProps {
   membersResponse: PaginatedTeamMembers;
 }
 
-export function TeamDetailPage({ team, membersResponse }: TeamDetailPageProps) {
+export function TeamDetailPage({
+  team,
+  membersResponse,
+}: Readonly<TeamDetailPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
 

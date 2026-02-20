@@ -25,7 +25,7 @@ export function QuickActionPanel({
   category,
   onSelect,
   onClose,
-}: QuickActionPanelProps) {
+}: Readonly<QuickActionPanelProps>) {
   const { t } = useTranslation('quickActions');
   const Icon = category.icon;
 

@@ -31,12 +31,10 @@ export function useDeleteAgent() {
       console.error('Delete agent failed:', error);
       try {
         const { code } = extractErrorData(error);
-        switch (code) {
-          case 'AGENT_NOT_FOUND':
-            showError(t('delete.notFound'));
-            break;
-          default:
-            showError(t('delete.error'));
+        if (code === 'AGENT_NOT_FOUND') {
+          showError(t('delete.notFound'));
+        } else {
+          showError(t('delete.error'));
         }
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)

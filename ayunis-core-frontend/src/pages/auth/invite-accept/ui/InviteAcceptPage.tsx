@@ -26,7 +26,7 @@ export default function InviteAcceptPage({
   invite,
   inviteToken,
   isCloud,
-}: InviteAcceptPageProps) {
+}: Readonly<InviteAcceptPageProps>) {
   const { form, onSubmit, isLoading } = useInviteAccept(invite, inviteToken);
   const { t } = useTranslation('auth');
 

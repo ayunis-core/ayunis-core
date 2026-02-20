@@ -31,10 +31,10 @@ import type { AgentResponseDto } from '@/shared/api';
 export default function AgentPropertiesCard({
   agent,
   disabled = false,
-}: {
+}: Readonly<{
   agent: AgentResponseDto;
   disabled?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('agent');
   const { models } = usePermittedModels();
   const { form, onSubmit, isLoading } = useUpdateAgent({

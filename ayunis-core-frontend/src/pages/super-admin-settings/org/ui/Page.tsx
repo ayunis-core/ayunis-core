@@ -51,7 +51,7 @@ export default function SuperAdminSettingsOrgPage({
   subscription,
   trial,
   initialTab = 'org',
-}: SuperAdminSettingsOrgPageProps) {
+}: Readonly<SuperAdminSettingsOrgPageProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const navigate = useNavigate();
   const { id } = useParams({

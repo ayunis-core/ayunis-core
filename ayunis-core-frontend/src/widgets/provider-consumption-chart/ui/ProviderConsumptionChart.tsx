@@ -28,7 +28,7 @@ interface ProviderConsumptionChartProps {
 export function ProviderConsumptionChart({
   chartData,
   chartConfig,
-}: ProviderConsumptionChartProps) {
+}: Readonly<ProviderConsumptionChartProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const seriesKeys = useMemo(() => Object.keys(chartConfig), [chartConfig]);
 

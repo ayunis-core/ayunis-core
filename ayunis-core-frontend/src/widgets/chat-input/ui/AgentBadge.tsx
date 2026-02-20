@@ -15,7 +15,7 @@ export function AgentBadge({
   agent,
   isDisabled,
   onRemove,
-}: AgentBadgeProps) {
+}: Readonly<AgentBadgeProps>) {
   return (
     <Badge
       variant="outline"

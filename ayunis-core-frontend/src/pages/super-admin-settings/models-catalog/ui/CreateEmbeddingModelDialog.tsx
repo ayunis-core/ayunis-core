@@ -43,7 +43,7 @@ const DIMENSIONS = [
 export function CreateEmbeddingModelDialog({
   open,
   onOpenChange,
-}: CreateEmbeddingModelDialogProps) {
+}: Readonly<CreateEmbeddingModelDialogProps>) {
   const form = useForm<EmbeddingModelFormData>({
     defaultValues: {
       name: '',

@@ -21,7 +21,7 @@ interface ProviderConsumptionErrorProps {
 
 export function ProviderConsumptionError({
   error,
-}: ProviderConsumptionErrorProps) {
+}: Readonly<ProviderConsumptionErrorProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const errorMessage =
     error instanceof Error ? error.message : t('charts.errorUnknown');

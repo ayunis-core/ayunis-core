@@ -18,7 +18,7 @@ interface SearchParams {
 export default function SuperAdminUsersSearch({
   search,
   orgId,
-}: SuperAdminUsersSearchProps) {
+}: Readonly<SuperAdminUsersSearchProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const navigate = useNavigate();
   const [localValue, setLocalValue] = useState<string | null>(null);

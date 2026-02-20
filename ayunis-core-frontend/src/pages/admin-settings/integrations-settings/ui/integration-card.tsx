@@ -36,7 +36,7 @@ export function IntegrationCard({
   onValidate,
   isTogglingEnabled = false,
   isValidating = false,
-}: IntegrationCardProps) {
+}: Readonly<IntegrationCardProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const typeLabel = getIntegrationTypeLabel(integration.type);
   const integrationKey = `integration-${integration.id}`;

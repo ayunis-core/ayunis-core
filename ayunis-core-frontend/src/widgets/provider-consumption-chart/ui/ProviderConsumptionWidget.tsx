@@ -19,7 +19,7 @@ export function ProviderConsumptionWidget({
   providerDisplayNames,
   isLoading,
   error,
-}: ProviderConsumptionWidgetProps) {
+}: Readonly<ProviderConsumptionWidgetProps>) {
   const { chartData, chartConfig } = useMemo(
     () => buildProviderChartData(timeSeries, providerDisplayNames),
     [timeSeries, providerDisplayNames],
@@ -27,7 +27,7 @@ export function ProviderConsumptionWidget({
 
   if (isLoading) return <ProviderConsumptionLoading />;
   if (error) return <ProviderConsumptionError error={error} />;
-  if (!chartData || chartData.length === 0) {
+  if (chartData.length === 0) {
     return <ProviderConsumptionEmpty />;
   }
 

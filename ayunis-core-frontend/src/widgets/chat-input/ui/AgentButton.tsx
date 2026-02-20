@@ -31,7 +31,7 @@ export default function AgentButton({
   selectedAgentId,
   onAgentChange,
   isDisabled,
-}: AgentButtonProps) {
+}: Readonly<AgentButtonProps>) {
   const { agents } = useAgents();
   const { t } = useTranslation('common');
   const { t: tAgents } = useTranslation('agents');

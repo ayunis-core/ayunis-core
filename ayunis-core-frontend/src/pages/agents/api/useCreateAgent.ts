@@ -54,7 +54,7 @@ export function useCreateAgent() {
       void queryClient.invalidateQueries({
         queryKey: getAgentsControllerFindAllQueryKey(),
       });
-      if (data && data.id) {
+      if (data.id) {
         void router.navigate({
           to: '/agents/$id',
           params: { id: data.id },
@@ -64,11 +64,8 @@ export function useCreateAgent() {
     onError: (error) => {
       console.error('Create agent failed:', error);
       try {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          default:
-            showError(t('create.error'));
-        }
+        extractErrorData(error);
+        showError(t('create.error'));
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)
         showError(t('create.error'));

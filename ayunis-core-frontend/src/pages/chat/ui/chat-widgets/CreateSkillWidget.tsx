@@ -18,26 +18,26 @@ import extractErrorData from '@/shared/api/extract-error-data';
 export default function CreateSkillWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
 
-  const params = (content.params || {}) as {
+  const params = content.params as {
     name?: string;
     short_description?: string;
     instructions?: string;
     is_active?: boolean;
   };
 
-  const [name, setName] = useState<string>(params.name || '');
+  const [name, setName] = useState<string>(params.name ?? '');
   const [shortDescription, setShortDescription] = useState<string>(
-    params.short_description || '',
+    params.short_description ?? '',
   );
   const [instructions, setInstructions] = useState<string>(
-    params.instructions || '',
+    params.instructions ?? '',
   );
   const [isActive, setIsActive] = useState<boolean>(params.is_active !== false);
   const [created, setCreated] = useState(false);
@@ -45,9 +45,9 @@ export default function CreateSkillWidget({
   // Update state when params change (for streaming updates)
   useEffect(() => {
     const updateWidget = () => {
-      setName(params.name || '');
-      setShortDescription(params.short_description || '');
-      setInstructions(params.instructions || '');
+      setName(params.name ?? '');
+      setShortDescription(params.short_description ?? '');
+      setInstructions(params.instructions ?? '');
       setIsActive(params.is_active !== false);
     };
     updateWidget();

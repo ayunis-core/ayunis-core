@@ -42,9 +42,6 @@ export function useDeletePermittedModel() {
             return old.map((item: ModelWithConfigResponseDto) => {
               // Match by permittedModelId since that's what the delete endpoint expects
               if (item.permittedModelId === id) {
-                console.log(
-                  'Found matching model, updating isPermitted to false',
-                );
                 return { ...item, isPermitted: false };
               }
               return item;
@@ -71,7 +68,7 @@ export function useDeletePermittedModel() {
         } catch {
           showError(t('models.deletePermittedModel.error'));
         }
-        if (context?.previousData && context?.queryKey) {
+        if (context?.previousData) {
           queryClient.setQueryData(context.queryKey, context.previousData);
         }
       },

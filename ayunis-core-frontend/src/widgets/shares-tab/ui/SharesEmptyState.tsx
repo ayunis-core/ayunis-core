@@ -11,7 +11,7 @@ interface SharesEmptyStateProps {
 export default function SharesEmptyState({
   translationNs,
   onCreateClick,
-}: SharesEmptyStateProps) {
+}: Readonly<SharesEmptyStateProps>) {
   const { t } = useTranslation(translationNs);
 
   return (

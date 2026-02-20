@@ -14,7 +14,6 @@ export function useSuperAdminTriggerPasswordReset(
     useSuperAdminUsersControllerTriggerPasswordReset({
       mutation: {
         onSuccess: () => {
-          console.log('Password reset email sent successfully');
           showSuccess(t('triggerPasswordReset.success'));
           if (options?.onSuccessCallback) {
             options.onSuccessCallback();

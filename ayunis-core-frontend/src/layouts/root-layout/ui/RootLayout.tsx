@@ -1,8 +1,8 @@
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   const plausibleDomain = import.meta.env.VITE_PLAUSIBLE_DOMAIN as
     | string
     | undefined;

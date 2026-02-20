@@ -7,7 +7,9 @@ interface InviteErrorPageProps {
   error: Error;
 }
 
-export default function InviteErrorPage({ error }: InviteErrorPageProps) {
+export default function InviteErrorPage({
+  error,
+}: Readonly<InviteErrorPageProps>) {
   const { t } = useTranslation('auth');
 
   function getErrorMessage(error: Error) {

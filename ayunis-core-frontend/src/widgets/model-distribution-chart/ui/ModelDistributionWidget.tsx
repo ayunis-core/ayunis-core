@@ -27,7 +27,7 @@ export function ModelDistributionWidget({
   models,
   isLoading,
   error,
-}: ModelDistributionWidgetProps) {
+}: Readonly<ModelDistributionWidgetProps>) {
   const { t } = useTranslation('admin-settings-usage');
 
   const { chartData, chartConfig, modelBreakdown } = useMemo(

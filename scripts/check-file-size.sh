@@ -27,11 +27,13 @@ fi
 # ── Exclude patterns ────────────────────────────────────────────────────────
 FILES=$(echo "$FILES" | grep -v '/generated/' \
     | grep -v '/migrations/' \
+    | grep -v '/shadcn/' \
     | grep -v '\.spec\.ts$' \
     | grep -v '\.spec\.tsx$' \
     | grep -v '\.test\.ts$' \
     | grep -v '\.test\.tsx$' \
     | grep -v '\.record\.ts$' \
+    | grep -v '\-data\.ts$' \
     || true)
 
 if [ -z "$FILES" ]; then

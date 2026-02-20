@@ -15,7 +15,7 @@ export function SuperAdminUserUsageTable({
   orgId,
   startDate,
   endDate,
-}: SuperAdminUserUsageTableProps) {
+}: Readonly<SuperAdminUserUsageTableProps>) {
   const filterKey = useMemo(
     () => `${startDate?.toISOString() ?? ''}-${endDate?.toISOString() ?? ''}`,
     [startDate, endDate],
@@ -35,7 +35,7 @@ function SuperAdminUserUsageTableInner({
   orgId,
   startDate,
   endDate,
-}: SuperAdminUserUsageTableProps) {
+}: Readonly<SuperAdminUserUsageTableProps>) {
   const [currentPage, setCurrentPage] = useState(0);
   const offset = currentPage * DEFAULT_PAGE_SIZE;
 
@@ -53,7 +53,7 @@ function SuperAdminUserUsageTableInner({
   return (
     <UserUsageTableWidget
       users={userUsageResponse?.data ?? []}
-      total={userUsageResponse?.pagination?.total ?? 0}
+      total={userUsageResponse?.pagination.total ?? 0}
       currentPage={currentPage}
       onPageChange={setCurrentPage}
       isLoading={isLoading}

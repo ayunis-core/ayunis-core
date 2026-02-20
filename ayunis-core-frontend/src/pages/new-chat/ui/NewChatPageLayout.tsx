@@ -8,7 +8,7 @@ interface NewChatPageLayoutProps {
 export default function NewChatPageLayout({
   header,
   children,
-}: NewChatPageLayoutProps) {
+}: Readonly<NewChatPageLayoutProps>) {
   return (
     <AppLayout>
       <div className="w-full h-full flex flex-col items-center justify-center">

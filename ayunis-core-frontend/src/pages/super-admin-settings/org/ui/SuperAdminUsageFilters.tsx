@@ -29,7 +29,7 @@ export function SuperAdminUsageFilters({
   onProviderChange,
   selectedModel,
   onModelChange,
-}: SuperAdminUsageFiltersProps) {
+}: Readonly<SuperAdminUsageFiltersProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const { data: permittedModels } =
     useSuperAdminModelsControllerGetPermittedModels(orgId);
@@ -115,7 +115,7 @@ export function SuperAdminUsageFilters({
       </Select>
 
       <Select
-        value={selectedProvider || 'all'}
+        value={selectedProvider ?? 'all'}
         onValueChange={(value) =>
           onProviderChange(value === 'all' ? undefined : value)
         }
@@ -134,7 +134,7 @@ export function SuperAdminUsageFilters({
       </Select>
 
       <Select
-        value={selectedModel || 'all'}
+        value={selectedModel ?? 'all'}
         onValueChange={(value) =>
           onModelChange(value === 'all' ? undefined : value)
         }

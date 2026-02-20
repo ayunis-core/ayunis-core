@@ -10,7 +10,7 @@ interface PendingImageThumbnailProps {
 export function PendingImageThumbnail({
   image,
   onRemove,
-}: PendingImageThumbnailProps) {
+}: Readonly<PendingImageThumbnailProps>) {
   return (
     <div className="relative inline-block rounded-lg overflow-hidden border border-border">
       <img

@@ -29,7 +29,7 @@ export function SuperAdminOrgDefaultModelCard({
   models,
   isLoading,
   orgId,
-}: SuperAdminOrgDefaultModelCardProps) {
+}: Readonly<SuperAdminOrgDefaultModelCardProps>) {
   const { t } = useTranslation('admin-settings-models');
   const { manageOrgDefaultModel, isLoading: isSaving } =
     useSuperAdminManageOrgDefaultModel(orgId);

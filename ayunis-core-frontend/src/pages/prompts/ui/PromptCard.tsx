@@ -18,7 +18,7 @@ interface PromptCardProps {
   prompt: Prompt;
 }
 
-export default function PromptCard({ prompt }: PromptCardProps) {
+export default function PromptCard({ prompt }: Readonly<PromptCardProps>) {
   const { t } = useTranslation('prompts');
   const deletePrompt = useDeletePrompt();
   const { confirm } = useConfirmation();

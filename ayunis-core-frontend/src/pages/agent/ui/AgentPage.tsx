@@ -27,13 +27,13 @@ export function AgentPage({
   userTeams,
   isEmbeddingModelEnabled,
   initialTab = 'config',
-}: {
+}: Readonly<{
   agent: AgentResponseDto;
   shares: ShareResponseDto[];
   userTeams: TeamResponseDto[];
   isEmbeddingModelEnabled: boolean;
   initialTab?: 'config' | 'share';
-}) {
+}>) {
   const navigate = useNavigate();
   const { t } = useTranslation('agent');
   const { id } = useParams({

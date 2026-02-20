@@ -39,7 +39,7 @@ interface CreateCustomDialogProps {
 export function CreateCustomDialog({
   open,
   onOpenChange,
-}: CreateCustomDialogProps) {
+}: Readonly<CreateCustomDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreateCustomIntegrationFormData>({
     defaultValues: {

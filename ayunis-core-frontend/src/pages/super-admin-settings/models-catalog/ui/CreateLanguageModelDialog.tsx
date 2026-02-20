@@ -37,7 +37,7 @@ interface CreateLanguageModelDialogProps {
 export function CreateLanguageModelDialog({
   open,
   onOpenChange,
-}: CreateLanguageModelDialogProps) {
+}: Readonly<CreateLanguageModelDialogProps>) {
   const form = useForm<LanguageModelFormData>({
     defaultValues: {
       name: '',

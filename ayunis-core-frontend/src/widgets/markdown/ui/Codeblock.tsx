@@ -17,7 +17,7 @@ export default function CodeBlock({
   children,
   inline = false,
   className = '',
-}: CodeBlockProps) {
+}: Readonly<CodeBlockProps>) {
   const { theme } = useTheme();
 
   if (inline) {
@@ -34,7 +34,7 @@ export default function CodeBlock({
     <div className="overflow-x-auto my-4 max-w-full">
       <SyntaxHighlighter
         style={theme === 'dark' ? oneDark : oneLight}
-        language={language || 'text'}
+        language={language ?? 'text'}
         PreTag="div"
         customStyle={{
           margin: '0',

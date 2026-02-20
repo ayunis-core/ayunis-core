@@ -19,7 +19,7 @@ interface AgentsPageProps {
   agents: Agent[];
 }
 
-export default function AgentsPage({ agents }: AgentsPageProps) {
+export default function AgentsPage({ agents }: Readonly<AgentsPageProps>) {
   const { t } = useTranslation('agents');
 
   // Separate agents into personal (owned) and shared

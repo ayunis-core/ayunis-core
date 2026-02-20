@@ -19,7 +19,9 @@ interface UserUsageTableErrorProps {
   error: unknown;
 }
 
-export function UserUsageTableError({ error }: UserUsageTableErrorProps) {
+export function UserUsageTableError({
+  error,
+}: Readonly<UserUsageTableErrorProps>) {
   const { t } = useTranslation('admin-settings-usage');
   const errorMessage =
     error instanceof Error ? error.message : t('charts.errorUnknown');

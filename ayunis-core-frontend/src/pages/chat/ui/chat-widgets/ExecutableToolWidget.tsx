@@ -31,15 +31,15 @@ function formatToolName(toolName: string): string {
 export default function ExecutableToolWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('chat');
   const [open, setOpen] = useState(false);
 
   // Check if params are empty or incomplete (streaming in progress)
-  const hasParams = content.params && Object.keys(content.params).length > 0;
+  const hasParams = Object.keys(content.params).length > 0;
   const isLoadingParams = isStreaming && !hasParams;
 
   // Try to get translation, fallback to formatted tool name if not found

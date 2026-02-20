@@ -26,7 +26,7 @@ export default function AgentKnowledgeBaseCard({
   agent,
   isEnabled,
   disabled = false,
-}: AgentKnowledgeBaseCardProps) {
+}: Readonly<AgentKnowledgeBaseCardProps>) {
   const { t } = useTranslation('agent');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,7 +40,6 @@ export default function AgentKnowledgeBaseCard({
   } = useAgentSources({ agent });
 
   function handleFileRemove(sourceAssignmentId: string) {
-    console.log('Removing source', sourceAssignmentId);
     removeSource(sourceAssignmentId);
   }
 
@@ -67,11 +66,12 @@ export default function AgentKnowledgeBaseCard({
       <CardContent>
         <div className="space-y-4">
           {/* Display existing sources */}
-          {isLoadingSources ? (
+          {isLoadingSources && (
             <div className="text-sm text-muted-foreground">
               <Loader className="h-4 w-4 animate-spin" />
             </div>
-          ) : sources.length > 0 ? (
+          )}
+          {!isLoadingSources && sources.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {sources.map((source) => (
                 <Badge
@@ -90,7 +90,7 @@ export default function AgentKnowledgeBaseCard({
                 </Badge>
               ))}
             </div>
-          ) : null}
+          )}
 
           {/* Add Source Button */}
           {!disabled && (

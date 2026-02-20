@@ -54,12 +54,10 @@ export function useUnassignMcpIntegration() {
         console.error('Unassign MCP integration failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'MCP_INTEGRATION_NOT_ASSIGNED':
-              showError(t('mcpIntegrations.errors.notAssigned'));
-              break;
-            default:
-              showError(t('mcpIntegrations.errors.failedToDisconnect'));
+          if (code === 'MCP_INTEGRATION_NOT_ASSIGNED') {
+            showError(t('mcpIntegrations.errors.notAssigned'));
+          } else {
+            showError(t('mcpIntegrations.errors.failedToDisconnect'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

@@ -8,7 +8,7 @@ interface QuickActionsProps {
   onPromptSelect: (text: string) => void;
 }
 
-export function QuickActions({ onPromptSelect }: QuickActionsProps) {
+export function QuickActions({ onPromptSelect }: Readonly<QuickActionsProps>) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [height, setHeight] = useState<number | undefined>(undefined);
   const contentRef = useRef<HTMLDivElement>(null);

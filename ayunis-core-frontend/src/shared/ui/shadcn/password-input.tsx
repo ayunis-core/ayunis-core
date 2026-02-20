@@ -38,6 +38,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   },
 );
 
+// eslint-disable-next-line sonarjs/no-hardcoded-passwords -- False positive: this is a React component displayName, not a password
 PasswordInput.displayName = 'PasswordInput';
 
 export { PasswordInput };

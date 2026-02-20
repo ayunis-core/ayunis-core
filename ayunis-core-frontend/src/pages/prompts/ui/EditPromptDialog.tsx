@@ -31,7 +31,7 @@ interface EditPromptDialogProps {
 export default function EditPromptDialog({
   trigger,
   selectedPrompt,
-}: EditPromptDialogProps) {
+}: Readonly<EditPromptDialogProps>) {
   const { t } = useTranslation('prompts');
   const [isOpen, setIsOpen] = useState(false);
   const { form, onSubmit, isLoading } = useEditPrompt({
@@ -42,7 +42,7 @@ export default function EditPromptDialog({
 
   // Set form values when dialog opens or selectedPrompt changes
   useEffect(() => {
-    if (selectedPrompt && isOpen) {
+    if (isOpen) {
       form.reset({
         id: selectedPrompt.id,
         title: selectedPrompt.title,

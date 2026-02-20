@@ -45,7 +45,7 @@ export default function ModelsCatalogList({
   onDeleteModel,
   isDeleting,
   isArchivedView = false,
-}: ModelsCatalogListProps) {
+}: Readonly<ModelsCatalogListProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const languageModels = models.filter(isLanguageModel);
   const embeddingModels = models.filter(isEmbeddingModel);
