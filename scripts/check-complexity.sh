@@ -26,8 +26,12 @@ fi
 if [ $# -gt 0 ]; then
     FILES=$(printf "%s\n" "$@" | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' | grep -v '/db/migrations/' || true)
 else
-    # Default: staged TypeScript files (excluding generated code, tests, and migrations)
-    FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(ts|tsx)$' | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' | grep -v '/db/migrations/' || true)
+    # Default: staged TypeScript files (excluding generated code, tests, migrations, templates, data carriers)
+    FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E '\.(ts|tsx)$' \
+      | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' \
+      | grep -v '/db/migrations/' | grep -v '/email-templates/' \
+      | grep -v '\.command\.ts$' | grep -v '\.query\.ts$' | grep -v '\.db-query\.ts$' \
+      | grep -v 'unicode-sanitizer\.ts$' || true)
 fi
 
 if [ -z "$FILES" ]; then

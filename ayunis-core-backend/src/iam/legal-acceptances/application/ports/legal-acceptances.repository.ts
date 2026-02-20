@@ -1,5 +1,5 @@
-import { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance.entity';
-import { LegalAcceptanceType } from '../../domain/value-objects/legal-acceptance-type.enum';
+import type { LegalAcceptance } from 'src/iam/legal-acceptances/domain/legal-acceptance.entity';
+import type { LegalAcceptanceType } from '../../domain/value-objects/legal-acceptance-type.enum';
 
 export abstract class LegalAcceptancesRepository {
   abstract create(legalAcceptance: LegalAcceptance): Promise<void>;

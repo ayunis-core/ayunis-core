@@ -10,5 +10,6 @@ export class SynaforceStreamInferenceHandler extends BaseOllamaStreamInferenceHa
     this.client = new Ollama({
       host: configService.get('models.synaforce.baseURL'),
     });
+    this.initConverter();
   }
 }

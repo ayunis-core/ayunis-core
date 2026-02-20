@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CollectUsageUseCase } from './collect-usage.use-case';
 import { CollectUsageCommand } from './collect-usage.command';
 import { UsageRepository } from '../../ports/usage.repository';
@@ -9,9 +10,9 @@ import {
 } from '../../usage.errors';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
 import { Currency } from '../../../../models/domain/value-objects/currency.enum';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { LanguageModel } from '../../../../models/domain/models/language.model';
-import { Usage } from '../../../domain/usage.entity';
+import type { Usage } from '../../../domain/usage.entity';
 import { ContextService } from '../../../../../common/context/services/context.service';
 
 describe('CollectUsageUseCase', () => {

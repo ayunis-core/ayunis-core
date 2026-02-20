@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class DeleteTeamCommand {
   public readonly teamId: UUID;

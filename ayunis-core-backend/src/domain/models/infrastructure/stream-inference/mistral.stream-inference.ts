@@ -9,31 +9,18 @@ import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
 import { Logger, Injectable } from '@nestjs/common';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
-import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
-import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
-import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
-import { Message } from 'src/domain/messages/domain/message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
-import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
-import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import {
-  ToolCall as MistralToolCall,
-  Tool as MistralTool,
-  Messages as MistralMessages,
-  ToolChoiceEnum as MistralToolChoiceEnum,
-  ToolChoice as MistralToolChoice,
   ChatCompletionStreamRequest,
   CompletionEvent,
 } from '@mistralai/mistralai/models/components';
+import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { MistralMessageConverter } from '../converters/mistral-message.converter';
 
 @Injectable()
 export class MistralStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(MistralStreamInferenceHandler.name);
   private readonly client: Mistral;
+  private readonly converter: MistralMessageConverter;
 
   constructor(
     private readonly configService: ConfigService,
@@ -42,6 +29,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     this.client = new Mistral({
       apiKey: this.configService.get('mistral.apiKey'),
     });
+    this.converter = new MistralMessageConverter(imageContentService);
   }
 
   answer(
@@ -58,16 +46,22 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
   ): Promise<void> {
     try {
       const { messages, tools, toolChoice, systemPrompt, orgId } = input;
-      const mistralTools = tools?.map(this.convertTool);
-      const mistralMessages = await this.convertMessages(messages, orgId);
+      const mistralTools = tools.map((t) => this.converter.convertTool(t));
+      const mistralMessages = await this.converter.convertMessages(
+        messages,
+        orgId,
+      );
       const mistralToolChoice = toolChoice
-        ? this.convertToolChoice(toolChoice)
+        ? this.converter.convertToolChoice(toolChoice)
         : undefined;
 
       const completionOptions: ChatCompletionStreamRequest = {
         model: input.model.name,
         messages: systemPrompt
-          ? [this.convertSystemPrompt(systemPrompt), ...mistralMessages]
+          ? [
+              this.converter.convertSystemPrompt(systemPrompt),
+              ...mistralMessages,
+            ]
           : mistralMessages,
         tools: mistralTools,
         toolChoice: mistralToolChoice,
@@ -98,227 +92,18 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
     }
   }
 
-  private convertTool = (tool: Tool): MistralTool => {
-    return {
-      type: 'function' as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters as Record<string, any>,
-      },
-    };
-  };
-
-  private convertSystemPrompt = (systemPrompt: string): MistralMessages => {
-    return {
-      role: 'system' as const,
-      content: systemPrompt,
-    };
-  };
-
-  private convertMessages = async (
-    messages: Message[],
-    orgId: string,
-    systemPrompt?: string,
-  ): Promise<MistralMessages[]> => {
-    const convertedMessages: MistralMessages[] = [];
-
-    // Add system message if provided
-    if (systemPrompt) {
-      convertedMessages.push({
-        role: 'system' as const,
-        content: systemPrompt,
-      });
-    }
-
-    for (const message of messages) {
-      convertedMessages.push(...(await this.convertMessage(message, orgId)));
-    }
-
-    return convertedMessages;
-  };
-
-  private convertMessage = async (
-    message: Message,
-    orgId: string,
-  ): Promise<MistralMessages[]> => {
-    const convertedMessages: MistralMessages[] = [];
-
-    // User Message
-    if (message instanceof UserMessage) {
-      const contentItems: Array<
-        | { type: 'text'; text: string }
-        | { type: 'image_url'; imageUrl: { url: string } }
-      > = [];
-
-      for (const content of message.content) {
-        if (content instanceof TextMessageContent) {
-          contentItems.push({
-            type: 'text' as const,
-            text: content.text,
-          });
-        }
-        // Image Message Content
-        if (content instanceof ImageMessageContent) {
-          const imageUrl = await this.convertImageContent(content, {
-            orgId,
-            threadId: message.threadId,
-            messageId: message.id,
-          });
-          contentItems.push({
-            type: 'image_url' as const,
-            imageUrl: { url: imageUrl },
-          });
-        }
-      }
-
-      if (contentItems.length > 0) {
-        convertedMessages.push({
-          role: 'user' as const,
-          content: contentItems,
-        });
-      }
-    }
-
-    // Assistant Message
-    if (message instanceof AssistantMessage) {
-      let assistantTextMessageContent: string | undefined = undefined;
-      let assistantToolUseMessageContent: MistralToolCall[] | undefined =
-        undefined;
-
-      for (const content of message.content) {
-        if (content instanceof TextMessageContent) {
-          assistantTextMessageContent = content.text;
-        }
-        if (content instanceof ToolUseMessageContent) {
-          if (!assistantToolUseMessageContent) {
-            assistantToolUseMessageContent = [
-              {
-                id: content.id,
-                type: 'function',
-                function: {
-                  name: content.name,
-                  arguments: content.params,
-                },
-              },
-            ];
-          } else {
-            assistantToolUseMessageContent.push({
-              id: content.id,
-              type: 'function',
-              function: {
-                name: content.name,
-                arguments: content.params,
-              },
-            });
-          }
-        }
-      }
-      convertedMessages.push({
-        role: 'assistant' as const,
-        content: assistantTextMessageContent,
-        toolCalls: assistantToolUseMessageContent,
-      });
-    }
-
-    // System Message
-    if (message instanceof SystemMessage) {
-      for (const content of message.content) {
-        convertedMessages.push({
-          role: 'system' as const,
-          content: content.text,
-        });
-      }
-    }
-
-    // Tool Result Message
-    if (message instanceof ToolResultMessage) {
-      for (const content of message.content) {
-        convertedMessages.push({
-          role: 'tool' as const,
-          toolCallId: content.toolId,
-          content: content.result,
-        });
-      }
-      if (
-        message.content.every(
-          (c) => c.result === 'Tool has been displayed successfully',
-        )
-      ) {
-        convertedMessages.push({
-          role: 'assistant' as const,
-          content: 'Awaiting user input',
-        });
-      }
-    }
-
-    return convertedMessages;
-  };
-
-  private convertToolChoice = (
-    toolChoice: ModelToolChoice,
-  ): MistralToolChoice | MistralToolChoiceEnum => {
-    if (toolChoice === ModelToolChoice.AUTO) {
-      return 'auto';
-    } else if (toolChoice === ModelToolChoice.REQUIRED) {
-      return 'required';
-    } else {
-      return { type: 'function', function: { name: toolChoice } };
-    }
-  };
-
-  private convertChunk = (
+  private convertChunk(
     chunk: CompletionEvent,
-  ): StreamInferenceResponseChunk | null => {
-    // Mistral streaming chunks have different structures
-    // Handle text content delta
-    let textContentDelta: string | null = null;
-    let toolCallsDelta: StreamInferenceResponseChunkToolCall[] = [];
-    const content = chunk.data.choices?.[0]?.delta?.content;
-    if (content) {
-      if (Array.isArray(content)) {
-        // content is an array of content chunks
-        textContentDelta = content
-          .map((c) => (c.type === 'text' ? c.text : null))
-          .filter(Boolean)
-          .join('');
-      } else {
-        // content is a string
-        textContentDelta = content;
-      }
-    }
-    const toolCalls = chunk.data.choices?.[0]?.delta?.toolCalls;
-    if (toolCalls) {
-      toolCallsDelta = toolCalls
-        .filter((toolCall) => toolCall.index !== undefined)
-        .map((toolCall) => ({
-          index: toolCall.index!,
-          id: toolCall.id || null,
-          name: toolCall.function?.name,
-          argumentsDelta:
-            typeof toolCall.function?.arguments === 'string'
-              ? toolCall.function?.arguments
-              : JSON.stringify(toolCall.function?.arguments),
-          providerMetadata: null,
-        }));
-    }
-
-    const choice = chunk.data.choices?.[0];
-    const finishReason = choice?.finishReason;
+  ): StreamInferenceResponseChunk | null {
+    const choice = chunk.data.choices[0];
+    const textContentDelta = this.extractTextDelta(choice.delta.content);
+    const toolCallsDelta = this.extractToolCallsDelta(choice.delta.toolCalls);
+    const finishReason = choice.finishReason;
     const usage = chunk.data.usage;
 
-    // Skip empty chunks with no useful data
-    if (
-      !textContentDelta &&
-      !toolCallsDelta.length &&
-      !usage &&
-      !finishReason
-    ) {
+    if (!textContentDelta && !toolCallsDelta.length && !usage && !finishReason)
       return null;
-    }
 
-    // Always include usage data when available to prevent data loss
-    // This ensures usage is captured even if it arrives with content
     return new StreamInferenceResponseChunk({
       thinkingDelta: null,
       textContentDelta,
@@ -331,17 +116,45 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
           }
         : undefined,
     });
-  };
+  }
 
-  private async convertImageContent(
-    content: ImageMessageContent,
-    context: { orgId: string; threadId: string; messageId: string },
-  ): Promise<string> {
-    const imageData = await this.imageContentService.convertImageToBase64(
-      content,
-      context,
-    );
+  private extractTextDelta(
+    content: string | Array<{ type: string; text?: string }> | null | undefined,
+  ): string | null {
+    if (!content) return null;
+    if (Array.isArray(content)) {
+      return (
+        content
+          .map((c) => (c.type === 'text' ? c.text : null))
+          .filter(Boolean)
+          .join('') || null
+      );
+    }
+    return content;
+  }
 
-    return `data:${imageData.contentType};base64,${imageData.base64}`;
+  private extractToolCallsDelta(
+    toolCalls:
+      | Array<{
+          index?: number;
+          id?: string;
+          function: { name: string; arguments: unknown };
+        }>
+      | null
+      | undefined,
+  ): StreamInferenceResponseChunkToolCall[] {
+    if (!toolCalls) return [];
+    return toolCalls
+      .filter((tc) => tc.index !== undefined)
+      .map((tc) => ({
+        index: tc.index!,
+        id: tc.id ?? null,
+        name: tc.function.name,
+        argumentsDelta:
+          typeof tc.function.arguments === 'string'
+            ? tc.function.arguments
+            : JSON.stringify(tc.function.arguments),
+        providerMetadata: null,
+      }));
   }
 }

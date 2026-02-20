@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CascadeDeleteSharesOnScopeDelete1769163990566
   implements MigrationInterface

@@ -7,18 +7,9 @@ import {
 } from '../../application/ports/stream-inference.handler';
 import { Observable, Subscriber } from 'rxjs';
 import OpenAI from 'openai';
-import { FunctionParameters } from 'openai/resources/shared';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
-import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
-import { Message } from 'src/domain/messages/domain/message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
-import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { ThinkingContentParser } from 'src/common/util/thinking-content-parser';
-import { normalizeSchemaForOpenAI } from '../util/normalize-schema-for-openai';
+import { OpenAIChatMessageConverter } from '../converters/openai-chat-message.converter';
 
 @Injectable()
 export class BaseOpenAIChatStreamInferenceHandler
@@ -29,6 +20,7 @@ export class BaseOpenAIChatStreamInferenceHandler
   );
   private readonly thinkingParser = new ThinkingContentParser();
   protected client: OpenAI;
+  protected readonly chatConverter = new OpenAIChatMessageConverter();
 
   answer(
     input: StreamInferenceInput,
@@ -47,13 +39,15 @@ export class BaseOpenAIChatStreamInferenceHandler
       this.thinkingParser.reset();
 
       const { messages, tools, toolChoice } = input;
-      const openAiTools = tools?.map(this.convertTool).map((tool) => ({
-        ...tool,
-        function: { ...tool.function, strict: true },
-      }));
-      const openAiMessages = this.convertMessages(messages);
+      const openAiTools = tools
+        .map((t) => this.chatConverter.convertTool(t))
+        .map((tool) => ({
+          ...tool,
+          function: { ...tool.function, strict: true },
+        }));
+      const openAiMessages = this.chatConverter.convertMessages(messages);
       const systemPrompt = input.systemPrompt
-        ? this.convertSystemPrompt(input.systemPrompt)
+        ? this.chatConverter.convertSystemPrompt(input.systemPrompt)
         : undefined;
 
       const completionOptions: OpenAI.ChatCompletionCreateParamsStreaming = {
@@ -63,7 +57,7 @@ export class BaseOpenAIChatStreamInferenceHandler
           : openAiMessages,
         tools: openAiTools,
         tool_choice: toolChoice
-          ? this.convertToolChoice(toolChoice)
+          ? this.chatConverter.convertToolChoice(toolChoice)
           : undefined,
         stream: true,
         stream_options: { include_usage: true },
@@ -105,152 +99,11 @@ export class BaseOpenAIChatStreamInferenceHandler
     }
   };
 
-  private convertTool = (tool: Tool): OpenAI.ChatCompletionTool => {
-    return {
-      type: 'function' as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: normalizeSchemaForOpenAI(
-          tool.parameters as Record<string, unknown> | undefined,
-        ) as FunctionParameters | undefined,
-      },
-    };
-  };
-
-  private convertSystemPrompt = (
-    systemPrompt: string,
-  ): OpenAI.ChatCompletionMessageParam => {
-    return {
-      role: 'system' as const,
-      content: systemPrompt,
-    };
-  };
-
-  private convertMessages = (
-    messages: Message[],
-  ): OpenAI.ChatCompletionMessageParam[] => {
-    const convertedMessages: OpenAI.ChatCompletionMessageParam[] = [];
-    for (const message of messages) {
-      convertedMessages.push(...this.convertMessage(message));
-    }
-    return convertedMessages;
-  };
-
-  private convertMessage = (
-    message: Message,
-  ): OpenAI.ChatCompletionMessageParam[] => {
-    const convertedMessages: OpenAI.ChatCompletionMessageParam[] = [];
-    // User Message
-    if (message.role === MessageRole.USER) {
-      for (const content of message.content) {
-        // Text Message Content
-        if (content instanceof TextMessageContent) {
-          convertedMessages.push({
-            role: 'user' as const,
-            content: [
-              {
-                type: 'text' as const,
-                text: content.text,
-              },
-            ],
-          });
-        }
-      }
-    }
-
-    if (message.role === MessageRole.ASSISTANT) {
-      let assistantTextMessageContent: string | undefined = undefined;
-      let assistantToolUseMessageContent:
-        | OpenAI.ChatCompletionMessageToolCall[]
-        | undefined = undefined;
-
-      for (const content of message.content) {
-        // Text Message Content
-        if (content instanceof TextMessageContent) {
-          assistantTextMessageContent = content.text;
-        }
-        // Thinking Message Content (ignore for OpenAI Chat Completions API)
-        if (content instanceof ThinkingMessageContent) {
-          // OpenAI Chat Completions API doesn't support thinking natively
-          // Skip this content type
-          continue;
-        }
-        // Tool Use Message Content
-        if (content instanceof ToolUseMessageContent) {
-          if (!assistantToolUseMessageContent) {
-            assistantToolUseMessageContent = [
-              {
-                id: content.id,
-                type: 'function',
-                function: {
-                  name: content.name,
-                  arguments: JSON.stringify(content.params),
-                },
-              },
-            ];
-          } else {
-            assistantToolUseMessageContent.push({
-              id: content.id,
-              type: 'function',
-              function: {
-                name: content.name,
-                arguments: JSON.stringify(content.params),
-              },
-            });
-          }
-        }
-      }
-      convertedMessages.push({
-        role: 'assistant' as const,
-        content: assistantTextMessageContent,
-        tool_calls: assistantToolUseMessageContent,
-      });
-    }
-
-    if (message.role === MessageRole.SYSTEM) {
-      for (const content of message.content) {
-        if (content instanceof TextMessageContent) {
-          convertedMessages.push({
-            role: 'system' as const,
-            content: content.text,
-          });
-        }
-      }
-    }
-
-    if (message.role === MessageRole.TOOL) {
-      for (const content of message.content) {
-        if (content instanceof ToolResultMessageContent) {
-          convertedMessages.push({
-            role: 'tool' as const,
-            tool_call_id: content.toolId,
-            content: content.result,
-          });
-        }
-      }
-    }
-
-    return convertedMessages;
-  };
-
-  private convertToolChoice = (
-    toolChoice: ModelToolChoice,
-  ): OpenAI.ChatCompletionToolChoiceOption => {
-    if (toolChoice === ModelToolChoice.AUTO) {
-      return 'auto';
-    } else if (toolChoice === ModelToolChoice.REQUIRED) {
-      return 'required';
-    } else {
-      return { type: 'function', function: { name: toolChoice } };
-    }
-  };
-
   private convertChunk = (
     chunk: OpenAI.ChatCompletionChunk,
   ): StreamInferenceResponseChunk => {
     const delta = chunk.choices[0]?.delta;
-    const textContent = delta?.content ?? null;
+    const textContent = delta.content ?? null;
 
     // Parse thinking content from text
     const { thinkingDelta, textContentDelta } = textContent
@@ -264,7 +117,7 @@ export class BaseOpenAIChatStreamInferenceHandler
       thinkingDelta,
       textContentDelta,
       toolCallsDelta:
-        delta?.tool_calls?.map(
+        delta.tool_calls?.map(
           (toolCall) =>
             new StreamInferenceResponseChunkToolCall({
               index: toolCall.index,

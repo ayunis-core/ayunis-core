@@ -42,6 +42,26 @@ export type DetectedFileType =
   | 'csv'
   | 'unknown';
 
+/** Lookup: MIME type → detected file type */
+const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
+  [MIME_TYPES.PDF]: 'pdf',
+  [MIME_TYPES.DOCX]: 'docx',
+  [MIME_TYPES.PPTX]: 'pptx',
+  [MIME_TYPES.XLSX]: 'xlsx',
+  [MIME_TYPES.CSV]: 'csv',
+  // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
+};
+
+/** Lookup: file extension → detected file type */
+const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
+  [FILE_EXTENSIONS.PDF]: 'pdf',
+  [FILE_EXTENSIONS.DOCX]: 'docx',
+  [FILE_EXTENSIONS.PPTX]: 'pptx',
+  [FILE_EXTENSIONS.XLSX]: 'xlsx',
+  [FILE_EXTENSIONS.XLS]: 'xls',
+  [FILE_EXTENSIONS.CSV]: 'csv',
+};
+
 /**
  * Detect file type from MIME type and filename extension.
  * Uses both MIME type and extension for disambiguation since browsers
@@ -53,39 +73,15 @@ export function detectFileType(
 ): DetectedFileType {
   const ext = extname(filename).toLowerCase();
 
-  // PDF
-  if (mimetype === MIME_TYPES.PDF || ext === FILE_EXTENSIONS.PDF) {
-    return 'pdf';
-  }
-
-  // Word (DOCX)
-  if (mimetype === MIME_TYPES.DOCX || ext === FILE_EXTENSIONS.DOCX) {
-    return 'docx';
-  }
-
-  // PowerPoint (PPTX)
-  if (mimetype === MIME_TYPES.PPTX || ext === FILE_EXTENSIONS.PPTX) {
-    return 'pptx';
-  }
-
-  // Excel (XLSX/XLS)
-  // Note: application/vnd.ms-excel can be sent for both .xls and .csv files
-  // Use extension-based fallback when MIME type is incorrect (e.g., application/octet-stream)
-  // For XLS, we only trust extension because XLS MIME can also indicate CSV files
-  if (mimetype === MIME_TYPES.XLSX || ext === FILE_EXTENSIONS.XLSX) {
-    return 'xlsx';
-  }
+  // Special case: XLS extension takes precedence over CSV MIME type.
+  // Some clients send .xls files with text/csv MIME type, but we should
+  // trust the extension for XLS files since XLS MIME can also indicate CSV.
   if (ext === FILE_EXTENSIONS.XLS) {
     return 'xls';
   }
 
-  // CSV
-  // Use extension-based fallback when MIME type is incorrect (e.g., application/octet-stream)
-  if (mimetype === MIME_TYPES.CSV || ext === FILE_EXTENSIONS.CSV) {
-    return 'csv';
-  }
-
-  return 'unknown';
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- lookup returns undefined for unknown keys at runtime
+  return MIME_TO_FILE_TYPE[mimetype] ?? EXT_TO_FILE_TYPE[ext] ?? 'unknown';
 }
 
 /**
@@ -130,7 +126,7 @@ export function getCanonicalMimeType(
       return MIME_TYPES.XLS;
     case 'csv':
       return MIME_TYPES.CSV;
-    default:
+    case 'unknown':
       return null;
   }
 }

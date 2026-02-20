@@ -5,6 +5,17 @@ import { EmbeddingDimensions } from '../../../../domain/value-objects/embedding-
 import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
 import { Currency } from '../../../../domain/value-objects/currency.enum';
 
+const tokenCostColumnOptions = {
+  type: 'decimal' as const,
+  precision: 10,
+  scale: 6,
+  nullable: true,
+  transformer: {
+    to: (value?: number | null) => value,
+    from: (value: string | null) => (value === null ? null : Number(value)),
+  },
+};
+
 @Entity({ name: 'models' })
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 @Index(['name', 'provider'], { unique: true })
@@ -54,28 +65,10 @@ export class LanguageModelRecord extends ModelRecord {
   })
   canVision: boolean;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 6,
-    nullable: true,
-    transformer: {
-      to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
-    },
-  })
+  @Column(tokenCostColumnOptions)
   inputTokenCost?: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 6,
-    nullable: true,
-    transformer: {
-      to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
-    },
-  })
+  @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
 
   @Column({
@@ -93,28 +86,10 @@ export class EmbeddingModelRecord extends ModelRecord {
   })
   dimensions: EmbeddingDimensions;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 6,
-    nullable: true,
-    transformer: {
-      to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
-    },
-  })
+  @Column(tokenCostColumnOptions)
   inputTokenCost?: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 6,
-    nullable: true,
-    transformer: {
-      to: (value?: number | null) => value,
-      from: (value: string | null) => (value == null ? null : Number(value)),
-    },
-  })
+  @Column(tokenCostColumnOptions)
   outputTokenCost?: number;
 
   @Column({

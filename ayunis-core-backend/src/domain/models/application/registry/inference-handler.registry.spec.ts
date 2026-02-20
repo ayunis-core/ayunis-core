@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { InferenceHandlerRegistry } from './inference-handler.registry';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { InferenceHandler } from '../ports/inference.handler';
+import type { InferenceHandler } from '../ports/inference.handler';
 // Token not used currently; register directly in the factory below
 const MISTRAL_INFERENCE_HANDLER = 'MISTRAL_INFERENCE_HANDLER';
-import { MistralInferenceHandler } from '../../infrastructure/inference/mistral.inference';
+import type { MistralInferenceHandler } from '../../infrastructure/inference/mistral.inference';
 
 describe('InferenceHandlerRegistry', () => {
   let registry: InferenceHandlerRegistry;

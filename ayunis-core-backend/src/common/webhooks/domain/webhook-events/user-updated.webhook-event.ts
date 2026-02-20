@@ -1,4 +1,4 @@
-import { User } from 'src/iam/users/domain/user.entity';
+import type { User } from 'src/iam/users/domain/user.entity';
 import { WebhookEvent } from '../webhook-event.entity';
 import { WebhookEventType } from '../value-objects/webhook-event-type.enum';
 import { cleanUserData } from 'src/common/util/clean-user-data';

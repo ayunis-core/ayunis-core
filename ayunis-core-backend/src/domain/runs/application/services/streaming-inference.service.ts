@@ -19,6 +19,11 @@ import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 
+type AssistantContentBlock =
+  | TextMessageContent
+  | ToolUseMessageContent
+  | ThinkingMessageContent;
+
 interface AccumulatedToolCall {
   id: string | null;
   name: string | null;
@@ -62,7 +67,7 @@ export class StreamingInferenceService {
     const streamInput = new StreamInferenceInput({
       model,
       messages,
-      systemPrompt: instructions || '',
+      systemPrompt: instructions ?? '',
       tools,
       toolChoice: ModelToolChoice.AUTO,
       orgId,
@@ -100,6 +105,7 @@ export class StreamingInferenceService {
         yield message;
       }
     } finally {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- mutated in callback, TS can't track
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
         if (usage) {
@@ -182,8 +188,6 @@ export class StreamingInferenceService {
     state: AccumulatedState,
   ): AsyncGenerator<AssistantMessage, void, void> {
     for await (const chunk of asyncIterable) {
-      if (!chunk) continue;
-
       const shouldUpdate = this.accumulateChunk(chunk, state);
 
       if (shouldUpdate) {
@@ -218,35 +222,38 @@ export class StreamingInferenceService {
       state.textProviderMetadata = chunk.textProviderMetadata;
     }
 
-    chunk.toolCallsDelta.forEach((toolCall) => {
-      const existing = state.toolCalls.get(toolCall.index) || {
+    if (chunk.toolCallsDelta.length > 0) {
+      this.accumulateToolCalls(chunk.toolCallsDelta, state.toolCalls);
+      shouldUpdate = true;
+    }
+
+    return shouldUpdate;
+  }
+
+  private accumulateToolCalls(
+    deltas: StreamInferenceResponseChunk['toolCallsDelta'],
+    toolCalls: Map<number, AccumulatedToolCall>,
+  ): void {
+    for (const toolCall of deltas) {
+      const existing = toolCalls.get(toolCall.index) ?? {
         id: null,
         name: null,
         arguments: '',
         providerMetadata: null,
       };
 
-      state.toolCalls.set(toolCall.index, {
-        id: toolCall.id || existing.id,
-        name: toolCall.name || existing.name,
-        arguments: existing.arguments + (toolCall.argumentsDelta || ''),
+      toolCalls.set(toolCall.index, {
+        id: toolCall.id ?? existing.id,
+        name: toolCall.name ?? existing.name,
+        arguments: existing.arguments + (toolCall.argumentsDelta ?? ''),
         providerMetadata:
-          toolCall.providerMetadata || existing.providerMetadata,
+          toolCall.providerMetadata ?? existing.providerMetadata,
       });
-      shouldUpdate = true;
-    });
-
-    return shouldUpdate;
+    }
   }
 
-  private buildBaseContent(
-    state: AccumulatedState,
-  ): Array<
-    TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-  > {
-    const content: Array<
-      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-    > = [];
+  private buildBaseContent(state: AccumulatedState): AssistantContentBlock[] {
+    const content: AssistantContentBlock[] = [];
 
     if (state.thinking.trim()) {
       content.push(
@@ -269,9 +276,7 @@ export class StreamingInferenceService {
 
   private buildMessageContent(
     state: AccumulatedState,
-  ): Array<
-    TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-  > {
+  ): AssistantContentBlock[] {
     const content = this.buildBaseContent(state);
 
     state.toolCalls.forEach((toolCall) => {
@@ -294,11 +299,17 @@ export class StreamingInferenceService {
     return content;
   }
 
-  private parseToolArguments(args: string, toolName: string): object {
+  private parseToolArguments(
+    args: string,
+    toolName: string,
+  ): Record<string, unknown> {
     if (!args) return {};
     try {
-      const parsed = safeJsonParse(args, null) as object | null;
-      return parsed || {};
+      const parsed = safeJsonParse(args, null) as Record<
+        string,
+        unknown
+      > | null;
+      return parsed ?? {};
     } catch {
       this.logger.debug(`Incomplete tool call arguments for ${toolName}`, {
         arguments: args,
@@ -347,9 +358,7 @@ export class StreamingInferenceService {
   private buildFinalContent(
     state: AccumulatedState,
     includeToolCalls: boolean,
-  ): Array<
-    TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-  > {
+  ): AssistantContentBlock[] {
     const content = this.buildBaseContent(state);
 
     if (includeToolCalls) {
@@ -365,25 +374,24 @@ export class StreamingInferenceService {
   }
 
   private addFinalToolCalls(
-    content: Array<
-      TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
-    >,
+    content: AssistantContentBlock[],
     toolCalls: Map<number, AccumulatedToolCall>,
   ): void {
     toolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
         try {
-          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as object;
-          if (parsedArgs) {
-            content.push(
-              new ToolUseMessageContent(
-                toolCall.id,
-                toolCall.name,
-                parsedArgs,
-                toolCall.providerMetadata,
-              ),
-            );
-          }
+          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as Record<
+            string,
+            unknown
+          >;
+          content.push(
+            new ToolUseMessageContent(
+              toolCall.id,
+              toolCall.name,
+              parsedArgs,
+              toolCall.providerMetadata,
+            ),
+          );
         } catch (error) {
           this.logger.warn(
             `Failed to parse tool arguments for ${toolCall.name}`,
@@ -406,8 +414,8 @@ export class StreamingInferenceService {
 
     for (const chunk of chunks) {
       if (chunk.usage) {
-        inputTokens += chunk.usage.inputTokens || 0;
-        outputTokens += chunk.usage.outputTokens || 0;
+        inputTokens += chunk.usage.inputTokens ?? 0;
+        outputTokens += chunk.usage.outputTokens ?? 0;
         hasUsageData = true;
       }
     }

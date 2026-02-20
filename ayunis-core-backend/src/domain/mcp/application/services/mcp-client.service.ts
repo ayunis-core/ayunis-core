@@ -38,6 +38,7 @@ export class McpClientService {
    * @returns Connection configuration for MCP client
    * @throws McpAuthenticationError if authentication configuration fails
    */
+  // eslint-disable-next-line sonarjs/cognitive-complexity -- auth config branching inherently complex
   async buildConnectionConfig(
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
@@ -324,7 +325,7 @@ export class McpClientService {
     operation: string,
   ): void {
     // Check for 401 authentication errors
-    if ((error as { status?: number })?.status === 401) {
+    if ((error as { status?: number }).status === 401) {
       this.logger.warn(
         `Authentication failed for MCP operation: ${operation}`,
         {

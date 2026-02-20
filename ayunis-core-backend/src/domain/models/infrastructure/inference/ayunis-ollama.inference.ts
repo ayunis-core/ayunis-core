@@ -18,5 +18,6 @@ export class AyunisOllamaInferenceHandler extends BaseOllamaInferenceHandler {
       },
     });
     this.imageContentService = imageContentService;
+    this.initConverter();
   }
 }

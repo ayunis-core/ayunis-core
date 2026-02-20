@@ -1,7 +1,5 @@
-import {
-  ApplicationError,
-  ErrorMetadata,
-} from '../../../common/errors/base.error';
+import type { ErrorMetadata } from '../../../common/errors/base.error';
+import { ApplicationError } from '../../../common/errors/base.error';
 
 /**
  * Error codes specific to the Hashing domain

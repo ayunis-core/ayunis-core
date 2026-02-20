@@ -1,7 +1,7 @@
-import { Repository } from 'typeorm';
-import { UUID } from 'crypto';
-import { UsageRecord } from '../schema/usage.record';
-import { UsageAggregateRow } from './usage-query.types';
+import type { Repository } from 'typeorm';
+import type { UUID } from 'crypto';
+import type { UsageRecord } from '../schema/usage.record';
+import type { UsageAggregateRow } from './usage-query.types';
 
 export async function getUsageAggregateStats(
   usageRepository: Repository<UsageRecord>,

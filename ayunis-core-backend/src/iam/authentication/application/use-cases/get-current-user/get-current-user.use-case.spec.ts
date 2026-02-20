@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GetCurrentUserUseCase } from './get-current-user.use-case';
 import { GetCurrentUserCommand } from './get-current-user.command';
 import { JwtService } from '@nestjs/jwt';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { InvalidTokenError } from '../../authentication.errors';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 
 describe('GetCurrentUserUseCase', () => {

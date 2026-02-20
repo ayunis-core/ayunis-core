@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GetModelDistributionUseCase } from './get-model-distribution.use-case';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { InvalidDateRangeError } from '../../usage.errors';
 import { ModelDistribution } from '../../../domain/model-distribution.entity';
 import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('GetModelDistributionUseCase', () => {
   let useCase: GetModelDistributionUseCase;

@@ -1,5 +1,8 @@
 import { UsageRecord } from '../schema/usage.record';
-import { GetUserUsageQueryParams, UserUsageRow } from './usage-query.types';
+import type {
+  GetUserUsageQueryParams,
+  UserUsageRow,
+} from './usage-query.types';
 
 export async function getUserUsageRows(
   params: GetUserUsageQueryParams,

@@ -17,11 +17,11 @@ import {
   ApiParam,
   ApiBody,
   ApiUnauthorizedResponse,
-  ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiBadRequestResponse,
-  ApiQuery,
+  ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
+import { ApiUsersListQueries } from './decorators/api-users-list.decorator';
 import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delete-user.use-case';
@@ -72,37 +72,12 @@ export class SuperAdminUsersController {
     format: 'uuid',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-    description: 'Search users by name or email',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Maximum number of users to return (default: 25)',
-  })
-  @ApiQuery({
-    name: 'offset',
-    required: false,
-    type: Number,
-    description: 'Number of users to skip (default: 0)',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Successfully retrieved users in the organization',
-    type: PaginatedUsersListResponseDto,
-  })
+  @ApiUsersListQueries()
   @ApiNotFoundResponse({
     description: 'Organization not found',
   })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error occurred while retrieving users',
   })
   async getUsersByOrgId(
     @Param('orgId') orgId: UUID,

@@ -1,6 +1,7 @@
-import { randomUUID, UUID } from 'crypto';
-import { ModelProvider } from './value-objects/model-provider.enum';
-import { ModelType } from './value-objects/model-type.enum';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import type { ModelProvider } from './value-objects/model-provider.enum';
+import type { ModelType } from './value-objects/model-type.enum';
 
 export abstract class Model {
   public readonly id: UUID;

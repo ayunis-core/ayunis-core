@@ -1,6 +1,6 @@
-import { UUID } from 'crypto';
-import { Agent } from '../../domain/agent.entity';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import type { UUID } from 'crypto';
+import type { Agent } from '../../domain/agent.entity';
+import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 
 export abstract class AgentRepository {
   abstract create(agent: Agent): Promise<Agent>;

@@ -51,7 +51,7 @@ export class ToolAssemblyService {
     // with code_execution tool, not source_query or source_get_text
     const allSources = [
       ...(thread.sourceAssignments?.map((a) => a.source) ?? []),
-      ...(agent?.sourceAssignments?.map((a) => a.source) ?? []),
+      ...(agent?.sourceAssignments.map((a) => a.source) ?? []),
     ];
     const textSources = allSources.filter(
       (s): s is TextSource => s instanceof TextSource,
@@ -136,7 +136,7 @@ export class ToolAssemblyService {
     const threadSources = thread.sourceAssignments?.map(
       (assignment) => assignment.source,
     );
-    const agentSources = agent?.sourceAssignments?.map(
+    const agentSources = agent?.sourceAssignments.map(
       (assignment) => assignment.source,
     );
     const codeExecutionSources = [

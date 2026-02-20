@@ -1,6 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
-import { randomUUID, UUID } from 'crypto';
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { AddSourceToThreadUseCase } from './add-source-to-thread.use-case';
 import { AddSourceCommand } from './add-source.command';
 import { ThreadsRepository } from '../../ports/threads.repository';

@@ -1,7 +1,5 @@
-import {
-  ApplicationError,
-  ErrorMetadata,
-} from '../../../common/errors/base.error';
+import type { ErrorMetadata } from '../../../common/errors/base.error';
+import { ApplicationError } from '../../../common/errors/base.error';
 
 export enum SkillErrorCode {
   SKILL_NOT_FOUND = 'SKILL_NOT_FOUND',

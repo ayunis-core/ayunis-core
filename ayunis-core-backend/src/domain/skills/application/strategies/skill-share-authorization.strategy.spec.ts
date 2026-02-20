@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { SkillShareAuthorizationStrategy } from './skill-share-authorization.strategy';
 import { SkillRepository } from '../ports/skill.repository';
-import { Skill } from '../../domain/skill.entity';
+import type { Skill } from '../../domain/skill.entity';
 import { randomUUID } from 'crypto';
 
 describe('SkillShareAuthorizationStrategy', () => {

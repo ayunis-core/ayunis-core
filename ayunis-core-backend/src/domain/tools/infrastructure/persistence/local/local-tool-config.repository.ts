@@ -53,13 +53,17 @@ export class LocalToolConfigRepository extends ToolConfigRepository {
   }
 
   async create(toolConfig: ToolConfig, userId: UUID): Promise<ToolConfig> {
-    const entity = this.toolConfigMapper.toRecord(toolConfig);
-    entity.userId = userId;
-    const savedEntity = await this.toolConfigRepository.save(entity);
-    return this.toolConfigMapper.toDomain(savedEntity);
+    return this.save(toolConfig, userId);
   }
 
   async update(toolConfig: ToolConfig, userId: UUID): Promise<ToolConfig> {
+    return this.save(toolConfig, userId);
+  }
+
+  private async save(
+    toolConfig: ToolConfig,
+    userId: UUID,
+  ): Promise<ToolConfig> {
     const entity = this.toolConfigMapper.toRecord(toolConfig);
     entity.userId = userId;
     const savedEntity = await this.toolConfigRepository.save(entity);

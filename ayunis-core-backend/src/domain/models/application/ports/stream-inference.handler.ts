@@ -1,9 +1,9 @@
-import { Message } from 'src/domain/messages/domain/message.entity';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
-import { Model } from '../../domain/model.entity';
-import { Observable } from 'rxjs';
-import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
+import type { Model } from '../../domain/model.entity';
+import type { Observable } from 'rxjs';
+import type { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 
 export class StreamInferenceInput {
   public readonly model: Model;
@@ -24,7 +24,7 @@ export class StreamInferenceInput {
     this.model = params.model;
     this.messages = params.messages;
     this.systemPrompt = params.systemPrompt;
-    this.tools = params.tools || [];
+    this.tools = params.tools ?? [];
     // only set toolChoice if tools are provided
     this.toolChoice =
       params.tools && params.tools.length > 0 ? params.toolChoice : undefined;
@@ -88,6 +88,24 @@ export class StreamInferenceResponseChunk {
     this.toolCallsDelta = params.toolCallsDelta;
     this.finishReason = params.finishReason;
     this.usage = params.usage;
+  }
+
+  /** Factory: chunk containing only a thinking delta */
+  static thinking(delta: string | null): StreamInferenceResponseChunk {
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: delta,
+      textContentDelta: null,
+      toolCallsDelta: [],
+    });
+  }
+
+  /** Factory: chunk containing only a text content delta */
+  static text(delta: string | null): StreamInferenceResponseChunk {
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: delta,
+      toolCallsDelta: [],
+    });
   }
 }
 

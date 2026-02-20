@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class DeleteInviteByEmailCommand {
   public readonly email: string;

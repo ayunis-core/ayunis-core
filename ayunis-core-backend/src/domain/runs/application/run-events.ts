@@ -1,4 +1,4 @@
-import { Message } from 'src/domain/messages/domain/message.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 
 export interface RunSessionEvent {
   type: 'session';
@@ -20,7 +20,7 @@ export interface RunErrorEvent {
   threadId: string;
   timestamp: string;
   code: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface RunThreadEvent {
