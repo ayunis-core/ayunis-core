@@ -1,25 +1,17 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { UUID } from 'crypto';
+import { Injectable, Logger } from '@nestjs/common';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientService } from '../../services/mcp-client.service';
-import { ContextService } from 'src/common/context/services/context.service';
-import {
-  McpIntegrationNotFoundError,
-  McpIntegrationAccessDeniedError,
-  McpIntegrationDisabledError,
-  UnexpectedMcpError,
-} from '../../mcp.errors';
+import { UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 
 @Injectable()
 export class RetrieveMcpResourceUseCase {
   private readonly logger = new Logger(RetrieveMcpResourceUseCase.name);
 
   constructor(
-    private readonly repository: McpIntegrationsRepositoryPort,
     private readonly mcpClientService: McpClientService,
-    private readonly contextService: ContextService,
+    private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
   ) {}
 
   async execute(
@@ -31,31 +23,9 @@ export class RetrieveMcpResourceUseCase {
       parameters: command.parameters,
     });
     try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      const integration = await this.repository.findById(
-        command.integrationId as UUID,
+      const integration = await this.validateIntegrationAccess.validate(
+        command.integrationId,
       );
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(command.integrationId);
-      }
-
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(
-          command.integrationId,
-          integration.name,
-        );
-      }
-
-      if (!integration.enabled) {
-        throw new McpIntegrationDisabledError(
-          command.integrationId,
-          integration.name,
-        );
-      }
 
       // Retrieve resource content with parameters (for URI template substitution)
       const { content, mimeType } = await this.mcpClientService.readResource(
@@ -66,10 +36,7 @@ export class RetrieveMcpResourceUseCase {
 
       return { content, mimeType };
     } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
+      if (error instanceof ApplicationError) {
         throw error;
       }
 

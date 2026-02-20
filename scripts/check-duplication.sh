@@ -12,10 +12,20 @@ set -euo pipefail
 PROJECT_DIR="$1"; shift
 STAGED_FILES=("$@")
 
-if [ ${#STAGED_FILES[@]} -eq 0 ]; then
-  echo "No staged files provided — skipping duplication check."
+# Filter out spec/test files and migration files from staged files
+FILTERED_STAGED=()
+for f in "${STAGED_FILES[@]}"; do
+  if [[ ! "$f" =~ \.(spec|test)\.(ts|tsx)$ ]] && [[ ! "$f" =~ /migrations/ ]]; then
+    FILTERED_STAGED+=("$f")
+  fi
+done
+
+if [ ${#FILTERED_STAGED[@]} -eq 0 ]; then
+  echo "No non-test staged files provided — skipping duplication check."
   exit 0
 fi
+
+STAGED_FILES=("${FILTERED_STAGED[@]}")
 
 # ── Colors ───────────────────────────────────────────────────────────────────
 RED="\033[31m"

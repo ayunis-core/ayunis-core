@@ -39,6 +39,7 @@ import { RetrieveMcpResourceUseCase } from './application/use-cases/retrieve-mcp
 import { DiscoverMcpCapabilitiesUseCase } from './application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case';
 import { ExecuteMcpToolUseCase } from './application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { GetMcpPromptUseCase } from './application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case';
+import { ValidateIntegrationAccessService } from './application/services/validate-integration-access.service';
 
 // Controller and Mappers
 import { McpIntegrationsController } from './presenters/http/mcp-integrations.controller';
@@ -78,6 +79,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     McpIntegrationAuthFactory,
     McpClientService,
     PredefinedMcpIntegrationRegistry,
+    ValidateIntegrationAccessService,
     // Use Cases
     CreateMcpIntegrationUseCase,
     GetMcpIntegrationUseCase,

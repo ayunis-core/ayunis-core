@@ -1,23 +1,17 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpToolCall } from '../../ports/mcp-client.port';
 import { McpClientService } from '../../services/mcp-client.service';
-import { ContextService } from 'src/common/context/services/context.service';
-import {
-  McpIntegrationNotFoundError,
-  McpIntegrationAccessDeniedError,
-  McpIntegrationDisabledError,
-  UnexpectedMcpError,
-} from '../../mcp.errors';
+import { UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 
 /**
  * Result of tool execution
  */
 export interface ToolExecutionResult {
   isError: boolean;
-  content: any; // Tool response content (structure depends on tool)
+  content: unknown; // Tool response content (structure depends on tool)
   errorMessage?: string; // Error message if execution failed
 }
 
@@ -26,9 +20,8 @@ export class ExecuteMcpToolUseCase {
   private readonly logger = new Logger(ExecuteMcpToolUseCase.name);
 
   constructor(
-    private readonly repository: McpIntegrationsRepositoryPort,
     private readonly mcpClientService: McpClientService,
-    private readonly contextService: ContextService,
+    private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
   ) {}
 
   async execute(command: ExecuteMcpToolCommand): Promise<ToolExecutionResult> {
@@ -38,29 +31,9 @@ export class ExecuteMcpToolUseCase {
     );
 
     try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-
-      const integration = await this.repository.findById(command.integrationId);
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(command.integrationId);
-      }
-
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(
-          command.integrationId,
-          integration.name,
-        );
-      }
-
-      if (!integration.enabled) {
-        throw new McpIntegrationDisabledError(
-          command.integrationId,
-          integration.name,
-        );
-      }
+      const integration = await this.validateIntegrationAccess.validate(
+        command.integrationId,
+      );
 
       // Execute tool (errors are caught and returned, not thrown)
       try {
@@ -103,10 +76,7 @@ export class ExecuteMcpToolUseCase {
     } catch (error) {
       const duration = Date.now() - startTime;
 
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
+      if (error instanceof ApplicationError) {
         this.logger.warn(
           `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=error error="${error.message}" duration=${duration}ms`,
         );

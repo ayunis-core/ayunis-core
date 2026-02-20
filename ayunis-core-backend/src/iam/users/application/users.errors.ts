@@ -2,12 +2,6 @@ import {
   ApplicationError,
   ErrorMetadata,
 } from '../../../common/errors/base.error';
-import {
-  BadRequestException,
-  NotFoundException,
-  ConflictException,
-  UnauthorizedException,
-} from '@nestjs/common';
 
 /**
  * Error codes specific to the Users domain
@@ -38,38 +32,6 @@ export abstract class UserError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    switch (this.statusCode) {
-      case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 409:
-        return new ConflictException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 401:
-        return new UnauthorizedException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      default:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-    }
   }
 }
 

@@ -185,7 +185,7 @@ export class StorageController {
   /**
    * Handle storage errors and convert them to appropriate HTTP exceptions
    */
-  private handleStorageError(error: any): never {
+  private handleStorageError(error: unknown): never {
     this.logger.error('Storage operation failed', error);
 
     // Handle domain errors - convert to HTTP exceptions

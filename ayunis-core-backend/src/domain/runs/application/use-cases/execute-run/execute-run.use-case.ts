@@ -42,8 +42,7 @@ import { FindOneAgentQuery } from 'src/domain/agents/application/use-cases/find-
 import { AgentNotFoundError } from 'src/domain/agents/application/agents.errors';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
-import { CollectUsageUseCase } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.use-case';
-import { CollectUsageCommand } from 'src/domain/usage/application/use-cases/collect-usage/collect-usage.command';
+import { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
@@ -68,7 +67,7 @@ export class ExecuteRunUseCase {
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
-    private readonly collectUsageUseCase: CollectUsageUseCase,
+    private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
@@ -400,7 +399,7 @@ export class ExecuteRunUseCase {
               inferenceResponse.meta.inputTokens !== undefined &&
               inferenceResponse.meta.outputTokens !== undefined
             ) {
-              this.collectUsageAsync(
+              this.collectUsage(
                 params.model,
                 inferenceResponse.meta.inputTokens,
                 inferenceResponse.meta.outputTokens,
@@ -488,36 +487,18 @@ export class ExecuteRunUseCase {
     }
   }
 
-  /**
-   * Collects usage data asynchronously (fire-and-forget).
-   * Errors are logged but don't block the main flow.
-   */
-  private collectUsageAsync(
+  private collectUsage(
     model: LanguageModel,
     inputTokens: number,
     outputTokens: number,
     messageId?: UUID,
   ): void {
-    this.logger.debug('Collecting usage', {
-      modelId: model.id,
-      modelName: model.name,
+    this.collectUsageAsyncService.collect(
+      model,
       inputTokens,
       outputTokens,
       messageId,
-    });
-
-    this.collectUsageUseCase
-      .execute(
-        new CollectUsageCommand({
-          model,
-          inputTokens,
-          outputTokens,
-          requestId: messageId,
-        }),
-      )
-      .catch((error) => {
-        this.logger.debug('Usage collection failed', { error: error as Error });
-      });
+    );
   }
 
   /**

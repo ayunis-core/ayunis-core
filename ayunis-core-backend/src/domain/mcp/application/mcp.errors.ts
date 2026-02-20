@@ -1,13 +1,7 @@
 import { ApplicationError, ErrorMetadata } from 'src/common/errors/base.error';
-import {
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-  ConflictException,
-  NotImplementedException,
-} from '@nestjs/common';
 
 export enum McpErrorCode {
+  MCP_UNAUTHENTICATED = 'MCP_UNAUTHENTICATED',
   INVALID_PREDEFINED_SLUG = 'INVALID_PREDEFINED_SLUG',
   INVALID_SERVER_URL = 'INVALID_SERVER_URL',
   MCP_INTEGRATION_NOT_FOUND = 'MCP_INTEGRATION_NOT_FOUND',
@@ -32,40 +26,16 @@ export abstract class McpError extends ApplicationError {
   ) {
     super(message, code, statusCode, metadata);
   }
+}
 
-  toHttpException() {
-    switch (this.statusCode) {
-      case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 403:
-        return new ForbiddenException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 409:
-        return new ConflictException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 501:
-        return new NotImplementedException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      default:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-    }
+export class McpUnauthenticatedError extends McpError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'User not authenticated',
+      McpErrorCode.MCP_UNAUTHENTICATED,
+      401,
+      metadata,
+    );
   }
 }
 

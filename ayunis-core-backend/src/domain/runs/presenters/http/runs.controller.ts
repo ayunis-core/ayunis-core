@@ -415,7 +415,7 @@ export class RunsController {
     }
   }
 
-  private writeSSEEvent(response: Response, id: string, data: any): void {
+  private writeSSEEvent(response: Response, id: string, data: unknown): void {
     response.write(`id: ${id}\n`);
     response.write(`data: ${JSON.stringify(data)}\n`);
     response.write('\n'); // Double newline to separate events
