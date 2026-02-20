@@ -14,4 +14,8 @@ The runs module is the central orchestrator for AI conversation execution. The `
 - **MessageCleanupService** — Ensures threads end with an assistant message after a run completes or is interrupted by deleting trailing non-assistant messages.
 - **SystemPromptBuilderService** — Builds system prompts from agent configuration, thread context, and active skills.
 
+### Error Handling
+
+- **RunAnonymizationUnavailableError** — When anonymous mode is enabled but the anonymization service is unavailable, the run aborts with a 503 error rather than proceeding without anonymization. This fail-closed behavior protects user privacy by ensuring messages are never sent without proper PII anonymization.
+
 The module integrates with **threads** for conversation context, **messages** for creating and reading conversation history, **models** for inference routing, **tools** for executing tool calls during runs, **agents** for loading agent configurations, **skills** for on-demand skill activation and source/MCP injection, **usage** for tracking token consumption, and **chat-settings** for user-level system prompt injection.
