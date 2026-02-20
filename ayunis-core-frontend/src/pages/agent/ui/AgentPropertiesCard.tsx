@@ -5,28 +5,17 @@ import {
   CardTitle,
   CardDescription,
 } from '@/shared/ui/shadcn/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/shadcn/select';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
+import { Form } from '@/shared/ui/shadcn/form';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useTranslation } from 'react-i18next';
 import { useUpdateAgent } from '../api';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import type { AgentResponseDto } from '@/shared/api';
+import {
+  NameField,
+  ModelSelectorField,
+  InstructionsField,
+} from '@/widgets/entity-form-fields';
 
 export default function AgentPropertiesCard({
   agent,
@@ -54,73 +43,29 @@ export default function AgentPropertiesCard({
             className="space-y-4"
           >
             <div className="grid grid-cols-2 gap-4">
-              <FormField
+              <NameField
                 control={form.control}
                 name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('editDialog.form.nameLabel')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t('editDialog.form.namePlaceholder')}
-                        disabled={disabled}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                translationNamespace="agent"
+                translationPrefix="editDialog"
+                disabled={disabled}
               />
-              <FormField
+              <ModelSelectorField
                 control={form.control}
                 name="modelId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('editDialog.form.modelLabel')}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={disabled}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue
-                            placeholder={t('editDialog.form.modelPlaceholder')}
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {models.map((model) => (
-                          <SelectItem key={model.id} value={model.id}>
-                            {model.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                translationNamespace="agent"
+                translationPrefix="editDialog"
+                models={models}
+                disabled={disabled}
               />
             </div>
-            <FormField
+            <InstructionsField
               control={form.control}
               name="instructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('editDialog.form.instructionsLabel')}
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('editDialog.form.instructionsPlaceholder')}
-                      className="min-h-[250px] max-h-[500px]"
-                      disabled={disabled}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              translationNamespace="agent"
+              translationPrefix="editDialog"
+              disabled={disabled}
+              className="min-h-[250px] max-h-[500px]"
             />
             {!disabled && (
               <Button type="submit" disabled={isLoading}>

@@ -7,7 +7,7 @@ import type {
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import SkillPropertiesCard from './SkillPropertiesCard';
-import SkillKnowledgeBaseCard from './SkillKnowledgeBaseCard';
+import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SharesTab } from '@/widgets/shares-tab';
 import {
@@ -23,7 +23,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDeleteSkill } from '../api';
+import { useDeleteSkill, useSkillSources } from '../api';
 
 export function SkillPage({
   skill,
@@ -45,6 +45,11 @@ export function SkillPage({
   });
   const deleteSkill = useDeleteSkill();
   const { confirm } = useConfirmation();
+
+  const sourcesHook = useSkillSources({
+    entity: skill,
+    translationNamespace: 'skill',
+  });
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -101,10 +106,12 @@ export function SkillPage({
           isReadOnly ? (
             <div className="grid gap-4">
               <SkillPropertiesCard skill={skill} disabled />
-              <SkillKnowledgeBaseCard
-                skill={skill}
+              <KnowledgeBaseCard
+                entity={skill}
                 isEnabled={isEmbeddingModelEnabled}
                 disabled
+                translationNamespace="skill"
+                sourcesHook={sourcesHook}
               />
               <SkillMcpIntegrationsCard disabled />
             </div>
@@ -123,9 +130,11 @@ export function SkillPage({
               <TabsContent value="config" className="mt-4">
                 <div className="grid gap-4">
                   <SkillPropertiesCard skill={skill} />
-                  <SkillKnowledgeBaseCard
-                    skill={skill}
+                  <KnowledgeBaseCard
+                    entity={skill}
                     isEnabled={isEmbeddingModelEnabled}
+                    translationNamespace="skill"
+                    sourcesHook={sourcesHook}
                   />
                   <SkillMcpIntegrationsCard />
                 </div>

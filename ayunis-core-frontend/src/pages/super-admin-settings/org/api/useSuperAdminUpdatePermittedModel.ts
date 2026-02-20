@@ -1,58 +1,43 @@
 import {
   useSuperAdminModelsControllerUpdatePermittedModel,
-  type ModelWithConfigResponseDto,
   getSuperAdminModelsControllerGetAvailableModelsQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
-import extractErrorData from '@/shared/api/extract-error-data';
-import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
+import {
+  prepareOptimisticUpdate,
+  handleMutationError,
+} from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
 
 interface UpdatePermittedModelParams {
   permittedModelId: string;
   anonymousOnly: boolean;
 }
 
+const UPDATE_ERROR_MAP: Record<string, string> = {
+  PERMITTED_MODEL_NOT_FOUND: 'models.updatePermittedModel.notFound',
+};
+
 export function useSuperAdminUpdatePermittedModel(orgId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { t } = useTranslation('admin-settings-models');
+  const queryKey =
+    getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
+
   const updatePermittedModelMutation =
     useSuperAdminModelsControllerUpdatePermittedModel({
       mutation: {
-        onMutate: async ({ id, data }) => {
-          const queryKey =
-            getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
-          await queryClient.cancelQueries({
-            queryKey,
-          });
-          const previousData =
-            queryClient.getQueryData<ModelWithConfigResponseDto[]>(queryKey);
-
-          // Optimistically update to the new value
-          queryClient.setQueryData<ModelWithConfigResponseDto[]>(
-            queryKey,
-            (old) => {
-              if (!old) {
-                return old;
-              }
-              return old.map((model) => {
-                if (model.permittedModelId === id) {
-                  return {
-                    ...model,
-                    anonymousOnly: data.anonymousOnly,
-                  };
-                }
-                return model;
-              });
-            },
-          );
-
-          return { previousData, queryKey };
-        },
+        onMutate: async ({ id, data }) =>
+          prepareOptimisticUpdate(queryClient, queryKey, (models) =>
+            models.map((model) =>
+              model.permittedModelId === id
+                ? { ...model, anonymousOnly: data.anonymousOnly }
+                : model,
+            ),
+          ),
         onSettled: () => {
-          // Invalidate queries by partial key
           void queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey;
@@ -67,21 +52,14 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
           void router.invalidate();
         },
         onError: (err, _, context) => {
-          try {
-            const { code } = extractErrorData(err);
-            if (code === 'PERMITTED_MODEL_NOT_FOUND') {
-              showError(t('models.updatePermittedModel.notFound'));
-            } else {
-              showError(t('models.updatePermittedModel.error'));
-            }
-          } catch {
-            // Non-AxiosError (network failure, request cancellation, etc.)
-            showError(t('models.updatePermittedModel.error'));
-          }
-
-          if (context?.previousData) {
-            queryClient.setQueryData(context.queryKey, context.previousData);
-          }
+          handleMutationError(
+            err,
+            queryClient,
+            context,
+            t,
+            UPDATE_ERROR_MAP,
+            'models.updatePermittedModel.error',
+          );
         },
       },
     });
@@ -90,9 +68,7 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
     updatePermittedModelMutation.mutate({
       orgId,
       id: params.permittedModelId,
-      data: {
-        anonymousOnly: params.anonymousOnly,
-      },
+      data: { anonymousOnly: params.anonymousOnly },
     });
   }
 

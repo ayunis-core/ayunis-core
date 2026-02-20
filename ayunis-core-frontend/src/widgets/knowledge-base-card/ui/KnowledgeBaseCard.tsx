@@ -10,24 +10,40 @@ import { FileText, Loader, X } from 'lucide-react';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useRef } from 'react';
-import type { AgentResponseDto } from '@/shared/api';
-import useAgentSources from '../api/useAgentSources';
 import { useTranslation } from 'react-i18next';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { showError } from '@/shared/lib/toast';
 
-interface AgentKnowledgeBaseCardProps {
-  agent: AgentResponseDto;
-  isEnabled: boolean;
-  disabled?: boolean;
+export interface Source {
+  id: string;
+  name: string;
 }
 
-export default function AgentKnowledgeBaseCard({
-  agent,
+export interface SourcesHook {
+  sources: Source[];
+  isLoadingSources: boolean;
+  addFileSource: (params: { id: string; data: { file: File } }) => void;
+  addFileSourcePending: boolean;
+  removeSource: (sourceId: string) => void;
+  removeSourcePending: boolean;
+}
+
+interface KnowledgeBaseCardProps {
+  entity: { id: string };
+  isEnabled: boolean;
+  disabled?: boolean;
+  translationNamespace: string;
+  sourcesHook: SourcesHook;
+}
+
+export default function KnowledgeBaseCard({
+  entity,
   isEnabled,
   disabled = false,
-}: Readonly<AgentKnowledgeBaseCardProps>) {
-  const { t } = useTranslation('agent');
+  translationNamespace,
+  sourcesHook,
+}: Readonly<KnowledgeBaseCardProps>) {
+  const { t } = useTranslation(translationNamespace);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -37,10 +53,10 @@ export default function AgentKnowledgeBaseCard({
     addFileSourcePending,
     removeSource,
     removeSourcePending,
-  } = useAgentSources({ agent });
+  } = sourcesHook;
 
-  function handleFileRemove(sourceAssignmentId: string) {
-    removeSource(sourceAssignmentId);
+  function handleFileRemove(sourceId: string) {
+    removeSource(sourceId);
   }
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -51,7 +67,7 @@ export default function AgentKnowledgeBaseCard({
     }
     if (file) {
       addFileSource({
-        id: agent.id,
+        id: entity.id,
         data: { file },
       });
     }

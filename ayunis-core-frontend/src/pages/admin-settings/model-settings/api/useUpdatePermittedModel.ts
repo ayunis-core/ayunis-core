@@ -1,79 +1,57 @@
 import {
   useModelsControllerUpdatePermittedModel,
-  type ModelWithConfigResponseDto,
   getModelsControllerGetAvailableModelsWithConfigQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
-import extractErrorData from '@/shared/api/extract-error-data';
-import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
+import {
+  prepareOptimisticUpdate,
+  handleMutationError,
+} from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
 
 interface UpdatePermittedModelParams {
   permittedModelId: string;
   anonymousOnly: boolean;
 }
 
+const UPDATE_ERROR_MAP: Record<string, string> = {
+  PERMITTED_MODEL_NOT_FOUND: 'models.updatePermittedModel.notFound',
+};
+
 export function useUpdatePermittedModel() {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-models');
+  const queryKey = getModelsControllerGetAvailableModelsWithConfigQueryKey();
+
   const updatePermittedModelMutation = useModelsControllerUpdatePermittedModel({
     mutation: {
-      onMutate: async ({ id, data }) => {
-        const queryKey =
-          getModelsControllerGetAvailableModelsWithConfigQueryKey();
-        await queryClient.cancelQueries({
-          queryKey,
-        });
-        const previousData =
-          queryClient.getQueryData<ModelWithConfigResponseDto[]>(queryKey);
-
-        // Optimistically update to the new value
-        queryClient.setQueryData<ModelWithConfigResponseDto[]>(
-          queryKey,
-          (old) => {
-            if (!old) {
-              return old;
-            }
-            return old.map((model) => {
-              if (model.permittedModelId === id) {
-                return {
-                  ...model,
-                  anonymousOnly: data.anonymousOnly,
-                };
-              }
-              return model;
-            });
-          },
-        );
-
-        return { previousData, queryKey };
-      },
+      onMutate: async ({ id, data }) =>
+        prepareOptimisticUpdate(queryClient, queryKey, (models) =>
+          models.map((model) =>
+            model.permittedModelId === id
+              ? { ...model, anonymousOnly: data.anonymousOnly }
+              : model,
+          ),
+        ),
       onError: (err, _, context) => {
-        try {
-          const { code } = extractErrorData(err);
-          if (code === 'PERMITTED_MODEL_NOT_FOUND') {
-            showError(t('models.updatePermittedModel.notFound'));
-          } else {
-            showError(t('models.updatePermittedModel.error'));
-          }
-        } catch {
-          // Non-AxiosError (network failure, request cancellation, etc.)
-          showError(t('models.updatePermittedModel.error'));
-        }
-
-        if (context?.previousData) {
-          queryClient.setQueryData(context.queryKey, context.previousData);
-        }
+        handleMutationError(
+          err,
+          queryClient,
+          context,
+          t,
+          UPDATE_ERROR_MAP,
+          'models.updatePermittedModel.error',
+        );
       },
       onSettled: async () => {
         const queryKeys = [
-          getModelsControllerGetAvailableModelsWithConfigQueryKey(),
+          queryKey,
           getModelsControllerGetPermittedLanguageModelsQueryKey(),
         ];
         await Promise.all(
-          queryKeys.map((queryKey) =>
-            queryClient.invalidateQueries({ queryKey }),
+          queryKeys.map((qk) =>
+            queryClient.invalidateQueries({ queryKey: qk }),
           ),
         );
       },
@@ -83,9 +61,7 @@ export function useUpdatePermittedModel() {
   function updatePermittedModel(params: UpdatePermittedModelParams) {
     updatePermittedModelMutation.mutate({
       id: params.permittedModelId,
-      data: {
-        anonymousOnly: params.anonymousOnly,
-      },
+      data: { anonymousOnly: params.anonymousOnly },
     });
   }
 

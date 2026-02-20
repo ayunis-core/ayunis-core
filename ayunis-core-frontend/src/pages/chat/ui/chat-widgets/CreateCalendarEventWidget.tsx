@@ -16,15 +16,9 @@ import { Label } from '@/shared/ui/shadcn/label';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Calendar } from '@/shared/ui/shadcn/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
 
-// Icons
-import { ChevronDownIcon } from 'lucide-react';
+// Widgets
+import { DateTimePickerWidget } from '@/widgets/date-time-picker/ui/DateTimePickerWidget';
 
 function parseTimeFromIso(
   isoString: string | undefined,
@@ -70,8 +64,6 @@ export default function CreateCalendarEventWidget({
   const [endDate, setEndDate] = useState<Date | undefined>(initialEndDate);
   const [startTime, setStartTime] = useState<string>(initialStartTime);
   const [endTime, setEndTime] = useState<string>(initialEndTime);
-  const [isStartDatePickerOpen, setIsStartDatePickerOpen] = useState(false);
-  const [isEndDatePickerOpen, setIsEndDatePickerOpen] = useState(false);
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
@@ -216,116 +208,34 @@ export default function CreateCalendarEventWidget({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        <div className="space-y-2">
-          <Label className={cn('px-1', isStreaming && 'animate-pulse')}>
-            {t('chat.tools.create_calendar_event.start')}
-          </Label>
-
-          <div className="flex gap-4">
-            <Popover
-              open={isStartDatePickerOpen}
-              onOpenChange={setIsStartDatePickerOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-40 justify-between font-normal',
-                    isStreaming && 'animate-pulse',
-                  )}
-                >
-                  {startDate
-                    ? startDate.toLocaleDateString()
-                    : t('chat.tools.create_calendar_event.selectDate', {
-                        defaultValue: 'Select date',
-                      })}
-                  <ChevronDownIcon />
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent
-                className="w-auto overflow-hidden p-0"
-                align="start"
-              >
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  captionLayout="dropdown"
-                  onSelect={(d) => {
-                    setStartDate(d ?? undefined);
-                    setIsStartDatePickerOpen(false);
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Input
-              type="time"
-              step="1"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className={cn(
-                'bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
-                isStreaming && 'animate-pulse',
-              )}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label className={cn('px-1', isStreaming && 'animate-pulse')}>
-            {t('chat.tools.create_calendar_event.end')}
-          </Label>
-
-          <div className="flex gap-4">
-            <Popover
-              open={isEndDatePickerOpen}
-              onOpenChange={setIsEndDatePickerOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-40 justify-between font-normal',
-                    isStreaming && 'animate-pulse',
-                  )}
-                >
-                  {endDate
-                    ? endDate.toLocaleDateString()
-                    : t('chat.tools.create_calendar_event.selectDate', {
-                        defaultValue: 'Select date',
-                      })}
-                  <ChevronDownIcon />
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent
-                className="w-auto overflow-hidden p-0"
-                align="start"
-              >
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  captionLayout="dropdown"
-                  onSelect={(d) => {
-                    setEndDate(d ?? undefined);
-                    setIsEndDatePickerOpen(false);
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Input
-              type="time"
-              step="1"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className={cn(
-                'bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
-                isStreaming && 'animate-pulse',
-              )}
-            />
-          </div>
-        </div>
+        <DateTimePickerWidget
+          label={t('chat.tools.create_calendar_event.start')}
+          date={startDate}
+          time={startTime}
+          onDateChange={setStartDate}
+          onTimeChange={setStartTime}
+          selectDatePlaceholder={t(
+            'chat.tools.create_calendar_event.selectDate',
+            {
+              defaultValue: 'Select date',
+            },
+          )}
+          isStreaming={isStreaming}
+        />
+        <DateTimePickerWidget
+          label={t('chat.tools.create_calendar_event.end')}
+          date={endDate}
+          time={endTime}
+          onDateChange={setEndDate}
+          onTimeChange={setEndTime}
+          selectDatePlaceholder={t(
+            'chat.tools.create_calendar_event.selectDate',
+            {
+              defaultValue: 'Select date',
+            },
+          )}
+          isStreaming={isStreaming}
+        />
       </div>
 
       <div className="w-full flex gap-2">
