@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["src/main.ts", "src/cli/main.ts"],
+  "project": ["src/**/*.ts"],
+  "ignore": [
+    "src/db/migrations/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "src/common/clients/locaboo/**",
+    "src/common/clients/docling/**",
+    "src/config/evals.config.ts",
+    "src/config/locaboo3.config.ts"
+  ],
+  "ignoreDependencies": ["tsconfig-paths"]
+}

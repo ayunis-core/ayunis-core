@@ -55,7 +55,7 @@ export class AnthropicMessageConverter {
         }
         if (
           message.role === MessageRole.ASSISTANT ||
-          lastMessage.role === MessageRole.ASSISTANT
+          lastMessage.role === (MessageRole.ASSISTANT as string)
         ) {
           convertedMessages.push(lastMessage);
           convertedMessages.push(await this.convertMessage(message, orgId));
