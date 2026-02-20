@@ -14,7 +14,7 @@ SUBJECT=$(grep -vE '^\s*#' "$MSG_FILE" | sed '/^\s*$/d' | head -n 1)
 #    feat|feature|fix|chore|refactor|docs|style|perf|test|build|ci|revert|check
 echo "$SUBJECT" | grep -qiE '^(feat|feature|fix|chore|refactor|docs|style|perf|test|build|ci|revert|check|wip)(\(.+\))?:\s' || {
   printf "\033[31mCommit message must start with a type (e.g., feat:, fix:, wip:, chore:, ...).\033[0m\n" >&2
-  printf "Examples:\n  feat: add new booking widget\n  fix: correct date validation\n  wip: partial implementation of task board\n" >&2
+  printf "Examples:\n  feat: add new booking widget (AYC-123)\n  fix: correct date validation (AYC-456)\n  wip: partial implementation of task board (AYC-789)\n" >&2
   exit 1
 }
 
