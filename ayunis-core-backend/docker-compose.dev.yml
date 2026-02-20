@@ -123,7 +123,7 @@ services:
     container_name: ayunis-anonymize-dev
     restart: unless-stopped
     ports:
-      - '8001:8000' # Expose on 8001 to avoid conflicts
+      - '8002:8000' # Expose on 8002 to avoid conflicts
     healthcheck:
       test:
         [

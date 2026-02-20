@@ -106,7 +106,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - '${ANONYMIZE_HOST_PORT:-8001}:8000'
+      - '${ANONYMIZE_HOST_PORT:-8002}:8000'
     healthcheck:
       test:
         [
