@@ -27,7 +27,7 @@ interface ModelTypeCardProps {
   readonly models: ModelWithConfigResponseDto[];
 }
 
-// Priority order: DE (0) -> EU (1) -> US (2)
+// Priority order: DE (0) -> EU (1) -> US (2) -> Unknown (3)
 function getHostingPriority(
   provider: ModelWithConfigResponseDto['provider'],
 ): number {
@@ -46,6 +46,8 @@ function getHostingPriority(
     case 'anthropic':
     case 'gemini':
       return 2; // US
+    default:
+      return 3;
   }
 }
 
