@@ -10,7 +10,7 @@ For architecture overview and module navigation, see [ARCHITECTURE.md](ARCHITECT
 
 **Ayunis Core** is an open-source AI gateway enabling municipalities to run customizable AI assistants with multi-provider LLM support, tool integration, document retrieval (RAG), and organization-scoped access control.
 
-```
+```text
 ayunis-core/
 ├── ayunis-core-backend/          # NestJS API server (hexagonal architecture)
 ├── ayunis-core-frontend/         # React SPA (Feature-Sliced Design)
@@ -113,6 +113,19 @@ If an action is irreversible and isn't writing/editing source code, **ask first*
 
 ---
 
+## Code Quality Enforcement
+
+The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations block commits and PRs.
+
+- **Strict TypeScript** — Backend uses `strict: true` (no implicit any, strict null checks, strict bind/call/apply). Frontend uses strict null checks.
+- **`no-explicit-any: error`** — Both backend and frontend. Use `unknown` or specific types. If `any` is truly unavoidable (e.g., TypeORM pgvector), add a targeted `eslint-disable` comment with a justification.
+- **sonarjs** — Both packages use `eslint-plugin-sonarjs` (recommended config). Cognitive complexity threshold: 15. Lizard enforces the stricter CCN ≤ 10 for individual functions.
+- **File size limit** — 500 lines per file (excluding tests, migrations, records, generated code). Enforced by `scripts/check-file-size.sh` in pre-commit.
+- **No `console.*`** — Use NestJS `Logger` on the backend. `console.warn` and `console.error` are allowed in specific infrastructure code.
+- **Circular dependency detection** — `madge` runs in pre-commit and CI.
+
+---
+
 ## Development Skills
 
 For detailed development workflows, patterns, and validation checklists, use the appropriate skill:
@@ -121,3 +134,5 @@ For detailed development workflows, patterns, and validation checklists, use the
 - **Backend work** → `ayunis-core-backend-dev` skill (NestJS, hexagonal patterns, TDD, validation)
 - **Frontend work** → `ayunis-core-frontend-dev` skill (React, Feature-Sliced Design, API client, hooks)
 - **Database migrations** → `ayunis-core-migrations` skill (TypeORM entity changes, auto-generated migrations)
+- **New backend module** → `new-module` skill (scaffold hexagonal module with entity, ports, use cases, controller)
+- **New frontend page** → `new-page` skill (scaffold FSD page with route, component, barrel export)

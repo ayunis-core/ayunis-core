@@ -22,12 +22,18 @@ npm run build                  # Must succeed
 npm run lint                   # Must pass
 ```
 
+## TypeScript & Lint Strictness
+
+ESLint enforces `@typescript-eslint/no-explicit-any: error`. Use `unknown` or specific types — never `any`. The `sonarjs` plugin is also active (cognitive complexity threshold: 15).
+
 ## Complexity Thresholds
 
 Enforced by Husky pre-commit and CI:
+
 - Cyclomatic complexity (CCN) ≤ 10
 - Function length ≤ 50 lines
 - Arguments ≤ 5
+- File size ≤ 500 lines (excluding tests, generated code)
 
 ```bash
 # From repo root
@@ -39,7 +45,7 @@ If a function exceeds these limits, **refactor it** into smaller units.
 
 ## Architecture (Feature-Sliced Design)
 
-```
+```text
 src/
 ├── pages/      # Route components (compose widgets/features)
 ├── widgets/    # Reusable composites (used in ≥2 pages)
@@ -105,5 +111,5 @@ npm run openapi:update      # Regenerate API client
 | Edit generated API client | Will be overwritten | Run `openapi:update` |
 | Import upward across layers | Breaks FSD architecture | Respect `pages → widgets → features → shared` |
 | Batch changes | Harder to identify breakage | One change → validate → commit |
-| Use `any` type | Hides errors | Use `unknown` or specific types |
+| Use `any` type | `no-explicit-any: error` blocks commit | Use `unknown` or specific types, narrow with type guards |
 | Write complex functions | CCN>10 triggers CI failure | Split into smaller functions |
