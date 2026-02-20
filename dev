@@ -294,14 +294,35 @@ _kill_pid() {
   fi
 }
 
+_is_repo_process() {
+  local pid="$1"
+  local proc_cwd
+  # Try to get process cwd via /proc (Linux)
+  proc_cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null || true)
+  if [ -n "$proc_cwd" ]; then
+    [[ "$proc_cwd" == "$REPO_DIR"* ]]
+  else
+    # Fallback for non-Linux or if /proc read fails: check command line
+    local cmd
+    cmd=$(ps -p "$pid" -o args= 2>/dev/null || true)
+    [[ "$cmd" == *"$REPO_DIR"* ]] || [[ "$cmd" == *"ayunis-core"* ]]
+  fi
+}
+
 _kill_port() {
   local port="$1"
   local label="${2:-process}"
-  local pid
-  pid=$(lsof -ti :"$port" 2>/dev/null || true)
-  if [ -n "$pid" ]; then
-    warn "Killing orphaned $label process on port $port (PID $pid)"
-    echo "$pid" | xargs kill -9 2>/dev/null || true
+  local pids
+  pids=$(lsof -ti :"$port" 2>/dev/null || true)
+  if [ -n "$pids" ]; then
+    for pid in $pids; do
+      if _is_repo_process "$pid"; then
+        warn "Killing orphaned $label process on port $port (PID $pid)"
+        kill -9 "$pid" 2>/dev/null || true
+      else
+        warn "Port $port occupied by unrelated process (PID $pid) — not killing"
+      fi
+    done
     sleep 1
   fi
 }
