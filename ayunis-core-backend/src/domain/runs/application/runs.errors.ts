@@ -11,6 +11,7 @@ export enum RunErrorCode {
   RUN_TOOL_NOT_FOUND = 'RUN_TOOL_NOT_FOUND',
   RUN_TOOL_EXECUTION_FAILED = 'RUN_TOOL_EXECUTION_FAILED',
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
+  RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
   THREAD_AGENT_NO_LONGER_ACCESSIBLE = 'THREAD_AGENT_NO_LONGER_ACCESSIBLE',
 }
 
@@ -102,6 +103,21 @@ export class RunToolExecutionFailedError extends RunError {
       `Tool '${toolName}' execution failed`,
       RunErrorCode.RUN_TOOL_EXECUTION_FAILED,
       400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when anonymous mode is enabled but the anonymization service
+ * is unavailable. The message must not be sent without anonymization.
+ */
+export class RunAnonymizationUnavailableError extends RunError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Anonymization is currently unavailable. Your message was not sent to protect your data.',
+      RunErrorCode.RUN_ANONYMIZATION_UNAVAILABLE,
+      503,
       metadata,
     );
   }

@@ -5,37 +5,24 @@ import StreamingLoadingIndicator from '@/pages/chat/ui/StreamingLoadingIndicator
 import ChatInput from '@/widgets/chat-input';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import { useMessageSend } from '../api/useMessageSend';
-import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
+import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableAgentWarning from './UnavailableAgentWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 import config from '@/shared/config';
-import { Button } from '@/shared/ui/shadcn/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type {
-  RunErrorResponseDto,
   RunMessageResponseDtoMessage,
   RunSessionResponseDto,
   RunThreadResponseDto,
 } from '@/shared/api';
+import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import AppLayout from '@/layouts/app-layout';
 import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
@@ -47,7 +34,6 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
-  getAgentsControllerFindAllQueryKey,
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
@@ -181,49 +167,7 @@ export default function ChatPage({
     [createFileSource],
   );
 
-  const handleError = useCallback(
-    (error: RunErrorResponseDto) => {
-      switch (error.code) {
-        case 'EXECUTION_ERROR':
-          showError(t('chat.errorExecutionError'));
-          break;
-        case 'RUN_NO_MODEL_FOUND':
-          showError(t('chat.errorNoModelFound'));
-          break;
-        case 'RUN_MAX_ITERATIONS_REACHED':
-          showError(t('chat.errorMaxIterationsReached'));
-          break;
-        case 'RUN_TOOL_NOT_FOUND':
-          showError(t('chat.errorToolNotFound'));
-          break;
-        case 'THREAD_AGENT_NO_LONGER_ACCESSIBLE':
-          // Refresh the agents list and thread to show the warning
-          void queryClient.invalidateQueries({
-            queryKey: getAgentsControllerFindAllQueryKey(),
-          });
-          void queryClient.invalidateQueries({
-            queryKey: getThreadsControllerFindOneQueryKey(thread.id),
-          });
-          showError(t('chat.unavailableAgentWarningTitle'));
-          break;
-        case 'QUOTA_EXCEEDED': {
-          const retryMinutes = error.details?.retryAfterSeconds
-            ? Math.ceil(Number(error.details.retryAfterSeconds) / 60)
-            : null;
-          showError(
-            retryMinutes
-              ? t('chat.errorQuotaExceededWithTime', { minutes: retryMinutes })
-              : t('chat.errorQuotaExceeded'),
-          );
-          break;
-        }
-        case undefined:
-        default:
-          showError(t('chat.errorUnexpected'));
-      }
-    },
-    [t, queryClient, thread.id],
-  );
+  const handleError = useRunErrorHandler(thread.id);
 
   const handleSession = useCallback((session: RunSessionResponseDto) => {
     if (config.env === 'development') {
@@ -446,64 +390,12 @@ export default function ChatPage({
     resetCreateFileSourceMutation,
   ]);
 
-  // Chat Header
   const chatHeader = (
-    <ContentAreaHeader
-      title={
-        <span
-          className="group inline-flex items-center gap-2"
-          data-testid="header"
-        >
-          {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should show "Untitled" */}
-          {threadTitle || t('chat.untitled')}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={() => handleRenameThread()}
-                variant="ghost"
-                className="opacity-0 group-hover:opacity-100"
-                aria-label={t('chat.renameThread')}
-              >
-                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('chat.renameThread')}</TooltipContent>
-          </Tooltip>
-          {thread.isAnonymous && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="secondary">
-                  <ShieldCheck className="h-3 w-3" />
-                  {t('chat.anonymousMode')}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>{t('chat.anonymousModeTooltip')}</TooltipContent>
-            </Tooltip>
-          )}
-        </span>
-      }
-      action={
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5 text-primary" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleRenameThread(true)}>
-              <Pencil className="h-4 w-4" />
-              <span>{t('chat.renameThread')}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDeleteThread}
-              variant="destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>{t('chat.deleteThread')}</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      }
+    <ChatHeader
+      threadTitle={threadTitle}
+      isAnonymous={thread.isAnonymous}
+      onRename={handleRenameThread}
+      onDelete={handleDeleteThread}
     />
   );
 
