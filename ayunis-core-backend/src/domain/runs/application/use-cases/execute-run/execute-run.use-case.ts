@@ -13,6 +13,7 @@ import { GetInferenceCommand } from '../../../../models/application/use-cases/ge
 import { CreateAssistantMessageUseCase } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import { CreateAssistantMessageCommand } from '../../../../messages/application/use-cases/create-assistant-message/create-assistant-message.command';
 import {
+  RunAnonymizationUnavailableError,
   RunExecutionFailedError,
   RunInvalidInputError,
   RunMaxIterationsReachedError,
@@ -418,11 +419,12 @@ export class ExecuteRunUseCase {
       }
       return result.anonymizedText;
     } catch (error) {
-      this.logger.error('Failed to anonymize text, returning original', {
+      this.logger.error('Anonymization service unavailable', {
         error: error as Error,
       });
-      // Return original text on anonymization failure to not block the conversation
-      return text;
+      throw new RunAnonymizationUnavailableError({
+        originalError: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
