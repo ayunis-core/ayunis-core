@@ -9,7 +9,6 @@
   "ignore": [
     "src/shared/api/generated/**",
     "src/app/routeTree.gen.ts",
-    "src/shared/ui/shadcn/**",
     "src/shared/ui/shadcn/**"
   ],
   "ignoreDependencies": [
