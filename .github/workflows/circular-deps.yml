@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Check circular dependencies
-        run: npx madge --circular --extensions ts src/
+        run: npx madge --circular --extensions ts --ts-config ./tsconfig.json src/
 
   frontend:
     name: Frontend
@@ -52,4 +52,4 @@ jobs:
         run: npm ci
 
       - name: Check circular dependencies
-        run: npx madge --circular --extensions ts,tsx src/
+        run: npx madge --circular --extensions ts,tsx --ts-config ./tsconfig.json src/
