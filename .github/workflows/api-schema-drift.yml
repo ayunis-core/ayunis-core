@@ -1,0 +1,116 @@
+name: API Schema Drift
+
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-backend/src/**'
+      - '.github/workflows/api-schema-drift.yml'
+
+jobs:
+  check:
+    name: Check API client is up to date
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ayunis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ayunis-core-backend
+        run: npm ci
+
+      - name: Create backend environment file
+        working-directory: ayunis-core-backend
+        run: |
+          cat > .env << 'EOF'
+          NODE_ENV=test
+          PORT=3000
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_USER=postgres
+          POSTGRES_PASSWORD=postgres
+          POSTGRES_DB=ayunis_test
+          JWT_SECRET=test-jwt-secret-for-ci-testing-minimum-32-characters
+          JWT_EXPIRES_IN=1h
+          JWT_REFRESH_EXPIRES_IN=7d
+          JWT_INVITE_EXPIRES_IN=7d
+          JWT_EMAIL_CONFIRMATION_EXPIRES_IN=1d
+          JWT_PASSWORD_RESET_EXPIRES_IN=1h
+          COOKIE_SECRET=test-cookie-secret-for-ci
+          COOKIE_SECURE=false
+          COOKIE_DOMAIN=localhost
+          COOKIE_SAME_SITE=lax
+          MINIO_ENDPOINT=localhost
+          MINIO_PORT=9000
+          MINIO_USE_SSL=false
+          MINIO_ROOT_USER=minio
+          MINIO_ROOT_PASSWORD=minio123
+          MINIO_BUCKET=ayunis-test-uploads
+          ADMIN_TOKEN=test-admin-token
+          DISABLE_REGISTRATION=false
+          DISABLE_EMAIL_CONFIRMATION=true
+          EOF
+
+      - name: Build backend
+        working-directory: ayunis-core-backend
+        run: npm run build
+
+      - name: Run migrations
+        working-directory: ayunis-core-backend
+        run: npm run typeorm migration:run -- -d src/db/datasource.ts
+        env:
+          NODE_ENV: test
+
+      - name: Start backend
+        working-directory: ayunis-core-backend
+        run: |
+          node dist/main.js &
+          # Wait for backend to be ready
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/api/docs-json > /dev/null 2>&1; do sleep 2; done'
+
+      - name: Install frontend dependencies
+        working-directory: ayunis-core-frontend
+        run: npm ci
+
+      - name: Create frontend environment file
+        working-directory: ayunis-core-frontend
+        run: |
+          cat > .env << 'EOF'
+          VITE_API_URL=http://localhost:3000
+          OPENAPI_URL=http://localhost:3000/api/docs-json
+          EOF
+
+      - name: Regenerate API client
+        working-directory: ayunis-core-frontend
+        run: npm run openapi:update
+
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code ayunis-core-frontend/src/shared/api/generated/; then
+            echo ""
+            echo "❌ API client is out of date."
+            echo "Run 'npm run openapi:update' in ayunis-core-frontend and commit the changes."
+            exit 1
+          fi
+          echo "✅ API client is up to date"
