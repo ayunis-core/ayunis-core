@@ -30,8 +30,6 @@ import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { UUID } from 'crypto';
-import langfuse from 'src/common/evals/langfuse';
-import { LangfuseTraceClient } from 'langfuse';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -130,17 +128,6 @@ export class ExecuteRunUseCase {
           model.model.canUseTools,
         );
 
-      const trace = langfuse.trace({
-        name: 'execute_run',
-        userId: userId,
-        metadata: {
-          threadId: thread.id,
-          model: model.model.name,
-          streaming: command.streaming,
-        },
-        input: command.input,
-      });
-
       // Execute the run
       return this.orchestrateRun({
         thread,
@@ -149,7 +136,6 @@ export class ExecuteRunUseCase {
         input: command.input as RunUserInput | RunToolResultInput,
         instructions,
         streaming: command.streaming,
-        trace,
         orgId,
         isAnonymous: effectiveIsAnonymous,
         agent,
@@ -178,255 +164,23 @@ export class ExecuteRunUseCase {
     });
   }
 
-  private async *orchestrateRun(params: {
-    thread: Thread;
-    tools: Tool[];
-    model: LanguageModel;
-    input: RunUserInput | RunToolResultInput;
-    instructions?: string;
-    streaming?: boolean;
-    trace: LangfuseTraceClient;
-    orgId: UUID;
-    isAnonymous: boolean;
-    agent?: Agent;
-    activeSkills: Skill[];
-  }): AsyncGenerator<Message, void, void> {
+  private async *orchestrateRun(
+    params: RunParams,
+  ): AsyncGenerator<Message, void, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
-
-    /* The order of operation is
-     * - collect and yield tool responses - both frontend and backend tools!
-     *   (we need to start with this step so we can process frontend tool responses from user and backend
-     *    tool responses from backend in one ToolResultMessage)
-     * - yield user text message (if first iteration)
-     * - yield agent response
-     * - check if we need to hand over to the user, if not repeat
-     */
     const iterations = 20;
     try {
       for (let i = 0; i < iterations; i++) {
         this.logger.debug('iteration', i);
-        const isFirstIteration = i === 0;
-        const isLastIteration = i === iterations - 1;
-        const userInput =
-          params.input instanceof RunUserInput ? params.input : null;
-        const toolResultInput =
-          params.input instanceof RunToolResultInput ? params.input : null;
-        if (!userInput && !toolResultInput) {
-          throw new RunInvalidInputError('Invalid input');
+        const { userInput, toolResultInput } = this.parseInput(params.input);
+
+        yield* this.processToolResults(params, toolResultInput);
+
+        if (i === 0 && userInput) {
+          yield await this.processUserMessage(params, userInput);
         }
 
-        // add frontend tools from user response, call backend tools and add their responses
-        const toolResultMessageContent =
-          await this.toolResultCollectorService.collectToolResults({
-            thread: params.thread,
-            tools: params.tools,
-            input: toolResultInput,
-            trace: params.trace,
-            orgId: params.orgId,
-            isAnonymous: params.isAnonymous,
-          });
-
-        // Add tool result messages to traces and thread if there were any
-        if (toolResultMessageContent.length > 0) {
-          const toolResultMessage =
-            await this.createToolResultMessageUseCase.execute(
-              new CreateToolResultMessageCommand(
-                params.thread.id,
-                toolResultMessageContent,
-              ),
-            );
-          params.trace.event({
-            name: 'new_message',
-            output: toolResultMessage,
-          });
-          this.addMessageToThreadUseCase.execute(
-            new AddMessageCommand(params.thread, toolResultMessage),
-          );
-          yield toolResultMessage;
-
-          // Check if activate_skill was called — refresh run context
-          const skillWasActivated = toolResultMessageContent.some(
-            (content) =>
-              content.toolName === (ToolType.ACTIVATE_SKILL as string),
-          );
-          if (skillWasActivated) {
-            const { thread: refreshedThread } =
-              await this.findThreadUseCase.execute(
-                new FindThreadQuery(params.thread.id),
-              );
-            params.thread = refreshedThread;
-            const refreshed = await this.toolAssemblyService.buildRunContext(
-              refreshedThread,
-              params.agent,
-              params.activeSkills,
-              params.model.canUseTools,
-            );
-            params.tools = refreshed.tools;
-            params.instructions = refreshed.instructions;
-          }
-        }
-
-        // Add user message if we have user input and it's the first iteration
-        if (isFirstIteration && userInput) {
-          // Validate that at least text or images are provided
-          const hasText = userInput.text && userInput.text.trim().length > 0;
-          const hasImages = userInput.pendingImages.length > 0;
-
-          if (!hasText && !hasImages) {
-            throw new RunInvalidInputError(
-              'Message must contain at least one content item (non-empty text or at least one image)',
-            );
-          }
-
-          // Validate that the model supports vision if images are included
-          if (hasImages && !params.model.canVision) {
-            throw new RunInvalidInputError(
-              'The selected model does not support image inputs. Please use a vision-capable model or remove images from your message.',
-            );
-          }
-
-          // Anonymize user message text if in anonymous mode (thread setting or model enforced)
-          const messageText =
-            hasText && params.isAnonymous
-              ? await this.anonymizeText(userInput.text)
-              : userInput.text;
-
-          const newUserMessage = await this.createUserMessageUseCase.execute(
-            new CreateUserMessageCommand(
-              params.thread.id,
-              messageText,
-              userInput.pendingImages,
-            ),
-          );
-          params.trace.event({
-            name: 'new_message',
-            input: newUserMessage,
-          });
-          this.addMessageToThreadUseCase.execute(
-            new AddMessageCommand(params.thread, newUserMessage),
-          );
-          yield newUserMessage;
-        }
-
-        let assistantMessage: AssistantMessage;
-        try {
-          // Trim messages to fit within context window before inference
-          const trimmedMessages = this.trimMessagesForInference(
-            params.thread.messages,
-          );
-
-          if (params.streaming) {
-            // Streaming mode: yield partial messages as they come in
-            let finalMessage: AssistantMessage | undefined;
-
-            const generation = params.trace.generation({
-              name: 'completion_streaming',
-              model: params.model.name,
-              input: trimmedMessages,
-              completionStartTime: new Date(),
-            });
-            for await (const partialMessage of this.streamingInferenceService.executeStreamingInference(
-              {
-                model: params.model,
-                messages: trimmedMessages,
-                tools: params.tools,
-                instructions: params.instructions,
-                threadId: params.thread.id,
-                orgId: params.orgId,
-              },
-            )) {
-              finalMessage = partialMessage; // Keep track of the last message
-              yield partialMessage;
-            }
-
-            if (!finalMessage) {
-              generation.end({
-                output: 'No final message received from streaming inference',
-                metadata: {
-                  isError: true,
-                  error: 'No final message received from streaming inference',
-                },
-              });
-              throw new RunExecutionFailedError(
-                'No final message received from streaming inference',
-              );
-            }
-
-            assistantMessage = finalMessage;
-            generation.end({
-              output: assistantMessage.content,
-            });
-            params.trace.event({
-              name: 'new_message',
-              output: assistantMessage,
-            });
-
-            // Final message is already saved to DB by executeStreamingInference
-            // So we just need to add it to the thread without saving again
-            this.addMessageToThreadUseCase.execute(
-              new AddMessageCommand(params.thread, assistantMessage),
-            );
-          } else {
-            // Non-streaming mode: get complete response at once
-            const generation = params.trace.generation({
-              name: 'completion_non_streaming',
-              model: params.model.name,
-              input: trimmedMessages,
-              completionStartTime: new Date(),
-            });
-            const inferenceResponse =
-              await this.triggerInferenceUseCase.execute(
-                new GetInferenceCommand({
-                  model: params.model,
-                  messages: trimmedMessages,
-                  tools: params.tools,
-                  toolChoice: ModelToolChoice.AUTO,
-                  instructions: params.instructions,
-                }),
-              );
-            generation.end({
-              output: inferenceResponse.content,
-            });
-
-            assistantMessage = await this.createAssistantMessageUseCase.execute(
-              new CreateAssistantMessageCommand(
-                params.thread.id,
-                inferenceResponse.content,
-              ),
-            );
-
-            if (
-              inferenceResponse.meta.inputTokens !== undefined &&
-              inferenceResponse.meta.outputTokens !== undefined
-            ) {
-              this.collectUsage(
-                params.model,
-                inferenceResponse.meta.inputTokens,
-                inferenceResponse.meta.outputTokens,
-                assistantMessage.id,
-              );
-            }
-
-            params.trace.event({
-              name: 'new_message',
-              output: assistantMessage,
-            });
-            // Add message to thread and yield it
-            this.addMessageToThreadUseCase.execute(
-              new AddMessageCommand(params.thread, assistantMessage),
-            );
-            yield assistantMessage;
-          }
-        } catch (error) {
-          if (error instanceof ApplicationError) {
-            throw error;
-          }
-          this.logger.error('Inference failed', error);
-          throw new RunExecutionFailedError(
-            error instanceof Error ? error.message : 'Inference error',
-            { originalError: error as Error },
-          );
-        }
+        const assistantMessage = yield* this.runInference(params);
 
         if (
           this.toolResultCollectorService.exitLoopAfterAgentResponse(
@@ -436,28 +190,214 @@ export class ExecuteRunUseCase {
         ) {
           break;
         }
-
-        // raise an error if we max the loop count
-        if (isLastIteration) {
+        if (i === iterations - 1) {
           throw new RunMaxIterationsReachedError(iterations);
         }
       }
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
+      if (error instanceof ApplicationError) throw error;
       this.logger.error('Run execution failed', { error: error as Error });
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { originalError: error as Error },
       );
     } finally {
-      // Ensure thread ends with an assistant message by cleaning up any trailing messages
       await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
         params.thread.id,
         null,
       );
     }
+  }
+
+  private parseInput(input: RunUserInput | RunToolResultInput): {
+    userInput: RunUserInput | null;
+    toolResultInput: RunToolResultInput | null;
+  } {
+    const userInput = input instanceof RunUserInput ? input : null;
+    const toolResultInput = input instanceof RunToolResultInput ? input : null;
+    if (!userInput && !toolResultInput) {
+      throw new RunInvalidInputError('Invalid input');
+    }
+    return { userInput, toolResultInput };
+  }
+
+  private async *processToolResults(
+    params: RunParams,
+    toolResultInput: RunToolResultInput | null,
+  ): AsyncGenerator<Message, void, void> {
+    const toolResultMessageContent =
+      await this.toolResultCollectorService.collectToolResults({
+        thread: params.thread,
+        tools: params.tools,
+        input: toolResultInput,
+        orgId: params.orgId,
+        isAnonymous: params.isAnonymous,
+      });
+
+    if (toolResultMessageContent.length === 0) return;
+
+    const toolResultMessage = await this.createToolResultMessageUseCase.execute(
+      new CreateToolResultMessageCommand(
+        params.thread.id,
+        toolResultMessageContent,
+      ),
+    );
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(params.thread, toolResultMessage),
+    );
+    yield toolResultMessage;
+
+    const skillWasActivated = toolResultMessageContent.some(
+      (content) => content.toolName === (ToolType.ACTIVATE_SKILL as string),
+    );
+    if (skillWasActivated) {
+      await this.refreshRunContext(params);
+    }
+  }
+
+  private async refreshRunContext(params: RunParams): Promise<void> {
+    const { thread: refreshedThread } = await this.findThreadUseCase.execute(
+      new FindThreadQuery(params.thread.id),
+    );
+    params.thread = refreshedThread;
+    const refreshed = await this.toolAssemblyService.buildRunContext(
+      refreshedThread,
+      params.agent,
+      params.activeSkills,
+      params.model.canUseTools,
+    );
+    params.tools = refreshed.tools;
+    params.instructions = refreshed.instructions;
+  }
+
+  private async processUserMessage(
+    params: RunParams,
+    userInput: RunUserInput,
+  ): Promise<Message> {
+    const hasText = userInput.text && userInput.text.trim().length > 0;
+    const hasImages = userInput.pendingImages.length > 0;
+
+    if (!hasText && !hasImages) {
+      throw new RunInvalidInputError(
+        'Message must contain at least one content item (non-empty text or at least one image)',
+      );
+    }
+    if (hasImages && !params.model.canVision) {
+      throw new RunInvalidInputError(
+        'The selected model does not support image inputs. Please use a vision-capable model or remove images from your message.',
+      );
+    }
+
+    const messageText =
+      hasText && params.isAnonymous
+        ? await this.anonymizeText(userInput.text)
+        : userInput.text;
+
+    const newUserMessage = await this.createUserMessageUseCase.execute(
+      new CreateUserMessageCommand(
+        params.thread.id,
+        messageText,
+        userInput.pendingImages,
+      ),
+    );
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(params.thread, newUserMessage),
+    );
+    return newUserMessage;
+  }
+
+  private async *runInference(
+    params: RunParams,
+  ): AsyncGenerator<Message, AssistantMessage, void> {
+    const trimmedMessages = this.trimMessagesForInference(
+      params.thread.messages,
+    );
+
+    try {
+      if (params.streaming) {
+        return yield* this.runStreamingInference(params, trimmedMessages);
+      }
+      return yield* this.runNonStreamingInference(params, trimmedMessages);
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error('Inference failed', error);
+      throw new RunExecutionFailedError(
+        error instanceof Error ? error.message : 'Inference error',
+        { originalError: error as Error },
+      );
+    }
+  }
+
+  private async *runStreamingInference(
+    params: RunParams,
+    trimmedMessages: Message[],
+  ): AsyncGenerator<Message, AssistantMessage, void> {
+    let finalMessage: AssistantMessage | undefined;
+
+    for await (const partialMessage of this.streamingInferenceService.executeStreamingInference(
+      {
+        model: params.model,
+        messages: trimmedMessages,
+        tools: params.tools,
+        instructions: params.instructions,
+        threadId: params.thread.id,
+        orgId: params.orgId,
+      },
+    )) {
+      finalMessage = partialMessage;
+      yield partialMessage;
+    }
+
+    if (!finalMessage) {
+      throw new RunExecutionFailedError(
+        'No final message received from streaming inference',
+      );
+    }
+
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(params.thread, finalMessage),
+    );
+    return finalMessage;
+  }
+
+  private async *runNonStreamingInference(
+    params: RunParams,
+    trimmedMessages: Message[],
+  ): AsyncGenerator<Message, AssistantMessage, void> {
+    const inferenceResponse = await this.triggerInferenceUseCase.execute(
+      new GetInferenceCommand({
+        model: params.model,
+        messages: trimmedMessages,
+        tools: params.tools,
+        toolChoice: ModelToolChoice.AUTO,
+        instructions: params.instructions,
+      }),
+    );
+
+    const assistantMessage = await this.createAssistantMessageUseCase.execute(
+      new CreateAssistantMessageCommand(
+        params.thread.id,
+        inferenceResponse.content,
+      ),
+    );
+
+    if (
+      inferenceResponse.meta.inputTokens !== undefined &&
+      inferenceResponse.meta.outputTokens !== undefined
+    ) {
+      this.collectUsage(
+        params.model,
+        inferenceResponse.meta.inputTokens,
+        inferenceResponse.meta.outputTokens,
+        assistantMessage.id,
+      );
+    }
+
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(params.thread, assistantMessage),
+    );
+    yield assistantMessage;
+    return assistantMessage;
   }
 
   /**
@@ -500,13 +440,22 @@ export class ExecuteRunUseCase {
     );
   }
 
-  /**
-   * Trims messages to fit within the context window before inference.
-   * Keeps the most recent messages up to MAX_CONTEXT_TOKENS.
-   */
   private trimMessagesForInference(messages: Message[]): Message[] {
     return this.trimMessagesForContextUseCase.execute(
       new TrimMessagesForContextCommand(messages, MAX_CONTEXT_TOKENS),
     );
   }
+}
+
+interface RunParams {
+  thread: Thread;
+  tools: Tool[];
+  model: LanguageModel;
+  input: RunUserInput | RunToolResultInput;
+  instructions?: string;
+  streaming?: boolean;
+  orgId: UUID;
+  isAnonymous: boolean;
+  agent?: Agent;
+  activeSkills: Skill[];
 }
