@@ -13,9 +13,9 @@ description: Frontend development in ayunis-core. Use when creating, modifying, 
 cd ayunis-core-frontend
 ```
 
-## Validation Sequence
+Before modifying any layer, read its `SUMMARY.md` in `src/[layer]/SUMMARY.md`. The top-level `src/SUMMARY.md` provides an overview.
 
-Run after every change. Do NOT trust your own assessment — verify through observable behavior.
+## Validation Sequence
 
 ```bash
 npm run build                  # Must succeed
@@ -81,20 +81,6 @@ export function useCreateItem(onSuccess?: () => void) {
 }
 ```
 
-## Common Commands
-
-```bash
-# From repo root:
-./dev up                     # Start full dev stack (infra + backend + frontend)
-./dev status                 # Check what's running
-./dev logs frontend          # View frontend logs
-
-# From ayunis-core-frontend/:
-npm run build               # Production build
-npm run lint                # Lint check
-npm run openapi:update      # Regenerate API client
-```
-
 ## Completion Checklist
 
 - [ ] `npm run build` succeeds
@@ -102,14 +88,11 @@ npm run openapi:update      # Regenerate API client
 - [ ] Page renders without console errors
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)
-- [ ] Committed with descriptive message
 
 ## Anti-Patterns
 
-| Don't | Why | Instead |
-|-------|-----|---------|
-| Edit generated API client | Will be overwritten | Run `openapi:update` |
-| Import upward across layers | Breaks FSD architecture | Respect `pages → widgets → features → shared` |
-| Batch changes | Harder to identify breakage | One change → validate → commit |
-| Use `any` type | `no-explicit-any: error` blocks commit | Use `unknown` or specific types, narrow with type guards |
-| Write complex functions | CCN>10 triggers CI failure | Split into smaller functions |
+| Don't                       | Why                                    | Instead                                                  |
+| --------------------------- | -------------------------------------- | -------------------------------------------------------- |
+| Import upward across layers | Breaks FSD architecture                | Respect `pages → widgets → features → shared`            |
+| Use `any` type              | `no-explicit-any: error` blocks commit | Use `unknown` or specific types, narrow with type guards |
+| Write complex functions     | CCN>10 triggers CI failure             | Split into smaller functions                             |

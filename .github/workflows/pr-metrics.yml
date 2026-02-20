@@ -1,0 +1,22 @@
+name: PR Metrics
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  schedule:
+    - cron: "0 7 * * 1" # Monday 7am UTC
+
+jobs:
+  pr-check:
+    if: github.event_name == 'pull_request'
+    uses: ayunis-core/engineering-metrics/.github/workflows/pr-check.yml@main
+    with:
+      size-threshold: 400
+
+  weekly-report:
+    if: github.event_name == 'schedule'
+    uses: ayunis-core/engineering-metrics/.github/workflows/weekly-report.yml@main
+    with:
+      days: 7
+    secrets:
+      SLACK_METRICS_WEBHOOK_URL: ${{ secrets.SLACK_METRICS_WEBHOOK_URL }}

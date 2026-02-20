@@ -24,44 +24,6 @@ ayunis-core/
 
 ---
 
-## Module Boundaries
-
-The backend enforces strict bounded contexts:
-
-- **`src/domain/*`** — Core business logic (agents, threads, messages, runs, models, tools, prompts, sources, RAG, etc.)
-- **`src/iam/*`** — Identity and access management (auth, users, orgs, subscriptions, quotas, teams, etc.)
-- **`src/common/*`** — Shared infrastructure only (base classes, utilities)
-- **`src/admin/*`** — Super admin routes
-
-Cross-module dependencies go through **ports** (abstract interfaces), not direct imports.
-
-Before modifying any module, read its `SUMMARY.md`:
-
-```bash
-# Backend modules
-cat ayunis-core-backend/src/domain/[module]/SUMMARY.md
-
-# Frontend layers
-cat ayunis-core-frontend/src/[layer]/SUMMARY.md   # layer = pages, widgets, features, shared
-```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete module index with links to every SUMMARY.md.
-
----
-
-## Key Files
-
-| Purpose                     | Location                                             |
-| --------------------------- | ---------------------------------------------------- |
-| Architecture & module index | [ARCHITECTURE.md](ARCHITECTURE.md)                   |
-| Backend module summaries    | `ayunis-core-backend/src/[area]/[module]/SUMMARY.md` |
-| Frontend layer summaries    | `ayunis-core-frontend/src/[layer]/SUMMARY.md`        |
-| TypeORM config              | `ayunis-core-backend/src/db/datasource.ts`           |
-| OpenAPI spec                | `http://localhost:3000/api/docs` (when running)      |
-| Frontend summary            | `ayunis-core-frontend/src/SUMMARY.md`                |
-
----
-
 ## Core Principles
 
 ### 1. Validation-First
@@ -128,11 +90,4 @@ The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations
 
 ## Development Skills
 
-For detailed development workflows, patterns, and validation checklists, use the appropriate skill:
-
-- **Environment setup** → `worktree-dev` skill (create worktree, start dev stack, isolated per-slot environment)
-- **Backend work** → `ayunis-core-backend-dev` skill (NestJS, hexagonal patterns, TDD, validation)
-- **Frontend work** → `ayunis-core-frontend-dev` skill (React, Feature-Sliced Design, API client, hooks)
-- **Database migrations** → `ayunis-core-migrations` skill (TypeORM entity changes, auto-generated migrations)
-- **New backend module** → `new-module` skill (scaffold hexagonal module with entity, ports, use cases, controller)
-- **New frontend page** → `new-page` skill (scaffold FSD page with route, component, barrel export)
+For detailed development workflows, patterns, and validation checklists, load the appropriate skill. Skills are listed with descriptions in the system prompt — pick the one that matches the task.

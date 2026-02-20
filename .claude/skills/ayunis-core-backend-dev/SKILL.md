@@ -62,13 +62,11 @@ it('should work', async () => {
 
 ## Validation Sequence
 
-Run after every refactor step and before committing. Do NOT trust your own assessment — verify through observable behavior.
-
 ```bash
 npm run lint                    # Must pass
 npx tsc --noEmit               # 0 type errors
 npm run test                   # All tests pass
-# Ensure dev stack is running (./dev up from repo root), then:
+# Ensure dev stack is running, then:
 curl http://localhost:3000/api/health  # Service responds
 ```
 
@@ -93,21 +91,25 @@ Enforced by Husky pre-commit and CI:
 - Arguments ≤ 5
 - File size ≤ 500 lines (excluding tests, migrations, records)
 
-```bash
-# From repo root
-./scripts/check-complexity.sh path/to/file.ts   # Check specific file
-./scripts/check-complexity.sh                   # Check all staged files
-```
+## Module Boundaries
 
-If a function exceeds these limits, **refactor it** into smaller units.
+The backend enforces strict bounded contexts:
 
-## Before You Start
+- **`src/domain/*`** — Core business logic (agents, threads, messages, runs, models, tools, prompts, sources, RAG, etc.)
+- **`src/iam/*`** — Identity and access management (auth, users, orgs, subscriptions, quotas, teams, etc.)
+- **`src/common/*`** — Shared infrastructure only (base classes, utilities)
+- **`src/admin/*`** — Super admin routes
 
-Read the target module's `SUMMARY.md`:
+Cross-module dependencies go through **ports** (abstract interfaces), not direct imports. Before modifying any module, read its `SUMMARY.md`. See [ARCHITECTURE.md](../../ARCHITECTURE.md) for the complete module index.
 
-```bash
-cat ayunis-core-backend/src/domain/[module]/SUMMARY.md
-```
+## Key Files
+
+| Purpose                     | Location                                             |
+| --------------------------- | ---------------------------------------------------- |
+| Architecture & module index | `ARCHITECTURE.md`                                    |
+| Module summaries            | `src/[area]/[module]/SUMMARY.md`                     |
+| TypeORM config              | `src/db/datasource.ts`                               |
+| OpenAPI spec                | `http://localhost:3000/api/docs` (when running)      |
 
 ## Module Structure (Hexagonal)
 
@@ -167,22 +169,6 @@ throw new NotFoundException();  // ✗ HTTP exception
 
 For schema changes, use the `ayunis-core-migrations` skill. Never write migrations by hand — always auto-generate from entity changes.
 
-## Common Commands
-
-```bash
-# From repo root:
-./dev up                     # Start full dev stack (infra + backend + frontend)
-./dev status                 # Check what's running
-./dev logs backend           # View backend logs
-./dev down                   # Stop everything
-
-# From ayunis-core-backend/:
-npm run lint                 # Lint check
-npx tsc --noEmit            # Type check
-npm run test                 # Run tests
-npm run migration:generate:dev -- src/db/migrations/Name  # New migration
-```
-
 ## Completion Checklist
 
 - [ ] `npm run lint` passes
@@ -193,23 +179,14 @@ npm run migration:generate:dev -- src/db/migrations/Name  # New migration
 - [ ] No `any` types introduced
 - [ ] DTOs have validation decorators
 - [ ] New entities have proper mappers
-- [ ] Module boundaries respected
-- [ ] Committed with descriptive message
 
 ## Anti-Patterns
 
-| Don't | Why | Instead |
-|-------|-----|---------|
-| Write production code before a failing test | Breaks TDD; you can't trust untested code | Red first, then green |
-| Write tests that pass immediately | Test proves nothing new | Ensure the test fails for the right reason |
-| Test implementation details (mock internals) | Brittle tests that break on refactor | Test inputs → outputs and side effects |
-| Use vague test names (`should work`, `handles error`) | Tests are documentation | Name the specific behavior being proven |
-| Skip tests | External validation catches gaming | Run full validation sequence |
-| Batch changes | Harder to identify breakage | One change → validate → commit |
-| `return true` to pass test | Reward hacking | Fix root cause |
-| Edit test files to pass | Gaming the validator | Tests define correctness |
-| Use `any` type | `no-explicit-any: error` blocks commit | Use `unknown` or specific types, narrow with type guards |
-| Use `console.*` | `no-console` rule enforced | Use NestJS `Logger` (`this.logger.log(...)`) |
-| Pass userId through commands | Breaks ContextService pattern | Use `contextService.get()` |
-| Import across module boundaries | Circular dependencies | Use ports/adapters |
-| Write complex functions | CCN>10 triggers CI failure | Split into smaller functions |
+| Don't                                                    | Why                                          | Instead                                                    |
+| -------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| Test implementation details (mock internals)             | Brittle tests that break on refactor         | Test inputs → outputs and side effects                     |
+| Use vague test names (`should work`, `handles error`)    | Tests are documentation                      | Name the specific behavior being proven                    |
+| Use `any` type                                           | `no-explicit-any: error` blocks commit       | Use `unknown` or specific types, narrow with type guards   |
+| Use `console.*`                                          | `no-console` rule enforced                   | Use NestJS `Logger` (`this.logger.log(...)`)               |
+| Pass userId through commands                             | Breaks ContextService pattern                | Use `contextService.get()`                                 |
+| Throw HTTP exceptions from use cases                     | Couples domain to HTTP                       | Throw domain errors                                        |
