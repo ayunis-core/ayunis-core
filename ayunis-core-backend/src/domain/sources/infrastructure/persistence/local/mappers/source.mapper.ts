@@ -48,6 +48,14 @@ export class SourceMapper {
     throw new Error(`Invalid source type`);
   }
 
+  private mapContentChunks(
+    details: TextSourceDetailsRecord,
+  ): ReturnType<SourceContentChunkMapper['toDomain']>[] {
+    return (details.contentChunks ?? []).map((c) =>
+      this.sourceContentChunkMapper.toDomain(c),
+    );
+  }
+
   private textSourceToDomain(record: TextSourceRecord): TextSource {
     if (record.textSourceDetails instanceof FileSourceDetailsRecord) {
       return new FileSource({
@@ -56,9 +64,7 @@ export class SourceMapper {
         name: record.name,
         type: TextType.FILE,
         text: record.textSourceDetails.text,
-        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
-          this.sourceContentChunkMapper.toDomain(c),
-        ),
+        contentChunks: this.mapContentChunks(record.textSourceDetails),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         createdBy: record.createdBy,
@@ -71,9 +77,7 @@ export class SourceMapper {
         name: record.name,
         type: TextType.WEB,
         text: record.textSourceDetails.text,
-        contentChunks: record.textSourceDetails.contentChunks.map((c) =>
-          this.sourceContentChunkMapper.toDomain(c),
-        ),
+        contentChunks: this.mapContentChunks(record.textSourceDetails),
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         createdBy: record.createdBy,
@@ -131,17 +135,38 @@ export class SourceMapper {
     throw new Error('Invalid source type: ' + source.type);
   }
 
-  private fileSourceToRecord(source: FileSource): {
-    source: TextSourceRecord;
-    details: FileSourceDetailsRecord;
-    contentChunks: SourceContentChunkRecord[];
-  } {
+  private createTextSourceRecord(source: TextSource): TextSourceRecord {
     const record = new TextSourceRecord();
     record.id = source.id;
     record.name = source.name;
     record.createdBy = source.createdBy;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
+    return record;
+  }
+
+  private buildTextSourceResult<T extends TextSourceDetailsRecord>(
+    record: TextSourceRecord,
+    details: T,
+    source: TextSource,
+  ): {
+    source: TextSourceRecord;
+    details: T;
+    contentChunks: SourceContentChunkRecord[];
+  } {
+    const contentChunks = source.contentChunks.map((c) =>
+      this.sourceContentChunkMapper.toRecord(details, c),
+    );
+    record.textSourceDetails = details;
+    return { source: record, details, contentChunks };
+  }
+
+  private fileSourceToRecord(source: FileSource): {
+    source: TextSourceRecord;
+    details: FileSourceDetailsRecord;
+    contentChunks: SourceContentChunkRecord[];
+  } {
+    const record = this.createTextSourceRecord(source);
 
     const details = new FileSourceDetailsRecord();
     details.id = source.id;
@@ -151,13 +176,7 @@ export class SourceMapper {
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    const contentChunks = source.contentChunks.map((c) =>
-      this.sourceContentChunkMapper.toRecord(details, c),
-    );
-
-    record.textSourceDetails = details;
-
-    return { source: record, details, contentChunks };
+    return this.buildTextSourceResult(record, details, source);
   }
 
   private urlSourceToRecord(source: UrlSource): {
@@ -165,12 +184,7 @@ export class SourceMapper {
     details: UrlSourceDetailsRecord;
     contentChunks: SourceContentChunkRecord[];
   } {
-    const record = new TextSourceRecord();
-    record.id = source.id;
-    record.name = source.name;
-    record.createdBy = source.createdBy;
-    record.createdAt = source.createdAt;
-    record.updatedAt = source.updatedAt;
+    const record = this.createTextSourceRecord(source);
 
     const details = new UrlSourceDetailsRecord();
     details.id = source.id;
@@ -180,14 +194,7 @@ export class SourceMapper {
     details.createdAt = source.createdAt;
     details.updatedAt = source.updatedAt;
 
-    const contentChunks = source.contentChunks.map((c) =>
-      this.sourceContentChunkMapper.toRecord(details, c),
-    );
-
-    // Set bidirectional relationship
-    record.textSourceDetails = details;
-
-    return { source: record, details, contentChunks };
+    return this.buildTextSourceResult(record, details, source);
   }
 
   private dataSourceToRecord(source: CSVDataSource): {

@@ -105,9 +105,11 @@ export class RunsController {
   @Post('send-message')
   @RequireSubscription()
   @UseInterceptors(
+    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP header */
     FilesInterceptor('images', MAX_IMAGES, {
       storage: memoryStorage(),
       limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
+      /* eslint-enable sonarjs/content-length */
       fileFilter: (req, file, cb) => {
         if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
           cb(null, true);
@@ -255,7 +257,7 @@ export class RunsController {
   })
   async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: Express.Multer.File[] | undefined,
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Req() request: RequestWithSubscriptionContext,
@@ -295,13 +297,6 @@ export class RunsController {
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');
-    response.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
-    response.setHeader(
-      'Access-Control-Allow-Headers',
-      'Cache-Control, Content-Type',
-    );
-    response.setHeader('Access-Control-Allow-Credentials', 'true');
-
     // Send initial connection confirmation
     response.write(': connection established\n\n');
 
@@ -372,28 +367,23 @@ export class RunsController {
 
   private mapEventToResponse(event: RunEvent): RunResponse {
     switch (event.type) {
-      case 'message': {
-        const messageDto = this.messageDtoMapper.toDto(event.message);
-        const response: RunMessageResponseDto = {
+      case 'message':
+        return {
           type: 'message',
-          message: messageDto,
+          message: this.messageDtoMapper.toDto(event.message),
           threadId: event.threadId,
           timestamp: event.timestamp,
         };
-        return response;
-      }
-      case 'thread': {
-        const response: RunThreadResponseDto = {
+      case 'thread':
+        return {
           type: 'thread',
           threadId: event.threadId,
           updateType: event.updateType,
           title: event.title,
           timestamp: event.timestamp,
         };
-        return response;
-      }
-      case 'error': {
-        const response: RunErrorResponseDto = {
+      case 'error':
+        return {
           type: 'error',
           message: event.message,
           threadId: event.threadId,
@@ -401,24 +391,18 @@ export class RunsController {
           code: event.code,
           details: event.details,
         };
-        return response;
-      }
-      case 'session': {
-        const response: RunSessionResponseDto = {
+      case 'session':
+        return {
           type: 'session',
           streaming: event.streaming,
           threadId: event.threadId,
           timestamp: event.timestamp,
         };
-        return response;
-      }
     }
   }
 
   private writeSSEEvent(response: Response, id: string, data: unknown): void {
-    response.write(`id: ${id}\n`);
-    response.write(`data: ${JSON.stringify(data)}\n`);
-    response.write('\n'); // Double newline to separate events
+    response.write(`id: ${id}\ndata: ${JSON.stringify(data)}\n\n`);
   }
 
   private async executeRunAndStream(params: {
@@ -438,13 +422,13 @@ export class RunsController {
 
       const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);
 
-      // Track if client disconnected
-      let clientDisconnected = false;
+      // Track if client disconnected (object wrapper so TS recognises async mutation)
+      const connection = { disconnected: false };
       const disconnectHandler = () => {
         this.logger.log('Client disconnected from SSE stream', {
           threadId: params.threadId,
         });
-        clientDisconnected = true;
+        connection.disconnected = true;
       };
 
       // Listen for client disconnect
@@ -453,7 +437,7 @@ export class RunsController {
       try {
         for await (const event of eventGenerator) {
           // Check if client disconnected before writing
-          if (clientDisconnected) {
+          if (connection.disconnected) {
             this.logger.log('Stopping event stream due to client disconnect');
             break;
           }
