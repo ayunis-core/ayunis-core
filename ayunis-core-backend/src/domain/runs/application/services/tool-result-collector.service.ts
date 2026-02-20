@@ -14,7 +14,10 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { RunToolExecutionFailedError } from '../runs.errors';
+import {
+  RunAnonymizationUnavailableError,
+  RunToolExecutionFailedError,
+} from '../runs.errors';
 import { RunToolResultInput } from '../../domain/run-input.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
@@ -184,10 +187,9 @@ export class ToolResultCollectorService {
       );
       return result.anonymizedText;
     } catch (error) {
-      this.logger.error('Failed to anonymize tool result, returning original', {
-        error: error as Error,
+      throw new RunAnonymizationUnavailableError({
+        originalError: error instanceof Error ? error.message : 'Unknown error',
       });
-      return text;
     }
   }
 }
