@@ -17,11 +17,11 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
     "paths": {
       "@modelcontextprotocol/sdk/client/*": ["node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"]
     }
