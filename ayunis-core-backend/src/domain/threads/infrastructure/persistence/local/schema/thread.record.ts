@@ -42,7 +42,7 @@ export class ThreadRecord extends BaseRecord {
   isAnonymous: boolean;
 
   @OneToMany(() => MessageRecord, (message) => message.thread)
-  messages: MessageRecord[];
+  messages?: MessageRecord[];
 
   @OneToMany(
     () => ThreadSourceAssignmentRecord,

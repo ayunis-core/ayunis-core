@@ -54,16 +54,16 @@ export class ThreadMapper {
       sourceAssignments:
         threadEntity.sourceAssignments?.map((assignment) =>
           this.sourceAssignmentMapper.toDomain(assignment),
-        ) || [],
+        ) ?? [],
       mcpIntegrationIds:
         threadEntity.mcpIntegrations?.map((integration) => integration.id) ??
         [],
       title: threadEntity.title,
       isAnonymous: threadEntity.isAnonymous,
       messages:
-        threadEntity.messages.map((message) =>
+        threadEntity.messages?.map((message) =>
           this.messageMapper.toDomain(message),
-        ) || [],
+        ) ?? [],
       createdAt: threadEntity.createdAt,
       updatedAt: threadEntity.updatedAt,
     });

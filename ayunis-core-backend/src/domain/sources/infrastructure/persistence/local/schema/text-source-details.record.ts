@@ -26,7 +26,7 @@ export abstract class TextSourceDetailsRecord extends BaseRecord {
     cascade: true,
     eager: true,
   })
-  contentChunks: SourceContentChunkRecord[];
+  contentChunks?: SourceContentChunkRecord[];
 }
 
 @ChildEntity(TextType.FILE)
