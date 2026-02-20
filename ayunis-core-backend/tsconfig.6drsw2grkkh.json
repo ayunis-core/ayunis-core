@@ -1,0 +1,72 @@
+{
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
+  },
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@modelcontextprotocol/sdk/client/*": [
+        "node_modules/@modelcontextprotocol/sdk/dist/cjs/client/*"
+      ]
+    }
+  },
+  "files": [
+    "src/common/filters/application-error.filter.ts",
+    "src/common/util/cookie.util.ts",
+    "src/common/util/file-type.ts",
+    "src/domain/mcp/application/services/mcp-client.service.ts",
+    "src/domain/mcp/application/use-cases/create-mcp-integration/create-mcp-integration.use-case.ts",
+    "src/domain/models/application/ports/stream-inference.handler.ts",
+    "src/domain/models/infrastructure/converters/anthropic-message.converter.ts",
+    "src/domain/models/infrastructure/converters/gemini-message.converter.ts",
+    "src/domain/models/infrastructure/converters/index.ts",
+    "src/domain/models/infrastructure/converters/mistral-message.converter.ts",
+    "src/domain/models/infrastructure/converters/ollama-message.converter.ts",
+    "src/domain/models/infrastructure/converters/openai-chat-message.converter.ts",
+    "src/domain/models/infrastructure/converters/openai-responses-message.converter.ts",
+    "src/domain/models/infrastructure/inference/ayunis-ollama.inference.ts",
+    "src/domain/models/infrastructure/inference/base-anthropic.inference.ts",
+    "src/domain/models/infrastructure/inference/base-ollama.inference.ts",
+    "src/domain/models/infrastructure/inference/base-openai-chat.inference.ts",
+    "src/domain/models/infrastructure/inference/bedrock.inference.ts",
+    "src/domain/models/infrastructure/inference/gemini.inference.ts",
+    "src/domain/models/infrastructure/inference/local-ollama.inference.ts",
+    "src/domain/models/infrastructure/inference/mistral.inference.ts",
+    "src/domain/models/infrastructure/inference/openai.inference.ts",
+    "src/domain/models/infrastructure/inference/synaforce.inference.ts",
+    "src/domain/models/infrastructure/stream-inference/ayunis-ollama.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/base-anthropic.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/base-ollama.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/base-openai-chat.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/bedrock.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/gemini.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/local-ollama.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/mistral.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/openai.stream-inference.ts",
+    "src/domain/models/infrastructure/stream-inference/synaforce.stream-inference.ts",
+    "src/domain/models/infrastructure/util/normalize-schema-for-openai.ts",
+    "src/domain/models/models.module.ts",
+    "src/domain/runs/application/services/streaming-inference.service.ts"
+  ],
+  "include": []
+}
