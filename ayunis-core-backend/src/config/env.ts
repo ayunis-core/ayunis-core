@@ -14,9 +14,9 @@
  */
 import { config } from 'dotenv';
 
-// dotenv 16.x only accepts a string for `path` (array support is v17.1+).
 // Call config() twice: first .env.dev (per-slot overrides), then .env
 // (defaults). dotenv never overwrites a variable already in process.env,
 // so .env.dev values take precedence.
-config({ path: '.env.dev' });
-config({ path: '.env' });
+// quiet: true suppresses dotenv v17's promotional console output.
+config({ path: '.env.dev', quiet: true });
+config({ path: '.env', quiet: true });
