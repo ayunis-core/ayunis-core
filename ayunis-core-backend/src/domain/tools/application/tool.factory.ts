@@ -75,6 +75,7 @@ export class ToolFactory {
     context?: unknown;
   }): Tool {
     const creator = this.creators[params.type];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: noUncheckedIndexedAccess is not enabled
     if (!creator) {
       throw new ToolInvalidTypeError({ toolType: params.type });
     }
@@ -86,13 +87,13 @@ export class ToolFactory {
   }
 
   private createHttpTool(config?: ToolConfig): HttpTool {
-    if (config && config instanceof HttpToolConfig) {
+    if (config instanceof HttpToolConfig) {
       return new HttpTool(config);
     }
     throw new ToolInvalidConfigError({
       toolName: 'HTTP',
       metadata: {
-        configType: config?.constructor.name || 'null',
+        configType: config?.constructor.name ?? 'null',
       },
     });
   }
@@ -100,7 +101,7 @@ export class ToolFactory {
 
 function requireArrayContext<T>(
   context: unknown,
-  itemType: abstract new (...args: unknown[]) => T,
+  itemType: abstract new (...args: never[]) => T,
   toolType: ToolType,
 ): T[] {
   if (
@@ -114,7 +115,7 @@ function requireArrayContext<T>(
     toolType,
     metadata: {
       contextType:
-        (context as { constructor?: { name?: string } }).constructor?.name ||
+        (context as { constructor?: { name?: string } }).constructor?.name ??
         'null',
     },
   });
