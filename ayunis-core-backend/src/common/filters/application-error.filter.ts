@@ -49,9 +49,9 @@ export class ApplicationErrorFilter implements ExceptionFilter {
     Sentry.withScope((scope) => {
       // Add user context from CLS store
       const cls = ClsServiceManager.getClsService<MyClsStore>();
-      const userId = cls?.get('userId');
-      const orgId = cls?.get('orgId');
-      const role = cls?.get('role');
+      const userId = cls.get('userId');
+      const orgId = cls.get('orgId');
+      const role = cls.get('role');
 
       if (userId) {
         scope.setUser({
