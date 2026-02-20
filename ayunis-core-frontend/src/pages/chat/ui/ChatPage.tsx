@@ -409,7 +409,7 @@ export default function ChatPage({
             pendingImages.length > 0
               ? pendingImages.map((img) => ({
                   file: img.file,
-                  altText: img.altText ?? img.file.name,
+                  altText: img.altText ?? (img.file.name || 'Pasted image'),
                 }))
               : undefined;
 
@@ -454,7 +454,8 @@ export default function ChatPage({
           className="group inline-flex items-center gap-2"
           data-testid="header"
         >
-          {threadTitle ?? t('chat.untitled')}
+          {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should show "Untitled" */}
+          {threadTitle || t('chat.untitled')}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
