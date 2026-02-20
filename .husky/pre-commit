@@ -248,7 +248,7 @@ run_be_madge() {
   STATUS_FILE="$1"
   print_section "Circular Deps • madge (backend)"
   set +e
-  npx --yes madge --circular --extensions ts ayunis-core-backend/src/
+  npx --yes madge --circular --extensions ts --ts-config ayunis-core-backend/tsconfig.json ayunis-core-backend/src/
   STATUS=$?
   set -e
   printf "%s" "$STATUS" > "$STATUS_FILE"
