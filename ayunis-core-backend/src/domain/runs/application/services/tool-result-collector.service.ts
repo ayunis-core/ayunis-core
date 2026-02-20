@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { LangfuseTraceClient } from 'langfuse';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
@@ -34,7 +33,6 @@ export class ToolResultCollectorService {
     thread: Thread;
     tools: Tool[];
     input: RunToolResultInput | null;
-    trace: LangfuseTraceClient;
     orgId: UUID;
     isAnonymous: boolean;
   }): Promise<ToolResultMessageContent[]> {
@@ -76,7 +74,6 @@ export class ToolResultCollectorService {
           const result = await this.executeBackendTool(
             tool,
             content,
-            params.trace,
             orgId,
             thread.id,
             isAnonymous,
@@ -101,13 +98,6 @@ export class ToolResultCollectorService {
     agentResponseMessage: AssistantMessage,
     tools: Tool[],
   ): boolean {
-    if (!agentResponseMessage) {
-      this.logger.warn(
-        'No agent response message provided to exitLoopAfterAgentResponse',
-      );
-      return true;
-    }
-
     const responseDoesNotContainToolCalls = agentResponseMessage.content.every(
       (content) => content.type !== MessageContentType.TOOL_USE,
     );
@@ -141,7 +131,7 @@ export class ToolResultCollectorService {
     content: ToolUseMessageContent,
     input: RunToolResultInput | null,
   ): ToolResultMessageContent {
-    if (input && input.toolId === content.id) {
+    if (input?.toolId === content.id) {
       return new ToolResultMessageContent(
         input.toolId,
         input.toolName,
@@ -158,18 +148,10 @@ export class ToolResultCollectorService {
   private async executeBackendTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    trace: LangfuseTraceClient,
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
   ): Promise<ToolResultMessageContent> {
-    const span = trace.span({
-      name: `tool__${tool.type}`,
-      input: content.params,
-      metadata: {
-        toolName: tool.name,
-      },
-    });
     const context = {
       orgId,
       threadId,
@@ -177,24 +159,12 @@ export class ToolResultCollectorService {
     let result = await this.executeToolUseCase
       .execute(new ExecuteToolCommand(tool, content.params, context))
       .catch((error) => {
-        span.update({
-          metadata: {
-            isError: true,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-        });
-        span.end({
-          output: error instanceof Error ? error.message : 'Unknown error',
-        });
         if (error instanceof ToolExecutionFailedError && error.exposeToLLM) {
           return `The tool didn't provide any result due to the following error in tool usage: ${error.message}`;
         } else {
           return `The tool didn't provide any result due to an unknown error`;
         }
       });
-    span.end({
-      output: result,
-    });
 
     if (result.length > MAX_TOOL_RESULT_LENGTH) {
       result = `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
