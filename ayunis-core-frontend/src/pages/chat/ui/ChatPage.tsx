@@ -511,11 +511,11 @@ export default function ChatPage({
   // - No assistant message has arrived yet, OR
   // - The last assistant message has empty content (still waiting for content to stream in)
   const lastMessage = sortedMessages[sortedMessages.length - 1];
-  /* eslint-disable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- lastMessage may be undefined if sortedMessages is empty */
+  /* eslint-disable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- lastMessage may be undefined if sortedMessages is empty; content may be undefined during streaming even if typed as required */
   const lastAssistantHasEmptyContent =
     lastMessage != null &&
     lastMessage.role === 'assistant' &&
-    lastMessage.content.length === 0;
+    (lastMessage.content == null || lastMessage.content.length === 0);
   const showLoadingMessage =
     isStreaming &&
     (lastMessage == null ||
