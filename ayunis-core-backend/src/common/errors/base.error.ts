@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -75,6 +76,8 @@ export abstract class ApplicationError extends Error {
         return new InternalServerErrorException(body);
       case 501:
         return new NotImplementedException(body);
+      case 503:
+        return new ServiceUnavailableException(body);
       case 504:
         return new GatewayTimeoutException(body);
       default:
