@@ -12,16 +12,18 @@ set -euo pipefail
 PROJECT_DIR="$1"; shift
 STAGED_FILES=("$@")
 
-# Filter out spec/test files and migration files from staged files
+# Filter out spec/test files, migration files, and entity/record files from staged files
 FILTERED_STAGED=()
 for f in "${STAGED_FILES[@]}"; do
-  if [[ ! "$f" =~ \.(spec|test)\.(ts|tsx)$ ]] && [[ ! "$f" =~ /migrations/ ]]; then
+  if [[ ! "$f" =~ \.(spec|test)\.(ts|tsx)$ ]] && \
+     [[ ! "$f" =~ /migrations/ ]] && \
+     [[ ! "$f" =~ \.entity\.ts$ ]] && \
+     [[ ! "$f" =~ \.record\.ts$ ]]; then
     FILTERED_STAGED+=("$f")
   fi
 done
-
 if [ ${#FILTERED_STAGED[@]} -eq 0 ]; then
-  echo "No non-test staged files provided — skipping duplication check."
+  echo "No non-test/migration/entity/record staged files provided — skipping duplication check."
   exit 0
 fi
 
@@ -42,6 +44,10 @@ REPORT_DIR=$(mktemp -d)
 trap 'rm -rf "$REPORT_DIR"' EXIT
 
 # ── Run jscpd on full src/ ───────────────────────────────────────────────────
+# Ignore patterns:
+# - generated/** & migrations/**: auto-generated code
+# - *.spec/test.*: test files
+# - *.entity.ts & *.record.ts: TypeORM entities/records (constructor param forwarding is intentional)
 (
   cd "$PROJECT_DIR"
   npx --yes jscpd src \
@@ -54,6 +60,8 @@ trap 'rm -rf "$REPORT_DIR"' EXIT
     --ignore '**/*.spec.ts' \
     --ignore '**/*.test.ts' \
     --ignore '**/*.test.tsx' \
+    --ignore '**/*.entity.ts' \
+    --ignore '**/*.record.ts' \
     --reporters json \
     --output "$REPORT_DIR" \
     --silent >/dev/null 2>&1

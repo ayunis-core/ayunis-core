@@ -54,6 +54,21 @@ export class LanguageModelRecord extends ModelRecord {
   })
   canVision: boolean;
 
+  @Column(tokenCostColumnOptions)
+  inputTokenCost?: number;
+
+  @Column(tokenCostColumnOptions)
+  outputTokenCost?: number;
+
+  @Column({
+    type: 'enum',
+    enum: Currency,
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  canVision: boolean;
+
   @Column({
     type: 'decimal',
     precision: 10,
@@ -68,24 +83,6 @@ export class LanguageModelRecord extends ModelRecord {
 
   @Column({
     type: 'decimal',
-    precision: 10,
-    scale: 6,
-    nullable: true,
-    transformer: {
-      to: (value?: number | null) => value,
-      from: (value: string | null) => (value === null ? null : Number(value)),
-    },
-  })
-  outputTokenCost?: number;
-
-  @Column({
-    type: 'enum',
-    enum: Currency,
-    nullable: true,
-  })
-  currency?: Currency;
-}
-
 @ChildEntity(ModelType.EMBEDDING)
 export class EmbeddingModelRecord extends ModelRecord {
   @Column({
@@ -124,3 +121,7 @@ export class EmbeddingModelRecord extends ModelRecord {
   })
   currency?: Currency;
 }
+  })
+  currency?: Currency;
+}
+

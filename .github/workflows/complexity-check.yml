@@ -40,7 +40,7 @@ jobs:
           
           # Filter out files where lizard thresholds don't apply:
           # - /generated/: auto-generated API clients
-          # - .entity.ts: TypeORM entities (decorators inflate length)
+          # - .entity.ts / .record.ts: TypeORM entities/records (decorators inflate length)
           # - .spec.ts: test files
           # - /db/migrations/: auto-generated migrations
           # - ayunis-core-frontend/: lizard doesn't handle React/JSX well
@@ -51,6 +51,7 @@ jobs:
           FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' \
             | grep -v '/generated/' \
             | grep -v '\.entity\.ts$' \
+            | grep -v '\.record\.ts$' \
             | grep -v '\.spec\.ts$' \
             | grep -v '/db/migrations/' \
             | grep -v '^ayunis-core-frontend/' \
