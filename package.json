@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "knip": "knip",
+    "madge": "madge --circular --extensions ts,tsx ayunis-core-backend/src ayunis-core-frontend/src",
+    "lint:md": "markdownlint-cli2 '**/*.md' '#node_modules'"
   },
   "devDependencies": {
     "husky": "^9.1.7",

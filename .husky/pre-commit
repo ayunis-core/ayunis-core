@@ -56,6 +56,7 @@ DEPCRUISE_STATUS_FILE="$STATUS_DIR/depcruise.status"
 FE_DEPCRUISE_STATUS_FILE="$STATUS_DIR/fe_depcruise.status"
 BE_DUPLICATION_STATUS_FILE="$STATUS_DIR/be_duplication.status"
 FE_DUPLICATION_STATUS_FILE="$STATUS_DIR/fe_duplication.status"
+FILE_SIZE_STATUS_FILE="$STATUS_DIR/file_size.status"
 
 # Jobs
 run_fe_prettier() {
@@ -235,6 +236,16 @@ run_fe_duplication() {
   printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
+run_file_size() {
+  STATUS_FILE="$1"
+  print_section "File Size • Line count check (staged TS)"
+  set +e
+  ./scripts/check-file-size.sh
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
+}
+
 # Launch jobs in parallel where possible
 if [ -n "$FE_STAGED" ]; then
   run_fe_prettier "$FE_PRETTIER_STATUS_FILE" &
@@ -258,6 +269,12 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_duplication "$BE_DUPLICATION_STATUS_FILE" &
 fi
 
+# File size check (runs on all staged TS/TSX files)
+ALL_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.(ts|tsx)$' || true)
+if [ -n "$ALL_TS_STAGED" ]; then
+  run_file_size "$FILE_SIZE_STATUS_FILE" &
+fi
+
 wait
 
 # Read statuses (default 0 when not run)
@@ -272,6 +289,7 @@ DEPCRUISE_STATUS=$(cat "$DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 FE_DEPCRUISE_STATUS=$(cat "$FE_DEPCRUISE_STATUS_FILE" 2>/dev/null || printf "0")
 BE_DUPLICATION_STATUS=$(cat "$BE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
 FE_DUPLICATION_STATUS=$(cat "$FE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
+FILE_SIZE_STATUS=$(cat "$FILE_SIZE_STATUS_FILE" 2>/dev/null || printf "0")
 
 # Summary and exit code
 FAILED=0
@@ -349,6 +367,16 @@ if [ -n "$BE_TS_STAGED" ]; then
     FAILED=1
   else
     printf "%b\n" "${GREEN}✅ Backend duplication check passed${NC}"
+  fi
+fi
+
+# File size check (all staged TS/TSX)
+if [ -n "$ALL_TS_STAGED" ]; then
+  if [ "$FILE_SIZE_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ File size check failed (files exceed line limit)${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ File size check passed${NC}"
   fi
 fi
 
