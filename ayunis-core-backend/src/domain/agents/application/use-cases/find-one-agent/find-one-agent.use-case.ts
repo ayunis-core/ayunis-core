@@ -57,6 +57,7 @@ export class FindOneAgentUseCase {
         agentId: query.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
+
       throw new UnexpectedAgentError(
         (error as Error).message ?? 'Unknown error when finding agent',
       );

@@ -324,7 +324,8 @@ export class McpClientService {
     operation: string,
   ): void {
     // Check for 401 authentication errors
-    if ((error as { status?: number }).status === 401) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- error is unknown; the cast has no runtime effect
+    if ((error as { status?: number })?.status === 401) {
       this.logger.warn(
         `Authentication failed for MCP operation: ${operation}`,
         {
