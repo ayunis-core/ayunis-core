@@ -117,6 +117,15 @@ jobs:
 
       - name: Check for drift
         run: |
+          UNTRACKED=$(git ls-files --others --exclude-standard ayunis-core-frontend/src/shared/api/generated/)
+          if [ -n "$UNTRACKED" ]; then
+            echo "Untracked files detected:"
+            echo "$UNTRACKED"
+            echo ""
+            echo "❌ API client is out of date."
+            echo "Run 'npm run openapi:update' in ayunis-core-frontend and commit the changes."
+            exit 1
+          fi
           if ! git diff --exit-code ayunis-core-frontend/src/shared/api/generated/; then
             echo ""
             echo "❌ API client is out of date."
