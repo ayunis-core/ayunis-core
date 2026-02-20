@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
@@ -48,84 +49,26 @@ export class CreateInviteUseCase {
       userId: command.userId,
     });
     try {
-      const emailProvider = command.email.split('@')[1].split('.')[0];
-      const emailProviderBlacklist = this.configService.get<string[]>(
-        'auth.emailProviderBlacklist',
-      )!;
-      if (emailProviderBlacklist.includes(emailProvider)) {
-        throw new UserEmailProviderBlacklistedError(emailProvider);
-      }
-      const existingUser = await this.findUserByEmailUseCase.execute(
-        new FindUserByEmailQuery(command.email),
-      );
-      if (existingUser) {
-        if (existingUser.orgId === command.orgId) {
-          throw new UserAlreadyExistsError();
-        }
-        throw new EmailNotAvailableError();
-      }
-
-      const isCloud = this.configService.get<boolean>(
-        'app.isCloudHosted',
-        false,
-      );
-      if (isCloud) {
-        let subscription: Awaited<
-          ReturnType<GetActiveSubscriptionUseCase['execute']>
-        > | null = null;
-
-        try {
-          subscription = await this.getActiveSubscriptionUseCase.execute(
-            new GetActiveSubscriptionQuery({
-              orgId: command.orgId,
-              requestingUserId: command.userId,
-            }),
-          );
-        } catch (error) {
-          if (error instanceof SubscriptionNotFoundError) {
-            this.logger.debug('No active subscription found, proceeding', {
-              orgId: command.orgId,
-            });
-          } else {
-            throw error;
-          }
-        }
-
-        if (subscription && subscription.availableSeats < 0) {
-          throw new InvalidSeatsError({
-            orgId: command.orgId,
-            availableSeats: subscription.availableSeats,
-          });
-        }
-        if (subscription && subscription.availableSeats === 0) {
-          await this.updateSeatsUseCase.execute(
-            new UpdateSeatsCommand({
-              orgId: command.orgId,
-              requestingUserId: command.userId,
-              noOfSeats: subscription.subscription.noOfSeats + 1,
-            }),
-          );
-        }
-      }
+      this.validateEmailProvider(command.email);
+      await this.ensureEmailAvailable(command.email, command.orgId);
+      await this.ensureCloudSeatsAvailable(command.orgId, command.userId);
 
       const validDuration = this.configService.get<string>(
         'auth.jwt.inviteExpiresIn',
         '7d',
       );
-      const inviteExpiresAt = getInviteExpiresAt(validDuration);
 
       const invite = new Invite({
         email: command.email,
         orgId: command.orgId,
         role: command.role,
         inviterId: command.userId,
-        expiresAt: inviteExpiresAt,
+        expiresAt: getInviteExpiresAt(validDuration),
       });
       this.logger.debug('Invite to be created', { invite });
 
       await this.invitesRepository.create(invite);
 
-      // Generate JWT token for the invite
       const inviteToken = this.inviteJwtService.generateInviteToken({
         inviteId: invite.id,
       });
@@ -135,10 +78,7 @@ export class CreateInviteUseCase {
         email: invite.email,
       });
 
-      return {
-        token: inviteToken,
-        invite,
-      };
+      return { token: inviteToken, invite };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -147,6 +87,90 @@ export class CreateInviteUseCase {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new UnexpectedInviteError(error as Error);
+    }
+  }
+
+  private validateEmailProvider(email: string): void {
+    const emailProvider = email.split('@')[1].split('.')[0];
+    const blacklist = this.configService.get<string[]>(
+      'auth.emailProviderBlacklist',
+    )!;
+    if (blacklist.includes(emailProvider)) {
+      throw new UserEmailProviderBlacklistedError(emailProvider);
+    }
+  }
+
+  private async ensureEmailAvailable(
+    email: string,
+    orgId: UUID,
+  ): Promise<void> {
+    const existingUser = await this.findUserByEmailUseCase.execute(
+      new FindUserByEmailQuery(email),
+    );
+    if (!existingUser) {
+      return;
+    }
+    if (existingUser.orgId === orgId) {
+      throw new UserAlreadyExistsError();
+    }
+    throw new EmailNotAvailableError();
+  }
+
+  private async ensureCloudSeatsAvailable(
+    orgId: UUID,
+    userId: UUID,
+  ): Promise<void> {
+    const isCloud = this.configService.get<boolean>(
+      'app.isCloudHosted',
+      false,
+    );
+    if (!isCloud) {
+      return;
+    }
+
+    const subscription = await this.fetchActiveSubscription(orgId, userId);
+    if (!subscription) {
+      return;
+    }
+
+    if (subscription.availableSeats < 0) {
+      throw new InvalidSeatsError({
+        orgId,
+        availableSeats: subscription.availableSeats,
+      });
+    }
+    if (subscription.availableSeats === 0) {
+      await this.updateSeatsUseCase.execute(
+        new UpdateSeatsCommand({
+          orgId,
+          requestingUserId: userId,
+          noOfSeats: subscription.subscription.noOfSeats + 1,
+        }),
+      );
+    }
+  }
+
+  private async fetchActiveSubscription(
+    orgId: UUID,
+    userId: UUID,
+  ): Promise<Awaited<
+    ReturnType<GetActiveSubscriptionUseCase['execute']>
+  > | null> {
+    try {
+      return await this.getActiveSubscriptionUseCase.execute(
+        new GetActiveSubscriptionQuery({
+          orgId,
+          requestingUserId: userId,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof SubscriptionNotFoundError) {
+        this.logger.debug('No active subscription found, proceeding', {
+          orgId,
+        });
+        return null;
+      }
+      throw error;
     }
   }
 }
