@@ -72,12 +72,26 @@ npm run test                   # All tests pass
 curl http://localhost:3000/api/health  # Service responds
 ```
 
+## TypeScript Strictness
+
+The backend uses `strict: true` in `tsconfig.json` (with `strictPropertyInitialization: false` for TypeORM entities). This means:
+
+- No implicit `any` — every variable must have a type or be inferable
+- `strictBindCallApply`, `strictFunctionTypes`, `strictNullChecks` — all enabled
+- `noImplicitReturns: true` — every code path must return
+
+ESLint enforces `@typescript-eslint/no-explicit-any: error`. Use `unknown` and narrow with type guards. The `sonarjs` plugin is also active — it flags cognitive complexity (threshold: 15), duplicate code, and other code smells.
+
+Use `Logger` (from `@nestjs/common`) instead of `console.*`. The `no-console` rule is enforced with only `console.warn` and `console.error` allowed.
+
 ## Complexity Thresholds
 
 Enforced by Husky pre-commit and CI:
+
 - Cyclomatic complexity (CCN) ≤ 10
 - Function length ≤ 50 lines
 - Arguments ≤ 5
+- File size ≤ 500 lines (excluding tests, migrations, records)
 
 ```bash
 # From repo root
@@ -97,7 +111,7 @@ cat ayunis-core-backend/src/domain/[module]/SUMMARY.md
 
 ## Module Structure (Hexagonal)
 
-```
+```text
 [module]/
 ├── SUMMARY.md           # ← Read this first
 ├── domain/              # Pure entities, no decorators
@@ -194,7 +208,8 @@ npm run migration:generate:dev -- src/db/migrations/Name  # New migration
 | Batch changes | Harder to identify breakage | One change → validate → commit |
 | `return true` to pass test | Reward hacking | Fix root cause |
 | Edit test files to pass | Gaming the validator | Tests define correctness |
-| Use `any` type | Hides errors | Use `unknown` or specific types |
+| Use `any` type | `no-explicit-any: error` blocks commit | Use `unknown` or specific types, narrow with type guards |
+| Use `console.*` | `no-console` rule enforced | Use NestJS `Logger` (`this.logger.log(...)`) |
 | Pass userId through commands | Breaks ContextService pattern | Use `contextService.get()` |
 | Import across module boundaries | Circular dependencies | Use ports/adapters |
 | Write complex functions | CCN>10 triggers CI failure | Split into smaller functions |
