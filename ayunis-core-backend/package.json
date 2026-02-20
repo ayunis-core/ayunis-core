@@ -73,7 +73,6 @@
     "form-data": "^4.0.5",
     "helmet": "^8.1.0",
     "json-schema-to-ts": "^3.1.1",
-    "langfuse": "^3.37.4",
     "minio": "^8.0.5",
     "mjml": "^4.7.1",
     "nest-commander": "^3.19.1",
