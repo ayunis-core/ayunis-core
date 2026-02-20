@@ -3,6 +3,9 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "knip": "^5.51.0",
+    "madge": "^8.0.0",
+    "markdownlint-cli2": "^0.17.2"
   }
 }
