@@ -28,6 +28,7 @@ fi
 FILES=$(echo "$FILES" | grep -v '/generated/' \
     | grep -v '/migrations/' \
     | grep -v '\.spec\.ts$' \
+    | grep -v '\.spec\.tsx$' \
     | grep -v '\.test\.ts$' \
     | grep -v '\.test\.tsx$' \
     | grep -v '\.record\.ts$' \
