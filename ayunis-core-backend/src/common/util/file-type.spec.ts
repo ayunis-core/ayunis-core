@@ -91,6 +91,10 @@ describe('detectFileType', () => {
         detectFileType('application/octet-stream', 'SPREADSHEET.XLS'),
       ).toBe('xls');
     });
+
+    it('returns "xls" when extension is .xls but MIME type is text/csv (extension takes precedence)', () => {
+      expect(detectFileType(MIME_TYPES.CSV, 'spreadsheet.xls')).toBe('xls');
+    });
   });
 
   describe('CSV detection', () => {
