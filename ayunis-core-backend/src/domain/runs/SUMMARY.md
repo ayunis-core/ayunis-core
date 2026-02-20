@@ -10,6 +10,7 @@ The runs module is the central orchestrator for AI conversation execution. The `
 - **ToolAssemblyService** — Assembles available tools and builds the run context (system prompt instructions) from thread, agent, active skills, and model capabilities.
 - **ToolResultCollectorService** — Collects tool results from the previous iteration: dispatches backend tool executions, handles frontend tool display acknowledgements, anonymizes PII results, and truncates oversized outputs.
 - **StreamingInferenceService** — Executes streaming inference, accumulates response chunks into partial `AssistantMessage` updates, and persists the final result. Handles usage collection from streaming chunks.
+- **CollectUsageAsyncService** — Collects usage data asynchronously (fire-and-forget). Errors are logged but don't block the main flow.
 - **MessageCleanupService** — Ensures threads end with an assistant message after a run completes or is interrupted by deleting trailing non-assistant messages.
 - **SystemPromptBuilderService** — Builds system prompts from agent configuration, thread context, and active skills.
 
