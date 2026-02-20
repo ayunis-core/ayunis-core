@@ -23,7 +23,7 @@ export class ValidateIntegrationAccessService {
 
   async validate(
     integrationId: string,
-    options: { requireEnabled?: boolean } = { requireEnabled: true },
+    { requireEnabled = true }: { requireEnabled?: boolean } = {},
   ): Promise<McpIntegration> {
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -42,7 +42,7 @@ export class ValidateIntegrationAccessService {
       );
     }
 
-    if (options.requireEnabled && !integration.enabled) {
+    if (requireEnabled && !integration.enabled) {
       throw new McpIntegrationDisabledError(integrationId, integration.name);
     }
 
