@@ -85,7 +85,7 @@ jobs:
       - name: Start backend
         working-directory: ayunis-core-backend
         run: |
-          node dist/main.js &
+          node dist/src/main.js &
           # Wait for backend to be ready
           timeout 60 bash -c 'until curl -sf http://localhost:3000/api/docs-json > /dev/null 2>&1; do sleep 2; done'
 
@@ -97,8 +97,7 @@ jobs:
         working-directory: ayunis-core-frontend
         run: |
           cat > .env << 'EOF'
-          VITE_API_URL=http://localhost:3000
-          OPENAPI_URL=http://localhost:3000/api/docs-json
+          VITE_API_BASE_URL=http://localhost:3000/api
           EOF
 
       - name: Regenerate API client
