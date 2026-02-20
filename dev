@@ -21,6 +21,7 @@ COMPOSE_FILE="$REPO_DIR/compose.dev.yml"
 
 die()  { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*"; }
+warn() { echo "⚠️  $*" >&2; }
 
 # ── Parse arguments ────────────────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ EOF
   if _pid_alive "$STATE_DIR/backend.pid"; then
     info "Backend already running (PID $(cat "$STATE_DIR/backend.pid"))"
   else
+    _kill_port "$BACKEND_PORT" "Backend (stale)"
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
     (
@@ -137,6 +139,7 @@ EOF
   if _pid_alive "$STATE_DIR/frontend.pid"; then
     info "Frontend already running (PID $(cat "$STATE_DIR/frontend.pid"))"
   else
+    _kill_port "$FRONTEND_PORT" "Frontend (stale)"
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
     (
@@ -184,9 +187,9 @@ EOF
 cmd_down() {
   info "Stopping slot $SLOT …"
 
-  # Stop native processes
-  _kill_pid "$STATE_DIR/frontend.pid" "Frontend"
-  _kill_pid "$STATE_DIR/backend.pid"  "Backend"
+  # Stop native processes (pass ports to kill orphaned grandchild processes)
+  _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT"
+  _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_PORT"
 
   # Stop Docker infrastructure
   dc down
@@ -267,6 +270,7 @@ _pid_alive() {
 _kill_pid() {
   local pidfile="$1"
   local label="${2:-process}"
+  local port="${3:-}"
   if _pid_alive "$pidfile"; then
     local pid
     pid=$(cat "$pidfile")
@@ -282,6 +286,23 @@ _kill_pid() {
     pkill -9 -P "$pid" 2>/dev/null || true
     kill -9 "$pid" 2>/dev/null || true
     rm -f "$pidfile"
+  fi
+  # Safety net: kill any process still listening on the port.
+  # Handles orphaned grandchild processes (e.g., node spawned by npm).
+  if [ -n "$port" ]; then
+    _kill_port "$port" "$label"
+  fi
+}
+
+_kill_port() {
+  local port="$1"
+  local label="${2:-process}"
+  local pid
+  pid=$(lsof -ti :"$port" 2>/dev/null || true)
+  if [ -n "$pid" ]; then
+    warn "Killing orphaned $label process on port $port (PID $pid)"
+    echo "$pid" | xargs kill -9 2>/dev/null || true
+    sleep 1
   fi
 }
 
