@@ -72,6 +72,14 @@ export function detectFileType(
   filename: string,
 ): DetectedFileType {
   const ext = extname(filename).toLowerCase();
+
+  // Special case: XLS extension takes precedence over CSV MIME type.
+  // Some clients send .xls files with text/csv MIME type, but we should
+  // trust the extension for XLS files since XLS MIME can also indicate CSV.
+  if (ext === FILE_EXTENSIONS.XLS) {
+    return 'xls';
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- lookup returns undefined for unknown keys at runtime
   return MIME_TO_FILE_TYPE[mimetype] ?? EXT_TO_FILE_TYPE[ext] ?? 'unknown';
 }
