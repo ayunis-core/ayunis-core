@@ -107,15 +107,6 @@ export class StreamInferenceResponseChunk {
       toolCallsDelta: [],
     });
   }
-
-  /** Factory: empty chunk (no content, no tool calls) */
-  static empty(): StreamInferenceResponseChunk {
-    return new StreamInferenceResponseChunk({
-      thinkingDelta: null,
-      textContentDelta: null,
-      toolCallsDelta: [],
-    });
-  }
 }
 
 export abstract class StreamInferenceHandler {
