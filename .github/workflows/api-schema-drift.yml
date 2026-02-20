@@ -36,7 +36,7 @@ jobs:
             -p 9000:9000 \
             -e MINIO_ROOT_USER=minio \
             -e MINIO_ROOT_PASSWORD=minio123 \
-            quay.io/minio/minio:latest server /data
+            quay.io/minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
           # Wait for MinIO to be ready
           timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
 
