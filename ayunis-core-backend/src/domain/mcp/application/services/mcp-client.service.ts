@@ -324,7 +324,7 @@ export class McpClientService {
     operation: string,
   ): void {
     // Check for 401 authentication errors
-    if ((error as { status?: number }).status === 401) {
+    if ((error as { status?: number })?.status === 401) {
       this.logger.warn(
         `Authentication failed for MCP operation: ${operation}`,
         {
