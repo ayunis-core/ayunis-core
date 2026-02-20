@@ -29,6 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minio \
+            -e MINIO_ROOT_PASSWORD=minio123 \
+            quay.io/minio/minio:latest server /data
+          # Wait for MinIO to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -70,6 +81,15 @@ jobs:
           ADMIN_TOKEN=test-admin-token
           DISABLE_REGISTRATION=false
           DISABLE_EMAIL_CONFIRMATION=true
+          MCP_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          OPENAI_API_KEY=sk-test-dummy-key-for-ci
+          ANTHROPIC_API_KEY=sk-ant-test-dummy-key-for-ci
+          MISTRAL_API_KEY=test-dummy-key-for-ci
+          OTC_API_KEY=test-dummy-key-for-ci
+          AZURE_OPENAI_API_KEY=test-dummy-key-for-ci
+          AZURE_OPENAI_ENDPOINT=https://dummy.openai.azure.com
+          GEMINI_API_KEY=test-dummy-key-for-ci
+          STACKIT_API_KEY=test-dummy-key-for-ci
           EOF
 
       - name: Build backend

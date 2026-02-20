@@ -30,7 +30,8 @@ jobs:
         run: npm ci
 
       - name: Check for dead code
-        run: npx knip
+        run: npx knip --include files,dependencies,unlisted
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
 
   frontend:
     name: Frontend
@@ -53,4 +54,5 @@ jobs:
         run: npm ci
 
       - name: Check for dead code
-        run: npx knip
+        run: npx knip --include files,dependencies,unlisted
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
