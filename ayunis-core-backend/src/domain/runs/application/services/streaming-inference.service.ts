@@ -103,7 +103,7 @@ export class StreamingInferenceService {
       if (streamCompletedSuccessfully && allChunks.length > 0) {
         const usage = this.extractUsageFromChunks(allChunks);
         if (usage) {
-          this.collectUsage(
+          this.collectUsageAsyncService.collect(
             model,
             usage.inputTokens,
             usage.outputTokens,
@@ -413,19 +413,5 @@ export class StreamingInferenceService {
     }
 
     return hasUsageData ? { inputTokens, outputTokens } : undefined;
-  }
-
-  private collectUsage(
-    model: LanguageModel,
-    inputTokens: number,
-    outputTokens: number,
-    messageId?: UUID,
-  ): void {
-    this.collectUsageAsyncService.collect(
-      model,
-      inputTokens,
-      outputTokens,
-      messageId,
-    );
   }
 }

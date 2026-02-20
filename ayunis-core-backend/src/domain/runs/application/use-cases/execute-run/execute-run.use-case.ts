@@ -399,7 +399,7 @@ export class ExecuteRunUseCase {
               inferenceResponse.meta.inputTokens !== undefined &&
               inferenceResponse.meta.outputTokens !== undefined
             ) {
-              this.collectUsage(
+              this.collectUsageAsyncService.collect(
                 params.model,
                 inferenceResponse.meta.inputTokens,
                 inferenceResponse.meta.outputTokens,
@@ -485,20 +485,6 @@ export class ExecuteRunUseCase {
       // Return original text on anonymization failure to not block the conversation
       return text;
     }
-  }
-
-  private collectUsage(
-    model: LanguageModel,
-    inputTokens: number,
-    outputTokens: number,
-    messageId?: UUID,
-  ): void {
-    this.collectUsageAsyncService.collect(
-      model,
-      inputTokens,
-      outputTokens,
-      messageId,
-    );
   }
 
   /**
