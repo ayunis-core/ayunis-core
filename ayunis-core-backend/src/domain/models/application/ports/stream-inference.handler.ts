@@ -24,7 +24,7 @@ export class StreamInferenceInput {
     this.model = params.model;
     this.messages = params.messages;
     this.systemPrompt = params.systemPrompt;
-    this.tools = params.tools || [];
+    this.tools = params.tools ?? [];
     // only set toolChoice if tools are provided
     this.toolChoice =
       params.tools && params.tools.length > 0 ? params.toolChoice : undefined;
@@ -88,6 +88,33 @@ export class StreamInferenceResponseChunk {
     this.toolCallsDelta = params.toolCallsDelta;
     this.finishReason = params.finishReason;
     this.usage = params.usage;
+  }
+
+  /** Factory: chunk containing only a thinking delta */
+  static thinking(delta: string | null): StreamInferenceResponseChunk {
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: delta,
+      textContentDelta: null,
+      toolCallsDelta: [],
+    });
+  }
+
+  /** Factory: chunk containing only a text content delta */
+  static text(delta: string | null): StreamInferenceResponseChunk {
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: delta,
+      toolCallsDelta: [],
+    });
+  }
+
+  /** Factory: empty chunk (no content, no tool calls) */
+  static empty(): StreamInferenceResponseChunk {
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: null,
+      toolCallsDelta: [],
+    });
   }
 }
 

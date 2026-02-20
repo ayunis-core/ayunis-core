@@ -77,6 +77,9 @@ import { StackitStreamInferenceHandler } from './infrastructure/stream-inference
 import { ConfigService } from '@nestjs/config';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
+import { OpenAIResponsesMessageConverter } from './infrastructure/converters/openai-responses-message.converter';
+import { GeminiMessageConverter } from './infrastructure/converters/gemini-message.converter';
+import { MistralMessageConverter } from './infrastructure/converters/mistral-message.converter';
 
 @Module({
   imports: [
@@ -95,6 +98,9 @@ import { MessagesModule } from '../messages/messages.module';
   providers: [
     ModelRegistry,
     ModelProviderInfoRegistry,
+    OpenAIResponsesMessageConverter,
+    GeminiMessageConverter,
+    MistralMessageConverter,
     ModelResponseDtoMapper,
     ModelWithConfigResponseDtoMapper,
     CatalogModelResponseDtoMapper,
@@ -291,6 +297,7 @@ import { MessagesModule } from '../messages/messages.module';
     GetModelByIdUseCase,
     GetAllModelsUseCase,
     DeleteModelUseCase,
+    // eslint-disable-next-line sonarjs/todo-tag -- pre-existing architectural note
     // TODO: These modules should be part of this module and not separate
     LocalModelsRepositoryModule, // Export repository for seeding
     LocalPermittedModelsRepositoryModule, // Export repository for seeding

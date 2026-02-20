@@ -4,60 +4,28 @@ import {
   InvokeModelWithResponseStreamCommand,
 } from '@aws-sdk/client-bedrock-runtime';
 import { ConfigService } from '@nestjs/config';
-import { Observable } from 'rxjs';
+import { Observable, Subscriber } from 'rxjs';
 import {
   StreamInferenceHandler,
   StreamInferenceInput,
   StreamInferenceResponseChunk,
   StreamInferenceResponseChunkToolCall,
 } from '../../application/ports/stream-inference.handler';
-import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { Message } from 'src/domain/messages/domain/message.entity';
-import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
-import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
-import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
-import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
-import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import { ImageMessageContent } from 'src/domain/messages/domain/message-contents/image-message-content.entity';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
-
-interface AnthropicMessage {
-  role: 'user' | 'assistant';
-  content: AnthropicContent[];
-}
-
-type AnthropicContent =
-  | { type: 'text'; text: string }
-  | {
-      type: 'image';
-      source: { type: 'base64'; media_type: string; data: string };
-    }
-  | { type: 'tool_use'; id: string; name: string; input: object }
-  | { type: 'tool_result'; tool_use_id: string; content: string }
-  | { type: 'thinking'; thinking: string; signature: string };
-
-interface AnthropicTool {
-  name: string;
-  description: string;
-  input_schema: object;
-}
-
-interface AnthropicToolChoice {
-  type: 'auto' | 'any' | 'tool';
-  name?: string;
-}
+import {
+  BedrockMessageConverter,
+  BedrockAnthropicMessage,
+  BedrockAnthropicTool,
+  BedrockAnthropicToolChoice,
+} from '../converters/bedrock-message.converter';
 
 interface BedrockAnthropicRequest {
   anthropic_version: string;
   max_tokens: number;
   system?: string;
-  messages: AnthropicMessage[];
-  tools?: AnthropicTool[];
-  tool_choice?: AnthropicToolChoice;
+  messages: BedrockAnthropicMessage[];
+  tools?: BedrockAnthropicTool[];
+  tool_choice?: BedrockAnthropicToolChoice;
 }
 
 // Bedrock streaming event types
@@ -137,6 +105,7 @@ type BedrockStreamEvent =
 export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
   private readonly logger = new Logger(BedrockStreamInferenceHandler.name);
   private readonly client: BedrockRuntimeClient;
+  private readonly converter: BedrockMessageConverter;
 
   constructor(
     private readonly configService: ConfigService,
@@ -159,7 +128,7 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
     });
 
     this.client = new BedrockRuntimeClient({
-      region: awsRegion || 'us-east-1',
+      region: awsRegion ?? 'us-east-1',
       credentials:
         awsAccessKeyId && awsSecretAccessKey
           ? {
@@ -168,6 +137,7 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
             }
           : undefined,
     });
+    this.converter = new BedrockMessageConverter(imageContentService);
   }
 
   answer(
@@ -193,13 +163,16 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
 
   private async streamResponse(
     input: StreamInferenceInput,
-    subscriber: import('rxjs').Subscriber<StreamInferenceResponseChunk>,
+    subscriber: Subscriber<StreamInferenceResponseChunk>,
   ): Promise<void> {
     const { messages, tools, toolChoice, systemPrompt, orgId } = input;
-    const anthropicMessages = await this.convertMessages(messages, orgId);
-    const anthropicTools = tools.map((tool) => this.convertTool(tool));
+    const anthropicMessages = await this.converter.convertMessages(
+      messages,
+      orgId,
+    );
+    const anthropicTools = tools.map((t) => this.converter.convertTool(t));
     const anthropicToolChoice = toolChoice
-      ? this.convertToolChoice(toolChoice)
+      ? this.converter.convertToolChoice(toolChoice)
       : undefined;
 
     const requestBody: BedrockAnthropicRequest = {
@@ -245,228 +218,105 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
   private convertChunk(
     chunk: BedrockStreamEvent,
   ): StreamInferenceResponseChunk | null {
-    // Handle content_block_delta events
-    if (chunk.type === 'content_block_delta') {
-      const deltaChunk = chunk as BedrockContentBlockDelta;
-      if (deltaChunk.delta.type === 'thinking_delta') {
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: deltaChunk.delta.thinking,
-          textContentDelta: null,
-          toolCallsDelta: [],
-        });
-      }
-      if (deltaChunk.delta.type === 'signature_delta') {
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          thinkingSignature: deltaChunk.delta.signature,
-          textContentDelta: null,
-          toolCallsDelta: [],
-        });
-      }
-      if (deltaChunk.delta.type === 'text_delta') {
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          textContentDelta: deltaChunk.delta.text,
-          toolCallsDelta: [],
-        });
-      }
-      if (deltaChunk.delta.type === 'input_json_delta') {
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          textContentDelta: null,
-          toolCallsDelta: [
-            new StreamInferenceResponseChunkToolCall({
-              index: deltaChunk.index,
-              id: null,
-              name: null,
-              argumentsDelta: deltaChunk.delta.partial_json,
-            }),
-          ],
-        });
-      }
-    }
-
-    // Handle content_block_start events
-    if (chunk.type === 'content_block_start') {
-      const startChunk = chunk as BedrockContentBlockStart;
-      if (startChunk.content_block.type === 'thinking') {
-        // Thinking block start — content arrives via thinking_delta events
-        return null;
-      }
-      if (startChunk.content_block.type === 'tool_use') {
-        const toolBlock =
-          startChunk.content_block as BedrockToolUseContentBlock;
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          textContentDelta: null,
-          toolCallsDelta: [
-            new StreamInferenceResponseChunkToolCall({
-              index: startChunk.index,
-              id: toolBlock.id,
-              name: toolBlock.name,
-              argumentsDelta: null,
-            }),
-          ],
-        });
-      }
-    }
-
-    // Handle message_start for input tokens
-    if (chunk.type === 'message_start') {
-      const messageChunk = chunk as BedrockMessageStart;
-      const usage = messageChunk.message.usage;
-      if (usage?.input_tokens !== undefined) {
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          textContentDelta: null,
-          toolCallsDelta: [],
-          usage: {
-            inputTokens: usage.input_tokens,
-            outputTokens: undefined,
-          },
-        });
-      }
-    }
-
-    // Handle message_delta for output tokens
-    if (chunk.type === 'message_delta') {
-      const deltaChunk = chunk as BedrockMessageDelta;
-      const usage = deltaChunk.usage;
-      if (usage?.output_tokens !== undefined) {
-        return new StreamInferenceResponseChunk({
-          thinkingDelta: null,
-          textContentDelta: null,
-          toolCallsDelta: [],
-          usage: {
-            inputTokens: undefined,
-            outputTokens: usage.output_tokens,
-          },
-        });
-      }
-    }
-
+    if (chunk.type === 'content_block_delta')
+      return this.convertContentBlockDelta(chunk as BedrockContentBlockDelta);
+    if (chunk.type === 'content_block_start')
+      return this.convertContentBlockStart(chunk as BedrockContentBlockStart);
+    if (chunk.type === 'message_start')
+      return this.convertMessageStart(chunk as BedrockMessageStart);
+    if (chunk.type === 'message_delta')
+      return this.convertMessageDelta(chunk as BedrockMessageDelta);
     return null;
   }
 
-  private convertTool(tool: Tool): AnthropicTool {
-    return {
-      name: tool.name,
-      description: tool.description,
-      input_schema: tool.parameters as object,
-    };
+  private convertContentBlockDelta(
+    chunk: BedrockContentBlockDelta,
+  ): StreamInferenceResponseChunk | null {
+    if (chunk.delta.type === 'thinking_delta') {
+      return new StreamInferenceResponseChunk({
+        thinkingDelta: chunk.delta.thinking,
+        textContentDelta: null,
+        toolCallsDelta: [],
+      });
+    }
+    if (chunk.delta.type === 'signature_delta') {
+      return new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        thinkingSignature: chunk.delta.signature,
+        textContentDelta: null,
+        toolCallsDelta: [],
+      });
+    }
+    if (chunk.delta.type === 'text_delta') {
+      return new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        textContentDelta: chunk.delta.text,
+        toolCallsDelta: [],
+      });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- exhaustive guard
+    if (chunk.delta.type === 'input_json_delta') {
+      return new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        textContentDelta: null,
+        toolCallsDelta: [
+          new StreamInferenceResponseChunkToolCall({
+            index: chunk.index,
+            id: null,
+            name: null,
+            argumentsDelta: chunk.delta.partial_json,
+          }),
+        ],
+      });
+    }
+    return null;
   }
 
-  private convertToolChoice(toolChoice: ModelToolChoice): AnthropicToolChoice {
-    if (toolChoice === ModelToolChoice.AUTO) {
-      return { type: 'auto' };
-    } else if (toolChoice === ModelToolChoice.REQUIRED) {
-      return { type: 'any' };
-    } else {
-      return { type: 'tool', name: toolChoice };
+  private convertContentBlockStart(
+    chunk: BedrockContentBlockStart,
+  ): StreamInferenceResponseChunk | null {
+    if (chunk.content_block.type === 'thinking') return null;
+    if (chunk.content_block.type === 'tool_use') {
+      const toolBlock = chunk.content_block as BedrockToolUseContentBlock;
+      return new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        textContentDelta: null,
+        toolCallsDelta: [
+          new StreamInferenceResponseChunkToolCall({
+            index: chunk.index,
+            id: toolBlock.id,
+            name: toolBlock.name,
+            argumentsDelta: null,
+          }),
+        ],
+      });
     }
+    return null;
   }
 
-  private async convertMessages(
-    messages: Message[],
-    orgId: string,
-  ): Promise<AnthropicMessage[]> {
-    const result: AnthropicMessage[] = [];
-
-    for (const message of messages) {
-      const converted = await this.convertMessage(message, orgId);
-
-      if (result.length === 0) {
-        result.push(converted);
-        continue;
-      }
-
-      const lastMessage = result[result.length - 1];
-
-      if (
-        message.role === MessageRole.ASSISTANT ||
-        lastMessage.role === 'assistant'
-      ) {
-        result.push(converted);
-      } else {
-        lastMessage.content.push(...converted.content);
-      }
-    }
-
-    return result;
+  private convertMessageStart(
+    chunk: BedrockMessageStart,
+  ): StreamInferenceResponseChunk | null {
+    const usage = chunk.message.usage;
+    if (!usage?.input_tokens) return null;
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: null,
+      toolCallsDelta: [],
+      usage: { inputTokens: usage.input_tokens, outputTokens: undefined },
+    });
   }
 
-  private async convertMessage(
-    message: Message,
-    orgId: string,
-  ): Promise<AnthropicMessage> {
-    if (message instanceof UserMessage) {
-      const content: AnthropicContent[] = [];
-      for (const c of message.content) {
-        if (c instanceof TextMessageContent) {
-          content.push({ type: 'text', text: c.text });
-        } else if (c instanceof ImageMessageContent) {
-          const imageData = await this.imageContentService.convertImageToBase64(
-            c,
-            { orgId, threadId: message.threadId, messageId: message.id },
-          );
-          content.push({
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: imageData.contentType,
-              data: imageData.base64,
-            },
-          });
-        }
-      }
-      return { role: 'user', content };
-    }
-
-    if (message instanceof AssistantMessage) {
-      const content: AnthropicContent[] = message.content
-        .map((c): AnthropicContent | null => {
-          if (c instanceof ThinkingMessageContent) {
-            if (!c.signature) return null;
-            return {
-              type: 'thinking' as const,
-              thinking: c.thinking,
-              signature: c.signature,
-            };
-          }
-          if (c instanceof TextMessageContent) {
-            return { type: 'text' as const, text: c.text };
-          }
-          if (c instanceof ToolUseMessageContent) {
-            return {
-              type: 'tool_use' as const,
-              id: c.id,
-              name: c.name,
-              input: c.params,
-            };
-          }
-          throw new Error('Unknown assistant content type');
-        })
-        .filter((block): block is AnthropicContent => block !== null);
-      return { role: 'assistant', content };
-    }
-
-    if (message instanceof ToolResultMessage) {
-      const content: AnthropicContent[] = message.content.map((c) => ({
-        type: 'tool_result' as const,
-        tool_use_id: c.toolId,
-        content: c.result,
-      }));
-      return { role: 'user', content };
-    }
-
-    if (message instanceof SystemMessage) {
-      const content: AnthropicContent[] = message.content.map((c) => ({
-        type: 'text' as const,
-        text: c.text,
-      }));
-      return { role: 'user', content };
-    }
-
-    throw new Error('Unknown message type');
+  private convertMessageDelta(
+    chunk: BedrockMessageDelta,
+  ): StreamInferenceResponseChunk | null {
+    const usage = chunk.usage;
+    if (!usage?.output_tokens) return null;
+    return new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: null,
+      toolCallsDelta: [],
+      usage: { inputTokens: undefined, outputTokens: usage.output_tokens },
+    });
   }
 }
