@@ -12,10 +12,10 @@ set -euo pipefail
 PROJECT_DIR="$1"; shift
 STAGED_FILES=("$@")
 
-# Filter out spec/test files from staged files
+# Filter out spec/test files and migration files from staged files
 FILTERED_STAGED=()
 for f in "${STAGED_FILES[@]}"; do
-  if [[ ! "$f" =~ \.(spec|test)\.(ts|tsx)$ ]]; then
+  if [[ ! "$f" =~ \.(spec|test)\.(ts|tsx)$ ]] && [[ ! "$f" =~ /migrations/ ]]; then
     FILTERED_STAGED+=("$f")
   fi
 done
