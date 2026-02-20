@@ -15,5 +15,6 @@ export class LocalOllamaInferenceHandler extends BaseOllamaInferenceHandler {
       host: configService.get('models.ollama.baseURL'),
     });
     this.imageContentService = imageContentService;
+    this.initConverter();
   }
 }

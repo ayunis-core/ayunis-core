@@ -10,5 +10,6 @@ export class SynaforceInferenceHandler extends BaseOllamaInferenceHandler {
     this.client = new Ollama({
       host: configService.get('models.synaforce.baseURL'),
     });
+    this.initConverter();
   }
 }

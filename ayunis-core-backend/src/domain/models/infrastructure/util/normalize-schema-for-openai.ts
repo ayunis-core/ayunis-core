@@ -14,46 +14,45 @@ export function normalizeSchemaForOpenAI(
 
   const normalized = { ...schema };
 
-  // Add additionalProperties: false to object types if not already present
-  if (normalized.type === 'object' && !('additionalProperties' in normalized)) {
-    normalized.additionalProperties = false;
-  }
-
-  // Add empty properties object if missing (OpenAI requires it)
-  if (normalized.type === 'object' && !('properties' in normalized)) {
-    normalized.properties = {};
-    normalized.required = [];
-  }
-
-  // Recursively process properties
-  if (normalized.properties && typeof normalized.properties === 'object') {
-    const props = normalized.properties as Record<
-      string,
-      Record<string, unknown>
-    >;
-
-    // Normalize nested properties
-    normalized.properties = Object.fromEntries(
-      Object.entries(props).map(([key, value]) => [
-        key,
-        normalizeSchemaForOpenAI(value),
-      ]),
-    );
-
-    // Ensure all properties are listed in required array
-    // OpenAI strict mode requires ALL properties to be required
-    if (normalized.type === 'object') {
-      const propertyNames = Object.keys(props);
-      normalized.required = propertyNames;
-    }
-  }
-
-  // Handle array items
-  if (normalized.items && typeof normalized.items === 'object') {
-    normalized.items = normalizeSchemaForOpenAI(
-      normalized.items as Record<string, unknown>,
-    );
-  }
+  normalizeObjectType(normalized);
+  normalizeProperties(normalized);
+  normalizeArrayItems(normalized);
 
   return normalized;
+}
+
+function normalizeObjectType(schema: Record<string, unknown>): void {
+  if (schema.type !== 'object') return;
+
+  if (!('additionalProperties' in schema)) {
+    schema.additionalProperties = false;
+  }
+  if (!('properties' in schema)) {
+    schema.properties = {};
+    schema.required = [];
+  }
+}
+
+function normalizeProperties(schema: Record<string, unknown>): void {
+  if (!schema.properties || typeof schema.properties !== 'object') return;
+
+  const props = schema.properties as Record<string, Record<string, unknown>>;
+  schema.properties = Object.fromEntries(
+    Object.entries(props).map(([key, value]) => [
+      key,
+      normalizeSchemaForOpenAI(value),
+    ]),
+  );
+
+  // OpenAI strict mode requires ALL properties to be required
+  if (schema.type === 'object') {
+    schema.required = Object.keys(props);
+  }
+}
+
+function normalizeArrayItems(schema: Record<string, unknown>): void {
+  if (!schema.items || typeof schema.items !== 'object') return;
+  schema.items = normalizeSchemaForOpenAI(
+    schema.items as Record<string, unknown>,
+  );
 }

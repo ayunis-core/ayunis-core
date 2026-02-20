@@ -103,7 +103,7 @@ export class CreateMcpIntegrationUseCase {
           const tokenField = command.credentialFields.find(
             (field) => field.name === CredentialFieldType.TOKEN,
           );
-          const rawToken = tokenField?.value?.trim();
+          const rawToken = tokenField?.value.trim();
 
           if (!rawToken) {
             throw new McpValidationFailedError(
@@ -137,7 +137,7 @@ export class CreateMcpIntegrationUseCase {
           const secretField = command.credentialFields.find(
             (field) => field.name === CredentialFieldType.TOKEN,
           );
-          const rawSecret = secretField?.value?.trim();
+          const rawSecret = secretField?.value.trim();
 
           if (!rawSecret) {
             throw new McpValidationFailedError(
@@ -151,8 +151,13 @@ export class CreateMcpIntegrationUseCase {
           integrationAuth = this.authFactory.createAuth({
             method: McpAuthMethod.CUSTOM_HEADER,
             secret: await this.credentialEncryption.encrypt(rawSecret),
+            headerName: config.authHeaderName ?? 'X-API-Key',
           });
           break;
+        }
+        default: {
+          const exhaustiveCheck: never = config.authType;
+          throw new Error(`Unknown MCP auth type: ${String(exhaustiveCheck)}`);
         }
       }
 
@@ -327,7 +332,7 @@ export class CreateMcpIntegrationUseCase {
       });
 
       if (validationResult.isValid) {
-        integration.updateConnectionStatus('healthy', undefined);
+        integration.updateConnectionStatus('healthy');
       } else {
         integration.updateConnectionStatus(
           'unhealthy',

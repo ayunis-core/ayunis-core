@@ -38,8 +38,28 @@ jobs:
           LENGTH_THRESHOLD=50   # Function length in lines
           ARGS_THRESHOLD=5      # Number of arguments
           
-          # Filter out generated code, entity files, migrations, and frontend (lizard doesn't handle React/JSX well)
-          FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | grep -v '/generated/' | grep -v '\.entity\.ts$' | grep -v '\.spec\.ts$' | grep -v '/db/migrations/' | grep -v '^ayunis-core-frontend/' || true)
+          # Filter out files where lizard thresholds don't apply:
+          # - /generated/: auto-generated API clients
+          # - .entity.ts: TypeORM entities (decorators inflate length)
+          # - .spec.ts: test files
+          # - /db/migrations/: auto-generated migrations
+          # - ayunis-core-frontend/: lizard doesn't handle React/JSX well
+          # - /email-templates/: MJML HTML strings (CCN=1-2, just long templates)
+          # - .command.ts / .query.ts: data-carrier constructors (high arg count is acceptable)
+          # - .db-query.ts: raw SQL query functions (high arg count for query params)
+          # - unicode-sanitizer.ts: lizard misparses chained .replace() as 85 NLOC (actual: ~25)
+          FILTERED=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' \
+            | grep -v '/generated/' \
+            | grep -v '\.entity\.ts$' \
+            | grep -v '\.spec\.ts$' \
+            | grep -v '/db/migrations/' \
+            | grep -v '^ayunis-core-frontend/' \
+            | grep -v '/email-templates/' \
+            | grep -v '\.command\.ts$' \
+            | grep -v '\.query\.ts$' \
+            | grep -v '\.db-query\.ts$' \
+            | grep -v 'unicode-sanitizer\.ts$' \
+            || true)
           
           if [ -z "$FILTERED" ]; then
             echo "✅ No non-generated TypeScript files to check"
