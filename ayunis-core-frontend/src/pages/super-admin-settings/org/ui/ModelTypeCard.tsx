@@ -47,6 +47,8 @@ function getHostingPriority(
     case 'anthropic':
     case 'gemini':
       return 2; // US
+    default:
+      return 3;
   }
 }
 
