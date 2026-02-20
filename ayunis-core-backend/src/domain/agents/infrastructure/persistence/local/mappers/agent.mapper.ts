@@ -44,13 +44,14 @@ export class AgentMapper {
     entity.modelId = domain.model.id;
     entity.model = this.permittedModelMapper.toRecord(domain.model);
     entity.userId = domain.userId;
-    entity.agentTools = domain.toolAssignments.map((toolAssignment) =>
-      this.agentToolMapper.toRecord(toolAssignment, domain.id),
-    );
-    entity.sourceAssignments = domain.sourceAssignments.map(
-      (sourceAssignment) =>
+    entity.agentTools =
+      domain.toolAssignments.map((toolAssignment) =>
+        this.agentToolMapper.toRecord(toolAssignment, domain.id),
+      ) ?? [];
+    entity.sourceAssignments =
+      domain.sourceAssignments.map((sourceAssignment) =>
         this.agentSourceAssignmentMapper.toRecord(sourceAssignment, domain.id),
-    );
+      ) ?? [];
     return entity;
   }
 }
