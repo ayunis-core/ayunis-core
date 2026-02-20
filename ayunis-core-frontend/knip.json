@@ -1,6 +1,23 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": ["src/main.tsx"],
-  "project": ["src/**/*.{ts,tsx}"],
-  "ignore": ["src/shared/api/generated/**", "src/app/routeTree.gen.ts"]
+  "entry": [
+    "src/main.tsx"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "src/shared/api/generated/**",
+    "src/app/routeTree.gen.ts",
+    "src/shared/ui/shadcn/**",
+    "src/shared/ui/shadcn/**"
+  ],
+  "ignoreDependencies": [
+    "@radix-ui/*",
+    "@tailwindcss/typography",
+    "tailwindcss",
+    "tailwindcss-animate",
+    "i18next-browser-languagedetector",
+    "@tanstack/react-router-devtools"
+  ]
 }
