@@ -2,11 +2,6 @@ import {
   ApplicationError,
   ErrorMetadata,
 } from '../../../common/errors/base.error';
-import {
-  BadRequestException,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
 import { ModelProvider } from '../domain/value-objects/model-provider.enum';
 import { UUID } from 'crypto';
 
@@ -44,32 +39,6 @@ export abstract class ModelError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    switch (this.statusCode) {
-      case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 409:
-        return new ConflictException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      default:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-    }
   }
 }
 

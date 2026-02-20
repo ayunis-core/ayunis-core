@@ -2,14 +2,6 @@ import {
   ApplicationError,
   ErrorMetadata,
 } from '../../../common/errors/base.error';
-import {
-  BadRequestException,
-  NotFoundException,
-  ConflictException,
-  ForbiddenException,
-  InternalServerErrorException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
 
 /**
  * Error codes specific to the Transcriptions domain
@@ -31,50 +23,6 @@ export abstract class TranscriptionError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    switch (this.statusCode) {
-      case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 403:
-        return new ForbiddenException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 409:
-        return new ConflictException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 500:
-        return new InternalServerErrorException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 503:
-        return new ServiceUnavailableException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      default:
-        return new BadRequestException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-    }
   }
 }
 
