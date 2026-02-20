@@ -1,9 +1,11 @@
 ---
-name: git-commit
-description: Use when committing changes. Ensures correct commit message format, task ID, and conventional commit style matching project history.
+name: git-workflow
+description: Git workflow for ayunis-core — commit messages, Graphite stacking, and branching conventions. Use when committing, branching, or asking about git workflow.
 ---
 
-# Git Commit — ayunis-core
+# Git Workflow — ayunis-core
+
+This project uses **Graphite** for stacked PRs. Always use `gt` commands, never raw `git commit`.
 
 ## Commit Message Format
 
@@ -20,7 +22,7 @@ refactor(AYC-30): update LongChatWarning component
 wip(AYC-60): add source entity and repository port
 ```
 
-## Rules
+### Rules
 
 1. **Task ID is required.** Always ask the user for the task ID if not provided. Format: `AYC-<number>`. Never invent a task ID.
 2. **Type** must be one of: `feat`, `fix`, `chore`, `refactor`, `ci`, `docs`, `test`, `perf`, `wip`.
@@ -56,22 +58,13 @@ Use `feat:`, `fix:`, etc. when the PR **delivers a complete, user-visible change
 
 > If this PR were the only one merged, would the change make sense to a user reading the changelog? If yes → semantic type. If no → `wip:`.
 
-## Pre-commit Checks
+## Branching & Stacking
 
-The project has a pre-commit hook that enforces:
-
-- **Commit message must include `AYC-` prefix** (validated by `commit-msg` hook)
-- **Commit message must start with a valid type** (`feat`, `fix`, `chore`, `wip`, etc.)
-- **ESLint, Prettier, TypeScript typecheck** on staged files
-- **Lizard complexity check** (CCN ≤ 10, length ≤ 50 lines, args ≤ 5)
-
-If complexity fails, split the offending function into smaller units before retrying.
-
-## Workflow
-
-This project uses **Graphite** for stacked PRs. Always use `gt` commands, never raw `git commit`.
+The worktree branch (e.g., `feat/ayc-123/work`) is the **base branch**. Graphite stacks are built on top of it.
 
 ### New commit → new stacked branch
+
+Each logical unit of work gets its own `gt create`:
 
 ```bash
 # 1. Stage changes
@@ -88,7 +81,7 @@ gt create -m "<type>(AYC-<number>): <description>"
 
 ### Amending the current branch
 
-Use this when fixing QA findings, addressing review feedback, or correcting issues on the current branch.
+Use when fixing QA findings, addressing review feedback, or correcting issues on the current branch:
 
 ```bash
 # 1. Stage fixes
@@ -108,3 +101,14 @@ Note: `gt modify` without `--commit` amends the existing commit. With `--commit`
 - Fixes and amendments use `gt modify`, never `gt create`
 - Never use `--no-verify` — let the hooks run
 - Never use raw `git commit` — always go through `gt`
+
+## Pre-commit Hooks
+
+The project has a pre-commit hook that enforces:
+
+- **Commit message must include `AYC-` prefix** (validated by `commit-msg` hook)
+- **Commit message must start with a valid type** (`feat`, `fix`, `chore`, `wip`, etc.)
+- **ESLint, Prettier, TypeScript typecheck** on staged files
+- **Lizard complexity check** (CCN ≤ 10, length ≤ 50 lines, args ≤ 5)
+
+If complexity fails, split the offending function into smaller units before retrying.
