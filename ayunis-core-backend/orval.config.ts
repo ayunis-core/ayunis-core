@@ -22,7 +22,7 @@ export default defineConfig({
   },
   anonymize: {
     input: {
-      target: 'http://localhost:8001/openapi.json',
+      target: 'http://localhost:8002/openapi.json',
     },
     output: {
       target: './src/common/clients/anonymize/generated',

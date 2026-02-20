@@ -5,7 +5,7 @@ import type { AxiosRequestConfig } from 'axios';
 
 // Create axios instance for anonymize service with all configuration
 const anonymizeAxios = axios.create({
-  baseURL: process.env.ANONYMIZE_SERVICE_URL || 'http://localhost:8001',
+  baseURL: process.env.ANONYMIZE_SERVICE_URL || 'http://localhost:8002',
   timeout: 30000, // 30 seconds timeout for text analysis
   headers: {
     'Content-Type': 'application/json',
