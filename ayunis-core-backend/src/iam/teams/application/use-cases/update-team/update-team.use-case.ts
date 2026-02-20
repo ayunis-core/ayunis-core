@@ -43,7 +43,7 @@ export class UpdateTeamUseCase {
     try {
       const team = await this.teamsRepository.findById(command.teamId);
 
-      if (!team || team.orgId !== orgId) {
+      if (team?.orgId !== orgId) {
         this.logger.warn('Team not found or belongs to different org', {
           teamId: command.teamId,
           orgId,
