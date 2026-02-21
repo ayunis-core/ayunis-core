@@ -149,7 +149,7 @@ export default function ChatPage({
     threadId: thread.id,
   });
 
-  const { exportArtifact } = useExportArtifact({
+  const { exportArtifact, isExporting } = useExportArtifact({
     artifactId: openArtifactId ?? '',
     title: openArtifact?.title ?? 'document',
   });
@@ -559,6 +559,7 @@ export default function ChatPage({
                 onRevert={handleRevertArtifact}
                 onExport={handleExportArtifact}
                 onClose={handleCloseArtifact}
+                isExporting={isExporting}
               />
             </Suspense>
           ) : undefined
