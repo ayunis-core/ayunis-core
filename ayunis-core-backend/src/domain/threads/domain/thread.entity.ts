@@ -4,6 +4,11 @@ import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { SourceAssignment } from './thread-source-assignment.entity';
 
+export interface KnowledgeBaseSummary {
+  id: UUID;
+  name: string;
+}
+
 export class Thread {
   id: UUID;
   userId: UUID;
@@ -11,6 +16,7 @@ export class Thread {
   agentId?: UUID;
   sourceAssignments?: SourceAssignment[];
   mcpIntegrationIds: UUID[];
+  knowledgeBases?: KnowledgeBaseSummary[];
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
@@ -24,6 +30,7 @@ export class Thread {
     agentId?: UUID;
     sourceAssignments?: SourceAssignment[];
     mcpIntegrationIds?: UUID[];
+    knowledgeBases?: KnowledgeBaseSummary[];
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
@@ -36,6 +43,7 @@ export class Thread {
     this.agentId = params.agentId;
     this.sourceAssignments = params.sourceAssignments;
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
+    this.knowledgeBases = params.knowledgeBases;
     this.title = params.title;
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;

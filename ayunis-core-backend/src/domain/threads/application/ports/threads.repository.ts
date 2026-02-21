@@ -7,6 +7,7 @@ export interface ThreadsFindAllOptions {
   withSources?: boolean;
   withMessages?: boolean;
   withModel?: boolean;
+  withKnowledgeBases?: boolean;
 }
 
 export interface ThreadsFindAllFilters {
@@ -56,6 +57,11 @@ export abstract class ThreadsRepository {
     threadId: UUID;
     userId: UUID;
     mcpIntegrationIds: UUID[];
+  }): Promise<void>;
+  abstract updateKnowledgeBases(params: {
+    threadId: UUID;
+    userId: UUID;
+    knowledgeBaseIds: UUID[];
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;

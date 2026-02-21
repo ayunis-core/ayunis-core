@@ -25,9 +25,12 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { ReplaceModelWithUserDefaultUseCase } from './application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from './application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { AddMcpIntegrationToThreadUseCase } from './application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
+import { AddKnowledgeBaseToThreadUseCase } from './application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.use-case';
+import { RemoveKnowledgeBaseFromThreadUseCase } from './application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
 import { RemoveSkillSourcesFromThreadsUseCase } from './application/use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { AgentsModule } from '../agents/agents.module';
+import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
 import { UsersModule } from 'src/iam/users/users.module';
@@ -39,6 +42,7 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     SourcesModule,
     forwardRef(() => ModelsModule),
     forwardRef(() => AgentsModule),
+    KnowledgeBasesModule,
     MessagesModule,
     OrgsModule,
     StorageModule,
@@ -65,6 +69,8 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     AddMcpIntegrationToThreadUseCase,
+    AddKnowledgeBaseToThreadUseCase,
+    RemoveKnowledgeBaseFromThreadUseCase,
     RemoveSkillSourcesFromThreadsUseCase,
     // Listeners
     ShareDeletedListener,
@@ -87,6 +93,8 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,
     AddMcpIntegrationToThreadUseCase,
+    AddKnowledgeBaseToThreadUseCase,
+    RemoveKnowledgeBaseFromThreadUseCase,
     RemoveSkillSourcesFromThreadsUseCase,
     // Export mappers
     GetThreadDtoMapper,

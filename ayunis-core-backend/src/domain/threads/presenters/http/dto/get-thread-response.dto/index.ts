@@ -24,6 +24,7 @@ import {
   SourceResponseDto,
   UrlSourceResponseDto,
 } from './source-response.dto';
+import { KnowledgeBaseSummaryResponseDto } from '../knowledge-base-summary-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -118,4 +119,10 @@ export class GetThreadResponseDto {
     example: false,
   })
   isLongChat: boolean;
+
+  @ApiProperty({
+    description: 'Knowledge bases attached to this thread',
+    type: [KnowledgeBaseSummaryResponseDto],
+  })
+  knowledgeBases: KnowledgeBaseSummaryResponseDto[];
 }

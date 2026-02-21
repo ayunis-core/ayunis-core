@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { UUID } from 'crypto';
+import {
+  Thread,
+  KnowledgeBaseSummary,
+} from 'src/domain/threads/domain/thread.entity';
 import { ThreadRecord } from '../schema/thread.record';
 import { MessageMapper } from 'src/domain/messages/infrastructure/persistence/local/mappers/message.mapper';
 import { PermittedModelMapper } from 'src/domain/models/infrastructure/persistence/local-permitted-models/mappers/permitted-model.mapper';
 import { ThreadSourceAssignmentMapper } from './thread-source-assignment.mapper';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Injectable()
 export class ThreadMapper {
@@ -35,6 +40,11 @@ export class ThreadMapper {
     record.mcpIntegrations = thread.mcpIntegrationIds.map(
       (id) => ({ id }) as McpIntegrationRecord,
     );
+    if (thread.knowledgeBases !== undefined) {
+      record.knowledgeBases = thread.knowledgeBases.map(
+        (kb) => ({ id: kb.id }) as KnowledgeBaseRecord,
+      );
+    }
     record.createdAt = thread.createdAt;
     record.updatedAt = thread.updatedAt;
     return record;
@@ -44,28 +54,52 @@ export class ThreadMapper {
     return new Thread({
       id: threadEntity.id,
       userId: threadEntity.userId,
-      model:
-        threadEntity.modelId && threadEntity.model
-          ? (this.permittedModelMapper.toDomain(
-              threadEntity.model,
-            ) as PermittedLanguageModel)
-          : undefined,
+      model: this.mapModel(threadEntity),
       agentId: threadEntity.agentId,
-      sourceAssignments:
-        threadEntity.sourceAssignments?.map((assignment) =>
-          this.sourceAssignmentMapper.toDomain(assignment),
-        ) ?? [],
-      mcpIntegrationIds:
-        threadEntity.mcpIntegrations?.map((integration) => integration.id) ??
-        [],
+      sourceAssignments: this.mapSourceAssignments(threadEntity),
+      mcpIntegrationIds: this.mapMcpIntegrationIds(threadEntity),
+      knowledgeBases: this.mapKnowledgeBases(threadEntity),
       title: threadEntity.title,
       isAnonymous: threadEntity.isAnonymous,
-      messages:
-        threadEntity.messages?.map((message) =>
-          this.messageMapper.toDomain(message),
-        ) ?? [],
+      messages: this.mapMessages(threadEntity),
       createdAt: threadEntity.createdAt,
       updatedAt: threadEntity.updatedAt,
     });
+  }
+
+  private mapModel(record: ThreadRecord): PermittedLanguageModel | undefined {
+    return record.modelId && record.model
+      ? (this.permittedModelMapper.toDomain(
+          record.model,
+        ) as PermittedLanguageModel)
+      : undefined;
+  }
+
+  private mapSourceAssignments(record: ThreadRecord) {
+    return (
+      record.sourceAssignments?.map((a) =>
+        this.sourceAssignmentMapper.toDomain(a),
+      ) ?? []
+    );
+  }
+
+  private mapMcpIntegrationIds(record: ThreadRecord): UUID[] {
+    return record.mcpIntegrations?.map((i) => i.id) ?? [];
+  }
+
+  private mapKnowledgeBases(
+    record: ThreadRecord,
+  ): KnowledgeBaseSummary[] | undefined {
+    if (!record.knowledgeBases) {
+      return undefined;
+    }
+    return record.knowledgeBases.map((kb) => ({
+      id: kb.id,
+      name: kb.name,
+    }));
+  }
+
+  private mapMessages(record: ThreadRecord) {
+    return record.messages?.map((m) => this.messageMapper.toDomain(m)) ?? [];
   }
 }
