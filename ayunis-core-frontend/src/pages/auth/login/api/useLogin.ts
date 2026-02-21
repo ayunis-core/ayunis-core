@@ -40,7 +40,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
       {
         onSuccess: () => {
           // With cookie-based auth, the backend automatically sets HTTP-only cookies
-          void navigate({ to: redirect ?? '/chat' });
+          void navigate({ to: redirect || '/chat' });
         },
         onError: (error) => {
           console.error('Login failed:', error);
