@@ -74,6 +74,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "better-npm-audit": "^3.11.0",
     "dependency-cruiser": "^17.3.8",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
