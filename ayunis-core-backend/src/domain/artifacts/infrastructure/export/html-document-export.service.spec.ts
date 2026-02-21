@@ -94,6 +94,22 @@ describe('HtmlDocumentExportService', () => {
       expect(result).not.toMatch(/style="[^"]*"\s+style="[^"]*"/);
     });
 
+    it('should merge styles when intervening attributes exist between style attributes', () => {
+      const html = '<p class="foo" style="text-align:center">Centered with class</p>';
+      const result = applyInlineStyles(html);
+
+      // Should have exactly one style attribute with both values
+      expect(result).toContain('margin-bottom:8pt');
+      expect(result).toContain('text-align:center');
+
+      // Count style attributes - should be exactly 1
+      const styleCount = (result.match(/style="/g) || []).length;
+      expect(styleCount).toBe(2); // One in body, one in p
+
+      // The p tag should have merged styles and class preserved
+      expect(result).toMatch(/<p\s+class="foo"\s+style="[^"]*margin-bottom:8pt[^"]*text-align:center[^"]*"/);
+    });
+
     it('should not affect <ol> when styling <ol> does not break other tags', () => {
       const html = '<ol><li>First</li></ol>';
       const result = applyInlineStyles(html);

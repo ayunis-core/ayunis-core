@@ -209,14 +209,29 @@ export class HtmlDocumentExportService
    * Merges duplicate `style` attributes on the same tag into one.
    *
    * When applyInlineStyles adds a style to a tag that already has one,
-   * the result is two style attributes. This method combines them.
+   * the result is two style attributes. This method combines them,
+   * even when other attributes (like `class`) appear between them.
    */
   private mergeDuplicateStyles(html: string): string {
     return html.replace(
-      /style="([^"]*)"\s+style="([^"]*)"/g,
-      (_, first: string, second: string) => {
-        const merged = first.replace(/;$/, '') + ';' + second;
-        return `style="${merged}"`;
+      /<(\w+)(\s[^>]*)>/g,
+      (match, tagName: string, attrs: string) => {
+        const styleMatches = attrs.match(/style="[^"]*"/g);
+        if (!styleMatches || styleMatches.length <= 1) {
+          return match;
+        }
+
+        const styles: string[] = [];
+        const styleRegex = /style="([^"]*)"/g;
+        let m: RegExpExecArray | null;
+        while ((m = styleRegex.exec(attrs)) !== null) {
+          styles.push(m[1]);
+        }
+
+        const cleanedAttrs = attrs.replace(/\s*style="[^"]*"/g, '');
+        const mergedStyle = styles.map((s) => s.replace(/;$/, '')).join(';');
+
+        return `<${tagName}${cleanedAttrs} style="${mergedStyle}">`;
       },
     );
   }
