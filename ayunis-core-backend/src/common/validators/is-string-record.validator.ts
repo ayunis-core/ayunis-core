@@ -15,7 +15,11 @@ export function IsStringRecord(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: unknown) {
-          if (typeof value !== 'object' || value === null) {
+          if (
+            typeof value !== 'object' ||
+            value === null ||
+            Array.isArray(value)
+          ) {
             return false;
           }
           return Object.values(value).every((v) => typeof v === 'string');
