@@ -1,9 +1,10 @@
 import NewChatPageLayout from './NewChatPageLayout';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import { useInitiateChat } from '../api/useInitiateChat';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PinnedSkills } from './PinnedSkills';
+import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
@@ -33,12 +34,17 @@ export default function NewChatPage({
   const { models } = usePermittedModels();
   const chatInputRef = useRef<ChatInputRef>(null);
   const greeting = useTimeBasedGreeting();
-  const { setPendingImages } = useChatContext();
+  const { setPendingImages, setPendingSkillId } = useChatContext();
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const { data: skills } = useSkillsControllerFindAll();
   const [selectedSkillId, setSelectedSkillId] = useState<string | undefined>(
     undefined,
+  );
+  const selectedSkillName = useMemo(
+    () => skills?.find((s) => s.id === selectedSkillId)?.name,
+    [skills, selectedSkillId],
   );
   const [sources, setSources] = useState<
     Array<{
@@ -98,6 +104,7 @@ export default function NewChatPage({
   function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
+    skillId?: string,
   ) {
     if (!modelId && !agentId) {
       showError(t('newChat.noModelOrAgentError'));
@@ -109,7 +116,15 @@ export default function NewChatPage({
       setPendingImages(imageFiles);
     }
 
+    // Store skill ID in context for ChatPage to include in the first message
+    if (skillId) {
+      setPendingSkillId(skillId);
+    } else {
+      setPendingSkillId('');
+    }
+
     initiateChat(message, modelId, agentId, sources, isAnonymous);
+    setSelectedSkillId(undefined);
   }
 
   return (
@@ -143,13 +158,20 @@ export default function NewChatPage({
           onAnonymousChange={setIsAnonymous}
           isAnonymousEnforced={isAnonymousEnforced}
           isVisionEnabled={isVisionEnabled}
+          selectedSkillId={selectedSkillId}
+          selectedSkillName={selectedSkillName}
+          onSkillRemove={() => {
+            setSelectedSkillId(undefined);
+          }}
         />
         <PinnedSkills
-          onSkillSelect={(skillId) =>
-            setSelectedSkillId((prev) =>
-              prev === skillId ? undefined : skillId,
-            )
-          }
+          onSkillSelect={(skillId) => {
+            if (selectedSkillId === skillId) {
+              setSelectedSkillId(undefined);
+            } else {
+              setSelectedSkillId(skillId);
+            }
+          }}
           selectedSkillId={selectedSkillId}
         />
       </div>

@@ -25,6 +25,8 @@ type ChatContextType = {
   ) => void;
   pendingImages: PendingImageFile[];
   setPendingImages: (images: PendingImageFile[]) => void;
+  pendingSkillId: string;
+  setPendingSkillId: (id: string) => void;
 };
 
 export const ChatContext = createContext<ChatContextType>({
@@ -39,5 +41,9 @@ export const ChatContext = createContext<ChatContextType>({
   pendingImages: [],
   setPendingImages: () => {
     throw new Error('setPendingImages is not implemented');
+  },
+  pendingSkillId: '',
+  setPendingSkillId: () => {
+    throw new Error('setPendingSkillId is not implemented');
   },
 });

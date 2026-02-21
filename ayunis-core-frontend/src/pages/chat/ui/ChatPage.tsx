@@ -94,7 +94,7 @@ export default function ChatPage({
   ]);
 
   const queryClient = useQueryClient();
-  const processedPendingMessageRef = useRef<string | null>(null);
+  const processedPendingRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
   const {
@@ -104,6 +104,8 @@ export default function ChatPage({
     setSources,
     pendingImages,
     setPendingImages,
+    pendingSkillId,
+    setPendingSkillId,
   } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
@@ -323,43 +325,46 @@ export default function ChatPage({
     setThreadTitle(thread.title);
   }, [thread]);
 
+  // Upload pending file sources before sending a message
+  const uploadPendingSources = useCallback(async () => {
+    if (sources.length === 0) return;
+    setIsProcessingPendingSources(true);
+    const promises = sources.map((source) =>
+      createFileSourceAsync({
+        file: source.file,
+        name: source.name,
+        description: `File source: ${source.name}`,
+      }),
+    );
+    await Promise.all(promises as Promise<unknown>[]);
+    resetCreateFileSourceMutation();
+  }, [sources, createFileSourceAsync, resetCreateFileSourceMutation]);
+
+  // Map pending images to the format expected by sendTextMessage
+  const buildPendingImages = useCallback((): PendingImage[] | undefined => {
+    if (pendingImages.length === 0) return undefined;
+    return pendingImages.map((img) => ({
+      file: img.file,
+      altText: img.altText ?? (img.file.name || 'Pasted image'),
+    }));
+  }, [pendingImages]);
+
   // Send pending message from NewChatPage if it exists
   useEffect(() => {
     async function sendPendingMessage() {
+      const dedupKey = `${pendingMessage}::${pendingSkillId}`;
       if (
-        pendingMessage &&
-        // avoid sending the same message twice
-        processedPendingMessageRef.current !== pendingMessage
+        (pendingMessage || pendingSkillId) &&
+        processedPendingRef.current !== dedupKey
       ) {
-        processedPendingMessageRef.current = pendingMessage;
+        processedPendingRef.current = dedupKey;
         try {
-          if (sources.length > 0) {
-            setIsProcessingPendingSources(true);
-            const promises = sources.map((source) =>
-              createFileSourceAsync({
-                file: source.file,
-                name: source.name,
-                description: `File source: ${source.name}`,
-              }),
-            );
-            await Promise.all(promises as Promise<unknown>[]);
-            // Reset the mutation state to ensure isPending goes to false
-            resetCreateFileSourceMutation();
-          }
+          await uploadPendingSources();
           setSources([]);
-
-          // Pass pending images directly - they'll be uploaded as part of the multipart request
-          const images: PendingImage[] | undefined =
-            pendingImages.length > 0
-              ? pendingImages.map((img) => ({
-                  file: img.file,
-                  altText: img.altText ?? (img.file.name || 'Pasted image'),
-                }))
-              : undefined;
-
           await sendTextMessage({
             text: pendingMessage,
-            images,
+            images: buildPendingImages(),
+            skillId: pendingSkillId || undefined,
           });
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
@@ -372,6 +377,7 @@ export default function ChatPage({
           setIsProcessingPendingSources(false);
           setPendingMessage('');
           setPendingImages([]);
+          setPendingSkillId('');
         }
       }
     }
@@ -380,14 +386,14 @@ export default function ChatPage({
     pendingMessage,
     sendTextMessage,
     setPendingMessage,
-    sources,
-    createFileSourceAsync,
+    uploadPendingSources,
     setSources,
-    pendingImages,
+    buildPendingImages,
     setPendingImages,
+    pendingSkillId,
+    setPendingSkillId,
     chatInputRef,
     t,
-    resetCreateFileSourceMutation,
   ]);
 
   const chatHeader = (

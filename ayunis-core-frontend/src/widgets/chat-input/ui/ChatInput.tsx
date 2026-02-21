@@ -15,6 +15,7 @@ import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { SendButton } from './SendButton';
 import { AnonymousButton } from './AnonymousButton';
 import { AgentBadge } from './AgentBadge';
+import { SkillBadge } from './SkillBadge';
 import {
   usePendingImages,
   type PendingImage,
@@ -51,8 +52,12 @@ interface ChatInputProps {
   onSend: (
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
+    skillId?: string,
   ) => void;
   onSendCancelled: () => void;
+  selectedSkillId?: string;
+  selectedSkillName?: string;
+  onSkillRemove?: () => void;
   prefilledPrompt?: string;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
@@ -95,6 +100,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onAnonymousChange,
       isAnonymousEnforced,
       isVisionEnabled = false,
+      selectedSkillId,
+      selectedSkillName,
+      onSkillRemove,
     },
     ref,
   ) => {
@@ -153,7 +161,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     const handleSend = () => {
       if (
-        (!message.trim() && pendingImages.length === 0) ||
+        (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
         !(modelId || agentId)
       ) {
         return;
@@ -165,7 +173,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         altText: img.file.name || 'Pasted image',
       }));
 
-      onSend(message, imageFiles.length > 0 ? imageFiles : undefined);
+      onSend(
+        message,
+        imageFiles.length > 0 ? imageFiles : undefined,
+        selectedSkillId,
+      );
       setMessage('');
       clearImages();
     };
@@ -200,8 +212,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     };
 
     const canSend =
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty string should use fallback, boolean OR
-      (message.trim() || pendingImages.length > 0) && (modelId || agentId);
+      (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should use fallback
+      (modelId || agentId);
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
       // Ensure emojis are preserved when pasting
@@ -307,6 +320,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       agent={agents.find((a) => a.id === agentId)}
                       isDisabled={isAgentChangeDisabled ?? false}
                       onRemove={onAgentRemove}
+                    />
+                  )}
+                  {selectedSkillId && selectedSkillName && onSkillRemove && (
+                    <SkillBadge
+                      skillName={selectedSkillName}
+                      onRemove={() => onSkillRemove()}
                     />
                   )}
                 </div>

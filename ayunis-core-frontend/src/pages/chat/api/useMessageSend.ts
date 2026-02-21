@@ -22,6 +22,7 @@ export interface PendingImage {
 export interface SendMessageInput {
   text: string;
   images?: PendingImage[];
+  skillId?: string;
 }
 
 interface SendToolResultInput {
@@ -46,6 +47,7 @@ interface SendMessagePayload {
   images?: File[];
   imageAltTexts?: string[];
   toolResult?: SendToolResultInput;
+  skillId?: string;
   streaming?: boolean;
 }
 
@@ -95,6 +97,10 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         if (payload.toolResult) {
           formData.append('toolResult', JSON.stringify(payload.toolResult));
+        }
+
+        if (payload.skillId) {
+          formData.append('skillId', payload.skillId);
         }
 
         if (payload.streaming !== undefined) {
@@ -254,6 +260,10 @@ export function useMessageSend(params: UseMessageSendParams) {
       if (input.images && input.images.length > 0) {
         payload.images = input.images.map((img) => img.file);
         payload.imageAltTexts = input.images.map((img) => img.altText ?? '');
+      }
+
+      if (input.skillId) {
+        payload.skillId = input.skillId;
       }
 
       return sendMessage(payload);

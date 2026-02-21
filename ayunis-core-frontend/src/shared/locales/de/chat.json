@@ -26,6 +26,7 @@
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
     "errorRemoveAgent": "Agent konnte nicht entfernt werden",
     "thinking": "Nachdenken",
+    "skillInstructions": "Skill-Anweisungen",
     "copyToClipboard": "In die Zwischenablage kopieren",
     "tools": {
       "internet_search": "Im Internet suchen",

@@ -29,6 +29,7 @@ import ExecutableToolWidget from './chat-widgets/ExecutableToolWidget';
 import ThinkingBlockWidget from './chat-widgets/ThinkingBlockWidget';
 import CreateCalendarEventWidget from './chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from './chat-widgets/CreateSkillWidget';
+import SkillInstructionWidget from './chat-widgets/SkillInstructionWidget';
 import {
   BarChartWidget,
   LineChartWidget,
@@ -222,11 +223,18 @@ function renderMessageContent(message: Message, isStreaming?: boolean) {
             </div>
           )}
 
-          {texts.map((textContent, index) => (
-            <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
-              {textContent.text}
-            </Markdown>
-          ))}
+          {texts.map((textContent, index) =>
+            textContent.isSkillInstruction ? (
+              <SkillInstructionWidget
+                key={`skill-instruction-${index}-${textContent.text.slice(0, 50)}`}
+                content={textContent}
+              />
+            ) : (
+              <Markdown key={`text-${index}-${textContent.text.slice(0, 50)}`}>
+                {textContent.text}
+              </Markdown>
+            ),
+          )}
         </>
       );
     }
