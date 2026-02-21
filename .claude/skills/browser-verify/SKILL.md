@@ -47,12 +47,14 @@ bb js "window.__errs"
 
 ## Authentication
 
+The dev database is seeded via `npm run seed:minimal:ts` (in `ayunis-core-backend`). The default fixture creates a super-admin user with the credentials below. See `src/db/fixtures/minimal.fixture.ts` for the full seed data.
+
 If the page requires login, fill in the login form first:
 
 ```bash
 bb open http://localhost:3021/login
-bb input "input[name='email']" "test@example.com"
-bb input "input[name='password']" "password"
+bb input "input[name='email']" "admin@demo.local"
+bb input "input[name='password']" "admin"
 bb click "button[type='submit']"
 bb sleep 2
 bb open http://localhost:3021/your-page

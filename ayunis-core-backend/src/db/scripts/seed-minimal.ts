@@ -2,191 +2,250 @@ import 'src/config/env';
 import { randomUUID } from 'crypto';
 import dataSource from 'src/db/datasource';
 import { SeedRunner } from './utils/seed-runner';
-import { minimalFixture } from '../fixtures/minimal.fixture';
+import { minimalFixture, type ModelKey } from '../fixtures/minimal.fixture';
 import { IsNull } from 'typeorm';
 
-// Import TypeORM entities (records)
+// Entity records
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
-import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
+import {
+  LanguageModelRecord,
+  EmbeddingModelRecord,
+} from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { SubscriptionBillingInfoRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 
-// Import enums
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+const fixture = minimalFixture;
 
-/**
- * Seed minimal data for development and E2E testing
- *
- * Creates:
- * - 1 organization (Demo Org)
- * - 1 admin user (admin@demo.local)
- * - 1 language model (gpt-4o-mini)
- * - 1 active subscription
- * - Permitted model for the org
- */
-async function seedMinimal() {
-  const runner = new SeedRunner();
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-  try {
-    // Ensure we're not in production
-    runner.ensureNonProduction();
+function log(entity: string, name: string, created: boolean): void {
+  const icon = created ? '✅' : '⏭️ ';
+  const verb = created ? 'Created' : 'Exists';
+  console.log(`${icon} ${verb}: ${entity} (${name})`); // eslint-disable-line no-console
+}
 
-    await runner.initialize();
-    console.log('🌱 Starting minimal seed...\n');
+// ---------------------------------------------------------------------------
+// Seed steps
+// ---------------------------------------------------------------------------
 
-    // Get TypeORM repositories (direct access, no NestJS DI)
-    const orgRepo = dataSource.getRepository(OrgRecord);
-    const userRepo = dataSource.getRepository(UserRecord);
-    const modelRepo = dataSource.getRepository(LanguageModelRecord);
-    const subscriptionRepo = dataSource.getRepository(SubscriptionRecord);
-    const billingInfoRepo = dataSource.getRepository(
-      SubscriptionBillingInfoRecord,
-    );
-    const permittedModelRepo = dataSource.getRepository(PermittedModelRecord);
+async function seedOrg(): Promise<OrgRecord> {
+  const repo = dataSource.getRepository(OrgRecord);
+  const existing = await repo.findOne({ where: { name: fixture.org.name } });
+  if (existing) {
+    log('Org', existing.name, false);
+    return existing;
+  }
 
-    // 1. Create model
-    let model = await modelRepo.findOne({
-      where: {
-        name: minimalFixture.model.name,
-        provider: ModelProvider.OPENAI,
-      },
-    });
+  const record = repo.create({ id: randomUUID(), name: fixture.org.name });
+  await repo.save(record);
+  log('Org', record.name, true);
+  return record;
+}
 
+async function seedLanguageModel(): Promise<LanguageModelRecord> {
+  const repo = dataSource.getRepository(LanguageModelRecord);
+  const { name, displayName, provider, ...flags } = fixture.languageModel;
+  const existing = await repo.findOne({ where: { name, provider } });
+  if (existing) {
+    log('Language model', existing.name, false);
+    return existing;
+  }
+
+  const record = repo.create({
+    id: randomUUID(),
+    name,
+    displayName,
+    provider,
+    ...flags,
+  });
+  await repo.save(record);
+  log('Language model', record.name, true);
+  return record;
+}
+
+async function seedEmbeddingModel(): Promise<EmbeddingModelRecord> {
+  const repo = dataSource.getRepository(EmbeddingModelRecord);
+  const { name, displayName, provider, dimensions } = fixture.embeddingModel;
+  const existing = await repo.findOne({ where: { name, provider } });
+  if (existing) {
+    log('Embedding model', existing.name, false);
+    return existing;
+  }
+
+  const record = repo.create({
+    id: randomUUID(),
+    name,
+    displayName,
+    provider,
+    dimensions,
+  });
+  await repo.save(record);
+  log('Embedding model', record.name, true);
+  return record;
+}
+
+// Manual find-or-create because password must be hashed before insert.
+async function seedUser(
+  orgId: string,
+  runner: SeedRunner,
+): Promise<UserRecord> {
+  const repo = dataSource.getRepository(UserRecord);
+  const existing = await repo.findOne({
+    where: { email: fixture.user.email },
+  });
+
+  if (existing) {
+    log('User', existing.email, false);
+    return existing;
+  }
+
+  const passwordHash = await runner.hashPassword(fixture.user.password);
+  const record = repo.create({
+    id: randomUUID(),
+    email: fixture.user.email,
+    passwordHash,
+    orgId,
+    name: fixture.user.name,
+    role: fixture.user.role,
+    systemRole: fixture.user.systemRole,
+    emailVerified: fixture.user.emailVerified,
+    hasAcceptedMarketing: fixture.user.hasAcceptedMarketing,
+  } as Partial<UserRecord>);
+  await repo.save(record);
+  log('User', record.email, true);
+  return record;
+}
+
+async function seedSubscription(orgId: string): Promise<SubscriptionRecord> {
+  const subRepo = dataSource.getRepository(SubscriptionRecord);
+  const billingRepo = dataSource.getRepository(SubscriptionBillingInfoRecord);
+
+  const existing = await subRepo.findOne({
+    where: {
+      orgId: orgId as `${string}-${string}-${string}-${string}-${string}`,
+      cancelledAt: IsNull(),
+    },
+  });
+
+  if (existing) {
+    log('Subscription', `org=${orgId}`, false);
+    return existing;
+  }
+
+  const subscriptionId = randomUUID();
+  const billingInfo = billingRepo.create({
+    id: randomUUID(),
+    subscriptionId,
+    ...fixture.subscription.billingInfo,
+  } as Partial<SubscriptionBillingInfoRecord>);
+
+  const record = subRepo.create({
+    id: subscriptionId,
+    orgId,
+    noOfSeats: fixture.subscription.noOfSeats,
+    pricePerSeat: fixture.subscription.pricePerSeat,
+    renewalCycle: fixture.subscription.renewalCycle,
+    renewalCycleAnchor: new Date(),
+    billingInfo,
+    cancelledAt: null,
+  } as Partial<SubscriptionRecord>);
+  await subRepo.save(record);
+  log('Subscription', `org=${orgId}`, true);
+  return record;
+}
+
+async function seedPermittedModels(
+  orgId: string,
+  models: Record<ModelKey, { id: string }>,
+): Promise<void> {
+  const repo = dataSource.getRepository(PermittedModelRecord);
+
+  for (const pm of fixture.permittedModels) {
+    const model = models[pm.modelKey];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for fixture integrity
     if (!model) {
-      model = modelRepo.create({
-        id: randomUUID(),
-        name: minimalFixture.model.name,
-        displayName: minimalFixture.model.displayName,
-        provider: ModelProvider.OPENAI,
-        canStream: minimalFixture.model.canStream,
-        isReasoning: minimalFixture.model.isReasoning,
-        isArchived: minimalFixture.model.isArchived,
-        canUseTools: minimalFixture.model.canUseTools,
-        canVision: minimalFixture.model.canVision,
-      });
-      await modelRepo.save(model);
-      console.log(`✅ Created model: ${model.name}`);
-    } else {
-      console.log(`⏭️  Model already exists: ${model.name}`);
+      throw new Error(`Model key "${pm.modelKey}" not found in seeded models`);
     }
 
-    // 2. Create organization
-    let org = await orgRepo.findOne({
-      where: { name: minimalFixture.org.name },
+    type UUID = `${string}-${string}-${string}-${string}-${string}`;
+    const modelId = model.id as UUID;
+    const typedOrgId = orgId as UUID;
+
+    const existing = await repo.findOne({
+      where: { modelId, orgId: typedOrgId },
     });
 
-    if (!org) {
-      org = orgRepo.create({
-        id: randomUUID(),
-        ...minimalFixture.org,
-      });
-      await orgRepo.save(org);
-      console.log(`✅ Created org: ${org.name}`);
-    } else {
-      console.log(`⏭️  Org already exists: ${org.name}`);
-    }
-
-    // 3. Create admin user
-    const existingUser = await userRepo.findOne({
-      where: { email: minimalFixture.user.email },
-    });
-
-    if (!existingUser) {
-      const passwordHash = await runner.hashPassword(
-        minimalFixture.user.password,
+    if (existing) {
+      log(
+        'Permitted model',
+        `${pm.modelKey} (default=${String(pm.isDefault)})`,
+        false,
       );
-      const user = userRepo.create({
-        id: randomUUID(),
-        email: minimalFixture.user.email,
-        passwordHash,
-        orgId: org.id,
-        emailVerified: minimalFixture.user.emailVerified,
-        role: UserRole.ADMIN,
-        name: minimalFixture.user.name,
-        hasAcceptedMarketing: minimalFixture.user.hasAcceptedMarketing,
-      });
-      await userRepo.save(user);
-      console.log(`✅ Created user: ${user.email}`);
-    } else {
-      console.log(`⏭️  User already exists: ${existingUser.email}`);
+      continue;
     }
 
-    // 4. Create subscription
-    const existingSubscription = await subscriptionRepo.findOne({
-      where: { orgId: org.id, cancelledAt: IsNull() },
+    const record = repo.create({
+      id: randomUUID(),
+      modelId,
+      orgId: typedOrgId,
+      isDefault: pm.isDefault,
+      anonymousOnly: pm.anonymousOnly,
     });
-
-    if (!existingSubscription) {
-      // Create subscription with billing info (cascade will save both)
-      const subscriptionId = randomUUID();
-
-      // Create billing info with subscription ID
-      const billingInfo = billingInfoRepo.create({
-        id: randomUUID(),
-        subscriptionId,
-        companyName: minimalFixture.subscription.billingInfo.companyName,
-        street: minimalFixture.subscription.billingInfo.street,
-        houseNumber: minimalFixture.subscription.billingInfo.houseNumber,
-        postalCode: minimalFixture.subscription.billingInfo.postalCode,
-        city: minimalFixture.subscription.billingInfo.city,
-        country: minimalFixture.subscription.billingInfo.country,
-      });
-      // Don't save billing info - let cascade handle it
-
-      // Create subscription with billing info attached
-      const subscription = subscriptionRepo.create({
-        id: subscriptionId,
-        orgId: org.id,
-        noOfSeats: minimalFixture.subscription.noOfSeats,
-        pricePerSeat: minimalFixture.subscription.pricePerSeat,
-        renewalCycle: RenewalCycle.MONTHLY,
-        renewalCycleAnchor: new Date(),
-        billingInfo,
-        cancelledAt: null,
-      });
-      await subscriptionRepo.save(subscription);
-      console.log(`✅ Created subscription for org: ${org.name}`);
-    } else {
-      console.log(
-        `⏭️  Active subscription already exists for org: ${org.name}`,
-      );
-    }
-
-    // 5. Create permitted model
-    const existingPermittedModel = await permittedModelRepo.findOne({
-      where: { modelId: model.id, orgId: org.id },
-    });
-
-    if (!existingPermittedModel) {
-      const permittedModel = permittedModelRepo.create({
-        id: randomUUID(),
-        modelId: model.id,
-        orgId: org.id,
-        isDefault: true, // Set as default for the organization
-      });
-      await permittedModelRepo.save(permittedModel);
-      console.log(`✅ Created permitted model: ${model.name}`);
-    } else {
-      console.log(`⏭️  Permitted model already exists: ${model.name}`);
-    }
-
-    console.log('\n🎉 Minimal seed completed successfully!');
-
-    process.exit(0);
-  } catch (error) {
-    console.error('\n❌ Seed failed:', error);
-
-    process.exit(1);
-  } finally {
-    await runner.destroy();
+    await repo.save(record);
+    log(
+      'Permitted model',
+      `${pm.modelKey} (default=${String(pm.isDefault)})`,
+      true,
+    );
   }
 }
 
-// Run if executed directly
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function seedMinimal(): Promise<void> {
+  const runner = new SeedRunner();
+  const shouldClean = process.argv.includes('--clean');
+  let exitCode = 0;
+
+  try {
+    runner.ensureNonProduction();
+    await runner.initialize();
+
+    if (shouldClean) {
+      await runner.truncateAll();
+    }
+
+    console.log('🌱 Starting minimal seed…\n'); // eslint-disable-line no-console
+
+    // Seed independent entities first
+    const [org, languageModel, embeddingModel] = await Promise.all([
+      seedOrg(),
+      seedLanguageModel(),
+      seedEmbeddingModel(),
+    ]);
+
+    // Seed entities that depend on org
+    await seedUser(org.id, runner);
+    await seedSubscription(org.id);
+    await seedPermittedModels(org.id, { languageModel, embeddingModel });
+
+    console.log('\n🎉 Minimal seed completed successfully!'); // eslint-disable-line no-console
+  } catch (error) {
+    console.error('\n❌ Seed failed:', error);
+    exitCode = 1;
+  } finally {
+    await runner.destroy();
+  }
+
+  process.exit(exitCode);
+}
+
 if (require.main === module) {
   void seedMinimal();
 }
