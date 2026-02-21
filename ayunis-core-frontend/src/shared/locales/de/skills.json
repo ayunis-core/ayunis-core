@@ -16,6 +16,8 @@
   "card": {
     "activeLabel": "Aktiv",
     "inactiveLabel": "Inaktiv",
+    "pinLabel": "An neuen Chat anheften",
+    "unpinLabel": "Von neuem Chat lösen",
     "confirmDelete": {
       "title": "Fähigkeit löschen",
       "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -54,6 +56,11 @@
   "toggleActive": {
     "success": "Fähigkeits-Status erfolgreich aktualisiert!",
     "error": "Fähigkeits-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
+  "togglePinned": {
+    "success": "Anheft-Status erfolgreich aktualisiert!",
+    "error": "Anheft-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "notFound": "Fähigkeit nicht gefunden. Sie wurde möglicherweise gelöscht."
   },
   "delete": {

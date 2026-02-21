@@ -1,9 +1,10 @@
 import { Button } from '@/shared/ui/shadcn/button';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Switch } from '@/shared/ui/shadcn/switch';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '../api/useDeleteSkill';
 import { useToggleSkillActive } from '../api/useToggleSkillActive';
+import { useToggleSkillPinned } from '../api/useToggleSkillPinned';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { Skill } from '../model/openapi';
@@ -24,6 +25,7 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
   const { t } = useTranslation('skills');
   const deleteSkill = useDeleteSkill();
   const toggleActive = useToggleSkillActive();
+  const togglePinned = useToggleSkillPinned();
   const { confirm } = useConfirmation();
   const router = useRouter();
 
@@ -42,6 +44,10 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
 
   function handleToggleActive() {
     toggleActive.mutate({ id: skill.id });
+  }
+
+  function handleTogglePinned() {
+    togglePinned.mutate({ id: skill.id });
   }
 
   function handleNavigateToDetail() {
@@ -83,6 +89,22 @@ export default function SkillCard({ skill }: Readonly<SkillCardProps>) {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
+        {skill.isActive && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTogglePinned();
+            }}
+            disabled={togglePinned.isPending}
+            title={skill.isPinned ? t('card.unpinLabel') : t('card.pinLabel')}
+          >
+            <Pin
+              className={`h-4 w-4 ${skill.isPinned ? 'fill-current' : ''}`}
+            />
+          </Button>
+        )}
         {!skill.isShared && (
           <Button
             variant="ghost"
