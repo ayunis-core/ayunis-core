@@ -16,9 +16,8 @@ describe('HtmlDocumentExportService', () => {
     </table>
   `;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     service = new HtmlDocumentExportService();
-    await service.onModuleInit();
   });
 
   afterAll(async () => {
@@ -55,6 +54,53 @@ describe('HtmlDocumentExportService', () => {
 
       expect(result).toBeInstanceOf(Buffer);
       expect(result.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('applyInlineStyles', () => {
+    const applyInlineStyles = (html: string): string => {
+      return (service as any).applyInlineStyles(html);
+    };
+
+    it('should not affect <pre> tags when styling <p> tags', () => {
+      const html = '<pre><code>const x = 1;</code></pre><p>Normal text</p>';
+      const result = applyInlineStyles(html);
+
+      expect(result).toContain('<pre><code>const x = 1;</code></pre>');
+      expect(result).toContain('<p style="margin-bottom:8pt"');
+      expect(result).not.toMatch(/<pre style=/);
+    });
+
+    it('should not affect <thead> tags when styling <th> tags', () => {
+      const html = '<table><thead><tr><th>Name</th></tr></thead></table>';
+      const result = applyInlineStyles(html);
+
+      expect(result).not.toMatch(/<thead style=/);
+      expect(result).toContain(
+        '<th style="border:1px solid #ccc;padding:6pt 8pt;text-align:left;background-color:#f5f5f5;font-weight:bold"',
+      );
+    });
+
+    it('should merge styles when element already has a style attribute', () => {
+      const html = '<p style="text-align:center">Centered paragraph</p>';
+      const result = applyInlineStyles(html);
+
+      // Should have exactly one style attribute with both values
+      const styleMatches = result.match(/style="[^"]*text-align:center[^"]*"/);
+      expect(styleMatches).not.toBeNull();
+      expect(result).toContain('margin-bottom:8pt');
+
+      // Must NOT have two separate style attributes
+      expect(result).not.toMatch(/style="[^"]*"\s+style="[^"]*"/);
+    });
+
+    it('should not affect <ol> when styling <ol> does not break other tags', () => {
+      const html = '<ol><li>First</li></ol>';
+      const result = applyInlineStyles(html);
+
+      expect(result).toContain(
+        '<ol style="margin-bottom:8pt;padding-left:24pt"',
+      );
     });
   });
 

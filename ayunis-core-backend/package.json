@@ -91,7 +91,7 @@
     "passport-local": "^1.0.0",
     "pdf-parse": "^1.1.1",
     "pg": "^8.18.0",
-    "puppeteer": "^24.37.4",
+    "puppeteer-core": "^24.37.5",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sanitize-html": "^2.17.1",

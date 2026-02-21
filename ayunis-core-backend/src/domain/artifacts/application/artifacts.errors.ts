@@ -63,15 +63,15 @@ export class ArtifactVersionConflictError extends ArtifactError {
 
 export class ArtifactContentTooLargeError extends ArtifactError {
   constructor(
-    contentSizeBytes: number,
-    maxSizeBytes: number,
+    contentLength: number,
+    maxLength: number,
     metadata?: ErrorMetadata,
   ) {
     super(
-      `Artifact content size (${contentSizeBytes} bytes) exceeds maximum (${maxSizeBytes} bytes)`,
+      `Artifact content length (${contentLength} characters) exceeds maximum (${maxLength} characters)`,
       ArtifactErrorCode.ARTIFACT_CONTENT_TOO_LARGE,
       400,
-      { contentSizeBytes, maxSizeBytes, ...metadata },
+      { contentLength, maxLength, ...metadata },
     );
   }
 }
