@@ -2,14 +2,18 @@ import {
   ChildEntity,
   Column,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToOne,
   TableInheritance,
 } from 'typeorm';
+import type { UUID } from 'crypto';
 import { BaseRecord } from '../../../../../../common/db/base-record';
 import { SourceType } from '../../../../domain/source-type.enum';
 import { SourceCreator } from '../../../../domain/source-creator.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
+import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
@@ -23,6 +27,16 @@ export abstract class SourceRecord extends BaseRecord {
     default: SourceCreator.USER,
   })
   createdBy: SourceCreator;
+
+  @Column({ nullable: true })
+  knowledgeBaseId: UUID | null;
+
+  @ManyToOne(() => KnowledgeBaseRecord, (kb) => kb.sources, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'knowledgeBaseId' })
+  knowledgeBase: KnowledgeBaseRecord | null;
 }
 
 @ChildEntity(SourceType.TEXT)

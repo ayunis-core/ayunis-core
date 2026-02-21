@@ -135,6 +135,7 @@ export class SourceMapper {
     throw new Error('Invalid source type: ' + source.type);
   }
 
+  // TODO(AYC-92): map knowledgeBaseId when knowledge base document assignment is implemented
   private createTextSourceRecord(source: TextSource): TextSourceRecord {
     const record = new TextSourceRecord();
     record.id = source.id;
