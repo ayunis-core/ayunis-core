@@ -38,6 +38,8 @@ describe('FindSkillByNameUseCase', () => {
     skillRepository = {
       findByNameAndOwner: jest.fn(),
       findByIds: jest.fn(),
+      toggleSkillPinned: jest.fn(),
+      getPinnedSkillIds: jest.fn(),
     } as unknown as jest.Mocked<SkillRepository>;
 
     findSharesByScopeUseCase = {

@@ -43,6 +43,8 @@ describe('FindAllSkillsUseCase', () => {
     const mockSkillRepository = {
       findAllByOwner: jest.fn(),
       findByIds: jest.fn(),
+      toggleSkillPinned: jest.fn(),
+      getPinnedSkillIds: jest.fn(),
     };
 
     const mockFindSharesByScopeUseCase = {

@@ -23,6 +23,8 @@ describe('SkillShareAuthorizationStrategy', () => {
       isSkillActive: jest.fn(),
       getActiveSkillIds: jest.fn(),
       findByIds: jest.fn(),
+      toggleSkillPinned: jest.fn(),
+      getPinnedSkillIds: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
