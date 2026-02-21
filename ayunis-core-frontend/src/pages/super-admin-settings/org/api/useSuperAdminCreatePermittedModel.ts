@@ -1,54 +1,43 @@
 import {
   useSuperAdminModelsControllerCreatePermittedModel,
   type CreatePermittedModelDto,
-  type ModelWithConfigResponseDto,
   getSuperAdminModelsControllerGetAvailableModelsQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
-import extractErrorData from '@/shared/api/extract-error-data';
-import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
+import {
+  prepareOptimisticUpdate,
+  handleMutationError,
+} from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
+
+const CREATE_ERROR_MAP: Record<string, string> = {
+  MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED:
+    'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
+  MODEL_PROVIDER_NOT_PERMITTED:
+    'models.createPermittedModel.modelProviderNotPermitted',
+  MODEL_NOT_FOUND: 'models.createPermittedModel.modelNotFound',
+};
 
 export function useSuperAdminCreatePermittedModel(orgId: string) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { t } = useTranslation('admin-settings-models');
+  const queryKey =
+    getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
+
   const createPermittedModelMutation =
     useSuperAdminModelsControllerCreatePermittedModel({
       mutation: {
-        onMutate: async ({ data }) => {
-          const queryKey =
-            getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
-          await queryClient.cancelQueries({
-            queryKey,
-          });
-          const previousData =
-            queryClient.getQueryData<ModelWithConfigResponseDto[]>(queryKey);
-
-          // Optimistically update to the new value
-          queryClient.setQueryData<ModelWithConfigResponseDto[]>(
-            queryKey,
-            (old) => {
-              if (!old) {
-                return old;
-              }
-              return old.map((model) => {
-                if (model.modelId === data.modelId) {
-                  return {
-                    ...model,
-                    isPermitted: true,
-                  };
-                }
-                return model;
-              });
-            },
-          );
-
-          return { previousData, queryKey };
-        },
+        onMutate: async ({ data }) =>
+          prepareOptimisticUpdate(queryClient, queryKey, (models) =>
+            models.map((model) =>
+              model.modelId === data.modelId
+                ? { ...model, isPermitted: true }
+                : model,
+            ),
+          ),
         onSettled: () => {
-          // Invalidate queries by partial key until API is regenerated
           void queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey;
@@ -64,45 +53,20 @@ export function useSuperAdminCreatePermittedModel(orgId: string) {
           void router.invalidate();
         },
         onError: (err, _, context) => {
-          try {
-            const { code } = extractErrorData(err);
-            switch (code) {
-              case 'MULTIPLE_EMBEDDING_MODELS_NOT_ALLOWED':
-                showError(
-                  t(
-                    'models.createPermittedModel.multipleEmbeddingModelsNotAllowed',
-                  ),
-                );
-                break;
-              case 'MODEL_PROVIDER_NOT_PERMITTED':
-                showError(
-                  t('models.createPermittedModel.modelProviderNotPermitted'),
-                );
-                break;
-              case 'MODEL_NOT_FOUND':
-                showError(t('models.createPermittedModel.modelNotFound'));
-                break;
-              default:
-                showError(t('models.createPermittedModel.error'));
-                break;
-            }
-          } catch {
-            // Non-AxiosError (network failure, request cancellation, etc.)
-            showError(t('models.createPermittedModel.error'));
-          }
-
-          if (context?.previousData) {
-            queryClient.setQueryData(context.queryKey, context.previousData);
-          }
+          handleMutationError(
+            err,
+            queryClient,
+            context,
+            t,
+            CREATE_ERROR_MAP,
+            'models.createPermittedModel.error',
+          );
         },
       },
     });
 
   function createPermittedModel(data: CreatePermittedModelDto) {
-    createPermittedModelMutation.mutate({
-      orgId,
-      data,
-    });
+    createPermittedModelMutation.mutate({ orgId, data });
   }
 
   return {

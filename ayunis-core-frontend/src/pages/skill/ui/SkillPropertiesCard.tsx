@@ -13,12 +13,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
 import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { Button } from '@/shared/ui/shadcn/button';
 import { useTranslation } from 'react-i18next';
 import { useUpdateSkill } from '../api';
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { NameField, InstructionsField } from '@/widgets/entity-form-fields';
 
 export default function SkillPropertiesCard({
   skill,
@@ -42,22 +42,12 @@ export default function SkillPropertiesCard({
             onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
             className="space-y-4"
           >
-            <FormField
+            <NameField
               control={form.control}
               name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('properties.form.nameLabel')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t('properties.form.namePlaceholder')}
-                      disabled={disabled}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              translationNamespace="skill"
+              translationPrefix="properties"
+              disabled={disabled}
             />
             <FormField
               control={form.control}
@@ -81,25 +71,13 @@ export default function SkillPropertiesCard({
                 </FormItem>
               )}
             />
-            <FormField
+            <InstructionsField
               control={form.control}
               name="instructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('properties.form.instructionsLabel')}
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('properties.form.instructionsPlaceholder')}
-                      className="min-h-[250px] max-h-[500px]"
-                      disabled={disabled}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              translationNamespace="skill"
+              translationPrefix="properties"
+              disabled={disabled}
+              className="min-h-[250px] max-h-[500px]"
             />
             <Button type="submit" disabled={isLoading || disabled}>
               {isLoading

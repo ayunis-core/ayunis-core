@@ -1,56 +1,41 @@
 import {
   useSuperAdminModelsControllerDeletePermittedModel,
-  type ModelWithConfigResponseDto,
   getSuperAdminModelsControllerGetAvailableModelsQueryKey,
 } from '@/shared/api';
-import extractErrorData from '@/shared/api/extract-error-data';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
-import { showError } from '@/shared/lib/toast';
+import {
+  prepareOptimisticUpdate,
+  handleMutationError,
+} from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
+
+const DELETE_ERROR_MAP: Record<string, string> = {
+  CANNOT_DELETE_DEFAULT_MODEL: 'models.deletePermittedModel.errorDefaultModel',
+  CANNOT_DELETE_LAST_MODEL: 'models.deletePermittedModel.errorLastModel',
+};
 
 export function useSuperAdminDeletePermittedModel(orgId: string) {
   const { t } = useTranslation('admin-settings-models');
   const queryClient = useQueryClient();
   const router = useRouter();
   const { confirm } = useConfirmation();
+  const queryKey =
+    getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
+
   const deletePermittedModelMutation =
     useSuperAdminModelsControllerDeletePermittedModel({
       mutation: {
-        onMutate: async ({ id }) => {
-          const queryKey =
-            getSuperAdminModelsControllerGetAvailableModelsQueryKey(orgId);
-          await queryClient.cancelQueries({
-            queryKey,
-          });
-          const previousData =
-            queryClient.getQueryData<ModelWithConfigResponseDto[]>(queryKey);
-
-          // Optimistically update to the new value
-          queryClient.setQueryData<ModelWithConfigResponseDto[]>(
-            queryKey,
-            (old) => {
-              if (!old) {
-                return old;
-              }
-              return old.map((model) => {
-                if (model.permittedModelId === id) {
-                  return {
-                    ...model,
-                    isPermitted: false,
-                    permittedModelId: null,
-                  };
-                }
-                return model;
-              });
-            },
-          );
-
-          return { previousData, queryKey };
-        },
+        onMutate: async ({ id }) =>
+          prepareOptimisticUpdate(queryClient, queryKey, (models) =>
+            models.map((model) =>
+              model.permittedModelId === id
+                ? { ...model, isPermitted: false, permittedModelId: null }
+                : model,
+            ),
+          ),
         onSettled: () => {
-          // Invalidate queries by partial key until API is regenerated
           void queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey;
@@ -66,26 +51,14 @@ export function useSuperAdminDeletePermittedModel(orgId: string) {
           void router.invalidate();
         },
         onError: (error, _, context) => {
-          console.error('Error deleting permitted model', error);
-          try {
-            const { code } = extractErrorData(error);
-            switch (code) {
-              case 'CANNOT_DELETE_DEFAULT_MODEL':
-                showError(t('models.deletePermittedModel.errorDefaultModel'));
-                break;
-              case 'CANNOT_DELETE_LAST_MODEL':
-                showError(t('models.deletePermittedModel.errorLastModel'));
-                break;
-              default:
-                showError(t('models.deletePermittedModel.error'));
-            }
-          } catch {
-            showError(t('models.deletePermittedModel.error'));
-          }
-
-          if (context?.previousData) {
-            queryClient.setQueryData(context.queryKey, context.previousData);
-          }
+          handleMutationError(
+            error,
+            queryClient,
+            context,
+            t,
+            DELETE_ERROR_MAP,
+            'models.deletePermittedModel.error',
+          );
         },
       },
     });

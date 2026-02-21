@@ -6,7 +6,7 @@ import type {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
-import AgentKnowledgeBaseCard from './AgentKnowledgeBaseCard';
+import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import AgentPropertiesCard from './AgentPropertiesCard';
 import AgentMcpIntegrationsCard from './AgentMcpIntegrationsCard';
 import { SharesTab } from '@/widgets/shares-tab';
@@ -20,6 +20,7 @@ import { Badge } from '@/shared/ui/shadcn/badge';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import useAgentSources from '../api/useAgentSources';
 
 export function AgentPage({
   agent,
@@ -38,6 +39,11 @@ export function AgentPage({
   const { t } = useTranslation('agent');
   const { id } = useParams({
     from: '/_authenticated/agents/$id',
+  });
+
+  const sourcesHook = useAgentSources({
+    entity: agent,
+    translationNamespace: 'agent',
   });
 
   const handleTabChange = useCallback(
@@ -70,10 +76,12 @@ export function AgentPage({
           isReadOnly ? (
             <div className="grid gap-4">
               <AgentPropertiesCard agent={agent} disabled />
-              <AgentKnowledgeBaseCard
-                agent={agent}
+              <KnowledgeBaseCard
+                entity={agent}
                 isEnabled={isEmbeddingModelEnabled}
                 disabled
+                translationNamespace="agent"
+                sourcesHook={sourcesHook}
               />
               <AgentMcpIntegrationsCard disabled />
             </div>
@@ -92,9 +100,11 @@ export function AgentPage({
               <TabsContent value="config" className="mt-4">
                 <div className="grid gap-4">
                   <AgentPropertiesCard agent={agent} />
-                  <AgentKnowledgeBaseCard
-                    agent={agent}
+                  <KnowledgeBaseCard
+                    entity={agent}
                     isEnabled={isEmbeddingModelEnabled}
+                    translationNamespace="agent"
+                    sourcesHook={sourcesHook}
                   />
                   <AgentMcpIntegrationsCard />
                 </div>
