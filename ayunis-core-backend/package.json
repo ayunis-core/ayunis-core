@@ -38,6 +38,8 @@
     "cli": "node -r ./src/config/env-register dist/src/cli/main.js",
     "seed:minimal:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal.ts",
     "seed:minimal": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js",
+    "seed:clean:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal.ts --clean",
+    "seed:clean": "node -r ./src/config/env-register dist/src/db/scripts/seed-minimal.js --clean",
     "seed:ts": "npm run seed:minimal:ts",
     "seed": "npm run seed:minimal"
   },

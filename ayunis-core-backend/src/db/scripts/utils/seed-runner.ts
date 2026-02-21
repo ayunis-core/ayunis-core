@@ -35,7 +35,7 @@ export class SeedRunner {
    * Check if environment is production
    */
   isProduction(): boolean {
-    return (process.env.NODE_ENV || 'development') === 'production';
+    return (process.env.NODE_ENV ?? 'development') === 'production';
   }
 
   /**
@@ -45,5 +45,26 @@ export class SeedRunner {
     if (this.isProduction()) {
       throw new Error('Seeding is disabled in production');
     }
+  }
+
+  /**
+   * Truncate all entity tables (for --clean flag)
+   * Preserves schema and migration history — only removes row data.
+   */
+  async truncateAll(): Promise<void> {
+    if (!dataSource.isInitialized) {
+      throw new Error('DataSource must be initialized before truncating');
+    }
+
+    const tableNames = dataSource.entityMetadatas
+      .map((meta) => meta.tableName)
+      .filter((name) => name !== 'migrations');
+
+    if (tableNames.length === 0) return;
+
+    const quoted = tableNames.map((t) => `"${t}"`).join(', ');
+    console.warn('🗑️  Truncating all tables...');
+    await dataSource.query(`TRUNCATE ${quoted} CASCADE`);
+    console.warn('✅ All tables truncated');
   }
 }
