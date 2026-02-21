@@ -16,7 +16,6 @@ ayunis-core/
 ├── ayunis-core-frontend/         # React SPA (Feature-Sliced Design)
 ├── ayunis-core-code-execution/   # Sandboxed code execution microservice
 ├── ayunis-core-anonymize/        # PII anonymization service
-├── ayunis-core-e2e-ui-tests/     # Cypress E2E tests
 ├── docker-compose.yml            # Local dev infrastructure
 ├── ARCHITECTURE.md               # Full architecture docs with module index
 └── AGENTS.md                     # This file

@@ -68,19 +68,6 @@ updates:
           - "vite"
           - "@vitejs/*"
 
-  # E2E UI Tests (Playwright)
-  - package-ecosystem: "npm"
-    directory: "/ayunis-core-e2e-ui-tests"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-e2e)"
-    labels:
-      - "dependencies"
-      - "testing"
-    open-pull-requests-limit: 5
-
   # Anonymize service (Python/uv)
   - package-ecosystem: "uv"
     directory: "/ayunis-core-anonymize"
@@ -132,17 +119,6 @@ updates:
 
   - package-ecosystem: "docker"
     directory: "/ayunis-core-code-execution"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps-docker)"
-    labels:
-      - "dependencies"
-      - "docker"
-
-  - package-ecosystem: "docker"
-    directory: "/ayunis-core-e2e-ui-tests"
     schedule:
       interval: "weekly"
       day: "monday"
