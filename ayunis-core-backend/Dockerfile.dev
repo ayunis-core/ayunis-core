@@ -1,7 +1,10 @@
 FROM node:20-alpine
 
 # Install build dependencies for bcrypt and other native modules
-RUN apk add --no-cache python3 make g++ gcc curl
+# Install Chromium for Puppeteer PDF export
+RUN apk add --no-cache python3 make g++ gcc curl chromium
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 

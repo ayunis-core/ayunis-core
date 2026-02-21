@@ -38,8 +38,10 @@ RUN npm run build
 # Stage 3: Production
 FROM node:20-alpine AS production
 
-# Install runtime dependencies for bcrypt
-RUN apk add --no-cache python3 make g++ gcc
+# Install runtime dependencies for bcrypt and Chromium for Puppeteer PDF export
+RUN apk add --no-cache python3 make g++ gcc chromium
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
