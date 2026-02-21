@@ -8,6 +8,7 @@ export abstract class Source {
   type: SourceType;
   name: string;
   createdBy: SourceCreator;
+  knowledgeBaseId: UUID | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -16,6 +17,7 @@ export abstract class Source {
     type: SourceType;
     name: string;
     createdBy?: SourceCreator;
+    knowledgeBaseId?: UUID | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -23,6 +25,7 @@ export abstract class Source {
     this.type = params.type;
     this.name = params.name;
     this.createdBy = params.createdBy ?? SourceCreator.USER;
+    this.knowledgeBaseId = params.knowledgeBaseId ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

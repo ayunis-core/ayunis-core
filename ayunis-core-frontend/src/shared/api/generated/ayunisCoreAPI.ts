@@ -66,8 +66,11 @@ import type {
   InviteDetailResponseDto,
   InvitesControllerGetInvitesParams,
   IsCloudResponseDto,
+  KnowledgeBaseDocumentListResponseDto,
+  KnowledgeBaseDocumentResponseDto,
   KnowledgeBaseListResponseDto,
   KnowledgeBaseResponseDto,
+  KnowledgeBasesControllerAddDocumentBody,
   LanguageModelResponseDto,
   LoginDto,
   MarketplaceIntegrationResponseDto,
@@ -12798,6 +12801,230 @@ export const useKnowledgeBasesControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getKnowledgeBasesControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List all documents in a knowledge base
+ */
+export const knowledgeBasesControllerListDocuments = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<KnowledgeBaseDocumentListResponseDto>(
+      {url: `/knowledge-bases/${id}/documents`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getKnowledgeBasesControllerListDocumentsQueryKey = (id?: string,) => {
+    return [
+    `/knowledge-bases/${id}/documents`
+    ] as const;
+    }
+
+    
+export const getKnowledgeBasesControllerListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBasesControllerListDocumentsQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>> = ({ signal }) => knowledgeBasesControllerListDocuments(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBasesControllerListDocumentsQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>>
+export type KnowledgeBasesControllerListDocumentsQueryError = void
+
+
+export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all documents in a knowledge base
+ */
+
+export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBasesControllerListDocumentsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Add a document to a knowledge base
+ */
+export const knowledgeBasesControllerAddDocument = (
+    id: string,
+    knowledgeBasesControllerAddDocumentBody: KnowledgeBasesControllerAddDocumentBody,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, knowledgeBasesControllerAddDocumentBody.file)
+
+      return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
+      {url: `/knowledge-bases/${id}/documents`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getKnowledgeBasesControllerAddDocumentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, TError,{id: string;data: KnowledgeBasesControllerAddDocumentBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, TError,{id: string;data: KnowledgeBasesControllerAddDocumentBody}, TContext> => {
+
+const mutationKey = ['knowledgeBasesControllerAddDocument'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, {id: string;data: KnowledgeBasesControllerAddDocumentBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBasesControllerAddDocument(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBasesControllerAddDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>>
+    export type KnowledgeBasesControllerAddDocumentMutationBody = KnowledgeBasesControllerAddDocumentBody
+    export type KnowledgeBasesControllerAddDocumentMutationError = void
+
+    /**
+ * @summary Add a document to a knowledge base
+ */
+export const useKnowledgeBasesControllerAddDocument = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, TError,{id: string;data: KnowledgeBasesControllerAddDocumentBody}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>,
+        TError,
+        {id: string;data: KnowledgeBasesControllerAddDocumentBody},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeBasesControllerAddDocumentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a document from a knowledge base
+ */
+export const knowledgeBasesControllerRemoveDocument = (
+    id: string,
+    documentId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/knowledge-bases/${id}/documents/${documentId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getKnowledgeBasesControllerRemoveDocumentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext> => {
+
+const mutationKey = ['knowledgeBasesControllerRemoveDocument'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, {id: string;documentId: string}> = (props) => {
+          const {id,documentId} = props ?? {};
+
+          return  knowledgeBasesControllerRemoveDocument(id,documentId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBasesControllerRemoveDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>>
+    
+    export type KnowledgeBasesControllerRemoveDocumentMutationError = void
+
+    /**
+ * @summary Remove a document from a knowledge base
+ */
+export const useKnowledgeBasesControllerRemoveDocument = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>,
+        TError,
+        {id: string;documentId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeBasesControllerRemoveDocumentMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

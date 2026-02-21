@@ -8,6 +8,9 @@ import { UpdateKnowledgeBaseUseCase } from './application/use-cases/update-knowl
 import { DeleteKnowledgeBaseUseCase } from './application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
 import { FindKnowledgeBaseUseCase } from './application/use-cases/find-knowledge-base/find-knowledge-base.use-case';
 import { ListKnowledgeBasesUseCase } from './application/use-cases/list-knowledge-bases/list-knowledge-bases.use-case';
+import { AddDocumentToKnowledgeBaseUseCase } from './application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
+import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
+import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
@@ -22,6 +25,9 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     DeleteKnowledgeBaseUseCase,
     FindKnowledgeBaseUseCase,
     ListKnowledgeBasesUseCase,
+    AddDocumentToKnowledgeBaseUseCase,
+    RemoveDocumentFromKnowledgeBaseUseCase,
+    ListKnowledgeBaseDocumentsUseCase,
     // Presenters
     KnowledgeBaseDtoMapper,
   ],
@@ -33,6 +39,9 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     DeleteKnowledgeBaseUseCase,
     FindKnowledgeBaseUseCase,
     ListKnowledgeBasesUseCase,
+    AddDocumentToKnowledgeBaseUseCase,
+    RemoveDocumentFromKnowledgeBaseUseCase,
+    ListKnowledgeBaseDocumentsUseCase,
   ],
 })
 export class KnowledgeBasesModule {}
