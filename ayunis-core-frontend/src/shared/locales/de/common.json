@@ -87,6 +87,9 @@
     "transcriptionFailed": "Transkription fehlgeschlagen",
     "modelSelectorAriaLabel": "KI-Modell auswählen"
   },
+  "pinnedSkills": {
+    "empty": "Keine angehefteten Fähigkeiten"
+  },
   "common": {
     "loading": "Laden...",
     "pagination": {

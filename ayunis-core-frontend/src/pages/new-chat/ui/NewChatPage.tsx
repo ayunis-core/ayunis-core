@@ -3,7 +3,7 @@ import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import { useInitiateChat } from '../api/useInitiateChat';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { QuickActions } from './QuickActions';
+import { PinnedSkills } from './PinnedSkills';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
@@ -37,6 +37,9 @@ export default function NewChatPage({
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | undefined>(
+    undefined,
+  );
   const [sources, setSources] = useState<
     Array<{
       id: string;
@@ -141,8 +144,13 @@ export default function NewChatPage({
           isAnonymousEnforced={isAnonymousEnforced}
           isVisionEnabled={isVisionEnabled}
         />
-        <QuickActions
-          onPromptSelect={(text) => chatInputRef.current?.sendMessage(text)}
+        <PinnedSkills
+          onSkillSelect={(skillId) =>
+            setSelectedSkillId((prev) =>
+              prev === skillId ? undefined : skillId,
+            )
+          }
+          selectedSkillId={selectedSkillId}
         />
       </div>
     </NewChatPageLayout>
