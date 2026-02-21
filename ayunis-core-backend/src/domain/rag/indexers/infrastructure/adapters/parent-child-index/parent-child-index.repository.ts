@@ -1,11 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChunkRecord } from './infrastructure/persistence/schema/parent-chunk.record';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ParentChunk } from './domain/parent-chunk.entity';
 import { UUID } from 'crypto';
 import { ParentChildIndexerRepositoryPort } from './application/ports/parent-child-indexer-repository.port';
 import { ParentChildIndexerMapper } from './infrastructure/persistence/mappers/parent-child-indexer.mapper';
+
+const DEFAULT_LIMIT = 10;
+const EMBEDDING_COLUMNS: Record<number, string> = {
+  1024: 'children.embedding_1024',
+  1536: 'children.embedding_1536',
+  2560: 'children.embedding_2560',
+};
 
 @Injectable()
 export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPort {
@@ -49,8 +56,8 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
   async find(
     queryVector: number[],
     relatedDocumentId: UUID,
+    limit?: number,
   ): Promise<ParentChunk[]> {
-    // Validate input
     if (!queryVector || queryVector.length === 0) {
       this.logger.warn('Empty query vector provided for vector search');
       return [];
@@ -67,59 +74,91 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
       `Starting vector search for document ${relatedDocumentId} with vector of dimension ${queryVector.length}`,
     );
 
-    // Determine which column to use based on query dimension
-    const queryDims = queryVector.length;
-    const embeddingColumns = {
-      1024: 'children.embedding_1024',
-      1536: 'children.embedding_1536',
-      2560: 'children.embedding_2560',
-    };
-    const embeddingColumn =
-      embeddingColumns[queryDims as keyof typeof embeddingColumns];
+    return this.vectorSearch(
+      queryVector,
+      (qb) =>
+        qb.where('parentChunk.relatedDocumentId = :relatedDocumentId', {
+          relatedDocumentId,
+        }),
+      limit,
+      { relatedDocumentId },
+    );
+  }
 
+  async findByDocumentIds(
+    queryVector: number[],
+    relatedDocumentIds: UUID[],
+    limit?: number,
+  ): Promise<ParentChunk[]> {
+    if (!queryVector || queryVector.length === 0) {
+      this.logger.warn('Empty query vector provided for multi-document search');
+      return [];
+    }
+
+    if (!relatedDocumentIds || relatedDocumentIds.length === 0) {
+      this.logger.warn('No document IDs provided for multi-document search');
+      return [];
+    }
+
+    this.logger.debug(
+      `Starting multi-document vector search across ${relatedDocumentIds.length} documents with vector of dimension ${queryVector.length}`,
+    );
+
+    return this.vectorSearch(
+      queryVector,
+      (qb) =>
+        qb.where('parentChunk.relatedDocumentId IN (:...documentIds)', {
+          documentIds: relatedDocumentIds,
+        }),
+      limit,
+      {
+        queryVectorLength: queryVector.length,
+        documentCount: relatedDocumentIds.length,
+      },
+    );
+  }
+
+  private async vectorSearch(
+    queryVector: number[],
+    applyWhereClause: (
+      qb: SelectQueryBuilder<ParentChunkRecord>,
+    ) => SelectQueryBuilder<ParentChunkRecord>,
+    limit: number | undefined,
+    errorContext: Record<string, unknown>,
+  ): Promise<ParentChunk[]> {
+    const embeddingColumn = EMBEDDING_COLUMNS[queryVector.length];
     if (!embeddingColumn) {
       this.logger.warn(
-        `Unsupported query vector dimension ${queryDims}. Only ${Object.keys(embeddingColumns).join(', ')} are supported.`,
+        `Unsupported query vector dimension ${queryVector.length}. Only ${Object.keys(EMBEDDING_COLUMNS).join(', ')} are supported.`,
       );
       return [];
     }
 
     try {
-      const limit = 10;
-
-      // Convert the vector to PostgreSQL array format
       const queryVectorString = JSON.stringify(queryVector);
-
-      // Build the exact search query using cosine distance ordering (ASC)
-      const queryBuilder = this.parentChunkRepository
+      let queryBuilder = this.parentChunkRepository
         .createQueryBuilder('parentChunk')
-        .leftJoinAndSelect('parentChunk.children', 'children')
-        .where('parentChunk.relatedDocumentId = :relatedDocumentId', {
-          relatedDocumentId,
-        })
+        .leftJoinAndSelect('parentChunk.children', 'children');
+
+      queryBuilder = applyWhereClause(queryBuilder);
+
+      queryBuilder
         .andWhere(`${embeddingColumn} IS NOT NULL`)
-        .setParameter('maxDistance', 0.35)
-        // Order by cosine distance ascending (closest first)
         .orderBy(`${embeddingColumn} <=> :queryVector::vector`, 'ASC')
         .setParameter('queryVector', queryVectorString)
-        .limit(limit);
+        .limit(limit ?? DEFAULT_LIMIT);
 
       const { entities } = await queryBuilder.getRawAndEntities();
 
-      // Map and return unique parent entities
       return entities.map((entity) =>
         this.parentChildIndexerMapper.toParentChunkEntity(entity),
       );
     } catch (error) {
-      this.logger.error(
-        `Error performing vector search in relatedDocumentId ${relatedDocumentId}:`,
-        {
-          error: error instanceof Error ? error.message : String(error),
-          queryVectorLength: queryVector.length,
-          relatedDocumentId,
-          stack: error instanceof Error ? error.stack : undefined,
-        },
-      );
+      this.logger.error(`Error performing vector search:`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        ...errorContext,
+      });
       throw new Error(
         `Vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );

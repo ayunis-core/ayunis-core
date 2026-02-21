@@ -22,3 +22,25 @@ export class SearchContentQuery {
     this.limit = params.limit;
   }
 }
+
+export class SearchMultiContentQuery {
+  orgId: UUID;
+  documentIds: UUID[];
+  query: string;
+  type: IndexType;
+  limit?: number;
+
+  constructor(params: {
+    orgId: UUID;
+    query: string;
+    documentIds: UUID[];
+    type: IndexType;
+    limit?: number;
+  }) {
+    this.orgId = params.orgId;
+    this.query = params.query;
+    this.documentIds = params.documentIds;
+    this.type = params.type;
+    this.limit = params.limit;
+  }
+}

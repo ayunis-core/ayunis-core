@@ -68,6 +68,7 @@ import {
   KnowledgeBaseDocumentResponseDto,
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
+import { MissingFileError } from '../../application/knowledge-bases.errors';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 
 @ApiTags('knowledge-bases')
@@ -315,9 +316,7 @@ export class KnowledgeBasesController {
     },
   ): Promise<KnowledgeBaseDocumentResponseDto> {
     if (!file) {
-      throw new BadRequestException(
-        'No file provided. Please upload a PDF, DOCX, or PPTX file.',
-      );
+      throw new MissingFileError();
     }
 
     this.logger.log('addDocument', {
