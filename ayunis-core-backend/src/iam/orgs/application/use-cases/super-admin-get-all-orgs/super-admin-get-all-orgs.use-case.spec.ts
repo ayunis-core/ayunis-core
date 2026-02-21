@@ -15,7 +15,7 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
   let orgsRepository: jest.Mocked<OrgsRepository>;
   let contextService: jest.Mocked<ContextService>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SuperAdminGetAllOrgsUseCase,
@@ -37,6 +37,9 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     useCase = module.get(SuperAdminGetAllOrgsUseCase);
     orgsRepository = module.get(OrgsRepository);
     contextService = module.get(ContextService);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should return paginated orgs when requester is super admin', async () => {

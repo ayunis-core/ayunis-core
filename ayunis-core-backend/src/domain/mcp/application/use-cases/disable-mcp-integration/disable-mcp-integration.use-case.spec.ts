@@ -25,7 +25,7 @@ describe('DisableMcpIntegrationUseCase', () => {
   const mockOrgId = 'org-123' as UUID;
   const mockIntegrationId = 'integration-456' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DisableMcpIntegrationUseCase,

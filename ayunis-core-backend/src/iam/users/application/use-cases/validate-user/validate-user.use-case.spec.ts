@@ -17,7 +17,7 @@ describe('ValidateUserUseCase', () => {
   let mockUsersRepository: Partial<UsersRepository>;
   let mockCompareHashUseCase: Partial<CompareHashUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       findOneByEmail: jest.fn(),
     };
@@ -34,6 +34,9 @@ describe('ValidateUserUseCase', () => {
     }).compile();
 
     useCase = module.get<ValidateUserUseCase>(ValidateUserUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

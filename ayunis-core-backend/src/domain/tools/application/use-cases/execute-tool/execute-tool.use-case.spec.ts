@@ -41,7 +41,7 @@ describe('ExecuteToolUseCase', () => {
 
   const mockContext = '123e4567-e89b-12d3-a456-426614174000' as any;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockHandler = {
       execute: jest.fn(),
     };
@@ -58,6 +58,9 @@ describe('ExecuteToolUseCase', () => {
     }).compile();
 
     useCase = module.get<ExecuteToolUseCase>(ExecuteToolUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

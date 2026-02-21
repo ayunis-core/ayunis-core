@@ -20,7 +20,7 @@ describe('CreateTeamUseCase', () => {
 
   const mockOrgId = 'org-123' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockTeamsRepository = {
       findByNameAndOrgId: jest.fn(),
       create: jest.fn(),
@@ -39,6 +39,9 @@ describe('CreateTeamUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateTeamUseCase>(CreateTeamUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

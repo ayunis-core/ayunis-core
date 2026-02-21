@@ -16,7 +16,7 @@ describe('CreateRegularUserUseCase', () => {
   let mockHashTextUseCase: Partial<HashTextUseCase>;
   let mockCreateUserUseCase: Partial<CreateUserUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       findOneByEmail: jest.fn(),
       create: jest.fn(),
@@ -38,6 +38,9 @@ describe('CreateRegularUserUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateRegularUserUseCase>(CreateRegularUserUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

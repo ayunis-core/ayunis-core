@@ -18,7 +18,7 @@ describe('ShareDeletedListener', () => {
   let findAllUserIdsByOrgId: { execute: jest.Mock };
   let findAllUserIdsByTeamId: { execute: jest.Mock };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     skillRepository = {
       deactivateAllExceptOwner: jest.fn().mockResolvedValue(undefined),
       deactivateUsersNotInSet: jest.fn().mockResolvedValue(undefined),
@@ -48,6 +48,9 @@ describe('ShareDeletedListener', () => {
     }).compile();
 
     listener = module.get<ShareDeletedListener>(ShareDeletedListener);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should deactivate all non-owner activations when no remaining scopes exist', async () => {

@@ -31,7 +31,7 @@ describe('DeleteShareUseCase', () => {
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteShareUseCase,
@@ -62,6 +62,9 @@ describe('DeleteShareUseCase', () => {
     contextService = module.get<ContextService>(ContextService);
     repository = module.get<SharesRepository>(SharesRepository);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should emit event with empty remainingScopes when no other shares exist for a skill', async () => {

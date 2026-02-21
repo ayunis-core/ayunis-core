@@ -15,7 +15,7 @@ describe('CreateSkillUseCase', () => {
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockSkillRepository = {
       create: jest.fn(),
       findByNameAndOwner: jest.fn(),

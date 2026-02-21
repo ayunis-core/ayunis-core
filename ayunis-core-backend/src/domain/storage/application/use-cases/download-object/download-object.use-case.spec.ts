@@ -18,7 +18,7 @@ describe('DownloadObjectUseCase', () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockObjectStorage = {
       download: jest.fn(),
       exists: jest.fn(),
@@ -37,6 +37,9 @@ describe('DownloadObjectUseCase', () => {
     }).compile();
 
     useCase = module.get<DownloadObjectUseCase>(DownloadObjectUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

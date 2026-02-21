@@ -15,7 +15,7 @@ describe('ShareDeletedListener (threads)', () => {
   let findAllUserIdsByOrgId: { execute: jest.Mock };
   let findAllUserIdsByTeamId: { execute: jest.Mock };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     removeSkillSources = {
       execute: jest.fn().mockResolvedValue(undefined),
     };
@@ -47,6 +47,9 @@ describe('ShareDeletedListener (threads)', () => {
     }).compile();
 
     listener = module.get<ShareDeletedListener>(ShareDeletedListener);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should remove skill sources from all non-owner users when no remaining scopes exist', async () => {

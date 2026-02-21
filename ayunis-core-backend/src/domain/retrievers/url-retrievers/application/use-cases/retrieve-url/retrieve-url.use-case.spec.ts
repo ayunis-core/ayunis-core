@@ -10,7 +10,7 @@ describe('RetrieveUrlUseCase', () => {
   let useCase: RetrieveUrlUseCase;
   let mockHandler: Partial<UrlRetrieverHandler>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockHandler = {
       retrieveUrl: jest.fn(),
     };
@@ -23,6 +23,9 @@ describe('RetrieveUrlUseCase', () => {
     }).compile();
 
     useCase = module.get<RetrieveUrlUseCase>(RetrieveUrlUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

@@ -9,7 +9,7 @@ describe('GetAvailableProvidersUseCase', () => {
   let useCase: GetAvailableProvidersUseCase;
   let mockProviderRegistry: Partial<EmbeddingsHandlerRegistry>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockProviderRegistry = {
       getHandler: jest.fn(),
       getAvailableProviders: jest.fn(),
@@ -26,6 +26,9 @@ describe('GetAvailableProvidersUseCase', () => {
     useCase = module.get<GetAvailableProvidersUseCase>(
       GetAvailableProvidersUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

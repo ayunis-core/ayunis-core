@@ -30,7 +30,7 @@ describe('SourceQueryToolHandler', () => {
   const mockOrgId = randomUUID();
   const mockThreadId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockGetSourceByIdUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetTextSourceByIdUseCase>;
@@ -54,6 +54,9 @@ describe('SourceQueryToolHandler', () => {
     }).compile();
 
     handler = module.get<SourceQueryToolHandler>(SourceQueryToolHandler);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

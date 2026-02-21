@@ -37,7 +37,7 @@ describe('ActivateSkillToolHandler', () => {
   const mockSkillId = randomUUID();
   const mockSourceId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockFindSkillByName = {
       execute: jest.fn(),
     } as any;

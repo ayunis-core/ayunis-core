@@ -8,7 +8,7 @@ describe('IsValidPasswordUseCase', () => {
   let useCase: IsValidPasswordUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       isValidPassword: jest.fn(),
     };
@@ -21,6 +21,9 @@ describe('IsValidPasswordUseCase', () => {
     }).compile();
 
     useCase = module.get<IsValidPasswordUseCase>(IsValidPasswordUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

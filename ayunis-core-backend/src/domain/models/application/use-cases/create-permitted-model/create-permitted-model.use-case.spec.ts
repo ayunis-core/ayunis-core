@@ -22,7 +22,7 @@ describe('CreatePermittedModelUseCase', () => {
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockPermittedModelsRepository = {
       create: jest.fn(),
       findAll: jest.fn(),

@@ -13,7 +13,7 @@ describe('UpdateUserNameUseCase', () => {
   let mockUsersRepository: Partial<UsersRepository>;
   let mockSendWebhookUseCase: Partial<SendWebhookUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       findOneById: jest.fn(),
       update: jest.fn(),
@@ -31,6 +31,9 @@ describe('UpdateUserNameUseCase', () => {
     }).compile();
 
     useCase = module.get<UpdateUserNameUseCase>(UpdateUserNameUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

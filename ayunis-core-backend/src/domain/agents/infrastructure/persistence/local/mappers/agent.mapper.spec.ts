@@ -37,7 +37,7 @@ describe('AgentMapper', () => {
       }),
     });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockPermittedModelMapper = {
       toDomain: jest.fn(),
       toRecord: jest.fn(),

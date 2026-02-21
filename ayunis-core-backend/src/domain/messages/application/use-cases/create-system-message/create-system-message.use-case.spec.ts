@@ -13,7 +13,7 @@ describe('CreateSystemMessageUseCase', () => {
   let useCase: CreateSystemMessageUseCase;
   let mockMessagesRepository: Partial<MessagesRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockMessagesRepository = {
       create: jest.fn(),
     };
@@ -28,6 +28,9 @@ describe('CreateSystemMessageUseCase', () => {
     useCase = module.get<CreateSystemMessageUseCase>(
       CreateSystemMessageUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

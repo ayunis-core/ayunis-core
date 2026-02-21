@@ -17,7 +17,7 @@ describe('DeleteObjectUseCase', () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockObjectStorage = {
       delete: jest.fn(),
       exists: jest.fn(),
@@ -36,6 +36,9 @@ describe('DeleteObjectUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteObjectUseCase>(DeleteObjectUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

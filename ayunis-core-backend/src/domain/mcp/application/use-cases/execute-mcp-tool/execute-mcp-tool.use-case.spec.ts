@@ -57,7 +57,7 @@ describe('ExecuteMcpToolUseCase', () => {
   let loggerWarnSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     repository = {
       findById: jest.fn(),
       save: jest.fn(),

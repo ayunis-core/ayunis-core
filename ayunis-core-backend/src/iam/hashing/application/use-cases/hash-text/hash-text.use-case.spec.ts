@@ -9,7 +9,7 @@ describe('HashTextUseCase', () => {
   let useCase: HashTextUseCase;
   let mockHashingHandler: Partial<HashingHandler>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockHashingHandler = {
       hash: jest.fn(),
     };
@@ -25,6 +25,9 @@ describe('HashTextUseCase', () => {
     }).compile();
 
     useCase = module.get<HashTextUseCase>(HashTextUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

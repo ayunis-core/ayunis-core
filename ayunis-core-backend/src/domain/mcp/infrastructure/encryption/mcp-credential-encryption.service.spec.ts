@@ -10,7 +10,7 @@ describe('McpCredentialEncryptionService', () => {
   const mockEncryptionKey =
     'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'; // 64 hex chars = 32 bytes
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         McpCredentialEncryptionService,
@@ -32,6 +32,9 @@ describe('McpCredentialEncryptionService', () => {
       McpCredentialEncryptionService,
     );
     configService = module.get<ConfigService>(ConfigService);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -59,8 +62,9 @@ describe('McpCredentialEncryptionService', () => {
     it('should throw error when encryption key is missing', async () => {
       jest.spyOn(configService, 'get').mockReturnValue(undefined);
 
-      // Re-instantiate service to trigger constructor error
+      // Re-instantiate service to trigger constructor validation
       expect(() => {
+        // eslint-disable-next-line sonarjs/constructor-for-side-effects
         new McpCredentialEncryptionService(configService);
       }).toThrow('MCP_ENCRYPTION_KEY environment variable is not configured');
     });
@@ -69,6 +73,7 @@ describe('McpCredentialEncryptionService', () => {
       jest.spyOn(configService, 'get').mockReturnValue('');
 
       expect(() => {
+        // eslint-disable-next-line sonarjs/constructor-for-side-effects
         new McpCredentialEncryptionService(configService);
       }).toThrow('MCP_ENCRYPTION_KEY environment variable is not configured');
     });
@@ -77,6 +82,7 @@ describe('McpCredentialEncryptionService', () => {
       jest.spyOn(configService, 'get').mockReturnValue('tooshort');
 
       expect(() => {
+        // eslint-disable-next-line sonarjs/constructor-for-side-effects
         new McpCredentialEncryptionService(configService);
       }).toThrow(
         'MCP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)',

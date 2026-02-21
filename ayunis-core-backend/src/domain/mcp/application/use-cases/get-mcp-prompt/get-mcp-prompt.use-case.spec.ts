@@ -36,7 +36,7 @@ describe('GetMcpPromptUseCase', () => {
   const mockIntegrationId = 'integration-456' as UUID;
   const mockPromptName = 'test-prompt';
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetMcpPromptUseCase,
@@ -164,7 +164,7 @@ describe('GetMcpPromptUseCase', () => {
         id: mockIntegrationId,
         name: 'Custom Integration',
         orgId: mockOrgId,
-        serverUrl: 'http://custom-server.com/mcp',
+        serverUrl: 'https://custom-server.example.com/mcp',
         auth: new NoAuthMcpIntegrationAuth(),
         enabled: true,
         createdAt: new Date(),
@@ -204,7 +204,7 @@ describe('GetMcpPromptUseCase', () => {
         id: mockIntegrationId,
         name: 'Custom Integration',
         orgId: mockOrgId,
-        serverUrl: 'http://custom-server.com/mcp',
+        serverUrl: 'https://custom-server.example.com/mcp',
         auth: new BearerMcpIntegrationAuth({
           authToken: 'encrypted-token-123',
         }),

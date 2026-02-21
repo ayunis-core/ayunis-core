@@ -24,7 +24,7 @@ describe('CreateShareUseCase', () => {
   const mockOrgId = randomUUID();
   const mockAgentId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateShareUseCase,
@@ -69,6 +69,9 @@ describe('CreateShareUseCase', () => {
       canCreateShare: jest.fn(),
       canDeleteShare: jest.fn(),
     };
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('execute', () => {

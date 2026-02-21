@@ -9,7 +9,7 @@ describe('CompareHashUseCase', () => {
   let useCase: CompareHashUseCase;
   let mockHashingHandler: Partial<HashingHandler>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockHashingHandler = {
       compare: jest.fn(),
     };
@@ -25,6 +25,9 @@ describe('CompareHashUseCase', () => {
     }).compile();
 
     useCase = module.get<CompareHashUseCase>(CompareHashUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

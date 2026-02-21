@@ -45,7 +45,7 @@ describe('McpClientService', () => {
     connectionStatus: 'pending',
   } as const;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     client = new MockMcpClientPort();
     encryption = new MockCredentialEncryptionPort();
 
@@ -59,6 +59,9 @@ describe('McpClientService', () => {
 
     module.useLogger(false);
     service = module.get(McpClientService);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('buildConnectionConfig', () => {

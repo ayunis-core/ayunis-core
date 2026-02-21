@@ -11,14 +11,14 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
   let configService: ConfigService;
 
   describe('with Locaboo 4 URL configured', () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           PredefinedMcpIntegrationRegistry,
           {
             provide: ConfigService,
             useValue: {
-              get: jest.fn((key: string) => {
+              get: jest.fn((key: string): unknown => {
                 if (key === 'mcp.locaboo4Url') {
                   return 'https://api.locaboo.example.com';
                 }
@@ -186,9 +186,12 @@ describe('PredefinedMcpIntegrationRegistryService', () => {
       });
     });
   });
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('without Locaboo 4 URL configured', () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           PredefinedMcpIntegrationRegistry,

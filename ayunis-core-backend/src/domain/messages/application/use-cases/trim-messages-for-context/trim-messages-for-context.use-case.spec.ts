@@ -42,7 +42,7 @@ describe('TrimMessagesForContextUseCase', () => {
     });
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockCountTokensUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<CountTokensUseCase>;
@@ -57,6 +57,9 @@ describe('TrimMessagesForContextUseCase', () => {
     useCase = module.get<TrimMessagesForContextUseCase>(
       TrimMessagesForContextUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

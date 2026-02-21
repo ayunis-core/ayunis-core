@@ -10,7 +10,7 @@ describe('ProcessTextUseCase', () => {
   let useCase: SplitTextUseCase;
   let mockProviderRegistry: Partial<SplitterHandlerRegistry>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockHandler = {
       processText: jest.fn(),
       isAvailable: jest.fn().mockReturnValue(true),
@@ -31,6 +31,9 @@ describe('ProcessTextUseCase', () => {
     }).compile();
 
     useCase = module.get<SplitTextUseCase>(SplitTextUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

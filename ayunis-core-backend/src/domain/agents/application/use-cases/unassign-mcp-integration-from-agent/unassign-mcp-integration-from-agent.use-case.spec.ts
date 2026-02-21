@@ -36,7 +36,7 @@ describe('UnassignMcpIntegrationFromAgentUseCase', () => {
   const mockIntegrationId1 = randomUUID();
   const mockIntegrationId2 = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockAgentRepository = {
       create: jest.fn(),
       findOne: jest.fn(),

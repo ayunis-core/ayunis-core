@@ -45,7 +45,7 @@ describe('AddSourceToAgentUseCase', () => {
   let logSpy: jest.SpyInstance;
   let errorSpy: jest.SpyInstance;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockAgentRepository = {
       findOne: jest.fn(),
       update: jest.fn(),

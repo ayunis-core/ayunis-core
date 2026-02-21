@@ -23,7 +23,7 @@ describe('UploadObjectUseCase', () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockObjectStorage = {
       upload: jest.fn(),
     };
@@ -41,6 +41,9 @@ describe('UploadObjectUseCase', () => {
     }).compile();
 
     useCase = module.get<UploadObjectUseCase>(UploadObjectUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

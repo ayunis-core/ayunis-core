@@ -14,7 +14,7 @@ describe('GetCurrentUserUseCase', () => {
   let mockJwtService: Partial<JwtService>;
   let mockFindUserByIdUseCase: Partial<FindUserByIdUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockJwtService = { verify: jest.fn() };
     mockFindUserByIdUseCase = { execute: jest.fn() };
 
@@ -27,6 +27,9 @@ describe('GetCurrentUserUseCase', () => {
     }).compile();
 
     useCase = module.get<GetCurrentUserUseCase>(GetCurrentUserUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

@@ -12,8 +12,39 @@ on:
       - 'ayunis-core-backend/**'
 
 jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ayunis-core-backend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ayunis-core-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run linter
+        run: npm run lint
+
   test:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
 
     # Service containers to run with this job
     services:
@@ -102,29 +133,12 @@ jobs:
           DISABLE_EMAIL_CONFIRMATION=true
           EOF
 
-      - name: Build application
-        run: npm run build
-
       - name: Run migrations
         run: npm run typeorm migration:run -- -d src/db/datasource.ts
         env:
           NODE_ENV: test
 
-      - name: Run TypeScript type check
-        run: npx tsc --noEmit
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run unit tests
-        run: npm run test:cov
+      - name: Run unit tests (shard ${{ matrix.shard }}/3)
+        run: npx jest --shard=${{ matrix.shard }}/3
         env:
           NODE_ENV: test
-
-      - name: Upload coverage reports
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: coverage-reports
-          path: ayunis-core-backend/coverage/
-          retention-days: 7

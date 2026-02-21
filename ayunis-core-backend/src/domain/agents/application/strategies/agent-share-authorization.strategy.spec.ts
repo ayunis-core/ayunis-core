@@ -9,7 +9,7 @@ describe('AgentShareAuthorizationStrategy', () => {
   let strategy: AgentShareAuthorizationStrategy;
   let agentRepository: jest.Mocked<AgentRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockAgentRepository = {
       create: jest.fn(),
       delete: jest.fn(),
@@ -35,6 +35,9 @@ describe('AgentShareAuthorizationStrategy', () => {
       AgentShareAuthorizationStrategy,
     );
     agentRepository = module.get(AgentRepository);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('canViewShares', () => {

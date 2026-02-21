@@ -29,7 +29,7 @@ class MockTool extends Tool {
 describe('CheckToolCapabilitiesUseCase', () => {
   let useCase: CheckToolCapabilitiesUseCase;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [CheckToolCapabilitiesUseCase],
     }).compile();
@@ -37,6 +37,9 @@ describe('CheckToolCapabilitiesUseCase', () => {
     useCase = module.get<CheckToolCapabilitiesUseCase>(
       CheckToolCapabilitiesUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

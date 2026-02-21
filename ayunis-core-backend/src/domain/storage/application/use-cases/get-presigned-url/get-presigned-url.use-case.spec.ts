@@ -19,7 +19,7 @@ describe('GetPresignedUrlUseCase', () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockObjectStorage = {
       getPresignedUrl: jest.fn(),
       exists: jest.fn(),
@@ -38,6 +38,9 @@ describe('GetPresignedUrlUseCase', () => {
     }).compile();
 
     useCase = module.get<GetPresignedUrlUseCase>(GetPresignedUrlUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

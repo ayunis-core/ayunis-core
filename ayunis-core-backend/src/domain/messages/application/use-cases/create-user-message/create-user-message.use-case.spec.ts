@@ -22,7 +22,7 @@ describe('CreateUserMessageUseCase', () => {
 
   const mockOrgId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockMessagesRepository = {
       create: jest.fn(),
     };
@@ -50,6 +50,12 @@ describe('CreateUserMessageUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateUserMessageUseCase>(CreateUserMessageUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (mockContextService.get as jest.Mock).mockReturnValue(mockOrgId);
+    (mockUploadObjectUseCase.execute as jest.Mock).mockResolvedValue(undefined);
+    (mockDeleteObjectUseCase.execute as jest.Mock).mockResolvedValue(undefined);
   });
 
   it('should be defined', () => {

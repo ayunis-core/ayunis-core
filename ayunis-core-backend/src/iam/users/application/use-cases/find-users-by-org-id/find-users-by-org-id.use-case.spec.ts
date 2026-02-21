@@ -15,7 +15,7 @@ describe('FindUsersByOrgIdUseCase', () => {
   let mockUsersRepository: Partial<UsersRepository>;
   let mockContextService: any;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       findManyByOrgId: jest.fn(),
     };
@@ -35,11 +35,14 @@ describe('FindUsersByOrgIdUseCase', () => {
     useCase = module.get<FindUsersByOrgIdUseCase>(FindUsersByOrgIdUseCase);
 
     // Configure ContextService mock to return ADMIN role
-    mockContextService.get.mockImplementation((key: string) => {
+    mockContextService.get.mockImplementation((key: string): unknown => {
       if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
       if (key === 'role') return UserRole.ADMIN;
       return null;
     });
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
