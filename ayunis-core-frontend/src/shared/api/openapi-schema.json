@@ -4755,9 +4755,48 @@
         ]
       }
     },
+    "/skills/{id}/toggle-pinned": {
+      "patch": {
+        "operationId": "SkillsController_togglePinned",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill to toggle pinned status",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The skill pinned status has been toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Skill is not active"
+          },
+          "404": {
+            "description": "Skill not found"
+          }
+        },
+        "summary": "Toggle skill pinned/unpinned status",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
     "/skills/{id}/sources": {
       "get": {
-        "operationId": "SkillsController_getSkillSources",
+        "operationId": "SkillSourcesController_getSkillSources",
         "parameters": [
           {
             "name": "id",
@@ -4796,7 +4835,7 @@
     },
     "/skills/{id}/sources/file": {
       "post": {
-        "operationId": "SkillsController_addFileSource",
+        "operationId": "SkillSourcesController_addFileSource",
         "parameters": [
           {
             "name": "id",
@@ -4855,7 +4894,7 @@
     },
     "/skills/{id}/sources/{sourceId}": {
       "delete": {
-        "operationId": "SkillsController_removeSource",
+        "operationId": "SkillSourcesController_removeSource",
         "parameters": [
           {
             "name": "id",
@@ -4894,7 +4933,7 @@
     },
     "/skills/{skillId}/mcp-integrations/{integrationId}": {
       "post": {
-        "operationId": "SkillsController_assignMcpIntegration",
+        "operationId": "SkillMcpIntegrationsController_assignMcpIntegration",
         "parameters": [
           {
             "name": "skillId",
@@ -4941,7 +4980,7 @@
         ]
       },
       "delete": {
-        "operationId": "SkillsController_unassignMcpIntegration",
+        "operationId": "SkillMcpIntegrationsController_unassignMcpIntegration",
         "parameters": [
           {
             "name": "skillId",
@@ -4987,7 +5026,7 @@
     },
     "/skills/{skillId}/mcp-integrations": {
       "get": {
-        "operationId": "SkillsController_listSkillMcpIntegrations",
+        "operationId": "SkillMcpIntegrationsController_listSkillMcpIntegrations",
         "parameters": [
           {
             "name": "skillId",
@@ -10448,6 +10487,11 @@
             "type": "boolean",
             "description": "Whether the skill is shared with the current user (not owned)",
             "example": false
+          },
+          "isPinned": {
+            "type": "boolean",
+            "description": "Whether the skill is pinned for quick access in chat",
+            "example": false
           }
         },
         "required": [
@@ -10460,7 +10504,8 @@
           "userId",
           "createdAt",
           "updatedAt",
-          "isShared"
+          "isShared",
+          "isPinned"
         ]
       },
       "CreateSkillDto": {

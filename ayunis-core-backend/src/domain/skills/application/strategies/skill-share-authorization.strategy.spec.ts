@@ -24,6 +24,7 @@ describe('SkillShareAuthorizationStrategy', () => {
       getActiveSkillIds: jest.fn(),
       findByIds: jest.fn(),
       toggleSkillPinned: jest.fn(),
+      isSkillPinned: jest.fn(),
       getPinnedSkillIds: jest.fn(),
     };
 

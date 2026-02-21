@@ -42,8 +42,7 @@ export function AgentPage({
   });
 
   const sourcesHook = useAgentSources({
-    entity: agent,
-    translationNamespace: 'agent',
+    agent,
   });
 
   const handleTabChange = useCallback(

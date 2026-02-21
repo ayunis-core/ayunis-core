@@ -8,13 +8,14 @@ Skills are reusable knowledge + integration bundles that an AI assistant can act
 
 - **Skill**: A named bundle with a short description (shown in system prompt), long description (instructions, returned on activation), sources, and MCP integrations.
 - **Activation**: Skill activation is tracked in a separate `skill_activations` table (via `SkillActivationRecord`). Only active skills are surfaced in the system prompt as available for the LLM to activate. The repository provides `activateSkill`, `deactivateSkill`, `isSkillActive`, and `getActiveSkillIds` methods to manage activation state.
-- **Pinning**: Active skills can be pinned so they appear prominently in the UI. Pinning state is stored as an `isPinned` boolean column on `SkillActivationRecord`. The repository provides `toggleSkillPinned` (returns the new pinned state) and `getPinnedSkillIds` methods. A skill must be active before it can be pinned — attempting to pin an inactive skill raises `SkillNotActiveError`.
+- **Pinning**: Active skills can be pinned so they appear prominently in the UI. Pinning state is stored as an `isPinned` boolean column on `SkillActivationRecord`. The repository provides `isSkillPinned` (checks if a skill is pinned for a user), `toggleSkillPinned` (returns the new pinned state), and `getPinnedSkillIds` methods. A skill must be active before it can be pinned — attempting to pin an inactive skill raises `SkillNotActiveError`.
+- **User context resolution**: Per-user state (isActive, isPinned, isShared) is resolved by `SkillAccessService` via `resolveUserContext(skillId)` (single skill) and `resolveUserContextBatch()` (all skills for a user). Controllers never import repository ports directly — they use use cases and `SkillAccessService` instead. This boundary is enforced by a `controllers-no-ports` dependency-cruiser rule.
 - **On-demand injection**: The LLM activates a skill via the `activate_skill` tool, which injects the skill's instructions and attaches its sources/MCP integrations to the thread.
 - **Name uniqueness**: Skill names must be unique per user (enforced at repository level) because the `activate_skill` tool uses the name as the identifier.
 
 ## Structure
 
-```
+```text
 skills/
 ├── SUMMARY.md
 ├── domain/
@@ -22,7 +23,8 @@ skills/
 ├── application/
 │   ├── ports/skill.repository.ts          # Abstract repository (includes activation + pinning methods)
 │   ├── services/
-│   │   └── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
+│   │   ├── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
+│   │   └── skill-access.service.ts        # Shared access-check logic for skill controllers
 │   ├── listeners/
 │   │   ├── share-deleted.listener.ts      # Reconciles activations on share deletion
 │   │   └── user-created.listener.ts       # Installs pre-installed marketplace skills for new users
@@ -35,6 +37,7 @@ skills/
 │       ├── find-all-skills/
 │       ├── find-skill-by-name/
 │       ├── toggle-skill-active/
+│       ├── toggle-skill-pinned/
 │       ├── find-active-skills/
 │       ├── add-source-to-skill/
 │       ├── remove-source-from-skill/
@@ -52,7 +55,9 @@ skills/
 │       ├── local-skill.repository.ts
 │       └── local-skill-repository.module.ts
 ├── presenters/http/
-│   ├── skills.controller.ts
+│   ├── skills.controller.ts                # Core CRUD + toggle-active + toggle-pinned
+│   ├── skill-sources.controller.ts         # Source management endpoints
+│   ├── skill-mcp-integrations.controller.ts # MCP integration endpoints
 │   ├── dto/
 │   │   ├── create-skill.dto.ts
 │   │   ├── update-skill.dto.ts
@@ -92,7 +97,7 @@ Error handling: `MarketplaceInstallFailedError` is raised when the installation 
 ## API Endpoints
 
 | Method | Path | Description |
-|--------|------|-------------|
+| ------ | ---- | ----------- |
 | POST | `/skills/install-from-marketplace` | Install a skill from the marketplace |
 | POST | `/skills` | Create a skill |
 | GET | `/skills` | List all skills for current user |
@@ -100,6 +105,7 @@ Error handling: `MarketplaceInstallFailedError` is raised when the installation 
 | PUT | `/skills/:id` | Update a skill |
 | DELETE | `/skills/:id` | Delete a skill |
 | PATCH | `/skills/:id/toggle-active` | Toggle skill active/inactive |
+| PATCH | `/skills/:id/toggle-pinned` | Toggle skill pinned/unpinned |
 | GET | `/skills/:id/sources` | List sources for a skill |
 | POST | `/skills/:id/sources/file` | Add a file source to a skill |
 | DELETE | `/skills/:id/sources/:sourceId` | Remove a source from a skill |

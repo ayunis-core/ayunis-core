@@ -15,6 +15,7 @@ describe('LocalSkillRepository', () => {
   let mockManager: {
     findOne: jest.Mock;
     find: jest.Mock;
+    count: jest.Mock;
     query: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
@@ -43,6 +44,7 @@ describe('LocalSkillRepository', () => {
     mockManager = {
       findOne: jest.fn(),
       find: jest.fn(),
+      count: jest.fn(),
       query: jest.fn(),
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
     };
@@ -88,6 +90,27 @@ describe('LocalSkillRepository', () => {
       await expect(
         repository.toggleSkillPinned(skillId, userId),
       ).rejects.toThrow(SkillNotActiveError);
+    });
+  });
+
+  describe('isSkillPinned', () => {
+    it('should return true when skill is pinned for user', async () => {
+      mockManager.count.mockResolvedValue(1);
+
+      const result = await repository.isSkillPinned(skillId, userId);
+
+      expect(result).toBe(true);
+      expect(mockManager.count).toHaveBeenCalledWith(SkillActivationRecord, {
+        where: { skillId, userId, isPinned: true },
+      });
+    });
+
+    it('should return false when skill is not pinned for user', async () => {
+      mockManager.count.mockResolvedValue(0);
+
+      const result = await repository.isSkillPinned(skillId, userId);
+
+      expect(result).toBe(false);
     });
   });
 

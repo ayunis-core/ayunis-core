@@ -47,8 +47,7 @@ export function SkillPage({
   const { confirm } = useConfirmation();
 
   const sourcesHook = useSkillSources({
-    entity: skill,
-    translationNamespace: 'skill',
+    skill,
   });
 
   const handleTabChange = useCallback(
