@@ -10,6 +10,9 @@ import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity'
 import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
 import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
 import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
+import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
+import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
+import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
   let factory: ToolFactory;
@@ -61,6 +64,24 @@ describe('ToolFactory', () => {
       expect(tool).toBeInstanceOf(CreateSkillTool);
     });
 
+    it('should create a KnowledgeQueryTool', () => {
+      const context = [{ id: randomUUID(), name: 'Test KB' }];
+      const tool = factory.createTool({
+        type: ToolType.KNOWLEDGE_QUERY,
+        context,
+      });
+      expect(tool).toBeInstanceOf(KnowledgeQueryTool);
+    });
+
+    it('should create a KnowledgeGetTextTool', () => {
+      const context = [{ id: randomUUID(), name: 'Test KB' }];
+      const tool = factory.createTool({
+        type: ToolType.KNOWLEDGE_GET_TEXT,
+        context,
+      });
+      expect(tool).toBeInstanceOf(KnowledgeGetTextTool);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -100,8 +121,10 @@ describe('ToolFactory', () => {
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
+      expect(types).toContain(ToolType.KNOWLEDGE_QUERY);
+      expect(types).toContain(ToolType.KNOWLEDGE_GET_TEXT);
 
-      expect(types.length).toBe(17);
+      expect(types.length).toBe(19);
     });
   });
 });

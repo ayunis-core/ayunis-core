@@ -22,6 +22,10 @@ import { ProductKnowledgeToolHandler } from './handlers/product-knowledge-tool.h
 import { ProductKnowledgeTool } from '../domain/tools/product-knowledge-tool.entity';
 import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler';
 import { ActivateSkillTool } from '../domain/tools/activate-skill-tool.entity';
+import { KnowledgeQueryToolHandler } from './handlers/knowledge-query-tool.handler';
+import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
+import { KnowledgeGetTextToolHandler } from './handlers/knowledge-get-text-tool.handler';
+import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 
 @Injectable()
 export class ToolHandlerRegistry {
@@ -38,6 +42,8 @@ export class ToolHandlerRegistry {
     private readonly mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
     private readonly productKnowledgeToolHandler: ProductKnowledgeToolHandler,
     private readonly activateSkillToolHandler: ActivateSkillToolHandler,
+    private readonly knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
+    private readonly knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -71,6 +77,12 @@ export class ToolHandlerRegistry {
     }
     if (tool instanceof ActivateSkillTool) {
       return this.activateSkillToolHandler;
+    }
+    if (tool instanceof KnowledgeQueryTool) {
+      return this.knowledgeQueryToolHandler;
+    }
+    if (tool instanceof KnowledgeGetTextTool) {
+      return this.knowledgeGetTextToolHandler;
     }
     throw new ToolHandlerNotFoundError({
       toolType: tool.name,

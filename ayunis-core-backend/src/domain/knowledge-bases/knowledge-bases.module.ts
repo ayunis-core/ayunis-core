@@ -14,6 +14,7 @@ import { AddDocumentToKnowledgeBaseUseCase } from './application/use-cases/add-d
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
+import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
 
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
@@ -37,6 +38,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     RemoveDocumentFromKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
+    GetKnowledgeBaseDocumentTextUseCase,
     // Presenters
     KnowledgeBaseDtoMapper,
   ],
@@ -52,6 +54,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     RemoveDocumentFromKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
+    GetKnowledgeBaseDocumentTextUseCase,
   ],
 })
 export class KnowledgeBasesModule {}

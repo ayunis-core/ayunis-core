@@ -1664,6 +1664,8 @@ export const ToolAssignmentDtoType = {
   product_knowledge: 'product_knowledge',
   activate_skill: 'activate_skill',
   create_skill: 'create_skill',
+  knowledge_query: 'knowledge_query',
+  knowledge_get_text: 'knowledge_get_text',
 } as const;
 
 export interface ToolAssignmentDto {
@@ -1713,6 +1715,8 @@ export const ToolResponseDtoType = {
   product_knowledge: 'product_knowledge',
   activate_skill: 'activate_skill',
   create_skill: 'create_skill',
+  knowledge_query: 'knowledge_query',
+  knowledge_get_text: 'knowledge_get_text',
 } as const;
 
 export interface ToolResponseDto {
