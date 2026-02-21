@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsObject } from 'class-validator';
+import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
  * DTO for setting per-user configuration on a marketplace MCP integration.
@@ -13,6 +14,7 @@ export class SetUserConfigDto {
     additionalProperties: { type: 'string' },
   })
   @IsObject()
+  @IsStringRecord({ message: 'all values in configValues must be strings' })
   configValues: Record<string, string>;
 }
 
