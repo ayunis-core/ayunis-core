@@ -153,6 +153,11 @@ export class RunsController {
           type: 'string',
           description: 'JSON object for tool result input',
         },
+        skillId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'Skill ID to activate for this message',
+        },
         streaming: { type: 'boolean', default: true },
       },
     },
@@ -176,53 +181,6 @@ export class RunsController {
               message: getSchemaPath(RunMessageResponseDto),
               error: getSchemaPath(RunErrorResponseDto),
               thread: getSchemaPath(RunThreadResponseDto),
-            },
-          },
-        },
-        examples: {
-          'session-event': {
-            summary: 'Session establishment event',
-            value: {
-              type: 'session',
-              success: true,
-              threadId: '123e4567-e89b-12d3-a456-426614174000',
-              timestamp: '2024-01-01T12:00:00.000Z',
-              streaming: true,
-            },
-          },
-          'message-event': {
-            summary: 'Message event',
-            value: {
-              type: 'message',
-              message: {
-                id: '123e4567-e89b-12d3-a456-426614174000',
-                threadId: '123e4567-e89b-12d3-a456-426614174000',
-                role: 'assistant',
-                content: [{ type: 'text', text: 'Hello!' }],
-                createdAt: '2024-01-01T12:00:00.000Z',
-              },
-              threadId: '123e4567-e89b-12d3-a456-426614174000',
-              timestamp: '2024-01-01T12:00:00.000Z',
-            },
-          },
-          'error-event': {
-            summary: 'Error event',
-            value: {
-              type: 'error',
-              message: 'An error occurred while processing your request',
-              threadId: '123e4567-e89b-12d3-a456-426614174000',
-              timestamp: '2024-01-01T12:00:00.000Z',
-              code: 'EXECUTION_ERROR',
-            },
-          },
-          'thread-event': {
-            summary: 'Thread update event',
-            value: {
-              type: 'thread',
-              threadId: '123e4567-e89b-12d3-a456-426614174000',
-              updateType: 'title_updated',
-              title: 'Discussion about AI and machine learning',
-              timestamp: '2024-01-01T12:00:00.000Z',
             },
           },
         },
@@ -274,14 +232,15 @@ export class RunsController {
       hasToolResult: !!sendMessageDto.toolResult,
     });
 
-    // Validate: at least text, images, or tool result must be provided
+    // Validate: at least text, images, tool result, or skillId must be provided
     if (
       !sendMessageDto.text?.trim() &&
       uploadedFiles.length === 0 &&
-      !sendMessageDto.toolResult
+      !sendMessageDto.toolResult &&
+      !sendMessageDto.skillId
     ) {
       throw new BadRequestException(
-        'Message must contain text, images, or tool result',
+        'Message must contain text, images, tool result, or skillId',
       );
     }
 
@@ -332,7 +291,11 @@ export class RunsController {
       // Execute run and stream events
       await this.executeRunAndStream({
         threadId: sendMessageDto.threadId,
-        input: RunInputMapper.toCommand(sendMessageDto, uploadedFiles),
+        input: RunInputMapper.toCommand(
+          sendMessageDto,
+          uploadedFiles,
+          sendMessageDto.skillId,
+        ),
         userId,
         streaming: sendMessageDto.streaming ?? true,
         orgId,

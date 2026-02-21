@@ -24,7 +24,8 @@ skills/
 │   ├── ports/skill.repository.ts          # Abstract repository (includes activation + pinning methods)
 │   ├── services/
 │   │   ├── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
-│   │   └── skill-access.service.ts        # Shared access-check logic for skill controllers
+│   │   ├── skill-access.service.ts        # Shared access-check logic (exported cross-module, used by runs)
+│   │   └── skill-activation.service.ts    # Activates a skill on a thread (sources, MCP, instructions)
 │   ├── listeners/
 │   │   ├── share-deleted.listener.ts      # Reconciles activations on share deletion
 │   │   └── user-created.listener.ts       # Installs pre-installed marketplace skills for new users
@@ -82,6 +83,7 @@ When a skill share is deleted, the `ShareDeletedListener` handles cleanup of act
 
 - **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
 - **McpModule** — for MCP integration validation and batch fetch
+- **ThreadsModule** — for adding sources and MCP integrations to threads during skill activation
 - **SharesModule** — for share authorization strategy registration
 - **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`)
 - **TeamsModule** — for resolving team-scoped share members (`FindAllUserIdsByTeamIdUseCase`)

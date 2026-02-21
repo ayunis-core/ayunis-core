@@ -31,6 +31,7 @@ import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/inst
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
 import { SkillAccessService } from './application/services/skill-access.service';
+import { SkillActivationService } from './application/services/skill-activation.service';
 
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
@@ -47,6 +48,7 @@ import { SharesModule } from '../shares/shares.module';
 // IAM
 import { UsersModule } from 'src/iam/users/users.module';
 import { TeamsModule } from 'src/iam/teams/teams.module';
+import { ThreadsModule } from '../threads/threads.module';
 
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
@@ -69,6 +71,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     forwardRef(() => SharesModule),
     UsersModule,
     TeamsModule,
+    forwardRef(() => ThreadsModule),
   ],
   providers: [
     {
@@ -77,6 +80,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     },
     // Services
     SkillAccessService,
+    SkillActivationService,
 
     // Use Cases
     CreateSkillUseCase,
@@ -124,6 +128,8 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     FindOneSkillUseCase,
     AddSourceToSkillUseCase,
     FindSkillByNameUseCase,
+    SkillAccessService,
+    SkillActivationService,
     SkillShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.SKILL),
   ],

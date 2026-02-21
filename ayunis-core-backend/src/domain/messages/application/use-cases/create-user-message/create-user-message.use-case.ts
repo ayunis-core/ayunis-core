@@ -52,6 +52,13 @@ export class CreateUserMessageUseCase {
       // Build content array
       const content: (TextMessageContent | ImageMessageContent)[] = [];
 
+      // Prepend skill instructions if provided (marked as isSkillInstruction)
+      if (command.skillInstructions?.trim()) {
+        content.push(
+          new TextMessageContent(command.skillInstructions, null, true),
+        );
+      }
+
       // Add text content if provided
       if (command.text?.trim()) {
         content.push(new TextMessageContent(command.text));

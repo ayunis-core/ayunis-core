@@ -1,3 +1,5 @@
+import type { UUID } from 'crypto';
+
 /**
  * Domain-layer data structure for image uploads.
  * Contains the raw binary data and metadata needed for image storage.
@@ -14,6 +16,7 @@ export class RunUserInput extends RunInput {
   constructor(
     public readonly text: string,
     public readonly pendingImages: ImageUploadData[] = [],
+    public readonly skillId?: UUID,
   ) {
     super();
   }

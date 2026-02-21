@@ -4,67 +4,42 @@ import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ActivateSkillToolHandler } from './activate-skill-tool.handler';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
-import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
-import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
+import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { Source } from 'src/domain/sources/domain/source.entity';
-import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { ToolExecutionFailedError } from '../tools.errors';
-
-class ConcreteSource extends Source {
-  constructor(params: { id?: string; name: string }) {
-    super({
-      id: params.id as any,
-      type: SourceType.TEXT,
-      name: params.name,
-    });
-  }
-}
 
 describe('ActivateSkillToolHandler', () => {
   let handler: ActivateSkillToolHandler;
   let mockFindSkillByName: jest.Mocked<FindSkillByNameUseCase>;
-  let mockAddSourceToThread: jest.Mocked<AddSourceToThreadUseCase>;
-  let mockAddMcpIntegration: jest.Mocked<AddMcpIntegrationToThreadUseCase>;
   let mockFindThread: jest.Mocked<FindThreadUseCase>;
-  let mockGetSourcesByIds: jest.Mocked<GetSourcesByIdsUseCase>;
+  let mockSkillActivationService: jest.Mocked<SkillActivationService>;
 
   const mockThreadId = randomUUID();
   const mockSkillId = randomUUID();
-  const mockSourceId = randomUUID();
 
   beforeAll(async () => {
     mockFindSkillByName = {
       execute: jest.fn(),
     } as any;
-    mockAddSourceToThread = {
-      execute: jest.fn(),
-    } as any;
-    mockAddMcpIntegration = {
-      execute: jest.fn(),
-    } as any;
     mockFindThread = {
       execute: jest.fn(),
     } as any;
-    mockGetSourcesByIds = {
-      execute: jest.fn(),
+    mockSkillActivationService = {
+      activateOnThread: jest.fn(),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ActivateSkillToolHandler,
         { provide: FindSkillByNameUseCase, useValue: mockFindSkillByName },
-        { provide: AddSourceToThreadUseCase, useValue: mockAddSourceToThread },
-        {
-          provide: AddMcpIntegrationToThreadUseCase,
-          useValue: mockAddMcpIntegration,
-        },
         { provide: FindThreadUseCase, useValue: mockFindThread },
-        { provide: GetSourcesByIdsUseCase, useValue: mockGetSourcesByIds },
+        {
+          provide: SkillActivationService,
+          useValue: mockSkillActivationService,
+        },
       ],
     }).compile();
 
@@ -86,7 +61,7 @@ describe('ActivateSkillToolHandler', () => {
       name: 'Budget Analysis',
       shortDescription: 'Analyzes municipal budgets',
       instructions: 'You are a budget analysis assistant.',
-      sourceIds: [mockSourceId],
+      sourceIds: [],
       mcpIntegrationIds: [],
       userId: randomUUID(),
       ...overrides,
@@ -100,16 +75,12 @@ describe('ActivateSkillToolHandler', () => {
     } as unknown as ActivateSkillTool;
   }
 
-  it('should pass the skill ID as originSkillId when adding sources to the thread', async () => {
+  it('should delegate activation to SkillActivationService with the skill ID and thread', async () => {
     const skill = createMockSkill();
     const thread = new Thread({
       userId: randomUUID(),
       messages: [],
       sourceAssignments: [],
-    });
-    const source = new ConcreteSource({
-      id: mockSourceId as string,
-      name: 'Budget Data 2026.pdf',
     });
 
     mockFindSkillByName.execute.mockResolvedValue(skill);
@@ -117,7 +88,10 @@ describe('ActivateSkillToolHandler', () => {
       thread,
       isLongChat: false,
     });
-    mockGetSourcesByIds.execute.mockResolvedValue([source]);
+    mockSkillActivationService.activateOnThread.mockResolvedValue({
+      instructions: 'You are a budget analysis assistant.',
+      skillName: 'Budget Analysis',
+    });
 
     const tool = createMockTool('Budget Analysis');
 
@@ -127,11 +101,10 @@ describe('ActivateSkillToolHandler', () => {
       context: { threadId: mockThreadId, orgId: randomUUID() },
     });
 
-    expect(mockAddSourceToThread.execute).toHaveBeenCalledTimes(1);
-    const command = mockAddSourceToThread.execute.mock.calls[0][0];
-    expect(command.thread).toBe(thread);
-    expect(command.source).toBe(source);
-    expect(command.originSkillId).toBe(mockSkillId);
+    expect(mockSkillActivationService.activateOnThread).toHaveBeenCalledWith(
+      skill.id,
+      thread,
+    );
   });
 
   it('should throw ToolExecutionFailedError when skill is not found', async () => {
@@ -147,14 +120,9 @@ describe('ActivateSkillToolHandler', () => {
     ).rejects.toThrow(ToolExecutionFailedError);
   });
 
-  it('should return the skill instructions on success', async () => {
+  it('should return the skill instructions from SkillActivationService', async () => {
     const instructions = 'You are a zoning compliance assistant.';
-    const skill = createMockSkill({
-      instructions,
-      sourceIds: [],
-      mcpIntegrationIds: [],
-    });
-
+    const skill = createMockSkill({ instructions });
     const thread = new Thread({
       userId: randomUUID(),
       messages: [],
@@ -165,7 +133,10 @@ describe('ActivateSkillToolHandler', () => {
       thread,
       isLongChat: false,
     });
-    mockGetSourcesByIds.execute.mockResolvedValue([]);
+    mockSkillActivationService.activateOnThread.mockResolvedValue({
+      instructions,
+      skillName: 'Budget Analysis',
+    });
 
     const tool = createMockTool('Budget Analysis');
 
@@ -176,5 +147,32 @@ describe('ActivateSkillToolHandler', () => {
     });
 
     expect(result).toBe(instructions);
+  });
+
+  it('should wrap unexpected errors from SkillActivationService as ToolExecutionFailedError', async () => {
+    const skill = createMockSkill();
+    const thread = new Thread({
+      userId: randomUUID(),
+      messages: [],
+    });
+
+    mockFindSkillByName.execute.mockResolvedValue(skill);
+    mockFindThread.execute.mockResolvedValue({
+      thread,
+      isLongChat: false,
+    });
+    mockSkillActivationService.activateOnThread.mockRejectedValue(
+      new Error('Database connection lost'),
+    );
+
+    const tool = createMockTool('Budget Analysis');
+
+    await expect(
+      handler.execute({
+        tool,
+        input: { skill_name: 'Budget Analysis' },
+        context: { threadId: mockThreadId, orgId: randomUUID() },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
   });
 });

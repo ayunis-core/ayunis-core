@@ -5137,6 +5137,11 @@
                     "type": "string",
                     "description": "JSON object for tool result input"
                   },
+                  "skillId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Skill ID to activate for this message"
+                  },
                   "streaming": {
                     "type": "boolean",
                     "default": true
@@ -10951,6 +10956,11 @@
                 "$ref": "#/components/schemas/ToolResultInput"
               }
             ]
+          },
+          "skillId": {
+            "type": "string",
+            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "streaming": {
             "type": "boolean",

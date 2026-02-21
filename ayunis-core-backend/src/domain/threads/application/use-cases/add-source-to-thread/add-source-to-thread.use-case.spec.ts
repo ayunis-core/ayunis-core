@@ -32,6 +32,7 @@ describe('AddSourceToThreadUseCase', () => {
 
   beforeAll(async () => {
     const mockThreadsRepository = {
+      findOne: jest.fn(),
       updateSourceAssignments: jest.fn(),
     };
 
@@ -71,8 +72,15 @@ describe('AddSourceToThreadUseCase', () => {
     const source = new ConcreteSource({ name: 'Budget Report 2026.pdf' });
     const command = new AddSourceCommand(thread, source);
 
+    // Mock DB returning thread with no existing assignments
+    threadsRepository.findOne.mockResolvedValue(thread);
+
     await useCase.execute(command);
 
+    expect(threadsRepository.findOne).toHaveBeenCalledWith(
+      thread.id,
+      mockUserId,
+    );
     expect(threadsRepository.updateSourceAssignments).toHaveBeenCalledWith(
       expect.objectContaining({
         threadId: thread.id,
@@ -100,6 +108,8 @@ describe('AddSourceToThreadUseCase', () => {
     });
     const command = new AddSourceCommand(thread, source, skillId);
 
+    threadsRepository.findOne.mockResolvedValue(thread);
+
     await useCase.execute(command);
 
     const savedAssignments =
@@ -120,6 +130,37 @@ describe('AddSourceToThreadUseCase', () => {
       sourceAssignments: [existingAssignment],
     });
     const command = new AddSourceCommand(thread, source);
+
+    // DB returns thread with the source already assigned
+    threadsRepository.findOne.mockResolvedValue(thread);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      SourceAlreadyAssignedError,
+    );
+    expect(threadsRepository.updateSourceAssignments).not.toHaveBeenCalled();
+  });
+
+  it('should detect duplicates from DB even when in-memory thread is stale', async () => {
+    const source = new ConcreteSource({ name: 'Legal Framework.pdf' });
+    const existingAssignment = new SourceAssignment({ source });
+
+    // The command's thread has no assignments (stale in-memory state)
+    const staleThread = new Thread({
+      userId: mockUserId,
+      messages: [],
+      sourceAssignments: [],
+    });
+
+    // But DB returns thread with the source already assigned
+    const freshThread = new Thread({
+      id: staleThread.id,
+      userId: mockUserId,
+      messages: [],
+      sourceAssignments: [existingAssignment],
+    });
+
+    const command = new AddSourceCommand(staleThread, source);
+    threadsRepository.findOne.mockResolvedValue(freshThread);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SourceAlreadyAssignedError,

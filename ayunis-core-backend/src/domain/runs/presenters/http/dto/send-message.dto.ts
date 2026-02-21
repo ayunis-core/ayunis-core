@@ -168,6 +168,16 @@ export class SendMessageDto {
   toolResult?: ToolResultInput;
 
   @IsOptional()
+  @IsUUID()
+  @ApiProperty({
+    description:
+      'Skill ID to activate for this message — injects skill instructions and resources into the thread',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    required: false,
+  })
+  skillId?: UUID;
+
+  @IsOptional()
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
   @ApiProperty({
