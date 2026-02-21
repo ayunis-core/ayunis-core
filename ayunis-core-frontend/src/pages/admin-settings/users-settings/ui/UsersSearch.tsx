@@ -8,7 +8,7 @@ interface UsersSearchProps {
   search?: string;
 }
 
-export default function UsersSearch({ search }: UsersSearchProps) {
+export default function UsersSearch({ search }: Readonly<UsersSearchProps>) {
   const { t } = useTranslation('admin-settings-users');
   const navigate = useNavigate();
   const [localValue, setLocalValue] = useState<string | null>(null);

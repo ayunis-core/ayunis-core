@@ -25,12 +25,10 @@ export function useCreateTeam(onSuccess?: () => void) {
         console.error('Create team failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'TEAM_NAME_ALREADY_EXISTS':
-              showError(t('teams.createTeam.duplicateName'));
-              break;
-            default:
-              showError(t('teams.createTeam.error'));
+          if (code === 'TEAM_NAME_ALREADY_EXISTS') {
+            showError(t('teams.createTeam.duplicateName'));
+          } else {
+            showError(t('teams.createTeam.error'));
           }
         } catch {
           showError(t('teams.createTeam.error'));

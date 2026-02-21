@@ -53,11 +53,8 @@ export function useAddPrompt(options?: UseAddPromptOptions) {
         onError: (error) => {
           console.error('Create prompt failed:', error);
           try {
-            const { code } = extractErrorData(error);
-            switch (code) {
-              default:
-                showError(t('createError'));
-            }
+            extractErrorData(error);
+            showError(t('createError'));
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('createError'));

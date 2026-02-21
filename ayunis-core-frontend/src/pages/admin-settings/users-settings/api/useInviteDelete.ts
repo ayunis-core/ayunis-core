@@ -37,15 +37,13 @@ export function useInviteDelete() {
         return { previousData };
       },
       onError: (error, _, context) => {
-        console.log(error);
+        console.error(error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'INVITE_NOT_FOUND':
-              showError(t('inviteDelete.error.inviteNotFound'));
-              break;
-            default:
-              showError(t('inviteDelete.error.unexpectedError'));
+          if (code === 'INVITE_NOT_FOUND') {
+            showError(t('inviteDelete.error.inviteNotFound'));
+          } else {
+            showError(t('inviteDelete.error.unexpectedError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

@@ -34,14 +34,14 @@ interface ChartParams {
 export default function PieChartWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
-  const params = (content.params || {}) as ChartParams;
+}>) {
+  const params = content.params as ChartParams;
 
   const chartData = useMemo<TransformedPieDataPoint[]>(() => {
-    return transformPieChartData(params.data || []);
+    return transformPieChartData(params.data ?? []);
   }, [params.data]);
 
   const hasData = chartData.length > 0;

@@ -25,7 +25,9 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
 
-export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
+export function McpIntegrationsPage({
+  isCloud,
+}: Readonly<{ isCloud: boolean }>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { t: tLayout } = useTranslation('admin-settings-layout');
 
@@ -92,7 +94,7 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
               {t('integrations.page.errorLoadingTitle')}
             </h2>
             <p className="mb-4 text-muted-foreground">
-              {(integrationsError as { message?: string })?.message ||
+              {(integrationsError as { message?: string }).message ??
                 t('integrations.page.errorLoadingMessage')}
             </p>
             <Button onClick={() => void refetchIntegrations()}>
@@ -127,11 +129,9 @@ export function McpIntegrationsPage({ isCloud }: { isCloud: boolean }) {
             <DropdownMenuItem onClick={handleOpenCreatePredefined}>
               {t('integrations.page.addPredefined')}
             </DropdownMenuItem>
-            {!isCloud && (
-              <DropdownMenuItem onClick={() => setCreateCustomOpen(true)}>
-                {t('integrations.page.addCustom')}
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={() => setCreateCustomOpen(true)}>
+              {t('integrations.page.addCustom')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}

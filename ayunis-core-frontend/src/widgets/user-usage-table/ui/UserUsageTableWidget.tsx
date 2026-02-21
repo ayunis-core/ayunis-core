@@ -22,7 +22,7 @@ export function UserUsageTableWidget({
   onPageChange,
   isLoading,
   error,
-}: UserUsageTableWidgetProps) {
+}: Readonly<UserUsageTableWidgetProps>) {
   const totalPages = Math.ceil(total / DEFAULT_PAGE_SIZE);
 
   if (isLoading) return <UserUsageTableLoading />;

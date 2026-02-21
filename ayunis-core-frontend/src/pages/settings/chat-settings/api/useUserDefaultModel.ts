@@ -12,11 +12,14 @@ import type {
 import { useQueryClient } from '@tanstack/react-query';
 import type { UserDefaultModel } from '../model/openapi';
 import { useRouter } from '@tanstack/react-router';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
 interface UseUserDefaultModelOptions {
   allModels: UserDefaultModel[];
 }
 
 export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
+  const { t } = useTranslation('settings');
   const queryClient = useQueryClient();
   const router = useRouter();
   const queryKeys = [
@@ -78,6 +81,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
             | undefined,
         ) => {
           console.error('Error managing user default model', err);
+          showError(t('chat.defaultModelError'));
           queryClient.setQueryData(
             getModelsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
@@ -124,6 +128,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
             | undefined,
         ) => {
           console.error('Error deleting user default model', err);
+          showError(t('chat.defaultModelError'));
           queryClient.setQueryData(
             getModelsControllerGetUserSpecificDefaultModelQueryKey(),
             context?.previousData,
@@ -143,7 +148,7 @@ export function useUserDefaultModel({ allModels }: UseUserDefaultModelOptions) {
   }
 
   return {
-    userDefaultModel: userDefaultModelResponse?.permittedLanguageModel || null,
+    userDefaultModel: userDefaultModelResponse?.permittedLanguageModel ?? null,
     error,
     manageError: manageUserDefaultModelMutation.error as Error | null,
     deleteError: deleteUserDefaultModelMutation.error as Error | null,

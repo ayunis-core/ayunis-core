@@ -8,7 +8,7 @@ interface ModelsSectionProps {
   orgId: string;
 }
 
-export default function ModelsSection({ orgId }: ModelsSectionProps) {
+export default function ModelsSection({ orgId }: Readonly<ModelsSectionProps>) {
   const { t } = useTranslation('admin-settings-models');
   const { models, isLoading } = useSuperAdminModels(orgId);
 

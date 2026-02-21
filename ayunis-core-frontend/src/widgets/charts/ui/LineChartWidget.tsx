@@ -34,21 +34,21 @@ interface ChartParams {
 export default function LineChartWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
+}>) {
   const THRESHOLD = 10;
   const MAX_TICK_CHARS = 12;
   const PER_POINT_PX = 70;
 
-  const params = (content.params || {}) as ChartParams;
+  const params = content.params as ChartParams;
 
   const chartData = useMemo(() => {
-    return transformChartData(params.xAxis || [], params.yAxis || []);
+    return transformChartData(params.xAxis ?? [], params.yAxis ?? []);
   }, [params.xAxis, params.yAxis]);
 
-  const hasData = chartData.length > 0 && (params.yAxis || []).length > 0;
+  const hasData = chartData.length > 0 && (params.yAxis ?? []).length > 0;
   const isLoading = isStreaming && !hasData;
 
   if (isLoading) {
@@ -59,7 +59,7 @@ export default function LineChartWidget({
     return <ChartEmptyState />;
   }
 
-  const yAxisSeries = params.yAxis || [];
+  const yAxisSeries = params.yAxis ?? [];
   const xCount = params.xAxis?.length ?? chartData.length;
 
   return (

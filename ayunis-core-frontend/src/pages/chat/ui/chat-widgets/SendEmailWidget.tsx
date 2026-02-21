@@ -11,11 +11,12 @@ import { cn } from '@/shared/lib/shadcn/utils';
 export default function SendEmailWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('chat');
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as {
     subject?: string;
     body?: string;
@@ -23,9 +24,9 @@ export default function SendEmailWidget({
   };
 
   // Derive initial values directly from params to avoid setState in useEffect
-  const initialSubject = params.subject || '';
-  const initialBody = params.body || '';
-  const initialTo = params.to || '';
+  const initialSubject = params.subject ?? '';
+  const initialBody = params.body ?? '';
+  const initialTo = params.to ?? '';
 
   const [subject, setSubject] = useState<string>(initialSubject);
   const [body, setBody] = useState<string>(initialBody);
@@ -35,9 +36,9 @@ export default function SendEmailWidget({
   // Update state when params change (for streaming updates)
   useEffect(() => {
     const updateWidget = () => {
-      setSubject(params.subject || '');
-      setBody(params.body || '');
-      setTo(params.to || '');
+      setSubject(params.subject ?? '');
+      setBody(params.body ?? '');
+      setTo(params.to ?? '');
     };
     updateWidget();
   }, [params.subject, params.body, params.to, content.id]);

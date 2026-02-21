@@ -47,12 +47,10 @@ export function useEditPrompt(options?: UseEditPromptOptions) {
           console.error('Update prompt failed:', error);
           try {
             const { code } = extractErrorData(error);
-            switch (code) {
-              case 'PROMPT_NOT_FOUND':
-                showError(t('notFound'));
-                break;
-              default:
-                showError(t('updateError'));
+            if (code === 'PROMPT_NOT_FOUND') {
+              showError(t('notFound'));
+            } else {
+              showError(t('updateError'));
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)

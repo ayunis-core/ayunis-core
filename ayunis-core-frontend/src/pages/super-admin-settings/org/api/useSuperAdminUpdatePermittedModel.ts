@@ -69,20 +69,17 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
         onError: (err, _, context) => {
           try {
             const { code } = extractErrorData(err);
-            switch (code) {
-              case 'PERMITTED_MODEL_NOT_FOUND':
-                showError(t('models.updatePermittedModel.notFound'));
-                break;
-              default:
-                showError(t('models.updatePermittedModel.error'));
-                break;
+            if (code === 'PERMITTED_MODEL_NOT_FOUND') {
+              showError(t('models.updatePermittedModel.notFound'));
+            } else {
+              showError(t('models.updatePermittedModel.error'));
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)
             showError(t('models.updatePermittedModel.error'));
           }
 
-          if (context?.previousData && context?.queryKey) {
+          if (context?.previousData) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }
         },

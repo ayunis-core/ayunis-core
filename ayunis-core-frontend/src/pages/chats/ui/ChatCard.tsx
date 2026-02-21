@@ -18,7 +18,7 @@ interface ChatCardProps {
   chat: ChatListItem;
 }
 
-export default function ChatCard({ chat }: ChatCardProps) {
+export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
   const { t } = useTranslation('chats');
   const { deleteChat, isDeleting } = useDeleteChat();
   const { confirm } = useConfirmation();

@@ -12,7 +12,7 @@ interface PromptsPageProps {
   prompts: Prompt[];
 }
 
-export default function PromptsPage({ prompts }: PromptsPageProps) {
+export default function PromptsPage({ prompts }: Readonly<PromptsPageProps>) {
   const { t } = useTranslation('prompts');
 
   if (prompts.length === 0) {

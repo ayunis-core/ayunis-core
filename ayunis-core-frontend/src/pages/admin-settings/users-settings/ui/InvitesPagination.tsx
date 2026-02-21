@@ -20,7 +20,7 @@ export default function InvitesPagination({
   currentPage,
   totalPages,
   search,
-}: InvitesPaginationProps) {
+}: Readonly<InvitesPaginationProps>) {
   const { t } = useTranslation('common');
 
   if (totalPages <= 1) {
@@ -68,7 +68,7 @@ export default function InvitesPagination({
               invitesPage?: number;
             }) => ({
               ...prev,
-              invitesSearch: search || undefined,
+              invitesSearch: search ?? undefined,
               invitesPage: currentPage - 1,
             })}
             disabled={isFirstPage}
@@ -99,7 +99,7 @@ export default function InvitesPagination({
                   invitesPage?: number;
                 }) => ({
                   ...prev,
-                  invitesSearch: search || undefined,
+                  invitesSearch: search ?? undefined,
                   invitesPage: pageNum,
                 })}
                 aria-current={pageNum === currentPage ? 'page' : undefined}
@@ -123,7 +123,7 @@ export default function InvitesPagination({
               invitesPage?: number;
             }) => ({
               ...prev,
-              invitesSearch: search || undefined,
+              invitesSearch: search ?? undefined,
               invitesPage: currentPage + 1,
             })}
             disabled={isLastPage}

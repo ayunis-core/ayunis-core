@@ -5,7 +5,9 @@ import { cn } from '@/shared/lib/shadcn/utils';
 
 function Popover({
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Root>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof PopoverPrimitive.Root>
+>): React.ReactElement {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 

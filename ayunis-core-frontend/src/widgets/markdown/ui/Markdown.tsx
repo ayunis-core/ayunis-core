@@ -19,7 +19,7 @@ interface TableComponentProps {
   children?: ReactNode;
 }
 
-function Markdown({ children, className = '' }: MarkdownProps) {
+function Markdown({ children, className = '' }: Readonly<MarkdownProps>) {
   return (
     <div
       className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
@@ -35,8 +35,7 @@ function Markdown({ children, className = '' }: MarkdownProps) {
                 : '';
 
             // Multiple detection methods
-            const hasLanguageClass =
-              className && className.startsWith('language-');
+            const hasLanguageClass = className?.startsWith('language-');
             const isMultiline = childrenStr.includes('\n');
             const isExplicitlyInline = inline === true;
 

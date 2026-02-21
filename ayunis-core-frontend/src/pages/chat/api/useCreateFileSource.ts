@@ -101,7 +101,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
 
     const data: ThreadsControllerAddFileSourceBody = {
       file,
-      name: name || file.name,
+      name: name ?? file.name,
       description,
     };
 
@@ -121,7 +121,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
 
     const data: ThreadsControllerAddFileSourceBody = {
       file,
-      name: name || file.name,
+      name: name ?? file.name,
       description,
     };
 

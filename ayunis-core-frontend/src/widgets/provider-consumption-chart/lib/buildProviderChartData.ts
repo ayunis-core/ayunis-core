@@ -25,7 +25,7 @@ export function buildProviderChartData(
   const rows = timeSeries ?? [];
   if (rows.length === 0) return EMPTY_RESULT;
 
-  const seriesKeys = Object.keys(rows[0].values ?? {});
+  const seriesKeys = Object.keys(rows[0].values);
   const chartData = rows.map((r) => ({
     date: r.date,
     ...r.values,

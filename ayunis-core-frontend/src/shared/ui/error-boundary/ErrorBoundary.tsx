@@ -33,7 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
-  render() {
+  // eslint-disable-next-line sonarjs/function-return-type -- Both branches return ReactNode
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
         this.props.fallback ?? <ErrorFallback onReset={this.handleReset} />

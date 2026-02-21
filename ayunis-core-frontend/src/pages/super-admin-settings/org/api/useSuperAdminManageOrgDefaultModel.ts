@@ -53,7 +53,7 @@ export function useSuperAdminManageOrgDefaultModel(orgId: string) {
         onError: (_, __, context) => {
           showError(t('models.defaultModel.error'));
 
-          if (context?.previousModels && context?.queryKey) {
+          if (context?.previousModels) {
             queryClient.setQueryData(context.queryKey, context.previousModels);
           }
         },

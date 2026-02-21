@@ -12,7 +12,7 @@ export function useLanguage() {
   const { i18n } = useTranslation();
   const [language, setLanguageState] = useState<Language>(() => {
     const currentLang = i18n.language as Language;
-    return currentLang && currentLang in languages ? currentLang : 'en';
+    return currentLang in languages ? currentLang : 'en';
   });
 
   // Sync with react-i18next language

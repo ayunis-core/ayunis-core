@@ -18,7 +18,7 @@ interface SubscriptionGetStartedSectionProps {
 
 export default function SubscriptionGetStartedSection({
   subscriptionPrice,
-}: SubscriptionGetStartedSectionProps) {
+}: Readonly<SubscriptionGetStartedSectionProps>) {
   const { t } = useTranslation('admin-settings-billing');
   const features = [
     t('subscriptionGetStarted.features.unlimitedMessages'),

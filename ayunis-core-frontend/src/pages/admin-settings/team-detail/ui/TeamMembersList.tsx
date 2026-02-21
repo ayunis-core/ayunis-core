@@ -18,7 +18,10 @@ interface TeamMembersListProps {
   members: TeamMember[];
 }
 
-export function TeamMembersList({ teamId, members }: TeamMembersListProps) {
+export function TeamMembersList({
+  teamId,
+  members,
+}: Readonly<TeamMembersListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { removeTeamMember, removingUserIds } = useRemoveTeamMember(teamId);
 

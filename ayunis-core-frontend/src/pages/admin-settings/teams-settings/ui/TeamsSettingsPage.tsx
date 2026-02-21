@@ -11,7 +11,7 @@ interface TeamsSettingsPageProps {
   teams: Team[];
 }
 
-export function TeamsSettingsPage({ teams }: TeamsSettingsPageProps) {
+export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { t: tLayout } = useTranslation('admin-settings-layout');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

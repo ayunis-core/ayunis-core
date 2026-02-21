@@ -43,7 +43,9 @@ interface CreateUserFormData {
   sendPasswordResetEmail: boolean;
 }
 
-export default function CreateUserDialog({ orgId }: CreateUserDialogProps) {
+export default function CreateUserDialog({
+  orgId,
+}: Readonly<CreateUserDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const [isOpen, setIsOpen] = useState(false);
   const { createUser, isLoading } = useSuperAdminCreateUser({

@@ -2,7 +2,6 @@ import {
   MoreHorizontal,
   MessageCircle,
   Loader2,
-  AlertCircle,
   Trash,
   ChevronDown,
   Search,
@@ -40,16 +39,9 @@ import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
-  const { threads, isLoading, error, hasMore } = useThreads();
+  const { threads, isLoading, hasMore } = useThreads();
   const { confirm } = useConfirmation();
-  const { deleteChat } = useDeleteThread({
-    onSuccess: () => {
-      console.log('Chat deleted');
-    },
-    onError: (error) => {
-      console.error('Error deleting chat', error);
-    },
-  });
+  const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
 
@@ -112,40 +104,6 @@ export function ChatsSidebarGroup() {
                   <SidebarMenuButton className="text-sidebar-foreground/70">
                     <Loader2 className="size-4 animate-spin" />
                     <span>{t('sidebar.loadingChats')}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  }
-
-  if (error) {
-    return (
-      <Collapsible defaultOpen className="group/collapsible">
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="flex items-center w-full">
-              {t('sidebar.chats')}
-              <Link
-                to="/chats"
-                className="ml-auto mr-1 p-1 hover:bg-accent rounded"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Search className="size-4" />
-              </Link>
-              <ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="text-sidebar-foreground/70">
-                    <AlertCircle className="text-destructive" />
-                    <span>{t('sidebar.failedToLoadChats')}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -227,7 +185,7 @@ export function ChatsSidebarGroup() {
                         <MessageCircle />
                         <div className="grid flex-1 text-left text-sm leading-tight">
                           <span className="truncate">
-                            {thread.title || t('sidebar.untitled')}
+                            {thread.title ?? t('sidebar.untitled')}
                           </span>
                         </div>
                       </Link>

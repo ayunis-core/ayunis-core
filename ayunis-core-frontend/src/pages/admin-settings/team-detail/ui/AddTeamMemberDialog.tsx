@@ -38,7 +38,7 @@ export function AddTeamMemberDialog({
   teamId,
   open,
   onOpenChange,
-}: AddTeamMemberDialogProps) {
+}: Readonly<AddTeamMemberDialogProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,12 +62,12 @@ export function AddTeamMemberDialog({
   );
 
   const existingMemberIds = new Set(
-    membersResponse?.data?.map((m) => m.userId) ?? [],
+    membersResponse?.data.map((m) => m.userId) ?? [],
   );
 
   const availableUsers: UserOption[] =
     usersResponse?.data
-      ?.filter((user) => !existingMemberIds.has(user.id))
+      .filter((user) => !existingMemberIds.has(user.id))
       .map((user) => ({
         value: user.id,
         label: `${user.name} (${user.email})`,

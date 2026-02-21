@@ -10,7 +10,10 @@ interface UserUsageTableProps {
   endDate?: Date;
 }
 
-export function UserUsageTable({ startDate, endDate }: UserUsageTableProps) {
+export function UserUsageTable({
+  startDate,
+  endDate,
+}: Readonly<UserUsageTableProps>) {
   const filterKey = useMemo(
     () => `${startDate?.toISOString() ?? ''}-${endDate?.toISOString() ?? ''}`,
     [startDate, endDate],
@@ -25,7 +28,10 @@ export function UserUsageTable({ startDate, endDate }: UserUsageTableProps) {
   );
 }
 
-function UserUsageTableInner({ startDate, endDate }: UserUsageTableProps) {
+function UserUsageTableInner({
+  startDate,
+  endDate,
+}: Readonly<UserUsageTableProps>) {
   const [currentPage, setCurrentPage] = useState(0);
   const offset = currentPage * DEFAULT_PAGE_SIZE;
 
@@ -43,7 +49,7 @@ function UserUsageTableInner({ startDate, endDate }: UserUsageTableProps) {
   return (
     <UserUsageTableWidget
       users={userUsageResponse?.data ?? []}
-      total={userUsageResponse?.pagination?.total ?? 0}
+      total={userUsageResponse?.pagination.total ?? 0}
       currentPage={currentPage}
       onPageChange={setCurrentPage}
       isLoading={isLoading}

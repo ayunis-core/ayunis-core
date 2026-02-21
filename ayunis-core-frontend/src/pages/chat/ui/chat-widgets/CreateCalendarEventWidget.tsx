@@ -26,30 +26,40 @@ import {
 // Icons
 import { ChevronDownIcon } from 'lucide-react';
 
+function parseTimeFromIso(
+  isoString: string | undefined,
+  fallback: string,
+): string {
+  return isoString
+    ? new Date(isoString).toISOString().substring(11, 19)
+    : fallback;
+}
+
+function parseDateFromIso(isoString: string | undefined): Date | undefined {
+  return isoString ? new Date(isoString) : undefined;
+}
+
 export default function CreateCalendarEventWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('chat');
   const { generate } = useGenerateIcs();
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const params = (content.params || {}) as Partial<CalendarEventInput>;
 
   // Derive initial values directly from params to avoid setState in useEffect
-  const initialTitle = params.title || '';
-  const initialDescription = params.description || '';
-  const initialLocation = params.location || '';
-  const initialStartDate = params.start ? new Date(params.start) : undefined;
-  const initialEndDate = params.end ? new Date(params.end) : undefined;
-  const initialStartTime = params.start
-    ? new Date(params.start).toISOString().substring(11, 19)
-    : '10:30:00';
-  const initialEndTime = params.end
-    ? new Date(params.end).toISOString().substring(11, 19)
-    : '11:30:00';
+  const initialTitle = params.title ?? '';
+  const initialDescription = params.description ?? '';
+  const initialLocation = params.location ?? '';
+  const initialStartDate = parseDateFromIso(params.start);
+  const initialEndDate = parseDateFromIso(params.end);
+  const initialStartTime = parseTimeFromIso(params.start, '10:30:00');
+  const initialEndTime = parseTimeFromIso(params.end, '11:30:00');
 
   const [title, setTitle] = useState<string>(initialTitle);
   const [description, setDescription] = useState<string>(initialDescription);
@@ -66,21 +76,13 @@ export default function CreateCalendarEventWidget({
   // Update state when params change (for streaming updates)
   useEffect(() => {
     const updateWidget = () => {
-      setTitle(params.title || '');
-      setDescription(params.description || '');
-      setLocation(params.location || '');
-      setStartDate(params.start ? new Date(params.start) : undefined);
-      setEndDate(params.end ? new Date(params.end) : undefined);
-      setStartTime(
-        params.start
-          ? new Date(params.start).toISOString().substring(11, 19)
-          : '10:30:00',
-      );
-      setEndTime(
-        params.end
-          ? new Date(params.end).toISOString().substring(11, 19)
-          : '11:30:00',
-      );
+      setTitle(params.title ?? '');
+      setDescription(params.description ?? '');
+      setLocation(params.location ?? '');
+      setStartDate(parseDateFromIso(params.start));
+      setEndDate(parseDateFromIso(params.end));
+      setStartTime(parseTimeFromIso(params.start, '10:30:00'));
+      setEndTime(parseTimeFromIso(params.end, '11:30:00'));
     };
     updateWidget();
   }, [
@@ -250,7 +252,7 @@ export default function CreateCalendarEventWidget({
                   selected={startDate}
                   captionLayout="dropdown"
                   onSelect={(d) => {
-                    setStartDate(d || undefined);
+                    setStartDate(d ?? undefined);
                     setIsStartDatePickerOpen(false);
                   }}
                 />
@@ -305,7 +307,7 @@ export default function CreateCalendarEventWidget({
                   selected={endDate}
                   captionLayout="dropdown"
                   onSelect={(d) => {
-                    setEndDate(d || undefined);
+                    setEndDate(d ?? undefined);
                     setIsEndDatePickerOpen(false);
                   }}
                 />

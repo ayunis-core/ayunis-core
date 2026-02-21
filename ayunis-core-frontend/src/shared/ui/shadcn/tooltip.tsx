@@ -6,7 +6,9 @@ import { cn } from '@/shared/lib/shadcn/utils';
 function TooltipProvider({
   delayDuration = 0,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof TooltipPrimitive.Provider>
+>): React.ReactElement {
   return (
     <TooltipPrimitive.Provider
       data-slot="tooltip-provider"
@@ -18,7 +20,9 @@ function TooltipProvider({
 
 function Tooltip({
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>): React.ReactElement {
+}: Readonly<
+  React.ComponentProps<typeof TooltipPrimitive.Root>
+>): React.ReactElement {
   return (
     <TooltipProvider>
       <TooltipPrimitive.Root data-slot="tooltip" {...props} />

@@ -40,7 +40,7 @@ export default function PlusButton({
   isCreatingFileSource,
   onPromptSelect,
   isImageUploadDisabled = false,
-}: PlusButtonProps) {
+}: Readonly<PlusButtonProps>) {
   const documentInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -81,6 +81,7 @@ export default function PlusButton({
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR, false should fall through
   const isLoading = isUploadingFile || isCreatingFileSource;
 
   return (
@@ -105,11 +106,12 @@ export default function PlusButton({
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
             <TooltipIf
-              condition={isFileSourceDisabled || false}
+              condition={isFileSourceDisabled ?? false}
               tooltip={t('chatInput.fileSourceDisabled')}
             >
               <DropdownMenuItem
                 onClick={() => documentInputRef.current?.click()}
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR, false should fall through
                 disabled={isLoading || isFileSourceDisabled}
               >
                 <FileText className="h-4 w-4" />
@@ -118,6 +120,7 @@ export default function PlusButton({
             </TooltipIf>
             <DropdownMenuItem
               onClick={() => imageInputRef.current?.click()}
+              // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR, false should fall through
               disabled={isLoading || isImageUploadDisabled}
             >
               <Image className="h-4 w-4" />
@@ -131,29 +134,32 @@ export default function PlusButton({
                 {t('chatInput.addPrompt')}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                {isLoadingPrompts ? (
+                {isLoadingPrompts && (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     {t('common.loading')}
                   </DropdownMenuItem>
-                ) : promptsError ? (
+                )}
+                {!isLoadingPrompts && !!promptsError && (
                   <DropdownMenuItem disabled className="text-destructive">
                     {t('chatInput.promptsLoadError')}
                   </DropdownMenuItem>
-                ) : prompts.length === 0 ? (
+                )}
+                {!isLoadingPrompts && !promptsError && prompts.length === 0 && (
                   <DropdownMenuItem disabled>
                     {t('chatInput.promptsEmptyState')}
                   </DropdownMenuItem>
-                ) : (
-                  prompts.map((prompt) => (
-                    <DropdownMenuItem
-                      key={prompt.id}
-                      onClick={() => onPromptSelect(prompt.content)}
-                    >
-                      {prompt.title}
-                    </DropdownMenuItem>
-                  ))
                 )}
+                {!isLoadingPrompts && !promptsError && prompts.length > 0
+                  ? prompts.map((prompt) => (
+                      <DropdownMenuItem
+                        key={prompt.id}
+                        onClick={() => onPromptSelect(prompt.content)}
+                      >
+                        {prompt.title}
+                      </DropdownMenuItem>
+                    ))
+                  : null}
                 <DropdownMenuItem
                   onClick={() => void navigate({ to: '/prompts' })}
                 >

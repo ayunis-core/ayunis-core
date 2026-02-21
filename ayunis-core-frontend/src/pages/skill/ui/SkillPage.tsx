@@ -31,13 +31,13 @@ export function SkillPage({
   userTeams,
   isEmbeddingModelEnabled,
   initialTab = 'config',
-}: {
+}: Readonly<{
   skill: SkillResponseDto;
   shares: ShareResponseDto[];
   userTeams: TeamResponseDto[];
   isEmbeddingModelEnabled: boolean;
   initialTab?: 'config' | 'share';
-}) {
+}>) {
   const navigate = useNavigate();
   const { t } = useTranslation('skill');
   const { id } = useParams({

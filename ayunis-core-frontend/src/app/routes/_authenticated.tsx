@@ -26,9 +26,6 @@ export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context, context: { queryClient } }) => {
     try {
       const response = await queryClient.fetchQuery(meQueryOptions());
-      if (!response.role) {
-        throw new Error('User not found');
-      }
       context.user = response;
       await queryClient.fetchQuery({
         queryKey: getAppControllerIsCloudQueryKey(),

@@ -5,7 +5,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 export const Route = createFileRoute('/_authenticated/super-admin-settings/')({
   beforeLoad: async () => {
     const user = await authenticationControllerMe();
-    if (user?.systemRole !== MeResponseDtoSystemRole.super_admin) {
+    if (user.systemRole !== MeResponseDtoSystemRole.super_admin) {
       throw redirect({ to: '/' });
     }
 

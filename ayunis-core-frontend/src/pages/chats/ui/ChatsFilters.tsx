@@ -24,7 +24,7 @@ export default function ChatsFilters({
   agents,
   search,
   agentId,
-}: ChatsFiltersProps) {
+}: Readonly<ChatsFiltersProps>) {
   const { t } = useTranslation('chats');
   const { t: tAgents } = useTranslation('agents');
   const navigate = useNavigate();

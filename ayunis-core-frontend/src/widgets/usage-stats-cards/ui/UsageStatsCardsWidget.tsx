@@ -20,7 +20,7 @@ interface UsageStatsCardsWidgetProps {
 export function UsageStatsCardsWidget({
   stats,
   isLoading,
-}: UsageStatsCardsWidgetProps) {
+}: Readonly<UsageStatsCardsWidgetProps>) {
   const { t, i18n } = useTranslation('admin-settings-usage');
 
   const formatCompact = (value?: number) => {

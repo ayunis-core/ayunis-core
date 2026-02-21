@@ -17,7 +17,7 @@ interface BillingInfoSectionProps {
 
 export default function BillingInfoSection({
   subscription,
-}: BillingInfoSectionProps) {
+}: Readonly<BillingInfoSectionProps>) {
   const { t } = useTranslation('admin-settings-billing');
 
   return (
@@ -76,7 +76,7 @@ export default function BillingInfoSection({
                 {t('billingInfo.vatNumber')}
               </div>
               <div className="text-sm text-gray-600">
-                {subscription.billingInfo.vatNumber || '-'}
+                {subscription.billingInfo.vatNumber ?? '-'}
               </div>
             </div>
           </div>

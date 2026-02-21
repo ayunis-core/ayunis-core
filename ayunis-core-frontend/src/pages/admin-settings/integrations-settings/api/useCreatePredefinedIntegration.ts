@@ -54,9 +54,9 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
   ) {
     const payload: CreatePredefinedIntegrationFormData = {
       slug: data.slug,
-      configValues: (data.configValues ?? []).map((value) => ({
+      configValues: data.configValues.map((value) => ({
         name: value.name,
-        value: value.value?.trim() ?? '',
+        value: value.value.trim(),
       })),
     };
 

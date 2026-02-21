@@ -31,14 +31,15 @@ function formatToolName(toolName: string): string {
 export default function ExecutableToolWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
+}>) {
   const { t } = useTranslation('chat');
   const [open, setOpen] = useState(false);
 
   // Check if params are empty or incomplete (streaming in progress)
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
   const hasParams = content.params && Object.keys(content.params).length > 0;
   const isLoadingParams = isStreaming && !hasParams;
 

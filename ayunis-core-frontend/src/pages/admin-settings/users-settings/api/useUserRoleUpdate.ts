@@ -32,12 +32,10 @@ export function useUserRoleUpdate(options?: UseUserRoleUpdateOptions) {
         console.error('Error updating user role', err);
         try {
           const { code } = extractErrorData(err);
-          switch (code) {
-            case 'USER_NOT_FOUND':
-              showError(t('userRoleUpdate.notFound'));
-              break;
-            default:
-              showError(t('userRoleUpdate.error'));
+          if (code === 'USER_NOT_FOUND') {
+            showError(t('userRoleUpdate.notFound'));
+          } else {
+            showError(t('userRoleUpdate.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

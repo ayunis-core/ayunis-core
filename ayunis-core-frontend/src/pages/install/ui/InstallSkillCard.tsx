@@ -22,7 +22,7 @@ export function InstallSkillCard({
   skill,
   onInstall,
   isInstalling,
-}: InstallSkillCardProps) {
+}: Readonly<InstallSkillCardProps>) {
   const { t } = useTranslation('install');
 
   return (

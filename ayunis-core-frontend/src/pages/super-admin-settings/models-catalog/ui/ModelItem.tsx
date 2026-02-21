@@ -38,7 +38,7 @@ export function ModelItem({
   onEdit,
   onDelete,
   isDeleting,
-}: ModelItemProps) {
+}: Readonly<ModelItemProps>) {
   const isLanguage = isLanguageModel(model);
   const isEmbedding = isEmbeddingModel(model);
 

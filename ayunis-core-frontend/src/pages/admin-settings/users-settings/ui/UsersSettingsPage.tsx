@@ -33,7 +33,7 @@ export default function UsersSettingsPage({
   pagination,
   search,
   currentPage,
-}: UsersSettingsPageProps) {
+}: Readonly<UsersSettingsPageProps>) {
   const { t } = useTranslation('admin-settings-layout');
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
@@ -46,6 +46,7 @@ export default function UsersSettingsPage({
   return (
     <SettingsLayout action={<InviteMenuButton />} title={t('layout.users')}>
       <div className="space-y-4">
+        {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- boolean OR */}
         {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (
           <InvitesSection
             invites={invites}

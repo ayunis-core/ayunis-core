@@ -36,7 +36,7 @@ export default function InvitesSection({
   totalInvites,
   searchSlot,
   paginationSlot,
-}: InvitesSectionProps) {
+}: Readonly<InvitesSectionProps>) {
   const { t } = useTranslation('admin-settings-users');
   const { deleteInvite, isLoading: isDeletingInvite } = useInviteDelete();
   const { deleteAllInvites, isDeleting } = useDeleteAllInvites();
@@ -120,17 +120,22 @@ export default function InvitesSection({
                   <TableCell className="font-medium">{invite.email}</TableCell>
                   <TableCell className="capitalize">{invite.role}</TableCell>
                   <TableCell>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        invite.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : invite.status === 'accepted'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {t(`users.${invite.status}`)}
-                    </span>
+                    {(() => {
+                      const statusColorMap: Record<string, string> = {
+                        pending: 'bg-yellow-100 text-yellow-800',
+                        accepted: 'bg-green-100 text-green-800',
+                      };
+                      const statusColor =
+                        statusColorMap[invite.status] ??
+                        'bg-red-100 text-red-800';
+                      return (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
+                        >
+                          {t(`users.${invite.status}`)}
+                        </span>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     {new Date(invite.sentDate).toLocaleDateString()}

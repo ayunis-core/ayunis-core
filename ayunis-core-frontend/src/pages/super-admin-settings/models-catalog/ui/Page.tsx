@@ -24,9 +24,9 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 
 export default function ModelsCatalogPage({
   models,
-}: {
+}: Readonly<{
   models: SuperAdminModelsControllerGetAllCatalogModels200Item[];
-}) {
+}>) {
   const { t } = useTranslation('super-admin-settings-layout');
   const [createLanguageDialogOpen, setCreateLanguageDialogOpen] =
     useState(false);

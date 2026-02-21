@@ -80,7 +80,7 @@ function RouteComponent() {
       users={data.usersResponse.data}
       usersPagination={data.usersResponse.pagination}
       usersSearch={data.usersSearch}
-      usersCurrentPage={data.usersPage ?? 1}
+      usersCurrentPage={data.usersPage}
       subscription={data.subscriptionResult.subscription ?? null}
       trial={data.trialResult.trial ?? null}
       initialTab={tab}

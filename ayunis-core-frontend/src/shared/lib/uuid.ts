@@ -8,7 +8,7 @@
  */
 export function generateUUID(): string {
   // Check if crypto.randomUUID is available (requires secure context)
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+  if (typeof crypto !== 'undefined') {
     try {
       return crypto.randomUUID();
     } catch (error) {
@@ -22,6 +22,7 @@ export function generateUUID(): string {
 
   // Polyfill implementation for non-secure contexts
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    // eslint-disable-next-line sonarjs/pseudo-random -- Fallback UUID generation when crypto.randomUUID is unavailable
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);

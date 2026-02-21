@@ -34,20 +34,20 @@ interface ChartParams {
 export default function BarChartWidget({
   content,
   isStreaming = false,
-}: {
+}: Readonly<{
   content: ToolUseMessageContent;
   isStreaming?: boolean;
-}) {
-  const params = (content.params || {}) as ChartParams;
+}>) {
+  const params = content.params as ChartParams;
   const THRESHOLD = 10;
   const MAX_TICK_CHARS = 12;
   const PER_POINT_PX = 70;
 
   const chartData = useMemo(() => {
-    return transformChartData(params.xAxis || [], params.yAxis || []);
+    return transformChartData(params.xAxis ?? [], params.yAxis ?? []);
   }, [params.xAxis, params.yAxis]);
 
-  const hasData = chartData.length > 0 && (params.yAxis || []).length > 0;
+  const hasData = chartData.length > 0 && (params.yAxis ?? []).length > 0;
   const isLoading = isStreaming && !hasData;
 
   if (isLoading) {
@@ -58,7 +58,7 @@ export default function BarChartWidget({
     return <ChartEmptyState />;
   }
 
-  const yAxisSeries = params.yAxis || [];
+  const yAxisSeries = params.yAxis ?? [];
 
   return (
     <ChartCard

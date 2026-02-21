@@ -12,7 +12,7 @@ interface ThinkingBlockWidgetProps {
 export default function ThinkingBlockWidget({
   content,
   open: initialOpen,
-}: ThinkingBlockWidgetProps) {
+}: Readonly<ThinkingBlockWidgetProps>) {
   const { t } = useTranslation('chat');
   const [open, setOpen] = useState(initialOpen);
 

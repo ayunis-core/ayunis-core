@@ -8,7 +8,9 @@ interface ChatsEmptyStateProps {
   hasFilters: boolean;
 }
 
-export default function ChatsEmptyState({ hasFilters }: ChatsEmptyStateProps) {
+export default function ChatsEmptyState({
+  hasFilters,
+}: Readonly<ChatsEmptyStateProps>) {
   const { t } = useTranslation('chats');
 
   if (hasFilters) {

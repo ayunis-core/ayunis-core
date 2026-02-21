@@ -83,7 +83,7 @@ export function useSuperAdminDeletePermittedModel(orgId: string) {
             showError(t('models.deletePermittedModel.error'));
           }
 
-          if (context?.previousData && context?.queryKey) {
+          if (context?.previousData) {
             queryClient.setQueryData(context.queryKey, context.previousData);
           }
         },

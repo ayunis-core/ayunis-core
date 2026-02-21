@@ -10,7 +10,7 @@ interface OrgDetailsProps {
   org: SuperAdminOrgResponseDto;
 }
 
-export default function OrgDetails({ org }: OrgDetailsProps) {
+export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
   return (
     <Card>
       <CardHeader>

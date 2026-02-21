@@ -19,7 +19,7 @@ export function SendButton({
   canSend,
   onSend,
   onCancel,
-}: SendButtonProps) {
+}: Readonly<SendButtonProps>) {
   const { t } = useTranslation('common');
 
   if (isStreaming) {

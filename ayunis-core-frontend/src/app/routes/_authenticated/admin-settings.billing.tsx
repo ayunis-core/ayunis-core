@@ -25,11 +25,8 @@ export const Route = createFileRoute('/_authenticated/admin-settings/billing')({
       return { subscription, subscriptionPrice };
     } catch (error) {
       try {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          default:
-            throw error;
-        }
+        extractErrorData(error);
+        throw error;
       } catch {
         // Non-AxiosError or extractErrorData threw - rethrow original error
         throw error;

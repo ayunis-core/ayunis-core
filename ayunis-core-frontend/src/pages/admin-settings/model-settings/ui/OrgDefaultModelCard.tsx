@@ -27,7 +27,7 @@ interface OrgDefaultModelCardProps {
 export function OrgDefaultModelCard({
   models,
   isLoading,
-}: OrgDefaultModelCardProps) {
+}: Readonly<OrgDefaultModelCardProps>) {
   const { t } = useTranslation('admin-settings-models');
   const { manageOrgDefaultModel, isLoading: isSaving } =
     useManageOrgDefaultModel();

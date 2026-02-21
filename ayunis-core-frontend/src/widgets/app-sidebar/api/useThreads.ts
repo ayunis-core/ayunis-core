@@ -26,7 +26,7 @@ export function useThreads() {
   );
 
   const threads = data?.data ?? [];
-  const total = data?.pagination?.total ?? 0;
+  const total = data?.pagination.total ?? 0;
   const hasMore = total > SIDEBAR_THREADS_LIMIT;
 
   return {

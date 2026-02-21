@@ -52,14 +52,14 @@ export default function ConfirmationModal() {
               onClick={handleCancel}
               disabled={isLoading}
             >
-              {options.cancelText || 'Cancel'}
+              {options.cancelText ?? 'Cancel'}
             </Button>
             <Button
               variant={isDangerous ? 'destructive' : 'default'}
               onClick={() => void handleConfirm()}
               disabled={isLoading}
             >
-              {isLoading ? 'Loading...' : options.confirmText || 'Confirm'}
+              {isLoading ? 'Loading...' : (options.confirmText ?? 'Confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

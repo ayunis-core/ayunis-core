@@ -30,7 +30,7 @@ interface CreateTrialDialogProps {
 export default function CreateTrialDialog({
   trigger,
   orgId,
-}: CreateTrialDialogProps) {
+}: Readonly<CreateTrialDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { form, handleSubmit } = useSuperAdminTrialCreate({ orgId });
 

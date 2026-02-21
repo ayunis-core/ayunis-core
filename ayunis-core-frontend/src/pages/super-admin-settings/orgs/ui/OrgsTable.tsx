@@ -24,7 +24,10 @@ interface OrgsTableProps {
   searchSlot?: ReactNode;
 }
 
-export default function OrgsTable({ orgs, searchSlot }: OrgsTableProps) {
+export default function OrgsTable({
+  orgs,
+  searchSlot,
+}: Readonly<OrgsTableProps>) {
   const { t } = useTranslation('super-admin-settings-orgs');
   const router = useRouter();
 

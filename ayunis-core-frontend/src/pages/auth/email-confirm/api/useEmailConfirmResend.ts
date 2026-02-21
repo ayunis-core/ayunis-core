@@ -37,13 +37,10 @@ export function useEmailConfirmResend() {
         onError: (error) => {
           try {
             const { code } = extractErrorData(error);
-            switch (code) {
-              case 'RATE_LIMIT_EXCEEDED':
-                showError(t('emailConfirm.rateLimitExceeded'));
-                break;
-              default:
-                showError(t('emailConfirm.error'));
-                break;
+            if (code === 'RATE_LIMIT_EXCEEDED') {
+              showError(t('emailConfirm.rateLimitExceeded'));
+            } else {
+              showError(t('emailConfirm.error'));
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)

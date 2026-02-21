@@ -12,7 +12,7 @@ interface SubscriptionCancellationSectionProps {
 export default function SubscriptionCancellationSection({
   subscription,
   orgId,
-}: SubscriptionCancellationSectionProps) {
+}: Readonly<SubscriptionCancellationSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { cancelSubscription } = useSuperAdminSubscriptionCancel(orgId);
   const { uncancelSubscription } = useSuperAdminSubscriptionUncancel(orgId);

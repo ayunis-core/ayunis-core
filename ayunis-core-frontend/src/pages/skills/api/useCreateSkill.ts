@@ -49,7 +49,7 @@ export function useCreateSkill() {
       void queryClient.invalidateQueries({
         queryKey: getSkillsControllerFindAllQueryKey(),
       });
-      if (data && data.id) {
+      if (data.id) {
         void router.navigate({
           to: '/skills/$id',
           params: { id: data.id },
@@ -59,11 +59,8 @@ export function useCreateSkill() {
     onError: (error) => {
       console.error('Create skill failed:', error);
       try {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          default:
-            showError(t('create.error'));
-        }
+        extractErrorData(error);
+        showError(t('create.error'));
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)
         showError(t('create.error'));

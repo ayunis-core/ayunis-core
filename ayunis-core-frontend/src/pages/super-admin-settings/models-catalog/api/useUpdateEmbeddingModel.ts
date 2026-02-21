@@ -25,12 +25,10 @@ export function useUpdateEmbeddingModel(onSuccess?: () => void) {
         console.error('Update embedding model failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'MODEL_NOT_FOUND':
-              showError(t('models.notFound'));
-              break;
-            default:
-              showError(t('models.updateError'));
+          if (code === 'MODEL_NOT_FOUND') {
+            showError(t('models.notFound'));
+          } else {
+            showError(t('models.updateError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

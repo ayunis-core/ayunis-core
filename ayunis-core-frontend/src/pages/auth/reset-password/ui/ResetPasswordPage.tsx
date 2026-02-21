@@ -13,7 +13,7 @@ import { useResetPassword } from '../api/useResetPassword';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 
-export function ResetPasswordPage({ token }: { token: string }) {
+export function ResetPasswordPage({ token }: Readonly<{ token: string }>) {
   const { form, onSubmit, isLoading } = useResetPassword(token);
   const { t } = useTranslation('auth');
 

@@ -13,7 +13,9 @@ interface NoTrialSectionProps {
   orgId: string;
 }
 
-export default function NoTrialSection({ orgId }: NoTrialSectionProps) {
+export default function NoTrialSection({
+  orgId,
+}: Readonly<NoTrialSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
 
   return (

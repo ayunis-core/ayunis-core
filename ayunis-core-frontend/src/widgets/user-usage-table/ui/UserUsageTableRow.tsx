@@ -10,7 +10,7 @@ interface UserUsageTableRowProps {
   user: UserUsageDto;
 }
 
-export function UserUsageTableRow({ user }: UserUsageTableRowProps) {
+export function UserUsageTableRow({ user }: Readonly<UserUsageTableRowProps>) {
   const { t, i18n } = useTranslation('admin-settings-usage');
 
   const formatCompact = (value?: number) =>
@@ -39,6 +39,7 @@ export function UserUsageTableRow({ user }: UserUsageTableRowProps) {
       <TableCell>
         {user.lastActivity ? (
           <span className="text-sm">
+            {/* eslint-disable-next-line sonarjs/todo-tag -- DTO typing issue: lastActivity has incorrect type in the generated DTO */}
             {/* TODO: Fix typing issue on the dto level */}
             {formatDistanceToNow(
               new Date(user.lastActivity as unknown as string),

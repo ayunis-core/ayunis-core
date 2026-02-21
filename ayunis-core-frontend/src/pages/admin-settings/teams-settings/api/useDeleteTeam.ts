@@ -25,12 +25,10 @@ export function useDeleteTeam() {
         console.error('Delete team failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'TEAM_NOT_FOUND':
-              showError(t('teams.deleteTeam.notFound'));
-              break;
-            default:
-              showError(t('teams.deleteTeam.error'));
+          if (code === 'TEAM_NOT_FOUND') {
+            showError(t('teams.deleteTeam.notFound'));
+          } else {
+            showError(t('teams.deleteTeam.error'));
           }
         } catch {
           showError(t('teams.deleteTeam.error'));

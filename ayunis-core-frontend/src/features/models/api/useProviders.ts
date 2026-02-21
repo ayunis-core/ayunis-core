@@ -15,7 +15,7 @@ export function useProviders() {
   const { models, isLoading, error } = usePermittedModels();
 
   const providers = useMemo<ProviderInfo[]>(() => {
-    if (!models?.length) return [];
+    if (!models.length) return [];
 
     // Get unique providers from permitted models
     const providerMap = new Map<string, string>();

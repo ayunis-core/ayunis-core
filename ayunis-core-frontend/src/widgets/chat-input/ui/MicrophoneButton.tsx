@@ -17,7 +17,7 @@ interface MicrophoneButtonProps {
 
 export function MicrophoneButton({
   onTranscriptionComplete,
-}: MicrophoneButtonProps) {
+}: Readonly<MicrophoneButtonProps>) {
   const { t } = useTranslation('common');
   const { transcribe, isTranscribing: isApiTranscribing } = useTranscribe();
 
@@ -49,11 +49,14 @@ export function MicrophoneButton({
     }
   };
 
-  const tooltipText = busy
-    ? t('chatInput.transcribing')
-    : isRecording
-      ? t('chatInput.microphoneRecording')
-      : t('chatInput.microphoneTooltip');
+  let tooltipText: string;
+  if (busy) {
+    tooltipText = t('chatInput.transcribing');
+  } else if (isRecording) {
+    tooltipText = t('chatInput.microphoneRecording');
+  } else {
+    tooltipText = t('chatInput.microphoneTooltip');
+  }
 
   return (
     <Tooltip>

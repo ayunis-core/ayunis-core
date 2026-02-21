@@ -32,7 +32,7 @@ export default function BillingInfoUpdateDialog({
   trigger,
   currentBillingInfo,
   orgId,
-}: BillingManagementModalProps) {
+}: Readonly<BillingManagementModalProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { form, updateBillingInfo, isPending } =
     useSuperAdminSubscriptionBillingInfoUpdate({

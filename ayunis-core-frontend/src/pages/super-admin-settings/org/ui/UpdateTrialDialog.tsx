@@ -33,7 +33,7 @@ export default function UpdateTrialDialog({
   trigger,
   orgId,
   trial,
-}: UpdateTrialDialogProps) {
+}: Readonly<UpdateTrialDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { form, handleSubmit, isPending } = useSuperAdminTrialUpdate({
     orgId,

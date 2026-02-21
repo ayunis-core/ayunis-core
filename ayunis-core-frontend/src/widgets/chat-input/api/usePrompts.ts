@@ -1,5 +1,6 @@
 import {
   getPromptsControllerFindAllQueryKey,
+  type PromptsControllerFindAllQueryResult,
   usePromptsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
@@ -9,7 +10,7 @@ export function usePrompts() {
     isLoading,
     error,
     refetch,
-  } = usePromptsControllerFindAll({
+  } = usePromptsControllerFindAll<PromptsControllerFindAllQueryResult, Error>({
     query: {
       queryKey: [getPromptsControllerFindAllQueryKey()],
     },

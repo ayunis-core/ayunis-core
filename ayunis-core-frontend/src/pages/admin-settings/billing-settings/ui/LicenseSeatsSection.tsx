@@ -17,7 +17,7 @@ interface LicenseSeatsSectionProps {
 
 export default function LicenseSeatsSection({
   subscription,
-}: LicenseSeatsSectionProps) {
+}: Readonly<LicenseSeatsSectionProps>) {
   const { t } = useTranslation('admin-settings-billing');
 
   return (

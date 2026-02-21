@@ -30,7 +30,7 @@ export default function SharesTab({
   entityId,
   shares,
   userTeams,
-}: SharesTabProps) {
+}: Readonly<SharesTabProps>) {
   const translationNs = entityType === 'agent' ? 'agent' : 'skill';
   const { t } = useTranslation(translationNs);
   const { confirm } = useConfirmation();
@@ -51,6 +51,7 @@ export default function SharesTab({
     );
 
   const handleOrgToggleChange = (checked: boolean) => {
+    // eslint-disable-next-line sonarjs/no-selector-parameter -- Required by Switch component's onCheckedChange callback signature
     if (checked) {
       confirm({
         title: t('shares.create.title'),
@@ -82,6 +83,7 @@ export default function SharesTab({
     teamName: string,
     checked: boolean,
   ) => {
+    // eslint-disable-next-line sonarjs/no-selector-parameter -- Required by Switch component's onCheckedChange callback signature
     if (checked) {
       confirm({
         title: t('shares.teams.create.title'),
@@ -108,7 +110,6 @@ export default function SharesTab({
       }
     }
   };
-
   return (
     <div className="space-y-4">
       <Item variant="outline">

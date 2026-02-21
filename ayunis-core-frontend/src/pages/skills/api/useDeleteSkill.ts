@@ -32,12 +32,10 @@ export function useDeleteSkill() {
       console.error('Delete skill failed:', error);
       try {
         const { code } = extractErrorData(error);
-        switch (code) {
-          case 'SKILL_NOT_FOUND':
-            showError(t('delete.notFound'));
-            break;
-          default:
-            showError(t('delete.error'));
+        if (code === 'SKILL_NOT_FOUND') {
+          showError(t('delete.notFound'));
+        } else {
+          showError(t('delete.error'));
         }
       } catch {
         // Non-AxiosError (network failure, request cancellation, etc.)

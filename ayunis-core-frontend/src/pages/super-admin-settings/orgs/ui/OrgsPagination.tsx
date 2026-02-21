@@ -20,7 +20,7 @@ export default function OrgsPagination({
   currentPage,
   totalPages,
   search,
-}: OrgsPaginationProps) {
+}: Readonly<OrgsPaginationProps>) {
   const { t } = useTranslation('common');
 
   if (totalPages <= 1) {

@@ -19,7 +19,7 @@ interface LicenseSeatsSectionProps {
 export default function LicenseSeatsSection({
   subscription,
   orgId,
-}: LicenseSeatsSectionProps) {
+}: Readonly<LicenseSeatsSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
 
   return (

@@ -15,7 +15,7 @@ export function SuperAdminProviderConsumption({
   startDate,
   endDate,
   selectedProvider,
-}: SuperAdminProviderConsumptionProps) {
+}: Readonly<SuperAdminProviderConsumptionProps>) {
   const {
     data: chartResp,
     isLoading,

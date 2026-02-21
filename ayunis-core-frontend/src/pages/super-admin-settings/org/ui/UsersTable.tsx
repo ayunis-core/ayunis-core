@@ -45,7 +45,7 @@ export default function UsersTable({
   pagination,
   search,
   currentPage,
-}: UsersTableProps) {
+}: Readonly<UsersTableProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { deleteUser, isLoading: isDeleting } = useSuperAdminDeleteUser({
     orgId,

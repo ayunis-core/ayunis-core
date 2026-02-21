@@ -1,16 +1,14 @@
 import { useEffect } from 'react';
 
-type Key = string;
-
 export default function useKeyboardShortcut(
-  targetKeys: Key[],
+  targetKeys: string[],
   callback: () => void,
   options?: { exclusive?: boolean },
 ): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Create a set of the keys that are currently pressed
-      const pressedKeys = new Set<Key>();
+      const pressedKeys = new Set<string>();
 
       if (event.ctrlKey || event.metaKey) {
         pressedKeys.add('Control');

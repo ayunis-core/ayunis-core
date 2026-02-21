@@ -20,7 +20,7 @@ export function UserUsageTablePagination({
   currentPage,
   totalPages,
   onPageChange,
-}: UserUsageTablePaginationProps) {
+}: Readonly<UserUsageTablePaginationProps>) {
   const { t: tCommon } = useTranslation('common');
   const pageNumbers = getPageNumbers(totalPages, currentPage);
 

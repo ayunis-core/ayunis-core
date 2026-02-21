@@ -24,12 +24,10 @@ export function useDeleteIntegration(onSuccess?: () => void) {
         console.error('Delete integration failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'MCP_INTEGRATION_NOT_FOUND':
-              showError(t('integrations.deleteIntegration.notFound'));
-              break;
-            default:
-              showError(t('integrations.deleteIntegration.error'));
+          if (code === 'MCP_INTEGRATION_NOT_FOUND') {
+            showError(t('integrations.deleteIntegration.notFound'));
+          } else {
+            showError(t('integrations.deleteIntegration.error'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

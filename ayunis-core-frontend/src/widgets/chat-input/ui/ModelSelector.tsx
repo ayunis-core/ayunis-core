@@ -19,7 +19,7 @@ export default function ModelSelector({
   isDisabled,
   selectedModelId,
   onModelChange,
-}: ModelSelectorProps) {
+}: Readonly<ModelSelectorProps>) {
   const { t } = useTranslation('common');
   const {
     models,

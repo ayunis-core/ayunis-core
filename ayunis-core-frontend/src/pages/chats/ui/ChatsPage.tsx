@@ -27,7 +27,7 @@ export default function ChatsPage({
   hasFilters,
   pagination,
   currentPage,
-}: ChatsPageProps) {
+}: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
 
   const total = pagination?.total ?? 0;

@@ -20,10 +20,14 @@ export function useValidateIntegration() {
           );
           return;
         }
-        const capabilities = data.capabilities || {
+        const capabilities = (data.capabilities || {
           prompts: 0,
           resources: 0,
           tools: 0,
+        }) as {
+          prompts: number;
+          resources: number;
+          tools: number;
         };
         showSuccess(
           t('integrations.validateIntegration.success', {

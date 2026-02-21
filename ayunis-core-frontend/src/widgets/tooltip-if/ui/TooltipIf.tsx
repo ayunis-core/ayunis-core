@@ -15,9 +15,9 @@ export default function TooltipIf({
   children,
   condition,
   tooltip,
-}: TooltipIfProps) {
+}: Readonly<TooltipIfProps>): React.ReactElement {
   if (!condition) {
-    return children;
+    return <>{children}</>;
   }
   return (
     <TooltipProvider>

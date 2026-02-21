@@ -15,7 +15,7 @@ interface NoSubscriptionSectionProps {
 
 export default function NoSubscriptionSection({
   orgId,
-}: NoSubscriptionSectionProps) {
+}: Readonly<NoSubscriptionSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
 
   return (

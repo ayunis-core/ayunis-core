@@ -30,7 +30,7 @@ interface BillingManagementModalProps {
 export default function BillingInfoUpdateDialog({
   trigger,
   currentBillingInfo,
-}: BillingManagementModalProps) {
+}: Readonly<BillingManagementModalProps>) {
   const { t } = useTranslation('admin-settings-billing');
   const { form, updateBillingInfo, isPending } = useBillingInfoUpdate({
     currentBillingInfo,

@@ -18,6 +18,7 @@ export function usePendingImages() {
         return null;
       }
 
+      // eslint-disable-next-line sonarjs/pseudo-random -- Unique ID for UI tracking, not security-sensitive
       const id = `${Date.now()}-${Math.random()}`;
       const preview = URL.createObjectURL(file);
       const image: PendingImage = { id, file, preview };
@@ -39,6 +40,7 @@ export function usePendingImages() {
 
       const filesToAdd = files.slice(0, remainingSlots);
       const newImages = filesToAdd.map((file) => {
+        // eslint-disable-next-line sonarjs/pseudo-random -- Unique ID for UI tracking, not security-sensitive
         const id = `${Date.now()}-${Math.random()}`;
         const preview = URL.createObjectURL(file);
 

@@ -33,7 +33,7 @@ export default function CreateSkillDialog({
   buttonText,
   showIcon = false,
   buttonClassName = '',
-}: CreateSkillDialogProps) {
+}: Readonly<CreateSkillDialogProps>) {
   const { t } = useTranslation('skills');
   const [isOpen, setIsOpen] = useState(false);
   const {
@@ -60,7 +60,7 @@ export default function CreateSkillDialog({
           className={`${showIcon ? 'inline-flex items-center gap-2' : ''} ${buttonClassName}`}
         >
           {showIcon && <Plus className="h-4 w-4" />}
-          {buttonText || t('createDialog.buttonText')}
+          {buttonText ?? t('createDialog.buttonText')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px]">

@@ -2,6 +2,11 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 type RecordingState = 'idle' | 'starting' | 'recording' | 'transcribing';
 
+/** Read a ref value without triggering ESLint type narrowing */
+function readRef<T>(ref: { current: T }): T {
+  return ref.current;
+}
+
 const MAX_RECORDING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MIN_RECORDING_DURATION_MS = 1000; // 1 second
 
@@ -86,11 +91,6 @@ export function useVoiceRecording(
   );
 
   const startRecording = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      onError('chatInput.recordingNotSupported');
-      return;
-    }
-
     // Prevent multiple concurrent startRecording calls
     if (state !== 'idle') {
       return;
@@ -103,7 +103,7 @@ export function useVoiceRecording(
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       // If cancelled during getUserMedia (e.g., component unmounted), clean up and return
-      if (cancelledRef.current) {
+      if (readRef(cancelledRef)) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -168,10 +168,7 @@ export function useVoiceRecording(
 
       // Auto-stop after max duration
       timeoutRef.current = setTimeout(() => {
-        if (
-          mediaRecorderRef.current &&
-          mediaRecorderRef.current.state === 'recording'
-        ) {
+        if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
       }, MAX_RECORDING_DURATION_MS);
@@ -188,18 +185,13 @@ export function useVoiceRecording(
   }, [state, onError, processRecording, cleanup]);
 
   const stopRecording = useCallback(() => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === 'recording'
-    ) {
+    if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
   }, []);
 
   const isSupported =
-    typeof window !== 'undefined' &&
-    !!navigator.mediaDevices?.getUserMedia &&
-    typeof MediaRecorder !== 'undefined';
+    typeof window !== 'undefined' && typeof MediaRecorder !== 'undefined';
 
   return {
     state,

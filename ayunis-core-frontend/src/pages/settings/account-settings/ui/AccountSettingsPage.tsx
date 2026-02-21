@@ -12,9 +12,9 @@ import PasswordSettingsPage from './PasswordSettingsPage';
 
 export default function AccountSettingsPage({
   user,
-}: {
+}: Readonly<{
   user: { name: string; email: string };
-}) {
+}>) {
   const { t } = useTranslation('settings');
 
   return (

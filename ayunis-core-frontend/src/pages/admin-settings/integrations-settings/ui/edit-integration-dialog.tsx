@@ -33,7 +33,7 @@ export function EditIntegrationDialog({
   integration,
   open,
   onOpenChange,
-}: EditIntegrationDialogProps) {
+}: Readonly<EditIntegrationDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { updateIntegration, isUpdating } = useUpdateIntegration(() => {
     onOpenChange(false);
@@ -145,7 +145,7 @@ export function EditIntegrationDialog({
                         <FormControl>
                           <Input
                             placeholder={
-                              integration.authHeaderName ||
+                              integration.authHeaderName ??
                               t('integrations.editDialog.headerNamePlaceholder')
                             }
                             {...field}

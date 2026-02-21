@@ -13,7 +13,7 @@ export default function SettingsLayout({
   title,
   children,
   action,
-}: SettingsLayoutProps) {
+}: Readonly<SettingsLayoutProps>) {
   const contentHeader = <ContentAreaHeader title={title} action={action} />;
 
   return (

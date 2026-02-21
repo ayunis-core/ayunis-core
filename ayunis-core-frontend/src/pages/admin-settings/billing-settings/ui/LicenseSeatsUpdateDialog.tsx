@@ -22,7 +22,7 @@ interface LicenseSeatsUpdateDialogProps {
 export default function LicenseSeatsUpdateDialog({
   subscription,
   trigger,
-}: LicenseSeatsUpdateDialogProps) {
+}: Readonly<LicenseSeatsUpdateDialogProps>) {
   const { t } = useTranslation('admin-settings-billing');
   const [selectedSeats, setSelectedSeats] = useState(subscription.noOfSeats);
   const { updateSeats, isPending } = useSubscriptionSeatsUpdate();

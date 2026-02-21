@@ -20,7 +20,7 @@ export default function UsersPagination({
   currentPage,
   totalPages,
   search,
-}: UsersPaginationProps) {
+}: Readonly<UsersPaginationProps>) {
   const { t } = useTranslation('common');
 
   if (totalPages <= 1) {

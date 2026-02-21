@@ -43,7 +43,7 @@ export function ModelDistributionChart({
   chartData,
   chartConfig,
   modelBreakdown,
-}: ModelDistributionChartProps) {
+}: Readonly<ModelDistributionChartProps>) {
   const { t, i18n } = useTranslation('admin-settings-usage');
   const isMobile = useIsMobile();
 
@@ -106,7 +106,7 @@ export function ModelDistributionChart({
                   formatter={(value: number, name, payload) => [
                     `${value.toFixed(1)}% `,
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    (payload?.payload?.name as string) ?? name,
+                    (payload.payload?.name as string | undefined) ?? name,
                   ]}
                 />
 

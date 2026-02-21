@@ -23,7 +23,7 @@ interface CreateTeamDialogProps {
 export function CreateTeamDialog({
   open,
   onOpenChange,
-}: CreateTeamDialogProps) {
+}: Readonly<CreateTeamDialogProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { createTeam, isCreating } = useCreateTeam(() => {
     onOpenChange(false);

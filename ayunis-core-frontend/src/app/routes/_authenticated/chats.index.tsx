@@ -45,8 +45,8 @@ export const Route = createFileRoute('/_authenticated/chats/')({
         queryFn: () => agentsControllerFindAll(),
       }),
     ]);
-    const chats = chatsResponse?.data ?? [];
-    const pagination = chatsResponse?.pagination;
+    const chats = chatsResponse.data;
+    const pagination = chatsResponse.pagination;
     return { chats, pagination, agents, search, agentId, page };
   },
   component: RouteComponent,
@@ -64,7 +64,7 @@ function RouteComponent() {
       agentId={agentId}
       hasFilters={hasFilters}
       pagination={pagination}
-      currentPage={page ?? 1}
+      currentPage={page}
     />
   );
 }

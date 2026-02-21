@@ -16,7 +16,7 @@ interface ComingSoonDialogProps {
 export function ComingSoonDialog({
   open,
   onOpenChange,
-}: ComingSoonDialogProps) {
+}: Readonly<ComingSoonDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

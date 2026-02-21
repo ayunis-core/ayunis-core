@@ -57,7 +57,7 @@ export default function CreateOrgDialog() {
               id="org-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={t('dialog.namePlaceholder') ?? ''}
+              placeholder={t('dialog.namePlaceholder')}
               required
               disabled={isLoading}
             />
@@ -72,9 +72,7 @@ export default function CreateOrgDialog() {
               {t('dialog.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading
-                ? (t('dialog.creating') ?? 'Creating...')
-                : t('dialog.create')}
+              {isLoading ? t('dialog.creating') : t('dialog.create')}
             </Button>
           </DialogFooter>
         </form>

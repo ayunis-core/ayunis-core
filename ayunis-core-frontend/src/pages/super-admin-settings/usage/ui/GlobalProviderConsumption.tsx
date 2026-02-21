@@ -13,7 +13,7 @@ export function GlobalProviderConsumption({
   startDate,
   endDate,
   selectedProvider,
-}: GlobalProviderConsumptionProps) {
+}: Readonly<GlobalProviderConsumptionProps>) {
   const {
     data: chartResp,
     isLoading,

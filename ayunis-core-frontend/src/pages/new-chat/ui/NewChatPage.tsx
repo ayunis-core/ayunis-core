@@ -27,7 +27,7 @@ export default function NewChatPage({
   prefilledPrompt,
   isEmbeddingModelEnabled,
   agents,
-}: NewChatPageProps) {
+}: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat } = useInitiateChat();
   const { models } = usePermittedModels();

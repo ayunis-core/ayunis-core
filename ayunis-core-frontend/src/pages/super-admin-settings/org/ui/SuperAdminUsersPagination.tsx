@@ -22,7 +22,7 @@ export default function SuperAdminUsersPagination({
   totalPages,
   search,
   orgId,
-}: SuperAdminUsersPaginationProps) {
+}: Readonly<SuperAdminUsersPaginationProps>) {
   const { t } = useTranslation('common');
 
   if (totalPages <= 1) {

@@ -28,9 +28,9 @@ export function RenameThreadDialog({
   onOpenChange,
   threadId,
   currentTitle,
-}: RenameThreadDialogProps) {
+}: Readonly<RenameThreadDialogProps>) {
   const { t } = useTranslation('common');
-  const [title, setTitle] = useState(currentTitle || '');
+  const [title, setTitle] = useState(currentTitle ?? '');
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,7 +47,7 @@ export function RenameThreadDialog({
   // Reset title when dialog opens with new thread
   useEffect(() => {
     function resetForm() {
-      setTitle(currentTitle || '');
+      setTitle(currentTitle ?? '');
       setError(null);
     }
     if (open) {

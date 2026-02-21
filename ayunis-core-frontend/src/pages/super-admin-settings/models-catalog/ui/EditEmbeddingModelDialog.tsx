@@ -50,7 +50,7 @@ export function EditEmbeddingModelDialog({
   model,
   open,
   onOpenChange,
-}: EditEmbeddingModelDialogProps) {
+}: Readonly<EditEmbeddingModelDialogProps>) {
   const { updateEmbeddingModel, isUpdating } = useUpdateEmbeddingModel(() => {
     onOpenChange(false);
   });

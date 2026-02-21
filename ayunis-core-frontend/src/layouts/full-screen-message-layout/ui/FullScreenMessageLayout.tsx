@@ -6,7 +6,7 @@ interface FullScreenMessageLayoutProps {
 export default function FullScreenMessageLayout({
   children,
   header,
-}: FullScreenMessageLayoutProps) {
+}: Readonly<FullScreenMessageLayoutProps>) {
   return (
     <div className="flex flex-col h-full">
       {header && (

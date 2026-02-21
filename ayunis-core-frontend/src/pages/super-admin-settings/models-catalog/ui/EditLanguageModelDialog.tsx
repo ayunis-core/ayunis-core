@@ -43,7 +43,7 @@ export function EditLanguageModelDialog({
   model,
   open,
   onOpenChange,
-}: EditLanguageModelDialogProps) {
+}: Readonly<EditLanguageModelDialogProps>) {
   const { updateLanguageModel, isUpdating } = useUpdateLanguageModel(() => {
     onOpenChange(false);
   });

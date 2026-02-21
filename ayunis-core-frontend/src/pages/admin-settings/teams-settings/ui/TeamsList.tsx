@@ -18,7 +18,7 @@ interface TeamsListProps {
   onEditTeam: (team: Team) => void;
 }
 
-export function TeamsList({ teams, onEditTeam }: TeamsListProps) {
+export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const { deleteTeam, isDeleting } = useDeleteTeam();
 

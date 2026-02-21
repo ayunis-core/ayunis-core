@@ -10,7 +10,7 @@ interface SubscriptionCancellationSectionProps {
 
 export default function SubscriptionCancellationSection({
   subscription,
-}: SubscriptionCancellationSectionProps) {
+}: Readonly<SubscriptionCancellationSectionProps>) {
   const { t } = useTranslation('admin-settings-billing');
   const { cancelSubscription } = useSubscriptionCancel();
   const { uncancelSubscription } = useSubscriptionUncancel();

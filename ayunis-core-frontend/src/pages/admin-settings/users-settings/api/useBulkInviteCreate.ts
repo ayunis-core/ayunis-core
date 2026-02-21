@@ -38,12 +38,10 @@ export function useBulkInviteCreate(
       onError: (error: unknown) => {
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'BULK_INVITE_VALIDATION_FAILED':
-              showError(t('bulkInvite.validationFailed'));
-              break;
-            default:
-              showError(t('bulkInvite.error'));
+          if (code === 'BULK_INVITE_VALIDATION_FAILED') {
+            showError(t('bulkInvite.validationFailed'));
+          } else {
+            showError(t('bulkInvite.error'));
           }
         } catch {
           showError(t('bulkInvite.error'));

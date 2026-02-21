@@ -21,7 +21,7 @@ export function DeleteConfirmationDialog({
   integration,
   open,
   onOpenChange,
-}: DeleteConfirmationDialogProps) {
+}: Readonly<DeleteConfirmationDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { deleteIntegration, isDeleting } = useDeleteIntegration(() => {
     onOpenChange(false);

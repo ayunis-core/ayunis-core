@@ -11,7 +11,7 @@ export function GlobalModelDistribution({
   startDate,
   endDate,
   selectedModel,
-}: GlobalModelDistributionProps) {
+}: Readonly<GlobalModelDistributionProps>) {
   const {
     data: modelDistribution,
     isLoading,

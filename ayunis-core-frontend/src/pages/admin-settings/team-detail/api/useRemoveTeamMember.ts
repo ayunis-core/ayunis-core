@@ -28,7 +28,7 @@ export function useRemoveTeamMember(teamId: string) {
       },
       onError: (error: unknown) => {
         const errorObj = error as { response?: { data?: { code?: string } } };
-        const errorCode = errorObj?.response?.data?.code;
+        const errorCode = errorObj.response?.data?.code;
 
         if (errorCode === 'TEAM_MEMBER_NOT_FOUND') {
           showError(t('teamDetail.removeMember.notFound'));

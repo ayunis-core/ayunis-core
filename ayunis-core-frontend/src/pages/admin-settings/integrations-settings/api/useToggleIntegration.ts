@@ -27,12 +27,10 @@ export function useToggleIntegration() {
         console.error('Enable integration failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'MCP_INTEGRATION_NOT_FOUND':
-              showError(t('integrations.toggleIntegration.notFound'));
-              break;
-            default:
-              showError(t('integrations.toggleIntegration.enableError'));
+          if (code === 'MCP_INTEGRATION_NOT_FOUND') {
+            showError(t('integrations.toggleIntegration.notFound'));
+          } else {
+            showError(t('integrations.toggleIntegration.enableError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
@@ -66,12 +64,10 @@ export function useToggleIntegration() {
         console.error('Disable integration failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'MCP_INTEGRATION_NOT_FOUND':
-              showError(t('integrations.toggleIntegration.notFound'));
-              break;
-            default:
-              showError(t('integrations.toggleIntegration.disableError'));
+          if (code === 'MCP_INTEGRATION_NOT_FOUND') {
+            showError(t('integrations.toggleIntegration.notFound'));
+          } else {
+            showError(t('integrations.toggleIntegration.disableError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

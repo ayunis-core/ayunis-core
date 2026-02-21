@@ -31,7 +31,7 @@ interface CreateSubscriptionDialogProps {
 export default function CreateSubscriptionDialog({
   trigger,
   orgId,
-}: CreateSubscriptionDialogProps) {
+}: Readonly<CreateSubscriptionDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { form, handleSubmit } = useSuperAdminSubscriptionCreate({ orgId });
 

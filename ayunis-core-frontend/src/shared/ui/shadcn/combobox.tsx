@@ -14,7 +14,7 @@ import {
 
 const Combobox = ComboboxPrimitive.Root;
 
-function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
+function ComboboxValue({ ...props }: Readonly<ComboboxPrimitive.Value.Props>) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />;
 }
 
@@ -22,7 +22,7 @@ function ComboboxTrigger({
   className,
   children,
   ...props
-}: ComboboxPrimitive.Trigger.Props) {
+}: Readonly<ComboboxPrimitive.Trigger.Props>) {
   return (
     <ComboboxPrimitive.Trigger
       data-slot="combobox-trigger"
@@ -38,7 +38,10 @@ function ComboboxTrigger({
   );
 }
 
-function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
+function ComboboxClear({
+  className,
+  ...props
+}: Readonly<ComboboxPrimitive.Clear.Props>) {
   return (
     <ComboboxPrimitive.Clear
       data-slot="combobox-clear"
@@ -128,7 +131,10 @@ function ComboboxContent({
   );
 }
 
-function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
+function ComboboxList({
+  className,
+  ...props
+}: Readonly<ComboboxPrimitive.List.Props>) {
   return (
     <ComboboxPrimitive.List
       data-slot="combobox-list"
@@ -145,7 +151,7 @@ function ComboboxItem({
   className,
   children,
   ...props
-}: ComboboxPrimitive.Item.Props) {
+}: Readonly<ComboboxPrimitive.Item.Props>) {
   return (
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
@@ -168,7 +174,10 @@ function ComboboxItem({
   );
 }
 
-function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
+function ComboboxGroup({
+  className,
+  ...props
+}: Readonly<ComboboxPrimitive.Group.Props>) {
   return (
     <ComboboxPrimitive.Group
       data-slot="combobox-group"
@@ -181,7 +190,7 @@ function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
 function ComboboxLabel({
   className,
   ...props
-}: ComboboxPrimitive.GroupLabel.Props) {
+}: Readonly<ComboboxPrimitive.GroupLabel.Props>) {
   return (
     <ComboboxPrimitive.GroupLabel
       data-slot="combobox-label"
@@ -194,13 +203,18 @@ function ComboboxLabel({
   );
 }
 
-function ComboboxCollection({ ...props }: ComboboxPrimitive.Collection.Props) {
+function ComboboxCollection({
+  ...props
+}: Readonly<ComboboxPrimitive.Collection.Props>) {
   return (
     <ComboboxPrimitive.Collection data-slot="combobox-collection" {...props} />
   );
 }
 
-function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
+function ComboboxEmpty({
+  className,
+  ...props
+}: Readonly<ComboboxPrimitive.Empty.Props>) {
   return (
     <ComboboxPrimitive.Empty
       data-slot="combobox-empty"
@@ -216,7 +230,7 @@ function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
 function ComboboxSeparator({
   className,
   ...props
-}: ComboboxPrimitive.Separator.Props) {
+}: Readonly<ComboboxPrimitive.Separator.Props>) {
   return (
     <ComboboxPrimitive.Separator
       data-slot="combobox-separator"
@@ -278,7 +292,7 @@ function ComboboxChipsInput({
   className,
   children: _children,
   ...props
-}: ComboboxPrimitive.Input.Props) {
+}: Readonly<ComboboxPrimitive.Input.Props>) {
   return (
     <ComboboxPrimitive.Input
       data-slot="combobox-chip-input"

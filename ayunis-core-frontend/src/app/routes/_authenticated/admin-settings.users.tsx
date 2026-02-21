@@ -82,11 +82,11 @@ function RouteComponent() {
       invites={invitesResponse.data}
       invitesPagination={invitesResponse.pagination}
       invitesSearch={invitesSearch}
-      invitesCurrentPage={invitesPage ?? 1}
+      invitesCurrentPage={invitesPage}
       users={usersResponse.data}
       pagination={usersResponse.pagination}
       search={search}
-      currentPage={page ?? 1}
+      currentPage={page}
     />
   );
 }

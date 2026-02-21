@@ -26,12 +26,10 @@ export function useCreateEmbeddingModel(onSuccess?: () => void) {
         console.error('Create embedding model failed:', error);
         try {
           const { code } = extractErrorData(error);
-          switch (code) {
-            case 'MODEL_ALREADY_EXISTS':
-              showError(t('models.alreadyExists'));
-              break;
-            default:
-              showError(t('models.createError'));
+          if (code === 'MODEL_ALREADY_EXISTS') {
+            showError(t('models.alreadyExists'));
+          } else {
+            showError(t('models.createError'));
           }
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)

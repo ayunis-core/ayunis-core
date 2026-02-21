@@ -43,12 +43,10 @@ export function useUserNameUpdate(currentName: string) {
           console.error('Username update failed:', error);
           try {
             const { code } = extractErrorData(error);
-            switch (code) {
-              case 'VALIDATION_ERROR':
-                showError(t('account.error.invalidName'));
-                break;
-              default:
-                showError(t('account.error.updateFailed'));
+            if (code === 'VALIDATION_ERROR') {
+              showError(t('account.error.invalidName'));
+            } else {
+              showError(t('account.error.updateFailed'));
             }
           } catch {
             // Non-AxiosError (network failure, request cancellation, etc.)

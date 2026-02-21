@@ -9,7 +9,7 @@ interface UsageTabProps {
   orgId: string;
 }
 
-export default function UsageTab({ orgId }: UsageTabProps) {
+export default function UsageTab({ orgId }: Readonly<UsageTabProps>) {
   const [dateRange, setDateRange] = useState<{
     startDate?: Date;
     endDate?: Date;

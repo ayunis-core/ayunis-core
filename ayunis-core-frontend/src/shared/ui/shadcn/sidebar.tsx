@@ -143,15 +143,13 @@ function SidebarProvider({
           });
 
         // Force focus back to document if it's trapped
-        if (
-          document.activeElement &&
-          document.activeElement.closest('[data-slot="sheet-content"]')
-        ) {
+        if (document.activeElement?.closest('[data-slot="sheet-content"]')) {
           (document.activeElement as HTMLElement).blur();
           document.body.focus();
         }
 
         // Chrome-specific: Force a reflow to ensure styles are properly applied
+        // eslint-disable-next-line sonarjs/void-use -- Intentional: reading offsetHeight forces a reflow
         void document.body.offsetHeight;
       };
 
@@ -722,6 +720,7 @@ function SidebarMenuSkeleton({
 }) {
   // Random width between 50 to 90%.
   const [width] = React.useState(() => {
+    // eslint-disable-next-line sonarjs/pseudo-random -- Random skeleton width for visual variety, not security-sensitive
     return `${Math.floor(Math.random() * 40) + 50}%`;
   });
 
