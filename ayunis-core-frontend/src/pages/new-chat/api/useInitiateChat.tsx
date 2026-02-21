@@ -7,7 +7,7 @@ import type { SourceResponseDtoType } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
 
 export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
-  const { setPendingMessage, setPendingSkillId, setSources } = useChatContext();
+  const { setPendingMessage, setSources } = useChatContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createThreadMutation = useThreadsControllerCreate({
@@ -25,9 +25,8 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
       },
       onError: (error) => {
         console.error('Failed to create thread:', error);
-        // Clear pending message and skill on error
+        // Clear pending message on error
         setPendingMessage('');
-        setPendingSkillId('');
       },
     },
   });

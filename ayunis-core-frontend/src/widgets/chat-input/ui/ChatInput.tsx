@@ -28,6 +28,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 import { SourcesList } from './SourcesList';
 import { showError } from '@/shared/lib/toast';
 import { MicrophoneButton } from './MicrophoneButton';
+import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -38,6 +39,7 @@ interface ChatInputProps {
     type: SourceResponseDtoType;
     createdBy?: SourceResponseDtoCreatedBy;
   }[];
+  knowledgeBases?: KnowledgeBaseSummary[];
   isStreaming?: boolean;
   isCreatingFileSource?: boolean;
   isModelChangeDisabled: boolean;
@@ -49,6 +51,8 @@ interface ChatInputProps {
   onFileUpload: (file: File) => void;
   onRemoveSource: (sourceId: string) => void;
   onDownloadSource: (sourceId: string) => void;
+  onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
+  onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onSend: (
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
@@ -81,6 +85,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       modelId,
       agentId,
       sources,
+      knowledgeBases,
       isStreaming,
       isCreatingFileSource,
       isModelChangeDisabled,
@@ -92,6 +97,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onFileUpload,
       onRemoveSource,
       onDownloadSource,
+      onAddKnowledgeBase,
+      onRemoveKnowledgeBase,
       onSend,
       onSendCancelled,
       prefilledPrompt,
@@ -261,7 +268,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
             <div className="flex flex-col gap-4">
               <SourcesList
                 sources={sources}
+                knowledgeBases={knowledgeBases}
                 onRemove={onRemoveSource}
+                onRemoveKnowledgeBase={onRemoveKnowledgeBase}
                 onDownload={onDownloadSource}
               />
 
@@ -302,6 +311,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     isCreatingFileSource={isCreatingFileSource}
                     onPromptSelect={handlePromptSelect}
                     isImageUploadDisabled={!isVisionEnabled}
+                    onKnowledgeBaseSelect={onAddKnowledgeBase}
+                    attachedKnowledgeBaseIds={knowledgeBases?.map(
+                      (kb) => kb.id,
+                    )}
                   />
                   <AgentButton
                     selectedAgentId={agentId}

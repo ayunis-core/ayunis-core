@@ -21,6 +21,8 @@
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",
     "errorQuotaExceededWithTime": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es in {{minutes}} Minuten erneut.",
+    "errorAddKnowledgeBase": "Wissensbasis konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
+    "errorRemoveKnowledgeBase": "Wissensbasis konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
     "errorDownloadSource": "Quelle konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",

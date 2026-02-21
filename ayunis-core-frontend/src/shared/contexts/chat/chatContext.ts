@@ -6,6 +6,11 @@ type PendingImageFile = {
   altText?: string;
 };
 
+export type KnowledgeBaseSummary = {
+  id: string;
+  name: string;
+};
+
 type ChatContextType = {
   pendingMessage: string;
   setPendingMessage: (message: string) => void;
@@ -25,8 +30,8 @@ type ChatContextType = {
   ) => void;
   pendingImages: PendingImageFile[];
   setPendingImages: (images: PendingImageFile[]) => void;
-  pendingSkillId: string;
-  setPendingSkillId: (id: string) => void;
+  pendingKnowledgeBases: KnowledgeBaseSummary[];
+  setPendingKnowledgeBases: (kbs: KnowledgeBaseSummary[]) => void;
 };
 
 export const ChatContext = createContext<ChatContextType>({
@@ -42,8 +47,8 @@ export const ChatContext = createContext<ChatContextType>({
   setPendingImages: () => {
     throw new Error('setPendingImages is not implemented');
   },
-  pendingSkillId: '',
-  setPendingSkillId: () => {
-    throw new Error('setPendingSkillId is not implemented');
+  pendingKnowledgeBases: [],
+  setPendingKnowledgeBases: () => {
+    throw new Error('setPendingKnowledgeBases is not implemented');
   },
 });

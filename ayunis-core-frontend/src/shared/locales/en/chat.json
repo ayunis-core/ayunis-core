@@ -21,6 +21,8 @@
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
     "errorQuotaExceeded": "You have reached the message limit. Please try again later.",
     "errorQuotaExceededWithTime": "You have reached the message limit. Please try again in {{minutes}} minutes.",
+    "errorAddKnowledgeBase": "Failed to add knowledge base. Please try again.",
+    "errorRemoveKnowledgeBase": "Failed to remove knowledge base. Please try again.",
     "errorDownloadSource": "Failed to download source. Please try again.",
     "errorUpdateModel": "Model could not be updated",
     "errorUpdateAgent": "Agent could not be updated",

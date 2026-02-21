@@ -11,7 +11,8 @@ import { cn } from '@/shared/lib/shadcn/utils';
 import { Badge } from '@/shared/ui/shadcn/badge';
 
 // Icons
-import { XIcon, FileIcon, DatabaseIcon, Sparkles } from 'lucide-react';
+import { XIcon, FileIcon, DatabaseIcon, Sparkles, Brain } from 'lucide-react';
+import type { KnowledgeBaseSummary } from '@/shared/contexts/chat/chatContext';
 
 interface Source {
   id: string;
@@ -22,7 +23,9 @@ interface Source {
 
 interface SourcesListProps {
   sources: Source[];
+  knowledgeBases?: KnowledgeBaseSummary[];
   onRemove: (sourceId: string) => void;
+  onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onDownload?: (sourceId: string) => void;
 }
 
@@ -45,19 +48,39 @@ function getSourceIcon(source: {
 
 export function SourcesList({
   sources,
+  knowledgeBases = [],
   onRemove,
+  onRemoveKnowledgeBase,
   onDownload,
 }: Readonly<SourcesListProps>) {
   const visibleSources = sources.filter(
     (source) => source.createdBy !== 'system',
   );
 
-  if (visibleSources.length === 0) {
+  if (visibleSources.length === 0 && knowledgeBases.length === 0) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
+      {knowledgeBases.map((kb) => (
+        <Badge
+          key={`kb-${kb.id}`}
+          variant="secondary"
+          className="flex items-center gap-1 bg-blue-600/10 text-blue-600"
+        >
+          <Brain className="h-3 w-3" />
+          {kb.name}
+          {onRemoveKnowledgeBase && (
+            <div
+              className="cursor-pointer"
+              onClick={() => onRemoveKnowledgeBase(kb.id)}
+            >
+              <XIcon className="h-3 w-3" />
+            </div>
+          )}
+        </Badge>
+      ))}
       {visibleSources.map((source) => (
         <Badge
           key={source.id}
