@@ -24,7 +24,7 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
   const { confirm } = useConfirmation();
   const router = useRouter();
 
-  const title = chat.title ?? t('card.untitled');
+  const title = chat.title || t('card.untitled');
   const createdDate = new Date(chat.createdAt).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
