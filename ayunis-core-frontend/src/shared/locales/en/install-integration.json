@@ -36,6 +36,7 @@
       "title": "Admin Access Required",
       "description": "You need administrator privileges to install integrations."
     },
+    "alreadyInstalled": "This integration is already installed in your organization.",
     "generic": "Something went wrong while installing the integration. Please try again."
   }
 }

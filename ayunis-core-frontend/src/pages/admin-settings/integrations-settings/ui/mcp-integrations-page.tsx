@@ -109,7 +109,6 @@ export function McpIntegrationsPage({
     );
   }
 
-
   return (
     <SettingsLayout
       action={

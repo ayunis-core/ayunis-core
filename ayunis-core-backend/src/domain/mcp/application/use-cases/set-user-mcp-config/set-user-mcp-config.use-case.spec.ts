@@ -1,21 +1,24 @@
 import { SetUserMcpConfigUseCase } from './set-user-mcp-config.use-case';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
+import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import {
   McpIntegrationNotFoundError,
   McpNotMarketplaceIntegrationError,
   McpNoUserFieldsError,
   McpIntegrationAccessDeniedError,
   McpInvalidConfigKeysError,
+  McpMissingRequiredConfigError,
 } from '../../mcp.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
+import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 
 describe('SetUserMcpConfigUseCase', () => {
   let useCase: SetUserMcpConfigUseCase;
@@ -23,6 +26,7 @@ describe('SetUserMcpConfigUseCase', () => {
   let userConfigRepository: jest.Mocked<McpIntegrationUserConfigRepositoryPort>;
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
   let contextService: jest.Mocked<ContextService>;
+  let marketplaceConfigService: MarketplaceConfigService;
 
   const userId = '770e8400-e29b-41d4-a716-446655440001' as UUID;
   const orgId = '660e8400-e29b-41d4-a716-446655440001' as UUID;
@@ -92,11 +96,15 @@ describe('SetUserMcpConfigUseCase', () => {
     userConfigRepository.save.mockImplementation(async (config) => config);
     userConfigRepository.findByIntegrationAndUser.mockResolvedValue(null);
 
+    marketplaceConfigService = new MarketplaceConfigService(
+      credentialEncryption,
+    );
+
     useCase = new SetUserMcpConfigUseCase(
       integrationRepository,
       userConfigRepository,
-      credentialEncryption,
       contextService,
+      marketplaceConfigService,
     );
   });
 
@@ -129,7 +137,7 @@ describe('SetUserMcpConfigUseCase', () => {
 
     expect(result.hasConfig).toBe(true);
     expect(result.configValues).toEqual({
-      personalToken: '***',
+      personalToken: SECRET_MASK,
       tenantId: 'my-tenant-123',
     });
     expect(userConfigRepository.save).toHaveBeenCalled();
@@ -165,8 +173,109 @@ describe('SetUserMcpConfigUseCase', () => {
 
     expect(result.hasConfig).toBe(true);
     expect(result.configValues).toEqual({
-      personalToken: '***',
+      personalToken: SECRET_MASK,
     });
+  });
+
+  it('should retain existing secret when mask sentinel is sent', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+      {
+        key: 'tenantId',
+        type: 'text' as const,
+        label: 'Tenant ID',
+        headerName: 'X-Tenant-Id',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+
+    const existingConfig = new McpIntegrationUserConfig({
+      integrationId,
+      userId,
+      configValues: {
+        personalToken: 'encrypted:old-token',
+        tenantId: 'old-tenant',
+      },
+    });
+    userConfigRepository.findByIntegrationAndUser.mockResolvedValue(
+      existingConfig,
+    );
+
+    const result = await useCase.execute(
+      new SetUserMcpConfigCommand(integrationId, {
+        personalToken: SECRET_MASK,
+        tenantId: 'new-tenant',
+      }),
+    );
+
+    expect(result.hasConfig).toBe(true);
+    expect(result.configValues).toEqual({
+      personalToken: SECRET_MASK,
+      tenantId: 'new-tenant',
+    });
+
+    // The saved config should retain the encrypted old token
+    const savedConfig = userConfigRepository.save.mock.calls[0][0];
+    expect(savedConfig.configValues.personalToken).toBe('encrypted:old-token');
+    expect(savedConfig.configValues.tenantId).toBe('new-tenant');
+  });
+
+  it('should retain existing values for fields missing from the update', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+      {
+        key: 'tenantId',
+        type: 'text' as const,
+        label: 'Tenant ID',
+        headerName: 'X-Tenant-Id',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+
+    const existingConfig = new McpIntegrationUserConfig({
+      integrationId,
+      userId,
+      configValues: {
+        personalToken: 'encrypted:existing-token',
+        tenantId: 'existing-tenant',
+      },
+    });
+    userConfigRepository.findByIntegrationAndUser.mockResolvedValue(
+      existingConfig,
+    );
+
+    // Only update personalToken, omit tenantId entirely
+    const result = await useCase.execute(
+      new SetUserMcpConfigCommand(integrationId, {
+        personalToken: 'brand-new-token',
+      }),
+    );
+
+    expect(result.hasConfig).toBe(true);
+    // tenantId should be retained from existing config
+    expect(result.configValues.tenantId).toBe('existing-tenant');
+
+    const savedConfig = userConfigRepository.save.mock.calls[0][0];
+    expect(savedConfig.configValues.tenantId).toBe('existing-tenant');
+    expect(savedConfig.configValues.personalToken).toBe(
+      'encrypted:brand-new-token',
+    );
   });
 
   it('should throw when integration is not found', async () => {
@@ -258,6 +367,99 @@ describe('SetUserMcpConfigUseCase', () => {
 
     expect(result.configValues).toEqual({ tenantId: 'my-tenant-123' });
     expect(credentialEncryption.encrypt).not.toHaveBeenCalled();
+  });
+
+  it('should throw UnauthorizedException when orgId is null', async () => {
+    contextService.get.mockImplementation((key?: string | symbol) => {
+      if (key === 'userId') return userId;
+      if (key === 'orgId') return undefined;
+      return undefined;
+    });
+
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+
+    await expect(
+      useCase.execute(
+        new SetUserMcpConfigCommand(integrationId, {
+          personalToken: 'my-token',
+        }),
+      ),
+    ).rejects.toThrow('User not authenticated');
+  });
+
+  it('should throw McpMissingRequiredConfigError when required user fields are empty', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: true,
+      },
+      {
+        key: 'tenantId',
+        type: 'text' as const,
+        label: 'Tenant ID',
+        headerName: 'X-Tenant-Id',
+        required: true,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+
+    await expect(
+      useCase.execute(
+        new SetUserMcpConfigCommand(integrationId, {
+          personalToken: '',
+          tenantId: '',
+        }),
+      ),
+    ).rejects.toThrow(McpMissingRequiredConfigError);
+  });
+
+  it('should not store SECRET_MASK as a real value when no existing config exists', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+      {
+        key: 'tenantId',
+        type: 'text' as const,
+        label: 'Tenant ID',
+        headerName: 'X-Tenant-Id',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+    userConfigRepository.findByIntegrationAndUser.mockResolvedValue(null);
+
+    const result = await useCase.execute(
+      new SetUserMcpConfigCommand(integrationId, {
+        personalToken: SECRET_MASK,
+        tenantId: 'my-tenant-123',
+      }),
+    );
+
+    expect(result.hasConfig).toBe(true);
+    // personalToken should be absent — SECRET_MASK without existing value is skipped
+    const savedConfig = userConfigRepository.save.mock.calls[0][0];
+    expect(savedConfig.configValues).not.toHaveProperty('personalToken');
+    expect(savedConfig.configValues.tenantId).toBe('my-tenant-123');
   });
 
   it('should reject config keys that are not defined in userFields', async () => {

@@ -4,7 +4,7 @@ import { McpIntegrationsRepository } from './mcp-integrations.repository';
 import { McpIntegrationRecord } from './schema/mcp-integration.record';
 import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
 import type { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
-import { MarketplaceMcpIntegrationRecord } from './schema/marketplace-mcp-integration.record';
+import type { MarketplaceMcpIntegrationRecord } from './schema/marketplace-mcp-integration.record';
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from '../../../application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../../application/factories/mcp-integration-auth.factory';

@@ -56,6 +56,18 @@ describe('IsStringRecord', () => {
     expect(errors).toHaveLength(1);
   });
 
+  it('rejects an array of strings', async () => {
+    const dto = createDto(['value1', 'value2']);
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(1);
+  });
+
+  it('rejects an empty array', async () => {
+    const dto = createDto([]);
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(1);
+  });
+
   it('uses custom message when provided', async () => {
     const dto = createDto({ key: 42 });
     const errors = await validate(dto);

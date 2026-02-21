@@ -40,6 +40,9 @@ export function useInstallIntegrationFromMarketplace() {
             case 'MCP_MISSING_REQUIRED_CONFIG':
               showError(t('error.missingRequiredConfig'));
               break;
+            case 'DUPLICATE_MCP_INTEGRATION':
+              showError(t('error.alreadyInstalled'));
+              break;
             default:
               showError(t('error.generic'));
           }

@@ -1,8 +1,8 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { McpIntegration } from '../mcp-integration.entity';
-import { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
+import type { McpIntegrationAuth } from '../auth/mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
-import { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
 
 /**
  * MCP integration installed from the Ayunis marketplace.

@@ -1,6 +1,6 @@
 import { ConnectionValidationService } from './connection-validation.service';
-import { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
-import { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
+import type { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
+import type { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
@@ -42,7 +42,7 @@ describe('ConnectionValidationService', () => {
     service = new ConnectionValidationService(validateUseCase, repository);
   });
 
-  it('sets status to healthy when validation succeeds', async () => {
+  it('sets status to connected when validation succeeds', async () => {
     const integration = createIntegration();
     validateUseCase.execute.mockResolvedValue({
       isValid: true,
@@ -53,11 +53,11 @@ describe('ConnectionValidationService', () => {
 
     await service.validateAndUpdateStatus(integration);
 
-    expect(integration.connectionStatus).toBe('healthy');
+    expect(integration.connectionStatus).toBe('connected');
     expect(repository.save).toHaveBeenCalledWith(integration);
   });
 
-  it('sets status to unhealthy when validation returns invalid', async () => {
+  it('sets status to error when validation returns invalid', async () => {
     const integration = createIntegration();
     validateUseCase.execute.mockResolvedValue({
       isValid: false,
@@ -69,12 +69,12 @@ describe('ConnectionValidationService', () => {
 
     await service.validateAndUpdateStatus(integration);
 
-    expect(integration.connectionStatus).toBe('unhealthy');
+    expect(integration.connectionStatus).toBe('error');
     expect(integration.lastConnectionError).toBe('Auth failed');
     expect(repository.save).toHaveBeenCalledWith(integration);
   });
 
-  it('sets status to unhealthy with default message when no errorMessage', async () => {
+  it('sets status to error with default message when no errorMessage', async () => {
     const integration = createIntegration();
     validateUseCase.execute.mockResolvedValue({
       isValid: false,
@@ -85,17 +85,17 @@ describe('ConnectionValidationService', () => {
 
     await service.validateAndUpdateStatus(integration);
 
-    expect(integration.connectionStatus).toBe('unhealthy');
+    expect(integration.connectionStatus).toBe('error');
     expect(integration.lastConnectionError).toBe('Validation failed');
   });
 
-  it('sets status to unhealthy when validation throws an error', async () => {
+  it('sets status to error when validation throws an error', async () => {
     const integration = createIntegration();
     validateUseCase.execute.mockRejectedValue(new Error('Connection refused'));
 
     await service.validateAndUpdateStatus(integration);
 
-    expect(integration.connectionStatus).toBe('unhealthy');
+    expect(integration.connectionStatus).toBe('error');
     expect(integration.lastConnectionError).toBe(
       'Validation failed: Connection refused',
     );
@@ -108,7 +108,7 @@ describe('ConnectionValidationService', () => {
 
     await service.validateAndUpdateStatus(integration);
 
-    expect(integration.connectionStatus).toBe('unhealthy');
+    expect(integration.connectionStatus).toBe('error');
     expect(integration.lastConnectionError).toBe(
       'Validation failed: Unknown error',
     );

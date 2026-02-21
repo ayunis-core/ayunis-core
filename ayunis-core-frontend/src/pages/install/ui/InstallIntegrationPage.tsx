@@ -1,12 +1,26 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
+import type { TFunction } from 'i18next';
+import { Plug } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import { useTranslation } from 'react-i18next';
 import { useMarketplaceControllerGetIntegration } from '../api/useFetchMarketplaceIntegration';
 import { useInstallIntegrationFromMarketplace } from '../api/useInstallIntegrationFromMarketplace';
 import { InstallErrorState } from './InstallErrorState';
 import { InstallLoadingSkeleton } from './InstallLoadingSkeleton';
 import type { MarketplaceIntegrationResponseDto } from '../api/useFetchMarketplaceIntegration';
+import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/shared/ui/shadcn/card';
+import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 
 interface InstallIntegrationPageProps {
   integrationIdentifier: string | undefined;
@@ -131,29 +145,11 @@ function InstallIntegrationCard({
   );
 }
 
-// Extracted to keep complexity low and reuse types
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Button } from '@/shared/ui/shadcn/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Plug } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
-import type { TFunction } from 'i18next';
-
 function getEditableOrgFields(
   integration: MarketplaceIntegrationResponseDto,
 ): MarketplaceIntegrationConfigFieldDto[] {
   return integration.configSchema.orgFields.filter(
-    (field) => field.value == null,
+    (field) => field.value === null || field.value === undefined,
   );
 }
 
@@ -242,51 +238,5 @@ function InstallIntegrationCardView({
         </Button>
       </CardFooter>
     </Card>
-  );
-}
-
-interface ConfigFieldInputProps {
-  field: MarketplaceIntegrationConfigFieldDto;
-  value: string;
-  onChange: (value: string) => void;
-  disabled: boolean;
-}
-
-function ConfigFieldInput({
-  field,
-  value,
-  onChange,
-  disabled,
-}: ConfigFieldInputProps) {
-  const inputId = `config-field-${field.key}`;
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={inputId}>
-        {field.label}
-        {field.required && <span className="ml-1 text-destructive">*</span>}
-      </Label>
-      {field.type === 'secret' ? (
-        <PasswordInput
-          id={inputId}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={field.help ?? ''}
-        />
-      ) : (
-        <Input
-          id={inputId}
-          type={field.type === 'url' ? 'url' : 'text'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={field.help ?? ''}
-        />
-      )}
-      {field.help && (
-        <p className="text-xs text-muted-foreground">{field.help}</p>
-      )}
-    </div>
   );
 }

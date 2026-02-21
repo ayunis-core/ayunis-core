@@ -1,5 +1,5 @@
-import { UUID } from 'crypto';
-import { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
+import type { UUID } from 'crypto';
+import type { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
 
 /**
  * Repository port for MCP integration user-level configuration.
