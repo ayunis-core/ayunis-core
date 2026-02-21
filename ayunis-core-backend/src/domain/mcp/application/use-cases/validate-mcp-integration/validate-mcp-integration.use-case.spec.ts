@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
 import { ValidateMcpIntegrationUseCase } from './validate-mcp-integration.use-case';
 import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import type { McpClientService } from '../../services/mcp-client.service';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 

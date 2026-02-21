@@ -76,7 +76,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   ): McpIntegrationUserConfig {
     return new McpIntegrationUserConfig({
       id: record.id,
-      integrationId: record.integrationId,
+      integrationId: record.integrationId as UUID,
       userId: record.userId,
       configValues: record.configValues,
       createdAt: record.createdAt,

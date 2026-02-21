@@ -1,16 +1,19 @@
 import { GetUserMcpConfigUseCase } from './get-user-mcp-config.use-case';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
+  McpNotMarketplaceIntegrationError,
 } from '../../mcp.errors';
-import { UUID } from 'crypto';
+import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
+import type { UUID } from 'crypto';
 
 describe('GetUserMcpConfigUseCase', () => {
   let useCase: GetUserMcpConfigUseCase;
@@ -109,7 +112,7 @@ describe('GetUserMcpConfigUseCase', () => {
 
     expect(result.hasConfig).toBe(true);
     expect(result.configValues).toEqual({
-      personalToken: '***',
+      personalToken: SECRET_MASK,
       tenantId: 'my-tenant-123',
     });
     expect(userConfigRepository.findByIntegrationAndUser).toHaveBeenCalledWith(
@@ -148,8 +151,35 @@ describe('GetUserMcpConfigUseCase', () => {
     ).rejects.toThrow(McpIntegrationAccessDeniedError);
   });
 
+  it('should throw McpNotMarketplaceIntegrationError when integration is not a marketplace type', async () => {
+    const customIntegration = new CustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Custom Integration',
+      serverUrl: 'https://custom.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth({}),
+    });
+    integrationRepository.findById.mockResolvedValue(customIntegration);
+
+    await expect(
+      useCase.execute(new GetUserMcpConfigQuery(integrationId)),
+    ).rejects.toThrow(McpNotMarketplaceIntegrationError);
+  });
+
   it('should throw when user is not authenticated', async () => {
     contextService.get.mockReturnValue(undefined);
+
+    await expect(
+      useCase.execute(new GetUserMcpConfigQuery(integrationId)),
+    ).rejects.toThrow('User not authenticated');
+  });
+
+  it('should throw UnauthorizedException when orgId is null', async () => {
+    contextService.get.mockImplementation((key?: string | symbol) => {
+      if (key === 'userId') return userId;
+      if (key === 'orgId') return undefined;
+      return undefined;
+    });
 
     await expect(
       useCase.execute(new GetUserMcpConfigQuery(integrationId)),

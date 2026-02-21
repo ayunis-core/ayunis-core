@@ -165,6 +165,9 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
         orgId,
         marketplaceIdentifier,
       },
+      relations: {
+        auth: true,
+      },
     });
 
     if (!record) {

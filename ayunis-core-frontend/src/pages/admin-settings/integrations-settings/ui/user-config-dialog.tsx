@@ -9,13 +9,12 @@ import {
   DialogTitle,
 } from '@/shared/ui/shadcn/dialog';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 import { useGetUserConfig, useSetUserConfig } from '../api/useUserConfig';
 import type { McpIntegration } from '../model/types';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SECRET_MASK } from '@/shared/constants/secret-mask';
 
 interface UserConfigDialogProps {
   integration: McpIntegration | null;
@@ -84,7 +83,7 @@ function UserConfigForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {userFields.map((field) => (
-        <UserConfigFieldInput
+        <ConfigFieldInput
           key={field.key}
           field={field}
           value={formValues[field.key] ?? ''}
@@ -92,6 +91,7 @@ function UserConfigForm({
             setFormValues((prev) => ({ ...prev, [field.key]: value }))
           }
           disabled={isSaving}
+          idPrefix="user-config"
         />
       ))}
       <DialogFooter>
@@ -130,8 +130,8 @@ function initFormFromExisting(
   const initial: Record<string, string> = {};
   for (const field of fields) {
     const existingValue = existing[field.key];
-    // Secret fields come back as "***" — don't prefill
-    if (existingValue && existingValue !== '***') {
+    // Secret fields come back masked — don't prefill
+    if (existingValue && existingValue !== SECRET_MASK) {
       initial[field.key] = existingValue;
     }
   }
@@ -147,52 +147,6 @@ function UserConfigLoadingSkeleton() {
         <Skeleton className="h-10 w-24" />
         <Skeleton className="h-10 w-24" />
       </div>
-    </div>
-  );
-}
-
-interface UserConfigFieldInputProps {
-  field: MarketplaceIntegrationConfigFieldDto;
-  value: string;
-  onChange: (value: string) => void;
-  disabled: boolean;
-}
-
-function UserConfigFieldInput({
-  field,
-  value,
-  onChange,
-  disabled,
-}: UserConfigFieldInputProps) {
-  const inputId = `user-config-${field.key}`;
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={inputId}>
-        {field.label}
-        {field.required && <span className="ml-1 text-destructive">*</span>}
-      </Label>
-      {field.type === 'secret' ? (
-        <PasswordInput
-          id={inputId}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={field.help ?? ''}
-        />
-      ) : (
-        <Input
-          id={inputId}
-          type={field.type === 'url' ? 'url' : 'text'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={field.help ?? ''}
-        />
-      )}
-      {field.help && (
-        <p className="text-xs text-muted-foreground">{field.help}</p>
-      )}
     </div>
   );
 }

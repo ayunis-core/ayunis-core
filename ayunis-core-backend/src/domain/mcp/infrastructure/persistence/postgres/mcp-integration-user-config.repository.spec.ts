@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { McpIntegrationUserConfigRepository } from './mcp-integration-user-config.repository';
 import { McpIntegrationUserConfigRecord } from './schema/mcp-integration-user-config.record';
 import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';

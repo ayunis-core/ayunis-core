@@ -2194,14 +2194,14 @@ export interface InstallMarketplaceIntegrationDto {
 }
 
 /**
- * Configuration values with secret values masked (keys present, values replaced with "***")
+ * Configuration values with secret values masked (keys present, values replaced with "••••••")
  */
 export type UserConfigResponseDtoConfigValues = {[key: string]: string};
 
 export interface UserConfigResponseDto {
   /** Whether the user has configured values for this integration */
   hasConfig: boolean;
-  /** Configuration values with secret values masked (keys present, values replaced with "***") */
+  /** Configuration values with secret values masked (keys present, values replaced with "••••••") */
   configValues: UserConfigResponseDtoConfigValues;
 }
 

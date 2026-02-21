@@ -8,6 +8,7 @@ import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { ConfigField } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 
 /**
  * Mapper for converting MCP integration entities to DTOs.
@@ -77,10 +78,10 @@ export class McpIntegrationDtoMapper {
     switch (integration.kind) {
       case McpIntegrationKind.PREDEFINED:
         return 'predefined';
+      case McpIntegrationKind.CUSTOM:
+        return 'custom';
       case McpIntegrationKind.MARKETPLACE:
         return 'marketplace';
-      default:
-        return 'custom';
     }
   }
 
@@ -132,7 +133,7 @@ export class McpIntegrationDtoMapper {
       }
 
       if (field.type === 'secret') {
-        masked[field.key] = '••••••';
+        masked[field.key] = SECRET_MASK;
       } else {
         masked[field.key] = currentValue;
       }

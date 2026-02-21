@@ -36,6 +36,7 @@
       "title": "Administratorzugriff erforderlich",
       "description": "Sie benötigen Administratorrechte, um Integrationen zu installieren."
     },
+    "alreadyInstalled": "Diese Integration ist bereits in Ihrer Organisation installiert.",
     "generic": "Beim Installieren der Integration ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
   }
 }

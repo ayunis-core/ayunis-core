@@ -19,7 +19,7 @@ import {
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
 import { PasswordInput } from '@/shared/ui/shadcn/password-input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 import { Button } from '@/shared/ui/shadcn/button';
 import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
 import { useUpdateIntegration } from '../api/useUpdateIntegration';
@@ -40,7 +40,9 @@ function getEditableOrgFields(
 ): MarketplaceIntegrationConfigFieldDto[] {
   const schema = integration.configSchema as ConfigSchema | undefined;
   if (!schema?.orgFields) return [];
-  return schema.orgFields.filter((field) => field.value == null);
+  return schema.orgFields.filter(
+    (field) => field.value === null || field.value === undefined,
+  );
 }
 
 export function EditIntegrationDialog({
@@ -208,11 +210,10 @@ export function EditIntegrationDialog({
                     {t('integrations.editDialog.configDescription')}
                   </p>
                   {editableFields.map((field) => (
-                    <MarketplaceConfigFieldInput
+                    <ConfigFieldInput
                       key={field.key}
                       field={field}
                       value={configFormValues[field.key] ?? ''}
-                      hasExistingValue={field.key in currentOrgValues}
                       onChange={(value) =>
                         setConfigFormValues((prev) => ({
                           ...prev,
@@ -220,9 +221,11 @@ export function EditIntegrationDialog({
                         }))
                       }
                       disabled={isUpdating}
-                      secretPlaceholder={t(
-                        'integrations.editDialog.secretPlaceholder',
-                      )}
+                      secretPlaceholder={
+                        field.key in currentOrgValues
+                          ? t('integrations.editDialog.secretPlaceholder')
+                          : undefined
+                      }
                     />
                   ))}
                 </div>
@@ -330,57 +333,5 @@ export function EditIntegrationDialog({
         </DialogContent>
       )}
     </Dialog>
-  );
-}
-
-interface MarketplaceConfigFieldInputProps {
-  field: MarketplaceIntegrationConfigFieldDto;
-  value: string;
-  hasExistingValue: boolean;
-  onChange: (value: string) => void;
-  disabled: boolean;
-  secretPlaceholder: string;
-}
-
-function MarketplaceConfigFieldInput({
-  field,
-  value,
-  hasExistingValue,
-  onChange,
-  disabled,
-  secretPlaceholder,
-}: MarketplaceConfigFieldInputProps) {
-  const inputId = `config-field-${field.key}`;
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={inputId}>
-        {field.label}
-        {field.required && <span className="ml-1 text-destructive">*</span>}
-      </Label>
-      {field.type === 'secret' ? (
-        <PasswordInput
-          id={inputId}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={
-            hasExistingValue ? secretPlaceholder : (field.help ?? '')
-          }
-        />
-      ) : (
-        <Input
-          id={inputId}
-          type={field.type === 'url' ? 'url' : 'text'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          placeholder={field.help ?? ''}
-        />
-      )}
-      {field.help && (
-        <p className="text-xs text-muted-foreground">{field.help}</p>
-      )}
-    </div>
   );
 }

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { MarketplaceMcpIntegration } from './marketplace-mcp-integration.entity';
 import { McpIntegrationKind } from '../value-objects/mcp-integration-kind.enum';
 import { NoAuthMcpIntegrationAuth } from '../auth/no-auth-mcp-integration-auth.entity';
-import { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../value-objects/integration-config-schema';
 
 describe('MarketplaceMcpIntegration', () => {
   const orgId = randomUUID();
