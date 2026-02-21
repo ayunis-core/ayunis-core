@@ -107,8 +107,6 @@ export function ChatSettingsCard() {
             </SelectContent>
           </Select>
         </div>
-
-        {/* Error messages removed — error types are void (always null) */}
       </CardContent>
     </Card>
   );

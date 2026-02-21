@@ -63,6 +63,7 @@
     "systemPromptSaved": "System prompt saved successfully",
     "systemPromptDeleted": "System prompt removed",
     "systemPromptError": "Failed to update system prompt",
+    "defaultModelError": "Failed to update default model",
     "saveSystemPrompt": "Save",
     "deleteSystemPrompt": "Remove"
   }

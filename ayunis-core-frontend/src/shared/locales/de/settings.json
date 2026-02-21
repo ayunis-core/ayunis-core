@@ -63,6 +63,7 @@
     "systemPromptSaved": "System-Prompt erfolgreich gespeichert",
     "systemPromptDeleted": "System-Prompt entfernt",
     "systemPromptError": "System-Prompt konnte nicht aktualisiert werden",
+    "defaultModelError": "Standardmodell konnte nicht aktualisiert werden",
     "saveSystemPrompt": "Speichern",
     "deleteSystemPrompt": "Entfernen"
   }
