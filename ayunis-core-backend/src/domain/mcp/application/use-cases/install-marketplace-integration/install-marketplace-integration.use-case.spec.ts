@@ -1,14 +1,14 @@
 import { InstallMarketplaceIntegrationUseCase } from './install-marketplace-integration.use-case';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
-import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
+import type { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
+import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
-import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
@@ -18,8 +18,8 @@ import {
   DuplicateMarketplaceMcpIntegrationError,
 } from '../../mcp.errors';
 import { MarketplaceIntegrationNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
-import { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
-import { UUID } from 'crypto';
+import type { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import type { UUID } from 'crypto';
 
 describe('InstallMarketplaceIntegrationUseCase', () => {
   let useCase: InstallMarketplaceIntegrationUseCase;

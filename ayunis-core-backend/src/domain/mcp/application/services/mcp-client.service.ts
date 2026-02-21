@@ -45,7 +45,7 @@ export class McpClientService {
    * @returns Connection configuration for MCP client
    * @throws McpAuthenticationError if authentication configuration fails
    */
-  // eslint-disable-next-line sonarjs/cognitive-complexity -- auth config branching inherently complex
+
   async buildConnectionConfig(
     integration: McpIntegration,
     userId?: UUID,
@@ -201,41 +201,6 @@ export class McpClientService {
         integrationId: integration.id,
       });
       throw new McpAuthenticationError('Authentication configuration failed');
-    }
-  }
-
-  /**
-   * Validates connection to an MCP server and updates integration status.
-   *
-   * @param integration The MCP integration entity
-   * @returns true if connection is valid, false otherwise
-   */
-  async validateConnection(
-    integration: McpIntegration,
-    userId?: UUID,
-  ): Promise<boolean> {
-    try {
-      const config = await this.buildConnectionConfig(integration, userId);
-      const result = await this.mcpClient.validateConnection(config);
-
-      integration.updateConnectionStatus(
-        result.valid ? 'connected' : 'error',
-        result.error,
-      );
-
-      return result.valid;
-    } catch (error) {
-      this.logger.error('Failed to validate connection', {
-        error: error as Error,
-        integrationId: integration.id,
-      });
-
-      integration.updateConnectionStatus(
-        'error',
-        'Authentication configuration failed',
-      );
-
-      return false;
     }
   }
 

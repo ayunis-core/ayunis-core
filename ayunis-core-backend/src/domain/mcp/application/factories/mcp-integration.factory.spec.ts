@@ -9,7 +9,7 @@ import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 
 describe('McpIntegrationFactory', () => {
   const orgId = randomUUID();

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpClientService } from '../../services/mcp-client.service';
+import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
@@ -12,6 +13,7 @@ export class RetrieveMcpResourceUseCase {
   constructor(
     private readonly mcpClientService: McpClientService,
     private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(

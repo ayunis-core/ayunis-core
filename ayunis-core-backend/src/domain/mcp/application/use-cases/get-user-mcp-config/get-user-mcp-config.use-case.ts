@@ -6,13 +6,15 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
+  McpNotMarketplaceIntegrationError,
 } from '../../mcp.errors';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
 
 export interface UserMcpConfigResult {
   hasConfig: boolean;
-  /** Config values with secret values masked (keys only, values replaced with '***') */
+  /** Config values with secret values masked (keys only, values replaced with SECRET_MASK) */
   configValues: Record<string, string>;
 }
 
@@ -35,6 +37,9 @@ export class GetUserMcpConfigUseCase {
     }
 
     const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
 
     const integration = await this.integrationRepository.findById(
       query.integrationId,
@@ -46,6 +51,10 @@ export class GetUserMcpConfigUseCase {
 
     if (integration.orgId !== orgId) {
       throw new McpIntegrationAccessDeniedError(query.integrationId);
+    }
+
+    if (!integration.isMarketplace()) {
+      throw new McpNotMarketplaceIntegrationError(query.integrationId);
     }
 
     const config = await this.userConfigRepository.findByIntegrationAndUser(
@@ -61,7 +70,7 @@ export class GetUserMcpConfigUseCase {
     const secretKeys = this.getSecretKeys(integration);
     const maskedValues: Record<string, string> = {};
     for (const [key, value] of Object.entries(config.configValues)) {
-      maskedValues[key] = secretKeys.has(key) ? '***' : value;
+      maskedValues[key] = secretKeys.has(key) ? SECRET_MASK : value;
     }
 
     return { hasConfig: true, configValues: maskedValues };

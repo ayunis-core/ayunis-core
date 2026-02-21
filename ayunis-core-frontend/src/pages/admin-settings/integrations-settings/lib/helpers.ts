@@ -39,7 +39,7 @@ export function getIntegrationTypeLabel(type: McpIntegration['type']): string {
       return i18n.t('integrations.helpers.type.marketplace', {
         ns: 'admin-settings-integrations',
       });
-    default:
+    case 'custom':
       return i18n.t('integrations.helpers.type.custom', {
         ns: 'admin-settings-integrations',
       });

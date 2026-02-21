@@ -7,7 +7,8 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
+import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
 
 describe('McpIntegrationDtoMapper', () => {
   const mapper = new McpIntegrationDtoMapper();
@@ -115,7 +116,7 @@ describe('McpIntegrationDtoMapper', () => {
     expect(dto.serverUrl).toBeUndefined();
     expect(dto.slug).toBeUndefined();
     // Secret field is masked
-    expect(dto.orgConfigValues).toEqual({ apiToken: '••••••' });
+    expect(dto.orgConfigValues).toEqual({ apiToken: SECRET_MASK });
   });
 
   it('maps marketplace integration without user fields', () => {
@@ -187,7 +188,7 @@ describe('McpIntegrationDtoMapper', () => {
 
     expect(dto.orgConfigValues).toEqual({
       endpointUrl: 'https://rim.ekom21.de/oparl/v1',
-      apiToken: '••••••',
+      apiToken: SECRET_MASK,
       description: 'Municipal council data',
     });
   });
