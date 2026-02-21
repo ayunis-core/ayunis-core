@@ -23,6 +23,7 @@ import { Route as AuthenticatedSuperAdminSettingsIndexImport } from './routes/_a
 import { Route as AuthenticatedSkillsIndexImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedPromptsIndexImport } from './routes/_authenticated/prompts.index'
+import { Route as AuthenticatedKnowledgeBasesIndexImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedChatIndexImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAgentsIndexImport } from './routes/_authenticated/agents.index'
@@ -121,6 +122,13 @@ const AuthenticatedPromptsIndexRoute = AuthenticatedPromptsIndexImport.update({
   path: '/prompts/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+
+const AuthenticatedKnowledgeBasesIndexRoute =
+  AuthenticatedKnowledgeBasesIndexImport.update({
+    id: '/knowledge-bases/',
+    path: '/knowledge-bases/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexImport.update({
   id: '/chats/',
@@ -441,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsIndexImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/knowledge-bases/': {
+      id: '/_authenticated/knowledge-bases/'
+      path: '/knowledge-bases'
+      fullPath: '/knowledge-bases'
+      preLoaderRoute: typeof AuthenticatedKnowledgeBasesIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/prompts/': {
       id: '/_authenticated/prompts/'
       path: '/prompts'
@@ -532,6 +547,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
   AuthenticatedPromptsIndexRoute: typeof AuthenticatedPromptsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
@@ -561,6 +577,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
   AuthenticatedPromptsIndexRoute: AuthenticatedPromptsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
@@ -609,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
@@ -646,6 +664,7 @@ export interface FileRoutesByTo {
   '/agents': typeof AuthenticatedAgentsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/prompts': typeof AuthenticatedPromptsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
@@ -684,6 +703,7 @@ export interface FileRoutesById {
   '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
   '/_authenticated/prompts/': typeof AuthenticatedPromptsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
@@ -723,6 +743,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/chat'
     | '/chats'
+    | '/knowledge-bases'
     | '/prompts'
     | '/settings'
     | '/skills'
@@ -759,6 +780,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/chat'
     | '/chats'
+    | '/knowledge-bases'
     | '/prompts'
     | '/settings'
     | '/skills'
@@ -795,6 +817,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents/'
     | '/_authenticated/chat/'
     | '/_authenticated/chats/'
+    | '/_authenticated/knowledge-bases/'
     | '/_authenticated/prompts/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
@@ -874,6 +897,7 @@ export const routeTree = rootRoute
         "/_authenticated/agents/",
         "/_authenticated/chat/",
         "/_authenticated/chats/",
+        "/_authenticated/knowledge-bases/",
         "/_authenticated/prompts/",
         "/_authenticated/settings/",
         "/_authenticated/skills/",
@@ -965,6 +989,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/chats/": {
       "filePath": "_authenticated/chats.index.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/knowledge-bases/": {
+      "filePath": "_authenticated/knowledge-bases.index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/prompts/": {
