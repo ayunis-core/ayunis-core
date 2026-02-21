@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAddPrompt } from '../api/useAddPrompt';
 import { CreateItemDialogWidget } from '@/widgets/create-item-dialog/ui/CreateItemDialogWidget';
@@ -15,8 +16,10 @@ export default function CreatePromptDialog({
   buttonClassName = '',
 }: Readonly<CreatePromptDialogProps>) {
   const { t } = useTranslation('prompts');
+  const [isOpen, setIsOpen] = useState(false);
   const { form, onSubmit, resetForm, isLoading } = useAddPrompt({
     onSuccessCallback: () => {
+      setIsOpen(false);
       resetForm();
     },
   });
@@ -52,6 +55,8 @@ export default function CreatePromptDialog({
       createButtonText={t('createDialog.buttons.create')}
       creatingButtonText={t('createDialog.buttons.creating')}
       cancelButtonText={t('createDialog.buttons.cancel')}
+      open={isOpen}
+      onOpenChange={setIsOpen}
     />
   );
 }

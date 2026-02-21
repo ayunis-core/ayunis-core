@@ -46,6 +46,8 @@ interface CreateItemDialogWidgetProps<T extends FieldValues> {
   createButtonText: string;
   creatingButtonText: string;
   cancelButtonText: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CreateItemDialogWidget<T extends FieldValues>({
@@ -62,21 +64,29 @@ export function CreateItemDialogWidget<T extends FieldValues>({
   createButtonText,
   creatingButtonText,
   cancelButtonText,
+  open,
+  onOpenChange,
 }: Readonly<CreateItemDialogWidgetProps<T>>) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const handleCancel = () => {
     onCancel();
-    setIsOpen(false);
+    setIsOpen?.(false);
   };
 
   const handleSubmit = (data: T) => {
     onSubmit(data);
-    setIsOpen(false);
+    if (!isControlled) {
+      setIsOpen?.(false);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(value) => setIsOpen?.(value)}>
       <DialogTrigger asChild>
         <Button
           size="sm"
