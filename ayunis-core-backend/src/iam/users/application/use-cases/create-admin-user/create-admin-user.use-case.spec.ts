@@ -16,7 +16,7 @@ describe('CreateAdminUserUseCase', () => {
   let mockHashTextUseCase: Partial<HashTextUseCase>;
   let mockCreateUserUseCase: Partial<CreateUserUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       findOneByEmail: jest.fn(),
       create: jest.fn(),
@@ -38,6 +38,9 @@ describe('CreateAdminUserUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateAdminUserUseCase>(CreateAdminUserUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

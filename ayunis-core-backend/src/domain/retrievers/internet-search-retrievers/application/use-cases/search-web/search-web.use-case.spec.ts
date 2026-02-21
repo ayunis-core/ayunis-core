@@ -10,7 +10,7 @@ describe('SearchWebUseCase', () => {
   let useCase: SearchWebUseCase;
   let mockHandler: Partial<InternetSearchHandler>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockHandler = {
       search: jest.fn(),
     };
@@ -23,6 +23,9 @@ describe('SearchWebUseCase', () => {
     }).compile();
 
     useCase = module.get<SearchWebUseCase>(SearchWebUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

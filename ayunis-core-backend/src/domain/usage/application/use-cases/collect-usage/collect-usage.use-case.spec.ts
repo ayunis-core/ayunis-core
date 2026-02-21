@@ -42,7 +42,7 @@ describe('CollectUsageUseCase', () => {
     });
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsageRepository = {
       save: jest.fn().mockResolvedValue(undefined),
     };
@@ -64,6 +64,17 @@ describe('CollectUsageUseCase', () => {
     }).compile();
 
     useCase = module.get<CollectUsageUseCase>(CollectUsageUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (mockContextService.get as jest.Mock).mockImplementation(
+      (key?: 'userId' | 'orgId') => {
+        if (key === 'userId') return userId;
+        if (key === 'orgId') return orgId;
+        return undefined;
+      },
+    );
+    (mockUsageRepository.save as jest.Mock).mockResolvedValue(undefined);
   });
 
   it('should be defined', () => {

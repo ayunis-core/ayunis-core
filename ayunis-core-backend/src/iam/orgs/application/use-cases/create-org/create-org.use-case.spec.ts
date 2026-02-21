@@ -11,7 +11,7 @@ describe('CreateOrgUseCase', () => {
   let useCase: CreateOrgUseCase;
   let mockOrgsRepository: Partial<OrgsRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockOrgsRepository = {
       create: jest.fn(),
     };
@@ -24,6 +24,9 @@ describe('CreateOrgUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateOrgUseCase>(CreateOrgUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

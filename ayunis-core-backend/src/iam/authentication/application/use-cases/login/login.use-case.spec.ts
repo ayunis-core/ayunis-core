@@ -14,7 +14,7 @@ describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
   let mockAuthRepository: Partial<AuthenticationRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockAuthRepository = {
       generateTokens: jest.fn(),
     };
@@ -30,6 +30,9 @@ describe('LoginUseCase', () => {
     }).compile();
 
     useCase = module.get<LoginUseCase>(LoginUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

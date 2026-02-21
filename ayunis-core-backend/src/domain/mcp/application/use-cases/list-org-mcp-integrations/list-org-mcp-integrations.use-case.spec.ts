@@ -25,7 +25,7 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
   const mockIntegrationId1 = randomUUID();
   const mockIntegrationId2 = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockRepository = {
       save: jest.fn(),
       findById: jest.fn(),
@@ -65,6 +65,13 @@ describe('ListOrgMcpIntegrationsUseCase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    (contextService.get as jest.Mock).mockImplementation((key?: string) => {
+      if (key === 'orgId') return mockOrgId;
+      return undefined;
+    });
   });
 
   describe('execute', () => {

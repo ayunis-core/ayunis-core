@@ -14,7 +14,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListPredefinedMcpIntegrationConfigsUseCase,
@@ -121,7 +121,7 @@ describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
         Reflect.getMetadata(
           'design:paramtypes',
           ListPredefinedMcpIntegrationConfigsUseCase,
-        ) || [];
+        ) ?? [];
 
       // Should only have PredefinedMcpIntegrationRegistryService
       expect(constructorParams.length).toBe(1);

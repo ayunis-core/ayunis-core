@@ -14,7 +14,7 @@ describe('GetModelDistributionUseCase', () => {
 
   const orgId = 'org-id' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsageRepository = {
       getModelDistribution: jest.fn(),
     };
@@ -29,6 +29,9 @@ describe('GetModelDistributionUseCase', () => {
     useCase = module.get<GetModelDistributionUseCase>(
       GetModelDistributionUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

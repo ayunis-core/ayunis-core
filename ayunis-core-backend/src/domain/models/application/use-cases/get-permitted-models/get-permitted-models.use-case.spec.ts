@@ -14,7 +14,7 @@ describe('GetPermittedModelsUseCase', () => {
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockPermittedModelsRepository = {
       findAll: jest.fn(),
       create: jest.fn(),

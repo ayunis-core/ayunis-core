@@ -51,7 +51,7 @@ describe('RetrieveMcpResourceUseCase', () => {
       updatedAt: overrides.updatedAt,
     });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetrieveMcpResourceUseCase,

@@ -11,7 +11,7 @@ describe('DeleteAllPendingInvitesUseCase', () => {
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001';
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockInvitesRepository = {
       deleteAllPendingByOrg: jest.fn(),
     };

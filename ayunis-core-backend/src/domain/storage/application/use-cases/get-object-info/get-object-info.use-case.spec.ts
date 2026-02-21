@@ -18,7 +18,7 @@ describe('GetObjectInfoUseCase', () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockObjectStorage = {
       getObjectInfo: jest.fn(),
     };
@@ -36,6 +36,9 @@ describe('GetObjectInfoUseCase', () => {
     }).compile();
 
     useCase = module.get<GetObjectInfoUseCase>(GetObjectInfoUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

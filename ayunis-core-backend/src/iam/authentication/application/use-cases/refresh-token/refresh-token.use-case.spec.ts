@@ -18,7 +18,7 @@ describe('RefreshTokenUseCase', () => {
   let mockJwtService: Partial<JwtService>;
   let mockFindUserByIdUseCase: Partial<FindUserByIdUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockAuthRepository = {
       generateTokens: jest.fn(),
     };
@@ -42,6 +42,9 @@ describe('RefreshTokenUseCase', () => {
     }).compile();
 
     useCase = module.get<RefreshTokenUseCase>(RefreshTokenUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

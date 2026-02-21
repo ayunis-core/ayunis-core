@@ -21,7 +21,7 @@ describe('DeleteSourceUseCase', () => {
   let useCase: DeleteSourceUseCase;
   let mockSourceRepository: Partial<SourceRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockSourceRepository = {
       delete: jest.fn(),
     };
@@ -41,6 +41,9 @@ describe('DeleteSourceUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteSourceUseCase>(DeleteSourceUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

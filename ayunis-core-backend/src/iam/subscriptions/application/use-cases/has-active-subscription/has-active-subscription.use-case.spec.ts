@@ -19,7 +19,7 @@ describe('HasActiveSubscriptionUseCase', () => {
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockSubscriptionRepository = {
       findByOrgId: jest.fn(),
       create: jest.fn(),

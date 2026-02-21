@@ -7,7 +7,7 @@ describe('IsCloudUseCase', () => {
   let useCase: IsCloudUseCase;
   let configService: jest.Mocked<ConfigService>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockConfigService = {
       get: jest.fn(),
     };
@@ -21,6 +21,9 @@ describe('IsCloudUseCase', () => {
 
     useCase = module.get<IsCloudUseCase>(IsCloudUseCase);
     configService = module.get(ConfigService);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('execute', () => {

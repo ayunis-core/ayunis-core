@@ -18,7 +18,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
   const mockMcpIntegrationId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockMcpIntegrationId2 = '123e4567-e89b-12d3-a456-426614174003' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockThreadsRepository = {
       findOne: jest.fn(),
       updateMcpIntegrations: jest.fn(),

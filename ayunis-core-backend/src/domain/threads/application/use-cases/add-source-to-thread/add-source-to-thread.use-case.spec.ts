@@ -30,7 +30,7 @@ describe('AddSourceToThreadUseCase', () => {
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockThreadsRepository = {
       updateSourceAssignments: jest.fn(),
     };

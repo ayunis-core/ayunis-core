@@ -27,7 +27,7 @@ describe('ProcessFileUseCase', () => {
     },
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockHandler = { processFile: jest.fn() };
     mockRegistry = {
       getHandler: jest.fn().mockReturnValue(mockHandler),
@@ -48,6 +48,9 @@ describe('ProcessFileUseCase', () => {
     useCase = module.get<RetrieveFileContentUseCase>(
       RetrieveFileContentUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

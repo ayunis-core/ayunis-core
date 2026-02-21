@@ -10,7 +10,7 @@ describe('RemoveSkillSourcesFromThreadsUseCase', () => {
   let useCase: RemoveSkillSourcesFromThreadsUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockThreadsRepository = {
       removeSourceAssignmentsByOriginSkill: jest.fn(),
     };

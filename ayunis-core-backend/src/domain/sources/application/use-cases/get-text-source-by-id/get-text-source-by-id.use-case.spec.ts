@@ -11,7 +11,7 @@ describe('GetSourceByIdUseCase', () => {
   let useCase: GetTextSourceByIdUseCase;
   let mockSourceRepository: Partial<SourceRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockSourceRepository = {
       findById: jest.fn(),
     };
@@ -27,6 +27,9 @@ describe('GetSourceByIdUseCase', () => {
     }).compile();
 
     useCase = module.get<GetTextSourceByIdUseCase>(GetTextSourceByIdUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

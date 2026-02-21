@@ -101,6 +101,7 @@
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
+    "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
@@ -141,10 +142,24 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.ts$": "ts-jest"
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "isolatedModules": true
+        }
+      ]
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/*.spec.ts",
+      "!**/*.d.ts",
+      "!**/migrations/**",
+      "!**/db/datasource.ts",
+      "!**/main.ts",
+      "!**/*.module.ts",
+      "!**/*.record.ts",
+      "!**/index.ts",
+      "!**/cli/**"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",

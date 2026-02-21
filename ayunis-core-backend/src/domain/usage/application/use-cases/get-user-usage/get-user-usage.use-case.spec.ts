@@ -18,7 +18,7 @@ describe('GetUserUsageUseCase', () => {
 
   const orgId = 'org-id' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsageRepository = {
       getUserUsage: jest.fn(),
     };
@@ -31,6 +31,9 @@ describe('GetUserUsageUseCase', () => {
     }).compile();
 
     useCase = module.get<GetUserUsageUseCase>(GetUserUsageUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

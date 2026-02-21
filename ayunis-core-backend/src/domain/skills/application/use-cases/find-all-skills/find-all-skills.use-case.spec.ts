@@ -39,7 +39,7 @@ describe('FindAllSkillsUseCase', () => {
       createdAt: new Date(),
     });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockSkillRepository = {
       findAllByOwner: jest.fn(),
       findByIds: jest.fn(),

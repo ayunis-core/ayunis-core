@@ -9,7 +9,7 @@ describe('FindAllUserIdsByTeamIdUseCase', () => {
   let useCase: FindAllUserIdsByTeamIdUseCase;
   let teamMembersRepository: { findAllUserIdsByTeamId: jest.Mock };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     teamMembersRepository = {
       findAllUserIdsByTeamId: jest.fn(),
     };
@@ -27,6 +27,9 @@ describe('FindAllUserIdsByTeamIdUseCase', () => {
     useCase = module.get<FindAllUserIdsByTeamIdUseCase>(
       FindAllUserIdsByTeamIdUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should return all user IDs for a team', async () => {

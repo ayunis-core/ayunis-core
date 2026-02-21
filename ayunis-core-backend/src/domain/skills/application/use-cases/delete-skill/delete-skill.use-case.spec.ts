@@ -24,7 +24,7 @@ describe('DeleteSkillUseCase', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockSkillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockSkillRepository = {
       findOne: jest.fn(),
       delete: jest.fn(),

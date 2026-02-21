@@ -15,7 +15,7 @@ describe('ListTeamsUseCase', () => {
 
   const mockOrgId = 'org-123' as UUID;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockTeamsRepository = {
       findByOrgId: jest.fn(),
     };
@@ -33,6 +33,9 @@ describe('ListTeamsUseCase', () => {
     }).compile();
 
     useCase = module.get<ListTeamsUseCase>(ListTeamsUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

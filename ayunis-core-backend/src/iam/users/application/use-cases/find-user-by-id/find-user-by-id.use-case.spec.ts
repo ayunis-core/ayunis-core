@@ -11,7 +11,7 @@ describe('FindUserByIdUseCase', () => {
   let useCase: FindUserByIdUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockUsersRepository = {
       findOneById: jest.fn(),
     };
@@ -24,6 +24,9 @@ describe('FindUserByIdUseCase', () => {
     }).compile();
 
     useCase = module.get<FindUserByIdUseCase>(FindUserByIdUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

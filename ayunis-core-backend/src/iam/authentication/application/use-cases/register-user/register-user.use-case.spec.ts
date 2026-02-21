@@ -34,7 +34,7 @@ describe('RegisterUserUseCase', () => {
   let mockCreateOrgUseCase: Partial<CreateOrgUseCase>;
   let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockCreateAdminUserUseCase = {
       execute: jest.fn(),
     };
@@ -82,6 +82,9 @@ describe('RegisterUserUseCase', () => {
     }).compile();
 
     useCase = module.get<RegisterUserUseCase>(RegisterUserUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

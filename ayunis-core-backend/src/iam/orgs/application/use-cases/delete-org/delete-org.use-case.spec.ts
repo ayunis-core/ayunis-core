@@ -10,7 +10,7 @@ describe('DeleteOrgUseCase', () => {
   let useCase: DeleteOrgUseCase;
   let mockOrgsRepository: Partial<OrgsRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockOrgsRepository = {
       delete: jest.fn(),
     };
@@ -23,6 +23,9 @@ describe('DeleteOrgUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteOrgUseCase>(DeleteOrgUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

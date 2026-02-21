@@ -25,7 +25,7 @@ describe('AuthenticationController', () => {
   let mockConfigService: Partial<ConfigService>;
   let mockJwtService: Partial<JwtService>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockLoginUseCase = {
       execute: jest.fn(),
     };
@@ -62,6 +62,9 @@ describe('AuthenticationController', () => {
     }).compile();
 
     controller = module.get<AuthenticationController>(AuthenticationController);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -150,7 +153,7 @@ describe('AuthenticationController', () => {
           if (key === 'auth.cookie.httpOnly') return true;
           if (key === 'auth.cookie.secure') return false;
           if (key === 'auth.cookie.sameSite') return 'lax';
-          return defaultValue || null;
+          return defaultValue ?? null;
         });
 
       // Mock cookies

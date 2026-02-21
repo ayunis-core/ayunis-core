@@ -7,7 +7,7 @@ import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get
 describe('GenerateAndSetThreadTitleUseCase - Markdown Stripping', () => {
   let useCase: GenerateAndSetThreadTitleUseCase;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GenerateAndSetThreadTitleUseCase,
@@ -25,6 +25,9 @@ describe('GenerateAndSetThreadTitleUseCase - Markdown Stripping', () => {
     useCase = module.get<GenerateAndSetThreadTitleUseCase>(
       GenerateAndSetThreadTitleUseCase,
     );
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('stripMarkdownFormatting', () => {

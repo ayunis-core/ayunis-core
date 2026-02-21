@@ -28,7 +28,7 @@ describe('SharesController', () => {
   const mockShareId = randomUUID();
   const mockOrgId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SharesController],
       providers: [
@@ -71,6 +71,9 @@ describe('SharesController', () => {
     deleteShareUseCase = module.get<DeleteShareUseCase>(DeleteShareUseCase);
     getSharesUseCase = module.get<GetSharesUseCase>(GetSharesUseCase);
     shareDtoMapper = module.get<ShareDtoMapper>(ShareDtoMapper);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('createShare', () => {

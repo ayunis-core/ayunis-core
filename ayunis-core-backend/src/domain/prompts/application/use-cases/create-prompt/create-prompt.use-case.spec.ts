@@ -13,7 +13,7 @@ describe('CreatePromptUseCase', () => {
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockPromptsRepository = {
       create: jest.fn(),
       findById: jest.fn(),

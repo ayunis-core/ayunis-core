@@ -9,7 +9,7 @@ describe('SkillShareAuthorizationStrategy', () => {
   let strategy: SkillShareAuthorizationStrategy;
   let skillRepository: jest.Mocked<SkillRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const mockSkillRepository = {
       create: jest.fn(),
       update: jest.fn(),
@@ -39,6 +39,9 @@ describe('SkillShareAuthorizationStrategy', () => {
       SkillShareAuthorizationStrategy,
     );
     skillRepository = module.get(SkillRepository);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('canViewShares', () => {

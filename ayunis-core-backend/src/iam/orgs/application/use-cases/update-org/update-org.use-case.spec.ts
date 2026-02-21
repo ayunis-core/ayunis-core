@@ -11,7 +11,7 @@ describe('UpdateOrgUseCase', () => {
   let useCase: UpdateOrgUseCase;
   let mockOrgsRepository: Partial<OrgsRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockOrgsRepository = {
       update: jest.fn(),
     };
@@ -24,6 +24,9 @@ describe('UpdateOrgUseCase', () => {
     }).compile();
 
     useCase = module.get<UpdateOrgUseCase>(UpdateOrgUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

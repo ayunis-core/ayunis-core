@@ -28,7 +28,7 @@ describe('DeleteAgentUseCase', () => {
   const userId = randomUUID();
   const orgId = randomUUID();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockAgentRepository = {
       create: jest.fn(),
       findOne: jest.fn(),
@@ -54,6 +54,14 @@ describe('DeleteAgentUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteAgentUseCase>(DeleteAgentUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockContextService.get.mockImplementation((key: string) => {
+      if (key === 'userId') return userId;
+      if (key === 'orgId') return orgId;
+      return undefined;
+    });
   });
 
   it('should be defined', () => {

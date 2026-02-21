@@ -12,7 +12,7 @@ describe('InferenceHandlerRegistry', () => {
   let registry: InferenceHandlerRegistry;
   let mockMistralHandler: Partial<InferenceHandler>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockMistralHandler = {} as InferenceHandler;
 
     const mockConfigService = {
@@ -48,6 +48,9 @@ describe('InferenceHandlerRegistry', () => {
     }).compile();
 
     registry = module.get<InferenceHandlerRegistry>(InferenceHandlerRegistry);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

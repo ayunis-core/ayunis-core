@@ -11,7 +11,7 @@ describe('FindOrgByIdUseCase', () => {
   let useCase: FindOrgByIdUseCase;
   let mockOrgsRepository: Partial<OrgsRepository>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     mockOrgsRepository = {
       findById: jest.fn(),
     };
@@ -24,6 +24,9 @@ describe('FindOrgByIdUseCase', () => {
     }).compile();
 
     useCase = module.get<FindOrgByIdUseCase>(FindOrgByIdUseCase);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
