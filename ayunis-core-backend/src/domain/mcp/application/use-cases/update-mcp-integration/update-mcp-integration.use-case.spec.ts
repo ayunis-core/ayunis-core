@@ -7,7 +7,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
@@ -17,7 +17,7 @@ import {
   McpNotMarketplaceIntegrationError,
   McpMissingRequiredConfigError,
 } from '../../mcp.errors';
-import { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
 
 describe('UpdateMcpIntegrationUseCase', () => {
   const orgId = randomUUID();
