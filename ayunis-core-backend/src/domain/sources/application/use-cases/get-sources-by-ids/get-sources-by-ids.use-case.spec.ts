@@ -27,6 +27,7 @@ describe('GetSourcesByIdsUseCase', () => {
     sourceRepository = {
       findById: jest.fn(),
       findByIds: jest.fn(),
+      findByKnowledgeBaseId: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),

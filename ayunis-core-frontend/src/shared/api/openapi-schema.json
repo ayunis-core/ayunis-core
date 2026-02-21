@@ -6669,6 +6669,171 @@
         ]
       }
     },
+    "/knowledge-bases": {
+      "post": {
+        "operationId": "KnowledgeBasesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateKnowledgeBaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The knowledge base has been successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      },
+      "get": {
+        "operationId": "KnowledgeBasesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns all knowledge bases for the current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all knowledge bases for the current user",
+        "tags": [
+          "knowledge-bases"
+        ]
+      }
+    },
+    "/knowledge-bases/{id}": {
+      "get": {
+        "operationId": "KnowledgeBasesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the knowledge base",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Get a knowledge base by ID",
+        "tags": [
+          "knowledge-bases"
+        ]
+      },
+      "patch": {
+        "operationId": "KnowledgeBasesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base to update",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateKnowledgeBaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The knowledge base has been successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Update a knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      },
+      "delete": {
+        "operationId": "KnowledgeBasesController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base to delete",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The knowledge base has been successfully deleted"
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Delete a knowledge base",
+        "tags": [
+          "knowledge-bases"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -11905,6 +12070,100 @@
         "required": [
           "text"
         ]
+      },
+      "CreateKnowledgeBaseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the knowledge base",
+            "example": "Stadtratsprotokolle 2025",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "An optional description of the knowledge base",
+            "example": "Sammlung aller Stadtratsprotokolle aus dem Jahr 2025",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "KnowledgeBaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier of the knowledge base",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the knowledge base",
+            "example": "Stadtratsprotokolle 2025"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the knowledge base",
+            "example": "Sammlung aller Stadtratsprotokolle aus dem Jahr 2025"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "The date and time when the knowledge base was created",
+            "example": "2025-01-15T10:00:00.000Z",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "The date and time when the knowledge base was last updated",
+            "example": "2025-01-15T10:00:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "KnowledgeBaseListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "The list of knowledge bases",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "UpdateKnowledgeBaseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the knowledge base",
+            "example": "Stadtratsprotokolle 2025",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the knowledge base",
+            "example": "Sammlung aller Stadtratsprotokolle aus dem Jahr 2025",
+            "maxLength": 2000
+          }
+        }
       },
       "LoginDto": {
         "type": "object",

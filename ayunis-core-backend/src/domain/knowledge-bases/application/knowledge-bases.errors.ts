@@ -3,6 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum KnowledgeBaseErrorCode {
   KNOWLEDGE_BASE_NOT_FOUND = 'KNOWLEDGE_BASE_NOT_FOUND',
+  UNEXPECTED_KNOWLEDGE_BASE_ERROR = 'UNEXPECTED_KNOWLEDGE_BASE_ERROR',
 }
 
 export abstract class KnowledgeBaseError extends ApplicationError {
@@ -22,6 +23,17 @@ export class KnowledgeBaseNotFoundError extends KnowledgeBaseError {
       `Knowledge base with ID '${knowledgeBaseId}' not found`,
       KnowledgeBaseErrorCode.KNOWLEDGE_BASE_NOT_FOUND,
       404,
+      metadata,
+    );
+  }
+}
+
+export class UnexpectedKnowledgeBaseError extends KnowledgeBaseError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(
+      message,
+      KnowledgeBaseErrorCode.UNEXPECTED_KNOWLEDGE_BASE_ERROR,
+      500,
       metadata,
     );
   }

@@ -2881,6 +2881,52 @@ export interface TranscriptionResponseDto {
   text: string;
 }
 
+export interface CreateKnowledgeBaseDto {
+  /**
+   * The name of the knowledge base
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * An optional description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
+}
+
+export interface KnowledgeBaseResponseDto {
+  /** The unique identifier of the knowledge base */
+  id: string;
+  /** The name of the knowledge base */
+  name: string;
+  /** The description of the knowledge base */
+  description: string;
+  /** The date and time when the knowledge base was created */
+  createdAt: string;
+  /** The date and time when the knowledge base was last updated */
+  updatedAt: string;
+}
+
+export interface KnowledgeBaseListResponseDto {
+  /** The list of knowledge bases */
+  data: KnowledgeBaseResponseDto[];
+}
+
+export interface UpdateKnowledgeBaseDto {
+  /**
+   * The name of the knowledge base
+   * @minLength 1
+   * @maxLength 255
+   */
+  name?: string;
+  /**
+   * The description of the knowledge base
+   * @maxLength 2000
+   */
+  description?: string;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;

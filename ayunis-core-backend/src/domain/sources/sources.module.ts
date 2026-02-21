@@ -32,6 +32,7 @@ import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-i
     QueryTextSourceUseCase,
   ],
   exports: [
+    LocalSourceRepositoryModule,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
