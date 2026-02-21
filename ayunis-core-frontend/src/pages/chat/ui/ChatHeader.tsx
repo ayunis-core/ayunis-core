@@ -28,7 +28,7 @@ export default function ChatHeader({
   onRename,
   onDelete,
 }: Readonly<ChatHeaderProps>) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('chat');
 
   return (
     <ContentAreaHeader
