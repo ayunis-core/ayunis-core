@@ -19,6 +19,7 @@ interface ArtifactEditorProps {
   onRevert: (versionNumber: number) => void;
   onExport: (format: 'docx' | 'pdf') => void;
   onClose: () => void;
+  isExporting?: boolean;
 }
 
 export function ArtifactEditor({
@@ -27,6 +28,7 @@ export function ArtifactEditor({
   onRevert,
   onExport,
   onClose,
+  isExporting,
 }: ArtifactEditorProps) {
   const { t } = useTranslation('artifacts');
 
@@ -77,7 +79,7 @@ export function ArtifactEditor({
           {artifact.title}
         </h3>
         <div className="flex items-center gap-1">
-          <ExportButtons onExport={onExport} />
+          <ExportButtons onExport={onExport} isExporting={isExporting} />
           <Button
             variant="default"
             size="sm"
