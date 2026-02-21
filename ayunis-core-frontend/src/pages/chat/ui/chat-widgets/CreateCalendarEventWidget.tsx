@@ -49,7 +49,8 @@ export default function CreateCalendarEventWidget({
   const { t } = useTranslation('chat');
   const { generate } = useGenerateIcs();
 
-  const params = content.params as Partial<CalendarEventInput>;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
+  const params = (content.params || {}) as Partial<CalendarEventInput>;
 
   // Derive initial values directly from params to avoid setState in useEffect
   const initialTitle = params.title ?? '';

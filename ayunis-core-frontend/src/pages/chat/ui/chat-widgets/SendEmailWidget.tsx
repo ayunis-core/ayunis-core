@@ -16,7 +16,8 @@ export default function SendEmailWidget({
   isStreaming?: boolean;
 }>) {
   const { t } = useTranslation('chat');
-  const params = content.params as {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- content.params may be undefined during streaming even if typed as required
+  const params = (content.params || {}) as {
     subject?: string;
     body?: string;
     to?: string;
