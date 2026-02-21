@@ -16,7 +16,7 @@ export class SearchContentUseCase {
   async execute(query: SearchContentQuery): Promise<IndexEntry[]> {
     try {
       const index = this.indexRegistry.get(query.type);
-      return index.search({
+      return await index.search({
         orgId: query.orgId,
         documentId: query.documentId,
         query: query.query,
