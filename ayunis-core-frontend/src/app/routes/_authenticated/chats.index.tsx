@@ -55,7 +55,7 @@ export const Route = createFileRoute('/_authenticated/chats/')({
 function RouteComponent() {
   const { chats, pagination, agents, search, agentId, page } =
     Route.useLoaderData();
-  const hasFilters = Boolean(search ?? agentId);
+  const hasFilters = Boolean(search || agentId);
   return (
     <ChatsPage
       chats={chats}
