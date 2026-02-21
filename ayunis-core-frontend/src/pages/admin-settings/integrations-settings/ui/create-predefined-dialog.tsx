@@ -136,7 +136,7 @@ export function CreatePredefinedDialog({
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value}
+                    value={field.value ?? ''}
                     disabled={isCreating}
                   >
                     <FormControl>
