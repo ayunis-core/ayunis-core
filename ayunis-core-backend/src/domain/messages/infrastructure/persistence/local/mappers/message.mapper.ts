@@ -29,6 +29,9 @@ export class MessageMapper {
           ...(content.providerMetadata && {
             providerMetadata: content.providerMetadata,
           }),
+          ...(content.isSkillInstruction && {
+            isSkillInstruction: true,
+          }),
         };
       }
       if (content instanceof ToolUseMessageContent) {
@@ -80,7 +83,11 @@ export class MessageMapper {
           createdAt: messageEntity.createdAt,
           content: messageEntity.content.map((content) => {
             if (content.type === MessageContentType.TEXT) {
-              return new TextMessageContent(content.text);
+              return new TextMessageContent(
+                content.text,
+                null,
+                content.isSkillInstruction ?? false,
+              );
             }
             if (content.type === MessageContentType.IMAGE) {
               return new ImageMessageContent(

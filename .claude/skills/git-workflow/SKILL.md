@@ -95,12 +95,27 @@ gt modify -m "<type>(AYC-<number>): <description>"
 
 Note: `gt modify` without `--commit` amends the existing commit. With `--commit` it creates an additional commit on the branch — that's not what we want for fixes.
 
+### Pushing to remote
+
+**Never use raw `git push`** — always use `gt submit`. Raw pushes bypass Graphite's metadata and desynchronize remote base branches, causing merge conflicts on GitHub.
+
+```bash
+# Push the current branch only
+gt submit --force --no-interactive
+
+# Push the entire stack
+gt submit --stack --force --no-interactive
+```
+
+Use `--force` to ensure remote refs are updated even if Graphite thinks they're current. Add `--publish` to take PRs out of draft.
+
 ### Rules
 
 - Each logical unit of work gets its own `gt create` — one stacked branch per batch/task
 - Fixes and amendments use `gt modify`, never `gt create`
 - Never use `--no-verify` — let the hooks run
 - Never use raw `git commit` — always go through `gt`
+- Never use raw `git push` — always go through `gt submit`
 
 ## Pre-commit Hooks
 

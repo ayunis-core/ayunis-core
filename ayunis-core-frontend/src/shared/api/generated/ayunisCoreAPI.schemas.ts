@@ -1214,6 +1214,8 @@ export interface TextMessageContentResponseDto {
   type: TextMessageContentResponseDtoType;
   /** The text content of the message */
   text: string;
+  /** Whether this text content contains skill instructions */
+  isSkillInstruction?: boolean;
 }
 
 /**
