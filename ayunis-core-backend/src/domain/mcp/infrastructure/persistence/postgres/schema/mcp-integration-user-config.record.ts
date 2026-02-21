@@ -5,7 +5,7 @@ import { UUID } from 'crypto';
 @Entity('mcp_integration_user_configs')
 @Unique(['integrationId', 'userId'])
 export class McpIntegrationUserConfigRecord extends BaseRecord {
-  @Column({ name: 'integration_id', type: 'uuid' })
+  @Column({ name: 'integration_id' })
   integrationId: UUID;
 
   @Column({ name: 'user_id', type: 'uuid' })
