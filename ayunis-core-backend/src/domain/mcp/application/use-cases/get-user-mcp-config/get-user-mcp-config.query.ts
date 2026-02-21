@@ -1,4 +1,4 @@
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 export class GetUserMcpConfigQuery {
   constructor(public readonly integrationId: UUID) {}

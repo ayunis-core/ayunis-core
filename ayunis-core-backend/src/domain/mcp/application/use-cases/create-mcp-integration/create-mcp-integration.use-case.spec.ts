@@ -11,7 +11,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
+import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';

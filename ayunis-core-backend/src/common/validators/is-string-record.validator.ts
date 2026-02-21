@@ -1,8 +1,5 @@
-import {
-  registerDecorator,
-  ValidationOptions,
-  ValidationArguments,
-} from 'class-validator';
+import type { ValidationOptions, ValidationArguments } from 'class-validator';
+import { registerDecorator } from 'class-validator';
 
 /**
  * Validates that a value is a plain object where every value is a string.

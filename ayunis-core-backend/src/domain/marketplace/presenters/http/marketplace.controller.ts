@@ -5,7 +5,11 @@ import { GetMarketplaceSkillQuery } from '../../application/use-cases/get-market
 import { MarketplaceSkillResponseDto } from './dto/marketplace-skill-response.dto';
 import { GetMarketplaceIntegrationUseCase } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from '../../application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
-import { MarketplaceIntegrationResponseDto } from './dto/marketplace-integration-response.dto';
+import {
+  MarketplaceIntegrationResponseDto,
+  MarketplaceIntegrationConfigSchemaDto,
+} from './dto/marketplace-integration-response.dto';
+import { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -67,6 +71,33 @@ export class MarketplaceController {
       new GetMarketplaceIntegrationQuery(identifier),
     );
 
-    return integration as unknown as MarketplaceIntegrationResponseDto;
+    return this.mapIntegrationResponse(integration);
+  }
+
+  private mapIntegrationResponse(
+    integration: IntegrationResponseDto,
+  ): MarketplaceIntegrationResponseDto {
+    const rawSchema = integration.configSchema as Record<string, unknown>;
+    const configSchema: MarketplaceIntegrationConfigSchemaDto = {
+      authType: rawSchema.authType as string,
+      orgFields: rawSchema.orgFields as MarketplaceIntegrationConfigSchemaDto['orgFields'],
+      userFields: rawSchema.userFields as MarketplaceIntegrationConfigSchemaDto['userFields'],
+    };
+
+    return {
+      id: integration.id,
+      identifier: integration.identifier,
+      name: integration.name,
+      shortDescription: integration.shortDescription,
+      description: integration.description,
+      iconUrl: integration.iconUrl,
+      serverUrl: integration.serverUrl,
+      configSchema,
+      featured: integration.featured,
+      published: integration.published,
+      preInstalled: integration.preInstalled,
+      createdAt: integration.createdAt,
+      updatedAt: integration.updatedAt,
+    };
   }
 }

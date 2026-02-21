@@ -1,6 +1,6 @@
 import { ConnectionValidationService } from './connection-validation.service';
-import { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
-import { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
+import type { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
+import type { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
 import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';

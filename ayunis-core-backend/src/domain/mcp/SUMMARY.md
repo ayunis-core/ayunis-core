@@ -26,7 +26,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 **Services:**
 - `McpClientService` — Handles actual server communication via the MCP SDK
 - `MarketplaceConfigService` — Resolves effective server URL and auth headers by merging org-level and user-level config values against the integration's config schema
-- `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
+- `ConnectionValidationService` — Validates MCP server connectivity and persists status; injects `ValidateMcpIntegrationUseCase`, used by `CreateMcpIntegrationUseCase`, `InstallMarketplaceIntegrationUseCase`, and `UpdateMcpIntegrationUseCase`
 
 **Ports:**
 - `McpIntegrationsRepository` — Persistence port for MCP integrations

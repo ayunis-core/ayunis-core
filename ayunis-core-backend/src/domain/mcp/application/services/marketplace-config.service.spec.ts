@@ -1,6 +1,6 @@
 import { MarketplaceConfigService } from './marketplace-config.service';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { ConfigField } from '../../domain/value-objects/integration-config-schema';
+import type { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
+import type { ConfigField } from '../../domain/value-objects/integration-config-schema';
 import { McpMissingRequiredConfigError } from '../mcp.errors';
 
 describe('MarketplaceConfigService', () => {

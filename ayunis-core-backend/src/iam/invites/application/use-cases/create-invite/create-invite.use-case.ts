@@ -120,10 +120,7 @@ export class CreateInviteUseCase {
     orgId: UUID,
     userId: UUID,
   ): Promise<void> {
-    const isCloud = this.configService.get<boolean>(
-      'app.isCloudHosted',
-      false,
-    );
+    const isCloud = this.configService.get<boolean>('app.isCloudHosted', false);
     if (!isCloud) {
       return;
     }

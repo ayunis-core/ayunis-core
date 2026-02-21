@@ -1,11 +1,11 @@
 import { GetMarketplaceIntegrationUseCase } from './get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from './get-marketplace-integration.query';
-import { MarketplaceClient } from '../../ports/marketplace-client.port';
+import type { MarketplaceClient } from '../../ports/marketplace-client.port';
 import {
   MarketplaceIntegrationNotFoundError,
   MarketplaceUnavailableError,
 } from '../../marketplace.errors';
-import { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
+import type { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 
 describe('GetMarketplaceIntegrationUseCase', () => {
   let useCase: GetMarketplaceIntegrationUseCase;

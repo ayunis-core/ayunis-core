@@ -1,9 +1,9 @@
 import { SetUserMcpConfigUseCase } from './set-user-mcp-config.use-case';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
-import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { ContextService } from 'src/common/context/services/context.service';
+import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
+import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
+import type { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
 import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
@@ -15,7 +15,7 @@ import {
   McpIntegrationAccessDeniedError,
   McpInvalidConfigKeysError,
 } from '../../mcp.errors';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 
 describe('SetUserMcpConfigUseCase', () => {
   let useCase: SetUserMcpConfigUseCase;
