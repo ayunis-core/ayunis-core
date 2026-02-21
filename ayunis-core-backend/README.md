@@ -175,9 +175,6 @@ The API documentation is available at `/api` using Swagger UI when the applicati
 # Run unit tests
 npm run test
 
-# Run e2e tests
-npm run test:e2e
-
 # Generate test coverage report
 npm run test:cov
 ```

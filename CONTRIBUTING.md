@@ -146,9 +146,6 @@ The frontend follows a **feature sliced design** architecture with:
 # Unit tests
 npm run test
 
-# Integration tests
-npm run test:e2e
-
 # Test coverage
 npm run test:cov
 ```
