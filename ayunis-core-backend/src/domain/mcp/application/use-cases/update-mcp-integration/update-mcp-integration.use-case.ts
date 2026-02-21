@@ -186,6 +186,7 @@ export class UpdateMcpIntegrationUseCase {
             `Credential rotation is not supported for auth method ${authMethod}.`,
           );
         }
+        return;
       }
     }
   }

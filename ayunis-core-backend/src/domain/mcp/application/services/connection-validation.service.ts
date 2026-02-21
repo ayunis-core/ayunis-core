@@ -23,10 +23,10 @@ export class ConnectionValidationService {
       });
 
       if (result.isValid) {
-        integration.updateConnectionStatus('healthy', undefined);
+        integration.updateConnectionStatus('connected', undefined);
       } else {
         integration.updateConnectionStatus(
-          'unhealthy',
+          'error',
           result.errorMessage ?? 'Validation failed',
         );
       }
@@ -35,7 +35,7 @@ export class ConnectionValidationService {
         error instanceof Error
           ? `Validation failed: ${error.message}`
           : 'Validation failed: Unknown error';
-      integration.updateConnectionStatus('unhealthy', errorMessage);
+      integration.updateConnectionStatus('error', errorMessage);
     }
 
     return this.repository.save(integration);

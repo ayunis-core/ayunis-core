@@ -7,7 +7,7 @@ import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integr
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
 
 describe('McpIntegrationDtoMapper', () => {
   const mapper = new McpIntegrationDtoMapper();

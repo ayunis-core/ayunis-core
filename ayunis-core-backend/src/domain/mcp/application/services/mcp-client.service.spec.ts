@@ -10,7 +10,7 @@ import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-m
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
 import { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';

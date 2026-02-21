@@ -1,4 +1,4 @@
-import {
+import type {
   IntegrationResponseDto,
   SkillResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';

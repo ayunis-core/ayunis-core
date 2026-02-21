@@ -77,10 +77,10 @@ export class McpIntegrationDtoMapper {
     switch (integration.kind) {
       case McpIntegrationKind.PREDEFINED:
         return 'predefined';
+      case McpIntegrationKind.CUSTOM:
+        return 'custom';
       case McpIntegrationKind.MARKETPLACE:
         return 'marketplace';
-      default:
-        return 'custom';
     }
   }
 
