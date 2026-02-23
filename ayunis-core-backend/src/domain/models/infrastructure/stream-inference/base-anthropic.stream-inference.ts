@@ -64,7 +64,7 @@ export abstract class BaseAnthropicStreamInferenceHandler
         messages: anthropicMessages,
         tools: anthropicTools,
         tool_choice: anthropicToolChoice,
-        max_tokens: 100000,
+        max_tokens: 64000,
         stream: true,
       };
 
