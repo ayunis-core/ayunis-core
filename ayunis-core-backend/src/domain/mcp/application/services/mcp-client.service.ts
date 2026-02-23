@@ -116,8 +116,13 @@ export class McpClientService {
     values: Record<string, string>,
   ): Promise<void> {
     for (const field of fields) {
+      if (
+        !(field.key in values) ||
+        values[field.key] === '' ||
+        !field.headerName
+      )
+        continue;
       const rawValue = values[field.key];
-      if (!rawValue || !field.headerName) continue;
 
       const decryptedValue =
         field.type === 'secret'

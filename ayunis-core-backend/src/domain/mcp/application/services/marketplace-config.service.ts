@@ -40,7 +40,11 @@ export class MarketplaceConfigService {
     values: Record<string, string>,
   ): void {
     const missing = orgFields
-      .filter((field) => field.required && !values[field.key])
+      .filter(
+        (field) =>
+          field.required &&
+          (!(field.key in values) || values[field.key] === ''),
+      )
       .map((field) => field.key);
 
     if (missing.length > 0) {
