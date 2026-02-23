@@ -174,12 +174,13 @@ export class CreateMcpIntegrationUseCase {
       const savedIntegration = await this.repository.save(integration);
 
       // Validate connection (don't throw on failure)
-      await this.connectionValidationService.validateAndUpdateStatus(
-        savedIntegration,
-      );
+      const validated =
+        await this.connectionValidationService.validateAndUpdateStatus(
+          savedIntegration,
+        );
 
       // Return the updated integration
-      return savedIntegration;
+      return validated as PredefinedMcpIntegration;
     } catch (error) {
       // Re-throw application errors and auth errors
       if (
@@ -295,12 +296,13 @@ export class CreateMcpIntegrationUseCase {
       const savedIntegration = await this.repository.save(integration);
 
       // Validate connection (don't throw on failure)
-      await this.connectionValidationService.validateAndUpdateStatus(
-        savedIntegration,
-      );
+      const validated =
+        await this.connectionValidationService.validateAndUpdateStatus(
+          savedIntegration,
+        );
 
       // Return the updated integration
-      return savedIntegration;
+      return validated as CustomMcpIntegration;
     } catch (error) {
       // Re-throw application errors and auth errors
       if (

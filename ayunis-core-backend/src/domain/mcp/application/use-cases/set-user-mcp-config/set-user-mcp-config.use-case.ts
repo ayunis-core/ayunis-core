@@ -102,7 +102,8 @@ export class SetUserMcpConfigUseCase {
     );
 
     if (existing) {
-      existing.updateConfigValues(encryptedValues);
+      const mergedValues = { ...existing.configValues, ...encryptedValues };
+      existing.updateConfigValues(mergedValues);
       return this.userConfigRepository.save(existing);
     }
 

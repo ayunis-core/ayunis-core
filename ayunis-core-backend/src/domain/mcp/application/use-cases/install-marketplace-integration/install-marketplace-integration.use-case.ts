@@ -158,8 +158,10 @@ export class InstallMarketplaceIntegrationUseCase {
     const schema = dto as unknown as MarketplaceConfigSchemaDto;
     return {
       authType: schema.authType,
-      orgFields: schema.orgFields.map((f) => this.parseConfigField(f)),
-      userFields: schema.userFields.map((f) => this.parseConfigField(f)),
+      orgFields: (schema.orgFields ?? []).map((f) => this.parseConfigField(f)),
+      userFields: (schema.userFields ?? []).map((f) =>
+        this.parseConfigField(f),
+      ),
     };
   }
 
