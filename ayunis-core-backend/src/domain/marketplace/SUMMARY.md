@@ -7,7 +7,7 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - `GetMarketplaceSkillUseCase` — Fetches skill details from the marketplace by identifier
 
 **Ports:**
-- `MarketplaceClient` — Abstract port for marketplace API communication
+- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`)
 
 **Infrastructure:**
 - `MarketplaceHttpClient` — HTTP client implementation using the generated marketplace API client
@@ -26,4 +26,4 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - Uses the generated marketplace API client from `src/common/clients/marketplace/`
 
 **Dependent Modules:**
-- **skills** — Uses `GetMarketplaceSkillUseCase` for installing marketplace skills via `InstallSkillFromMarketplaceUseCase`
+- **skills** — Uses `GetMarketplaceSkillUseCase` for installing marketplace skills via `InstallSkillFromMarketplaceUseCase`; `MarketplaceSkillInstallationService` consumes `MarketplaceClient.getPreInstalledSkills()` for pre-installed skill provisioning

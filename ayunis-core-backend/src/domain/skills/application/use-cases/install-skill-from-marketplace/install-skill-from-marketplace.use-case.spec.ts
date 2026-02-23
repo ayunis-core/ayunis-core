@@ -1,9 +1,6 @@
 import { InstallSkillFromMarketplaceUseCase } from './install-skill-from-marketplace.use-case';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
-import type { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
-import type { SkillRepository } from '../../ports/skill.repository';
 import type { ContextService } from 'src/common/context/services/context.service';
-import type { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
@@ -11,61 +8,44 @@ import {
 import { MarketplaceInstallFailedError } from '../../skills.errors';
 import { Skill } from '../../../domain/skill.entity';
 import type { UUID } from 'crypto';
+import type { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
 
 describe('InstallSkillFromMarketplaceUseCase', () => {
   let useCase: InstallSkillFromMarketplaceUseCase;
-  let getMarketplaceSkillUseCase: jest.Mocked<GetMarketplaceSkillUseCase>;
-  let skillRepository: jest.Mocked<SkillRepository>;
+  let skillInstallationService: jest.Mocked<MarketplaceSkillInstallationService>;
   let contextService: jest.Mocked<ContextService>;
 
   const userId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
-  const marketplaceSkill: SkillResponseDto = {
-    id: '660e8400-e29b-41d4-a716-446655440001',
-    identifier: 'meeting-summarizer',
+  const installedSkill = new Skill({
     name: 'Meeting Summarizer',
     shortDescription: 'Summarize meetings and extract action items',
-    aiDescription:
-      'Activate this skill when the user wants to summarize meeting notes.',
     instructions:
       'You are a meeting summarization assistant. Analyze meeting notes and produce a summary.',
-    skillCategoryId: '770e8400-e29b-41d4-a716-446655440002',
-    iconUrl: 'https://marketplace.ayunis.de/icons/meeting-summarizer.png',
-    featured: true,
-    published: true,
-    preInstalled: false,
-    createdAt: '2026-01-15T10:00:00.000Z',
-    updatedAt: '2026-02-10T14:30:00.000Z',
-  };
+    marketplaceIdentifier: 'meeting-summarizer',
+    userId,
+  });
 
   beforeEach(() => {
-    getMarketplaceSkillUseCase = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<GetMarketplaceSkillUseCase>;
-
-    skillRepository = {
-      create: jest.fn(),
-      activateSkill: jest.fn(),
-      findByNameAndOwner: jest.fn(),
-    } as unknown as jest.Mocked<SkillRepository>;
+    skillInstallationService = {
+      installFromMarketplace: jest.fn(),
+    } as unknown as jest.Mocked<MarketplaceSkillInstallationService>;
 
     contextService = {
       get: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
 
     useCase = new InstallSkillFromMarketplaceUseCase(
-      getMarketplaceSkillUseCase,
-      skillRepository,
+      skillInstallationService,
       contextService,
     );
   });
 
-  it('should create a skill with marketplace data and activate it', async () => {
+  it('should delegate to MarketplaceSkillInstallationService and return the created skill', async () => {
     contextService.get.mockReturnValue(userId);
-    getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-    skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
-    skillRepository.activateSkill.mockResolvedValue(undefined);
+    skillInstallationService.installFromMarketplace.mockResolvedValue(
+      installedSkill,
+    );
 
     const result = await useCase.execute(
       new InstallSkillFromMarketplaceCommand('meeting-summarizer'),
@@ -80,16 +60,14 @@ describe('InstallSkillFromMarketplaceUseCase', () => {
     );
     expect(result.marketplaceIdentifier).toBe('meeting-summarizer');
     expect(result.userId).toBe(userId);
-    expect(skillRepository.create).toHaveBeenCalled();
-    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
-      result.id,
-      userId,
-    );
+    expect(
+      skillInstallationService.installFromMarketplace,
+    ).toHaveBeenCalledWith('meeting-summarizer', userId);
   });
 
   it('should propagate MarketplaceSkillNotFoundError when skill is not found', async () => {
     contextService.get.mockReturnValue(userId);
-    getMarketplaceSkillUseCase.execute.mockRejectedValue(
+    skillInstallationService.installFromMarketplace.mockRejectedValue(
       new MarketplaceSkillNotFoundError('nonexistent-skill'),
     );
 
@@ -102,7 +80,7 @@ describe('InstallSkillFromMarketplaceUseCase', () => {
 
   it('should propagate MarketplaceUnavailableError when marketplace is down', async () => {
     contextService.get.mockReturnValue(userId);
-    getMarketplaceSkillUseCase.execute.mockRejectedValue(
+    skillInstallationService.installFromMarketplace.mockRejectedValue(
       new MarketplaceUnavailableError(),
     );
 
@@ -125,36 +103,14 @@ describe('InstallSkillFromMarketplaceUseCase', () => {
 
   it('should throw MarketplaceInstallFailedError on unexpected errors', async () => {
     contextService.get.mockReturnValue(userId);
-    getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-    skillRepository.findByNameAndOwner.mockResolvedValue(null);
-    skillRepository.create.mockRejectedValue(new Error('Database error'));
+    skillInstallationService.installFromMarketplace.mockRejectedValue(
+      new Error('Database error'),
+    );
 
     await expect(
       useCase.execute(
         new InstallSkillFromMarketplaceCommand('meeting-summarizer'),
       ),
     ).rejects.toThrow(MarketplaceInstallFailedError);
-  });
-
-  it('should append suffix when skill name already exists', async () => {
-    contextService.get.mockReturnValue(userId);
-    getMarketplaceSkillUseCase.execute.mockResolvedValue(marketplaceSkill);
-    const existingSkill = new Skill({
-      name: 'Meeting Summarizer',
-      shortDescription: 'Existing skill',
-      instructions: 'Existing instructions',
-      userId,
-    });
-    skillRepository.findByNameAndOwner
-      .mockResolvedValueOnce(existingSkill)
-      .mockResolvedValueOnce(null);
-    skillRepository.create.mockImplementation(async (skill: Skill) => skill);
-    skillRepository.activateSkill.mockResolvedValue(undefined);
-
-    const result = await useCase.execute(
-      new InstallSkillFromMarketplaceCommand('meeting-summarizer'),
-    );
-
-    expect(result.name).toBe('Meeting Summarizer 2');
   });
 });

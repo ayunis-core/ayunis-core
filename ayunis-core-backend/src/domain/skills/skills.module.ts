@@ -27,8 +27,12 @@ import { ListSkillMcpIntegrationsUseCase } from './application/use-cases/list-sk
 import { FindSkillByNameUseCase } from './application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/install-skill-from-marketplace/install-skill-from-marketplace.use-case';
 
+// Services
+import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
+
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
+import { UserCreatedListener } from './application/listeners/user-created.listener';
 
 // Strategies
 import { SkillShareAuthorizationStrategy } from './application/strategies/skill-share-authorization.strategy';
@@ -84,8 +88,12 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     FindSkillByNameUseCase,
     InstallSkillFromMarketplaceUseCase,
 
+    // Services
+    MarketplaceSkillInstallationService,
+
     // Listeners
     ShareDeletedListener,
+    UserCreatedListener,
 
     // Strategies
     SkillShareAuthorizationStrategy,

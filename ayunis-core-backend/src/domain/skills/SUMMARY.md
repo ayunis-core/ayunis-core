@@ -20,8 +20,11 @@ skills/
 │   └── skill.entity.ts                    # Skill domain entity
 ├── application/
 │   ├── ports/skill.repository.ts          # Abstract repository (includes activation methods)
+│   ├── services/
+│   │   └── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
 │   ├── listeners/
-│   │   └── share-deleted.listener.ts      # Reconciles activations on share deletion
+│   │   ├── share-deleted.listener.ts      # Reconciles activations on share deletion
+│   │   └── user-created.listener.ts       # Installs pre-installed marketplace skills for new users
 │   ├── skills.errors.ts                   # Domain errors
 │   └── use-cases/
 │       ├── create-skill/
@@ -62,6 +65,8 @@ skills/
 Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` pattern. The domain entity stores `sourceIds: UUID[]` and `mcpIntegrationIds: UUID[]`. Full entity objects are fetched via dedicated list use cases (`ListSkillSourcesUseCase`, `ListSkillMcpIntegrationsUseCase`) that batch-fetch by IDs.
 
 Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
+
+When a new user is created, the `UserCreatedListener` listens for `UserCreatedEvent` and installs pre-installed marketplace skills via `MarketplaceSkillInstallationService`. The service encapsulates the shared install logic (fetch marketplace skill → resolve unique name → create `Skill` → activate) used by both the listener and `InstallSkillFromMarketplaceUseCase`. If the marketplace is unavailable during user creation, the listener logs a warning and continues — pre-installed skills are best-effort.
 
 When a skill share is deleted, the `ShareDeletedListener` handles cleanup of activations. If no other shares remain for the skill, all non-owner activations are removed. If other shares still exist, the listener resolves the remaining scopes to user IDs (via `FindAllUserIdsByOrgIdUseCase` and `FindAllUserIdsByTeamIdUseCase`) and only deactivates users who are no longer covered by any remaining share scope.
 
