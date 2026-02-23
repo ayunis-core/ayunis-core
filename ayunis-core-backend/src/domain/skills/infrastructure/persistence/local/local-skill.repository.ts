@@ -10,7 +10,10 @@ import { Skill } from '../../../domain/skill.entity';
 import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import { SkillMapper } from './mappers/skill.mapper';
-import { SkillNotFoundError } from '../../../application/skills.errors';
+import {
+  SkillNotActiveError,
+  SkillNotFoundError,
+} from '../../../application/skills.errors';
 
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
@@ -301,6 +304,37 @@ export class LocalSkillRepository implements SkillRepository {
 
     const activations = await this.activationRepository.find({
       where: { userId },
+      select: ['skillId'],
+    });
+
+    return new Set(activations.map((a) => a.skillId));
+  }
+
+  async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
+    this.logger.log('toggleSkillPinned', { skillId, userId });
+
+    const manager = this.getManager();
+
+    const rows: Array<{ isPinned: boolean }> = await manager.query(
+      `UPDATE skill_activations SET "isPinned" = NOT "isPinned"
+       WHERE "skillId" = $1 AND "userId" = $2
+       RETURNING "isPinned"`,
+      [skillId, userId],
+    );
+
+    if (rows.length === 0) {
+      throw new SkillNotActiveError(skillId);
+    }
+
+    return rows[0].isPinned;
+  }
+
+  async getPinnedSkillIds(userId: UUID): Promise<Set<UUID>> {
+    this.logger.log('getPinnedSkillIds', { userId });
+
+    const manager = this.getManager();
+    const activations = await manager.find(SkillActivationRecord, {
+      where: { userId, isPinned: true },
       select: ['skillId'],
     });
 

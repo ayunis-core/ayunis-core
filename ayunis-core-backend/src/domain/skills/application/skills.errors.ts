@@ -15,6 +15,7 @@ export enum SkillErrorCode {
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   MARKETPLACE_INSTALL_FAILED = 'MARKETPLACE_INSTALL_FAILED',
+  SKILL_NOT_ACTIVE = 'SKILL_NOT_ACTIVE',
   UNEXPECTED_SKILL_ERROR = 'UNEXPECTED_SKILL_ERROR',
 }
 
@@ -172,6 +173,17 @@ export class MarketplaceInstallFailedError extends SkillError {
       SkillErrorCode.MARKETPLACE_INSTALL_FAILED,
       500,
       { identifier, ...metadata },
+    );
+  }
+}
+
+export class SkillNotActiveError extends SkillError {
+  constructor(skillId: string, metadata?: ErrorMetadata) {
+    super(
+      `Skill with ID ${skillId} is not active and cannot be pinned`,
+      SkillErrorCode.SKILL_NOT_ACTIVE,
+      400,
+      metadata,
     );
   }
 }

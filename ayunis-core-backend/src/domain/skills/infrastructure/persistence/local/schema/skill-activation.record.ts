@@ -28,6 +28,9 @@ export class SkillActivationRecord {
   @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
   user: UserRecord;
 
+  @Column({ default: false })
+  isPinned: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }

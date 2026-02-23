@@ -8,6 +8,7 @@ Skills are reusable knowledge + integration bundles that an AI assistant can act
 
 - **Skill**: A named bundle with a short description (shown in system prompt), long description (instructions, returned on activation), sources, and MCP integrations.
 - **Activation**: Skill activation is tracked in a separate `skill_activations` table (via `SkillActivationRecord`). Only active skills are surfaced in the system prompt as available for the LLM to activate. The repository provides `activateSkill`, `deactivateSkill`, `isSkillActive`, and `getActiveSkillIds` methods to manage activation state.
+- **Pinning**: Active skills can be pinned so they appear prominently in the UI. Pinning state is stored as an `isPinned` boolean column on `SkillActivationRecord`. The repository provides `toggleSkillPinned` (returns the new pinned state) and `getPinnedSkillIds` methods. A skill must be active before it can be pinned — attempting to pin an inactive skill raises `SkillNotActiveError`.
 - **On-demand injection**: The LLM activates a skill via the `activate_skill` tool, which injects the skill's instructions and attaches its sources/MCP integrations to the thread.
 - **Name uniqueness**: Skill names must be unique per user (enforced at repository level) because the `activate_skill` tool uses the name as the identifier.
 
@@ -19,7 +20,7 @@ skills/
 ├── domain/
 │   └── skill.entity.ts                    # Skill domain entity
 ├── application/
-│   ├── ports/skill.repository.ts          # Abstract repository (includes activation methods)
+│   ├── ports/skill.repository.ts          # Abstract repository (includes activation + pinning methods)
 │   ├── services/
 │   │   └── marketplace-skill-installation.service.ts  # Marketplace install logic (resolve name, create, activate)
 │   ├── listeners/
@@ -65,6 +66,8 @@ skills/
 Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` pattern. The domain entity stores `sourceIds: UUID[]` and `mcpIntegrationIds: UUID[]`. Full entity objects are fetched via dedicated list use cases (`ListSkillSourcesUseCase`, `ListSkillMcpIntegrationsUseCase`) that batch-fetch by IDs.
 
 Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
+
+Pinning state is co-located on `SkillActivationRecord` (the `isPinned` column, defaulting to `false`) rather than in a separate table. This ensures pinning is tightly coupled to activation — when a skill is deactivated, its pinned state is naturally removed with the activation record. `SkillNotActiveError` is thrown when attempting to pin a skill that has no activation record.
 
 When a new user is created, the `UserCreatedListener` listens for `UserCreatedEvent` and installs pre-installed marketplace skills via `MarketplaceSkillInstallationService`. The service encapsulates the shared install logic (fetch marketplace skill → resolve unique name → create `Skill` → activate) used by both the listener and `InstallSkillFromMarketplaceUseCase`. If the marketplace is unavailable during user creation, the listener logs a warning and continues — pre-installed skills are best-effort.
 

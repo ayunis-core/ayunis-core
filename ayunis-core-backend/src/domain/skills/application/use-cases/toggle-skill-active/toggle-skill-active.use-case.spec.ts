@@ -39,6 +39,8 @@ describe('ToggleSkillActiveUseCase', () => {
     const mockSkillRepository = {
       findOne: jest.fn(),
       findByIds: jest.fn(),
+      toggleSkillPinned: jest.fn(),
+      getPinnedSkillIds: jest.fn(),
       update: jest.fn(),
       isSkillActive: jest.fn(),
       activateSkill: jest.fn(),
