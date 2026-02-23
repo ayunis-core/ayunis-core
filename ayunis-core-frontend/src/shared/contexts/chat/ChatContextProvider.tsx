@@ -22,6 +22,7 @@ export const ChatContextProvider = ({
     }>
   >([]);
   const [pendingImages, setPendingImages] = useState<PendingImageFile[]>([]);
+  const [pendingSkillId, setPendingSkillId] = useState('');
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(
@@ -32,8 +33,10 @@ export const ChatContextProvider = ({
       setSources,
       pendingImages,
       setPendingImages,
+      pendingSkillId,
+      setPendingSkillId,
     }),
-    [pendingMessage, sources, pendingImages],
+    [pendingMessage, sources, pendingImages, pendingSkillId],
   );
 
   return (
