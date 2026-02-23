@@ -30,7 +30,12 @@ export default function NewChatPage({
   agents,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
-  const { initiateChat } = useInitiateChat();
+  const [selectedSkillId, setSelectedSkillId] = useState<string | undefined>(
+    undefined,
+  );
+  const { initiateChat } = useInitiateChat({
+    onSuccess: () => setSelectedSkillId(undefined),
+  });
   const { models } = usePermittedModels();
   const chatInputRef = useRef<ChatInputRef>(null);
   const greeting = useTimeBasedGreeting();
@@ -39,9 +44,6 @@ export default function NewChatPage({
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const { data: skills } = useSkillsControllerFindAll();
-  const [selectedSkillId, setSelectedSkillId] = useState<string | undefined>(
-    undefined,
-  );
   const selectedSkillName = useMemo(
     () => skills?.find((s) => s.id === selectedSkillId)?.name,
     [skills, selectedSkillId],
@@ -124,7 +126,6 @@ export default function NewChatPage({
     }
 
     initiateChat(message, modelId, agentId, sources, isAnonymous);
-    setSelectedSkillId(undefined);
   }
 
   return (
