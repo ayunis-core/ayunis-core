@@ -5,22 +5,20 @@ import {
   SkillSourceResponseDto,
 } from '../dto/skill-response.dto';
 import { Source } from 'src/domain/sources/domain/source.entity';
+import { SkillUserContext } from '../../../application/services/skill-access.service';
 
 @Injectable()
 export class SkillDtoMapper {
-  toDto(
-    skill: Skill,
-    isActive: boolean,
-    isShared: boolean = false,
-  ): SkillResponseDto {
+  toDto(skill: Skill, context: SkillUserContext): SkillResponseDto {
     return {
       id: skill.id,
       name: skill.name,
       shortDescription: skill.shortDescription,
       instructions: skill.instructions,
       marketplaceIdentifier: skill.marketplaceIdentifier,
-      isActive,
-      isShared,
+      isActive: context.isActive,
+      isShared: context.isShared,
+      isPinned: context.isPinned,
       userId: skill.userId,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
@@ -31,13 +29,14 @@ export class SkillDtoMapper {
     skills: Skill[],
     activeSkillIds: Set<string>,
     sharedSkillIds: Set<string> = new Set(),
+    pinnedSkillIds: Set<string> = new Set(),
   ): SkillResponseDto[] {
     return skills.map((skill) =>
-      this.toDto(
-        skill,
-        activeSkillIds.has(skill.id),
-        sharedSkillIds.has(skill.id),
-      ),
+      this.toDto(skill, {
+        isActive: activeSkillIds.has(skill.id),
+        isShared: sharedSkillIds.has(skill.id),
+        isPinned: pinnedSkillIds.has(skill.id),
+      }),
     );
   }
 

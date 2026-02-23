@@ -39,12 +39,17 @@ describe('FindAllSkillsUseCase', () => {
       createdAt: new Date(),
     });
 
-  beforeAll(async () => {
+  const mockActiveSkillIds = new Set<UUID>();
+  const mockPinnedSkillIds = new Set<UUID>();
+
+  beforeEach(async () => {
     const mockSkillRepository = {
       findAllByOwner: jest.fn(),
       findByIds: jest.fn(),
+      getActiveSkillIds: jest.fn().mockResolvedValue(mockActiveSkillIds),
+      getPinnedSkillIds: jest.fn().mockResolvedValue(mockPinnedSkillIds),
       toggleSkillPinned: jest.fn(),
-      getPinnedSkillIds: jest.fn(),
+      isSkillPinned: jest.fn(),
     };
 
     const mockFindSharesByScopeUseCase = {
@@ -89,11 +94,11 @@ describe('FindAllSkillsUseCase', () => {
     skillRepository.findAllByOwner.mockResolvedValue([ownedSkill]);
     findSharesByScopeUseCase.execute.mockResolvedValue([]);
 
-    const results = await useCase.execute(new FindAllSkillsQuery());
+    const result = await useCase.execute(new FindAllSkillsQuery());
 
-    expect(results).toHaveLength(1);
-    expect(results[0].skill).toBe(ownedSkill);
-    expect(results[0].isShared).toBe(false);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0].skill).toBe(ownedSkill);
+    expect(result.skills[0].isShared).toBe(false);
   });
 
   it('should return shared skills with isShared=true', async () => {
@@ -106,11 +111,11 @@ describe('FindAllSkillsUseCase', () => {
     ]);
     skillRepository.findByIds.mockResolvedValue([sharedSkill]);
 
-    const results = await useCase.execute(new FindAllSkillsQuery());
+    const result = await useCase.execute(new FindAllSkillsQuery());
 
-    expect(results).toHaveLength(1);
-    expect(results[0].skill).toBe(sharedSkill);
-    expect(results[0].isShared).toBe(true);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0].skill).toBe(sharedSkill);
+    expect(result.skills[0].isShared).toBe(true);
   });
 
   it('should deduplicate owned vs shared (owned wins)', async () => {
@@ -122,11 +127,11 @@ describe('FindAllSkillsUseCase', () => {
       makeSkillShare(skillId),
     ]);
 
-    const results = await useCase.execute(new FindAllSkillsQuery());
+    const result = await useCase.execute(new FindAllSkillsQuery());
 
-    expect(results).toHaveLength(1);
-    expect(results[0].skill).toBe(ownedSkill);
-    expect(results[0].isShared).toBe(false);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0].skill).toBe(ownedSkill);
+    expect(result.skills[0].isShared).toBe(false);
     expect(skillRepository.findByIds).not.toHaveBeenCalled();
   });
 
@@ -141,22 +146,36 @@ describe('FindAllSkillsUseCase', () => {
     ]);
     skillRepository.findByIds.mockResolvedValue([sharedSkill]);
 
-    const results = await useCase.execute(new FindAllSkillsQuery());
+    const result = await useCase.execute(new FindAllSkillsQuery());
 
-    expect(results).toHaveLength(2);
-    expect(results[0].skill).toBe(ownedSkill);
-    expect(results[0].isShared).toBe(false);
-    expect(results[1].skill).toBe(sharedSkill);
-    expect(results[1].isShared).toBe(true);
+    expect(result.skills).toHaveLength(2);
+    expect(result.skills[0].skill).toBe(ownedSkill);
+    expect(result.skills[0].isShared).toBe(false);
+    expect(result.skills[1].skill).toBe(sharedSkill);
+    expect(result.skills[1].isShared).toBe(true);
   });
 
   it('should not fetch shared skills when there are no shares', async () => {
     skillRepository.findAllByOwner.mockResolvedValue([]);
     findSharesByScopeUseCase.execute.mockResolvedValue([]);
 
-    const results = await useCase.execute(new FindAllSkillsQuery());
+    const result = await useCase.execute(new FindAllSkillsQuery());
 
-    expect(results).toHaveLength(0);
+    expect(result.skills).toHaveLength(0);
     expect(skillRepository.findByIds).not.toHaveBeenCalled();
+  });
+
+  it('should return activeSkillIds and pinnedSkillIds from repository', async () => {
+    const activeIds = new Set(['skill-1' as UUID]);
+    const pinnedIds = new Set(['skill-1' as UUID]);
+    skillRepository.getActiveSkillIds.mockResolvedValue(activeIds);
+    skillRepository.getPinnedSkillIds.mockResolvedValue(pinnedIds);
+    skillRepository.findAllByOwner.mockResolvedValue([makeSkill('skill-1')]);
+    findSharesByScopeUseCase.execute.mockResolvedValue([]);
+
+    const result = await useCase.execute(new FindAllSkillsQuery());
+
+    expect(result.activeSkillIds).toBe(activeIds);
+    expect(result.pinnedSkillIds).toBe(pinnedIds);
   });
 });

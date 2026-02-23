@@ -94,7 +94,7 @@ import type {
   SharesControllerGetSharesParams,
   SkillResponseDto,
   SkillSourceResponseDto,
-  SkillsControllerAddFileSourceBody,
+  SkillSourcesControllerAddFileSourceBody,
   StorageControllerUploadFileBody,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -9164,9 +9164,71 @@ export const useSkillsControllerToggleActive = <TError = void,
     }
     
 /**
+ * @summary Toggle skill pinned/unpinned status
+ */
+export const skillsControllerTogglePinned = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${id}/toggle-pinned`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getSkillsControllerTogglePinnedMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerTogglePinned>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerTogglePinned>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['skillsControllerTogglePinned'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerTogglePinned>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  skillsControllerTogglePinned(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillsControllerTogglePinnedMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerTogglePinned>>>
+    
+    export type SkillsControllerTogglePinnedMutationError = void
+
+    /**
+ * @summary Toggle skill pinned/unpinned status
+ */
+export const useSkillsControllerTogglePinned = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerTogglePinned>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillsControllerTogglePinned>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSkillsControllerTogglePinnedMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Get all sources for a skill
  */
-export const skillsControllerGetSkillSources = (
+export const skillSourcesControllerGetSkillSources = (
     id: string,
  signal?: AbortSignal
 ) => {
@@ -9181,69 +9243,69 @@ export const skillsControllerGetSkillSources = (
 
 
 
-export const getSkillsControllerGetSkillSourcesQueryKey = (id?: string,) => {
+export const getSkillSourcesControllerGetSkillSourcesQueryKey = (id?: string,) => {
     return [
     `/skills/${id}/sources`
     ] as const;
     }
 
     
-export const getSkillsControllerGetSkillSourcesQueryOptions = <TData = Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError, TData>>, }
+export const getSkillSourcesControllerGetSkillSourcesQueryOptions = <TData = Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSkillsControllerGetSkillSourcesQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getSkillSourcesControllerGetSkillSourcesQueryKey(id);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>> = ({ signal }) => skillsControllerGetSkillSources(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>> = ({ signal }) => skillSourcesControllerGetSkillSources(id, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SkillsControllerGetSkillSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>>
-export type SkillsControllerGetSkillSourcesQueryError = void
+export type SkillSourcesControllerGetSkillSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>>
+export type SkillSourcesControllerGetSkillSourcesQueryError = void
 
 
-export function useSkillsControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError, TData>> & Pick<
+export function useSkillSourcesControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof skillsControllerGetSkillSources>>,
+          Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>,
           TError,
-          Awaited<ReturnType<typeof skillsControllerGetSkillSources>>
+          Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSkillsControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError, TData>> & Pick<
+export function useSkillSourcesControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof skillsControllerGetSkillSources>>,
+          Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>,
           TError,
-          Awaited<ReturnType<typeof skillsControllerGetSkillSources>>
+          Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSkillsControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError, TData>>, }
+export function useSkillSourcesControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get all sources for a skill
  */
 
-export function useSkillsControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerGetSkillSources>>, TError, TData>>, }
+export function useSkillSourcesControllerGetSkillSources<TData = Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillSourcesControllerGetSkillSources>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSkillsControllerGetSkillSourcesQueryOptions(id,options)
+  const queryOptions = getSkillSourcesControllerGetSkillSourcesQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -9259,14 +9321,14 @@ export function useSkillsControllerGetSkillSources<TData = Awaited<ReturnType<ty
 /**
  * @summary Add a file source to a skill
  */
-export const skillsControllerAddFileSource = (
+export const skillSourcesControllerAddFileSource = (
     id: string,
-    skillsControllerAddFileSourceBody: SkillsControllerAddFileSourceBody,
+    skillSourcesControllerAddFileSourceBody: SkillSourcesControllerAddFileSourceBody,
  signal?: AbortSignal
 ) => {
       
       const formData = new FormData();
-formData.append(`file`, skillsControllerAddFileSourceBody.file)
+formData.append(`file`, skillSourcesControllerAddFileSourceBody.file)
 
       return customAxiosInstance<SkillResponseDto>(
       {url: `/skills/${id}/sources/file`, method: 'POST',
@@ -9278,11 +9340,11 @@ formData.append(`file`, skillsControllerAddFileSourceBody.file)
   
 
 
-export const getSkillsControllerAddFileSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerAddFileSource>>, TError,{id: string;data: SkillsControllerAddFileSourceBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerAddFileSource>>, TError,{id: string;data: SkillsControllerAddFileSourceBody}, TContext> => {
+export const getSkillSourcesControllerAddFileSourceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerAddFileSource>>, TError,{id: string;data: SkillSourcesControllerAddFileSourceBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerAddFileSource>>, TError,{id: string;data: SkillSourcesControllerAddFileSourceBody}, TContext> => {
 
-const mutationKey = ['skillsControllerAddFileSource'];
+const mutationKey = ['skillSourcesControllerAddFileSource'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9292,10 +9354,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerAddFileSource>>, {id: string;data: SkillsControllerAddFileSourceBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillSourcesControllerAddFileSource>>, {id: string;data: SkillSourcesControllerAddFileSourceBody}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  skillsControllerAddFileSource(id,data,)
+          return  skillSourcesControllerAddFileSource(id,data,)
         }
 
         
@@ -9303,23 +9365,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SkillsControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerAddFileSource>>>
-    export type SkillsControllerAddFileSourceMutationBody = SkillsControllerAddFileSourceBody
-    export type SkillsControllerAddFileSourceMutationError = void
+    export type SkillSourcesControllerAddFileSourceMutationResult = NonNullable<Awaited<ReturnType<typeof skillSourcesControllerAddFileSource>>>
+    export type SkillSourcesControllerAddFileSourceMutationBody = SkillSourcesControllerAddFileSourceBody
+    export type SkillSourcesControllerAddFileSourceMutationError = void
 
     /**
  * @summary Add a file source to a skill
  */
-export const useSkillsControllerAddFileSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerAddFileSource>>, TError,{id: string;data: SkillsControllerAddFileSourceBody}, TContext>, }
+export const useSkillSourcesControllerAddFileSource = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerAddFileSource>>, TError,{id: string;data: SkillSourcesControllerAddFileSourceBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof skillsControllerAddFileSource>>,
+        Awaited<ReturnType<typeof skillSourcesControllerAddFileSource>>,
         TError,
-        {id: string;data: SkillsControllerAddFileSourceBody},
+        {id: string;data: SkillSourcesControllerAddFileSourceBody},
         TContext
       > => {
 
-      const mutationOptions = getSkillsControllerAddFileSourceMutationOptions(options);
+      const mutationOptions = getSkillSourcesControllerAddFileSourceMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -9327,7 +9389,7 @@ export const useSkillsControllerAddFileSource = <TError = void,
 /**
  * @summary Remove a source from a skill
  */
-export const skillsControllerRemoveSource = (
+export const skillSourcesControllerRemoveSource = (
     id: string,
     sourceId: string,
  ) => {
@@ -9341,11 +9403,11 @@ export const skillsControllerRemoveSource = (
   
 
 
-export const getSkillsControllerRemoveSourceMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
+export const getSkillSourcesControllerRemoveSourceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext> => {
 
-const mutationKey = ['skillsControllerRemoveSource'];
+const mutationKey = ['skillSourcesControllerRemoveSource'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9355,10 +9417,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillSourcesControllerRemoveSource>>, {id: string;sourceId: string}> = (props) => {
           const {id,sourceId} = props ?? {};
 
-          return  skillsControllerRemoveSource(id,sourceId,)
+          return  skillSourcesControllerRemoveSource(id,sourceId,)
         }
 
         
@@ -9366,23 +9428,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SkillsControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerRemoveSource>>>
+    export type SkillSourcesControllerRemoveSourceMutationResult = NonNullable<Awaited<ReturnType<typeof skillSourcesControllerRemoveSource>>>
     
-    export type SkillsControllerRemoveSourceMutationError = void
+    export type SkillSourcesControllerRemoveSourceMutationError = void
 
     /**
  * @summary Remove a source from a skill
  */
-export const useSkillsControllerRemoveSource = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
+export const useSkillSourcesControllerRemoveSource = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerRemoveSource>>, TError,{id: string;sourceId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof skillsControllerRemoveSource>>,
+        Awaited<ReturnType<typeof skillSourcesControllerRemoveSource>>,
         TError,
         {id: string;sourceId: string},
         TContext
       > => {
 
-      const mutationOptions = getSkillsControllerRemoveSourceMutationOptions(options);
+      const mutationOptions = getSkillSourcesControllerRemoveSourceMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -9390,7 +9452,7 @@ export const useSkillsControllerRemoveSource = <TError = void,
 /**
  * @summary Assign MCP integration to skill
  */
-export const skillsControllerAssignMcpIntegration = (
+export const skillMcpIntegrationsControllerAssignMcpIntegration = (
     skillId: string,
     integrationId: string,
  signal?: AbortSignal
@@ -9405,11 +9467,11 @@ export const skillsControllerAssignMcpIntegration = (
   
 
 
-export const getSkillsControllerAssignMcpIntegrationMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerAssignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerAssignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext> => {
+export const getSkillMcpIntegrationsControllerAssignMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerAssignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerAssignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext> => {
 
-const mutationKey = ['skillsControllerAssignMcpIntegration'];
+const mutationKey = ['skillMcpIntegrationsControllerAssignMcpIntegration'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9419,10 +9481,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerAssignMcpIntegration>>, {skillId: string;integrationId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillMcpIntegrationsControllerAssignMcpIntegration>>, {skillId: string;integrationId: string}> = (props) => {
           const {skillId,integrationId} = props ?? {};
 
-          return  skillsControllerAssignMcpIntegration(skillId,integrationId,)
+          return  skillMcpIntegrationsControllerAssignMcpIntegration(skillId,integrationId,)
         }
 
         
@@ -9430,23 +9492,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SkillsControllerAssignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerAssignMcpIntegration>>>
+    export type SkillMcpIntegrationsControllerAssignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof skillMcpIntegrationsControllerAssignMcpIntegration>>>
     
-    export type SkillsControllerAssignMcpIntegrationMutationError = void
+    export type SkillMcpIntegrationsControllerAssignMcpIntegrationMutationError = void
 
     /**
  * @summary Assign MCP integration to skill
  */
-export const useSkillsControllerAssignMcpIntegration = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerAssignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
+export const useSkillMcpIntegrationsControllerAssignMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerAssignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof skillsControllerAssignMcpIntegration>>,
+        Awaited<ReturnType<typeof skillMcpIntegrationsControllerAssignMcpIntegration>>,
         TError,
         {skillId: string;integrationId: string},
         TContext
       > => {
 
-      const mutationOptions = getSkillsControllerAssignMcpIntegrationMutationOptions(options);
+      const mutationOptions = getSkillMcpIntegrationsControllerAssignMcpIntegrationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -9454,7 +9516,7 @@ export const useSkillsControllerAssignMcpIntegration = <TError = void,
 /**
  * @summary Unassign MCP integration from skill
  */
-export const skillsControllerUnassignMcpIntegration = (
+export const skillMcpIntegrationsControllerUnassignMcpIntegration = (
     skillId: string,
     integrationId: string,
  ) => {
@@ -9468,11 +9530,11 @@ export const skillsControllerUnassignMcpIntegration = (
   
 
 
-export const getSkillsControllerUnassignMcpIntegrationMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerUnassignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof skillsControllerUnassignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext> => {
+export const getSkillMcpIntegrationsControllerUnassignMcpIntegrationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerUnassignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerUnassignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext> => {
 
-const mutationKey = ['skillsControllerUnassignMcpIntegration'];
+const mutationKey = ['skillMcpIntegrationsControllerUnassignMcpIntegration'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9482,10 +9544,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillsControllerUnassignMcpIntegration>>, {skillId: string;integrationId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillMcpIntegrationsControllerUnassignMcpIntegration>>, {skillId: string;integrationId: string}> = (props) => {
           const {skillId,integrationId} = props ?? {};
 
-          return  skillsControllerUnassignMcpIntegration(skillId,integrationId,)
+          return  skillMcpIntegrationsControllerUnassignMcpIntegration(skillId,integrationId,)
         }
 
         
@@ -9493,23 +9555,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SkillsControllerUnassignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof skillsControllerUnassignMcpIntegration>>>
+    export type SkillMcpIntegrationsControllerUnassignMcpIntegrationMutationResult = NonNullable<Awaited<ReturnType<typeof skillMcpIntegrationsControllerUnassignMcpIntegration>>>
     
-    export type SkillsControllerUnassignMcpIntegrationMutationError = void
+    export type SkillMcpIntegrationsControllerUnassignMcpIntegrationMutationError = void
 
     /**
  * @summary Unassign MCP integration from skill
  */
-export const useSkillsControllerUnassignMcpIntegration = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillsControllerUnassignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
+export const useSkillMcpIntegrationsControllerUnassignMcpIntegration = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerUnassignMcpIntegration>>, TError,{skillId: string;integrationId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof skillsControllerUnassignMcpIntegration>>,
+        Awaited<ReturnType<typeof skillMcpIntegrationsControllerUnassignMcpIntegration>>,
         TError,
         {skillId: string;integrationId: string},
         TContext
       > => {
 
-      const mutationOptions = getSkillsControllerUnassignMcpIntegrationMutationOptions(options);
+      const mutationOptions = getSkillMcpIntegrationsControllerUnassignMcpIntegrationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -9517,7 +9579,7 @@ export const useSkillsControllerUnassignMcpIntegration = <TError = void,
 /**
  * @summary List MCP integrations assigned to skill
  */
-export const skillsControllerListSkillMcpIntegrations = (
+export const skillMcpIntegrationsControllerListSkillMcpIntegrations = (
     skillId: string,
  signal?: AbortSignal
 ) => {
@@ -9532,69 +9594,69 @@ export const skillsControllerListSkillMcpIntegrations = (
 
 
 
-export const getSkillsControllerListSkillMcpIntegrationsQueryKey = (skillId?: string,) => {
+export const getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey = (skillId?: string,) => {
     return [
     `/skills/${skillId}/mcp-integrations`
     ] as const;
     }
 
     
-export const getSkillsControllerListSkillMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError = void>(skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError, TData>>, }
+export const getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryOptions = <TData = Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError = void>(skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSkillsControllerListSkillMcpIntegrationsQueryKey(skillId);
+  const queryKey =  queryOptions?.queryKey ?? getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey(skillId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>> = ({ signal }) => skillsControllerListSkillMcpIntegrations(skillId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>> = ({ signal }) => skillMcpIntegrationsControllerListSkillMcpIntegrations(skillId, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(skillId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(skillId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SkillsControllerListSkillMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>>
-export type SkillsControllerListSkillMcpIntegrationsQueryError = void
+export type SkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>>
+export type SkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryError = void
 
 
-export function useSkillsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError = void>(
- skillId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError, TData>> & Pick<
+export function useSkillMcpIntegrationsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError = void>(
+ skillId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>,
+          Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>,
           TError,
-          Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>
+          Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSkillsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError = void>(
- skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError, TData>> & Pick<
+export function useSkillMcpIntegrationsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError = void>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>,
+          Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>,
           TError,
-          Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>
+          Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSkillsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError = void>(
- skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError, TData>>, }
+export function useSkillMcpIntegrationsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError = void>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List MCP integrations assigned to skill
  */
 
-export function useSkillsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError = void>(
- skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillsControllerListSkillMcpIntegrations>>, TError, TData>>, }
+export function useSkillMcpIntegrationsControllerListSkillMcpIntegrations<TData = Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError = void>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillMcpIntegrationsControllerListSkillMcpIntegrations>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSkillsControllerListSkillMcpIntegrationsQueryOptions(skillId,options)
+  const queryOptions = getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryOptions(skillId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

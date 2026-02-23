@@ -75,6 +75,12 @@ export class SkillResponseDto {
     example: false,
   })
   isShared: boolean;
+
+  @ApiProperty({
+    description: 'Whether the skill is pinned for quick access in chat',
+    example: false,
+  })
+  isPinned: boolean;
 }
 
 export class SkillSourceResponseDto {

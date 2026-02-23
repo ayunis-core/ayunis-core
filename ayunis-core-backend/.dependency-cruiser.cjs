@@ -152,7 +152,8 @@ module.exports = {
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // CONTROLLERS — No direct infrastructure access
+    // CONTROLLERS — No direct infrastructure or port access
+    // Controllers should use use cases and services, not repositories directly.
     // ═══════════════════════════════════════════════════════════════════════════
     {
       name: 'controllers-no-infrastructure',
@@ -163,6 +164,17 @@ module.exports = {
       },
       to: {
         path: '^src/(domain|iam)/[^/]+/infrastructure/',
+      },
+    },
+    {
+      name: 'controllers-no-ports',
+      comment: 'Controllers cannot import repository ports directly (use services instead)',
+      severity: 'error',
+      from: {
+        path: '^src/(domain|iam)/[^/]+/presenters/http/.*\\.controller\\.ts$',
+      },
+      to: {
+        path: '^src/(domain|iam)/[^/]+/application/ports/',
       },
     },
 

@@ -9,17 +9,17 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 import { Logger } from '@nestjs/common';
-import { ToggleSkillActiveUseCase } from './toggle-skill-active.use-case';
-import { ToggleSkillActiveCommand } from './toggle-skill-active.command';
+import { ToggleSkillPinnedUseCase } from './toggle-skill-pinned.use-case';
+import { ToggleSkillPinnedCommand } from './toggle-skill-pinned.command';
 import { SkillRepository } from '../../ports/skill.repository';
 import { SkillAccessService } from '../../services/skill-access.service';
 import { Skill } from '../../../domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
-import { SkillNotFoundError } from '../../skills.errors';
+import { SkillNotFoundError, SkillNotActiveError } from '../../skills.errors';
 
-describe('ToggleSkillActiveUseCase', () => {
-  let useCase: ToggleSkillActiveUseCase;
+describe('ToggleSkillPinnedUseCase', () => {
+  let useCase: ToggleSkillPinnedUseCase;
   let skillRepository: jest.Mocked<SkillRepository>;
   let skillAccessService: jest.Mocked<SkillAccessService>;
 
@@ -39,11 +39,10 @@ describe('ToggleSkillActiveUseCase', () => {
     const mockSkillRepository = {
       findOne: jest.fn(),
       findByIds: jest.fn(),
+      isSkillActive: jest.fn(),
       toggleSkillPinned: jest.fn(),
       isSkillPinned: jest.fn(),
       getPinnedSkillIds: jest.fn(),
-      update: jest.fn(),
-      isSkillActive: jest.fn(),
       activateSkill: jest.fn(),
       deactivateSkill: jest.fn(),
     };
@@ -62,14 +61,14 @@ describe('ToggleSkillActiveUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ToggleSkillActiveUseCase,
+        ToggleSkillPinnedUseCase,
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: SkillAccessService, useValue: mockSkillAccessService },
         { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
-    useCase = module.get<ToggleSkillActiveUseCase>(ToggleSkillActiveUseCase);
+    useCase = module.get<ToggleSkillPinnedUseCase>(ToggleSkillPinnedUseCase);
     skillRepository = module.get(SkillRepository);
     skillAccessService = module.get(SkillAccessService);
 
@@ -81,67 +80,54 @@ describe('ToggleSkillActiveUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should activate an inactive owned skill', async () => {
-    const skill = makeSkill();
-    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
-    skillAccessService.resolveIsShared.mockResolvedValue(false);
-    skillRepository.isSkillActive.mockResolvedValue(false);
-    skillRepository.isSkillPinned.mockResolvedValue(false);
-    skillRepository.activateSkill.mockResolvedValue(undefined);
-
-    const result = await useCase.execute(
-      new ToggleSkillActiveCommand({ skillId: mockSkillId }),
-    );
-
-    expect(result.isActive).toBe(true);
-    expect(result.isShared).toBe(false);
-    expect(result.isPinned).toBe(false);
-    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
-      mockSkillId,
-      mockUserId,
-    );
-    expect(skillRepository.deactivateSkill).not.toHaveBeenCalled();
-  });
-
-  it('should deactivate an active owned skill with isPinned=false', async () => {
+  it('should pin an active unpinned skill and return isShared', async () => {
     const skill = makeSkill();
     skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
     skillAccessService.resolveIsShared.mockResolvedValue(false);
     skillRepository.isSkillActive.mockResolvedValue(true);
-    skillRepository.deactivateSkill.mockResolvedValue(undefined);
+    skillRepository.toggleSkillPinned.mockResolvedValue(true);
 
     const result = await useCase.execute(
-      new ToggleSkillActiveCommand({ skillId: mockSkillId }),
+      new ToggleSkillPinnedCommand({ skillId: mockSkillId }),
     );
 
-    expect(result.isActive).toBe(false);
-    expect(result.isPinned).toBe(false);
-    expect(skillRepository.deactivateSkill).toHaveBeenCalledWith(
+    expect(result.isPinned).toBe(true);
+    expect(result.isShared).toBe(false);
+    expect(result.skill).toBe(skill);
+    expect(skillRepository.toggleSkillPinned).toHaveBeenCalledWith(
       mockSkillId,
       mockUserId,
     );
-    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
   });
 
-  it('should activate a shared skill and return isShared=true', async () => {
-    const sharedSkill = makeSkill(mockSkillId, 'other-user' as UUID);
-    skillAccessService.findAccessibleSkill.mockResolvedValue(sharedSkill);
-    skillAccessService.resolveIsShared.mockResolvedValue(true);
-    skillRepository.isSkillActive.mockResolvedValue(false);
-    skillRepository.isSkillPinned.mockResolvedValue(false);
-    skillRepository.activateSkill.mockResolvedValue(undefined);
+  it('should unpin a pinned skill', async () => {
+    const skill = makeSkill();
+    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillAccessService.resolveIsShared.mockResolvedValue(false);
+    skillRepository.isSkillActive.mockResolvedValue(true);
+    skillRepository.toggleSkillPinned.mockResolvedValue(false);
 
     const result = await useCase.execute(
-      new ToggleSkillActiveCommand({ skillId: mockSkillId }),
+      new ToggleSkillPinnedCommand({ skillId: mockSkillId }),
     );
 
-    expect(result.skill).toBe(sharedSkill);
-    expect(result.isActive).toBe(true);
-    expect(result.isShared).toBe(true);
-    expect(skillRepository.activateSkill).toHaveBeenCalledWith(
+    expect(result.isPinned).toBe(false);
+    expect(skillRepository.toggleSkillPinned).toHaveBeenCalledWith(
       mockSkillId,
       mockUserId,
     );
+  });
+
+  it('should throw SkillNotActiveError when skill is not active', async () => {
+    const skill = makeSkill();
+    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillRepository.isSkillActive.mockResolvedValue(false);
+
+    await expect(
+      useCase.execute(new ToggleSkillPinnedCommand({ skillId: mockSkillId })),
+    ).rejects.toThrow(SkillNotActiveError);
+
+    expect(skillRepository.toggleSkillPinned).not.toHaveBeenCalled();
   });
 
   it('should throw SkillNotFoundError when skill is not accessible', async () => {
@@ -150,7 +136,23 @@ describe('ToggleSkillActiveUseCase', () => {
     );
 
     await expect(
-      useCase.execute(new ToggleSkillActiveCommand({ skillId: mockSkillId })),
+      useCase.execute(new ToggleSkillPinnedCommand({ skillId: mockSkillId })),
     ).rejects.toThrow(SkillNotFoundError);
+  });
+
+  it('should toggle pinned on a shared skill and return isShared=true', async () => {
+    const sharedSkill = makeSkill(mockSkillId, 'other-user' as UUID);
+    skillAccessService.findAccessibleSkill.mockResolvedValue(sharedSkill);
+    skillAccessService.resolveIsShared.mockResolvedValue(true);
+    skillRepository.isSkillActive.mockResolvedValue(true);
+    skillRepository.toggleSkillPinned.mockResolvedValue(true);
+
+    const result = await useCase.execute(
+      new ToggleSkillPinnedCommand({ skillId: mockSkillId }),
+    );
+
+    expect(result.skill).toBe(sharedSkill);
+    expect(result.isPinned).toBe(true);
+    expect(result.isShared).toBe(true);
   });
 });

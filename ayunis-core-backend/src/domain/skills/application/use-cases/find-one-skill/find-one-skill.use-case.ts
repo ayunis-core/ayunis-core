@@ -10,9 +10,11 @@ import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-case
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 
-export interface SkillWithShareStatus {
+export interface SkillWithUserContext {
   skill: Skill;
+  isActive: boolean;
   isShared: boolean;
+  isPinned: boolean;
 }
 
 @Injectable()
@@ -25,7 +27,7 @@ export class FindOneSkillUseCase {
     private readonly contextService: ContextService,
   ) {}
 
-  async execute(query: FindOneSkillQuery): Promise<SkillWithShareStatus> {
+  async execute(query: FindOneSkillQuery): Promise<SkillWithUserContext> {
     this.logger.log('Finding skill', { id: query.id });
     try {
       const userId = this.contextService.get('userId');
@@ -36,7 +38,11 @@ export class FindOneSkillUseCase {
       // Try owned skill first
       const ownedSkill = await this.skillRepository.findOne(query.id, userId);
       if (ownedSkill) {
-        return { skill: ownedSkill, isShared: false };
+        const [isActive, isPinned] = await Promise.all([
+          this.skillRepository.isSkillActive(query.id, userId),
+          this.skillRepository.isSkillPinned(query.id, userId),
+        ]);
+        return { skill: ownedSkill, isActive, isShared: false, isPinned };
       }
 
       // Check if skill is shared with user
@@ -47,7 +53,16 @@ export class FindOneSkillUseCase {
       if (share) {
         const sharedSkills = await this.skillRepository.findByIds([query.id]);
         if (sharedSkills.length > 0) {
-          return { skill: sharedSkills[0], isShared: true };
+          const [isActive, isPinned] = await Promise.all([
+            this.skillRepository.isSkillActive(query.id, userId),
+            this.skillRepository.isSkillPinned(query.id, userId),
+          ]);
+          return {
+            skill: sharedSkills[0],
+            isActive,
+            isShared: true,
+            isPinned,
+          };
         }
       }
 

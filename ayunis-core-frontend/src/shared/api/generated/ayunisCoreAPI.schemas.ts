@@ -2194,6 +2194,8 @@ export interface SkillResponseDto {
   updatedAt: string;
   /** Whether the skill is shared with the current user (not owned) */
   isShared: boolean;
+  /** Whether the skill is pinned for quick access in chat */
+  isPinned: boolean;
 }
 
 export interface CreateSkillDto {
@@ -2944,7 +2946,7 @@ limit?: number;
 offset?: number;
 };
 
-export type SkillsControllerAddFileSourceBody = {
+export type SkillSourcesControllerAddFileSourceBody = {
   /** The file to upload */
   file: Blob;
 };

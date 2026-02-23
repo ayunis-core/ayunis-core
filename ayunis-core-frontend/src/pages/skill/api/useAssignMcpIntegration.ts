@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  useSkillsControllerAssignMcpIntegration,
-  getSkillsControllerListSkillMcpIntegrationsQueryKey,
+  useSkillMcpIntegrationsControllerAssignMcpIntegration,
+  getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess, showError } from '@/shared/lib/toast';
@@ -17,20 +17,26 @@ export function useAssignMcpIntegration(
   const { t } = useTranslation('skill');
   const queryClient = useQueryClient();
 
-  return useSkillsControllerAssignMcpIntegration({
+  return useSkillMcpIntegrationsControllerAssignMcpIntegration({
     mutation: {
       onMutate: async ({ skillId, integrationId }) => {
         await queryClient.cancelQueries({
           queryKey:
-            getSkillsControllerListSkillMcpIntegrationsQueryKey(skillId),
+            getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey(
+              skillId,
+            ),
         });
 
         const previousAssignments = queryClient.getQueryData(
-          getSkillsControllerListSkillMcpIntegrationsQueryKey(skillId),
+          getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey(
+            skillId,
+          ),
         );
 
         queryClient.setQueryData(
-          getSkillsControllerListSkillMcpIntegrationsQueryKey(skillId),
+          getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey(
+            skillId,
+          ),
           (old: McpIntegrationResponseDto[] | undefined) => {
             if (!old) return old;
             const integration = availableIntegrations?.find(
@@ -45,7 +51,7 @@ export function useAssignMcpIntegration(
       onError: (error, variables, context) => {
         if (context?.previousAssignments) {
           queryClient.setQueryData(
-            getSkillsControllerListSkillMcpIntegrationsQueryKey(
+            getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey(
               variables.skillId,
             ),
             context.previousAssignments,
@@ -76,9 +82,10 @@ export function useAssignMcpIntegration(
       },
       onSettled: (_data, _error, variables) => {
         void queryClient.invalidateQueries({
-          queryKey: getSkillsControllerListSkillMcpIntegrationsQueryKey(
-            variables.skillId,
-          ),
+          queryKey:
+            getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey(
+              variables.skillId,
+            ),
         });
       },
     },

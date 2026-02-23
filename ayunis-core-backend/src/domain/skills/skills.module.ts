@@ -17,6 +17,7 @@ import { DeleteSkillUseCase } from './application/use-cases/delete-skill/delete-
 import { FindOneSkillUseCase } from './application/use-cases/find-one-skill/find-one-skill.use-case';
 import { FindAllSkillsUseCase } from './application/use-cases/find-all-skills/find-all-skills.use-case';
 import { ToggleSkillActiveUseCase } from './application/use-cases/toggle-skill-active/toggle-skill-active.use-case';
+import { ToggleSkillPinnedUseCase } from './application/use-cases/toggle-skill-pinned/toggle-skill-pinned.use-case';
 import { FindActiveSkillsUseCase } from './application/use-cases/find-active-skills/find-active-skills.use-case';
 import { AddSourceToSkillUseCase } from './application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
 import { RemoveSourceFromSkillUseCase } from './application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
@@ -29,6 +30,7 @@ import { InstallSkillFromMarketplaceUseCase } from './application/use-cases/inst
 
 // Services
 import { MarketplaceSkillInstallationService } from './application/services/marketplace-skill-installation.service';
+import { SkillAccessService } from './application/services/skill-access.service';
 
 // Listeners
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
@@ -48,6 +50,8 @@ import { TeamsModule } from 'src/iam/teams/teams.module';
 
 // Presenters
 import { SkillsController } from './presenters/http/skills.controller';
+import { SkillSourcesController } from './presenters/http/skill-sources.controller';
+import { SkillMcpIntegrationsController } from './presenters/http/skill-mcp-integrations.controller';
 import { SkillDtoMapper } from './presenters/http/mappers/skill.mapper';
 import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-integration-dto.mapper';
 
@@ -71,6 +75,9 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
       provide: SkillRepository,
       useClass: LocalSkillRepository,
     },
+    // Services
+    SkillAccessService,
+
     // Use Cases
     CreateSkillUseCase,
     UpdateSkillUseCase,
@@ -78,6 +85,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     FindOneSkillUseCase,
     FindAllSkillsUseCase,
     ToggleSkillActiveUseCase,
+    ToggleSkillPinnedUseCase,
     FindActiveSkillsUseCase,
     AddSourceToSkillUseCase,
     RemoveSourceFromSkillUseCase,
@@ -106,7 +114,11 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     SkillDtoMapper,
     McpIntegrationDtoMapper,
   ],
-  controllers: [SkillsController],
+  controllers: [
+    SkillsController,
+    SkillSourcesController,
+    SkillMcpIntegrationsController,
+  ],
   exports: [
     FindActiveSkillsUseCase,
     FindOneSkillUseCase,

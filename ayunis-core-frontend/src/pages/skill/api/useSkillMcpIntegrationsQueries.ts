@@ -1,6 +1,6 @@
 import {
   useMcpIntegrationsControllerListAvailable,
-  useSkillsControllerListSkillMcpIntegrations,
+  useSkillMcpIntegrationsControllerListSkillMcpIntegrations,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 /**
@@ -19,7 +19,7 @@ export function useSkillMcpIntegrationsQueries(skillId: string) {
     isLoading: loadingAssigned,
     isError: errorAssigned,
     refetch: refetchAssigned,
-  } = useSkillsControllerListSkillMcpIntegrations(skillId);
+  } = useSkillMcpIntegrationsControllerListSkillMcpIntegrations(skillId);
 
   return {
     availableIntegrations,

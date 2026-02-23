@@ -329,6 +329,17 @@ export class LocalSkillRepository implements SkillRepository {
     return rows[0].isPinned;
   }
 
+  async isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
+    this.logger.log('isSkillPinned', { skillId, userId });
+
+    const manager = this.getManager();
+    const count = await manager.count(SkillActivationRecord, {
+      where: { skillId, userId, isPinned: true },
+    });
+
+    return count > 0;
+  }
+
   async getPinnedSkillIds(userId: UUID): Promise<Set<UUID>> {
     this.logger.log('getPinnedSkillIds', { userId });
 
