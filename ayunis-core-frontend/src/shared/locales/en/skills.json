@@ -16,6 +16,8 @@
   "card": {
     "activeLabel": "Active",
     "inactiveLabel": "Inactive",
+    "pinLabel": "Pin to new chat",
+    "unpinLabel": "Unpin from new chat",
     "confirmDelete": {
       "title": "Delete Skill",
       "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
@@ -54,6 +56,11 @@
   "toggleActive": {
     "success": "Skill status updated successfully!",
     "error": "Failed to update skill status. Please try again.",
+    "notFound": "Skill not found. It may have been deleted."
+  },
+  "togglePinned": {
+    "success": "Skill pin status updated successfully!",
+    "error": "Failed to update skill pin status. Please try again.",
     "notFound": "Skill not found. It may have been deleted."
   },
   "delete": {
