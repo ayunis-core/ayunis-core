@@ -217,9 +217,20 @@ export class ExecuteRunUseCase {
     if (params.skillId) {
       await this.activateSkillOnThread(params);
     }
-    if (userInput) {
+    if (userInput && this.hasUserMessageContent(userInput, params)) {
       yield await this.processUserMessage(params, userInput);
     }
+  }
+
+  private hasUserMessageContent(
+    userInput: RunUserInput,
+    params: RunParams,
+  ): boolean {
+    const hasText = userInput.text && userInput.text.trim().length > 0;
+    const hasImages = userInput.pendingImages.length > 0;
+    const hasSkillInstructions =
+      !!params.skillInstructions && params.skillInstructions.trim().length > 0;
+    return hasText || hasImages || hasSkillInstructions;
   }
 
   private parseInput(input: RunUserInput | RunToolResultInput): {
