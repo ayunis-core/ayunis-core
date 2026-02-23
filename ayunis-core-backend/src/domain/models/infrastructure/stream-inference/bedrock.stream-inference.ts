@@ -177,7 +177,7 @@ export class BedrockStreamInferenceHandler implements StreamInferenceHandler {
 
     const requestBody: BedrockAnthropicRequest = {
       anthropic_version: 'bedrock-2023-05-31',
-      max_tokens: 4096,
+      max_tokens: 100000,
       system: systemPrompt,
       messages: anthropicMessages,
       tools: anthropicTools,
