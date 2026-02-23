@@ -114,6 +114,7 @@ CODE_EXECUTION_SERVICE_URL=http://localhost:$CODE_EXEC_HOST_PORT
 ANONYMIZE_SERVICE_URL=http://localhost:$ANONYMIZE_HOST_PORT
 FRONTEND_BASEURL=http://localhost:$FRONTEND_PORT
 CORS_ALLOWED_ORIGINS=http://localhost:$FRONTEND_PORT,http://localhost:$BACKEND_PORT
+MARKETPLACE_SERVICE_URL=http://localhost:3002
 EOF
 
   # -- 3. Run database migrations ------------------------------------------

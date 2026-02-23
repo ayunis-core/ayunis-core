@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { CreateUserCommand } from './create-user.command';
 import { User } from '../../../domain/user.entity';
@@ -15,6 +16,7 @@ import { SendWebhookCommand } from 'src/common/webhooks/application/use-cases/se
 import { SendWebhookUseCase } from 'src/common/webhooks/application/use-cases/send-webhook/send-webhook.use-case';
 import { ConfigService } from '@nestjs/config';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { UserCreatedEvent } from '../../events/user-created.event';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -25,6 +27,7 @@ export class CreateUserUseCase {
     private readonly hashTextUseCase: HashTextUseCase,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
@@ -99,6 +102,18 @@ export class CreateUserUseCase {
           }),
         ),
       );
+
+      this.eventEmitter
+        .emitAsync(
+          UserCreatedEvent.EVENT_NAME,
+          new UserCreatedEvent(createdUser.id, command.orgId),
+        )
+        .catch((err: unknown) => {
+          this.logger.error('Failed to emit UserCreatedEvent', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: createdUser.id,
+          });
+        });
 
       return createdUser;
     } catch (error) {

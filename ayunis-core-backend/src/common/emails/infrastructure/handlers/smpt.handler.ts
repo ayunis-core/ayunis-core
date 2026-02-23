@@ -9,14 +9,14 @@ export class SmptHandler implements EmailHandlerPort {
   private readonly transporter: Transporter;
 
   constructor(configService: ConfigService) {
+    const user = configService.get<string>('emails.smtp.user');
+    const pass = configService.get<string>('emails.smtp.password');
+
     this.transporter = nodemailer.createTransport({
       host: configService.get<string>('emails.smtp.host'),
       port: configService.get<number>('emails.smtp.port'),
       secure: configService.get<boolean>('emails.smtp.secure'),
-      auth: {
-        user: configService.get<string>('emails.smtp.user'),
-        pass: configService.get<string>('emails.smtp.password'),
-      },
+      ...(user && pass ? { auth: { user, pass } } : {}),
       requireTLS: configService.get<boolean>('emails.smtp.requireTLS'),
     });
   }
