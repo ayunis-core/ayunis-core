@@ -34,8 +34,6 @@ import enAgents from './shared/locales/en/agents.json';
 import deAgents from './shared/locales/de/agents.json';
 import enAgent from './shared/locales/en/agent.json';
 import deAgent from './shared/locales/de/agent.json';
-import enQuickActions from './shared/locales/en/quickActions.json';
-import deQuickActions from './shared/locales/de/quickActions.json';
 import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
 import enInstall from './shared/locales/en/install.json';
@@ -64,7 +62,6 @@ const resources = {
     prompts: enPrompts,
     agents: enAgents,
     agent: enAgent,
-    quickActions: enQuickActions,
     install: enInstall,
     skills: enSkills,
     skill: enSkill,
@@ -87,7 +84,6 @@ const resources = {
     prompts: dePrompts,
     agents: deAgents,
     agent: deAgent,
-    quickActions: deQuickActions,
     install: deInstall,
     skills: deSkills,
     skill: deSkill,

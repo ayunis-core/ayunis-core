@@ -87,6 +87,9 @@
     "transcriptionFailed": "Transcription failed",
     "modelSelectorAriaLabel": "Select AI model"
   },
+  "pinnedSkills": {
+    "empty": "No pinned skills"
+  },
   "common": {
     "loading": "Loading...",
     "pagination": {
