@@ -17,6 +17,13 @@ export class TextMessageContentResponseDto extends MessageContentResponseDto {
     example: 'Hello, how can I help you today?',
   })
   text: string;
+
+  @ApiProperty({
+    description: 'Whether this text content contains skill instructions',
+    example: false,
+    required: false,
+  })
+  isSkillInstruction?: boolean;
 }
 
 export class ToolUseMessageContentResponseDto extends MessageContentResponseDto {

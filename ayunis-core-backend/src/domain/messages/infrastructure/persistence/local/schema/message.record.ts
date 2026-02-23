@@ -10,6 +10,7 @@ interface TextMessageContentData {
   type: MessageContentType.TEXT;
   text: string;
   providerMetadata?: ProviderMetadata;
+  isSkillInstruction?: boolean;
 }
 
 interface ToolUseMessageContentData {

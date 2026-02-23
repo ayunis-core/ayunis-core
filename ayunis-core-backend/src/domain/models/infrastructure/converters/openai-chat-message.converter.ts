@@ -67,12 +67,13 @@ export class OpenAIChatMessageConverter {
   private convertUserMessage(
     message: Message,
   ): OpenAI.ChatCompletionMessageParam[] {
-    return message.content
+    const contentParts: OpenAI.ChatCompletionContentPart[] = message.content
       .filter((c) => c instanceof TextMessageContent)
-      .map((c) => ({
-        role: 'user' as const,
-        content: [{ type: 'text' as const, text: c.text }],
-      }));
+      .map((c) => ({ type: 'text' as const, text: c.text }));
+
+    if (contentParts.length === 0) return [];
+
+    return [{ role: 'user' as const, content: contentParts }];
   }
 
   private convertAssistantMessage(

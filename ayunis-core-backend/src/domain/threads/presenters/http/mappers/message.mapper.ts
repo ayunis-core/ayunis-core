@@ -169,6 +169,7 @@ export class MessageDtoMapper {
     return {
       type: content.type,
       text: content.text,
+      ...(content.isSkillInstruction && { isSkillInstruction: true }),
     };
   }
 

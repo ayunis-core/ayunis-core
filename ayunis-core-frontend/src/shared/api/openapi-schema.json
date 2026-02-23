@@ -8882,6 +8882,11 @@
             "type": "string",
             "description": "The text content of the message",
             "example": "Hello, how can I help you today?"
+          },
+          "isSkillInstruction": {
+            "type": "boolean",
+            "description": "Whether this text content contains skill instructions",
+            "example": false
           }
         },
         "required": [
