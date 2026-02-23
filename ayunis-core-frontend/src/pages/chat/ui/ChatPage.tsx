@@ -366,6 +366,7 @@ export default function ChatPage({
             images: buildPendingImages(),
             skillId: pendingSkillId || undefined,
           });
+          setPendingSkillId('');
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
             showError(t('chat.upgradeToProError'));
@@ -377,7 +378,6 @@ export default function ChatPage({
           setIsProcessingPendingSources(false);
           setPendingMessage('');
           setPendingImages([]);
-          setPendingSkillId('');
         }
       }
     }

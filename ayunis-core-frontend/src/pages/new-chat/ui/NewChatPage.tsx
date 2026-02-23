@@ -13,6 +13,7 @@ import { SourceResponseDtoType } from '@/shared/api/generated/ayunisCoreAPI.sche
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
+import { keepPreviousData } from '@tanstack/react-query';
 
 interface NewChatPageProps {
   prefilledPrompt?: string;
@@ -43,7 +44,9 @@ export default function NewChatPage({
   const [modelId, setModelId] = useState(selectedModelId);
   const [agentId, setAgentId] = useState(selectedAgentId);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const { data: skills } = useSkillsControllerFindAll();
+  const { data: skills } = useSkillsControllerFindAll({
+    query: { placeholderData: keepPreviousData },
+  });
   const selectedSkillName = useMemo(
     () => skills?.find((s) => s.id === selectedSkillId)?.name,
     [skills, selectedSkillId],
