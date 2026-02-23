@@ -21,10 +21,10 @@ export class McpIntegrationResponseDto {
 
   @ApiProperty({
     description: 'Type of integration',
-    enum: ['predefined', 'custom'],
+    enum: ['predefined', 'custom', 'marketplace'],
     example: 'predefined',
   })
-  type: 'predefined' | 'custom';
+  type: 'predefined' | 'custom' | 'marketplace';
 
   @ApiProperty({
     description:
@@ -115,4 +115,40 @@ export class McpIntegrationResponseDto {
     example: true,
   })
   returnsPii: boolean;
+
+  @ApiProperty({
+    description:
+      'Marketplace integration identifier (only for marketplace integrations)',
+    required: false,
+    example: 'oparl-council-data',
+  })
+  marketplaceIdentifier?: string;
+
+  @ApiProperty({
+    description:
+      'Configuration schema from marketplace (only for marketplace integrations)',
+    required: false,
+  })
+  configSchema?: {
+    authType: string;
+    orgFields: unknown[];
+    userFields: unknown[];
+  };
+
+  @ApiProperty({
+    description:
+      'Whether this marketplace integration has user-level config fields',
+    required: false,
+    example: false,
+  })
+  hasUserFields?: boolean;
+
+  @ApiProperty({
+    description:
+      'Current org-level config values for marketplace integrations. ' +
+      'Non-secret fields contain plaintext values. Secret fields are masked with "••••••".',
+    required: false,
+    example: { endpointUrl: 'https://example.com/api', apiToken: '••••••' },
+  })
+  orgConfigValues?: Record<string, string>;
 }

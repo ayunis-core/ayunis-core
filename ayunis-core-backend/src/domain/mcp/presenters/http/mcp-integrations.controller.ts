@@ -27,6 +27,8 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
 import { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
 import { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
+import { InstallMarketplaceIntegrationDto } from './dto/install-marketplace-integration.dto';
+import { SetUserConfigDto, UserConfigResponseDto } from './dto/user-config.dto';
 import { McpIntegrationResponseDto } from './dto/mcp-integration-response.dto';
 import { ValidationResponseDto } from './dto/validation-response.dto';
 import { PredefinedConfigResponseDto } from './dto/predefined-config-response.dto';
@@ -46,6 +48,9 @@ import { EnableMcpIntegrationUseCase } from '../../application/use-cases/enable-
 import { DisableMcpIntegrationUseCase } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.use-case';
 import { ValidateMcpIntegrationUseCase } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
+import { InstallMarketplaceIntegrationUseCase } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { SetUserMcpConfigUseCase } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
+import { GetUserMcpConfigUseCase } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 
 // Commands and Queries
 import { CreatePredefinedMcpIntegrationCommand } from '../../application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
@@ -56,6 +61,9 @@ import { DeleteMcpIntegrationCommand } from '../../application/use-cases/delete-
 import { EnableMcpIntegrationCommand } from '../../application/use-cases/enable-mcp-integration/enable-mcp-integration.command';
 import { DisableMcpIntegrationCommand } from '../../application/use-cases/disable-mcp-integration/disable-mcp-integration.command';
 import { ValidateMcpIntegrationCommand } from '../../application/use-cases/validate-mcp-integration/validate-mcp-integration.command';
+import { InstallMarketplaceIntegrationCommand } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.command';
+import { SetUserMcpConfigCommand } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.command';
+import { GetUserMcpConfigQuery } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.query';
 import { CredentialFieldValue } from '../../domain/predefined-mcp-integration-config';
 import { ConfigService } from '@nestjs/config';
 
@@ -80,6 +88,9 @@ export class McpIntegrationsController {
     private readonly disableMcpIntegrationUseCase: DisableMcpIntegrationUseCase,
     private readonly validateMcpIntegrationUseCase: ValidateMcpIntegrationUseCase,
     private readonly listPredefinedConfigsUseCase: ListPredefinedMcpIntegrationConfigsUseCase,
+    private readonly installMarketplaceIntegrationUseCase: InstallMarketplaceIntegrationUseCase,
+    private readonly setUserMcpConfigUseCase: SetUserMcpConfigUseCase,
+    private readonly getUserMcpConfigUseCase: GetUserMcpConfigUseCase,
     private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
     private readonly configService: ConfigService,
@@ -256,13 +267,14 @@ export class McpIntegrationsController {
   ): Promise<McpIntegrationResponseDto> {
     this.logger.log('update', { id });
 
-    const command = new UpdateMcpIntegrationCommand(
-      id,
-      dto.name,
-      dto.credentials,
-      dto.authHeaderName,
-      dto.returnsPii,
-    );
+    const command = new UpdateMcpIntegrationCommand({
+      integrationId: id,
+      name: dto.name,
+      credentials: dto.credentials,
+      authHeaderName: dto.authHeaderName,
+      returnsPii: dto.returnsPii,
+      orgConfigValues: dto.orgConfigValues,
+    });
 
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
     return this.mcpIntegrationDtoMapper.toDto(integration);
@@ -325,6 +337,94 @@ export class McpIntegrationsController {
     );
 
     return this.mcpIntegrationDtoMapper.toDto(integration);
+  }
+
+  @Post('install-from-marketplace')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Install an MCP integration from the marketplace',
+  })
+  @ApiBody({ type: InstallMarketplaceIntegrationDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Integration installed successfully',
+    type: McpIntegrationResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Missing required config fields or OAuth not supported',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Marketplace integration not found',
+  })
+  async installFromMarketplace(
+    @Body() dto: InstallMarketplaceIntegrationDto,
+  ): Promise<McpIntegrationResponseDto> {
+    this.logger.log('installFromMarketplace', {
+      identifier: dto.identifier,
+    });
+
+    const command = new InstallMarketplaceIntegrationCommand(
+      dto.identifier,
+      dto.orgConfigValues,
+      dto.returnsPii,
+    );
+
+    const integration =
+      await this.installMarketplaceIntegrationUseCase.execute(command);
+    return this.mcpIntegrationDtoMapper.toDto(integration);
+  }
+
+  @Get(':id/user-config')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get current user config for a marketplace MCP integration',
+  })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiResponse({
+    status: 200,
+    description: 'User configuration (secret values masked)',
+    type: UserConfigResponseDto,
+  })
+  async getUserConfig(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<UserConfigResponseDto> {
+    this.logger.log('getUserConfig', { id });
+
+    const result = await this.getUserMcpConfigUseCase.execute(
+      new GetUserMcpConfigQuery(id),
+    );
+
+    return {
+      hasConfig: result.hasConfig,
+      configValues: result.configValues,
+    };
+  }
+
+  @Patch(':id/user-config')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Set current user config for a marketplace MCP integration',
+  })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiBody({ type: SetUserConfigDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User configuration saved',
+    type: UserConfigResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Integration has no user fields' })
+  @ApiResponse({ status: 404, description: 'Integration not found' })
+  async setUserConfig(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: SetUserConfigDto,
+  ): Promise<UserConfigResponseDto> {
+    this.logger.log('setUserConfig', { id });
+
+    const command = new SetUserMcpConfigCommand(id, dto.configValues);
+
+    return this.setUserMcpConfigUseCase.execute(command);
   }
 
   @Post(':id/validate')

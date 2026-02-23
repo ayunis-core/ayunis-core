@@ -16,6 +16,12 @@ export enum McpErrorCode {
   UNEXPECTED_MCP_ERROR = 'UNEXPECTED_MCP_ERROR',
   MCP_AUTH_NOT_IMPLEMENTED = 'MCP_AUTH_NOT_IMPLEMENTED',
   DUPLICATE_MCP_INTEGRATION = 'DUPLICATE_MCP_INTEGRATION',
+  MCP_OAUTH_NOT_SUPPORTED = 'MCP_OAUTH_NOT_SUPPORTED',
+  MCP_MISSING_REQUIRED_CONFIG = 'MCP_MISSING_REQUIRED_CONFIG',
+  MCP_MARKETPLACE_INTEGRATION_NOT_FOUND = 'MCP_MARKETPLACE_INTEGRATION_NOT_FOUND',
+  MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
+  MCP_NO_USER_FIELDS = 'MCP_NO_USER_FIELDS',
+  MCP_INVALID_CONFIG_KEYS = 'MCP_INVALID_CONFIG_KEYS',
 }
 
 export abstract class McpError extends ApplicationError {
@@ -226,6 +232,83 @@ export class DuplicateMcpIntegrationError extends McpError {
       `A MCP integration with slug '${slug}' already exists for this organization. Only one MCP integration with the same slug is allowed per organization.`,
       McpErrorCode.DUPLICATE_MCP_INTEGRATION,
       409,
+      metadata,
+    );
+  }
+}
+
+export class DuplicateMarketplaceMcpIntegrationError extends McpError {
+  constructor(identifier: string, metadata?: ErrorMetadata) {
+    super(
+      `Marketplace integration '${identifier}' is already installed for this organization.`,
+      McpErrorCode.DUPLICATE_MCP_INTEGRATION,
+      409,
+      metadata,
+    );
+  }
+}
+
+export class McpOAuthNotSupportedError extends McpError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'OAuth authentication is not yet supported for marketplace integrations. Please use a different authentication method.',
+      McpErrorCode.MCP_OAUTH_NOT_SUPPORTED,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpMissingRequiredConfigError extends McpError {
+  constructor(missingFields: string[], metadata?: ErrorMetadata) {
+    super(
+      `Missing required configuration fields: ${missingFields.join(', ')}`,
+      McpErrorCode.MCP_MISSING_REQUIRED_CONFIG,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpMarketplaceIntegrationNotFoundError extends McpError {
+  constructor(identifier: string, metadata?: ErrorMetadata) {
+    super(
+      `Marketplace integration not found: ${identifier}`,
+      McpErrorCode.MCP_MARKETPLACE_INTEGRATION_NOT_FOUND,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class McpNotMarketplaceIntegrationError extends McpError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration ${integrationId} is not a marketplace integration`,
+      McpErrorCode.MCP_NOT_MARKETPLACE_INTEGRATION,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpNoUserFieldsError extends McpError {
+  constructor(integrationId: string, metadata?: ErrorMetadata) {
+    super(
+      `MCP integration ${integrationId} does not support user-level configuration`,
+      McpErrorCode.MCP_NO_USER_FIELDS,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class McpInvalidConfigKeysError extends McpError {
+  constructor(invalidKeys: string[], metadata?: ErrorMetadata) {
+    super(
+      `Unknown config keys: ${invalidKeys.join(', ')}`,
+      McpErrorCode.MCP_INVALID_CONFIG_KEYS,
+      400,
       metadata,
     );
   }

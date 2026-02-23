@@ -4475,6 +4475,122 @@
         ]
       }
     },
+    "/mcp-integrations/install-from-marketplace": {
+      "post": {
+        "operationId": "McpIntegrationsController_installFromMarketplace",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstallMarketplaceIntegrationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Integration installed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required config fields or OAuth not supported"
+          },
+          "404": {
+            "description": "Marketplace integration not found"
+          }
+        },
+        "summary": "Install an MCP integration from the marketplace",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
+    "/mcp-integrations/{id}/user-config": {
+      "get": {
+        "operationId": "McpIntegrationsController_getUserConfig",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User configuration (secret values masked)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get current user config for a marketplace MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      },
+      "patch": {
+        "operationId": "McpIntegrationsController_setUserConfig",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User configuration saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserConfigResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Integration has no user fields"
+          },
+          "404": {
+            "description": "Integration not found"
+          }
+        },
+        "summary": "Set current user config for a marketplace MCP integration",
+        "tags": [
+          "mcp-integrations"
+        ]
+      }
+    },
     "/mcp-integrations/{id}/validate": {
       "post": {
         "operationId": "McpIntegrationsController_validate",
@@ -4507,6 +4623,76 @@
         "summary": "Validate MCP integration connection",
         "tags": [
           "mcp-integrations"
+        ]
+      }
+    },
+    "/marketplace/skills/{identifier}": {
+      "get": {
+        "operationId": "MarketplaceController_getSkill",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "description": "The unique identifier slug of the marketplace skill",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the marketplace skill details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceSkillResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marketplace skill not found"
+          }
+        },
+        "summary": "Preview a marketplace skill before installation",
+        "tags": [
+          "marketplace"
+        ]
+      }
+    },
+    "/marketplace/integrations/{identifier}": {
+      "get": {
+        "operationId": "MarketplaceController_getIntegration",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "description": "The unique identifier slug of the marketplace integration",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the marketplace integration details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceIntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marketplace integration not found"
+          }
+        },
+        "summary": "Preview a marketplace integration before installation",
+        "tags": [
+          "marketplace"
         ]
       }
     },
@@ -5063,41 +5249,6 @@
         ]
       }
     },
-    "/marketplace/skills/{identifier}": {
-      "get": {
-        "operationId": "MarketplaceController_getSkill",
-        "parameters": [
-          {
-            "name": "identifier",
-            "required": true,
-            "in": "path",
-            "description": "The unique identifier slug of the marketplace skill",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the marketplace skill details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarketplaceSkillResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Marketplace skill not found"
-          }
-        },
-        "summary": "Preview a marketplace skill before installation",
-        "tags": [
-          "marketplace"
-        ]
-      }
-    },
     "/runs/send-message": {
       "post": {
         "description": "Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.",
@@ -5178,58 +5329,6 @@
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
                       "thread": "#/components/schemas/RunThreadResponseDto"
-                    }
-                  }
-                },
-                "examples": {
-                  "session-event": {
-                    "summary": "Session establishment event",
-                    "value": {
-                      "type": "session",
-                      "success": true,
-                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                      "timestamp": "2024-01-01T12:00:00.000Z",
-                      "streaming": true
-                    }
-                  },
-                  "message-event": {
-                    "summary": "Message event",
-                    "value": {
-                      "type": "message",
-                      "message": {
-                        "id": "123e4567-e89b-12d3-a456-426614174000",
-                        "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                        "role": "assistant",
-                        "content": [
-                          {
-                            "type": "text",
-                            "text": "Hello!"
-                          }
-                        ],
-                        "createdAt": "2024-01-01T12:00:00.000Z"
-                      },
-                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                      "timestamp": "2024-01-01T12:00:00.000Z"
-                    }
-                  },
-                  "error-event": {
-                    "summary": "Error event",
-                    "value": {
-                      "type": "error",
-                      "message": "An error occurred while processing your request",
-                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                      "timestamp": "2024-01-01T12:00:00.000Z",
-                      "code": "EXECUTION_ERROR"
-                    }
-                  },
-                  "thread-event": {
-                    "summary": "Thread update event",
-                    "value": {
-                      "type": "thread",
-                      "threadId": "123e4567-e89b-12d3-a456-426614174000",
-                      "updateType": "title_updated",
-                      "title": "Discussion about AI and machine learning",
-                      "timestamp": "2024-01-01T12:00:00.000Z"
                     }
                   }
                 }
@@ -9792,7 +9891,8 @@
             "description": "Type of integration",
             "enum": [
               "predefined",
-              "custom"
+              "custom",
+              "marketplace"
             ],
             "example": "predefined"
           },
@@ -9875,6 +9975,28 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
             "example": true
+          },
+          "marketplaceIdentifier": {
+            "type": "string",
+            "description": "Marketplace integration identifier (only for marketplace integrations)",
+            "example": "oparl-council-data"
+          },
+          "configSchema": {
+            "type": "object",
+            "description": "Configuration schema from marketplace (only for marketplace integrations)"
+          },
+          "hasUserFields": {
+            "type": "boolean",
+            "description": "Whether this marketplace integration has user-level config fields",
+            "example": false
+          },
+          "orgConfigValues": {
+            "type": "object",
+            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
+            "example": {
+              "endpointUrl": "https://example.com/api",
+              "apiToken": "••••••"
+            }
           }
         },
         "required": [
@@ -10396,8 +10518,86 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode.",
             "example": true
+          },
+          "orgConfigValues": {
+            "type": "object",
+            "description": "Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.",
+            "example": {
+              "endpointUrl": "https://example.com/api"
+            }
           }
         }
+      },
+      "InstallMarketplaceIntegrationDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Marketplace integration identifier",
+            "example": "oparl-council-data"
+          },
+          "orgConfigValues": {
+            "type": "object",
+            "description": "Organization-level configuration values (key-value pairs matching config schema orgFields)",
+            "example": {
+              "oparlEndpointUrl": "https://rim.ekom21.de/oparl/v1"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "returnsPii": {
+            "type": "boolean",
+            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
+            "example": false
+          }
+        },
+        "required": [
+          "identifier",
+          "orgConfigValues"
+        ]
+      },
+      "UserConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "hasConfig": {
+            "type": "boolean",
+            "description": "Whether the user has configured values for this integration",
+            "example": true
+          },
+          "configValues": {
+            "type": "object",
+            "description": "Configuration values with secret values masked (keys present, values replaced with \"••••••\")",
+            "example": {
+              "personalToken": "••••••"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "hasConfig",
+          "configValues"
+        ]
+      },
+      "SetUserConfigDto": {
+        "type": "object",
+        "properties": {
+          "configValues": {
+            "type": "object",
+            "description": "User-level configuration values (key-value pairs matching config schema userFields)",
+            "example": {
+              "personalToken": "my-personal-access-token"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "configValues"
+        ]
       },
       "ValidationResponseDto": {
         "type": "object",
@@ -10425,6 +10625,234 @@
         "required": [
           "valid",
           "capabilities"
+        ]
+      },
+      "MarketplaceSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Skill UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "aiDescription": {
+            "type": "string",
+            "description": "Description shown to LLM to decide activation"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Detailed instructions injected into the conversation when the skill is activated"
+          },
+          "skillCategoryId": {
+            "type": "string",
+            "description": "Skill category ID",
+            "nullable": true
+          },
+          "iconUrl": {
+            "type": "string",
+            "description": "Icon URL",
+            "nullable": true
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the skill is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the skill is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the skill is pre-installed"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "aiDescription",
+          "instructions",
+          "featured",
+          "published",
+          "preInstalled",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MarketplaceIntegrationConfigFieldDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique identifier within the schema"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label for the frontend form"
+          },
+          "type": {
+            "type": "string",
+            "description": "Field type",
+            "enum": [
+              "text",
+              "url",
+              "secret"
+            ]
+          },
+          "headerName": {
+            "type": "string",
+            "description": "HTTP header name this field maps to; if absent, field is internal config",
+            "nullable": true
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Optional prefix prepended to the value before sending",
+            "nullable": true
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the field must be provided"
+          },
+          "help": {
+            "type": "string",
+            "description": "Optional help text for the frontend form",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "description": "Fixed value from marketplace; if set, field is not shown in forms",
+            "nullable": true
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type",
+          "required"
+        ]
+      },
+      "MarketplaceIntegrationConfigSchemaDto": {
+        "type": "object",
+        "properties": {
+          "authType": {
+            "type": "string",
+            "description": "Auth type for documentation/UI purposes"
+          },
+          "orgFields": {
+            "description": "Fields configured by org admin at install time",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceIntegrationConfigFieldDto"
+            }
+          },
+          "userFields": {
+            "description": "Fields configured by individual users",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceIntegrationConfigFieldDto"
+            }
+          }
+        },
+        "required": [
+          "authType",
+          "orgFields",
+          "userFields"
+        ]
+      },
+      "MarketplaceIntegrationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Integration UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "description": {
+            "type": "string",
+            "description": "Full description"
+          },
+          "iconUrl": {
+            "type": "string",
+            "description": "Icon URL",
+            "nullable": true
+          },
+          "serverUrl": {
+            "type": "string",
+            "description": "MCP server URL"
+          },
+          "configSchema": {
+            "description": "Configuration schema (authType, orgFields, userFields, oauth)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MarketplaceIntegrationConfigSchemaDto"
+              }
+            ]
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the integration is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the integration is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the integration is pre-installed"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "description",
+          "serverUrl",
+          "configSchema",
+          "featured",
+          "published",
+          "preInstalled",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "InstallSkillFromMarketplaceDto": {
@@ -10601,78 +11029,6 @@
           "id",
           "name",
           "type"
-        ]
-      },
-      "MarketplaceSkillResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Skill UUID"
-          },
-          "identifier": {
-            "type": "string",
-            "description": "Unique identifier (slug)"
-          },
-          "name": {
-            "type": "string",
-            "description": "Display name"
-          },
-          "shortDescription": {
-            "type": "string",
-            "description": "Short description for marketplace display"
-          },
-          "aiDescription": {
-            "type": "string",
-            "description": "Description shown to LLM to decide activation"
-          },
-          "instructions": {
-            "type": "string",
-            "description": "Detailed instructions injected into the conversation when the skill is activated"
-          },
-          "skillCategoryId": {
-            "type": "string",
-            "description": "Skill category ID",
-            "nullable": true
-          },
-          "iconUrl": {
-            "type": "string",
-            "description": "Icon URL",
-            "nullable": true
-          },
-          "featured": {
-            "type": "boolean",
-            "description": "Whether the skill is featured"
-          },
-          "published": {
-            "type": "boolean",
-            "description": "Whether the skill is published"
-          },
-          "preInstalled": {
-            "type": "boolean",
-            "description": "Whether the skill is pre-installed"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp"
-          }
-        },
-        "required": [
-          "id",
-          "identifier",
-          "name",
-          "shortDescription",
-          "aiDescription",
-          "instructions",
-          "featured",
-          "published",
-          "preInstalled",
-          "createdAt",
-          "updatedAt"
         ]
       },
       "MessageContentResponseDto": {

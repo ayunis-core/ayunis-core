@@ -60,12 +60,14 @@ import type {
   ForgotPasswordDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
+  InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InviteDetailResponseDto,
   InvitesControllerGetInvitesParams,
   IsCloudResponseDto,
   LanguageModelResponseDto,
   LoginDto,
+  MarketplaceIntegrationResponseDto,
   MarketplaceSkillResponseDto,
   McpIntegrationResponseDto,
   MeResponseDto,
@@ -89,6 +91,7 @@ import type {
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
   SetOrgDefaultModelDto,
+  SetUserConfigDto,
   SetUserDefaultModelDto,
   ShareResponseDto,
   SharesControllerGetSharesParams,
@@ -148,6 +151,7 @@ import type {
   UsageControllerGetUsageStatsParams,
   UsageControllerGetUserUsageParams,
   UsageStatsResponseDto,
+  UserConfigResponseDto,
   UserControllerGetUsersInOrganizationParams,
   UserControllerValidateResetToken200,
   UserControllerValidateResetTokenParams,
@@ -8596,6 +8600,229 @@ export const useMcpIntegrationsControllerDisable = <TError = void,
     }
     
 /**
+ * @summary Install an MCP integration from the marketplace
+ */
+export const mcpIntegrationsControllerInstallFromMarketplace = (
+    installMarketplaceIntegrationDto: InstallMarketplaceIntegrationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpIntegrationResponseDto>(
+      {url: `/mcp-integrations/install-from-marketplace`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: installMarketplaceIntegrationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerInstallFromMarketplaceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerInstallFromMarketplace'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, {data: InstallMarketplaceIntegrationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mcpIntegrationsControllerInstallFromMarketplace(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerInstallFromMarketplaceMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>>
+    export type McpIntegrationsControllerInstallFromMarketplaceMutationBody = InstallMarketplaceIntegrationDto
+    export type McpIntegrationsControllerInstallFromMarketplaceMutationError = void
+
+    /**
+ * @summary Install an MCP integration from the marketplace
+ */
+export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>, TError,{data: InstallMarketplaceIntegrationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerInstallFromMarketplace>>,
+        TError,
+        {data: InstallMarketplaceIntegrationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerInstallFromMarketplaceMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get current user config for a marketplace MCP integration
+ */
+export const mcpIntegrationsControllerGetUserConfig = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<UserConfigResponseDto>(
+      {url: `/mcp-integrations/${id}/user-config`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMcpIntegrationsControllerGetUserConfigQueryKey = (id?: string,) => {
+    return [
+    `/mcp-integrations/${id}/user-config`
+    ] as const;
+    }
+
+    
+export const getMcpIntegrationsControllerGetUserConfigQueryOptions = <TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpIntegrationsControllerGetUserConfigQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>> = ({ signal }) => mcpIntegrationsControllerGetUserConfig(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpIntegrationsControllerGetUserConfigQueryResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>>
+export type McpIntegrationsControllerGetUserConfigQueryError = unknown
+
+
+export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>,
+          TError,
+          Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get current user config for a marketplace MCP integration
+ */
+
+export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpIntegrationsControllerGetUserConfigQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Set current user config for a marketplace MCP integration
+ */
+export const mcpIntegrationsControllerSetUserConfig = (
+    id: string,
+    setUserConfigDto: SetUserConfigDto,
+ ) => {
+      
+      
+      return customAxiosInstance<UserConfigResponseDto>(
+      {url: `/mcp-integrations/${id}/user-config`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setUserConfigDto
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerSetUserConfigMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerSetUserConfig'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, {id: string;data: SetUserConfigDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  mcpIntegrationsControllerSetUserConfig(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerSetUserConfigMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>>
+    export type McpIntegrationsControllerSetUserConfigMutationBody = SetUserConfigDto
+    export type McpIntegrationsControllerSetUserConfigMutationError = void
+
+    /**
+ * @summary Set current user config for a marketplace MCP integration
+ */
+export const useMcpIntegrationsControllerSetUserConfig = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>,
+        TError,
+        {id: string;data: SetUserConfigDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerSetUserConfigMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Validate MCP integration connection
  */
 export const mcpIntegrationsControllerValidate = (
@@ -8658,6 +8885,192 @@ export const useMcpIntegrationsControllerValidate = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Preview a marketplace skill before installation
+ */
+export const marketplaceControllerGetSkill = (
+    identifier: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MarketplaceSkillResponseDto>(
+      {url: `/marketplace/skills/${identifier}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMarketplaceControllerGetSkillQueryKey = (identifier?: string,) => {
+    return [
+    `/marketplace/skills/${identifier}`
+    ] as const;
+    }
+
+    
+export const getMarketplaceControllerGetSkillQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerGetSkillQueryKey(identifier);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>> = ({ signal }) => marketplaceControllerGetSkill(identifier, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(identifier), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MarketplaceControllerGetSkillQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>>
+export type MarketplaceControllerGetSkillQueryError = void
+
+
+export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Preview a marketplace skill before installation
+ */
+
+export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketplaceControllerGetSkillQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Preview a marketplace integration before installation
+ */
+export const marketplaceControllerGetIntegration = (
+    identifier: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MarketplaceIntegrationResponseDto>(
+      {url: `/marketplace/integrations/${identifier}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMarketplaceControllerGetIntegrationQueryKey = (identifier?: string,) => {
+    return [
+    `/marketplace/integrations/${identifier}`
+    ] as const;
+    }
+
+    
+export const getMarketplaceControllerGetIntegrationQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError = void>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerGetIntegrationQueryKey(identifier);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>> = ({ signal }) => marketplaceControllerGetIntegration(identifier, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(identifier), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MarketplaceControllerGetIntegrationQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>>
+export type MarketplaceControllerGetIntegrationQueryError = void
+
+
+export function useMarketplaceControllerGetIntegration<TData = Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError = void>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetIntegration<TData = Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetIntegration<TData = Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Preview a marketplace integration before installation
+ */
+
+export function useMarketplaceControllerGetIntegration<TData = Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetIntegration>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketplaceControllerGetIntegrationQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Install a skill from the marketplace
  */
@@ -9657,99 +10070,6 @@ export function useSkillMcpIntegrationsControllerListSkillMcpIntegrations<TData 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryOptions(skillId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * @summary Preview a marketplace skill before installation
- */
-export const marketplaceControllerGetSkill = (
-    identifier: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<MarketplaceSkillResponseDto>(
-      {url: `/marketplace/skills/${identifier}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getMarketplaceControllerGetSkillQueryKey = (identifier?: string,) => {
-    return [
-    `/marketplace/skills/${identifier}`
-    ] as const;
-    }
-
-    
-export const getMarketplaceControllerGetSkillQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerGetSkillQueryKey(identifier);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>> = ({ signal }) => marketplaceControllerGetSkill(identifier, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(identifier), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type MarketplaceControllerGetSkillQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>>
-export type MarketplaceControllerGetSkillQueryError = void
-
-
-export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>,
-          TError,
-          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>,
-          TError,
-          Awaited<ReturnType<typeof marketplaceControllerGetSkill>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Preview a marketplace skill before installation
- */
-
-export function useMarketplaceControllerGetSkill<TData = Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError = void>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetSkill>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getMarketplaceControllerGetSkillQueryOptions(identifier,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

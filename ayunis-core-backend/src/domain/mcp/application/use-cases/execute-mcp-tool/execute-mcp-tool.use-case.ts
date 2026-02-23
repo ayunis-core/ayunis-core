@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpToolCall } from '../../ports/mcp-client.port';
 import { McpClientService } from '../../services/mcp-client.service';
+import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
@@ -22,6 +23,7 @@ export class ExecuteMcpToolUseCase {
   constructor(
     private readonly mcpClientService: McpClientService,
     private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: ExecuteMcpToolCommand): Promise<ToolExecutionResult> {
@@ -37,6 +39,7 @@ export class ExecuteMcpToolUseCase {
 
       // Execute tool (errors are caught and returned, not thrown)
       try {
+        const userId = this.contextService.get('userId');
         const toolCall: McpToolCall = {
           toolName: command.toolName,
           parameters: command.parameters,
@@ -45,6 +48,7 @@ export class ExecuteMcpToolUseCase {
         const result = await this.mcpClientService.callTool(
           integration,
           toolCall,
+          userId,
         );
 
         const duration = Date.now() - startTime;

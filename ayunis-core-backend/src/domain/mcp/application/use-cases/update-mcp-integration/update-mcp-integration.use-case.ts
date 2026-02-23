@@ -6,6 +6,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
+  McpNotMarketplaceIntegrationError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -15,6 +16,9 @@ import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enu
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { McpValidationFailedError } from '../../mcp.errors';
+import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { ConnectionValidationService } from '../../services/connection-validation.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -24,6 +28,8 @@ export class UpdateMcpIntegrationUseCase {
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
+    private readonly marketplaceConfigService: MarketplaceConfigService,
+    private readonly connectionValidationService: ConnectionValidationService,
   ) {}
 
   async execute(command: UpdateMcpIntegrationCommand): Promise<McpIntegration> {
@@ -66,7 +72,18 @@ export class UpdateMcpIntegrationUseCase {
         );
       }
 
-      return await this.repository.save(integration);
+      if (command.orgConfigValues !== undefined) {
+        await this.updateOrgConfigValues(integration, command.orgConfigValues);
+      }
+
+      let saved = await this.repository.save(integration);
+
+      if (command.orgConfigValues !== undefined) {
+        saved =
+          await this.connectionValidationService.validateAndUpdateStatus(saved);
+      }
+
+      return saved;
     } catch (error) {
       if (
         error instanceof ApplicationError ||
@@ -79,6 +96,23 @@ export class UpdateMcpIntegrationUseCase {
       });
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
+  }
+
+  private async updateOrgConfigValues(
+    integration: McpIntegration,
+    orgConfigValues: Record<string, string>,
+  ): Promise<void> {
+    if (!(integration instanceof MarketplaceMcpIntegration)) {
+      throw new McpNotMarketplaceIntegrationError(integration.id);
+    }
+
+    const mergedValues = await this.marketplaceConfigService.mergeForUpdate(
+      integration.orgConfigValues,
+      orgConfigValues,
+      integration.configSchema.orgFields,
+    );
+
+    integration.updateOrgConfigValues(mergedValues);
   }
 
   private async rotateCredentials(
@@ -152,6 +186,7 @@ export class UpdateMcpIntegrationUseCase {
             `Credential rotation is not supported for auth method ${authMethod}.`,
           );
         }
+        return;
       }
     }
   }

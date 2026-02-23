@@ -9,10 +9,11 @@ import type { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/pr
 export abstract class McpIntegrationsRepositoryPort {
   /**
    * Saves an MCP integration (create or update).
+   * Returns the same subtype that was passed in.
    * @param integration The integration to save
    * @returns The saved integration
    */
-  abstract save(integration: McpIntegration): Promise<McpIntegration>;
+  abstract save<T extends McpIntegration>(integration: T): Promise<T>;
 
   /**
    * Finds an MCP integration by its ID.
@@ -49,6 +50,18 @@ export abstract class McpIntegrationsRepositoryPort {
   abstract findByOrgIdAndSlug(
     organizationId: UUID,
     slug: PredefinedMcpIntegrationSlug,
+  ): Promise<McpIntegration | null>;
+
+  /**
+   * Finds a marketplace MCP integration by organization ID and marketplace identifier.
+   * Used to check for duplicate marketplace installations.
+   * @param orgId The organization ID
+   * @param marketplaceIdentifier The marketplace integration identifier
+   * @returns The integration or null if not found
+   */
+  abstract findByOrgIdAndMarketplaceIdentifier(
+    orgId: UUID,
+    marketplaceIdentifier: string,
   ): Promise<McpIntegration | null>;
 
   /**

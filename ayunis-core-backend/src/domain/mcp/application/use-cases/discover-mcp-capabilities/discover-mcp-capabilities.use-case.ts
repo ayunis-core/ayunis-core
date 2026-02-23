@@ -82,11 +82,12 @@ export class DiscoverMcpCapabilitiesUseCase {
       }
 
       // Discover capabilities from MCP server
+      const userId = this.contextService.get('userId');
       const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-        this.mcpClientService.listTools(integration),
-        this.mcpClientService.listResources(integration),
-        this.mcpClientService.listResourceTemplates(integration),
-        this.mcpClientService.listPrompts(integration),
+        this.mcpClientService.listTools(integration, userId),
+        this.mcpClientService.listResources(integration, userId),
+        this.mcpClientService.listResourceTemplates(integration, userId),
+        this.mcpClientService.listPrompts(integration, userId),
       ]);
 
       // Map to domain entities

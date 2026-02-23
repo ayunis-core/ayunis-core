@@ -6,7 +6,11 @@
  * OpenAPI spec version: 1.0
  */
 import type {
+  IntegrationListResponseDto,
+  IntegrationResponseDto,
+  PaginatedIntegrationsResponseDto,
   PaginatedSkillsResponseDto,
+  PublicIntegrationsControllerListParams,
   PublicSkillsControllerListParams,
   SkillCategoryResponseDto,
   SkillListResponseDto,
@@ -207,6 +211,105 @@ export const getAyunisMarketplaceAPI = () => {
     });
   };
 
+  /**
+   * Retrieve a paginated list of published integrations with optional filters for featured status and pagination.
+   * @summary List published integrations
+   */
+  const publicIntegrationsControllerList = (
+    params?: PublicIntegrationsControllerListParams,
+  ) => {
+    return marketplaceAxiosInstance<PaginatedIntegrationsResponseDto>({
+      url: `/api/integrations`,
+      method: 'GET',
+      params,
+    });
+  };
+
+  /**
+   * Retrieve all published integrations that are marked as pre-installed for new organizations.
+   * @summary List pre-installed integrations
+   */
+  const publicIntegrationsControllerListPreInstalled = () => {
+    return marketplaceAxiosInstance<IntegrationListResponseDto[]>({
+      url: `/api/integrations/pre-installed`,
+      method: 'GET',
+    });
+  };
+
+  /**
+   * Retrieve full details of a published integration by its unique identifier slug.
+   * @summary Get an integration by identifier
+   */
+  const publicIntegrationsControllerGetByIdentifier = (identifier: string) => {
+    return marketplaceAxiosInstance<IntegrationResponseDto>({
+      url: `/api/integrations/${identifier}`,
+      method: 'GET',
+    });
+  };
+
+  const adminIntegrationsControllerList = () => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations`,
+      method: 'GET',
+    });
+  };
+
+  const adminIntegrationsControllerCreate = () => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations`,
+      method: 'POST',
+    });
+  };
+
+  const adminIntegrationsControllerNewForm = () => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/new`,
+      method: 'GET',
+    });
+  };
+
+  const adminIntegrationsControllerEditForm = (id: string) => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/${id}/edit`,
+      method: 'GET',
+    });
+  };
+
+  const adminIntegrationsControllerUpdate = (id: string) => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/${id}`,
+      method: 'POST',
+    });
+  };
+
+  const adminIntegrationsControllerDeleteConfirm = (id: string) => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/${id}/delete`,
+      method: 'GET',
+    });
+  };
+
+  const adminIntegrationsControllerDelete = (id: string) => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/${id}/delete`,
+      method: 'POST',
+    });
+  };
+
+  const adminIntegrationsControllerPublish = (id: string) => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/${id}/publish`,
+      method: 'POST',
+    });
+  };
+
+  const adminIntegrationsControllerUnpublish = (id: string) => {
+    return marketplaceAxiosInstance<null>({
+      url: `/admin/integrations/${id}/unpublish`,
+      method: 'POST',
+    });
+  };
+
   return {
     authControllerLoginPage,
     authControllerGoogleAuth,
@@ -233,6 +336,18 @@ export const getAyunisMarketplaceAPI = () => {
     adminSkillsControllerDelete,
     adminSkillsControllerPublish,
     adminSkillsControllerUnpublish,
+    publicIntegrationsControllerList,
+    publicIntegrationsControllerListPreInstalled,
+    publicIntegrationsControllerGetByIdentifier,
+    adminIntegrationsControllerList,
+    adminIntegrationsControllerCreate,
+    adminIntegrationsControllerNewForm,
+    adminIntegrationsControllerEditForm,
+    adminIntegrationsControllerUpdate,
+    adminIntegrationsControllerDeleteConfirm,
+    adminIntegrationsControllerDelete,
+    adminIntegrationsControllerPublish,
+    adminIntegrationsControllerUnpublish,
   };
 };
 export type AuthControllerLoginPageResult = NonNullable<
@@ -435,6 +550,114 @@ export type AdminSkillsControllerUnpublishResult = NonNullable<
       ReturnType<
         typeof getAyunisMarketplaceAPI
       >['adminSkillsControllerUnpublish']
+    >
+  >
+>;
+export type PublicIntegrationsControllerListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['publicIntegrationsControllerList']
+    >
+  >
+>;
+export type PublicIntegrationsControllerListPreInstalledResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['publicIntegrationsControllerListPreInstalled']
+    >
+  >
+>;
+export type PublicIntegrationsControllerGetByIdentifierResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['publicIntegrationsControllerGetByIdentifier']
+    >
+  >
+>;
+export type AdminIntegrationsControllerListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerList']
+    >
+  >
+>;
+export type AdminIntegrationsControllerCreateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerCreate']
+    >
+  >
+>;
+export type AdminIntegrationsControllerNewFormResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerNewForm']
+    >
+  >
+>;
+export type AdminIntegrationsControllerEditFormResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerEditForm']
+    >
+  >
+>;
+export type AdminIntegrationsControllerUpdateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerUpdate']
+    >
+  >
+>;
+export type AdminIntegrationsControllerDeleteConfirmResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerDeleteConfirm']
+    >
+  >
+>;
+export type AdminIntegrationsControllerDeleteResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerDelete']
+    >
+  >
+>;
+export type AdminIntegrationsControllerPublishResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerPublish']
+    >
+  >
+>;
+export type AdminIntegrationsControllerUnpublishResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminIntegrationsControllerUnpublish']
     >
   >
 >;

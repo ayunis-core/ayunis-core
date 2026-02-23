@@ -100,11 +100,98 @@ export interface SkillResponseDto {
   updatedAt: string;
 }
 
+export interface IntegrationListResponseDto {
+  /** Integration UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /**
+   * Icon URL
+   * @nullable
+   */
+  iconUrl: string | null;
+  /** Whether the integration is featured */
+  featured: boolean;
+  /** Whether the integration is published */
+  published: boolean;
+  /** Whether the integration is pre-installed */
+  preInstalled: boolean;
+}
+
+export interface PaginatedIntegrationsResponseDto {
+  /** List of integrations */
+  data: IntegrationListResponseDto[];
+  /** Total number of integrations matching the query */
+  total: number;
+  /** Current page number */
+  page: number;
+  /** Items per page */
+  limit: number;
+  /** Total number of pages */
+  totalPages: number;
+}
+
+/**
+ * Configuration schema (authType, orgFields, userFields, oauth)
+ */
+export type IntegrationResponseDtoConfigSchema = { [key: string]: unknown };
+
+export interface IntegrationResponseDto {
+  /** Integration UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /** Full description */
+  description: string;
+  /**
+   * Icon URL
+   * @nullable
+   */
+  iconUrl: string | null;
+  /** MCP server URL */
+  serverUrl: string;
+  /** Configuration schema (authType, orgFields, userFields, oauth) */
+  configSchema: IntegrationResponseDtoConfigSchema;
+  /** Whether the integration is featured */
+  featured: boolean;
+  /** Whether the integration is published */
+  published: boolean;
+  /** Whether the integration is pre-installed */
+  preInstalled: boolean;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
 export type PublicSkillsControllerListParams = {
   /**
    * Filter by category ID
    */
   categoryId?: string;
+  /**
+   * Filter by featured status
+   */
+  featured?: string;
+  /**
+   * Maximum number of items per page
+   */
+  limit?: number;
+  /**
+   * Page number
+   */
+  page?: number;
+};
+
+export type PublicIntegrationsControllerListParams = {
   /**
    * Filter by featured status
    */

@@ -3,9 +3,11 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
+  IsObject,
   Length,
   MinLength,
 } from 'class-validator';
+import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -62,4 +64,15 @@ export class UpdateMcpIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Org-level config values for marketplace integrations. ' +
+      'For secret fields, omit or send empty string to keep the existing value.',
+    example: { endpointUrl: 'https://example.com/api' },
+  })
+  @IsOptional()
+  @IsObject()
+  @IsStringRecord({ message: 'all values in orgConfigValues must be strings' })
+  orgConfigValues?: Record<string, string>;
 }

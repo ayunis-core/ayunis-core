@@ -1,0 +1,42 @@
+{
+  "title": "Integration installieren",
+  "detail": {
+    "installNote": "Diese Integration wird Ihrer Organisation hinzugefügt. Konfigurieren Sie die erforderlichen Felder unten.",
+    "zeroConfigNote": "Diese Integration erfordert keine zusätzliche Konfiguration und wird sofort installiert.",
+    "adminOnly": "Nur Organisationsadministratoren können Integrationen installieren."
+  },
+  "field": {
+    "required": "Erforderlich",
+    "optional": "Optional"
+  },
+  "action": {
+    "install": "Integration installieren",
+    "installing": "Wird installiert…",
+    "cancel": "Abbrechen",
+    "backToIntegrations": "Zurück zu Integrationen"
+  },
+  "success": "Integration erfolgreich installiert!",
+  "error": {
+    "missingIdentifier": {
+      "title": "Fehlende Integrations-Kennung",
+      "description": "Es wurde keine Integrations-Kennung angegeben. Bitte verwenden Sie einen gültigen Installationslink aus dem Marktplatz."
+    },
+    "notFound": {
+      "title": "Integration nicht gefunden",
+      "description": "Die angeforderte Integration konnte im Marktplatz nicht gefunden werden. Sie wurde möglicherweise entfernt oder deaktiviert."
+    },
+    "fetchFailed": {
+      "title": "Integration konnte nicht geladen werden",
+      "description": "Die Integrationsdetails konnten nicht vom Marktplatz geladen werden. Bitte versuchen Sie es später erneut."
+    },
+    "unavailable": "Der Marktplatz ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
+    "oauthNotSupported": "OAuth-Integrationen werden noch nicht unterstützt.",
+    "missingRequiredConfig": "Bitte füllen Sie alle erforderlichen Felder aus.",
+    "adminRequired": {
+      "title": "Administratorzugriff erforderlich",
+      "description": "Sie benötigen Administratorrechte, um Integrationen zu installieren."
+    },
+    "alreadyInstalled": "Diese Integration ist bereits in Ihrer Organisation installiert.",
+    "generic": "Beim Installieren der Integration ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+  }
+}

@@ -5,15 +5,21 @@ import { McpCredentialEncryptionService } from './infrastructure/encryption/mcp-
 import { McpClientPort } from './application/ports/mcp-client.port';
 import { McpSdkClientAdapter } from './infrastructure/clients/mcp-sdk-client.adapter';
 import { McpClientService } from './application/services/mcp-client.service';
+import { MarketplaceConfigService } from './application/services/marketplace-config.service';
+import { ConnectionValidationService } from './application/services/connection-validation.service';
 import { PredefinedMcpIntegrationRegistry } from './application/registries/predefined-mcp-integration-registry.service';
 import { McpIntegrationsRepositoryPort } from './application/ports/mcp-integrations.repository.port';
 import { McpIntegrationsRepository } from './infrastructure/persistence/postgres/mcp-integrations.repository';
+import { McpIntegrationUserConfigRepositoryPort } from './application/ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationUserConfigRepository } from './infrastructure/persistence/postgres/mcp-integration-user-config.repository';
 import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,
   CustomMcpIntegrationRecord,
+  MarketplaceMcpIntegrationRecord,
   McpIntegrationAuthRecord,
   McpIntegrationRecord,
+  McpIntegrationUserConfigRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
@@ -22,9 +28,13 @@ import { McpIntegrationMapper } from './infrastructure/persistence/postgres/mapp
 import { McpIntegrationFactory } from './application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from './application/factories/mcp-integration-auth.factory';
 import { SourcesModule } from '../sources/sources.module';
+import { MarketplaceModule } from '../marketplace/marketplace.module';
 
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
+import { InstallMarketplaceIntegrationUseCase } from './application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { SetUserMcpConfigUseCase } from './application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
+import { GetUserMcpConfigUseCase } from './application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 import { GetMcpIntegrationUseCase } from './application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
 import { GetMcpIntegrationsByIdsUseCase } from './application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { ListOrgMcpIntegrationsUseCase } from './application/use-cases/list-org-mcp-integrations/list-org-mcp-integrations.use-case';
@@ -52,13 +62,16 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       McpIntegrationRecord,
       CustomMcpIntegrationRecord,
       PredefinedMcpIntegrationRecord,
+      MarketplaceMcpIntegrationRecord,
       McpIntegrationAuthRecord,
       NoAuthMcpIntegrationAuthRecord,
       BearerMcpIntegrationAuthRecord,
       CustomHeaderMcpIntegrationAuthRecord,
       OAuthMcpIntegrationAuthRecord,
+      McpIntegrationUserConfigRecord,
     ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
+    MarketplaceModule,
   ],
   controllers: [McpIntegrationsController],
   providers: [
@@ -74,10 +87,16 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       provide: McpIntegrationsRepositoryPort,
       useClass: McpIntegrationsRepository,
     },
+    {
+      provide: McpIntegrationUserConfigRepositoryPort,
+      useClass: McpIntegrationUserConfigRepository,
+    },
     McpIntegrationMapper,
     McpIntegrationFactory,
     McpIntegrationAuthFactory,
     McpClientService,
+    MarketplaceConfigService,
+    ConnectionValidationService,
     PredefinedMcpIntegrationRegistry,
     ValidateIntegrationAccessService,
     // Use Cases
@@ -96,6 +115,9 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     DiscoverMcpCapabilitiesUseCase,
     ExecuteMcpToolUseCase,
     GetMcpPromptUseCase,
+    InstallMarketplaceIntegrationUseCase,
+    SetUserMcpConfigUseCase,
+    GetUserMcpConfigUseCase,
     // Mappers
     McpIntegrationDtoMapper,
     PredefinedConfigDtoMapper,
@@ -104,6 +126,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     McpCredentialEncryptionPort,
     McpClientPort,
     McpIntegrationsRepositoryPort,
+    McpIntegrationUserConfigRepositoryPort,
     PredefinedMcpIntegrationRegistry,
     RetrieveMcpResourceUseCase,
     DiscoverMcpCapabilitiesUseCase,

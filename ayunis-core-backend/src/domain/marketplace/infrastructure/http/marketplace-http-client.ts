@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MarketplaceClient } from '../../application/ports/marketplace-client.port';
 import { getAyunisMarketplaceAPI } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI';
 import {
+  IntegrationResponseDto,
   SkillListResponseDto,
   SkillResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
@@ -37,6 +38,28 @@ export class MarketplaceHttpClient extends MarketplaceClient {
       return await this.api.publicSkillsControllerListPreInstalled();
     } catch (error) {
       this.logger.warn('Failed to fetch pre-installed marketplace skills', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        status:
+          error instanceof MarketplaceHttpError ? error.status : undefined,
+      });
+      throw error;
+    }
+  }
+
+  async getIntegrationByIdentifier(
+    identifier: string,
+  ): Promise<IntegrationResponseDto | null> {
+    try {
+      return await this.api.publicIntegrationsControllerGetByIdentifier(
+        identifier,
+      );
+    } catch (error) {
+      if (error instanceof MarketplaceHttpError && error.status === 404) {
+        this.logger.debug('Marketplace integration not found', { identifier });
+        return null;
+      }
+      this.logger.warn('Failed to fetch marketplace integration', {
+        identifier,
         error: error instanceof Error ? error.message : 'Unknown error',
         status:
           error instanceof MarketplaceHttpError ? error.status : undefined,

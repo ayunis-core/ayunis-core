@@ -38,6 +38,8 @@ import enChats from './shared/locales/en/chats.json';
 import deChats from './shared/locales/de/chats.json';
 import enInstall from './shared/locales/en/install.json';
 import deInstall from './shared/locales/de/install.json';
+import enInstallIntegration from './shared/locales/en/install-integration.json';
+import deInstallIntegration from './shared/locales/de/install-integration.json';
 import enSkills from './shared/locales/en/skills.json';
 import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
@@ -63,6 +65,7 @@ const resources = {
     agents: enAgents,
     agent: enAgent,
     install: enInstall,
+    'install-integration': enInstallIntegration,
     skills: enSkills,
     skill: enSkill,
   },
@@ -85,6 +88,7 @@ const resources = {
     agents: deAgents,
     agent: deAgent,
     install: deInstall,
+    'install-integration': deInstallIntegration,
     skills: deSkills,
     skill: deSkill,
   },

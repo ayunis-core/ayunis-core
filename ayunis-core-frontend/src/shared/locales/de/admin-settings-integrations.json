@@ -50,7 +50,8 @@
       "retry": "Erneut versuchen",
       "addPredefined": "Vordefinierte hinzufügen",
       "addCustom": "Benutzerdefinierte hinzufügen",
-      "add": "Integration hinzufügen"
+      "add": "Integration hinzufügen",
+      "browseMarketplace": "Marktplatz durchsuchen"
     },
     "card": {
       "openMenu": "Menü öffnen",
@@ -60,7 +61,9 @@
       "credentials": "Anmeldedaten",
       "enableIntegration": "Integration aktivieren",
       "testing": "Teste...",
-      "testConnection": "Verbindung testen"
+      "testConnection": "Verbindung testen",
+      "marketplace": "Marktplatz",
+      "userConfig": "Meine Konfiguration"
     },
     "list": {
       "noIntegrationsTitle": "Noch keine Integrationen",
@@ -127,6 +130,8 @@
       "credentials": "Anmeldedaten (Optional)",
       "credentialsPlaceholder": "Leer lassen, um bestehende beizubehalten",
       "noCredentialsMessage": "Diese Integration verwendet keine Authentifizierungsdaten.",
+      "configDescription": "Aktualisieren Sie die Konfigurationswerte für diese Marketplace-Integration.",
+      "secretPlaceholder": "Leer lassen, um aktuellen Wert beizubehalten",
       "cancel": "Abbrechen",
       "updating": "Wird aktualisiert...",
       "update": "Aktualisieren"
@@ -138,10 +143,20 @@
       "deleting": "Wird gelöscht...",
       "delete": "Löschen"
     },
+    "userConfig": {
+      "title": "Benutzerkonfiguration — {{name}}",
+      "description": "Legen Sie Ihre persönliche Konfiguration für diese Integration fest. Diese Werte überschreiben die Organisationsstandards.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "cancel": "Abbrechen",
+      "success": "Benutzerkonfiguration erfolgreich gespeichert",
+      "error": "Benutzerkonfiguration konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
     "helpers": {
       "type": {
         "predefined": "Vordefiniert",
-        "custom": "Benutzerdefiniert"
+        "custom": "Benutzerdefiniert",
+        "marketplace": "Marktplatz"
       },
       "authMethod": {
         "none": "Keine",

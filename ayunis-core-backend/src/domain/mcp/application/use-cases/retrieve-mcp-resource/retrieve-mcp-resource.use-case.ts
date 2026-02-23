@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpClientService } from '../../services/mcp-client.service';
+import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
@@ -12,6 +13,7 @@ export class RetrieveMcpResourceUseCase {
   constructor(
     private readonly mcpClientService: McpClientService,
     private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(
@@ -28,10 +30,12 @@ export class RetrieveMcpResourceUseCase {
       );
 
       // Retrieve resource content with parameters (for URI template substitution)
+      const userId = this.contextService.get('userId');
       const { content, mimeType } = await this.mcpClientService.readResource(
         integration,
         command.resourceUri,
         command.parameters,
+        userId,
       );
 
       return { content, mimeType };

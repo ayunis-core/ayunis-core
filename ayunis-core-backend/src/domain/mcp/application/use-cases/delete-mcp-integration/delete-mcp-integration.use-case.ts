@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -18,6 +19,7 @@ export class DeleteMcpIntegrationUseCase {
 
   constructor(
     private readonly repository: McpIntegrationsRepositoryPort,
+    private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
 
@@ -48,6 +50,11 @@ export class DeleteMcpIntegrationUseCase {
       if (integration.orgId !== orgId) {
         throw new McpIntegrationAccessDeniedError(command.integrationId);
       }
+
+      // Delete associated user configs before deleting the integration
+      await this.userConfigRepository.deleteByIntegrationId(
+        command.integrationId,
+      );
 
       // Delete integration
       await this.repository.delete(command.integrationId);
