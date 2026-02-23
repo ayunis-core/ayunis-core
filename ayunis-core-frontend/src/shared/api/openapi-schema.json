@@ -2228,104 +2228,6 @@
         ]
       }
     },
-    "/subscriptions": {
-      "get": {
-        "operationId": "SubscriptionsController_getSubscription",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved subscription details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionResponseDtoNullable"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to access this organization's subscription"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Get subscription details for the current organization",
-        "tags": [
-          "subscriptions"
-        ]
-      },
-      "post": {
-        "operationId": "SubscriptionsController_createSubscription",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSubscriptionRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created subscription",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid subscription data provided"
-          },
-          "403": {
-            "description": "User is not authorized to create a subscription for this organization"
-          },
-          "409": {
-            "description": "Subscription already exists for this organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Create a new subscription for the current organization",
-        "tags": [
-          "subscriptions"
-        ]
-      },
-      "delete": {
-        "operationId": "SubscriptionsController_cancelSubscription",
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": "Successfully cancelled subscription"
-          },
-          "403": {
-            "description": "User is not authorized to cancel this organization's subscription"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "409": {
-            "description": "Subscription is already cancelled"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Cancel the subscription for the current organization",
-        "tags": [
-          "subscriptions"
-        ]
-      }
-    },
     "/subscriptions/active": {
       "get": {
         "operationId": "SubscriptionsController_hasActiveSubscription",
@@ -2374,104 +2276,6 @@
           }
         },
         "summary": "Get the current price per seat monthly",
-        "tags": [
-          "subscriptions"
-        ]
-      }
-    },
-    "/subscriptions/seats": {
-      "put": {
-        "operationId": "SubscriptionsController_updateSeats",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSeatsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated seats"
-          },
-          "400": {
-            "description": "Invalid seat update data provided"
-          },
-          "403": {
-            "description": "User is not authorized to update seats for this organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update the number of seats for the current organization",
-        "tags": [
-          "subscriptions"
-        ]
-      }
-    },
-    "/subscriptions/billing-info": {
-      "put": {
-        "operationId": "SubscriptionsController_updateBillingInfo",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateBillingInfoDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successfully updated billing information"
-          },
-          "400": {
-            "description": "Invalid billing information provided"
-          },
-          "403": {
-            "description": "User is not authorized to update billing information for this organization"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Update the billing information for the current organization",
-        "tags": [
-          "subscriptions"
-        ]
-      }
-    },
-    "/subscriptions/uncancel": {
-      "post": {
-        "operationId": "SubscriptionsController_uncancelSubscription",
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": "Successfully uncancelled subscription"
-          },
-          "403": {
-            "description": "User is not authorized to uncancel this organization's subscription"
-          },
-          "404": {
-            "description": "No subscription found for the organization"
-          },
-          "409": {
-            "description": "Subscription is not cancelled"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "summary": "Uncancel the subscription for the current organization",
         "tags": [
           "subscriptions"
         ]
@@ -8473,6 +8277,32 @@
           "deletedCount"
         ]
       },
+      "ActiveSubscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "hasActiveSubscription": {
+            "type": "boolean",
+            "description": "Whether the organization has an active subscription",
+            "example": true
+          }
+        },
+        "required": [
+          "hasActiveSubscription"
+        ]
+      },
+      "PriceResponseDto": {
+        "type": "object",
+        "properties": {
+          "pricePerSeatMonthly": {
+            "type": "number",
+            "description": "Current price per seat per month in the configured currency",
+            "example": 29.99
+          }
+        },
+        "required": [
+          "pricePerSeatMonthly"
+        ]
+      },
       "SubscriptionBillingInfoResponseDto": {
         "type": "object",
         "properties": {
@@ -8685,19 +8515,6 @@
           "country"
         ]
       },
-      "ActiveSubscriptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "hasActiveSubscription": {
-            "type": "boolean",
-            "description": "Whether the organization has an active subscription",
-            "example": true
-          }
-        },
-        "required": [
-          "hasActiveSubscription"
-        ]
-      },
       "UpdateBillingInfoDto": {
         "type": "object",
         "properties": {
@@ -8744,19 +8561,6 @@
           "postalCode",
           "city",
           "country"
-        ]
-      },
-      "PriceResponseDto": {
-        "type": "object",
-        "properties": {
-          "pricePerSeatMonthly": {
-            "type": "number",
-            "description": "Current price per seat per month in the configured currency",
-            "example": 29.99
-          }
-        },
-        "required": [
-          "pricePerSeatMonthly"
         ]
       },
       "UpdateSeatsDto": {

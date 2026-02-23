@@ -1,6 +1,5 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
-  getSubscriptionsControllerGetSubscriptionQueryKey,
   useInvitesControllerDeleteAllPending,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,9 +25,6 @@ export function useDeleteAllInvites() {
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getInvitesControllerGetInvitesQueryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
         void router.invalidate();
       },

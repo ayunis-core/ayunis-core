@@ -1,6 +1,5 @@
 import {
   getUserControllerGetUsersInOrganizationQueryKey,
-  getSubscriptionsControllerGetSubscriptionQueryKey,
   useUserControllerDeleteUser,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { useQueryClient } from '@tanstack/react-query';
@@ -45,10 +44,6 @@ export function useUserDelete(options?: UseUserDeleteOptions) {
         // Invalidate users list query to refresh the data
         void queryClient.invalidateQueries({
           queryKey: getUserControllerGetUsersInOrganizationQueryKey(),
-        });
-        // Invalidate subscription query as deleting a user frees up a seat
-        void queryClient.invalidateQueries({
-          queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
         // Invalidate router to refresh route data
         void router.invalidate();

@@ -1,6 +1,5 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
-  getSubscriptionsControllerGetSubscriptionQueryKey,
   useInvitesControllerCreateBulk,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -51,9 +50,6 @@ export function useBulkInviteCreate(
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getInvitesControllerGetInvitesQueryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
         void router.invalidate();
       },

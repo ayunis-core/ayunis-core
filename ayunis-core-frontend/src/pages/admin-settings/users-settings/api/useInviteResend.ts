@@ -1,7 +1,4 @@
-import {
-  getInvitesControllerGetInvitesQueryKey,
-  getSubscriptionsControllerGetSubscriptionQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { getInvitesControllerGetInvitesQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { customAxiosInstance } from '@/shared/api/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -53,9 +50,6 @@ export function useInviteResend(
     onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: getInvitesControllerGetInvitesQueryKey(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
       });
       void router.invalidate();
     },
