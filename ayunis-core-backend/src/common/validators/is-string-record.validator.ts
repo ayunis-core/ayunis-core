@@ -21,6 +21,10 @@ export function IsStringRecord(validationOptions?: ValidationOptions) {
           if (Array.isArray(value)) {
             return false;
           }
+          const proto: unknown = Object.getPrototypeOf(value);
+          if (proto !== Object.prototype && proto !== null) {
+            return false;
+          }
           return Object.values(value).every((v) => typeof v === 'string');
         },
         defaultMessage(args: ValidationArguments) {

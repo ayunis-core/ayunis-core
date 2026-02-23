@@ -68,6 +68,35 @@ describe('IsStringRecord', () => {
     expect(errors).toHaveLength(1);
   });
 
+  it('rejects a Date instance', async () => {
+    const dto = createDto(new Date());
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(1);
+  });
+
+  it('rejects a class instance', async () => {
+    class MyClass {
+      value = 'test';
+    }
+    const dto = createDto(new MyClass());
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(1);
+  });
+
+  it('rejects a Map instance', async () => {
+    const dto = createDto(new Map());
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(1);
+  });
+
+  it('accepts an object created with Object.create(null)', async () => {
+    const obj = Object.create(null);
+    obj.key = 'value';
+    const dto = createDto(obj);
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
   it('uses custom message when provided', async () => {
     const dto = createDto({ key: 42 });
     const errors = await validate(dto);
