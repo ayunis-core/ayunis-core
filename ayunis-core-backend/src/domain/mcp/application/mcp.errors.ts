@@ -18,7 +18,6 @@ export enum McpErrorCode {
   DUPLICATE_MCP_INTEGRATION = 'DUPLICATE_MCP_INTEGRATION',
   MCP_OAUTH_NOT_SUPPORTED = 'MCP_OAUTH_NOT_SUPPORTED',
   MCP_MISSING_REQUIRED_CONFIG = 'MCP_MISSING_REQUIRED_CONFIG',
-  MCP_MARKETPLACE_INTEGRATION_NOT_FOUND = 'MCP_MARKETPLACE_INTEGRATION_NOT_FOUND',
   MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
   MCP_NO_USER_FIELDS = 'MCP_NO_USER_FIELDS',
   MCP_INVALID_CONFIG_KEYS = 'MCP_INVALID_CONFIG_KEYS',
@@ -265,17 +264,6 @@ export class McpMissingRequiredConfigError extends McpError {
       `Missing required configuration fields: ${missingFields.join(', ')}`,
       McpErrorCode.MCP_MISSING_REQUIRED_CONFIG,
       400,
-      metadata,
-    );
-  }
-}
-
-export class McpMarketplaceIntegrationNotFoundError extends McpError {
-  constructor(identifier: string, metadata?: ErrorMetadata) {
-    super(
-      `Marketplace integration not found: ${identifier}`,
-      McpErrorCode.MCP_MARKETPLACE_INTEGRATION_NOT_FOUND,
-      404,
       metadata,
     );
   }

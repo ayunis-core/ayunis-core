@@ -8,7 +8,7 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - `GetMarketplaceIntegrationUseCase` — Fetches MCP integration details (including config schema with org/user fields) from the marketplace by identifier
 
 **Ports:**
-- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`)
+- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`, `getIntegrationByIdentifier`)
 
 **Infrastructure:**
 - `MarketplaceHttpClient` — HTTP client implementation using the generated marketplace API client
