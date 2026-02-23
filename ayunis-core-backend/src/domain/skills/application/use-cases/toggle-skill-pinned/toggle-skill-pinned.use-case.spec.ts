@@ -82,7 +82,10 @@ describe('ToggleSkillPinnedUseCase', () => {
 
   it('should pin an active unpinned skill and return isShared', async () => {
     const skill = makeSkill();
-    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill,
+      userId: mockUserId,
+    });
     skillAccessService.resolveIsShared.mockResolvedValue(false);
     skillRepository.isSkillActive.mockResolvedValue(true);
     skillRepository.toggleSkillPinned.mockResolvedValue(true);
@@ -102,7 +105,10 @@ describe('ToggleSkillPinnedUseCase', () => {
 
   it('should unpin a pinned skill', async () => {
     const skill = makeSkill();
-    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill,
+      userId: mockUserId,
+    });
     skillAccessService.resolveIsShared.mockResolvedValue(false);
     skillRepository.isSkillActive.mockResolvedValue(true);
     skillRepository.toggleSkillPinned.mockResolvedValue(false);
@@ -120,7 +126,10 @@ describe('ToggleSkillPinnedUseCase', () => {
 
   it('should throw SkillNotActiveError when skill is not active', async () => {
     const skill = makeSkill();
-    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill,
+      userId: mockUserId,
+    });
     skillRepository.isSkillActive.mockResolvedValue(false);
 
     await expect(
@@ -142,7 +151,10 @@ describe('ToggleSkillPinnedUseCase', () => {
 
   it('should toggle pinned on a shared skill and return isShared=true', async () => {
     const sharedSkill = makeSkill(mockSkillId, 'other-user' as UUID);
-    skillAccessService.findAccessibleSkill.mockResolvedValue(sharedSkill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill: sharedSkill,
+      userId: mockUserId,
+    });
     skillAccessService.resolveIsShared.mockResolvedValue(true);
     skillRepository.isSkillActive.mockResolvedValue(true);
     skillRepository.toggleSkillPinned.mockResolvedValue(true);

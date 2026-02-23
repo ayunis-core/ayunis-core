@@ -72,17 +72,18 @@ describe('SkillAccessService', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('findAccessibleSkill', () => {
-    it('should return owned skill without checking shares', async () => {
+    it('should return owned skill and userId without checking shares', async () => {
       const skill = makeSkill();
       skillRepository.findOne.mockResolvedValue(skill);
 
       const result = await service.findAccessibleSkill(skillId);
 
-      expect(result).toBe(skill);
+      expect(result.skill).toBe(skill);
+      expect(result.userId).toBe(userId);
       expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
     });
 
-    it('should return shared skill when not owned', async () => {
+    it('should return shared skill and userId when not owned', async () => {
       const sharedSkill = makeSkill(skillId, otherUserId);
       skillRepository.findOne.mockResolvedValue(null);
       findShareByEntityUseCase.execute.mockResolvedValue({} as never);
@@ -90,7 +91,8 @@ describe('SkillAccessService', () => {
 
       const result = await service.findAccessibleSkill(skillId);
 
-      expect(result).toBe(sharedSkill);
+      expect(result.skill).toBe(sharedSkill);
+      expect(result.userId).toBe(userId);
     });
 
     it('should throw SkillNotFoundError when skill is not owned or shared', async () => {

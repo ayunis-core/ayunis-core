@@ -27,11 +27,9 @@ export class ToggleSkillActiveUseCase {
   }> {
     this.logger.log('Toggling skill active', { skillId: command.skillId });
     try {
-      // findAccessibleSkill validates userId and throws UnauthorizedAccessError
-      const skill = await this.skillAccessService.findAccessibleSkill(
-        command.skillId,
-      );
-      const userId = this.contextService.get('userId')!;
+      // findAccessibleSkill validates userId and returns it to avoid re-reading from context
+      const { skill, userId } =
+        await this.skillAccessService.findAccessibleSkill(command.skillId);
 
       const currentlyActive = await this.skillRepository.isSkillActive(
         command.skillId,

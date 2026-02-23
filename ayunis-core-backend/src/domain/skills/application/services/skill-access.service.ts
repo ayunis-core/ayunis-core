@@ -20,6 +20,11 @@ export interface SkillUserContextBatch {
   pinnedSkillIds: Set<UUID>;
 }
 
+export interface AccessibleSkillResult {
+  skill: Skill;
+  userId: UUID;
+}
+
 @Injectable()
 export class SkillAccessService {
   private readonly logger = new Logger(SkillAccessService.name);
@@ -32,9 +37,10 @@ export class SkillAccessService {
 
   /**
    * Finds a skill accessible to the current user (owned or shared).
+   * Returns both the skill and the validated userId to avoid re-reading from context.
    * Throws SkillNotFoundError if the skill doesn't exist or isn't accessible.
    */
-  async findAccessibleSkill(skillId: UUID): Promise<Skill> {
+  async findAccessibleSkill(skillId: UUID): Promise<AccessibleSkillResult> {
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedAccessError();
@@ -59,7 +65,7 @@ export class SkillAccessService {
       throw new SkillNotFoundError(skillId);
     }
 
-    return skill;
+    return { skill, userId };
   }
 
   /**

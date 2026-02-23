@@ -83,7 +83,10 @@ describe('ToggleSkillActiveUseCase', () => {
 
   it('should activate an inactive owned skill', async () => {
     const skill = makeSkill();
-    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill,
+      userId: mockUserId,
+    });
     skillAccessService.resolveIsShared.mockResolvedValue(false);
     skillRepository.isSkillActive.mockResolvedValue(false);
     skillRepository.isSkillPinned.mockResolvedValue(false);
@@ -105,7 +108,10 @@ describe('ToggleSkillActiveUseCase', () => {
 
   it('should deactivate an active owned skill with isPinned=false', async () => {
     const skill = makeSkill();
-    skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill,
+      userId: mockUserId,
+    });
     skillAccessService.resolveIsShared.mockResolvedValue(false);
     skillRepository.isSkillActive.mockResolvedValue(true);
     skillRepository.deactivateSkill.mockResolvedValue(undefined);
@@ -125,7 +131,10 @@ describe('ToggleSkillActiveUseCase', () => {
 
   it('should activate a shared skill and return isShared=true', async () => {
     const sharedSkill = makeSkill(mockSkillId, 'other-user' as UUID);
-    skillAccessService.findAccessibleSkill.mockResolvedValue(sharedSkill);
+    skillAccessService.findAccessibleSkill.mockResolvedValue({
+      skill: sharedSkill,
+      userId: mockUserId,
+    });
     skillAccessService.resolveIsShared.mockResolvedValue(true);
     skillRepository.isSkillActive.mockResolvedValue(false);
     skillRepository.isSkillPinned.mockResolvedValue(false);

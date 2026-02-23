@@ -24,11 +24,9 @@ export class ToggleSkillPinnedUseCase {
   ): Promise<{ skill: Skill; isPinned: boolean; isShared: boolean }> {
     this.logger.log('Toggling skill pinned', { skillId: command.skillId });
     try {
-      // findAccessibleSkill validates userId and throws UnauthorizedAccessError
-      const skill = await this.skillAccessService.findAccessibleSkill(
-        command.skillId,
-      );
-      const userId = this.contextService.get('userId')!;
+      // findAccessibleSkill validates userId and returns it to avoid re-reading from context
+      const { skill, userId } =
+        await this.skillAccessService.findAccessibleSkill(command.skillId);
 
       // Skill must be active to toggle pinned
       const isActive = await this.skillRepository.isSkillActive(
