@@ -2458,6 +2458,8 @@ export interface SendMessageDto {
   imageAltTexts?: string[];
   /** Tool result input (for tool_result type only) */
   toolResult?: ToolResultInput;
+  /** Skill ID to activate for this message — injects skill instructions and resources into the thread */
+  skillId?: string;
   /** Enable streaming mode for real-time response updates */
   streaming?: boolean;
 }
@@ -2963,6 +2965,8 @@ export type RunsControllerSendMessageBody = {
   imageAltTexts?: string;
   /** JSON object for tool result input */
   toolResult?: string;
+  /** Skill ID to activate for this message */
+  skillId?: string;
   streaming?: boolean;
 };
 

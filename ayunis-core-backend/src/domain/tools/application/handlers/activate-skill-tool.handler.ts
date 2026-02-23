@@ -7,14 +7,9 @@ import { ActivateSkillTool } from '../../domain/tools/activate-skill-tool.entity
 import { ToolExecutionFailedError } from '../tools.errors';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.query';
-import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
-import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
-import { AddMcpIntegrationToThreadUseCase } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.use-case';
-import { AddMcpIntegrationToThreadCommand } from 'src/domain/threads/application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
-import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
-import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
+import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 
 @Injectable()
 export class ActivateSkillToolHandler extends ToolExecutionHandler {
@@ -22,10 +17,8 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
 
   constructor(
     private readonly findSkillByNameUseCase: FindSkillByNameUseCase,
-    private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
-    private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
+    private readonly skillActivationService: SkillActivationService,
   ) {
     super();
   }
@@ -61,27 +54,14 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
         new FindThreadQuery(threadId),
       );
 
-      // Get the sources by IDs
-      const sources = await this.getSourcesByIdsUseCase.execute(
-        new GetSourcesByIdsQuery(skill.sourceIds),
-      );
-
-      // Copy skill's sources to the thread
-      for (const source of sources) {
-        await this.addSourceToThreadUseCase.execute(
-          new AddSourceCommand(threadResult.thread, source, skill.id),
+      // Delegate core activation logic to SkillActivationService
+      const { instructions } =
+        await this.skillActivationService.activateOnThread(
+          skill.id,
+          threadResult.thread,
         );
-      }
 
-      // Copy skill's MCP integrations to the thread
-      for (const mcpIntegrationId of skill.mcpIntegrationIds) {
-        await this.addMcpIntegrationToThreadUseCase.execute(
-          new AddMcpIntegrationToThreadCommand(threadId, mcpIntegrationId),
-        );
-      }
-
-      // Return the skill's instructions
-      return skill.instructions;
+      return instructions;
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;

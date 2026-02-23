@@ -9785,6 +9785,9 @@ if(runsControllerSendMessageBody.imageAltTexts !== undefined) {
 if(runsControllerSendMessageBody.toolResult !== undefined) {
  formData.append(`toolResult`, runsControllerSendMessageBody.toolResult)
  }
+if(runsControllerSendMessageBody.skillId !== undefined) {
+ formData.append(`skillId`, runsControllerSendMessageBody.skillId)
+ }
 if(runsControllerSendMessageBody.streaming !== undefined) {
  formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
  }

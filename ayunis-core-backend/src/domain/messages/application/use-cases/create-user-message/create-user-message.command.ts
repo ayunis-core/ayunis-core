@@ -28,14 +28,21 @@ export class CreateUserMessageCommand {
     public readonly threadId: UUID,
     public readonly text?: string,
     public readonly pendingImages: ImageUploadData[] = [],
+    public readonly skillInstructions?: string,
   ) {
     this.validate();
   }
 
   private validate(): void {
-    // Validate that at least text or images are provided
-    if (!this.text?.trim() && this.pendingImages.length === 0) {
-      throw new Error('Message must contain text or at least one image');
+    // Validate that at least text, images, or skill instructions are provided
+    if (
+      !this.text?.trim() &&
+      this.pendingImages.length === 0 &&
+      !this.skillInstructions?.trim()
+    ) {
+      throw new Error(
+        'Message must contain text, at least one image, or skill instructions',
+      );
     }
 
     // Validate each image

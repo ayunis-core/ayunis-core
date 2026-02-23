@@ -2,7 +2,6 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Message } from '../../../../messages/domain/message.entity';
 import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
 import { Thread } from '../../../../threads/domain/thread.entity';
-import { Tool } from '../../../../tools/domain/tool.entity';
 import { CreateUserMessageUseCase } from '../../../../messages/application/use-cases/create-user-message/create-user-message.use-case';
 import { CreateUserMessageCommand } from '../../../../messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
@@ -44,11 +43,12 @@ import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-c
 import { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
 import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
-import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
 import { StreamingInferenceService } from '../../services/streaming-inference.service';
+import type { RunParams } from './run-params.interface';
 
 const MAX_CONTEXT_TOKENS = 80000;
 
@@ -72,6 +72,7 @@ export class ExecuteRunUseCase {
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly messageCleanupService: MessageCleanupService,
     private readonly streamingInferenceService: StreamingInferenceService,
+    private readonly skillActivationService: SkillActivationService,
   ) {}
 
   async execute(
@@ -91,36 +92,10 @@ export class ExecuteRunUseCase {
       const { thread } = await this.findThreadUseCase.execute(
         new FindThreadQuery(command.threadId),
       );
-      // Fetch the agent separately to prevent accidental access of not-shared-anymore agents
-      let agent: Agent | undefined;
-      if (thread.agentId) {
-        try {
-          // This will fail if the agent is no longer accessible (not owned or shared)
-          agent = (
-            await this.findOneAgentUseCase.execute(
-              new FindOneAgentQuery(thread.agentId),
-            )
-          ).agent;
-        } catch (error) {
-          // If agent is not found or not accessible, throw a specific error
-          // that the frontend can handle to show a disclaimer
-          if (error instanceof AgentNotFoundError) {
-            throw new ThreadAgentNoLongerAccessibleError(
-              command.threadId,
-              thread.agentId,
-            );
-          }
-          throw error;
-        }
-      }
+      const agent = await this.resolveThreadAgent(thread, command.threadId);
       const model = this.pickModel(thread, agent);
-      // Effective anonymous mode: enabled if thread is anonymous OR model enforces it
       const effectiveIsAnonymous = thread.isAnonymous || model.anonymousOnly;
-
-      // Fetch active skills for the current user
       const activeSkills = await this.toolAssemblyService.findActiveSkills();
-
-      // Build initial run context (tools + instructions)
       const { tools, instructions } =
         await this.toolAssemblyService.buildRunContext(
           thread,
@@ -129,7 +104,6 @@ export class ExecuteRunUseCase {
           model.model.canUseTools,
         );
 
-      // Execute the run
       return this.orchestrateRun({
         thread,
         tools,
@@ -141,6 +115,10 @@ export class ExecuteRunUseCase {
         isAnonymous: effectiveIsAnonymous,
         agent,
         activeSkills,
+        skillId:
+          command.input instanceof RunUserInput
+            ? command.input.skillId
+            : undefined,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
@@ -149,6 +127,28 @@ export class ExecuteRunUseCase {
       throw new RunExecutionFailedError('Unknown error in execute run', {
         error: error as Error,
       });
+    }
+  }
+
+  /**
+   * Resolves the agent for a thread, throwing if it's no longer accessible.
+   */
+  private async resolveThreadAgent(
+    thread: Thread,
+    threadId: UUID,
+  ): Promise<Agent | undefined> {
+    if (!thread.agentId) return undefined;
+    try {
+      return (
+        await this.findOneAgentUseCase.execute(
+          new FindOneAgentQuery(thread.agentId),
+        )
+      ).agent;
+    } catch (error) {
+      if (error instanceof AgentNotFoundError) {
+        throw new ThreadAgentNoLongerAccessibleError(threadId, thread.agentId);
+      }
+      throw error;
     }
   }
 
@@ -177,8 +177,8 @@ export class ExecuteRunUseCase {
 
         yield* this.processToolResults(params, toolResultInput);
 
-        if (i === 0 && userInput) {
-          yield await this.processUserMessage(params, userInput);
+        if (i === 0) {
+          yield* this.handleFirstIteration(params, userInput);
         }
 
         const assistantMessage = yield* this.runInference(params);
@@ -207,6 +207,18 @@ export class ExecuteRunUseCase {
         params.thread.id,
         null,
       );
+    }
+  }
+
+  private async *handleFirstIteration(
+    params: RunParams,
+    userInput: RunUserInput | null,
+  ): AsyncGenerator<Message, void, void> {
+    if (params.skillId) {
+      await this.activateSkillOnThread(params);
+    }
+    if (userInput) {
+      yield await this.processUserMessage(params, userInput);
     }
   }
 
@@ -256,6 +268,30 @@ export class ExecuteRunUseCase {
     }
   }
 
+  private async activateSkillOnThread(params: RunParams): Promise<void> {
+    if (!params.skillId) return;
+
+    const { instructions, skillName } =
+      await this.skillActivationService.activateOnThread(
+        params.skillId,
+        params.thread,
+      );
+
+    params.activatedSkillName = skillName;
+    await this.refreshRunContext(params);
+    params.skillInstructions = instructions;
+  }
+
+  private appendSkillActivatedNote(
+    instructions: string | undefined,
+    skillName: string,
+  ): string {
+    const note = `<already_activated_skill>
+Skill "${skillName}" has already been activated on this thread. Do not call activate_skill for this skill.
+</already_activated_skill>`;
+    return instructions ? `${instructions}\n\n${note}` : note;
+  }
+
   private async refreshRunContext(params: RunParams): Promise<void> {
     const { thread: refreshedThread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(params.thread.id),
@@ -269,6 +305,13 @@ export class ExecuteRunUseCase {
     );
     params.tools = refreshed.tools;
     params.instructions = refreshed.instructions;
+
+    if (params.activatedSkillName) {
+      params.instructions = this.appendSkillActivatedNote(
+        params.instructions,
+        params.activatedSkillName,
+      );
+    }
   }
 
   private async processUserMessage(
@@ -277,8 +320,10 @@ export class ExecuteRunUseCase {
   ): Promise<Message> {
     const hasText = userInput.text && userInput.text.trim().length > 0;
     const hasImages = userInput.pendingImages.length > 0;
+    const hasSkillInstructions =
+      !!params.skillInstructions && params.skillInstructions.trim().length > 0;
 
-    if (!hasText && !hasImages) {
+    if (!hasText && !hasImages && !hasSkillInstructions) {
       throw new RunInvalidInputError(
         'Message must contain at least one content item (non-empty text or at least one image)',
       );
@@ -299,6 +344,7 @@ export class ExecuteRunUseCase {
         params.thread.id,
         messageText,
         userInput.pendingImages,
+        params.skillInstructions,
       ),
     );
     this.addMessageToThreadUseCase.execute(
@@ -447,17 +493,4 @@ export class ExecuteRunUseCase {
       new TrimMessagesForContextCommand(messages, MAX_CONTEXT_TOKENS),
     );
   }
-}
-
-interface RunParams {
-  thread: Thread;
-  tools: Tool[];
-  model: LanguageModel;
-  input: RunUserInput | RunToolResultInput;
-  instructions?: string;
-  streaming?: boolean;
-  orgId: UUID;
-  isAnonymous: boolean;
-  agent?: Agent;
-  activeSkills: Skill[];
 }

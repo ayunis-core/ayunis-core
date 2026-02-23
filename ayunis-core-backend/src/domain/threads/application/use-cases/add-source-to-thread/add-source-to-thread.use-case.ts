@@ -22,32 +22,43 @@ export class AddSourceToThreadUseCase {
       sourceId: command.source.id,
     });
     try {
-      if (!command.thread.sourceAssignments) {
-        command.thread.sourceAssignments = [];
-      }
-
       const userId = this.contextService.get('userId');
       if (!userId) {
         throw new UnauthorizedException('User not authenticated');
       }
 
-      // Check if source already exists in thread
-      const sourceExists = command.thread.sourceAssignments.some(
+      // Load fresh thread from DB to avoid stale in-memory duplicate checks
+      const freshThread = await this.threadsRepository.findOne(
+        command.thread.id,
+        userId,
+      );
+      if (!freshThread) {
+        throw new SourceAdditionError(
+          command.thread.id,
+          new Error('Thread not found'),
+        );
+      }
+
+      const currentAssignments = freshThread.sourceAssignments ?? [];
+
+      // Check if source already exists in thread (against DB state)
+      const sourceExists = currentAssignments.some(
         (assignment) => assignment.source.id === command.source.id,
       );
 
       if (sourceExists) {
         throw new SourceAlreadyAssignedError(command.source.id);
       }
+
       const sourceAssignment = new SourceAssignment({
         source: command.source,
         originSkillId: command.originSkillId,
       });
-      command.thread.sourceAssignments.push(sourceAssignment);
+      const updatedAssignments = [...currentAssignments, sourceAssignment];
       return await this.threadsRepository.updateSourceAssignments({
         threadId: command.thread.id,
         userId,
-        sourceAssignments: command.thread.sourceAssignments,
+        sourceAssignments: updatedAssignments,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
