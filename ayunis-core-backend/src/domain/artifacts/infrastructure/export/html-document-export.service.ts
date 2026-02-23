@@ -24,7 +24,7 @@ export class HtmlDocumentExportService
     const wrappedHtml = this.wrapHtmlForDocx(html);
     const buffer = await htmlToDocx(wrappedHtml, null, {
       font: 'Arial',
-      fontSize: '12pt',
+      fontSize: 24, // half-points (OOXML standard): 24 = 12pt
       table: { row: { cantSplit: true } },
       footer: true,
       pageNumber: true,
