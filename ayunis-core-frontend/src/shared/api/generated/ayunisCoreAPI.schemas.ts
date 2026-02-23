@@ -948,6 +948,16 @@ export interface DeleteAllPendingInvitesResponseDto {
   deletedCount: number;
 }
 
+export interface ActiveSubscriptionResponseDto {
+  /** Whether the organization has an active subscription */
+  hasActiveSubscription: boolean;
+}
+
+export interface PriceResponseDto {
+  /** Current price per seat per month in the configured currency */
+  pricePerSeatMonthly: number;
+}
+
 export interface SubscriptionBillingInfoResponseDto {
   /** Company name */
   companyName: string;
@@ -1038,11 +1048,6 @@ export interface CreateSubscriptionRequestDto {
   vatNumber?: string;
 }
 
-export interface ActiveSubscriptionResponseDto {
-  /** Whether the organization has an active subscription */
-  hasActiveSubscription: boolean;
-}
-
 export interface UpdateBillingInfoDto {
   /** Company name for the subscription */
   companyName: string;
@@ -1058,11 +1063,6 @@ export interface UpdateBillingInfoDto {
   country: string;
   /** VAT number for the subscription */
   vatNumber?: string;
-}
-
-export interface PriceResponseDto {
-  /** Current price per seat per month in the configured currency */
-  pricePerSeatMonthly: number;
 }
 
 export interface UpdateSeatsDto { [key: string]: unknown }

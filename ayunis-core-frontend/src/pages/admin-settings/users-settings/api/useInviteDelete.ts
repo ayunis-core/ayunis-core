@@ -1,6 +1,5 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
-  getSubscriptionsControllerGetSubscriptionQueryKey,
   useInvitesControllerDeleteInvite,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { PaginatedInvitesListResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -57,9 +56,6 @@ export function useInviteDelete() {
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getInvitesControllerGetInvitesQueryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
         void router.invalidate();
       },

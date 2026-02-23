@@ -8,8 +8,6 @@ import enCommon from './shared/locales/en/common.json';
 import deCommon from './shared/locales/de/common.json';
 import enAdminSettingsLayout from './shared/locales/en/admin-settings-layout.json';
 import deAdminSettingsLayout from './shared/locales/de/admin-settings-layout.json';
-import enAdminSettingsBilling from './shared/locales/en/admin-settings-billing.json';
-import deAdminSettingsBilling from './shared/locales/de/admin-settings-billing.json';
 import enAdminSettingsModels from './shared/locales/en/admin-settings-models.json';
 import deAdminSettingsModels from './shared/locales/de/admin-settings-models.json';
 import enAdminSettingsUsers from './shared/locales/en/admin-settings-users.json';
@@ -52,7 +50,6 @@ const resources = {
     auth: enAuth,
     common: enCommon,
     'admin-settings-layout': enAdminSettingsLayout,
-    'admin-settings-billing': enAdminSettingsBilling,
     'admin-settings-models': enAdminSettingsModels,
     'admin-settings-users': enAdminSettingsUsers,
     'admin-settings-integrations': enAdminSettingsIntegrations,
@@ -76,7 +73,6 @@ const resources = {
     auth: deAuth,
     common: deCommon,
     'admin-settings-layout': deAdminSettingsLayout,
-    'admin-settings-billing': deAdminSettingsBilling,
     'admin-settings-models': deAdminSettingsModels,
     'admin-settings-users': deAdminSettingsUsers,
     'admin-settings-integrations': deAdminSettingsIntegrations,

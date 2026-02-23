@@ -37,7 +37,6 @@ import { Route as AuthenticatedAdminSettingsUsersImport } from './routes/_authen
 import { Route as AuthenticatedAdminSettingsUsageImport } from './routes/_authenticated/admin-settings.usage'
 import { Route as AuthenticatedAdminSettingsModelsImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsImport } from './routes/_authenticated/admin-settings.integrations'
-import { Route as AuthenticatedAdminSettingsBillingImport } from './routes/_authenticated/admin-settings.billing'
 import { Route as onboardingPasswordResetImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotImport } from './routes/(onboarding)/password.forgot'
 import { Route as AuthenticatedSuperAdminSettingsUsageIndexImport } from './routes/_authenticated/super-admin-settings.usage.index'
@@ -216,13 +215,6 @@ const AuthenticatedAdminSettingsIntegrationsRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
-const AuthenticatedAdminSettingsBillingRoute =
-  AuthenticatedAdminSettingsBillingImport.update({
-    id: '/admin-settings/billing',
-    path: '/admin-settings/billing',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-
 const onboardingPasswordResetRoute = onboardingPasswordResetImport.update({
   id: '/(onboarding)/password/reset',
   path: '/password/reset',
@@ -350,13 +342,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/password/reset'
       preLoaderRoute: typeof onboardingPasswordResetImport
       parentRoute: typeof rootRoute
-    }
-    '/_authenticated/admin-settings/billing': {
-      id: '/_authenticated/admin-settings/billing'
-      path: '/admin-settings/billing'
-      fullPath: '/admin-settings/billing'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsBillingImport
-      parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/admin-settings/integrations': {
       id: '/_authenticated/admin-settings/integrations'
@@ -533,7 +518,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
-  AuthenticatedAdminSettingsBillingRoute: typeof AuthenticatedAdminSettingsBillingRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
@@ -562,8 +546,6 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
-  AuthenticatedAdminSettingsBillingRoute:
-    AuthenticatedAdminSettingsBillingRoute,
   AuthenticatedAdminSettingsIntegrationsRoute:
     AuthenticatedAdminSettingsIntegrationsRoute,
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
@@ -613,7 +595,6 @@ export interface FileRoutesByFullPath {
   '/install': typeof AuthenticatedInstallRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
-  '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
@@ -651,7 +632,6 @@ export interface FileRoutesByTo {
   '/install': typeof AuthenticatedInstallRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
-  '/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
@@ -690,7 +670,6 @@ export interface FileRoutesById {
   '/_authenticated/install': typeof AuthenticatedInstallRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
-  '/_authenticated/admin-settings/billing': typeof AuthenticatedAdminSettingsBillingRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
@@ -730,7 +709,6 @@ export interface FileRouteTypes {
     | '/install'
     | '/password/forgot'
     | '/password/reset'
-    | '/admin-settings/billing'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
     | '/admin-settings/usage'
@@ -767,7 +745,6 @@ export interface FileRouteTypes {
     | '/install'
     | '/password/forgot'
     | '/password/reset'
-    | '/admin-settings/billing'
     | '/admin-settings/integrations'
     | '/admin-settings/models'
     | '/admin-settings/usage'
@@ -804,7 +781,6 @@ export interface FileRouteTypes {
     | '/_authenticated/install'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
-    | '/_authenticated/admin-settings/billing'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/usage'
@@ -884,7 +860,6 @@ export const routeTree = rootRoute
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/install",
-        "/_authenticated/admin-settings/billing",
         "/_authenticated/admin-settings/integrations",
         "/_authenticated/admin-settings/models",
         "/_authenticated/admin-settings/usage",
@@ -935,10 +910,6 @@ export const routeTree = rootRoute
     },
     "/(onboarding)/password/reset": {
       "filePath": "(onboarding)/password.reset.tsx"
-    },
-    "/_authenticated/admin-settings/billing": {
-      "filePath": "_authenticated/admin-settings.billing.tsx",
-      "parent": "/_authenticated"
     },
     "/_authenticated/admin-settings/integrations": {
       "filePath": "_authenticated/admin-settings.integrations.tsx",

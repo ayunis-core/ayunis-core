@@ -1,7 +1,6 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerCreate,
-  getSubscriptionsControllerGetSubscriptionQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { InviteCreateData } from '../model/openapi';
@@ -47,9 +46,6 @@ export function useInviteCreate(
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getInvitesControllerGetInvitesQueryKey(),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: getSubscriptionsControllerGetSubscriptionQueryKey(),
         });
         void router.invalidate();
       },
