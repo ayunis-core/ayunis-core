@@ -1,11 +1,13 @@
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/shared/ui/shadcn/form';
 import { Input } from '@/shared/ui/shadcn/input';
+import { Textarea } from '@/shared/ui/shadcn/textarea';
 import { useTranslation } from 'react-i18next';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 
@@ -15,6 +17,7 @@ interface ShortDescriptionFieldProps<TFieldValues extends FieldValues> {
   translationNamespace: string;
   translationPrefix?: string;
   disabled?: boolean;
+  multiline?: boolean;
 }
 
 export default function ShortDescriptionField<
@@ -25,8 +28,11 @@ export default function ShortDescriptionField<
   translationNamespace,
   translationPrefix = 'createDialog',
   disabled = false,
+  multiline = false,
 }: Readonly<ShortDescriptionFieldProps<TFieldValues>>) {
   const { t } = useTranslation(translationNamespace);
+  const hintKey = `${translationPrefix}.form.shortDescriptionHint`;
+  const hint = t(hintKey, { defaultValue: '' });
 
   return (
     <FormField
@@ -38,14 +44,26 @@ export default function ShortDescriptionField<
             {t(`${translationPrefix}.form.shortDescriptionLabel`)}
           </FormLabel>
           <FormControl>
-            <Input
-              placeholder={t(
-                `${translationPrefix}.form.shortDescriptionPlaceholder`,
-              )}
-              disabled={disabled}
-              {...field}
-            />
+            {multiline ? (
+              <Textarea
+                placeholder={t(
+                  `${translationPrefix}.form.shortDescriptionPlaceholder`,
+                )}
+                className="min-h-[80px] max-h-[200px]"
+                disabled={disabled}
+                {...field}
+              />
+            ) : (
+              <Input
+                placeholder={t(
+                  `${translationPrefix}.form.shortDescriptionPlaceholder`,
+                )}
+                disabled={disabled}
+                {...field}
+              />
+            )}
           </FormControl>
+          {hint && <FormDescription>{hint}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}

@@ -23,7 +23,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Enter knowledge base name...",
       "shortDescriptionLabel": "Description",
-      "shortDescriptionPlaceholder": "Enter an optional description..."
+      "shortDescriptionPlaceholder": "Enter an optional description...",
+      "shortDescriptionHint": "A good description helps the AI understand when to use this knowledge base."
     },
     "validation": {
       "nameRequired": "Name is required"
@@ -51,7 +52,8 @@
         "nameLabel": "Name",
         "namePlaceholder": "Enter knowledge base name...",
         "descriptionLabel": "Description",
-        "descriptionPlaceholder": "Enter an optional description..."
+        "descriptionPlaceholder": "Enter an optional description...",
+        "descriptionHint": "A good description helps the AI understand when to use this knowledge base."
       },
       "buttons": {
         "save": "Save",

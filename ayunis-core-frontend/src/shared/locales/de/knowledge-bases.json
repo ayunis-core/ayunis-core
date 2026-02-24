@@ -23,7 +23,8 @@
       "nameLabel": "Name",
       "namePlaceholder": "Name der Wissenssammlung eingeben...",
       "shortDescriptionLabel": "Beschreibung",
-      "shortDescriptionPlaceholder": "Optionale Beschreibung eingeben..."
+      "shortDescriptionPlaceholder": "Optionale Beschreibung eingeben...",
+      "shortDescriptionHint": "Eine gute Beschreibung hilft der KI zu verstehen, wann diese Wissenssammlung verwendet werden soll."
     },
     "validation": {
       "nameRequired": "Name ist erforderlich"
@@ -51,7 +52,8 @@
         "nameLabel": "Name",
         "namePlaceholder": "Name der Wissenssammlung eingeben...",
         "descriptionLabel": "Beschreibung",
-        "descriptionPlaceholder": "Optionale Beschreibung eingeben..."
+        "descriptionPlaceholder": "Optionale Beschreibung eingeben...",
+        "descriptionHint": "Eine gute Beschreibung hilft der KI zu verstehen, wann diese Wissenssammlung verwendet werden soll."
       },
       "buttons": {
         "save": "Speichern",

@@ -52,6 +52,7 @@ export default function CreateKnowledgeBaseDialog({
             control={form.control}
             name="description"
             translationNamespace="knowledge-bases"
+            multiline
           />
         </div>
       </Form>

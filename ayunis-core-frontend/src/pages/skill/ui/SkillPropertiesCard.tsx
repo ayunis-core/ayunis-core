@@ -8,6 +8,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -67,6 +68,9 @@ export default function SkillPropertiesCard({
                       {...field}
                     />
                   </FormControl>
+                  <FormDescription>
+                    {t('properties.form.shortDescriptionHint')}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
