@@ -133,6 +133,9 @@ export class LocalThreadsRepository extends ThreadsRepository {
     if (options?.withModel) {
       queryBuilder.leftJoinAndSelect('thread.model', 'model');
     }
+    if (options?.withKnowledgeBases) {
+      queryBuilder.leftJoinAndSelect('thread.knowledgeBases', 'knowledgeBases');
+    }
 
     // Order by most recent first (by creation time)
     queryBuilder.orderBy('thread.createdAt', 'DESC');
