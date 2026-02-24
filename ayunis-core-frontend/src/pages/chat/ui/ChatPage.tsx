@@ -37,6 +37,7 @@ import {
   threadsControllerFindOne,
   threadsControllerDownloadSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
 import type { PendingImage } from '../api/useMessageSend';
 
 interface ChatPageProps {
@@ -61,28 +62,16 @@ export default function ChatPage({
 
   const selectedAgent = agents.find((agent) => agent.id === thread.agentId);
 
-  // Determine if vision is enabled by the thread's model
   const selectedModel = models.find((m) => m.id === thread.permittedModelId);
   const isVisionEnabled = thread.agentId
     ? (selectedAgent?.model.canVision ?? false)
     : (selectedModel?.canVision ?? false);
 
-  // Detect if the agent or model used in this thread is no longer accessible
-  // This happens when:
-  // - Thread has an agentId but agent is not found in user's accessible agents
-  // - Thread has a permittedModelId (and no agent) but model is not found in permitted models
-  // Note: We only consider the agent/model unavailable once loading has completed
-  // to avoid flashing the warning while data is still being fetched
+  // Detect if the agent or model used in this thread is no longer accessible.
+  // Only flagged after loading completes to avoid flashing the warning.
   const isAgentUnavailable = useMemo(() => {
-    if (thread.agentId) {
-      // Thread uses an agent - check if agent is accessible (only after loading)
-      return !isLoadingAgents && !selectedAgent;
-    }
-    if (thread.permittedModelId) {
-      // Thread uses a model directly - check if model is accessible (only after loading)
-      return !isLoadingModels && !selectedModel;
-    }
-    // No agent or model specified (shouldn't happen in practice)
+    if (thread.agentId) return !isLoadingAgents && !selectedAgent;
+    if (thread.permittedModelId) return !isLoadingModels && !selectedModel;
     return false;
   }, [
     thread.agentId,
@@ -94,7 +83,7 @@ export default function ChatPage({
   ]);
 
   const queryClient = useQueryClient();
-  const processedPendingRef = useRef<string | null>(null);
+  const processedPendingMessageRef = useRef<string | null>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
 
   const {
@@ -104,8 +93,8 @@ export default function ChatPage({
     setSources,
     pendingImages,
     setPendingImages,
-    pendingSkillId,
-    setPendingSkillId,
+    pendingKnowledgeBases,
+    setPendingKnowledgeBases,
   } = useChatContext();
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
@@ -116,9 +105,8 @@ export default function ChatPage({
     useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 
-  // Memoize sorted messages to avoid sorting on every render
   const sortedMessages = useMemo(() => {
-    return messages.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+    return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
   }, [messages]);
 
   const { deleteChat } = useDeleteThread({
@@ -143,17 +131,16 @@ export default function ChatPage({
     threadId: thread.id,
   });
 
-  // Combine both loading states - use our local state for bulk operations
+  const { addKnowledgeBase, addKnowledgeBaseAsync, removeKnowledgeBase } =
+    useKnowledgeBaseAttachment({ threadId: thread.id });
+
   const isTotallyCreatingFileSource =
     isCreatingFileSource || isProcessingPendingSources;
 
   const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
     setMessages((prev) => {
-      // Update message if exists, otherwise append
-      const existing = prev.find((m) => m.id === message.id);
-      if (existing) {
-        return prev.map((m) => (m.id === message.id ? message : m));
-      }
+      const exists = prev.some((m) => m.id === message.id);
+      if (exists) return prev.map((m) => (m.id === message.id ? message : m));
       return [...prev, message];
     });
   }, []);
@@ -325,60 +312,71 @@ export default function ChatPage({
     setThreadTitle(thread.title);
   }, [thread]);
 
-  // Upload pending file sources before sending a message
-  const uploadPendingSources = useCallback(async () => {
-    if (sources.length === 0) return;
-    setIsProcessingPendingSources(true);
-    const promises = sources.map((source) =>
-      createFileSourceAsync({
-        file: source.file,
-        name: source.name,
-        description: `File source: ${source.name}`,
-      }),
-    );
-    await Promise.all(promises as Promise<unknown>[]);
-    resetCreateFileSourceMutation();
-  }, [sources, createFileSourceAsync, resetCreateFileSourceMutation]);
-
-  // Map pending images to the format expected by sendTextMessage
-  const buildPendingImages = useCallback((): PendingImage[] | undefined => {
-    if (pendingImages.length === 0) return undefined;
-    return pendingImages.map((img) => ({
-      file: img.file,
-      altText: img.altText ?? (img.file.name || 'Pasted image'),
-    }));
-  }, [pendingImages]);
-
   // Send pending message from NewChatPage if it exists
   useEffect(() => {
+    async function uploadPendingSources() {
+      if (sources.length === 0) return;
+      setIsProcessingPendingSources(true);
+      const promises = sources.map((source) =>
+        createFileSourceAsync({
+          file: source.file,
+          name: source.name,
+          description: `File source: ${source.name}`,
+        }),
+      );
+      await Promise.all(promises as Promise<unknown>[]);
+      resetCreateFileSourceMutation();
+    }
+
+    async function attachPendingKnowledgeBases() {
+      if (pendingKnowledgeBases.length === 0) return;
+      const results = await Promise.allSettled(
+        pendingKnowledgeBases.map((kb) => addKnowledgeBaseAsync(kb.id)),
+      );
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error(
+          `Failed to attach ${String(failed.length)} knowledge base(s)`,
+        );
+      }
+    }
+
+    function buildPendingImages(): PendingImage[] | undefined {
+      if (pendingImages.length === 0) return undefined;
+      return pendingImages.map((img) => ({
+        file: img.file,
+        altText: img.altText ?? (img.file.name || 'Pasted image'),
+      }));
+    }
+
     async function sendPendingMessage() {
-      const dedupKey = `${pendingMessage}::${pendingSkillId}`;
       if (
-        (pendingMessage || pendingSkillId) &&
-        processedPendingRef.current !== dedupKey
+        !pendingMessage ||
+        processedPendingMessageRef.current === pendingMessage
       ) {
-        processedPendingRef.current = dedupKey;
-        try {
-          await uploadPendingSources();
-          setSources([]);
-          await sendTextMessage({
-            text: pendingMessage,
-            images: buildPendingImages(),
-            skillId: pendingSkillId || undefined,
-          });
-          setPendingSkillId('');
-        } catch (error) {
-          if (error instanceof AxiosError && error.response?.status === 403) {
-            showError(t('chat.upgradeToProError'));
-          } else {
-            showError(t('chat.errorSendMessage'));
-          }
-          chatInputRef.current?.setMessage(pendingMessage);
-        } finally {
-          setIsProcessingPendingSources(false);
-          setPendingMessage('');
-          setPendingImages([]);
+        return;
+      }
+      processedPendingMessageRef.current = pendingMessage;
+      try {
+        await uploadPendingSources();
+        setSources([]);
+        await attachPendingKnowledgeBases();
+        await sendTextMessage({
+          text: pendingMessage,
+          images: buildPendingImages(),
+        });
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 403) {
+          showError(t('chat.upgradeToProError'));
+        } else {
+          showError(t('chat.errorSendMessage'));
         }
+        chatInputRef.current?.setMessage(pendingMessage);
+      } finally {
+        setIsProcessingPendingSources(false);
+        setPendingMessage('');
+        setPendingImages([]);
+        setPendingKnowledgeBases([]);
       }
     }
     void sendPendingMessage();
@@ -386,14 +384,17 @@ export default function ChatPage({
     pendingMessage,
     sendTextMessage,
     setPendingMessage,
-    uploadPendingSources,
+    sources,
+    createFileSourceAsync,
     setSources,
-    buildPendingImages,
+    pendingImages,
     setPendingImages,
-    pendingSkillId,
-    setPendingSkillId,
+    pendingKnowledgeBases,
+    setPendingKnowledgeBases,
+    addKnowledgeBaseAsync,
     chatInputRef,
     t,
+    resetCreateFileSourceMutation,
   ]);
 
   const chatHeader = (
@@ -405,10 +406,7 @@ export default function ChatPage({
     />
   );
 
-  // Chat Content (Messages only)
-  // Show loading indicator when streaming and either:
-  // - No assistant message has arrived yet, OR
-  // - The last assistant message has empty content (still waiting for content to stream in)
+  // Show loading indicator when streaming and no assistant content has arrived yet
   const lastMessage = sortedMessages[sortedMessages.length - 1];
   /* eslint-disable eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- lastMessage may be undefined if sortedMessages is empty; content may be undefined during streaming even if typed as required */
   const lastAssistantHasEmptyContent =
@@ -440,9 +438,7 @@ export default function ChatPage({
     </div>
   );
 
-  // Chat Input
-  // Agent, model, and anonymous mode controls are always disabled on ChatPage
-  // because the thread already has messages (ChatPage is only shown after first message)
+  // Controls are always disabled — thread already has messages
   const chatInput = isAgentUnavailable ? (
     <UnavailableAgentWarning />
   ) : (
@@ -454,7 +450,6 @@ export default function ChatPage({
       <ChatInput
         ref={chatInputRef}
         modelId={
-          // If the thread has an agent, use the agent's model
           thread.agentId ? selectedAgent?.model.id : thread.permittedModelId
         }
         isModelChangeDisabled={true}
@@ -462,6 +457,7 @@ export default function ChatPage({
         isAnonymousChangeDisabled={true}
         agentId={thread.agentId}
         sources={thread.sources}
+        knowledgeBases={thread.knowledgeBases}
         isAnonymous={thread.isAnonymous}
         isStreaming={isStreaming}
         isCreatingFileSource={isTotallyCreatingFileSource}
@@ -471,6 +467,8 @@ export default function ChatPage({
         onFileUpload={handleFileUpload}
         onRemoveSource={deleteFileSource}
         onDownloadSource={(sourceId) => void handleDownloadSource(sourceId)}
+        onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
+        onRemoveKnowledgeBase={removeKnowledgeBase}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
         onSendCancelled={handleSendCancelled}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}

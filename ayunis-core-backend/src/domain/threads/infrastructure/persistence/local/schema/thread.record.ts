@@ -14,6 +14,7 @@ import { PermittedModelRecord } from '../../../../../models/infrastructure/persi
 import { AgentRecord } from '../../../../../agents/infrastructure/persistence/local/schema/agent.record';
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
 import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -56,4 +57,8 @@ export class ThreadRecord extends BaseRecord {
   @ManyToMany(() => McpIntegrationRecord)
   @JoinTable({ name: 'thread_mcp_integrations' })
   mcpIntegrations?: McpIntegrationRecord[];
+
+  @ManyToMany(() => KnowledgeBaseRecord)
+  @JoinTable({ name: 'thread_knowledge_bases' })
+  knowledgeBases?: KnowledgeBaseRecord[];
 }

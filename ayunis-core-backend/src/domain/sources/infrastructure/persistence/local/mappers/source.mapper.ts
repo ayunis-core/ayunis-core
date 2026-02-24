@@ -65,6 +65,7 @@ export class SourceMapper {
         type: TextType.FILE,
         text: record.textSourceDetails.text,
         contentChunks: this.mapContentChunks(record.textSourceDetails),
+        knowledgeBaseId: record.knowledgeBaseId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         createdBy: record.createdBy,
@@ -78,6 +79,7 @@ export class SourceMapper {
         type: TextType.WEB,
         text: record.textSourceDetails.text,
         contentChunks: this.mapContentChunks(record.textSourceDetails),
+        knowledgeBaseId: record.knowledgeBaseId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         createdBy: record.createdBy,
@@ -93,6 +95,7 @@ export class SourceMapper {
         id: record.id,
         data: record.dataSourceDetails.data,
         name: record.name,
+        knowledgeBaseId: record.knowledgeBaseId,
         createdBy: record.createdBy,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -135,12 +138,12 @@ export class SourceMapper {
     throw new Error('Invalid source type: ' + source.type);
   }
 
-  // TODO(AYC-92): map knowledgeBaseId when knowledge base document assignment is implemented
   private createTextSourceRecord(source: TextSource): TextSourceRecord {
     const record = new TextSourceRecord();
     record.id = source.id;
     record.name = source.name;
     record.createdBy = source.createdBy;
+    record.knowledgeBaseId = source.knowledgeBaseId;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
     return record;
@@ -206,6 +209,7 @@ export class SourceMapper {
     record.id = source.id;
     record.name = source.name;
     record.createdBy = source.createdBy;
+    record.knowledgeBaseId = source.knowledgeBaseId;
     record.createdAt = source.createdAt;
     record.updatedAt = source.updatedAt;
 

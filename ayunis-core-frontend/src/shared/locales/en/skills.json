@@ -35,6 +35,7 @@
       "namePlaceholder": "Enter skill name...",
       "shortDescriptionLabel": "Short Description",
       "shortDescriptionPlaceholder": "Brief description of what this skill does...",
+      "shortDescriptionHint": "A good description helps the AI understand when to use this skill.",
       "instructionsLabel": "Detailed Instructions",
       "instructionsPlaceholder": "Enter detailed instructions for this skill..."
     },

@@ -7,6 +7,7 @@ import {
   LogOut,
   Plus,
   Bot,
+  Brain,
   Sparkles,
 } from 'lucide-react';
 
@@ -82,6 +83,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ]
       : []),
+    {
+      title: t('sidebar.knowledge'),
+      url: '/knowledge-bases',
+      icon: Brain,
+    },
   ];
 
   return (

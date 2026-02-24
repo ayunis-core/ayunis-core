@@ -11,6 +11,7 @@ export abstract class DataSource extends Source {
     id?: UUID;
     name: string;
     type: DataType;
+    knowledgeBaseId?: UUID | null;
     createdBy?: SourceCreator;
   }) {
     super({ ...params, type: SourceType.DATA });
@@ -28,6 +29,7 @@ export class CSVDataSource extends DataSource {
     id?: UUID;
     name: string;
     data: { headers: string[]; rows: string[][] };
+    knowledgeBaseId?: UUID | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;

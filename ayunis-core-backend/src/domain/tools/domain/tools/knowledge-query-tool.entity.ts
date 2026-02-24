@@ -1,0 +1,63 @@
+import type { JSONSchema } from 'json-schema-to-ts';
+import { createAjv } from 'src/common/validators/ajv.factory';
+import { ToolType } from '../value-objects/tool-type.enum';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
+import { Tool } from '../tool.entity';
+
+interface KnowledgeQueryToolParameters {
+  knowledgeBaseId: string;
+  query: string;
+}
+
+// eslint-disable-next-line sonarjs/function-return-type -- false positive: function always returns JSONSchema
+function knowledgeQueryToolParameters(
+  knowledgeBases: KnowledgeBaseSummary[],
+): JSONSchema {
+  const knowledgeBaseIds: string[] = knowledgeBases.map((kb) => kb.id);
+  const schema: JSONSchema = {
+    type: 'object',
+    properties: {
+      knowledgeBaseId: {
+        type: 'string',
+        description: 'The ID of the knowledge base to search',
+        enum: knowledgeBaseIds,
+      },
+      query: {
+        type: 'string',
+        description: 'The semantic search query to find relevant content',
+      },
+    },
+    required: ['knowledgeBaseId', 'query'],
+    additionalProperties: false,
+  };
+  return schema;
+}
+
+export class KnowledgeQueryTool extends Tool {
+  constructor(knowledgeBases: KnowledgeBaseSummary[]) {
+    super({
+      name: ToolType.KNOWLEDGE_QUERY,
+      description:
+        'Search a knowledge base through semantic search. Use the knowledge base ID to select which one to search.',
+      descriptionLong: `Search knowledge bases BEFORE answering questions about attached knowledge bases. If knowledge bases don't contain the answer, say so rather than guessing from general knowledge. Results may include startLine and endLine metadata for each matched snippet. Use these line numbers with knowledge_get_text to retrieve additional context around relevant sections if necessary.`,
+      parameters: knowledgeQueryToolParameters(knowledgeBases),
+      type: ToolType.KNOWLEDGE_QUERY,
+    });
+  }
+
+  validateParams(
+    params: Record<string, unknown>,
+  ): KnowledgeQueryToolParameters {
+    const ajv = createAjv();
+    const validate = ajv.compile(this.parameters);
+    const valid = validate(params);
+    if (!valid) {
+      throw new Error(JSON.stringify(validate.errors));
+    }
+    return params as unknown as KnowledgeQueryToolParameters;
+  }
+
+  get returnsPii(): boolean {
+    return true;
+  }
+}

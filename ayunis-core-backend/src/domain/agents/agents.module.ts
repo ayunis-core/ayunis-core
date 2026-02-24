@@ -33,6 +33,7 @@ import { SharedEntityType } from '../shares/domain/value-objects/shared-entity-t
 
 // Presenters
 import { AgentsController } from './presenters/http/agents.controller';
+import { AgentMcpIntegrationsController } from './presenters/http/agent-mcp-integrations.controller';
 import { AgentDtoMapper } from './presenters/http/mappers/agent.mapper';
 import { AgentSourceDtoMapper } from './presenters/http/mappers/agent-source.mapper';
 import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-integration-dto.mapper';
@@ -82,7 +83,7 @@ import { McpIntegrationDtoMapper } from '../mcp/presenters/http/mappers/mcp-inte
     AgentSourceDtoMapper,
     McpIntegrationDtoMapper,
   ],
-  controllers: [AgentsController],
+  controllers: [AgentsController, AgentMcpIntegrationsController],
   exports: [
     CreateAgentUseCase,
     FindOneAgentUseCase,

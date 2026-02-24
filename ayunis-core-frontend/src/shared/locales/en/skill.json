@@ -63,6 +63,7 @@
       "namePlaceholder": "Enter skill name...",
       "shortDescriptionLabel": "Short Description",
       "shortDescriptionPlaceholder": "Brief description for the AI to decide when to activate this skill...",
+      "shortDescriptionHint": "A good description helps the AI understand when to use this skill.",
       "instructionsLabel": "Instructions",
       "instructionsPlaceholder": "Detailed instructions injected when the skill is activated..."
     },

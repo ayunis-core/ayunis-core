@@ -36,8 +36,6 @@ import { FindOneAgentUseCase } from '../../application/use-cases/find-one-agent/
 import { FindAllAgentsUseCase } from '../../application/use-cases/find-all-agents/find-all-agents.use-case';
 import { AddSourceToAgentUseCase } from '../../application/use-cases/add-source-to-agent/add-source-to-agent.use-case';
 import { RemoveSourceFromAgentUseCase } from '../../application/use-cases/remove-source-from-agent/remove-source-from-agent.use-case';
-import { AssignMcpIntegrationToAgentUseCase } from '../../application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.use-case';
-
 // Import commands and queries
 import { CreateAgentCommand } from '../../application/use-cases/create-agent/create-agent.command';
 import { UpdateAgentCommand } from '../../application/use-cases/update-agent/update-agent.command';
@@ -46,11 +44,6 @@ import { FindOneAgentQuery } from '../../application/use-cases/find-one-agent/fi
 import { FindAllAgentsQuery } from '../../application/use-cases/find-all-agents/find-all-agents.query';
 import { AddSourceToAgentCommand } from '../../application/use-cases/add-source-to-agent/add-source-to-agent.command';
 import { RemoveSourceFromAgentCommand } from '../../application/use-cases/remove-source-from-agent/remove-source-from-agent.command';
-import { AssignMcpIntegrationToAgentCommand } from '../../application/use-cases/assign-mcp-integration-to-agent/assign-mcp-integration-to-agent.command';
-import { UnassignMcpIntegrationFromAgentUseCase } from '../../application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.use-case';
-import { UnassignMcpIntegrationFromAgentCommand } from '../../application/use-cases/unassign-mcp-integration-from-agent/unassign-mcp-integration-from-agent.command';
-import { ListAgentMcpIntegrationsUseCase } from '../../application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.use-case';
-import { ListAgentMcpIntegrationsQuery } from '../../application/use-cases/list-agent-mcp-integrations/list-agent-mcp-integrations.query';
 
 // Import DTOs and mappers
 import { CreateAgentDto } from './dto/create-agent.dto';
@@ -70,27 +63,15 @@ import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
-import { CreateFileSourceCommand } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.command';
 import { CreateTextSourceUseCase } from 'src/domain/sources/application/use-cases/create-text-source/create-text-source.use-case';
-import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
-import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
-import {
-  detectFileType,
-  getCanonicalMimeType,
-  isDocumentFile,
-  isSpreadsheetFile,
-  isCSVFile,
-} from 'src/common/util/file-type';
+
 import {
   UnsupportedFileTypeError,
   EmptyFileDataError,
   MissingFileError,
 } from '../../application/agents.errors';
-import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
-import { parseCSV } from 'src/common/util/csv';
-import { parseExcel } from 'src/common/util/excel';
-import { Source } from 'src/domain/sources/domain/source.entity';
+import { createSourcesFromFile } from 'src/domain/sources/application/file-source-creator';
 import { AgentSourceAssignment } from '../../domain/agent-source-assignment.entity';
 
 @ApiTags('agents')
@@ -106,14 +87,11 @@ export class AgentsController {
     private readonly findAllAgentsUseCase: FindAllAgentsUseCase,
     private readonly addSourceToAgentUseCase: AddSourceToAgentUseCase,
     private readonly removeSourceFromAgentUseCase: RemoveSourceFromAgentUseCase,
-    private readonly assignMcpIntegrationToAgentUseCase: AssignMcpIntegrationToAgentUseCase,
-    private readonly unassignMcpIntegrationFromAgentUseCase: UnassignMcpIntegrationFromAgentUseCase,
-    private readonly listAgentMcpIntegrationsUseCase: ListAgentMcpIntegrationsUseCase,
+
     private readonly agentDtoMapper: AgentDtoMapper,
     private readonly agentSourceDtoMapper: AgentSourceDtoMapper,
     private readonly createTextSourceUseCase: CreateTextSourceUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
-    private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
   ) {}
 
   @Post()
@@ -298,6 +276,7 @@ export class AgentsController {
     );
 
     return this.agentSourceDtoMapper.toDtoArray(
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: sourceAssignments may be undefined at runtime
       result.agent.sourceAssignments || [],
     );
   }
@@ -336,8 +315,10 @@ export class AgentsController {
   })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @UseInterceptors(
+    /* eslint-disable sonarjs/content-length -- file size validated downstream */
     FileInterceptor('file', {
       storage: diskStorage({
+        // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, tracked separately
         // TODO: Move this to a separate service
         destination: './uploads',
         filename: (req, file, cb) => {
@@ -346,6 +327,7 @@ export class AgentsController {
         },
       }),
     }),
+    /* eslint-enable sonarjs/content-length */
   )
   @Transactional()
   async addFileSource(
@@ -363,6 +345,7 @@ export class AgentsController {
       path: string;
     },
   ): Promise<AgentSourceResponseDto[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: file may be undefined if upload middleware fails
     if (!file) {
       throw new MissingFileError();
     }
@@ -373,79 +356,23 @@ export class AgentsController {
       fileName: file.originalname,
     });
     try {
-      const sources: Source[] = [];
-
-      // Detect file type using centralized utility
-      const detectedType = detectFileType(file.mimetype, file.originalname);
-      this.logger.debug('File type detection', {
-        mimetype: file.mimetype,
-        originalname: file.originalname,
-        detectedType,
+      const sources = await createSourcesFromFile(file as Express.Multer.File, {
+        createTextSource: (cmd) => this.createTextSourceUseCase.execute(cmd),
+        createDataSource: (cmd) => this.createDataSourceUseCase.execute(cmd),
+        throwEmptyFileError: (fileName) => {
+          throw new EmptyFileDataError(fileName);
+        },
+        throwUnsupportedTypeError: (type) => {
+          throw new UnsupportedFileTypeError(type, [
+            'PDF',
+            'DOCX',
+            'PPTX',
+            'CSV',
+            'XLSX',
+            'XLS',
+          ]);
+        },
       });
-
-      if (isDocumentFile(detectedType)) {
-        // Read file data from disk since we're using diskStorage
-        const fileData = fs.readFileSync(file.path);
-        const canonicalMimeType = getCanonicalMimeType(detectedType)!;
-
-        // Create the file source
-        const createFileSourceCommand = new CreateFileSourceCommand({
-          fileType: canonicalMimeType,
-          fileData: fileData,
-          fileName: file.originalname,
-        });
-
-        const fileSource = await this.createTextSourceUseCase.execute(
-          createFileSourceCommand,
-        );
-        sources.push(fileSource);
-      } else if (isCSVFile(detectedType)) {
-        const fileData = fs.readFileSync(file.path, 'utf8');
-        const { headers, data } = parseCSV(fileData);
-        const command = new CreateCSVDataSourceCommand({
-          name: file.originalname,
-          data: {
-            headers,
-            rows: data,
-          },
-        });
-        const source = await this.createDataSourceUseCase.execute(command);
-        sources.push(source);
-      } else if (isSpreadsheetFile(detectedType)) {
-        const fileData = fs.readFileSync(file.path);
-        const sheets = parseExcel(fileData);
-
-        // Validate that the file contains processable data
-        if (sheets.length === 0) {
-          throw new EmptyFileDataError(file.originalname);
-        }
-
-        // Get the base filename without extension
-        const baseFileName = file.originalname.replace(/\.(xlsx|xls)$/i, '');
-
-        for (const sheet of sheets) {
-          // Create a source name: if single sheet, use filename; if multiple, include sheet name
-          const sourceName =
-            sheets.length === 1
-              ? `${baseFileName}.csv`
-              : `${baseFileName}_${sheet.sheetName.replace(/\s+/g, '_')}.csv`;
-
-          const command = new CreateCSVDataSourceCommand({
-            name: sourceName,
-            data: {
-              headers: sheet.headers,
-              rows: sheet.rows,
-            },
-          });
-          const source = await this.createDataSourceUseCase.execute(command);
-          sources.push(source);
-        }
-      } else {
-        throw new UnsupportedFileTypeError(
-          detectedType === 'unknown' ? file.originalname : detectedType,
-          ['PDF', 'DOCX', 'PPTX', 'CSV', 'XLSX', 'XLS'],
-        );
-      }
 
       // Add all sources to the agent
       const sourceAssignments: AgentSourceAssignment[] = [];
@@ -508,118 +435,5 @@ export class AgentsController {
         sourceAssignmentId,
       }),
     );
-  }
-
-  // MCP Integration Management Endpoints
-
-  @Post(':agentId/mcp-integrations/:integrationId')
-  @ApiOperation({ summary: 'Assign MCP integration to agent' })
-  @ApiParam({
-    name: 'agentId',
-    description: 'The UUID of the agent',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'integrationId',
-    description: 'The UUID of the MCP integration to assign',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'The MCP integration has been successfully assigned',
-    type: AgentResponseDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Integration disabled',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Integration belongs to different organization',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Agent or integration not found',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Integration already assigned',
-  })
-  @HttpCode(HttpStatus.CREATED)
-  async assignMcpIntegration(
-    @Param('agentId', ParseUUIDPipe) agentId: UUID,
-    @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
-  ): Promise<AgentResponseDto> {
-    this.logger.log('assignMcpIntegration', { agentId, integrationId });
-
-    const agent = await this.assignMcpIntegrationToAgentUseCase.execute(
-      new AssignMcpIntegrationToAgentCommand(agentId, integrationId),
-    );
-
-    return this.agentDtoMapper.toDto(agent);
-  }
-
-  @Delete(':agentId/mcp-integrations/:integrationId')
-  @ApiOperation({ summary: 'Unassign MCP integration from agent' })
-  @ApiParam({
-    name: 'agentId',
-    description: 'The UUID of the agent',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'integrationId',
-    description: 'The UUID of the MCP integration to unassign',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'The MCP integration has been successfully unassigned',
-    type: AgentResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Agent not found or integration not assigned',
-  })
-  async unassignMcpIntegration(
-    @Param('agentId', ParseUUIDPipe) agentId: UUID,
-    @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
-  ): Promise<AgentResponseDto> {
-    this.logger.log('unassignMcpIntegration', { agentId, integrationId });
-
-    const agent = await this.unassignMcpIntegrationFromAgentUseCase.execute(
-      new UnassignMcpIntegrationFromAgentCommand(agentId, integrationId),
-    );
-
-    return this.agentDtoMapper.toDto(agent);
-  }
-
-  @Get(':agentId/mcp-integrations')
-  @ApiOperation({ summary: 'List MCP integrations assigned to agent' })
-  @ApiParam({
-    name: 'agentId',
-    description: 'The UUID of the agent',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all MCP integrations assigned to the agent',
-    type: [McpIntegrationResponseDto],
-  })
-  @ApiResponse({ status: 404, description: 'Agent not found' })
-  async listAgentMcpIntegrations(
-    @Param('agentId', ParseUUIDPipe) agentId: UUID,
-  ): Promise<McpIntegrationResponseDto[]> {
-    this.logger.log('listAgentMcpIntegrations', { agentId });
-
-    const integrations = await this.listAgentMcpIntegrationsUseCase.execute(
-      new ListAgentMcpIntegrationsQuery(agentId),
-    );
-
-    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
   }
 }

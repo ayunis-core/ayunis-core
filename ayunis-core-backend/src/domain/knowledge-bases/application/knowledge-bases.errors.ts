@@ -4,6 +4,8 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum KnowledgeBaseErrorCode {
   KNOWLEDGE_BASE_NOT_FOUND = 'KNOWLEDGE_BASE_NOT_FOUND',
   UNEXPECTED_KNOWLEDGE_BASE_ERROR = 'UNEXPECTED_KNOWLEDGE_BASE_ERROR',
+  DOCUMENT_NOT_IN_KNOWLEDGE_BASE = 'DOCUMENT_NOT_IN_KNOWLEDGE_BASE',
+  MISSING_FILE = 'MISSING_FILE',
 }
 
 export abstract class KnowledgeBaseError extends ApplicationError {
@@ -34,6 +36,32 @@ export class UnexpectedKnowledgeBaseError extends KnowledgeBaseError {
       message,
       KnowledgeBaseErrorCode.UNEXPECTED_KNOWLEDGE_BASE_ERROR,
       500,
+      metadata,
+    );
+  }
+}
+
+export class DocumentNotInKnowledgeBaseError extends KnowledgeBaseError {
+  constructor(
+    documentId: string,
+    knowledgeBaseId: string,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `Document '${documentId}' not found in knowledge base '${knowledgeBaseId}'`,
+      KnowledgeBaseErrorCode.DOCUMENT_NOT_IN_KNOWLEDGE_BASE,
+      404,
+      metadata,
+    );
+  }
+}
+
+export class MissingFileError extends KnowledgeBaseError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No file was provided in the request',
+      KnowledgeBaseErrorCode.MISSING_FILE,
+      400,
       metadata,
     );
   }

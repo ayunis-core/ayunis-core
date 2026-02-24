@@ -1,0 +1,8 @@
+import type { UUID } from 'crypto';
+
+export class AddKnowledgeBaseToThreadCommand {
+  constructor(
+    public readonly threadId: UUID,
+    public readonly knowledgeBaseId: UUID,
+  ) {}
+}

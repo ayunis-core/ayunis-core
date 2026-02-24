@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import {
-  IndexerPort,
+import type {
   IngestInput,
   SearchInput,
+  SearchMultiInput,
 } from 'src/domain/rag/indexers/application/ports/indexer';
-import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
+import { IndexerPort } from 'src/domain/rag/indexers/application/ports/indexer';
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { IngestContentUseCase } from './use-cases/ingest-content/ingest-content.use-case';
 import { IngestContentCommand } from './use-cases/ingest-content/ingest-content.command';
 import { SearchContentUseCase } from './use-cases/search-content/search-content.use-case';
-import { UUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { DeleteContentUseCase } from './use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from './use-cases/delete-content/delete-content.command';
 import { DeleteContentsUseCase } from './use-cases/delete-contents/delete-contents.use-case';
@@ -37,6 +38,10 @@ export class ParentChildIndexerAdapter extends IndexerPort {
 
   async search(input: SearchInput): Promise<IndexEntry[]> {
     return await this.searchContentUseCase.execute(input);
+  }
+
+  async searchMulti(input: SearchMultiInput): Promise<IndexEntry[]> {
+    return await this.searchContentUseCase.executeMulti(input);
   }
 
   async delete(documentId: UUID): Promise<void> {

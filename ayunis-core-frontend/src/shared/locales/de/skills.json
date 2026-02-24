@@ -35,6 +35,7 @@
       "namePlaceholder": "Name der Fähigkeit eingeben...",
       "shortDescriptionLabel": "Kurzbeschreibung",
       "shortDescriptionPlaceholder": "Kurze Beschreibung dessen, was diese Fähigkeit macht...",
+      "shortDescriptionHint": "Eine gute Beschreibung hilft der KI zu verstehen, wann diese Fähigkeit verwendet werden soll.",
       "instructionsLabel": "Detaillierte Anweisungen",
       "instructionsPlaceholder": "Detaillierte Anweisungen für diese Fähigkeit eingeben..."
     },

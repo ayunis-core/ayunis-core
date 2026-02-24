@@ -13,6 +13,7 @@ import {
   CSVDataSource,
 } from 'src/domain/sources/domain/sources/data-source.entity';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 
 export interface SystemPromptBuildParams {
   agent?: Agent;
@@ -20,14 +21,22 @@ export interface SystemPromptBuildParams {
   currentTime: Date;
   sources?: Source[];
   skills?: Skill[];
+  knowledgeBases?: KnowledgeBaseSummary[];
   userSystemPrompt?: string;
 }
 
 @Injectable()
 export class SystemPromptBuilderService {
   build(params: SystemPromptBuildParams): string {
-    const { agent, tools, currentTime, sources, skills, userSystemPrompt } =
-      params;
+    const {
+      agent,
+      tools,
+      currentTime,
+      sources,
+      skills,
+      knowledgeBases,
+      userSystemPrompt,
+    } = params;
 
     const sections = [
       this.buildPreamble(currentTime),
@@ -35,6 +44,7 @@ export class SystemPromptBuilderService {
       this.buildToolUsageSection(tools),
       this.buildSkillsSection(skills ?? []),
       this.buildFilesSection(sources ?? []),
+      this.buildKnowledgeBasesSection(knowledgeBases ?? []),
       this.buildDataHandlingSection(),
       this.buildResponseGuidelines(),
       this.buildPlatformSection(),
@@ -313,6 +323,27 @@ ${systemFiles.map(formatFile).join('\n')}
       return 'Data';
     }
     return 'Unknown';
+  }
+
+  private buildKnowledgeBasesSection(
+    knowledgeBases: KnowledgeBaseSummary[],
+  ): string {
+    if (knowledgeBases.length === 0) {
+      return '';
+    }
+
+    const entries = knowledgeBases
+      .map(
+        (kb) =>
+          `<knowledge_base id="${kb.id}" name="${this.escapeXml(kb.name)}" />`,
+      )
+      .join('\n');
+
+    return `<available_knowledge_bases>
+The following knowledge bases are available. Use the knowledge_query tool to search them and the knowledge_get_text tool to read specific document sections.
+
+${entries}
+</available_knowledge_bases>`;
   }
 
   private escapeXml(str: string): string {

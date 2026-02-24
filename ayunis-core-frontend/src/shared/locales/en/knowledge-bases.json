@@ -1,0 +1,87 @@
+{
+  "page": {
+    "title": "My Knowledge Bases"
+  },
+  "emptyState": {
+    "title": "No knowledge bases yet",
+    "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."
+  },
+  "card": {
+    "confirmDelete": {
+      "title": "Delete Knowledge Base",
+      "description": "Are you sure you want to delete \"{{title}}\"? All associated documents will also be deleted. This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Add Knowledge Base",
+    "buttonTextFirst": "Create your first knowledge base",
+    "title": "Create New Knowledge Base",
+    "description": "Create a new knowledge base to organize documents and use them in chats.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter knowledge base name...",
+      "shortDescriptionLabel": "Description",
+      "shortDescriptionPlaceholder": "Enter an optional description...",
+      "shortDescriptionHint": "A good description helps the AI understand when to use this knowledge base."
+    },
+    "validation": {
+      "nameRequired": "Name is required"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating..."
+    }
+  },
+  "create": {
+    "success": "Knowledge base created successfully!",
+    "error": "Failed to create knowledge base. Please try again."
+  },
+  "delete": {
+    "success": "Knowledge base deleted successfully!",
+    "error": "Failed to delete knowledge base. Please try again.",
+    "notFound": "Knowledge base not found. It may have been deleted."
+  },
+  "detail": {
+    "properties": {
+      "title": "Properties",
+      "description": "Update the name and description of your knowledge base.",
+      "form": {
+        "nameLabel": "Name",
+        "namePlaceholder": "Enter knowledge base name...",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Enter an optional description...",
+        "descriptionHint": "A good description helps the AI understand when to use this knowledge base."
+      },
+      "buttons": {
+        "save": "Save",
+        "saving": "Saving..."
+      }
+    },
+    "validation": {
+      "nameRequired": "Name is required"
+    },
+    "confirmDelete": {
+      "title": "Delete Knowledge Base",
+      "description": "Are you sure you want to delete \"{{title}}\"? All associated documents will also be deleted. This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    },
+    "update": {
+      "success": "Knowledge base updated successfully!",
+      "error": "Failed to update knowledge base. Please try again."
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Manage the documents in this knowledge base. Supported formats: PDF, DOCX.",
+      "upload": "Upload",
+      "empty": "No documents uploaded yet. Upload a PDF or DOCX file to get started.",
+      "uploadSuccess": "Document uploaded successfully!",
+      "uploadError": "Failed to upload document. Please try again.",
+      "removeSuccess": "Document removed successfully!",
+      "removeError": "Failed to remove document. Please try again."
+    }
+  }
+}

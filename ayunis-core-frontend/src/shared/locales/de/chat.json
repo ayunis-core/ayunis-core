@@ -21,6 +21,8 @@
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",
     "errorQuotaExceededWithTime": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es in {{minutes}} Minuten erneut.",
+    "errorAddKnowledgeBase": "Wissensbasis konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
+    "errorRemoveKnowledgeBase": "Wissensbasis konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
     "errorDownloadSource": "Quelle konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "errorUpdateModel": "Modell konnte nicht aktualisiert werden",
     "errorUpdateAgent": "Agent konnte nicht aktualisiert werden",
@@ -35,6 +37,9 @@
       "source_get_text": "Datei durchsuchen",
       "code_execution": "Berechnung ausführen",
       "activate_skill": "Fähigkeit aktivieren",
+      "knowledge_query": "Wissen abrufen",
+      "knowledge_get_text": "Wissen abrufen",
+      "product_knowledge": "Produktwissen durchsuchen",
       "send_email": {
         "subject": "Betreff",
         "body": "Nachricht",

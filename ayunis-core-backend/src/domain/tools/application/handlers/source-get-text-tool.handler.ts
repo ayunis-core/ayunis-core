@@ -11,6 +11,7 @@ import {
 } from '../ports/execution.handler';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import toolsConfig from 'src/config/tools.config';
+import { extractTextByLineRange } from '../utils/text-extraction.utils';
 
 interface SourceGetTextResult {
   sourceId: string;
@@ -48,20 +49,10 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
       const { sourceId, startLine = 1, endLine = -1 } = validatedInput;
       const { maxLines, maxChars } = this.config.sourceGetText;
 
-      // Get the source
       const source = await this.getSourceByIdUseCase.execute(
         new GetTextSourceByIdQuery(sourceId as UUID),
       );
 
-      if (!source) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Source with ID "${sourceId}" not found`,
-          exposeToLLM: true,
-        });
-      }
-
-      // Ensure it's a TextSource
       if (!(source instanceof TextSource)) {
         throw new ToolExecutionFailedError({
           toolName: tool.name,
@@ -71,81 +62,24 @@ export class SourceGetTextToolHandler extends ToolExecutionHandler {
       }
 
       const text = source.text || '';
-      const lines = text.split('\n');
-      const totalLines = lines.length;
-
-      // Handle empty text
-      if (totalLines === 0 || (totalLines === 1 && lines[0] === '')) {
-        const result: SourceGetTextResult = {
-          sourceId: source.id,
-          sourceName: source.name,
-          totalLines: 0,
-          requestedStartLine: startLine,
-          requestedEndLine: endLine,
-          actualStartLine: 0,
-          actualEndLine: 0,
-          text: '',
-        };
-        return JSON.stringify(result);
-      }
-
-      // Validate and clamp line numbers
-      const effectiveStartLine = Math.max(1, Math.min(startLine, totalLines));
-      const effectiveEndLine =
-        endLine === -1
-          ? totalLines
-          : Math.max(effectiveStartLine, Math.min(endLine, totalLines));
-
-      // Check if start > end (after clamping)
-      if (startLine > effectiveEndLine && startLine !== 1) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Invalid line range: startLine (${startLine}) is greater than the file's total lines (${totalLines}). The file has ${totalLines} lines.`,
-          exposeToLLM: true,
-        });
-      }
-
-      // Calculate requested line count
-      const requestedLineCount = effectiveEndLine - effectiveStartLine + 1;
-
-      // Check line limit
-      if (requestedLineCount > maxLines) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Requested range (${requestedLineCount} lines) exceeds maximum of ${maxLines} lines. Please use a smaller range. Suggestion: try lines ${effectiveStartLine} to ${effectiveStartLine + maxLines - 1}.`,
-          exposeToLLM: true,
-        });
-      }
-
-      // Extract the requested lines (convert to 0-indexed)
-      const extractedLines = lines.slice(
-        effectiveStartLine - 1,
-        effectiveEndLine,
-      );
-      const extractedText = extractedLines.join('\n');
-
-      // Check character limit
-      if (extractedText.length > maxChars) {
-        // Calculate approximately how many lines we can include
-        const avgLineLength = extractedText.length / requestedLineCount;
-        const suggestedLines = Math.floor(maxChars / avgLineLength);
-
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Requested text (${extractedText.length} characters) exceeds maximum of ${maxChars} characters. The lines in this range are lengthy. Suggestion: try reading ~${suggestedLines} lines at a time, e.g., lines ${effectiveStartLine} to ${effectiveStartLine + suggestedLines - 1}.`,
-          exposeToLLM: true,
-        });
-      }
+      const extraction = extractTextByLineRange({
+        toolName: tool.name,
+        text,
+        startLine,
+        endLine,
+        maxLines,
+        maxChars,
+      });
 
       const result: SourceGetTextResult = {
         sourceId: source.id,
         sourceName: source.name,
-        totalLines,
+        totalLines: extraction.totalLines,
         requestedStartLine: startLine,
         requestedEndLine: endLine,
-        actualStartLine: effectiveStartLine,
-        actualEndLine: effectiveEndLine,
-        text: extractedText,
+        actualStartLine: extraction.effectiveStartLine,
+        actualEndLine: extraction.effectiveEndLine,
+        text: extraction.extractedText,
       };
 
       return JSON.stringify(result);

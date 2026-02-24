@@ -1,0 +1,87 @@
+{
+  "page": {
+    "title": "Meine Wissenssammlungen"
+  },
+  "emptyState": {
+    "title": "Noch keine Wissenssammlungen",
+    "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und nutzen Sie sie in Ihren Chats als Kontext für die KI."
+  },
+  "card": {
+    "confirmDelete": {
+      "title": "Wissenssammlung löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Alle zugehörigen Dokumente werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
+    }
+  },
+  "createDialog": {
+    "buttonText": "Wissenssammlung hinzufügen",
+    "buttonTextFirst": "Erstellen Sie Ihre erste Wissenssammlung",
+    "title": "Neue Wissenssammlung erstellen",
+    "description": "Erstellen Sie eine neue Wissenssammlung, um Dokumente zu organisieren und in Chats zu nutzen.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "Name der Wissenssammlung eingeben...",
+      "shortDescriptionLabel": "Beschreibung",
+      "shortDescriptionPlaceholder": "Optionale Beschreibung eingeben...",
+      "shortDescriptionHint": "Eine gute Beschreibung hilft der KI zu verstehen, wann diese Wissenssammlung verwendet werden soll."
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich"
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "creating": "Wird erstellt..."
+    }
+  },
+  "create": {
+    "success": "Wissenssammlung erfolgreich erstellt!",
+    "error": "Wissenssammlung konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+  },
+  "delete": {
+    "success": "Wissenssammlung erfolgreich gelöscht!",
+    "error": "Wissenssammlung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Wissenssammlung nicht gefunden. Sie wurde möglicherweise gelöscht."
+  },
+  "detail": {
+    "properties": {
+      "title": "Eigenschaften",
+      "description": "Aktualisieren Sie den Namen und die Beschreibung Ihrer Wissenssammlung.",
+      "form": {
+        "nameLabel": "Name",
+        "namePlaceholder": "Name der Wissenssammlung eingeben...",
+        "descriptionLabel": "Beschreibung",
+        "descriptionPlaceholder": "Optionale Beschreibung eingeben...",
+        "descriptionHint": "Eine gute Beschreibung hilft der KI zu verstehen, wann diese Wissenssammlung verwendet werden soll."
+      },
+      "buttons": {
+        "save": "Speichern",
+        "saving": "Wird gespeichert..."
+      }
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich"
+    },
+    "confirmDelete": {
+      "title": "Wissenssammlung löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Alle zugehörigen Dokumente werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
+    },
+    "update": {
+      "success": "Wissenssammlung erfolgreich aktualisiert!",
+      "error": "Wissenssammlung konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+    },
+    "documents": {
+      "title": "Dokumente",
+      "description": "Verwalten Sie die Dokumente in dieser Wissenssammlung. Unterstützte Formate: PDF, DOCX.",
+      "upload": "Hochladen",
+      "empty": "Noch keine Dokumente hochgeladen. Laden Sie eine PDF- oder DOCX-Datei hoch, um zu beginnen.",
+      "uploadSuccess": "Dokument erfolgreich hochgeladen!",
+      "uploadError": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
+      "removeSuccess": "Dokument erfolgreich entfernt!",
+      "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut."
+    }
+  }
+}
