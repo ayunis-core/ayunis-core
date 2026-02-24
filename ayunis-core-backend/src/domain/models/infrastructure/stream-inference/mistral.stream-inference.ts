@@ -65,7 +65,7 @@ export class MistralStreamInferenceHandler implements StreamInferenceHandler {
           : mistralMessages,
         tools: mistralTools,
         toolChoice: mistralToolChoice,
-        maxTokens: 10000,
+        maxTokens: 100000,
         stream: true,
       };
 
