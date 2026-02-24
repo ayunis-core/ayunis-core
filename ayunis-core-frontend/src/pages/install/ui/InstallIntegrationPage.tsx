@@ -255,7 +255,7 @@ function InstallIntegrationCardView({
             <span
               className="text-sm leading-normal cursor-pointer select-none"
               onClick={(e) => {
-                if (!(e.target as HTMLElement).closest('a')) {
+                if (!isInstalling && !(e.target as HTMLElement).closest('a')) {
                   onLegalAcceptedChange(!legalAccepted);
                 }
               }}
