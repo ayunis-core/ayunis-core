@@ -21,10 +21,11 @@ import {
   CardTitle,
 } from '@/shared/ui/shadcn/card';
 import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
 
 interface InstallIntegrationPageProps {
-  integrationIdentifier: string | undefined;
+  readonly integrationIdentifier: string | undefined;
 }
 
 export default function InstallIntegrationPage({
@@ -61,7 +62,7 @@ export default function InstallIntegrationPage({
 function InstallIntegrationContent({
   integrationIdentifier,
 }: {
-  integrationIdentifier: string;
+  readonly integrationIdentifier: string;
 }) {
   const { t } = useTranslation('install-integration');
   const {
@@ -111,13 +112,13 @@ function InstallIntegrationContent({
 }
 
 interface InstallIntegrationCardProps {
-  integration: MarketplaceIntegrationResponseDto;
-  formValues: Record<string, string>;
-  onFormValuesChange: (values: Record<string, string>) => void;
-  onInstall: () => void;
-  isInstalling: boolean;
-  legalAccepted: boolean;
-  onLegalAcceptedChange: (accepted: boolean) => void;
+  readonly integration: MarketplaceIntegrationResponseDto;
+  readonly formValues: Record<string, string>;
+  readonly onFormValuesChange: (values: Record<string, string>) => void;
+  readonly onInstall: () => void;
+  readonly isInstalling: boolean;
+  readonly legalAccepted: boolean;
+  readonly onLegalAcceptedChange: (accepted: boolean) => void;
 }
 
 function InstallIntegrationCard({
@@ -173,17 +174,17 @@ function checkRequiredFieldsFilled(
 }
 
 interface InstallIntegrationCardViewProps {
-  integration: MarketplaceIntegrationResponseDto;
-  editableFields: MarketplaceIntegrationConfigFieldDto[];
-  isZeroConfig: boolean;
-  allRequiredFilled: boolean;
-  formValues: Record<string, string>;
-  onFormValuesChange: (values: Record<string, string>) => void;
-  onInstall: () => void;
-  isInstalling: boolean;
-  legalAccepted: boolean;
-  onLegalAcceptedChange: (accepted: boolean) => void;
-  t: TFunction;
+  readonly integration: MarketplaceIntegrationResponseDto;
+  readonly editableFields: MarketplaceIntegrationConfigFieldDto[];
+  readonly isZeroConfig: boolean;
+  readonly allRequiredFilled: boolean;
+  readonly formValues: Record<string, string>;
+  readonly onFormValuesChange: (values: Record<string, string>) => void;
+  readonly onInstall: () => void;
+  readonly isInstalling: boolean;
+  readonly legalAccepted: boolean;
+  readonly onLegalAcceptedChange: (accepted: boolean) => void;
+  readonly t: TFunction;
 }
 
 function InstallIntegrationCardView({
@@ -241,34 +242,41 @@ function InstallIntegrationCardView({
         ))}
 
         {hasLegalText && (
-          <div className="flex items-start gap-3 rounded-md border p-4">
+          <div className="flex items-start gap-2">
             <Checkbox
               id="legal-accept"
+              className="mt-0.5"
               checked={legalAccepted}
               onCheckedChange={(checked) =>
                 onLegalAcceptedChange(checked === true)
               }
               disabled={isInstalling}
             />
-            <label
-              htmlFor="legal-accept"
-              className="text-sm leading-relaxed cursor-pointer"
+            <span
+              className="text-sm leading-normal cursor-pointer select-none"
+              onClick={(e) => {
+                if (!(e.target as HTMLElement).closest('a')) {
+                  onLegalAcceptedChange(!legalAccepted);
+                }
+              }}
             >
               <Trans
                 ns="install-integration"
                 i18nKey="detail.legalText"
                 components={{
-                  link: (
+                  legalLink: (
                     <a
                       href={integration.legalTextUrl ?? ''}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-primary hover:text-primary/80"
-                    />
+                    >
+                      placeholder
+                    </a>
                   ),
                 }}
               />
-            </label>
+            </span>
           </div>
         )}
       </CardContent>
