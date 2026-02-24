@@ -23,8 +23,11 @@ import { AgentResponseDto } from './dto/agent-response.dto';
 import { AgentDtoMapper } from './mappers/agent.mapper';
 import { McpIntegrationResponseDto } from 'src/domain/mcp/presenters/http/dto/mcp-integration-response.dto';
 import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('agents')
+@RequireFeature(FeatureFlag.Agents)
 @Controller('agents')
 export class AgentMcpIntegrationsController {
   private readonly logger = new Logger(AgentMcpIntegrationsController.name);

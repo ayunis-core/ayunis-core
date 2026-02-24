@@ -42,7 +42,7 @@ import { useSidebar } from '@/shared/ui/shadcn/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
-import { useAppControllerIsCloud } from '@/shared/api/generated/ayunisCoreAPI';
+import { useFeatureToggles } from '@/features/feature-toggles';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
@@ -51,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { closeMobileWithCleanup } = useSidebar();
-  const { data: cloudStatus } = useAppControllerIsCloud();
+  const featureToggles = useFeatureToggles();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
@@ -64,17 +64,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Plus,
       shortcut: '⌘J',
     },
-    {
-      title: t('sidebar.prompts'),
-      url: '/prompts',
-      icon: BookOpen,
-    },
-    {
-      title: t('sidebar.agents'),
-      url: '/agents',
-      icon: Bot,
-    },
-    ...(!cloudStatus?.isCloud
+    ...(featureToggles.promptsEnabled
+      ? [
+          {
+            title: t('sidebar.prompts'),
+            url: '/prompts',
+            icon: BookOpen,
+          },
+        ]
+      : []),
+    ...(featureToggles.agentsEnabled
+      ? [
+          {
+            title: t('sidebar.agents'),
+            url: '/agents',
+            icon: Bot,
+          },
+        ]
+      : []),
+    ...(featureToggles.skillsEnabled
       ? [
           {
             title: t('sidebar.skills'),
@@ -83,11 +91,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ]
       : []),
-    {
-      title: t('sidebar.knowledge'),
-      url: '/knowledge-bases',
-      icon: Brain,
-    },
+    ...(featureToggles.knowledgeBasesEnabled
+      ? [
+          {
+            title: t('sidebar.knowledge'),
+            url: '/knowledge-bases',
+            icon: Brain,
+          },
+        ]
+      : []),
   ];
 
   return (

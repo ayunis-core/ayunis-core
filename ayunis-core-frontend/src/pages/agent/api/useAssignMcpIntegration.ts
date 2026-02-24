@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  useAgentsControllerAssignMcpIntegration,
-  getAgentsControllerListAgentMcpIntegrationsQueryKey,
+  useAgentMcpIntegrationsControllerAssignMcpIntegration,
+  getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess, showError } from '@/shared/lib/toast';
@@ -17,23 +17,29 @@ export function useAssignMcpIntegration(
   const { t } = useTranslation('agent');
   const queryClient = useQueryClient();
 
-  return useAgentsControllerAssignMcpIntegration({
+  return useAgentMcpIntegrationsControllerAssignMcpIntegration({
     mutation: {
       onMutate: async ({ agentId, integrationId }) => {
         // Cancel outgoing refetches
         await queryClient.cancelQueries({
           queryKey:
-            getAgentsControllerListAgentMcpIntegrationsQueryKey(agentId),
+            getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey(
+              agentId,
+            ),
         });
 
         // Snapshot previous value
         const previousAssignments = queryClient.getQueryData(
-          getAgentsControllerListAgentMcpIntegrationsQueryKey(agentId),
+          getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey(
+            agentId,
+          ),
         );
 
         // Optimistically update by adding integration
         queryClient.setQueryData(
-          getAgentsControllerListAgentMcpIntegrationsQueryKey(agentId),
+          getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey(
+            agentId,
+          ),
           (old: McpIntegrationResponseDto[] | undefined) => {
             if (!old) return old;
             // Find the integration from available list
@@ -51,7 +57,7 @@ export function useAssignMcpIntegration(
         // Rollback on error
         if (context?.previousAssignments) {
           queryClient.setQueryData(
-            getAgentsControllerListAgentMcpIntegrationsQueryKey(
+            getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey(
               variables.agentId,
             ),
             context.previousAssignments,
@@ -84,9 +90,10 @@ export function useAssignMcpIntegration(
       onSettled: (_data, _error, variables) => {
         // Always refetch after mutation
         void queryClient.invalidateQueries({
-          queryKey: getAgentsControllerListAgentMcpIntegrationsQueryKey(
-            variables.agentId,
-          ),
+          queryKey:
+            getAgentMcpIntegrationsControllerListAgentMcpIntegrationsQueryKey(
+              variables.agentId,
+            ),
         });
       },
     },

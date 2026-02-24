@@ -29,6 +29,7 @@ import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
 import { useAgents } from '@/features/useAgents';
+import { useIsAgentsEnabled } from '@/features/feature-toggles';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
@@ -52,7 +53,10 @@ export default function ChatPage({
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
-  const { agents, isLoading: isLoadingAgents } = useAgents();
+  const isAgentsEnabled = useIsAgentsEnabled();
+  const { agents, isLoading: isLoadingAgents } = useAgents({
+    enabled: isAgentsEnabled,
+  });
   const { models, isLoading: isLoadingModels } = usePermittedModels();
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),

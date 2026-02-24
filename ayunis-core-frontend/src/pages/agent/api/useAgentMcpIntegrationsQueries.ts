@@ -1,6 +1,6 @@
 import {
   useMcpIntegrationsControllerListAvailable,
-  useAgentsControllerListAgentMcpIntegrations,
+  useAgentMcpIntegrationsControllerListAgentMcpIntegrations,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 /**
@@ -19,7 +19,7 @@ export function useAgentMcpIntegrationsQueries(agentId: string) {
     isLoading: loadingAssigned,
     isError: errorAssigned,
     refetch: refetchAssigned,
-  } = useAgentsControllerListAgentMcpIntegrations(agentId);
+  } = useAgentMcpIntegrationsControllerListAgentMcpIntegrations(agentId);
 
   return {
     availableIntegrations,

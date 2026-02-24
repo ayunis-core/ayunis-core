@@ -73,8 +73,11 @@ import {
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { createSourcesFromFile } from 'src/domain/sources/application/file-source-creator';
 import { AgentSourceAssignment } from '../../domain/agent-source-assignment.entity';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('agents')
+@RequireFeature(FeatureFlag.Agents)
 @Controller('agents')
 export class AgentsController {
   private readonly logger = new Logger(AgentsController.name);

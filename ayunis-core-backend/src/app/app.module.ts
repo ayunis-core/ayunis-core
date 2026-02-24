@@ -48,6 +48,7 @@ import internetSearchConfig from 'src/config/internet-search.config';
 import { mcpConfig } from '../config/mcp.config';
 import { marketplaceConfig } from '../config/marketplace.config';
 import toolsConfig from '../config/tools.config';
+import { featuresConfig } from '../config/features.config';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { ClsModule } from 'nestjs-cls';
@@ -75,6 +76,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
         mcpConfig,
         marketplaceConfig,
         toolsConfig,
+        featuresConfig,
       ],
     }),
     ClsModule.forRoot({
@@ -134,6 +136,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     KnowledgeBasesModule,
     IamModule.register({
       authProvider:
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
         (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     }),
   ],

@@ -68,8 +68,11 @@ import {
 } from '../../application/skills.errors';
 import { parseCSV } from 'src/common/util/csv';
 import { parseExcel } from 'src/common/util/excel';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('skills')
+@RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillSourcesController {
   private readonly logger = new Logger(SkillSourcesController.name);

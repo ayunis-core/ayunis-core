@@ -11,6 +11,8 @@ import {
   modelsControllerIsEmbeddingModelEnabled,
   getAgentsControllerFindAllQueryKey,
   agentsControllerFindAll,
+  appControllerFeatureToggles,
+  getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
@@ -53,6 +55,10 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     deps: { prompt: promptId, modelId, agentId },
     context: { queryClient },
   }) => {
+    const featureToggles = await queryClient.fetchQuery({
+      queryKey: getAppControllerFeatureTogglesQueryKey(),
+      queryFn: () => appControllerFeatureToggles(),
+    });
     let selectedModelId: string | undefined;
     let selectedAgentId: string | undefined;
     if (modelId) {
@@ -72,10 +78,13 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { hasActiveSubscription } = await queryClient.fetchQuery(
       queryHasActiveSubscriptionOptions(),
     );
-    const prompt = promptId
-      ? await queryClient.fetchQuery(queryPromptOptions(promptId))
-      : undefined;
-    const agents = await queryClient.fetchQuery(queryAgentsOptions());
+    const prompt =
+      promptId && featureToggles.promptsEnabled
+        ? await queryClient.fetchQuery(queryPromptOptions(promptId))
+        : undefined;
+    const agents = featureToggles.agentsEnabled
+      ? await queryClient.fetchQuery(queryAgentsOptions())
+      : [];
     return {
       selectedModelId,
       selectedAgentId,

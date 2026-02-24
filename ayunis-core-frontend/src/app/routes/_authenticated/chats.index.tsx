@@ -6,6 +6,8 @@ import {
   getThreadsControllerFindAllQueryKey,
   agentsControllerFindAll,
   getAgentsControllerFindAllQueryKey,
+  appControllerFeatureToggles,
+  getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 const CHATS_PER_PAGE = 20;
@@ -24,6 +26,10 @@ export const Route = createFileRoute('/_authenticated/chats/')({
     context: { queryClient },
   }) => {
     const offset = (page - 1) * CHATS_PER_PAGE;
+    const featureToggles = await queryClient.fetchQuery({
+      queryKey: getAppControllerFeatureTogglesQueryKey(),
+      queryFn: () => appControllerFeatureToggles(),
+    });
     const [chatsResponse, agents] = await Promise.all([
       queryClient.fetchQuery({
         queryKey: getThreadsControllerFindAllQueryKey({
@@ -40,10 +46,12 @@ export const Route = createFileRoute('/_authenticated/chats/')({
             offset,
           }),
       }),
-      queryClient.fetchQuery({
-        queryKey: getAgentsControllerFindAllQueryKey(),
-        queryFn: () => agentsControllerFindAll(),
-      }),
+      featureToggles.agentsEnabled
+        ? queryClient.fetchQuery({
+            queryKey: getAgentsControllerFindAllQueryKey(),
+            queryFn: () => agentsControllerFindAll(),
+          })
+        : Promise.resolve([]),
     ]);
     const chats = chatsResponse.data;
     const pagination = chatsResponse.pagination;

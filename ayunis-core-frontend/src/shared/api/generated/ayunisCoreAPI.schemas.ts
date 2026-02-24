@@ -12,6 +12,17 @@ export interface IsCloudResponseDto {
   isRegistrationDisabled: boolean;
 }
 
+export interface FeatureTogglesResponseDto {
+  /** Whether the agents feature is enabled */
+  agentsEnabled: boolean;
+  /** Whether the standalone knowledge bases feature is enabled */
+  knowledgeBasesEnabled: boolean;
+  /** Whether the prompts feature is enabled */
+  promptsEnabled: boolean;
+  /** Whether the skills feature is enabled */
+  skillsEnabled: boolean;
+}
+
 /**
  * The provider of the model
  */

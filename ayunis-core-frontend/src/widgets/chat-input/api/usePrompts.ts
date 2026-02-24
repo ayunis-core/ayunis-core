@@ -4,7 +4,12 @@ import {
   usePromptsControllerFindAll,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
-export function usePrompts() {
+interface UsePromptsOptions {
+  enabled?: boolean;
+}
+
+export function usePrompts(options: UsePromptsOptions = {}) {
+  const { enabled = true } = options;
   const {
     data: prompts = [],
     isLoading,
@@ -13,6 +18,7 @@ export function usePrompts() {
   } = usePromptsControllerFindAll<PromptsControllerFindAllQueryResult, Error>({
     query: {
       queryKey: [getPromptsControllerFindAllQueryKey()],
+      enabled,
     },
   });
 

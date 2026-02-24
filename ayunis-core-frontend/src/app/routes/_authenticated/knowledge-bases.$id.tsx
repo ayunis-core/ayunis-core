@@ -2,8 +2,10 @@ import { queryOptions } from '@tanstack/react-query';
 import {
   knowledgeBasesControllerFindOne,
   getKnowledgeBasesControllerFindOneQueryKey,
+  appControllerFeatureToggles,
+  getAppControllerFeatureTogglesQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { KnowledgeBasePage } from '@/pages/knowledge-base';
 
 const knowledgeBaseQueryOptions = (id: string) =>
@@ -15,6 +17,13 @@ const knowledgeBaseQueryOptions = (id: string) =>
 export const Route = createFileRoute('/_authenticated/knowledge-bases/$id')({
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { id } }) => {
+    const featureToggles = await queryClient.fetchQuery({
+      queryKey: getAppControllerFeatureTogglesQueryKey(),
+      queryFn: () => appControllerFeatureToggles(),
+    });
+    if (!featureToggles.knowledgeBasesEnabled) {
+      throw redirect({ to: '/chat' });
+    }
     const knowledgeBase = await queryClient.fetchQuery(
       knowledgeBaseQueryOptions(id),
     );
