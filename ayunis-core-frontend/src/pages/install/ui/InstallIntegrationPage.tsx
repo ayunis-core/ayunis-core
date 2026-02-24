@@ -270,9 +270,7 @@ function InstallIntegrationCardView({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline text-primary hover:text-primary/80"
-                    >
-                      placeholder
-                    </a>
+                    />
                   ),
                 }}
               />
