@@ -74,11 +74,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/agents',
       icon: Bot,
     },
-    {
-      title: t('sidebar.knowledge'),
-      url: '/knowledge-bases',
-      icon: Brain,
-    },
     ...(!cloudStatus?.isCloud
       ? [
           {
@@ -88,6 +83,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ]
       : []),
+    {
+      title: t('sidebar.knowledge'),
+      url: '/knowledge-bases',
+      icon: Brain,
+    },
   ];
 
   return (
